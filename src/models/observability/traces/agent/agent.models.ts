@@ -7,12 +7,12 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   SpanResponse,
   AgentTraceGetSpansByReferenceOptions,
-} from './traces.types';
+} from './agent.types';
 import type {
   HasPaginationOptions,
   NonPaginatedResponse,
   PaginatedResponse,
-} from '../../../utils/pagination/types';
+} from '../../../../utils/pagination/types';
 
 /**
  * Service for retrieving UiPath Agent trace metrics.
@@ -25,7 +25,7 @@ export interface AgentTracesServiceModel {
    * @returns Promise resolving to an array of {@link AgentTraceGetErrorsTimelineResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -37,7 +37,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -60,7 +60,7 @@ export interface AgentTracesServiceModel {
    * @returns Promise resolving to an array of {@link AgentTraceGetLatencyTimelineResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -72,7 +72,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the latency timeline for an agent version within a time window
    * const filtered = await trace.getLatencyTimeline({
@@ -95,7 +95,7 @@ export interface AgentTracesServiceModel {
    * @returns Promise resolving to an array of {@link AgentTraceGetUnitConsumptionResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -107,7 +107,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get per-agent unit consumption for an agent version within a time window
    * const filtered = await trace.getUnitConsumption({
@@ -130,7 +130,7 @@ export interface AgentTracesServiceModel {
    * @returns Promise resolving to an array of {@link SpanResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -154,7 +154,7 @@ export interface AgentTracesServiceModel {
    * @returns Promise resolving to a paginated or non-paginated list of {@link SpanResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -164,7 +164,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {

@@ -1,4 +1,4 @@
-import type { PaginationOptions } from '../../../utils/pagination/types';
+import type { PaginationOptions } from '../../../../utils/pagination/types';
 
 /**
  * Job execution mode filter — `Debug` (test runs) or `Runtime` (production runs).

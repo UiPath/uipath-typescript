@@ -1,4 +1,4 @@
-import { BaseService } from '../../base';
+import { BaseService } from '../../../base';
 import {
   AgentTraceFilterOptions,
   AgentTraceGetErrorsTimelineOptions,
@@ -9,25 +9,25 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   SpanResponse,
   AgentTraceGetSpansByReferenceOptions,
-} from '../../../models/agents/traces/traces.types';
-import { AgentTracesServiceModel } from '../../../models/agents/traces/traces.models';
-import { RawSpanResponse } from '../../../models/agents/traces/traces.internal-types';
-import { SpanMap } from '../../../models/agents/traces/traces.constants';
-import { AGENT_TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
+} from '../../../../models/observability/traces/agent/agent.types';
+import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
+import { RawSpanResponse } from '../../../../models/observability/traces/agent/agent.internal-types';
+import { SpanMap } from '../../../../models/observability/traces/agent/agent.constants';
+import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
   AGENTS_OFFSET_PARAMS,
   TRACEVIEW_SPANS_PAGINATION,
-} from '../../../utils/constants/common';
-import { track } from '../../../core/telemetry';
-import { transformData } from '../../../utils/transform';
-import { PaginationHelpers } from '../../../utils/pagination/helpers';
-import { PaginationType } from '../../../utils/pagination/internal-types';
+} from '../../../../utils/constants/common';
+import { track } from '../../../../core/telemetry';
+import { transformData } from '../../../../utils/transform';
+import { PaginationHelpers } from '../../../../utils/pagination/helpers';
+import { PaginationType } from '../../../../utils/pagination/internal-types';
 import type {
   HasPaginationOptions,
   NonPaginatedResponse,
   PaginatedResponse,
-} from '../../../utils/pagination/types';
+} from '../../../../utils/pagination/types';
 
 /**
  * Applies the {@link SpanMap} semantic renames (e.g. `expiryTimeUtc` → `expiredTime`)
@@ -48,7 +48,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * @returns Promise resolving to an array of {@link AgentTraceGetErrorsTimelineResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -60,7 +60,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -90,7 +90,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * @returns Promise resolving to an array of {@link AgentTraceGetLatencyTimelineResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -102,7 +102,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the latency timeline for an agent version within a time window
    * const filtered = await trace.getLatencyTimeline({
@@ -132,7 +132,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * @returns Promise resolving to an array of {@link AgentTraceGetUnitConsumptionResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -144,7 +144,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get per-agent unit consumption for an agent version within a time window
    * const filtered = await trace.getUnitConsumption({
@@ -174,7 +174,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * @returns Promise resolving to an array of {@link SpanResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -202,7 +202,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * @returns Promise resolving to a paginated or non-paginated list of {@link SpanResponse}
    * @example
    * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
    *
    * const trace = new AgentTraces(sdk);
    *
@@ -212,7 +212,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {

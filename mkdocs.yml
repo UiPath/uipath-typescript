@@ -191,7 +191,6 @@ nav:
             - Feedback: api/interfaces/FeedbackServiceModel.md
             - Agents: api/interfaces/AgentServiceModel.md
             - Agent Memory: api/interfaces/AgentMemoryServiceModel.md
-            - Agent Traces: api/interfaces/AgentTracesServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
@@ -210,6 +209,7 @@ nav:
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
           - Traces: api/interfaces/TracesServiceModel.md
+          - Agent Traces: api/interfaces/AgentTracesServiceModel.md
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md

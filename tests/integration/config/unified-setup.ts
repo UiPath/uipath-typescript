@@ -13,7 +13,7 @@ import {
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Agents } from '../../../src/services/agents';
 import { AgentMemory } from '../../../src/services/agents/memory';
-import { AgentTraces } from '../../../src/services/agents/traces';
+import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';

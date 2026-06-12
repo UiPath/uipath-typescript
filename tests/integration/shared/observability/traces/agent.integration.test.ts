@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { AgentTraces } from '../../../../src/services/agents/traces';
-import { AgentTraceExecutionType } from '../../../../src/models/agents/traces/traces.types';
-import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
+import { getServices, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
+import { AgentTraces } from '../../../../../src/services/observability/traces/agent';
+import { AgentTraceExecutionType } from '../../../../../src/models/observability/traces/agent/agent.types';
+import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 /**
  * Integration tests for Agent Traces (`/insightsrtm_/Traceview/*`).
  *
  * Run with:
- *   npx vitest run tests/integration/shared/agents/traces.integration.test.ts --config vitest.integration.config.ts
+ *   npx vitest run tests/integration/shared/observability/traces/agent.integration.test.ts --config vitest.integration.config.ts
  */
 
 const modes: InitMode[] = ['v1'];

@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
+ * import { AgentTraces } from '@uipath/uipath-typescript/traces';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -19,6 +19,6 @@
  * @module
  */
 
-export { AgentTracesService as AgentTraces } from './traces';
+export { AgentTracesService as AgentTraces } from './agent';
 
-export * from '../../../models/agents/traces';
+export * from '../../../../models/observability/traces/agent';

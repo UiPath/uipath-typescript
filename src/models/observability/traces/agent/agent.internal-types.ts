@@ -1,4 +1,4 @@
-import type { SpanResponse } from './traces.types';
+import type { SpanResponse } from './agent.types';
 
 /**
  * Raw span record as returned by the Traceview API, before the

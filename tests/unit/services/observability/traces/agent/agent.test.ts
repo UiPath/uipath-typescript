@@ -1,14 +1,14 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AgentTracesService } from '../../../../../src/services/agents/traces/traces';
-import { ApiClient } from '../../../../../src/core/http/api-client';
-import { createServiceTestDependencies, createMockApiClient } from '../../../../utils/setup';
-import { AGENT_TRACES_ENDPOINTS } from '../../../../../src/utils/constants/endpoints';
-import { AgentTraceExecutionType } from '../../../../../src/models/agents/traces/traces.types';
-import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
+import { AgentTracesService } from '../../../../../../src/services/observability/traces/agent/agent';
+import { ApiClient } from '../../../../../../src/core/http/api-client';
+import { createServiceTestDependencies, createMockApiClient } from '../../../../../utils/setup';
+import { AGENT_TRACES_ENDPOINTS } from '../../../../../../src/utils/constants/endpoints';
+import { AgentTraceExecutionType } from '../../../../../../src/models/observability/traces/agent/agent.types';
+import { AGENT_TEST_CONSTANTS } from '../../../../../utils/constants';
 
 // ===== MOCKING =====
-vi.mock('../../../../../src/core/http/api-client');
+vi.mock('../../../../../../src/core/http/api-client');
 
 // Spans-by-reference envelope: spans under `data`, total count under `pagination.totalCount`.
 const buildSpansEnvelope = (spans: unknown[], totalCount: number, pageNumber = 0, pageSize = 10) => ({
