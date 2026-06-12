@@ -61,6 +61,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   publishers: ['Orchestrator', 'Actions'],
    * });
    * ```
+   * @internal
    */
   @track('Subscriptions.GetAll')
   async getAll(tenantId: string, options?: SubscriptionGetAllOptions): Promise<SubscriptionGetResponse> {
@@ -96,6 +97,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```typescript
    * const { publishers } = await subscriptions.getPublishers('<tenantId>', { name: 'Orchestrator' });
    * ```
+   * @internal
    */
   @track('Subscriptions.GetPublishers')
   async getPublishers(tenantId: string, options?: SubscriptionGetPublishersOptions): Promise<SubscriptionGetResponse> {
@@ -131,6 +133,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   // safe to subscribe to Slack
    * }
    * ```
+   * @internal
    */
   @track('Subscriptions.GetSupportedChannels')
   async getSupportedChannels(tenantId: string): Promise<SubscriptionGetSupportedChannelsResponse> {

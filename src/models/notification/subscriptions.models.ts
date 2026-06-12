@@ -66,6 +66,7 @@ export interface SubscriptionServiceModel {
    *   publishers: ['Orchestrator', 'Actions'],
    * });
    * ```
+   * @internal
    */
   getAll(tenantId: string, options?: SubscriptionGetAllOptions): Promise<SubscriptionGetResponse>;
 
@@ -91,6 +92,7 @@ export interface SubscriptionServiceModel {
    * ```typescript
    * const { publishers } = await subscriptions.getPublishers('<tenantId>', { name: 'Orchestrator' });
    * ```
+   * @internal
    */
   getPublishers(tenantId: string, options?: SubscriptionGetPublishersOptions): Promise<SubscriptionGetResponse>;
 
@@ -116,6 +118,7 @@ export interface SubscriptionServiceModel {
    *   // safe to subscribe to Slack
    * }
    * ```
+   * @internal
    */
   getSupportedChannels(tenantId: string): Promise<SubscriptionGetSupportedChannelsResponse>;
 }
