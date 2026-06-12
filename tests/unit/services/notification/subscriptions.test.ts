@@ -12,6 +12,12 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { SUBSCRIPTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TENANT_ID } from '../../../../src/utils/constants/headers';
+import {
+  NotificationCategory,
+  NotificationMode,
+  type CategorySubscriptionUpdate,
+  type TopicSubscriptionUpdate,
+} from '../../../../src/models/notification';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -139,6 +145,80 @@ describe('SubscriptionService Unit Tests', () => {
 
       await expect(
         subscriptionService.getSupportedChannels(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('updateTopic', () => {
+    it('should POST userSubscriptions with tenant header and echo input', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const subscriptions: TopicSubscriptionUpdate[] = [
+        {
+          topicId: NOTIFICATION_TEST_CONSTANTS.TOPIC_ID,
+          isSubscribed: false,
+          notificationMode: NotificationMode.Email,
+        },
+      ];
+
+      const result = await subscriptionService.updateTopic(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC,
+        { userSubscriptions: subscriptions },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { subscriptions } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID));
+
+      await expect(
+        subscriptionService.updateTopic(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
+          {
+            topicId: NOTIFICATION_TEST_CONSTANTS.TOPIC_ID,
+            isSubscribed: true,
+            notificationMode: NotificationMode.InApp,
+          },
+        ])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID);
+    });
+  });
+
+  describe('updateCategory', () => {
+    it('should POST categorySubscriptions with tenant header and echo input', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const subscriptions: CategorySubscriptionUpdate[] = [
+        {
+          publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+          category: NotificationCategory.Error,
+          isSubscribed: false,
+          notificationMode: NotificationMode.Email,
+        },
+      ];
+
+      const result = await subscriptionService.updateCategory(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY,
+        { categorySubscriptions: subscriptions },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { subscriptions } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        subscriptionService.updateCategory(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
+          {
+            publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+            category: NotificationCategory.Info,
+            isSubscribed: true,
+            notificationMode: NotificationMode.InApp,
+          },
+        ])
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

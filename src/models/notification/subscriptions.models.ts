@@ -3,11 +3,15 @@
  * that drives generated API documentation.
  */
 
+import type { OperationResponse } from '../common/types';
+
 import type {
+  CategorySubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionPublisher,
   SupportedChannel,
+  TopicSubscriptionUpdate,
 } from './subscriptions.types';
 
 /**
@@ -29,6 +33,16 @@ export interface SubscriptionGetSupportedChannelsResponse {
   /** Notification channels supported in the current tenant. `InApp` is not listed — it is always available. */
   channels: SupportedChannel[];
 }
+
+/** Response from `updateTopic()`. */
+export type SubscriptionUpdateTopicResponse = OperationResponse<{
+  subscriptions: TopicSubscriptionUpdate[];
+}>;
+
+/** Response from `updateCategory()`. */
+export type SubscriptionUpdateCategoryResponse = OperationResponse<{
+  subscriptions: CategorySubscriptionUpdate[];
+}>;
 
 /**
  * Public surface of the Subscriptions service. JSDoc on this interface drives
@@ -116,4 +130,49 @@ export interface SubscriptionServiceModel {
    * ```
    */
   getSupportedChannels(tenantId: string): Promise<SubscriptionGetSupportedChannelsResponse>;
+
+  /**
+   * Updates topic-level subscription preferences. Each entry sets the subscription state
+   * (`isSubscribed`) for a single (topic, mode) pair.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Topic subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicResponse}
+   *
+   * @example Unsubscribe a topic from a single channel
+   * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateTopic('<tenantId>', [
+   *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
+   * ]);
+   * ```
+   */
+  updateTopic(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse>;
+
+  /**
+   * Updates category-level subscription preferences for a publisher. Each entry sets
+   * the subscription state for all topics of a given category via a given mode.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Category subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateCategoryResponse}
+   *
+   * @example Unsubscribe from all `Error` topics via email for one publisher
+   * ```typescript
+   * import { NotificationCategory, NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateCategory('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     category: NotificationCategory.Error,
+   *     isSubscribed: false,
+   *     notificationMode: NotificationMode.Email,
+   *   },
+   * ]);
+   * ```
+   */
+  updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse>;
 }
