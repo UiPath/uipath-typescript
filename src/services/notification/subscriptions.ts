@@ -6,13 +6,17 @@ import { track } from '../../core/telemetry';
 import { BaseService } from '../base';
 
 import type {
+  CategorySubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
+  TopicSubscriptionUpdate,
 } from '../../models/notification/subscriptions.types';
 import type {
   SubscriptionGetResponse,
   SubscriptionGetSupportedChannelsResponse,
   SubscriptionServiceModel,
+  SubscriptionUpdateCategoryResponse,
+  SubscriptionUpdateTopicResponse,
 } from '../../models/notification/subscriptions.models';
 
 import { SUBSCRIPTION_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -137,5 +141,62 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
       { headers: createHeaders({ [TENANT_ID]: tenantId }) }
     );
     return response.data;
+  }
+
+  /**
+   * Updates topic-level subscription preferences. Each entry sets the subscription state
+   * (`isSubscribed`) for a single (topic, mode) pair.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Topic subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicResponse}
+   *
+   * @example Unsubscribe a topic from a single channel
+   * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateTopic('<tenantId>', [
+   *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
+   * ]);
+   * ```
+   */
+  @track('Subscriptions.UpdateTopic')
+  async updateTopic(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC, {
+      userSubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  /**
+   * Updates category-level subscription preferences for a publisher. Each entry sets
+   * the subscription state for all topics of a given category via a given mode.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Category subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateCategoryResponse}
+   *
+   * @example Unsubscribe from all `Error` topics via email for one publisher
+   * ```typescript
+   * import { NotificationCategory, NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateCategory('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     category: NotificationCategory.Error,
+   *     isSubscribed: false,
+   *     notificationMode: NotificationMode.Email,
+   *   },
+   * ]);
+   * ```
+   */
+  @track('Subscriptions.UpdateCategory')
+  async updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY, {
+      categorySubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
   }
 }

@@ -85,4 +85,31 @@ describe.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
       }
     });
   });
+
+  describe('updateTopic', () => {
+    it('should round-trip a topic subscription change', async () => {
+      // Find a non-mandatory topic with at least one mode we can toggle
+      const topic = firstPublisher.topics.find((t) => t.isMandatory === false && (t.modes?.length ?? 0) > 0);
+      if (!topic) {
+        throw new Error('No non-mandatory topics with toggleable modes — cannot run updateTopic round-trip.');
+      }
+      const mode = topic.modes![0];
+      const originalState = mode.isSubscribed;
+
+      // Flip the state
+      const flip = await subscriptions.updateTopic(tenantId, [
+        { topicId: topic.id, isSubscribed: !originalState, notificationMode: mode.name },
+      ]);
+      expect(flip.success).toBe(true);
+
+      // Restore — leave the tenant in its original state
+      const restore = await subscriptions.updateTopic(tenantId, [
+        { topicId: topic.id, isSubscribed: originalState, notificationMode: mode.name },
+      ]);
+      expect(restore.success).toBe(true);
+    });
+  });
+
+  // Note: no updateCategory integration test — needs richer tenant fixtures (multi-topic
+  // category coverage). Covered by unit tests for SDK shape.
 });
