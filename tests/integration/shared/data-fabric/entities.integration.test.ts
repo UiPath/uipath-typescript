@@ -241,10 +241,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     // includeFolderEntities switches to the v2 endpoint, which returns tenant-level and
     // folder-level entities together — a superset of the default tenant-only result.
-    // skip: the v2 endpoint requires the OR.Users OAuth scope, which the standard
-    // integration PAT does not carry. Convert to `it()` locally when running with
-    // a PAT/OAuth token that includes OR.Users.
-    it.skip('should return tenant and folder entities together when includeFolderEntities is true', async () => {
+    // Requires the OR.Users OAuth scope on the integration token.
+    it('should return tenant and folder entities together when includeFolderEntities is true', async () => {
       const { entities } = getServices();
 
       const [tenantEntities, allEntities] = await Promise.all([
