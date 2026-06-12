@@ -60,7 +60,7 @@ describe('Conversation Models', () => {
       getById: vi.fn(),
       createFeedback: vi.fn(),
       end: vi.fn(),
-    } as any;
+    };
   });
 
   afterEach(() => {

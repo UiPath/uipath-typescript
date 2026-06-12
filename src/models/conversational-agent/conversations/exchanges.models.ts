@@ -242,7 +242,7 @@ export interface ConversationExchangeServiceModel {
    * Ends an exchange in this conversation
    *
    * @param exchangeId - The exchange to end
-   * @returns Promise resolving to the ended exchange
+   * @returns Promise resolving to {@link ExchangeEndResponse}
    *
    * @example
    * ```typescript
