@@ -208,7 +208,7 @@ describe('SubscriptionService Unit Tests', () => {
     });
 
     it('should propagate errors', async () => {
-      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID));
 
       await expect(
         subscriptionService.updateCategory(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
@@ -219,7 +219,7 @@ describe('SubscriptionService Unit Tests', () => {
             notificationMode: NotificationMode.InApp,
           },
         ])
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID);
     });
   });
 });
