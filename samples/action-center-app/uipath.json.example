@@ -3,6 +3,6 @@
   "scope": "OR.Tasks",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
-  "baseUrl": "https://alpha.api.uipath.com",
+  "baseUrl": "https://api.uipath.com",
   "redirectUri": "http://localhost:5173"
 }

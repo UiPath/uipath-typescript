@@ -1,7 +1,39 @@
 import { useState } from 'react'
+import { Inbox, Plus, RefreshCw, User, Users } from 'lucide-react'
 import { Tasks, TaskStatus, TaskPriority } from '@uipath/uipath-typescript/tasks'
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@uipath/apollo-wind/components/ui/dialog'
+import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
+import { EmptyState } from '@uipath/apollo-wind/components/ui/empty-state'
+import { Input } from '@uipath/apollo-wind/components/ui/input'
+import { Label } from '@uipath/apollo-wind/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@uipath/apollo-wind/components/ui/select'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@uipath/apollo-wind/components/ui/table'
+import { Tabs, TabsList, TabsTrigger } from '@uipath/apollo-wind/components/ui/tabs'
 import { useAuth } from '../hooks/useAuth'
 import { useTasks } from '../hooks/useTasks'
 import {
@@ -12,12 +44,6 @@ import {
   taskTypeLabel,
 } from '../taskUtils'
 import { TaskDetail } from './TaskDetail'
-import { Modal } from './Modal'
-
-const BTN_PRIMARY =
-  'rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
-const BTN_OUTLINE =
-  'rounded-md border px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
 
 const STATUS_OPTIONS: Array<TaskStatus | 'all'> = [
   'all',
@@ -64,100 +90,145 @@ export function TaskList({ folderId }: Props) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Tabs — map to getAll({ asTaskAdmin }) */}
-      <div className="flex items-center gap-1 border-b px-4 pt-2 sm:px-6">
-        <TabButton
-          active={!asTaskAdmin}
-          onClick={() => setAsTaskAdmin(false)}
-          title="Tasks in folders where you have view/edit access"
+      <div className="border-b px-4 pt-2 sm:px-6">
+        <Tabs
+          value={asTaskAdmin ? 'manage' : 'my'}
+          onValueChange={(v) => setAsTaskAdmin(v === 'manage')}
         >
-          My Tasks
-        </TabButton>
-        <TabButton
-          active={asTaskAdmin}
-          onClick={() => setAsTaskAdmin(true)}
-          title="Tasks across folders where you can assign them (admin) — enables group assignment"
-        >
-          Manage Tasks
-        </TabButton>
+          <TabsList>
+            <TabsTrigger
+              value="my"
+              title="Tasks in folders where you have view/edit access"
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              My Tasks
+              {!asTaskAdmin && totalCount > 0 && (
+                <Badge variant="secondary" className="ml-1 tabular-nums">
+                  {totalCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="manage"
+              title="Tasks across folders where you can assign them (admin) — enables group assignment"
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Manage Tasks
+              {asTaskAdmin && totalCount > 0 && (
+                <Badge variant="secondary" className="ml-1 tabular-nums">
+                  {totalCount}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 border-b px-4 py-3 sm:px-6">
-        <FilterSelect label="Status" value={status} onChange={(v) => setStatus(v as TaskStatus | 'all')} options={STATUS_OPTIONS} />
-        <FilterSelect label="Priority" value={priority} onChange={(v) => setPriority(v as TaskPriority | 'all')} options={PRIORITY_OPTIONS} />
+      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-6">
+        <FilterSelect
+          label="Status"
+          value={status}
+          onChange={(v) => setStatus(v as TaskStatus | 'all')}
+          options={STATUS_OPTIONS}
+        />
+        <FilterSelect
+          label="Priority"
+          value={priority}
+          onChange={(v) => setPriority(v as TaskPriority | 'all')}
+          options={PRIORITY_OPTIONS}
+        />
         <div className="ml-auto flex items-center gap-2">
-          <button className={BTN_OUTLINE} onClick={refresh} disabled={loading}>
+          <Button variant="outline" onClick={refresh} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
-          <button className={BTN_PRIMARY} onClick={() => setCreating(true)}>
+          </Button>
+          <Button onClick={() => setCreating(true)}>
+            <Plus className="h-4 w-4" />
             Create task
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Table */}
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-6">
         {error ? (
-          <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : loading && tasks.length === 0 ? (
-          <p className="py-10 text-center text-sm text-gray-500">Loading tasks…</p>
+          <TaskTableSkeleton />
         ) : tasks.length === 0 ? (
-          <p className="py-10 text-center text-sm text-gray-500">
-            No tasks match the current filters
-            {folderId == null ? ' across your folders.' : ` in folder ${folderId}.`}
-          </p>
+          <EmptyState
+            icon={<Inbox className="h-8 w-8 text-muted-foreground" />}
+            title="No tasks"
+            description={`No tasks match the current filters${
+              folderId == null ? ' across your folders.' : ` in folder ${folderId}.`
+            }`}
+          />
         ) : (
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full table-fixed text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                <tr className="border-b">
-                  <th className="w-[36%] px-3 py-2 font-medium">Title</th>
-                  <th className="w-[10%] px-3 py-2 font-medium">Type</th>
-                  <th className="w-[12%] px-3 py-2 font-medium">Status</th>
-                  <th className="w-[10%] px-3 py-2 font-medium">Priority</th>
-                  <th className="w-[14%] px-3 py-2 font-medium">Assignee</th>
-                  <th className="w-[18%] px-3 py-2 font-medium">Created</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[36%]">Title</TableHead>
+                  <TableHead className="w-[10%]">Type</TableHead>
+                  <TableHead className="w-[12%]">Status</TableHead>
+                  <TableHead className="w-[10%]">Priority</TableHead>
+                  <TableHead className="w-[14%]">Assignee</TableHead>
+                  <TableHead className="w-[18%]">Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {tasks.map((task) => {
                   const sla = slaBadge(task.taskSlaDetail?.status)
+                  const sb = statusBadge(task.status)
+                  const pb = priorityBadge(task.priority)
                   return (
-                    <tr
+                    <TableRow
                       key={task.id}
                       onClick={() => setSelected(task)}
-                      className="cursor-pointer border-b last:border-b-0 hover:bg-gray-50"
+                      className="cursor-pointer"
                     >
-                      <td className="max-w-0 px-3 py-2">
+                      <TableCell className="max-w-0">
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="truncate font-medium" title={task.title}>
                             {task.title}
                           </span>
-                          {sla && <span className={`shrink-0 ${sla.className}`}>{sla.label}</span>}
+                          {sla && (
+                            <Badge variant={sla.variant} className="shrink-0">
+                              {sla.label}
+                            </Badge>
+                          )}
                         </div>
-                      </td>
-                      <td className="truncate px-3 py-2 text-gray-500">{taskTypeLabel(task.type)}</td>
-                      <td className="px-3 py-2">
-                        <span className={statusBadge(task.status).className}>
-                          {statusBadge(task.status).label}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className={priorityBadge(task.priority).className}>
-                          {priorityBadge(task.priority).label}
-                        </span>
-                      </td>
-                      <td className="truncate px-3 py-2" title={task.assignedToUser?.displayName ?? ''}>
-                        {task.assignedToUser?.displayName ?? <span className="text-gray-400">—</span>}
-                      </td>
-                      <td className="truncate px-3 py-2 text-gray-500">
+                      </TableCell>
+                      <TableCell className="truncate text-muted-foreground">
+                        {taskTypeLabel(task.type)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={sb.variant}>{sb.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={pb.variant}>{pb.label}</Badge>
+                      </TableCell>
+                      <TableCell
+                        className="truncate"
+                        title={task.assignedToUser?.displayName ?? ''}
+                      >
+                        {task.assignedToUser?.displayName ?? (
+                          <span className="text-muted-foreground/60">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="truncate text-muted-foreground">
                         {formatDateTime(task.createdTime)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -165,19 +236,29 @@ export function TaskList({ folderId }: Props) {
       {/* Pagination */}
       {totalCount > 0 && (
         <div className="flex items-center justify-between gap-4 border-t px-4 py-3 text-sm sm:px-6">
-          <span className="text-gray-500">
+          <span className="text-muted-foreground">
             Showing {rangeStart}–{rangeEnd} of {totalCount}
           </span>
           <div className="flex items-center gap-2">
-            <button className={BTN_OUTLINE} onClick={() => setPage(page - 1)} disabled={page <= 1 || loading}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page - 1)}
+              disabled={page <= 1 || loading}
+            >
               Prev
-            </button>
-            <span className="tabular-nums text-gray-500">
+            </Button>
+            <span className="tabular-nums text-muted-foreground">
               Page {page} of {totalPages}
             </span>
-            <button className={BTN_OUTLINE} onClick={() => setPage(page + 1)} disabled={page >= totalPages || loading}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages || loading}
+            >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -202,30 +283,51 @@ export function TaskList({ folderId }: Props) {
   )
 }
 
-function TabButton({
-  active,
-  onClick,
-  title,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  title: string
-  children: React.ReactNode
-}) {
+/**
+ * Skeleton placeholder for the task table. Mirrors the real table's column
+ * layout so the page doesn't jump on load — the industry-standard pattern
+ * for data-grids (Linear, Notion, Vercel, Stripe all do this).
+ */
+function TaskTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${
-        active
-          ? 'border-blue-600 text-blue-700'
-          : 'border-transparent text-gray-500 hover:text-gray-800'
-      }`}
-    >
-      {children}
-    </button>
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[36%]">Title</TableHead>
+            <TableHead className="w-[10%]">Type</TableHead>
+            <TableHead className="w-[12%]">Status</TableHead>
+            <TableHead className="w-[10%]">Priority</TableHead>
+            <TableHead className="w-[14%]">Assignee</TableHead>
+            <TableHead className="w-[18%]">Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell>
+                <Skeleton className="h-4 w-3/4" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-32" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -241,20 +343,19 @@ function FilterSelect({
   options: readonly string[]
 }) {
   return (
-    <label className="flex items-center gap-1.5 text-sm text-gray-600">
-      {label}
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border px-2 py-1 text-sm"
-      >
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="h-9 w-auto gap-2 px-3" aria-label={label}>
+        <span className="text-muted-foreground">{label}:</span>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
         {options.map((o) => (
-          <option key={o} value={o}>
+          <SelectItem key={o} value={o}>
             {o === 'all' ? 'All' : o}
-          </option>
+          </SelectItem>
         ))}
-      </select>
-    </label>
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -300,60 +401,71 @@ function CreateForm({
   }
 
   return (
-    <Modal title="Create task" onClose={onClose}>
-      <div className="space-y-3 text-sm">
-        <p className="text-xs text-gray-500">
-          Creates an external task. Form and app tasks are created by workflows, not the API.
-        </p>
-        <label className="block">
-          <span className="text-gray-500">Title</span>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Review document"
-            className="mt-1 w-full rounded-md border px-2 py-2"
-          />
-        </label>
-        <label className="block">
-          <span className="text-gray-500">Folder ID</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={folderDraft}
-            onChange={(e) => setFolderDraft(e.target.value)}
-            placeholder="e.g. 1234567"
-            className="mt-1 w-full rounded-md border px-2 py-2"
-          />
-        </label>
-        <label className="block">
-          <span className="text-gray-500">Priority</span>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            className="mt-1 w-full rounded-md border px-2 py-2"
-          >
-            {[TaskPriority.Low, TaskPriority.Medium, TaskPriority.High, TaskPriority.Critical].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </label>
-        {submitError && <p className="text-red-700">{submitError}</p>}
-        <div className="flex justify-end gap-2 pt-2">
-          <button className={BTN_OUTLINE} onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button
-            className={BTN_PRIMARY}
-            onClick={submit}
-            disabled={!title.trim() || !folderValid || busy}
-          >
-            {busy ? 'Creating…' : 'Create task'}
-          </button>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create task</DialogTitle>
+          <DialogDescription>
+            Creates an external task. Form and app tasks are created by workflows, not the API.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="create-title">Title</Label>
+            <Input
+              id="create-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Review document"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-folder">Folder ID</Label>
+            <Input
+              id="create-folder"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              value={folderDraft}
+              onChange={(e) => setFolderDraft(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="e.g. 1234567"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="create-priority">Priority</Label>
+            <Select
+              value={priority}
+              onValueChange={(v) => setPriority(v as TaskPriority)}
+            >
+              <SelectTrigger id="create-priority">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[TaskPriority.Low, TaskPriority.Medium, TaskPriority.High, TaskPriority.Critical].map(
+                  (p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          {submitError && <p className="text-sm text-destructive">{submitError}</p>}
         </div>
-      </div>
-    </Modal>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={!title.trim() || !folderValid || busy}>
+            {busy ? 'Creating…' : 'Create task'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

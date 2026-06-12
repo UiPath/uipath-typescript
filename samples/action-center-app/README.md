@@ -2,11 +2,12 @@
 
 A minimal React + TypeScript [UiPath Coded Web App](https://docs.uipath.com/)
 demonstrating the `@uipath/uipath-typescript` SDK's **Tasks (Action Center)**
-service. It's an operational dashboard for triaging human tasks in a folder:
-list and filter them, view detail, assign / reassign / unassign, complete
-(approve / reject), and create external tasks.
+service. It's an operational dashboard for triaging human tasks: list and
+filter them across your folders, view detail, assign / reassign / unassign,
+complete (approve / reject), and create external tasks.
 
-Built with plain Tailwind (no component library) to keep the file count small.
+Built on UiPath's [Apollo Vertex](https://apollo-vertex.vercel.app/) design
+system via [`@uipath/apollo-wind`](https://www.npmjs.com/package/@uipath/apollo-wind).
 
 ## What it demonstrates
 
@@ -14,7 +15,7 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 
 | SDK call | Where |
 |----------|-------|
-| `Tasks.getAll({ folderId, pageSize, jumpToPage, filter, orderby })` | `hooks/useTasks.ts` (`useTasks`) — paginated, filterable list |
+| `Tasks.getAll({ folderId, pageSize, jumpToPage, filter, orderby, asTaskAdmin })` | `hooks/useTasks.ts` (`useTasks`) — paginated, filterable list |
 | `Tasks.getById(id, {}, folderId)` | `hooks/useTasks.ts` (`useTask`) — full detail |
 | `Tasks.getUsers(folderId)` | `hooks/useTasks.ts` (`useTaskUsers`) — assignee picker (cursor-looped) |
 | `Tasks.create({ title, priority }, folderId)` | `components/TaskList.tsx` (create form) |
@@ -24,8 +25,8 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 By default the app lists tasks across **all folders** you can view/edit. The
 header's **Folder ID** field is an optional filter — leave it blank for all
 folders, or set it to scope the list (persisted to `localStorage`). Per-task
-actions (detail, assign, complete) use each task's own folder; creating a task
-asks for a target folder.
+actions (detail, assign, complete) use each task's own folder, propagated from
+the row; creating a task asks for a target folder.
 
 ## Files
 
@@ -35,14 +36,15 @@ src/
   taskUtils.ts        — badges, filter builder, complete-options builder, formatting
   hooks/useAuth.tsx   — OAuth/PKCE via the SDK (Coded Apps template)
   hooks/useTasks.ts   — useTasks + useTask + useTaskUsers
-  components/Modal.tsx, TaskList.tsx, TaskDetail.tsx
+  components/Theme.tsx, TaskList.tsx, TaskDetail.tsx
 ```
 
 ## Prerequisites
 
 - Node.js 20+
 - A UiPath OAuth External Application (client ID) with the **`OR.Tasks`** scope
-- An Orchestrator folder ID that contains Action Center tasks
+- An Orchestrator folder ID that contains Action Center tasks (required only
+  when creating tasks)
 
 ## Setup
 

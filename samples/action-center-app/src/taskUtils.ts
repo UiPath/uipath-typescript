@@ -1,63 +1,57 @@
-import {
-  TaskStatus,
-  TaskPriority,
-  TaskType,
-  TaskSlaStatus,
-} from '@uipath/uipath-typescript/tasks'
+import { TaskStatus, TaskPriority, TaskType, TaskSlaStatus } from '@uipath/uipath-typescript/tasks'
 import type { TaskCompleteOptions } from '@uipath/uipath-typescript/tasks'
+import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
 
 /**
  * Presentation + mapping helpers for Action Center tasks, kept out of the
- * components so the logic (badge colours, OData filter assembly, the
+ * components so the logic (badge variants, OData filter assembly, the
  * `complete()` discriminated-union builder) stays in one testable place.
  */
 
 export interface Badge {
   label: string
-  /** Tailwind classes for a small pill. */
-  className: string
+  /** Apollo-wind Badge variant. */
+  variant: NonNullable<BadgeProps['variant']>
 }
-
-const PILL = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium'
 
 export function statusBadge(status: TaskStatus): Badge {
   switch (status) {
     case TaskStatus.Completed:
-      return { label: 'Completed', className: `${PILL} bg-green-100 text-green-700` }
+      return { label: 'Completed', variant: 'success' }
     case TaskStatus.Pending:
-      return { label: 'Pending', className: `${PILL} bg-blue-100 text-blue-700` }
+      return { label: 'Pending', variant: 'info' }
     case TaskStatus.Unassigned:
-      return { label: 'Unassigned', className: `${PILL} bg-gray-100 text-gray-600` }
+      return { label: 'Unassigned', variant: 'secondary' }
     default:
-      return { label: String(status), className: `${PILL} bg-gray-100 text-gray-600` }
+      return { label: String(status), variant: 'secondary' }
   }
 }
 
 export function priorityBadge(priority: TaskPriority): Badge {
   switch (priority) {
     case TaskPriority.Critical:
-      return { label: 'Critical', className: `${PILL} bg-red-100 text-red-700` }
+      return { label: 'Critical', variant: 'error' }
     case TaskPriority.High:
-      return { label: 'High', className: `${PILL} bg-amber-100 text-amber-700` }
+      return { label: 'High', variant: 'warning' }
     case TaskPriority.Medium:
-      return { label: 'Medium', className: `${PILL} bg-blue-100 text-blue-700` }
+      return { label: 'Medium', variant: 'info' }
     case TaskPriority.Low:
-      return { label: 'Low', className: `${PILL} bg-gray-100 text-gray-600` }
+      return { label: 'Low', variant: 'secondary' }
     default:
-      return { label: String(priority), className: `${PILL} bg-gray-100 text-gray-600` }
+      return { label: String(priority), variant: 'secondary' }
   }
 }
 
 export function slaBadge(status: TaskSlaStatus | undefined): Badge | null {
   switch (status) {
     case TaskSlaStatus.Overdue:
-      return { label: 'Overdue', className: `${PILL} bg-red-100 text-red-700` }
+      return { label: 'Overdue', variant: 'error' }
     case TaskSlaStatus.OverdueSoon:
-      return { label: 'Due soon', className: `${PILL} bg-amber-100 text-amber-700` }
+      return { label: 'Due soon', variant: 'warning' }
     case TaskSlaStatus.OverdueLater:
-      return { label: 'On track', className: `${PILL} bg-blue-100 text-blue-700` }
+      return { label: 'On track', variant: 'info' }
     case TaskSlaStatus.CompletedInTime:
-      return { label: 'In time', className: `${PILL} bg-green-100 text-green-700` }
+      return { label: 'In time', variant: 'success' }
     default:
       return null
   }
@@ -101,7 +95,8 @@ export interface TaskFilters {
 export function buildTaskFilter(filters: TaskFilters): string | undefined {
   const clauses: string[] = []
   if (filters.status && filters.status !== 'all') clauses.push(`Status eq '${filters.status}'`)
-  if (filters.priority && filters.priority !== 'all') clauses.push(`Priority eq '${filters.priority}'`)
+  if (filters.priority && filters.priority !== 'all')
+    clauses.push(`Priority eq '${filters.priority}'`)
   return clauses.length ? clauses.join(' and ') : undefined
 }
 
