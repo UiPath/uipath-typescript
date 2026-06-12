@@ -39,6 +39,7 @@ import {
   ExternalField,
   FieldDisplayType,
   QueryFilterOperator,
+  RawEntityGetResponse,
 } from "../../../../src/models/data-fabric/entities.types";
 import {
   EntityFieldTypeMap,
@@ -112,7 +113,7 @@ describe("EntityService Unit Tests", () => {
       // Verify the API call has correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        {},
+        { headers: {} },
       );
 
       // Verify entity has methods attached
@@ -123,6 +124,20 @@ describe("EntityService Unit Tests", () => {
       expect(typeof result.deleteRecords).toBe("function");
       expect(typeof result.deleteRecord).toBe("function");
       expect(typeof result.getAllRecords).toBe("function");
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      const mockResponse = createMockEntityResponse();
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      await entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
     });
 
     it("should get entity with external fields successfully and transform field metadata", async () => {
@@ -470,6 +485,23 @@ describe("EntityService Unit Tests", () => {
       expect(result.hasNextPage).toBe(true);
     });
 
+    it("should forward folderKey as X-UIPATH-FolderKey header but NOT pass it to PaginationHelpers (avoids $folderKey query param)", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID },
+        }),
+        // folderKey must be stripped — only pageSize survives
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+      );
+    });
+
     it("should handle expansion level option", async () => {
       // With expansionLevel, reference fields should be expanded to objects
       const mockRecords = createMockEntityRecords(3, {
@@ -541,7 +573,7 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
         ),
-        { params: {} },
+        { params: {}, headers: {} },
       );
     });
 
@@ -575,6 +607,7 @@ describe("EntityService Unit Tests", () => {
           params: expect.objectContaining({
             expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
           }),
+          headers: {},
         },
       );
     });
@@ -1147,7 +1180,25 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID
         ),
-        {}
+        { headers: {} }
+      );
+    });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.delete.mockResolvedValue(true);
+
+      await entityService.deleteRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } }
       );
     });
 
@@ -1185,7 +1236,28 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
-        { responseType: "blob" },
+        { responseType: "blob", headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      const mockBlob = new Blob(["test content"], { type: "application/pdf" });
+      mockApiClient.get.mockResolvedValue(mockBlob);
+
+      await entityService.downloadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { responseType: "blob", headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
@@ -1235,7 +1307,7 @@ describe("EntityService Unit Tests", () => {
             ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
           ),
           expect.any(FormData),
-          { params: {} },
+          { params: {}, headers: {} },
         );
       },
     );
@@ -1261,7 +1333,31 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
         expect.any(FormData),
-        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } },
+        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL }, headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.post.mockResolvedValue({ id: ENTITY_TEST_CONSTANTS.RECORD_ID });
+
+      const file = new Blob(["test"]);
+
+      await entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        expect.any(FormData),
+        { params: {}, headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
@@ -1298,7 +1394,27 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
-        {},
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
@@ -1345,6 +1461,28 @@ describe("EntityService Unit Tests", () => {
       );
       expect(result.items).toHaveLength(2);
       expect(result.totalCount).toBe(2);
+    });
+
+    it("should forward folderKey as X-UIPATH-FolderKey header but NOT include it in the POST body", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      const options = {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        filterGroup: {
+          logicalOperator: 0 as const,
+          queryFilters: [{ fieldName: "isActive", operator: QueryFilterOperator.Equals, value: "true" }],
+        },
+      };
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      const [config, downstreamOptions] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as { headers: Record<string, string> }).headers).toEqual({
+        "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID,
+      });
+      // folderKey must be stripped from the options passed downstream — otherwise it lands in the POST body
+      expect(downstreamOptions).not.toHaveProperty("folderKey");
+      expect(downstreamOptions).toHaveProperty("filterGroup");
     });
 
     it("should pass filter and sort options through to PaginationHelpers.getAll", async () => {
@@ -1544,7 +1682,7 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         expect.any(FormData),
-        {},
+        { headers: {} },
       );
     });
 
@@ -1567,7 +1705,7 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         expect.any(FormData),
-        {},
+        { headers: {} },
       );
     });
 
@@ -1590,7 +1728,7 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         expect.any(FormData),
-        {},
+        { headers: {} },
       );
     });
 
@@ -1651,7 +1789,7 @@ describe("EntityService Unit Tests", () => {
             isInsightsEnabled: false,
           }),
         }),
-        {},
+        { headers: {} },
       );
     });
 
@@ -1666,11 +1804,11 @@ describe("EntityService Unit Tests", () => {
           displayName: "my_new_entity",
           entityDefinition: expect.objectContaining({ name: "my_new_entity" }),
         }),
-        {},
+        { headers: {} },
       );
     });
 
-    it("should pass custom folderKey to the entity definition", async () => {
+    it("should pass custom folderKey to the entity definition and the X-UIPATH-FolderKey header", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       await entityService.create("my_entity", [], {
@@ -1684,7 +1822,7 @@ describe("EntityService Unit Tests", () => {
             folderId: ENTITY_TEST_CONSTANTS.FIELD_ID,
           }),
         }),
-        {},
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
@@ -1702,7 +1840,7 @@ describe("EntityService Unit Tests", () => {
             isInsightsEnabled: true,
           }),
         }),
-        {},
+        { headers: {} },
       );
     });
 
@@ -1722,7 +1860,7 @@ describe("EntityService Unit Tests", () => {
             externalFields,
           }),
         }),
-        {},
+        { headers: {} },
       );
     });
 
@@ -2043,7 +2181,20 @@ describe("EntityService Unit Tests", () => {
 
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        {},
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      });
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
@@ -2091,7 +2242,7 @@ describe("EntityService Unit Tests", () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        {},
+        { headers: {} },
       );
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
@@ -2108,7 +2259,7 @@ describe("EntityService Unit Tests", () => {
             ]),
           }),
         }),
-        {},
+        { headers: {} },
       );
     });
 
@@ -2173,7 +2324,7 @@ describe("EntityService Unit Tests", () => {
           displayName: mockRawEntity.displayName,
           description: mockRawEntity.description,
         }),
-        {},
+        { headers: {} },
       );
     });
 
@@ -2785,7 +2936,7 @@ describe("EntityService Unit Tests", () => {
           description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
           isRbacEnabled: true,
         },
-        {},
+        { headers: {} },
       );
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
@@ -2802,7 +2953,47 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
-        {},
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header on both schema GET/POST and metadata PATCH", async () => {
+      const mockRawEntity: RawEntityGetResponse = {
+        name: "my_entity",
+        displayName: "My Entity",
+        description: "",
+        isRbacEnabled: false,
+        fields: [],
+        id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        entityType: 0,
+        externalFields: [],
+        createdBy: "u",
+        createdTime: "t",
+      } as RawEntityGetResponse;
+      mockApiClient.get.mockResolvedValue(mockRawEntity);
+      mockApiClient.post.mockResolvedValue(undefined);
+      mockApiClient.patch.mockResolvedValue(undefined);
+
+      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        addFields: [{ fieldName: "newcol", type: EntityFieldDataType.STRING }],
+        displayName: "renamed",
+      });
+
+      const folderHeaders = { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } };
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        folderHeaders,
+      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
+        expect.any(Object),
+        folderHeaders,
+      );
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { displayName: "renamed" },
+        folderHeaders,
       );
     });
 
@@ -2818,7 +3009,7 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { isRbacEnabled: false },
-        {},
+        { headers: {} },
       );
     });
 
@@ -2841,14 +3032,14 @@ describe("EntityService Unit Tests", () => {
             ]),
           }),
         }),
-        {},
+        { headers: {} },
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: "New Display Name" },
-        {},
+        { headers: {} },
       );
     });
 

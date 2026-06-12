@@ -17,6 +17,7 @@ export interface IntegrationConfig {
   maestroTestProcessKey?: string;
   orchestratorTestProcessKey?: string;
   dataFabricTestEntityId?: string;
+  dataFabricTestFolderEntityId?: string;
   dataFabricTestChoiceSetId?: string;
   dataFabricTestAttachmentField?: string;
   orchestratorAttachmentId?: string;
@@ -69,6 +70,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
     orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
     dataFabricTestEntityId: typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
+    dataFabricTestFolderEntityId: typeof rawConfig.dataFabricTestFolderEntityId === 'string' ? rawConfig.dataFabricTestFolderEntityId : undefined,
     dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
@@ -105,6 +107,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,
     orchestratorTestProcessKey: process.env.ORCHESTRATOR_TEST_PROCESS_KEY || undefined,
     dataFabricTestEntityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || undefined,
+    dataFabricTestFolderEntityId: process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || undefined,
     dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,

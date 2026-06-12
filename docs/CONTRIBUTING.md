@@ -41,9 +41,10 @@ npm run build
 ## Pull Request Process
 
 1. **Ensure your code builds** without warnings
-2. **Update documentation** as needed
-3. **Write clear commit messages**
-4. **Submit your pull request** with a detailed description
+2. **Add integration tests** following [these instructions](integration-testing.md)
+3. **Update documentation** as needed
+4. **Write clear commit messages**
+5. **Submit your pull request** with a detailed description
 
 ## Reporting Issues
 

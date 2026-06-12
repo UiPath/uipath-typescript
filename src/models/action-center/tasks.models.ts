@@ -157,6 +157,26 @@ export interface TaskServiceModel {
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
    * ```
+   *
+   * @example Group assignment
+   * ```typescript
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   *
+   * // Assign to a directory group by userId + criteria — Action Center
+   * // distributes the task across the group's members based on the criteria
+   * const result = await tasks.assign({
+   *   taskId: <taskId>,
+   *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result2 = await tasks.assign({
+   *   taskId: <taskId>,
+   *   userNameOrEmail: "<groupName>",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   * ```
    */
   assign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
   
@@ -191,6 +211,25 @@ export interface TaskServiceModel {
    *   { taskId: <taskId1>, userId: <userId> },
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
+   * ```
+   *
+   * @example Group reassignment
+   * ```typescript
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   *
+   * // Reassign to a directory group by userId + criteria
+   * const result = await tasks.reassign({
+   *   taskId: <taskId>,
+   *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result2 = await tasks.reassign({
+   *   taskId: <taskId>,
+   *   userNameOrEmail: "<groupName>",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   reassign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
@@ -324,9 +363,10 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
     async assign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
+      const criteria = options.assignmentCriteria !== undefined ? { assignmentCriteria: options.assignmentCriteria } : {};
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+        ? { taskId: taskData.id, userId: options.userId, ...criteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, ...criteria };
 
       return service.assign(assignmentOptions);
     },
@@ -334,9 +374,10 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
     async reassign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
+      const criteria = options.assignmentCriteria !== undefined ? { assignmentCriteria: options.assignmentCriteria } : {};
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+        ? { taskId: taskData.id, userId: options.userId, ...criteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, ...criteria };
 
       return service.reassign(assignmentOptions);
     },

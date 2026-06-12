@@ -8,6 +8,8 @@ import { AuthenticationError, HttpStatus } from '../errors';
 import { ActionCenterTokenManager } from './action-center-token-manager';
 import { EmbeddedTokenManager } from './embedded-token-manager';
 import { isValidHostOrigin } from './host-token-request';
+import { telemetryClient } from '../telemetry';
+import { extractUserIdFromToken } from '../../utils/encoding';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -269,6 +271,7 @@ export class TokenManager {
    */
   private _updateExecutionContext(tokenInfo: TokenInfo): void {
     this.executionContext.set('tokenInfo', tokenInfo);
+    telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
   }
 
   /**

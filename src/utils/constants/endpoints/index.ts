@@ -24,7 +24,14 @@ export * from './conversational-agent';
 // Agent Feedback endpoints
 export * from './feedback';
 
+// Agent Memory endpoints
+export * from './memory';
+
 // Traces endpoints
 export * from './traces';
+
+// Agent endpoints
+export * from './agents';
+
 // Governance endpoints
 export * from './governance';

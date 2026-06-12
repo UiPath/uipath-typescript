@@ -7,8 +7,10 @@ import {
   BucketGetByNameOptions,
   BucketGetUriResponse,
   BucketGetReadUriOptions,
+  BucketGetReadUriRequestOptions,
   BucketGetFileMetaDataWithPaginationOptions,
   BucketUploadFileOptions,
+  BucketUploadFileRequestOptions,
   BucketUploadResponse,
   BlobItem,
   BucketGetUriOptions,
@@ -186,45 +188,80 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   /**
-   * Gets metadata for files in a bucket with optional filtering and pagination
-   * 
+   * Gets metadata for files in a bucket with optional filtering and pagination.
+   *
+   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
+   * inside the options.
+   *
    * The method returns either:
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param bucketId - The ID of the bucket to get file metadata from
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Optional parameters for filtering, pagination and access URL generation
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination
    * @returns Promise resolving to the list of file metadata in the bucket or paginated result
-   * 
+   * {@link BlobItem}
+   *
    * @example
    * ```typescript
    * import { Buckets } from '@uipath/uipath-typescript/buckets';
    *
    * const buckets = new Buckets(sdk);
    *
-   * // Get metadata for all files in a bucket
-   * const fileMetadata = await buckets.getFileMetaData(123, 456);
+   * // By folder ID
+   * const fileMetadata = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId> });
    *
-   * // Get file metadata with a specific prefix
-   * const fileMetadata = await buckets.getFileMetaData(123, 456, {
-   *   prefix: '/folder1'
-   * });
+   * // By folder key (GUID)
+   * await buckets.getFileMetaData(<bucketId>, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await buckets.getFileMetaData(<bucketId>, { folderPath: 'Shared/Finance' });
+   *
+   * // Filter by prefix
+   * await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, prefix: '/folder1' });
    *
    * // First page with pagination
-   * const page1 = await buckets.getFileMetaData(123, 456, { pageSize: 10 });
+   * const page1 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
+   *   const page2 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
    * }
    * ```
    */
+  getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  >;
+  /**
+   * Gets metadata for files in a bucket — positional `folderId` form.
+   *
+   * @deprecated Use the options-object form: `getFileMetaData(bucketId, { folderId })`. See {@link BucketGetFileMetaDataWithPaginationOptions} for the supported options.
+   *
+   * @param bucketId - The ID of the bucket to get file metadata from
+   * @param folderId - Required folder ID (numeric)
+   * @param options - Optional parameters for filtering and pagination
+   * @returns Promise resolving to the list of file metadata in the bucket or paginated result
+   * {@link BlobItem}
+   */
+  getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number,
+    folderId: number,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  >;
   @track('Buckets.GetFileMetaData')
   async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketId: number, 
-    folderId: number, 
-    options?: T
+    bucketId: number,
+    optionsOrFolderId?: T | number,
+    legacyOptions?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<BlobItem>
@@ -233,13 +270,33 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     if (!bucketId) {
       throw new ValidationError({ message: 'bucketId is required for getFileMetaData' });
     }
-    
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for getFileMetaData' });
+
+    // Normalize the two overload forms into a single internal shape.
+    let folderId: number | undefined;
+    let folderKey: string | undefined;
+    let folderPath: string | undefined;
+    let restOptions: Omit<T, 'folderId' | 'folderKey' | 'folderPath'>;
+
+    if (typeof optionsOrFolderId === 'number') {
+      // Deprecated positional form: getFileMetaData(bucketId, folderId, options?)
+      folderId = optionsOrFolderId;
+      restOptions = (legacyOptions ?? {}) as Omit<T, 'folderId' | 'folderKey' | 'folderPath'>;
+    } else {
+      // Preferred form: getFileMetaData(bucketId, options?)
+      const opts = optionsOrFolderId ?? ({} as T);
+      ({ folderId, folderKey, folderPath, ...restOptions } = opts);
     }
 
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Buckets.getFileMetaData',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
     // Transformation function for blob items
-    const transformBlobItem = (item: any) => 
+    const transformBlobItem = (item: any) =>
       transformData(item, BucketMap) as BlobItem;
 
     return PaginationHelpers.getAll({
@@ -251,73 +308,120 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         itemsField: BUCKET_PAGINATION.ITEMS_FIELD,
         continuationTokenField: BUCKET_PAGINATION.CONTINUATION_TOKEN_FIELD,
         paginationParams: {
-          pageSizeParam: BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM,       
-          tokenParam: BUCKET_TOKEN_PARAMS.TOKEN_PARAM               
+          pageSizeParam: BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM,
+          tokenParam: BUCKET_TOKEN_PARAMS.TOKEN_PARAM
         }
       },
-      excludeFromPrefix: ['prefix'] // Bucket-specific param, not OData
-    }, { ...options, folderId }) as any;
+      excludeFromPrefix: ['prefix'], // Bucket-specific param, not OData
+      headers,
+    }, restOptions) as any;
   }
 
   /**
-   * Uploads a file to a bucket
-   * 
-   * @param options - Options for file upload including bucket ID, folder ID, path, content, and optional parameters
+   * Uploads a file to a bucket.
+   *
+   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
+   * in the options.
+   *
+   * @param bucketId - The ID of the bucket to upload to
+   * @param path - Path where the file should be stored in the bucket
+   * @param content - File content to upload
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a response with success status and HTTP status code
-   * 
+   * {@link BucketUploadResponse}
+   *
    * @example
    * ```typescript
    * import { Buckets } from '@uipath/uipath-typescript/buckets';
    *
    * const buckets = new Buckets(sdk);
    *
-   * // Upload a file from browser
+   * // By folder ID
    * const file = new File(['file content'], 'example.txt');
-   * const result = await buckets.uploadFile({
-   *   bucketId: 123,
-   *   folderId: 456,
-   *   path: '/folder/example.txt',
-   *   content: file
-   * });
+   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderId: <folderId> });
+   *
+   * // By folder key (GUID)
+   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
    *
    * // In Node env with Buffer
    * const buffer = Buffer.from('file content');
-   * const result = await buckets.uploadFile({
-   *   bucketId: 123,
-   *   folderId: 456,
-   *   path: '/folder/example.txt',
-   *   content: buffer
-   * });
+   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', buffer, { folderId: <folderId> });
    * ```
    */
+  uploadFile(
+    bucketId: number,
+    path: string,
+    content: Blob | Uint8Array<ArrayBuffer> | File,
+    options?: BucketUploadFileRequestOptions,
+  ): Promise<BucketUploadResponse>;
+  /**
+   * Uploads a file to a bucket — options-only form.
+   *
+   * @deprecated Use the positional form: `uploadFile(bucketId, path, content, options?)`. See {@link BucketUploadFileRequestOptions} for the supported options.
+   *
+   * @param options - Options for file upload including bucket ID, folder scoping (`folderId` / `folderKey` / `folderPath`), path, and content
+   * @returns Promise resolving to a response with success status and HTTP status code
+   * {@link BucketUploadResponse}
+   */
+  uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
   @track('Buckets.UploadFile')
-  async uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse> {
-    const { bucketId, folderId, path, content } = options;
-    
+  async uploadFile(
+    bucketIdOrOptions: number | BucketUploadFileOptions,
+    path?: string,
+    content?: Blob | Uint8Array<ArrayBuffer> | File,
+    options?: BucketUploadFileRequestOptions,
+  ): Promise<BucketUploadResponse> {
+    // Normalize the two overload forms into a single internal shape.
+    let bucketId: number;
+    let resolvedPath: string;
+    let resolvedContent: Blob | Uint8Array<ArrayBuffer> | File;
+    let folderId: number | undefined;
+    let folderKey: string | undefined;
+    let folderPath: string | undefined;
+
+    if (bucketIdOrOptions !== null && typeof bucketIdOrOptions === 'object') {
+      // Deprecated options-only form: uploadFile({ bucketId, path, content, ... })
+      ({ bucketId, path: resolvedPath, content: resolvedContent, folderId, folderKey, folderPath } = bucketIdOrOptions);
+    } else {
+      // Preferred positional form: uploadFile(bucketId, path, content, options?)
+      bucketId = bucketIdOrOptions;
+      resolvedPath = path as string;
+      resolvedContent = content as Blob | Uint8Array<ArrayBuffer> | File;
+      const opts = options ?? ({} as BucketUploadFileRequestOptions);
+      ({ folderId, folderKey, folderPath } = opts);
+    }
+
     if (!bucketId) {
       throw new ValidationError({ message: 'bucketId is required for uploadFile' });
     }
-    
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for uploadFile' });
-    }
 
-    if (!path) {
+    if (!resolvedPath) {
       throw new ValidationError({ message: 'path is required for uploadFile' });
     }
 
-    if (!content) {
+    if (!resolvedContent) {
       throw new ValidationError({ message: 'content is required for uploadFile' });
     }
 
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Buckets.uploadFile',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
     const uriResponse = await this._getWriteUri({
       bucketId,
-      folderId,
-      path,
+      path: resolvedPath,
+      headers,
     });
 
     // Upload file to the provided URI
-    const response = await this._uploadToUri(uriResponse, content);
+    const response = await this._uploadToUri(uriResponse, resolvedContent);
 
     return {
       success: response.status >= 200 && response.status < 300,
@@ -326,39 +430,99 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   /**
-   * Gets a direct download URL for a file in the bucket
-   * 
-   * @param options - Contains bucketId, folderId, file path and optional expiry time
+   * Gets a direct download URL for a file in the bucket.
+   *
+   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
+   * inside the options.
+   *
+   * @param bucketId - The ID of the bucket
+   * @param path - The full path to the file
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes`
    * @returns Promise resolving to blob file access information
-   * 
+   * {@link BucketGetUriResponse}
+   *
    * @example
    * ```typescript
    * import { Buckets } from '@uipath/uipath-typescript/buckets';
    *
    * const buckets = new Buckets(sdk);
    *
-   * // Get download URL for a file
-   * const fileAccess = await buckets.getReadUri({
-   *   bucketId: 123,
-   *   folderId: 456,
-   *   path: '/folder/file.pdf'
-   * });
+   * // By folder ID
+   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+   *
+   * // By folder key (GUID)
+   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
    * ```
    */
+  getReadUri(
+    bucketId: number,
+    path: string,
+    options?: BucketGetReadUriRequestOptions,
+  ): Promise<BucketGetUriResponse>;
+  /**
+   * Gets a direct download URL for a file in the bucket — options-only form.
+   *
+   * @deprecated Use the positional form: `getReadUri(bucketId, path, options?)`. See {@link BucketGetReadUriRequestOptions} for the supported options.
+   *
+   * @param options - Contains bucketId, folder scoping (`folderId` / `folderKey` / `folderPath`), file path and optional expiry time
+   * @returns Promise resolving to blob file access information
+   * {@link BucketGetUriResponse}
+   */
+  getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse>;
   @track('Buckets.GetReadUri')
-  async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
-    const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
-    
+  async getReadUri(
+    bucketIdOrOptions: number | BucketGetReadUriOptions,
+    path?: string,
+    options?: BucketGetReadUriRequestOptions,
+  ): Promise<BucketGetUriResponse> {
+    // Normalize the two overload forms into a single internal shape.
+    let bucketId: number;
+    let resolvedPath: string;
+    let folderId: number | undefined;
+    let folderKey: string | undefined;
+    let folderPath: string | undefined;
+    let expiryInMinutes: number | undefined;
+    let restOptions: Record<string, unknown>;
+
+    if (bucketIdOrOptions !== null && typeof bucketIdOrOptions === 'object') {
+      // Deprecated options-only form: getReadUri({ bucketId, path, ... })
+      const { bucketId: bid, path: p, expiryInMinutes: e, folderId: fid, folderKey: fkey, folderPath: fpath, ...rest } = bucketIdOrOptions;
+      bucketId = bid;
+      resolvedPath = p;
+      expiryInMinutes = e;
+      folderId = fid;
+      folderKey = fkey;
+      folderPath = fpath;
+      restOptions = rest;
+    } else {
+      // Preferred positional form: getReadUri(bucketId, path, options?)
+      bucketId = bucketIdOrOptions;
+      resolvedPath = path as string;
+      const opts = options ?? ({} as BucketGetReadUriRequestOptions);
+      ({ expiryInMinutes, folderId, folderKey, folderPath, ...restOptions } = opts);
+    }
+
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Buckets.getReadUri',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
     const queryOptions = {
       expiryInMinutes,
       ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
     };
-    
+
     return this._getUri(
       BUCKET_ENDPOINTS.GET_READ_URI(bucketId),
       bucketId,
-      folderId,
-      path,
+      resolvedPath,
+      headers,
       queryOptions
     );
   }
@@ -399,39 +563,32 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * Private method to handle common URI request logic
    * @param endpoint - The API endpoint to call
    * @param bucketId - The bucket ID
-   * @param folderId - The folder ID
    * @param path - The file path
+   * @param headers - Pre-built folder-context headers (built via `resolveFolderHeaders`)
    * @param queryOptions - Additional query parameters
    * @returns Promise resolving to blob file access information
    */
   private async _getUri(
     endpoint: string,
     bucketId: number,
-    folderId: number,
     path: string,
-    queryOptions: Record<string, any> = {}
+    headers: Record<string, string>,
+    queryOptions: Record<string, string | number | undefined> = {}
   ): Promise<BucketGetUriResponse> {
     if (!bucketId) {
       throw new ValidationError({ message: 'bucketId is required for getUri' });
-    }
-    
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for getUri' });
     }
 
     if (!path) {
       throw new ValidationError({ message: 'path is required for getUri' });
     }
-    
-    // Create headers with required folder ID
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     // Filter out undefined values and build query params
     const queryParams = filterUndefined({
       path,
       ...queryOptions
     });
-    
+
     // Make the API call to get URI
     const response = await this.get<Record<string, any>>(
       endpoint,
@@ -440,16 +597,16 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         headers
       }
     );
-    
+
     const transformedData = transformData(pascalToCamelCaseKeys(response.data), BucketMap) as BucketGetUriResponse;
-    
+
     // Convert headers from array-based to record if needed
     if (transformedData.headers && 'keys' in transformedData.headers && 'values' in transformedData.headers) {
       transformedData.headers = arrayDictionaryToRecord(
         transformedData.headers as unknown as { keys: string[], values: string[] }
       );
     }
-    
+
     return transformedData;
   }
 
@@ -592,22 +749,24 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Gets a direct upload URL for a file in the bucket
    *
-   * @param options - Contains bucketId, folderId, file path, optional expiry time
+   * @param options - Contains bucketId, file path, optional expiry time, and pre-built folder-context headers
    * @returns Promise resolving to blob file access information
    */
-  private async _getWriteUri(options: BucketGetUriOptions): Promise<BucketGetUriResponse> {
-    const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
-    
+  private async _getWriteUri(
+    options: BucketGetUriOptions & { headers: Record<string, string> },
+  ): Promise<BucketGetUriResponse> {
+    const { bucketId, path, expiryInMinutes, headers, ...restOptions } = options;
+
     const queryOptions = {
       expiryInMinutes,
       ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
     };
-    
+
     return this._getUri(
       BUCKET_ENDPOINTS.GET_WRITE_URI(bucketId),
       bucketId,
-      folderId,
       path,
+      headers,
       queryOptions
     );
   }

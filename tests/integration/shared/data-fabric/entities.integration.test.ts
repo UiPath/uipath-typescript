@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -14,6 +14,7 @@ import {
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
+  QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 
@@ -763,8 +764,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
-  describe.skip('importRecordsById', () => {
+  describe('importRecordsById', () => {
     it('should import records from a CSV blob', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
@@ -1328,6 +1328,169 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
+    });
+  });
+
+  // ─── Folder-scoped record CRUD ────────────────────────────────────────────
+  // Verifies that every record-CRUD method correctly forwards the
+  // X-UIPATH-FolderKey header for an entity that lives in a non-tenant folder.
+  //
+  // Uses a pre-existing folder-scoped entity (DATA_FABRIC_TEST_FOLDER_ENTITY_ID)
+  // so the suite runs with the standard integration-test PAT — entity schema
+  // create/delete are NOT exercised here (they live in the skipped schema-write
+  // describes above).
+  //
+  // Skipped when DATA_FABRIC_TEST_FOLDER_ENTITY_ID is not configured — CI does
+  // not yet provision a persistent folder-scoped test entity. Run locally by
+  // setting both INTEGRATION_TEST_FOLDER_KEY and DATA_FABRIC_TEST_FOLDER_ENTITY_ID.
+  describe.skipIf(!process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || !process.env.INTEGRATION_TEST_FOLDER_KEY)('Folder-scoped record CRUD', () => {
+    let folderEntityId!: string;
+    let folderKey!: string;
+    let folderEntityMetadata!: RawEntityGetResponse;
+    const folderRecordIds: string[] = [];
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      folderKey = config.folderKey!;
+      folderEntityId = config.dataFabricTestFolderEntityId!;
+
+      // Fetch schema once so per-test record bodies match the entity's shape.
+      const { entities } = getServices();
+      folderEntityMetadata = await entities.getById(folderEntityId, { folderKey });
+    });
+
+    it('should insert a single record with folderKey via insertRecordById', async () => {
+      const { entities } = getServices();
+      const data = await buildDummyRecord(folderEntityMetadata);
+      const result = await entities.insertRecordById(folderEntityId, data, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBeDefined();
+      folderRecordIds.push(result.Id);
+    });
+
+    it('should batch-insert records with folderKey via insertRecordsById', async () => {
+      const { entities } = getServices();
+      const batch = await Promise.all([
+        buildDummyRecord(folderEntityMetadata),
+        buildDummyRecord(folderEntityMetadata),
+      ]);
+
+      const result = await entities.insertRecordsById(folderEntityId, batch, { folderKey });
+
+      expect(result.successRecords).toBeDefined();
+      expect(result.successRecords.length).toBe(batch.length);
+
+      const ids = result.successRecords.map((r) => r.Id).filter(Boolean) as string[];
+      folderRecordIds.push(...ids);
+    });
+
+    it('should get a single record with folderKey via getRecordById', async () => {
+      const { entities } = getServices();
+      const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
+
+      expect(record).toBeDefined();
+      expect(record.Id).toBe(folderRecordIds[0]);
+    });
+
+    it('should list paginated records with folderKey via getAllRecords', async () => {
+      const { entities } = getServices();
+      const result = await entities.getAllRecords(folderEntityId, { folderKey, pageSize: 10 });
+
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should query records with folderKey via queryRecordsById', async () => {
+      const { entities } = getServices();
+      const result = await entities.queryRecordsById(folderEntityId, {
+        folderKey,
+        filterGroup: {
+          queryFilters: [
+            { fieldName: 'Id', operator: QueryFilterOperator.Equals, value: folderRecordIds[0] },
+          ],
+        },
+      });
+
+      expect(Array.isArray(result.items)).toBe(true);
+      // The folder header must reach the server for the row to be retrievable; the
+      // filter narrows to the record we just inserted in this run.
+      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
+    });
+
+    it('should update a record with folderKey via updateRecordById', async () => {
+      const { entities } = getServices();
+      const patch = await buildDummyRecord(folderEntityMetadata);
+      const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBe(folderRecordIds[0]);
+    });
+
+    it('should batch-update records with folderKey via updateRecordsById', async () => {
+      const { entities } = getServices();
+      const updates: EntityRecord[] = await Promise.all(
+        folderRecordIds.slice(1).map(async (id) => {
+          const patch = await buildDummyRecord(folderEntityMetadata);
+          return { Id: id, ...patch } as EntityRecord;
+        }),
+      );
+      if (updates.length === 0) {
+        throw new Error('No batch-inserted records to update — prior insert test must have failed');
+      }
+
+      const result = await entities.updateRecordsById(folderEntityId, updates, { folderKey });
+
+      expect(result.successRecords).toBeDefined();
+      expect(result.successRecords.length).toBe(updates.length);
+    });
+
+    it('should delete a single record with folderKey via deleteRecordById', async () => {
+      const { entities } = getServices();
+      const idToDelete = folderRecordIds.pop()!;
+
+      await entities.deleteRecordById(folderEntityId, idToDelete, { folderKey });
+
+      // Verify gone via queryRecordsById — the deleted Id should not appear.
+      const result = await entities.queryRecordsById(folderEntityId, {
+        folderKey,
+        filterGroup: {
+          queryFilters: [
+            { fieldName: 'Id', operator: QueryFilterOperator.Equals, value: idToDelete },
+          ],
+        },
+      });
+      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
+    });
+
+    it('should batch-delete records with folderKey via deleteRecordsById', async () => {
+      const { entities } = getServices();
+      if (folderRecordIds.length === 0) {
+        throw new Error('No folder records to batch-delete — prior insert tests may have failed to track IDs');
+      }
+
+      const result = await entities.deleteRecordsById(
+        folderEntityId,
+        [...folderRecordIds],
+        { folderKey },
+      );
+
+      expect(result.successRecords).toBeDefined();
+      folderRecordIds.length = 0;
+    });
+
+    afterAll(async () => {
+      const config = getTestConfig();
+      if (config.skipCleanup) return;
+      const { entities } = getServices();
+
+      // Records only — the test entity is owned by the tenant, not created here.
+      if (folderRecordIds.length > 0) {
+        await entities
+          .deleteRecordsById(folderEntityId, folderRecordIds, { folderKey })
+          .catch(() => undefined);
+      }
     });
   });
 

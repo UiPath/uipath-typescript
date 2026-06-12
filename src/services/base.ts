@@ -289,8 +289,9 @@ export class BaseService {
     const continuationTokenField = fields.continuationTokenField || 'continuationToken';
 
     // Extract items and metadata
-    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
-    const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
+    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N }).
+    // itemsField may be a dotted path (e.g. 'data.agents') for nested envelopes.
+    const items = Array.isArray(response.data) ? response.data : ((resolveNestedField(response.data, itemsField) as T[]) || []);
     const rawTotalCount = Array.isArray(response.data) ? undefined : resolveNestedField(response.data, totalCountField);
     const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
     const continuationToken = response.data[continuationTokenField];

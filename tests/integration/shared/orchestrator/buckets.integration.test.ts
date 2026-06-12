@@ -203,12 +203,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       const buffer = Buffer.from(fileContent, 'utf-8');
 
       try {
-        const uploadResult = await buckets.uploadFile({
-          bucketId: bucket.bucketId,
-          folderId: bucket.folderId,
-          path: fileName,
-          content: buffer,
-        });
+        const uploadResult = await buckets.uploadFile(bucket.bucketId, fileName, buffer, { folderId: bucket.folderId });
         trackUploadedFile(bucket.bucketId, fileName, bucket.folderId);
 
         expect(uploadResult).toBeDefined();
@@ -237,11 +232,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
 
       const fileName = metadata.items[0].path;
 
-      const result = await buckets.getReadUri({
-        bucketId: bucket.bucketId,
-        folderId: bucket.folderId,
-        path: fileName,
-      });
+      const result = await buckets.getReadUri(bucket.bucketId, fileName, { folderId: bucket.folderId });
 
       expect(result).toBeDefined();
       expect(result.uri).toBeDefined();
@@ -257,12 +248,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       const fileContent = createTestFileContent(fileName);
       const buffer = Buffer.from(fileContent, 'utf-8');
 
-      const uploadResult = await buckets.uploadFile({
-        bucketId: bucket.bucketId,
-        folderId: bucket.folderId,
-        path: fileName,
-        content: buffer,
-      });
+      const uploadResult = await buckets.uploadFile(bucket.bucketId, fileName, buffer, { folderId: bucket.folderId });
       trackUploadedFile(bucket.bucketId, fileName, bucket.folderId);
       expect(uploadResult.success).toBe(true);
 
@@ -281,12 +267,12 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       const bucket = await getBucketForTest('OData GetFiles test');
 
       const seedName = `/integration-getfiles-${mode}-${Date.now()}.txt`;
-      await buckets.uploadFile({
-        bucketId: bucket.bucketId,
-        folderId: bucket.folderId,
-        path: seedName,
-        content: Buffer.from(createTestFileContent(seedName), 'utf-8'),
-      });
+      await buckets.uploadFile(
+        bucket.bucketId,
+        seedName,
+        Buffer.from(createTestFileContent(seedName), 'utf-8'),
+        { folderId: bucket.folderId },
+      );
       trackUploadedFile(bucket.bucketId, seedName, bucket.folderId);
 
       const result = await buckets.getFiles(bucket.bucketId, { folderId: bucket.folderId });
@@ -328,6 +314,62 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
+    });
+  });
+
+  describe('File operations - folderKey scoping', () => {
+    let bucketId!: number;
+    let folderId!: number;
+    let folderKey!: string;
+    let folderPath!: string;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for folderKey scoping tests');
+      }
+      if (!config.folderPath) {
+        throw new Error('INTEGRATION_TEST_FOLDER_PATH must be configured for folderKey scoping tests');
+      }
+      folderKey = config.folderKey;
+      folderPath = config.folderPath;
+      const bucket = await getBucketForTest('folderKey scoping');
+      bucketId = bucket.bucketId;
+      folderId = bucket.folderId;
+    });
+
+    it('should get file metadata using folderKey', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getFileMetaData(bucketId, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should get file metadata using folderPath', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getFileMetaData(bucketId, { folderPath });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should upload and get read URI using folderKey', async () => {
+      const { buckets } = getServices();
+      const fileName = `/integration-folderkey-${mode}-${Date.now()}.txt`;
+      const buffer = Buffer.from(createTestFileContent(fileName), 'utf-8');
+
+      const uploadResult = await buckets.uploadFile(bucketId, fileName, buffer, { folderKey });
+      // Tracker uses folderId for cleanup since deleteFile-by-folderKey is not exercised here
+      trackUploadedFile(bucketId, fileName, folderId);
+
+      expect(uploadResult.success).toBe(true);
+
+      const readUri = await buckets.getReadUri(bucketId, fileName, { folderKey });
+
+      expect(readUri.uri).toMatch(/^https?:\/\/.+/);
     });
   });
 

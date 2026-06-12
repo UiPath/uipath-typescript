@@ -20,6 +20,7 @@ import {
     SDK_RUN_EVENT,
     SDK_SERVICE_NAME,
     SDK_VERSION,
+    TS_SDK_CLOUD_ROLE_NAME,
 } from './constants';
 
 /** Keyed by `CLOUD_ROLE_NAME` so all CodedActionApp SDK module loads share a single `TelemetryClient`. Each SDK uses
@@ -40,5 +41,14 @@ export const telemetryClient = {
             defaultEventName: SDK_RUN_EVENT,
             context,
         });
+    },
+
+    /**
+     * Sets the authenticated user's id so completeTask event and all ts-sdk api calls
+     * carry it as `CloudUserId`.
+     */
+    setUserId(userId: string): void {
+        codedActionAppTelemetryClient.setUserId(userId);
+        getOrCreateClient(TS_SDK_CLOUD_ROLE_NAME).setUserId(userId);
     },
 };

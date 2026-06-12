@@ -1,6 +1,6 @@
 {
   "name": "@uipath/coded-action-app",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "UiPath package to be used for viewing coded action apps in Action Center",
   "license": "MIT",
   "type": "module",
@@ -32,7 +32,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
-    "@uipath/core-telemetry": "^1.0.0-beta.2"
+    "@uipath/core-telemetry": "^1.0.0-beta.3"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",

@@ -4,7 +4,11 @@ import {
   TaskCompleteResponse,
 } from './types';
 import { CodedActionAppServiceModel } from './coded-action-app.models';
-import { ActionCenterEventNames, ActionCenterEventResponsePayload } from './types.internal';
+import {
+  ActionCenterEventNames,
+  ActionCenterEventResponsePayload,
+  TaskWithCloudUserId,
+} from './types.internal';
 import { telemetryClient, track } from './telemetry';
 import { loadFromMetaTags } from './telemetry/runtime';
 
@@ -18,7 +22,12 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
   private isCompletingTask = false;
 
   constructor() {
-    telemetryClient.initialize(loadFromMetaTags() ?? undefined);
+    const metaConfig = loadFromMetaTags();
+    telemetryClient.initialize(
+      metaConfig
+        ? { ...metaConfig, orgId: metaConfig.orgName, tenantId: metaConfig.tenantName }
+        : undefined,
+    );
   }
 
   /**
@@ -111,7 +120,10 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
         clearTimeout(timer);
 
         this.cleanup(messageListener);
-        resolve(event.data?.content as Task);
+
+        const task = event.data?.content as TaskWithCloudUserId;
+        telemetryClient.setUserId(task?.cloudUserId ?? '');
+        resolve(task);
       };
 
       const timer = setTimeout(() => {

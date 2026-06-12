@@ -104,6 +104,7 @@ plugins:
           - api/interfaces/ExchangeServiceModel.md: Exchange service methods
           - api/interfaces/MessageServiceModel.md: Message service methods
           - api/interfaces/UserSettingsServiceModel.md: User settings service methods
+          - api/interfaces/AgentServiceModel.md: Agents service methods
           - api/interfaces/SessionStream.md: Real-time WebSocket session
           - api/interfaces/ExchangeStream.md: Exchange streaming events
           - api/interfaces/MessageStream.md: Message streaming events
@@ -188,6 +189,8 @@ nav:
               - Messages: api/interfaces/MessageServiceModel.md
               - User Settings: api/interfaces/UserSettingsServiceModel.md
             - Feedback: api/interfaces/FeedbackServiceModel.md
+            - Agents: api/interfaces/AgentServiceModel.md
+            - Agent Memory: api/interfaces/AgentMemoryServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
@@ -215,6 +218,7 @@ nav:
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
+  - Integration Testing: integration-testing.md
   - Release Policy: release-policy.md
   - API Guide:
       - Data Fabric: https://docs.uipath.com/data-service/automation-cloud/latest/api-guide/get-entity-endpoint

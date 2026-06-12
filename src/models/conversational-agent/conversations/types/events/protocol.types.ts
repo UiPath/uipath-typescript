@@ -36,30 +36,11 @@ export interface ContentPartInterrupted {}
  */
 export interface SessionCapabilities {
   /**
-   * Indicates the sender may produce a cross exchange input stream events if the receiver indicates they can be handled.
+   * Indicates that a client is prepared to handle events for exchanges initiated by service-role messages.
+   * When set to true, the client will receive events for the service-role message and any assistant-role messages 
+   * sent in response to it within the exchange.
    */
-  asyncInputStreamEmitter?: boolean;
-  /**
-   * Indicates the sender can handle cross exchange input stream events.
-   */
-  asyncInputStreamHandler?: boolean;
-  /**
-   * Indicates the sender may produce cross exchange tool calls if the receiver indicates they can be handled.
-   */
-  asyncToolCallEmitter?: boolean;
-  /**
-   * Indicates the sender can handle cross exchange tool calls.
-   */
-  asyncToolCallHandler?: boolean;
-  /**
-   * Indicates the mime types which the sender can send in input streams and as message content, provided the receiver
-   * indicates they can handle the mime type.
-   */
-  mimeTypesEmitted?: string[];
-  /**
-   * Indicates the mime types the sender can handle. Wildcards such as "*\/*" and "text/*" are allowed.
-   */
-  mimeTypesHandled?: string[];
+  serviceMessageClient?: boolean;
   /** Allow custom properties */
   [key: string]: unknown;
 }

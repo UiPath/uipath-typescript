@@ -198,7 +198,7 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   actionLabel?: string | null;
   taskSlaDetails?: TaskSlaDetail[] | null;
   completedByUser?: UserLoginInfo | null;
-  taskAssignmentCriteria?: string;
+  taskAssignmentCriteria?: TaskAssignmentCriteria;
   taskAssignees?: UserLoginInfo[] | null;
   taskSource?: TaskSource | null;
   processingTime?: number | null;
@@ -206,12 +206,41 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
 }
 
 /**
- * Options for task assignment operations when called from a task instance
- * Requires either userId or userNameOrEmail, but not both
+ * Defines how a task assignment is distributed.
+ *
+ * Defaults to {@link TaskAssignmentCriteria.SingleUser} (a direct single-user
+ * assignment) when not specified. The group-based criteria tell Action Center
+ * how to distribute the task across the members of a directory group.
  */
-export type TaskAssignOptions =
+export enum TaskAssignmentCriteria {
+  /** Assigned to a single user, like a direct assignment. */
+  SingleUser = 'SingleUser',
+  /** Assigned to the group member with the fewest pending tasks. */
+  Workload = 'Workload',
+  /** Assigned to all users in the group. */
+  AllUsers = 'AllUsers',
+  /** Assigned in a round-robin manner across the group's members. */
+  RoundRobin = 'RoundRobin',
+}
+
+/**
+ * Options for task assignment operations when called from a task instance
+ * Requires either userId or userNameOrEmail, but not both. Optionally accepts
+ * an assignment criteria; defaults to a single-user assignment, set a group
+ * criteria (e.g. {@link TaskAssignmentCriteria.AllUsers}) for a directory group.
+ */
+export type TaskAssignOptions = (
   | { userId: number; userNameOrEmail?: never }
-  | { userId?: never; userNameOrEmail: string };
+  | { userId?: never; userNameOrEmail: string }
+) & {
+  /**
+   * How the assignment is distributed. Optional — defaults to
+   * {@link TaskAssignmentCriteria.SingleUser} (a direct single-user assignment).
+   * Set a group criteria (e.g. {@link TaskAssignmentCriteria.AllUsers}) to
+   * distribute the task across a directory group's members.
+   */
+  assignmentCriteria?: TaskAssignmentCriteria;
+};
 
 /**
  * Options for task assignment operations when called from the service

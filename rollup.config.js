@@ -200,6 +200,11 @@ const serviceEntries = [
     output: 'feedback/index'
   },
   {
+    name: 'agent-memory',
+    input: 'src/services/agents/memory/index.ts',
+    output: 'agent-memory/index'
+  },
+  {
     name: 'traces',
     input: 'src/services/observability/traces/index.ts',
     output: 'traces/index'
@@ -208,6 +213,11 @@ const serviceEntries = [
     name: 'document-understanding',
     input: 'src/models/document-understanding/index.ts',
     output: 'document-understanding/index'
+  },
+  {
+    name: 'agents',
+    input: 'src/services/agents/index.ts',
+    output: 'agents/index'
   },
   {
     name: 'governance',
