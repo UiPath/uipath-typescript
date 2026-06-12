@@ -280,6 +280,11 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       }
       folderId = Number(config.folderId);
 
+      if (!config.tasksTestUserGroupId) {
+        throw new Error('TASKS_TEST_USER_GROUP_ID is required in the test config for group assignment-criteria tests');
+      }
+      groupId = Number(config.tasksTestUserGroupId);
+
       const users = await tasks.getUsers(folderId);
 
       const individual = users.items.find(
@@ -289,12 +294,6 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         throw new Error('No individual user (User/DirectoryUser) in the folder to test single-user assignment');
       }
       userNameOrEmail = individual.emailAddress || individual.userName;
-
-      const group = users.items.find((u) => u.type === TaskUserType.DirectoryGroup);
-      if (!group) {
-        throw new Error('No DirectoryGroup in the folder to test group assignment');
-      }
-      groupId = group.id;
 
       // One reusable External task; unassigned between cases so each assign
       // starts from a clean state. Tasks have no delete API, so cleanup only
