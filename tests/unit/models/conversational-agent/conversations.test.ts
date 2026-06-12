@@ -96,6 +96,7 @@ describe('Conversation Models', () => {
       expect(typeof conversation.exchanges.getAll).toBe('function');
       expect(typeof conversation.exchanges.getById).toBe('function');
       expect(typeof conversation.exchanges.createFeedback).toBe('function');
+      expect(typeof conversation.exchanges.end).toBe('function');
     });
   });
 
