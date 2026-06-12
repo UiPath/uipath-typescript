@@ -70,6 +70,7 @@ jobs:
           echo "jobs_test_folder_id=${{ secrets.UIPATH_JOBS_TEST_FOLDER_ID_DEV || secrets.UIPATH_JOBS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
           echo "traces_test_trace_id=${{ secrets.UIPATH_TRACES_TEST_TRACE_ID_DEV || secrets.UIPATH_TRACES_TEST_TRACE_ID }}" >> $GITHUB_OUTPUT
           echo "tasks_test_user_group_id=${{ secrets.UIPATH_TASKS_TEST_USER_GROUP_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_GROUP_ID }}" >> $GITHUB_OUTPUT
+          echo "tasks_test_user_id=${{ secrets.UIPATH_TASKS_TEST_USER_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_ID }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         if: github.base_ref == 'main'
@@ -94,6 +95,7 @@ jobs:
           JOBS_TEST_FOLDER_ID=${{ steps.config.outputs.jobs_test_folder_id }}
           TRACES_TEST_TRACE_ID=${{ steps.config.outputs.traces_test_trace_id }}
           TASKS_TEST_USER_GROUP_ID=${{ steps.config.outputs.tasks_test_user_group_id }}
+          TASKS_TEST_USER_ID=${{ steps.config.outputs.tasks_test_user_id }}
           EOF
 
       - name: Run Integration Tests

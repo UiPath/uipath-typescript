@@ -23,6 +23,7 @@ export interface IntegrationConfig {
   orchestratorAttachmentId?: string;
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
+  tasksTestUserId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -77,6 +78,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
+    tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
   };
 }
 
@@ -115,6 +117,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,
+    tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
