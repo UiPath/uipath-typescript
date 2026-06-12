@@ -52,6 +52,10 @@ export type NotificationDeleteAllResponse = OperationResponse<{
 /**
  * Public surface of the Notifications service. JSDoc on this interface drives
  * the generated API reference documentation.
+ *
+ * Every method takes the tenant GUID as the first argument — the notification
+ * API identifies the acting tenant via the `X-UIPATH-Internal-TenantId` header
+ * and the SDK forwards `tenantId` into that header on each call.
  */
 export interface NotificationServiceModel {
   /**
@@ -61,6 +65,7 @@ export interface NotificationServiceModel {
    * when any of `pageSize`/`cursor`/`jumpToPage` is supplied. Supports OData `filter` and
    * `orderby` query options.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param options - Optional OData query and pagination options
    * @returns Array of notifications, or a paginated result when pagination params are supplied
    * {@link NotificationGetResponse}
@@ -70,12 +75,12 @@ export interface NotificationServiceModel {
    * import { Notifications } from '@uipath/uipath-typescript/notifications';
    *
    * const notifications = new Notifications(sdk);
-   * const all = await notifications.getAll();
+   * const all = await notifications.getAll('<tenantId>');
    * ```
    *
    * @example Filter unread, most recent first
    * ```typescript
-   * const unread = await notifications.getAll({
+   * const unread = await notifications.getAll('<tenantId>', {
    *   filter: 'isRead eq false',
    *   orderby: 'publishedOn desc',
    * });
@@ -83,13 +88,14 @@ export interface NotificationServiceModel {
    *
    * @example First page with pagination
    * ```typescript
-   * const page1 = await notifications.getAll({ pageSize: 20 });
+   * const page1 = await notifications.getAll('<tenantId>', { pageSize: 20 });
    * if (page1.hasNextPage) {
-   *   const page2 = await notifications.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await notifications.getAll('<tenantId>', { cursor: page1.nextCursor });
    * }
    * ```
    */
   getAll<T extends NotificationGetAllOptions = NotificationGetAllOptions>(
+    tenantId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -100,49 +106,53 @@ export interface NotificationServiceModel {
   /**
    * Marks the given notifications as read.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param notificationIds - GUIDs of notifications to mark read
    * @returns Operation result echoing the affected IDs and new read state
    * {@link NotificationUpdateReadResponse}
    *
    * @example
    * ```typescript
-   * await notifications.markRead(['<notificationId-1>', '<notificationId-2>']);
+   * await notifications.markRead('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
    * ```
    */
-  markRead(notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+  markRead(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
 
   /**
    * Marks the given notifications as unread.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param notificationIds - GUIDs of notifications to mark unread
    * @returns Operation result echoing the affected IDs and new read state
    * {@link NotificationUpdateReadResponse}
    *
    * @example
    * ```typescript
-   * await notifications.markUnread(['<notificationId>']);
+   * await notifications.markUnread('<tenantId>', ['<notificationId>']);
    * ```
    */
-  markUnread(notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+  markUnread(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
 
   /**
    * Marks all notifications in the current user's inbox as read.
    *
    * Uses the server-side `forceAllRead` flag — no per-notification IDs are sent.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @returns Operation result confirming the bulk update
    * {@link NotificationMarkAllReadResponse}
    *
    * @example
    * ```typescript
-   * await notifications.markAllRead();
+   * await notifications.markAllRead('<tenantId>');
    * ```
    */
-  markAllRead(): Promise<NotificationMarkAllReadResponse>;
+  markAllRead(tenantId: string): Promise<NotificationMarkAllReadResponse>;
 
   /**
    * Deletes the given notifications.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param notificationIds - GUIDs of notifications to delete. Must be non-empty —
    *   the server rejects an empty array with HTTP 400.
    * @returns Operation result echoing the deleted IDs
@@ -150,23 +160,24 @@ export interface NotificationServiceModel {
    *
    * @example
    * ```typescript
-   * await notifications.deleteNotifications(['<notificationId-1>', '<notificationId-2>']);
+   * await notifications.deleteNotifications('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
    * ```
    */
-  deleteNotifications(notificationIds: string[]): Promise<NotificationDeleteResponse>;
+  deleteNotifications(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse>;
 
   /**
    * Deletes all notifications from the current user's inbox.
    *
    * Uses the server-side `deleteAll` flag — no per-notification IDs are sent.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @returns Operation result confirming the bulk delete
    * {@link NotificationDeleteAllResponse}
    *
    * @example
    * ```typescript
-   * await notifications.deleteAll();
+   * await notifications.deleteAll('<tenantId>');
    * ```
    */
-  deleteAll(): Promise<NotificationDeleteAllResponse>;
+  deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse>;
 }

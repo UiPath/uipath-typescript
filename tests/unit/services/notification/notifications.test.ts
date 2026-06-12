@@ -14,6 +14,7 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { NOTIFICATION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { TENANT_ID } from '../../../../src/utils/constants/headers';
 import { NotificationCategory, NotificationPriority } from '../../../../src/models/notification';
 import type { RawNotificationEntry } from '../../../../src/models/notification/notifications.internal-types';
 
@@ -23,6 +24,9 @@ vi.mock('../../../../src/core/http/api-client');
 const mocks = vi.hoisted(() => import('../../../utils/mocks/core'));
 
 vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
+
+// Shorthand for asserting the tenant header is forwarded on each call
+const TENANT_HEADER = { [TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID };
 
 // ===== TEST SUITE =====
 describe('NotificationService Unit Tests', () => {
@@ -43,11 +47,11 @@ describe('NotificationService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should return a list of notifications via PaginationHelpers with OData pagination params', async () => {
+    it('should return a list of notifications via PaginationHelpers with OData pagination params and tenant header', async () => {
       const items = [createBasicNotificationEntry()];
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items, totalCount: 1 });
 
-      const result = await notificationService.getAll();
+      const result = await notificationService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
       expect(result.items.length).toBe(1);
       expect(result.totalCount).toBe(1);
@@ -56,6 +60,7 @@ describe('NotificationService Unit Tests', () => {
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
+          headers: TENANT_HEADER,
           transformFn: stripInternalNotificationFields,
           pagination: expect.objectContaining({
             itemsField: 'value',
@@ -74,7 +79,7 @@ describe('NotificationService Unit Tests', () => {
     it('should pass query/pagination options through to PaginationHelpers', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
-      await notificationService.getAll({
+      await notificationService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, {
         filter: 'isRead eq false',
         orderby: 'publishedOn desc',
         pageSize: 20,
@@ -90,19 +95,21 @@ describe('NotificationService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
-      await expect(notificationService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        notificationService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('markRead', () => {
-    it('should POST per-id read=true entries to UpdateRead endpoint', async () => {
+    it('should POST per-id read=true entries with tenant header', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const ids = [
         NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID,
         NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2,
       ];
 
-      const result = await notificationService.markRead(ids);
+      const result = await notificationService.markRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         NOTIFICATION_ENDPOINTS.UPDATE_READ,
@@ -113,7 +120,7 @@ describe('NotificationService Unit Tests', () => {
           ],
           forceAllRead: false,
         },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { notificationIds: ids, read: true } });
     });
@@ -122,17 +129,17 @@ describe('NotificationService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
 
       await expect(
-        notificationService.markRead([NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+        notificationService.markRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
       ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
     });
   });
 
   describe('markUnread', () => {
-    it('should POST per-id read=false entries to UpdateRead endpoint', async () => {
+    it('should POST per-id read=false entries with tenant header', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const ids = [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID];
 
-      const result = await notificationService.markUnread(ids);
+      const result = await notificationService.markUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         NOTIFICATION_ENDPOINTS.UPDATE_READ,
@@ -142,7 +149,7 @@ describe('NotificationService Unit Tests', () => {
           ],
           forceAllRead: false,
         },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { notificationIds: ids, read: false } });
     });
@@ -151,21 +158,21 @@ describe('NotificationService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        notificationService.markUnread([NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+        notificationService.markUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('markAllRead', () => {
-    it('should POST forceAllRead=true with empty notifications array', async () => {
+    it('should POST forceAllRead=true with empty notifications array and tenant header', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
-      const result = await notificationService.markAllRead();
+      const result = await notificationService.markAllRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         NOTIFICATION_ENDPOINTS.UPDATE_READ,
         { notifications: [], forceAllRead: true },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { all: true, read: true } });
     });
@@ -173,24 +180,26 @@ describe('NotificationService Unit Tests', () => {
     it('should propagate errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(notificationService.markAllRead()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        notificationService.markAllRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('deleteNotifications', () => {
-    it('should POST notifcationIds (preserving the API typo) and deleteAll=false', async () => {
+    it('should POST notifcationIds (preserving the API typo), deleteAll=false, and tenant header', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const ids = [
         NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID,
         NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2,
       ];
 
-      const result = await notificationService.deleteNotifications(ids);
+      const result = await notificationService.deleteNotifications(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         NOTIFICATION_ENDPOINTS.DELETE_BULK,
         { notifcationIds: ids, deleteAll: false },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { notificationIds: ids } });
     });
@@ -199,21 +208,21 @@ describe('NotificationService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        notificationService.deleteNotifications([NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+        notificationService.deleteNotifications(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('deleteAll', () => {
-    it('should POST deleteAll=true with empty notifcationIds array', async () => {
+    it('should POST deleteAll=true with empty notifcationIds array and tenant header', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
-      const result = await notificationService.deleteAll();
+      const result = await notificationService.deleteAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         NOTIFICATION_ENDPOINTS.DELETE_BULK,
         { notifcationIds: [], deleteAll: true },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { all: true } });
     });
@@ -221,7 +230,9 @@ describe('NotificationService Unit Tests', () => {
     it('should propagate errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(notificationService.deleteAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        notificationService.deleteAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

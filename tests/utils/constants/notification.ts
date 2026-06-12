@@ -3,6 +3,10 @@
  */
 
 export const NOTIFICATION_TEST_CONSTANTS = {
+  // Tenant GUID — passed as the first arg to every Notifications/Subscriptions
+  // method (sent to the API via the X-UIPATH-Internal-TenantId header)
+  TENANT_ID: '99999999-9999-4999-8999-999999999999',
+
   // Notification entry identifiers
   NOTIFICATION_ID: '11111111-1111-4111-8111-111111111111',
   NOTIFICATION_ID_2: '22222222-2222-4222-8222-222222222222',

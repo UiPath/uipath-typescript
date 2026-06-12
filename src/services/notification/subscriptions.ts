@@ -26,6 +26,8 @@ import type {
 } from '../../models/notification/subscriptions.models';
 
 import { SUBSCRIPTION_ENDPOINTS } from '../../utils/constants/endpoints';
+import { TENANT_ID } from '../../utils/constants/headers';
+import { createHeaders } from '../../utils/http/headers';
 
 /**
  * Service for managing the current user's notification subscription preferences.
@@ -33,6 +35,10 @@ import { SUBSCRIPTION_ENDPOINTS } from '../../utils/constants/endpoints';
  * Subscriptions are scoped to publishers (e.g. `Orchestrator`, `Actions`) and topics
  * within them. Each topic can be activated per notification channel (InApp, Email,
  * Slack, Teams) — see {@link NotificationMode}.
+ *
+ * Every public method takes the acting tenant GUID as the first argument — the
+ * subscription API identifies the tenant via the `X-UIPATH-Internal-TenantId`
+ * header and the SDK forwards `tenantId` into that header on each call.
  */
 export class SubscriptionService extends BaseService implements SubscriptionServiceModel {
   /**
@@ -43,6 +49,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * state) the user has access to. Use {@link SubscriptionGetAllOptions.publishers} to
    * narrow to specific publishers.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param options - Optional publisher-name filter
    * @returns Full subscription state for the matched publishers
    * {@link SubscriptionGetResponse}
@@ -52,21 +59,24 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * import { Subscriptions } from '@uipath/uipath-typescript/notifications';
    *
    * const subscriptions = new Subscriptions(sdk);
-   * const { publishers } = await subscriptions.getAll();
+   * const { publishers } = await subscriptions.getAll('<tenantId>');
    * ```
    *
    * @example Filter to specific publishers
    * ```typescript
-   * const { publishers } = await subscriptions.getAll({
+   * const { publishers } = await subscriptions.getAll('<tenantId>', {
    *   publishers: ['Orchestrator', 'Actions'],
    * });
    * ```
    */
   @track('Subscriptions.GetAll')
-  async getAll(options?: SubscriptionGetAllOptions): Promise<SubscriptionGetResponse> {
+  async getAll(tenantId: string, options?: SubscriptionGetAllOptions): Promise<SubscriptionGetResponse> {
     const response = await this.get<SubscriptionGetResponse>(
       SUBSCRIPTION_ENDPOINTS.GET_ALL,
-      options?.publishers ? { params: { Publishers: options.publishers } } : undefined
+      {
+        headers: createHeaders({ [TENANT_ID]: tenantId }),
+        ...(options?.publishers ? { params: { Publishers: options.publishers } } : {}),
+      }
     );
     return response.data;
   }
@@ -80,25 +90,29 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * Note: the response from this endpoint carries only identity/discovery fields on
    * publishers and topics (no subscription state). Use {@link getAll} to inspect state.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param options - Optional publisher-name filter
    * @returns Publishers and their full topic catalogue
    * {@link SubscriptionGetResponse}
    *
    * @example Basic usage
    * ```typescript
-   * const { publishers } = await subscriptions.getPublishers();
+   * const { publishers } = await subscriptions.getPublishers('<tenantId>');
    * ```
    *
    * @example Filter to a single publisher
    * ```typescript
-   * const { publishers } = await subscriptions.getPublishers({ name: 'Orchestrator' });
+   * const { publishers } = await subscriptions.getPublishers('<tenantId>', { name: 'Orchestrator' });
    * ```
    */
   @track('Subscriptions.GetPublishers')
-  async getPublishers(options?: SubscriptionGetPublishersOptions): Promise<SubscriptionGetResponse> {
+  async getPublishers(tenantId: string, options?: SubscriptionGetPublishersOptions): Promise<SubscriptionGetResponse> {
     const response = await this.get<SubscriptionGetResponse>(
       SUBSCRIPTION_ENDPOINTS.GET_PUBLISHERS,
-      options?.name ? { params: { PublisherName: options.name } } : undefined
+      {
+        headers: createHeaders({ [TENANT_ID]: tenantId }),
+        ...(options?.name ? { params: { PublisherName: options.name } } : {}),
+      }
     );
     return response.data;
   }
@@ -111,12 +125,13 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *
    * Note: `InApp` is always available and is not included in the response.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @returns Supported channels with enabled status
    * {@link SubscriptionGetSupportedChannelsResponse}
    *
    * @example
    * ```typescript
-   * const { channels } = await subscriptions.getSupportedChannels();
+   * const { channels } = await subscriptions.getSupportedChannels('<tenantId>');
    * const slack = channels.find(c => c.name === 'Slack');
    * if (slack?.isEnabled) {
    *   // safe to subscribe to Slack
@@ -124,9 +139,10 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```
    */
   @track('Subscriptions.GetSupportedChannels')
-  async getSupportedChannels(): Promise<SubscriptionGetSupportedChannelsResponse> {
+  async getSupportedChannels(tenantId: string): Promise<SubscriptionGetSupportedChannelsResponse> {
     const response = await this.get<SubscriptionGetSupportedChannelsResponse>(
-      SUBSCRIPTION_ENDPOINTS.GET_SUPPORTED_CHANNELS
+      SUBSCRIPTION_ENDPOINTS.GET_SUPPORTED_CHANNELS,
+      { headers: createHeaders({ [TENANT_ID]: tenantId }) }
     );
     return response.data;
   }
@@ -135,6 +151,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * Updates topic-level subscription preferences. Each entry sets the subscription state
    * (`isSubscribed`) for a single (topic, mode) pair.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param subscriptions - Topic subscription updates
    * @returns Operation result echoing the submitted updates
    * {@link SubscriptionUpdateTopicResponse}
@@ -143,16 +160,16 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```typescript
    * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
    *
-   * await subscriptions.updateTopic([
+   * await subscriptions.updateTopic('<tenantId>', [
    *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
    * ]);
    * ```
    */
   @track('Subscriptions.UpdateTopic')
-  async updateTopic(subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse> {
+  async updateTopic(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC, {
       userSubscriptions: subscriptions,
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
 
@@ -160,6 +177,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * Updates category-level subscription preferences for a publisher. Each entry sets
    * the subscription state for all topics of a given category via a given mode.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param subscriptions - Category subscription updates
    * @returns Operation result echoing the submitted updates
    * {@link SubscriptionUpdateCategoryResponse}
@@ -168,7 +186,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```typescript
    * import { NotificationCategory, NotificationMode } from '@uipath/uipath-typescript/notifications';
    *
-   * await subscriptions.updateCategory([
+   * await subscriptions.updateCategory('<tenantId>', [
    *   {
    *     publisherId: '<publisherId>',
    *     category: NotificationCategory.Error,
@@ -179,10 +197,10 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```
    */
   @track('Subscriptions.UpdateCategory')
-  async updateCategory(subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse> {
+  async updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY, {
       categorySubscriptions: subscriptions,
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
 
@@ -190,19 +208,20 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * Updates publisher-level opt-in / opt-out. Each entry toggles the user's overall
    * opt-in for a publisher and optionally scopes the change to specific entities.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param subscriptions - Publisher subscription updates
    * @returns Operation result echoing the submitted updates
    * {@link SubscriptionUpdatePublisherResponse}
    *
    * @example Opt out of a publisher entirely
    * ```typescript
-   * await subscriptions.updatePublisher([
+   * await subscriptions.updatePublisher('<tenantId>', [
    *   { publisherId: '<publisherId>', isUserOptIn: false },
    * ]);
    * ```
    */
   @track('Subscriptions.UpdatePublisher')
-  async updatePublisher(subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse> {
+  async updatePublisher(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse> {
     // API field is misspelled `publisherID` — map at send time.
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER, {
       publisherSubscriptions: subscriptions.map(({ publisherId, isUserOptIn, entities }) => ({
@@ -210,7 +229,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
         isUserOptIn,
         entities,
       })),
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
 
@@ -218,13 +237,14 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * Updates topic-group subscription preferences. Each entry scopes a topic group to
    * a specific set of entities.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param subscriptions - Topic-group subscription updates
    * @returns Operation result echoing the submitted updates
    * {@link SubscriptionUpdateTopicGroupResponse}
    *
    * @example Subscribe a topic group to two folders
    * ```typescript
-   * await subscriptions.updateTopicGroup([
+   * await subscriptions.updateTopicGroup('<tenantId>', [
    *   {
    *     publisherId: '<publisherId>',
    *     topicGroupName: 'JobNotifications',
@@ -237,10 +257,10 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```
    */
   @track('Subscriptions.UpdateTopicGroup')
-  async updateTopicGroup(subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse> {
+  async updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC_GROUP, {
       topicGroupSubscriptions: subscriptions,
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
 
@@ -249,6 +269,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *
    * Use {@link getSupportedChannels} first to check whether the channel is enabled in the tenant.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param publisherId - Publisher GUID
    * @param mode - Channel and target activation state
    * @returns Operation result echoing the new mode state
@@ -258,38 +279,39 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```typescript
    * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
    *
-   * await subscriptions.updateMode('<publisherId>', {
+   * await subscriptions.updateMode('<tenantId>', '<publisherId>', {
    *   name: NotificationMode.Email,
    *   isActive: true,
    * });
    * ```
    */
   @track('Subscriptions.UpdateMode')
-  async updateMode(publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse> {
+  async updateMode(tenantId: string, publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_MODE, {
       publisherId,
       publisherMode: mode,
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { publisherId, mode } };
   }
 
   /**
    * Resets the current user's subscriptions for a publisher to the publisher's defaults.
    *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
    * @param publisherId - Publisher GUID
    * @returns The publisher's full subscription state after reset
    * {@link SubscriptionGetResponse}
    *
    * @example
    * ```typescript
-   * const { publishers } = await subscriptions.reset('<publisherId>');
+   * const { publishers } = await subscriptions.reset('<tenantId>', '<publisherId>');
    * ```
    */
   @track('Subscriptions.Reset')
-  async reset(publisherId: string): Promise<SubscriptionGetResponse> {
+  async reset(tenantId: string, publisherId: string): Promise<SubscriptionGetResponse> {
     const response = await this.post<SubscriptionGetResponse>(SUBSCRIPTION_ENDPOINTS.RESET, {
       publisherId,
-    });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return response.data;
   }
 }

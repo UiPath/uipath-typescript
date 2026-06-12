@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import type { Notifications } from '../../../../src/services/notification';
 import { INTERNAL_NOTIFICATION_FIELDS } from '../../../../src/models/notification/notifications.internal-types';
 
@@ -9,6 +9,7 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let notifications!: Notifications;
+  let tenantId!: string;
 
   beforeAll(() => {
     const service = getServices().notifications;
@@ -16,18 +17,24 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
       throw new Error('Notifications service is not registered for this init mode');
     }
     notifications = service;
+
+    const id = getTestConfig().notificationTenantId;
+    if (!id) {
+      throw new Error('NOTIFICATION_TEST_TENANT_ID must be set in .env.integration to run notification tests.');
+    }
+    tenantId = id;
   });
 
   describe('getAll', () => {
     it('should retrieve notifications without pagination options as a NonPaginatedResponse', async () => {
-      const result = await notifications.getAll();
+      const result = await notifications.getAll(tenantId);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
     });
 
     it('should retrieve notifications with pagination options as a PaginatedResponse', async () => {
-      const result = await notifications.getAll({ pageSize: 5 });
+      const result = await notifications.getAll(tenantId, { pageSize: 5 });
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
@@ -38,7 +45,7 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
     });
 
     it('should support OData filter and orderby', async () => {
-      const result = await notifications.getAll({
+      const result = await notifications.getAll(tenantId, {
         filter: 'isRead eq false',
         orderby: 'publishedOn desc',
         pageSize: 3,
@@ -52,7 +59,7 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
     });
 
     it('should drop internal API fields (entityOrgName, partitionKey, etc.) from each item', async () => {
-      const result = await notifications.getAll({ pageSize: 1 });
+      const result = await notifications.getAll(tenantId, { pageSize: 1 });
 
       if (result.items.length === 0) {
         throw new Error(
@@ -77,7 +84,7 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
 
   describe('mark-read flows', () => {
     it('should mark a single notification as read and reflect the change via getAll', async () => {
-      const unread = await notifications.getAll({ filter: 'isRead eq false', pageSize: 1 });
+      const unread = await notifications.getAll(tenantId, { filter: 'isRead eq false', pageSize: 1 });
       if (unread.items.length === 0) {
         throw new Error(
           'No unread notifications in the inbox — cannot validate markRead. Trigger one on the test tenant.'
@@ -85,19 +92,19 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
       }
       const target = unread.items[0];
 
-      const mark = await notifications.markRead([target.id]);
+      const mark = await notifications.markRead(tenantId, [target.id]);
       expect(mark.success).toBe(true);
       expect(mark.data.notificationIds).toEqual([target.id]);
       expect(mark.data.read).toBe(true);
 
       // Restore so subsequent runs see the same fixture
-      const restore = await notifications.markUnread([target.id]);
+      const restore = await notifications.markUnread(tenantId, [target.id]);
       expect(restore.success).toBe(true);
       expect(restore.data.read).toBe(false);
     });
 
     it('markAllRead should succeed without per-id payload', async () => {
-      const result = await notifications.markAllRead();
+      const result = await notifications.markAllRead(tenantId);
       expect(result.success).toBe(true);
       expect(result.data).toEqual({ all: true, read: true });
     });

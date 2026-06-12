@@ -11,6 +11,7 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { SUBSCRIPTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { TENANT_ID } from '../../../../src/utils/constants/headers';
 import {
   NotificationCategory,
   NotificationMode,
@@ -22,6 +23,9 @@ import {
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
+
+// Shorthand for asserting the tenant header is forwarded on each call
+const TENANT_HEADER = { [TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID };
 
 // ===== TEST SUITE =====
 describe('SubscriptionService Unit Tests', () => {
@@ -41,27 +45,30 @@ describe('SubscriptionService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should GET UserSubscription without params when no publishers filter', async () => {
+    it('should GET UserSubscription with only tenant header when no publishers filter', async () => {
       const mockData = { publishers: [createBasicSubscriptionPublisher()] };
       mockApiClient.get.mockResolvedValue(mockData);
 
-      const result = await subscriptionService.getAll();
+      const result = await subscriptionService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(SUBSCRIPTION_ENDPOINTS.GET_ALL, {});
+      expect(mockApiClient.get).toHaveBeenCalledWith(SUBSCRIPTION_ENDPOINTS.GET_ALL, {
+        headers: TENANT_HEADER,
+      });
       expect(result).toEqual(mockData);
     });
 
-    it('should GET UserSubscription with Publishers param when filter supplied', async () => {
+    it('should GET UserSubscription with Publishers param + tenant header when filter supplied', async () => {
       const mockData = { publishers: [createBasicSubscriptionPublisher()] };
       mockApiClient.get.mockResolvedValue(mockData);
 
-      const result = await subscriptionService.getAll({
+      const result = await subscriptionService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, {
         publishers: [NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME, NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME_ALT],
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.GET_ALL,
         {
+          headers: TENANT_HEADER,
           params: {
             Publishers: [
               NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME,
@@ -76,50 +83,59 @@ describe('SubscriptionService Unit Tests', () => {
     it('should propagate errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND));
 
-      await expect(subscriptionService.getAll()).rejects.toThrow(
-        NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND
-      );
+      await expect(
+        subscriptionService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND);
     });
   });
 
   describe('getPublishers', () => {
-    it('should GET GetPublishers without params when no name filter', async () => {
+    it('should GET GetPublishers with only tenant header when no name filter', async () => {
       const mockData = { publishers: [createBasicSubscriptionPublisher()] };
       mockApiClient.get.mockResolvedValue(mockData);
 
-      const result = await subscriptionService.getPublishers();
+      const result = await subscriptionService.getPublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(SUBSCRIPTION_ENDPOINTS.GET_PUBLISHERS, {});
+      expect(mockApiClient.get).toHaveBeenCalledWith(SUBSCRIPTION_ENDPOINTS.GET_PUBLISHERS, {
+        headers: TENANT_HEADER,
+      });
       expect(result).toEqual(mockData);
     });
 
-    it('should GET GetPublishers with PublisherName param when name supplied', async () => {
+    it('should GET GetPublishers with PublisherName param + tenant header when name supplied', async () => {
       const mockData = { publishers: [createBasicSubscriptionPublisher()] };
       mockApiClient.get.mockResolvedValue(mockData);
 
-      await subscriptionService.getPublishers({ name: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME });
+      await subscriptionService.getPublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, {
+        name: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME,
+      });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.GET_PUBLISHERS,
-        { params: { PublisherName: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME } }
+        { headers: TENANT_HEADER, params: { PublisherName: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_NAME } }
       );
     });
 
     it('should propagate errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(subscriptionService.getPublishers()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        subscriptionService.getPublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('getSupportedChannels', () => {
-    it('should GET GetSupportedChannelStatus and return channels (InApp not included)', async () => {
+    it('should GET GetSupportedChannelStatus with tenant header and return channels (InApp not included)', async () => {
       const mockData = { channels: createBasicSupportedChannels() };
       mockApiClient.get.mockResolvedValue(mockData);
 
-      const result = await subscriptionService.getSupportedChannels();
+      const result = await subscriptionService.getSupportedChannels(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(SUBSCRIPTION_ENDPOINTS.GET_SUPPORTED_CHANNELS, {});
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.GET_SUPPORTED_CHANNELS,
+        { headers: TENANT_HEADER }
+      );
       expect(result).toEqual(mockData);
       // Confirms InApp is intentionally omitted (it's always implicit)
       expect(result.channels.length).toBeGreaterThan(0);
@@ -129,12 +145,14 @@ describe('SubscriptionService Unit Tests', () => {
     it('should propagate errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(subscriptionService.getSupportedChannels()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        subscriptionService.getSupportedChannels(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('updateTopic', () => {
-    it('should POST userSubscriptions and echo input', async () => {
+    it('should POST userSubscriptions with tenant header and echo input', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const subscriptions: TopicSubscriptionUpdate[] = [
         {
@@ -144,12 +162,12 @@ describe('SubscriptionService Unit Tests', () => {
         },
       ];
 
-      const result = await subscriptionService.updateTopic(subscriptions);
+      const result = await subscriptionService.updateTopic(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC,
         { userSubscriptions: subscriptions },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { subscriptions } });
     });
@@ -158,7 +176,7 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID));
 
       await expect(
-        subscriptionService.updateTopic([
+        subscriptionService.updateTopic(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
           {
             topicId: NOTIFICATION_TEST_CONSTANTS.TOPIC_ID,
             isSubscribed: true,
@@ -170,7 +188,7 @@ describe('SubscriptionService Unit Tests', () => {
   });
 
   describe('updateCategory', () => {
-    it('should POST categorySubscriptions and echo input', async () => {
+    it('should POST categorySubscriptions with tenant header and echo input', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const subscriptions: CategorySubscriptionUpdate[] = [
         {
@@ -181,12 +199,12 @@ describe('SubscriptionService Unit Tests', () => {
         },
       ];
 
-      const result = await subscriptionService.updateCategory(subscriptions);
+      const result = await subscriptionService.updateCategory(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY,
         { categorySubscriptions: subscriptions },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { subscriptions } });
     });
@@ -195,7 +213,7 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        subscriptionService.updateCategory([
+        subscriptionService.updateCategory(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
           {
             publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
             category: NotificationCategory.Info,
@@ -208,13 +226,13 @@ describe('SubscriptionService Unit Tests', () => {
   });
 
   describe('updatePublisher', () => {
-    it('should POST publisherSubscriptions with API-spelling publisherID, echoing clean input', async () => {
+    it('should POST publisherSubscriptions with API-spelling publisherID + tenant header, echoing clean input', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const subscriptions: PublisherSubscriptionUpdate[] = [
         { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, isUserOptIn: false },
       ];
 
-      const result = await subscriptionService.updatePublisher(subscriptions);
+      const result = await subscriptionService.updatePublisher(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER,
@@ -227,7 +245,7 @@ describe('SubscriptionService Unit Tests', () => {
             },
           ],
         },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       // Result echoes the SDK-shape input (publisherId, not publisherID)
       expect(result).toEqual({ success: true, data: { subscriptions } });
@@ -243,7 +261,7 @@ describe('SubscriptionService Unit Tests', () => {
         },
       ];
 
-      await subscriptionService.updatePublisher(subscriptions);
+      await subscriptionService.updatePublisher(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER,
@@ -256,7 +274,7 @@ describe('SubscriptionService Unit Tests', () => {
             },
           ],
         },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
     });
 
@@ -264,7 +282,7 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        subscriptionService.updatePublisher([
+        subscriptionService.updatePublisher(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
           { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, isUserOptIn: true },
         ])
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
@@ -272,7 +290,7 @@ describe('SubscriptionService Unit Tests', () => {
   });
 
   describe('updateTopicGroup', () => {
-    it('should POST topicGroupSubscriptions and echo input', async () => {
+    it('should POST topicGroupSubscriptions with tenant header and echo input', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const subscriptions: TopicGroupSubscriptionUpdate[] = [
         {
@@ -281,12 +299,12 @@ describe('SubscriptionService Unit Tests', () => {
         },
       ];
 
-      const result = await subscriptionService.updateTopicGroup(subscriptions);
+      const result = await subscriptionService.updateTopicGroup(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC_GROUP,
         { topicGroupSubscriptions: subscriptions },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({ success: true, data: { subscriptions } });
     });
@@ -295,7 +313,7 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        subscriptionService.updateTopicGroup([
+        subscriptionService.updateTopicGroup(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
           {
             publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
             topicGroupName: 'JobNotifications',
@@ -306,11 +324,12 @@ describe('SubscriptionService Unit Tests', () => {
   });
 
   describe('updateMode', () => {
-    it('should POST publisherId + publisherMode and echo input', async () => {
+    it('should POST publisherId + publisherMode with tenant header and echo input', async () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const mode = { name: NotificationMode.Email, isActive: true };
 
       const result = await subscriptionService.updateMode(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
         NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
         mode
       );
@@ -318,7 +337,7 @@ describe('SubscriptionService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_MODE,
         { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, publisherMode: mode },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual({
         success: true,
@@ -330,12 +349,16 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(undefined);
       const mode = { name: NotificationMode.Slack, isActive: false };
 
-      await subscriptionService.updateMode(NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, mode);
+      await subscriptionService.updateMode(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+        NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+        mode
+      );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.UPDATE_MODE,
         { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, publisherMode: mode },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
     });
 
@@ -343,25 +366,32 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        subscriptionService.updateMode(NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, {
-          name: NotificationMode.InApp,
-          isActive: true,
-        })
+        subscriptionService.updateMode(
+          NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+          NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+          {
+            name: NotificationMode.InApp,
+            isActive: true,
+          }
+        )
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('reset', () => {
-    it('should POST publisherId and return the publisher subscription state', async () => {
+    it('should POST publisherId with tenant header and return the publisher subscription state', async () => {
       const mockData = { publishers: [createBasicSubscriptionPublisher()] };
       mockApiClient.post.mockResolvedValue(mockData);
 
-      const result = await subscriptionService.reset(NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID);
+      const result = await subscriptionService.reset(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+        NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID
+      );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         SUBSCRIPTION_ENDPOINTS.RESET,
         { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID },
-        expect.any(Object)
+        { headers: TENANT_HEADER }
       );
       expect(result).toEqual(mockData);
     });
@@ -370,7 +400,7 @@ describe('SubscriptionService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND));
 
       await expect(
-        subscriptionService.reset(NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID)
+        subscriptionService.reset(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID)
       ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND);
     });
   });
