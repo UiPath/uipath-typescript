@@ -43,7 +43,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 ## Entities
 
-> **Folder-scoped entities require `OR.Users` in addition to the scope below.** Any CRUD operation on a folder entity (passing `folderKey`), and `getAll({ includeAllScopes: true })` which lists all tenant and folder entities, need `OR.Users` as well.
+> **Folder-scoped entities require `OR.Users` in addition to the scope below.** Any CRUD operation on a folder entity (passing `folderKey`), and `getAll({ includeFolderEntities: true })` which lists all tenant and folder entities, need `OR.Users` as well.
 
 | Method | OAuth Scope |
 |--------|-------------|

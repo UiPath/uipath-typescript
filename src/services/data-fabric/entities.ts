@@ -507,11 +507,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Gets all entities in the system.
    *
    * Three call modes:
-   * - `getAll({ includeAllScopes: false })` — default. Returns only tenant-level entities. No `OR.Users` scope required.
-   * - `getAll({ includeAllScopes: true })` — returns tenant-level **and** folder-level entities together. Requires the `OR.Users` OAuth scope.
-   * - `getAll({ includeAllScopes: false, folderKey: "<uuid>" })` — returns only entities in that folder. `folderKey` always wins over `includeAllScopes`.
+   * - `getAll({ includeFolderEntities: false })` — default. Returns only tenant-level entities. No `OR.Users` scope required.
+   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. Requires the `OR.Users` OAuth scope.
+   * - `getAll({ includeFolderEntities: false, folderKey: "<uuid>" })` — returns only entities in that folder. `folderKey` always wins over `includeFolderEntities`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllScopes: true` to list tenant + folder entities together)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeFolderEntities: true` to list tenant + folder entities together)
    * @returns Promise resolving to an array of entity metadata
    *
    * @example
@@ -521,13 +521,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Tenant-only (default — no OR.Users needed)
-   * const tenantEntities = await entities.getAll({ includeAllScopes: false });
+   * const tenantEntities = await entities.getAll({ includeFolderEntities: false });
    *
    * // Tenant + folder entities together (requires OR.Users scope)
-   * const allEntities = await entities.getAll({ includeAllScopes: true });
+   * const allEntities = await entities.getAll({ includeFolderEntities: true });
    *
    * // A single folder's entities
-   * const folderEntities = await entities.getAll({ includeAllScopes: false, folderKey: "<folderKey>" });
+   * const folderEntities = await entities.getAll({ includeFolderEntities: false, folderKey: "<folderKey>" });
    *
    * // Call operations on an entity
    * const records = await tenantEntities[0].getAllRecords();
@@ -536,11 +536,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
     // folderKey always wins: when present, scope to that folder via the v1 endpoint + header.
-    // Only when no folderKey is given AND includeAllScopes is explicitly true does the SDK
+    // Only when no folderKey is given AND includeFolderEntities is explicitly true does the SDK
     // switch to the v2 endpoint (returns tenant + folder entities together — requires OR.Users).
-    // Default (no options or includeAllScopes omitted) stays on the v1 endpoint = tenant only,
+    // Default (no options or includeFolderEntities omitted) stays on the v1 endpoint = tenant only,
     // no OR.Users required.
-    const endpoint = !options?.folderKey && options?.includeAllScopes
+    const endpoint = !options?.folderKey && options?.includeFolderEntities
       ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
 

@@ -18,7 +18,7 @@ export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity`,
     // Lists tenant-level and folder-level entities together (requires OR.Users scope).
-    // Used by getAll when includeAllScopes is true.
+    // Used by getAll when includeFolderEntities is true.
     GET_ALL_V2: `${DATAFABRIC_BASE}/api/v2/Entity`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,

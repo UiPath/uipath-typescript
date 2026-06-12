@@ -56,23 +56,23 @@ export interface EntityServiceModel {
    * Gets entities in the system.
    *
    * Three call modes:
-   * - `getAll({ includeAllScopes: false })` — default. Returns only tenant-level entities. No `OR.Users` scope required.
-   * - `getAll({ includeAllScopes: true })` — returns tenant-level **and** folder-level entities together. Requires the `OR.Users` OAuth scope.
-   * - `getAll({ includeAllScopes: false, folderKey: "<uuid>" })` — returns only entities in that folder. `folderKey` always wins over `includeAllScopes`.
+   * - `getAll({ includeFolderEntities: false })` — default. Returns only tenant-level entities. No `OR.Users` scope required.
+   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. Requires the `OR.Users` OAuth scope.
+   * - `getAll({ includeFolderEntities: false, folderKey: "<uuid>" })` — returns only entities in that folder. `folderKey` always wins over `includeFolderEntities`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllScopes: true` to list tenant + folder entities together)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeFolderEntities: true` to list tenant + folder entities together)
    * @returns Promise resolving to an array of entity metadata
    * {@link EntityGetResponse}
    * @example
    * ```typescript
    * // Tenant-only (default — no OR.Users needed)
-   * const tenantEntities = await entities.getAll({ includeAllScopes: false });
+   * const tenantEntities = await entities.getAll({ includeFolderEntities: false });
    *
    * // Tenant + folder entities together (requires OR.Users scope)
-   * const allEntities = await entities.getAll({ includeAllScopes: true });
+   * const allEntities = await entities.getAll({ includeFolderEntities: true });
    *
    * // A single folder's entities
-   * const folderEntities = await entities.getAll({ includeAllScopes: false, folderKey: "<folderKey>" });
+   * const folderEntities = await entities.getAll({ includeFolderEntities: false, folderKey: "<folderKey>" });
    *
    * // Iterate through entities
    * tenantEntities.forEach(entity => {

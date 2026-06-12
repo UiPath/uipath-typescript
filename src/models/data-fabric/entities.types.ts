@@ -325,7 +325,7 @@ export interface EntityGetAllOptions extends EntityFolderScopedOptions {
    * Omit (or `false`, the default) to return only tenant-level entities — no `OR.Users` needed.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
    */
-  includeAllScopes?: boolean;
+  includeFolderEntities?: boolean;
 }
 
 export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}

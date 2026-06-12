@@ -239,14 +239,14 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
     });
 
-    // includeAllScopes switches to the v2 endpoint, which returns tenant-level and
+    // includeFolderEntities switches to the v2 endpoint, which returns tenant-level and
     // folder-level entities together — a superset of the default tenant-only result.
-    it('should return tenant and folder entities together when includeAllScopes is true', async () => {
+    it('should return tenant and folder entities together when includeFolderEntities is true', async () => {
       const { entities } = getServices();
 
       const [tenantEntities, allEntities] = await Promise.all([
         entities.getAll(),
-        entities.getAll({ includeAllScopes: true }),
+        entities.getAll({ includeFolderEntities: true }),
       ]);
 
       expect(Array.isArray(allEntities)).toBe(true);
