@@ -100,7 +100,7 @@ export interface SpanResponse {
   startTime: string;
   /** Span end time. `null` while the span is in progress. */
   endTime: string | null;
-  /** Span attributes as a JSON string — parse with `JSON.parse()`. */
+  /** Span attributes. */
   attributes: string;
   /** Span status. */
   status: string;
@@ -133,8 +133,7 @@ export interface SpanResponse {
   /** Agent version that produced the span. May be `null`. */
   agentVersion: string | null;
   /**
-   * Raw span context as a JSON string. Includes the
-   * `ReferenceHierarchy` array matched by the spans-by-reference query.
+   * Raw span context as a JSON string.
    * May be `null`.
    */
   context: string | null;
