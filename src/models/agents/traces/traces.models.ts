@@ -72,10 +72,15 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * // Get the latency timeline within a time window
-   * const windowed = await trace.getLatencyTimeline({
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   *
+   * // Get the latency timeline for an agent version within a time window
+   * const filtered = await trace.getLatencyTimeline({
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   agentId: '<agentId>',
+   *   agentVersion: '1.0.0',
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */
@@ -102,10 +107,15 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * // Get per-agent unit consumption within a time window
-   * const windowed = await trace.getUnitConsumption({
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   *
+   * // Get per-agent unit consumption for an agent version within a time window
+   * const filtered = await trace.getUnitConsumption({
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   agentId: '<agentId>',
+   *   agentVersion: '1.0.0',
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */

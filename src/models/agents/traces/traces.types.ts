@@ -109,7 +109,7 @@ export interface SpanResponse {
   /** Tenant ID (GUID). May be `null`. */
   tenantId: string | null;
   /** Span retention expiry time. May be `null`. */
-  expiryTimeUtc: string | null;
+  expiredTime: string | null;
   /** Folder key (GUID) the span was recorded in. May be `null`. */
   folderKey: string | null;
   /** Span source. May be `null`. */

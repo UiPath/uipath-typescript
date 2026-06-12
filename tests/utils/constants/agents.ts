@@ -41,6 +41,7 @@ export const AGENT_TEST_CONSTANTS = {
   SPAN_SERVICE_TYPE: 'Agent',
   SPAN_ATTRIBUTES_JSON: '{"llm.model":"gpt-4"}',
   SPAN_CONTEXT_JSON: '{"ReferenceHierarchy":[{"ReferenceId":"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d","ServiceType":"Agent","Version":"1.0.0"}]}',
+  SPAN_EXPIRY_TIME: '2025-07-01T00:00:00.000Z',
   ORGANIZATION_ID: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90',
   ERROR_GENERIC: 'Agents API error',
 } as const;

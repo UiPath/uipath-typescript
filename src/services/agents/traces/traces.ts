@@ -11,6 +11,8 @@ import {
   AgentTraceGetSpansByReferenceOptions,
 } from '../../../models/agents/traces/traces.types';
 import { AgentTracesServiceModel } from '../../../models/agents/traces/traces.models';
+import { RawSpanResponse } from '../../../models/agents/traces/traces.internal-types';
+import { SpanMap } from '../../../models/agents/traces/traces.constants';
 import { AGENT_TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
@@ -18,6 +20,7 @@ import {
   TRACEVIEW_SPANS_PAGINATION,
 } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
+import { transformData } from '../../../utils/transform';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import type {
@@ -25,6 +28,14 @@ import type {
   NonPaginatedResponse,
   PaginatedResponse,
 } from '../../../utils/pagination/types';
+
+/**
+ * Applies the {@link SpanMap} semantic renames (e.g. `expiryTimeUtc` → `expiredTime`)
+ * to a span record. The Traceview API already returns camelCase, so only the
+ * field renames are needed.
+ */
+const transformSpan = (span: RawSpanResponse): SpanResponse =>
+  transformData(span, SpanMap) as unknown as SpanResponse;
 
 /**
  * Service for retrieving UiPath Agent trace metrics.
@@ -91,10 +102,15 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * // Get the latency timeline within a time window
-   * const windowed = await trace.getLatencyTimeline({
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   *
+   * // Get the latency timeline for an agent version within a time window
+   * const filtered = await trace.getLatencyTimeline({
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   agentId: '<agentId>',
+   *   agentVersion: '1.0.0',
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */
@@ -128,10 +144,15 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * // Get per-agent unit consumption within a time window
-   * const windowed = await trace.getUnitConsumption({
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   *
+   * // Get per-agent unit consumption for an agent version within a time window
+   * const filtered = await trace.getUnitConsumption({
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   agentId: '<agentId>',
+   *   agentVersion: '1.0.0',
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */
@@ -165,8 +186,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    */
   @track('AgentTraces.GetSpansByTraceId')
   async getSpansByTraceId(traceId: string): Promise<SpanResponse[]> {
-    const response = await this.get<SpanResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
-    return response.data;
+    const response = await this.get<RawSpanResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
+    return response.data.map(transformSpan);
   }
 
   /**
@@ -223,10 +244,11 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
     };
 
-    return PaginationHelpers.getAll<typeof apiOptions, SpanResponse>({
+    return PaginationHelpers.getAll<typeof apiOptions, RawSpanResponse, SpanResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_REFERENCE(referenceId),
       method: HTTP_METHODS.GET,
+      transformFn: transformSpan,
       excludeFromPrefix: Object.keys(apiOptions),
       pagination: {
         paginationType: PaginationType.OFFSET,

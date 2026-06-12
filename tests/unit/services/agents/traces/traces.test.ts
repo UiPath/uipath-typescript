@@ -24,7 +24,7 @@ describe('AgentTracesService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as unknown as ApiClient);
+    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as never);
     traceService = new AgentTracesService(instance);
   });
 
@@ -289,7 +289,7 @@ describe('AgentTracesService Unit Tests', () => {
       status: AGENT_TEST_CONSTANTS.SPAN_STATUS,
       organizationId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
       tenantId: null,
-      expiryTimeUtc: null,
+      expiryTimeUtc: AGENT_TEST_CONSTANTS.SPAN_EXPIRY_TIME,
       folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
       source: null,
       spanType: null,
@@ -309,7 +309,10 @@ describe('AgentTracesService Unit Tests', () => {
 
       const result = await traceService.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID);
 
-      expect(result).toEqual([mockSpan]);
+      // expiryTimeUtc is renamed to the canonical expiredTime
+      expect(result[0].id).toBe(AGENT_TEST_CONSTANTS.SPAN_ID);
+      expect(result[0].expiredTime).toBe(AGENT_TEST_CONSTANTS.SPAN_EXPIRY_TIME);
+      expect((result[0] as { expiryTimeUtc?: unknown }).expiryTimeUtc).toBeUndefined();
       expect(mockApiClient.get).toHaveBeenCalledWith(
         AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(AGENT_TEST_CONSTANTS.TRACE_ID),
         expect.any(Object),
@@ -344,7 +347,7 @@ describe('AgentTracesService Unit Tests', () => {
       status: AGENT_TEST_CONSTANTS.SPAN_STATUS,
       organizationId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
       tenantId: null,
-      expiryTimeUtc: null,
+      expiryTimeUtc: AGENT_TEST_CONSTANTS.SPAN_EXPIRY_TIME,
       folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
       source: null,
       spanType: null,
@@ -364,7 +367,10 @@ describe('AgentTracesService Unit Tests', () => {
 
       const result = await traceService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID);
 
-      expect(result.items).toEqual([mockSpan]);
+      // expiryTimeUtc is renamed to the canonical expiredTime
+      expect(result.items[0].id).toBe(AGENT_TEST_CONSTANTS.SPAN_ID);
+      expect(result.items[0].expiredTime).toBe(AGENT_TEST_CONSTANTS.SPAN_EXPIRY_TIME);
+      expect((result.items[0] as { expiryTimeUtc?: unknown }).expiryTimeUtc).toBeUndefined();
       expect(result.totalCount).toBe(1);
       expect((result as { hasNextPage?: boolean }).hasNextPage).toBeUndefined();
 
