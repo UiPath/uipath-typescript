@@ -15,9 +15,12 @@ export const NOTIFICATION_TEST_CONSTANTS = {
   // Publisher / topic IDs used inside notification-entry fixtures
   PUBLISHER_ID: '44444444-4444-4444-4444-444444444444',
   PUBLISHER_NAME: 'Orchestrator',
+  PUBLISHER_DISPLAY_NAME: 'Orchestrator',
+  PUBLISHER_NAME_ALT: 'Actions',
   TOPIC_ID: '55555555-5555-4555-8555-555555555555',
   TOPIC_NAME: 'Process.JobExecution.Faulted',
   TOPIC_KEY_NAME: 'Process.JobExecution.Faulted',
+  TOPIC_DISPLAY_NAME: 'Job execution faulted',
 
   // User identifier
   USER_ID: '66666666-6666-4666-8666-666666666666',
@@ -32,4 +35,5 @@ export const NOTIFICATION_TEST_CONSTANTS = {
 
   // Error messages
   ERROR_NOTIFICATION_NOT_FOUND: 'Notification not found',
+  ERROR_PUBLISHER_NOT_FOUND: 'Publisher not found',
 } as const;
