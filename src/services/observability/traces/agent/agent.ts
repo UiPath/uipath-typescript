@@ -20,6 +20,7 @@ import {
   TRACEVIEW_SPANS_PAGINATION,
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
+import { ValidationError } from '../../../../core/errors';
 import { transformData } from '../../../../utils/transform';
 import { PaginationHelpers } from '../../../../utils/pagination/helpers';
 import { PaginationType } from '../../../../utils/pagination/internal-types';
@@ -186,6 +187,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    */
   @track('AgentTraces.GetSpansByTraceId')
   async getSpansByTraceId(traceId: string): Promise<SpanResponse[]> {
+    if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByTraceId' });
     const response = await this.get<RawSpanResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
     return response.data.map(transformSpan);
   }
@@ -237,6 +239,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       ? PaginatedResponse<SpanResponse>
       : NonPaginatedResponse<SpanResponse>
   > {
+    if (!referenceId) throw new ValidationError({ message: 'referenceId is required for getSpansByReference' });
     const { startTime, endTime, ...rest } = options ?? {};
     const apiOptions = {
       ...rest,

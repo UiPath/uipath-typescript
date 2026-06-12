@@ -333,6 +333,11 @@ describe('AgentTracesService Unit Tests', () => {
         traceService.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
+
+    it('should throw ValidationError when traceId is empty', async () => {
+      await expect(traceService.getSpansByTraceId('')).rejects.toThrow('traceId is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
   });
 
   describe('getSpansByReference', () => {
@@ -438,6 +443,11 @@ describe('AgentTracesService Unit Tests', () => {
       await expect(
         traceService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+
+    it('should throw ValidationError when referenceId is empty', async () => {
+      await expect(traceService.getSpansByReference('')).rejects.toThrow('referenceId is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 });
