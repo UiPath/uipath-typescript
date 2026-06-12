@@ -108,8 +108,10 @@ export interface SubscriptionServiceModel {
    *
    * @example
    * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
    * const { channels } = await subscriptions.getSupportedChannels('<tenantId>');
-   * const slack = channels.find(c => c.name === 'Slack');
+   * const slack = channels.find(c => c.name === NotificationMode.Slack);
    * if (slack?.isEnabled) {
    *   // safe to subscribe to Slack
    * }

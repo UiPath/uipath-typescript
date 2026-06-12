@@ -12,6 +12,7 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { SUBSCRIPTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TENANT_ID } from '../../../../src/utils/constants/headers';
+import { NotificationMode } from '../../../../src/models/notification';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -131,7 +132,7 @@ describe('SubscriptionService Unit Tests', () => {
       expect(result).toEqual(mockData);
       // Confirms InApp is intentionally omitted (it's always implicit)
       expect(result.channels.length).toBeGreaterThan(0);
-      expect(result.channels.map(c => c.name)).not.toContain('InApp');
+      expect(result.channels.map(c => c.name)).not.toContain(NotificationMode.InApp);
     });
 
     it('should propagate errors', async () => {
