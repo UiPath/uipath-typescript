@@ -61,7 +61,9 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -103,7 +105,9 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
    *
    * // Get the latency timeline for an agent version within a time window
    * const filtered = await trace.getLatencyTimeline({
@@ -145,7 +149,9 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
    *
    * // Get per-agent unit consumption for an agent version within a time window
    * const filtered = await trace.getUnitConsumption({
@@ -189,7 +195,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   async getSpansByTraceId(traceId: string): Promise<SpanResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByTraceId' });
     const response = await this.get<RawSpanResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
-    return response.data.map(transformSpan);
+    return (response.data ?? []).map(transformSpan);
   }
 
   /**
@@ -214,7 +220,9 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {
