@@ -13,6 +13,7 @@ import {
   createMockError,
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { NOTIFICATION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TENANT_ID } from '../../../../src/utils/constants/headers';
 import { NotificationCategory, NotificationPriority } from '../../../../src/models/notification';
 import type { RawNotificationEntry } from '../../../../src/models/notification/notifications.internal-types';
@@ -96,6 +97,91 @@ describe('NotificationService Unit Tests', () => {
 
       await expect(
         notificationService.getAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('markRead', () => {
+    it('should POST per-id read=true entries with tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const ids = [
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID,
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2,
+      ];
+
+      const result = await notificationService.markRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        {
+          notifications: [
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID, read: true },
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2, read: true },
+          ],
+          forceAllRead: false,
+        },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { notificationIds: ids, read: true } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
+
+      await expect(
+        notificationService.markRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
+    });
+  });
+
+  describe('markUnread', () => {
+    it('should POST per-id read=false entries with tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const ids = [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID];
+
+      const result = await notificationService.markUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        {
+          notifications: [
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID, read: false },
+          ],
+          forceAllRead: false,
+        },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { notificationIds: ids, read: false } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        notificationService.markUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('markAllRead', () => {
+    it('should POST forceAllRead=true with empty notifications array and tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const result = await notificationService.markAllRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        { notifications: [], forceAllRead: true },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { all: true, read: true } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        notificationService.markAllRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

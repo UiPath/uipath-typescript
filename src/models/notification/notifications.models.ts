@@ -3,6 +3,7 @@
  * that drives generated API documentation.
  */
 
+import type { OperationResponse } from '../common/types';
 import type {
   HasPaginationOptions,
   NonPaginatedResponse,
@@ -13,6 +14,24 @@ import type {
   NotificationGetAllOptions,
   NotificationGetResponse,
 } from './notifications.types';
+
+/**
+ * Response from `markRead()` / `markUnread()`.
+ *
+ * `notificationIds` echoes the IDs that were marked; `read` reflects the new state.
+ */
+export type NotificationUpdateReadResponse = OperationResponse<{
+  notificationIds: string[];
+  read: boolean;
+}>;
+
+/**
+ * Response from `markAllRead()`.
+ */
+export type NotificationMarkAllReadResponse = OperationResponse<{
+  all: true;
+  read: true;
+}>;
 
 /**
  * Public surface of the Notifications service. JSDoc on this interface drives
@@ -67,4 +86,50 @@ export interface NotificationServiceModel {
       ? PaginatedResponse<NotificationGetResponse>
       : NonPaginatedResponse<NotificationGetResponse>
   >;
+
+  /**
+   * Marks the given notifications as read.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param notificationIds - GUIDs of notifications to mark read
+   * @returns Operation result echoing the affected IDs and new read state
+   * {@link NotificationUpdateReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markRead('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   */
+  markRead(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+
+  /**
+   * Marks the given notifications as unread.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param notificationIds - GUIDs of notifications to mark unread
+   * @returns Operation result echoing the affected IDs and new read state
+   * {@link NotificationUpdateReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markUnread('<tenantId>', ['<notificationId>']);
+   * ```
+   */
+  markUnread(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+
+  /**
+   * Marks all notifications in the current user's inbox as read.
+   *
+   * Uses the server-side `forceAllRead` flag — no per-notification IDs are sent.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @returns Operation result confirming the bulk update
+   * {@link NotificationMarkAllReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markAllRead('<tenantId>');
+   * ```
+   */
+  markAllRead(tenantId: string): Promise<NotificationMarkAllReadResponse>;
 }

@@ -214,6 +214,9 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `NotificationService` |
+| `markRead()` | `NotificationService` |
+| `markUnread()` | `NotificationService` |
+| `markAllRead()` | `NotificationService` |
 
 ## Processes
 
