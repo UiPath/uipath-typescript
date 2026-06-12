@@ -162,6 +162,7 @@ export interface NotificationServiceModel {
    * ```typescript
    * await notifications.deleteNotifications('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
    * ```
+   * @internal
    */
   deleteNotifications(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse>;
 
@@ -178,6 +179,7 @@ export interface NotificationServiceModel {
    * ```typescript
    * await notifications.deleteAll('<tenantId>');
    * ```
+   * @internal
    */
   deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse>;
 }

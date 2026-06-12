@@ -184,6 +184,7 @@ export class NotificationService extends BaseService implements NotificationServ
    * ```typescript
    * await notifications.deleteNotifications('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
    * ```
+   * @internal
    */
   @track('Notifications.DeleteNotifications')
   async deleteNotifications(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse> {
@@ -208,6 +209,7 @@ export class NotificationService extends BaseService implements NotificationServ
    * ```typescript
    * await notifications.deleteAll('<tenantId>');
    * ```
+   * @internal
    */
   @track('Notifications.DeleteAll')
   async deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse> {
