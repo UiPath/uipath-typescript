@@ -258,6 +258,7 @@ export interface SubscriptionServiceModel {
    *   isActive: true,
    * });
    * ```
+   * @internal
    */
   updateMode(tenantId: string, publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse>;
 
@@ -273,6 +274,7 @@ export interface SubscriptionServiceModel {
    * ```typescript
    * const { publishers } = await subscriptions.reset('<tenantId>', '<publisherId>');
    * ```
+   * @internal
    */
   reset(tenantId: string, publisherId: string): Promise<SubscriptionGetResponse>;
 }

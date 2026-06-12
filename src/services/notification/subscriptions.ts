@@ -286,6 +286,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   isActive: true,
    * });
    * ```
+   * @internal
    */
   @track('Subscriptions.UpdateMode')
   async updateMode(tenantId: string, publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse> {
@@ -308,6 +309,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    * ```typescript
    * const { publishers } = await subscriptions.reset('<tenantId>', '<publisherId>');
    * ```
+   * @internal
    */
   @track('Subscriptions.Reset')
   async reset(tenantId: string, publisherId: string): Promise<SubscriptionGetResponse> {
