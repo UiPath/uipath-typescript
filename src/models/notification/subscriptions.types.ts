@@ -180,6 +180,30 @@ export interface CategorySubscriptionUpdate {
 }
 
 /**
+ * Update payload for a publisher-level opt-in / opt-out.
+ */
+export interface PublisherSubscriptionUpdate {
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Whether the user opts in to receive notifications from this publisher. */
+  isUserOptIn: boolean;
+  /** Optional entity scoping. */
+  entities?: SubscriptionEntity[];
+}
+
+/**
+ * Update payload for a topic-group-level subscription change.
+ */
+export interface TopicGroupSubscriptionUpdate {
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Topic group name. */
+  topicGroupName: string;
+  /** Optional entity scoping. */
+  entities?: SubscriptionEntity[];
+}
+
+/**
  * Options for `Subscriptions.getAll()`.
  */
 export interface SubscriptionGetAllOptions {

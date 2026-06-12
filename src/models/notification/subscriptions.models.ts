@@ -7,10 +7,12 @@ import type { OperationResponse } from '../common/types';
 
 import type {
   CategorySubscriptionUpdate,
+  PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionPublisher,
   SupportedChannel,
+  TopicGroupSubscriptionUpdate,
   TopicSubscriptionUpdate,
 } from './subscriptions.types';
 
@@ -42,6 +44,16 @@ export type SubscriptionUpdateTopicResponse = OperationResponse<{
 /** Response from `updateCategory()`. */
 export type SubscriptionUpdateCategoryResponse = OperationResponse<{
   subscriptions: CategorySubscriptionUpdate[];
+}>;
+
+/** Response from `updatePublisher()`. */
+export type SubscriptionUpdatePublisherResponse = OperationResponse<{
+  subscriptions: PublisherSubscriptionUpdate[];
+}>;
+
+/** Response from `updateTopicGroup()`. */
+export type SubscriptionUpdateTopicGroupResponse = OperationResponse<{
+  subscriptions: TopicGroupSubscriptionUpdate[];
 }>;
 
 /**
@@ -177,4 +189,49 @@ export interface SubscriptionServiceModel {
    * @internal
    */
   updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse>;
+
+  /**
+   * Updates publisher-level opt-in / opt-out. Each entry toggles the user's overall
+   * opt-in for a publisher and optionally scopes the change to specific entities.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Publisher subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdatePublisherResponse}
+   *
+   * @example Opt out of a publisher entirely
+   * ```typescript
+   * await subscriptions.updatePublisher('<tenantId>', [
+   *   { publisherId: '<publisherId>', isUserOptIn: false },
+   * ]);
+   * ```
+   * @internal
+   */
+  updatePublisher(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse>;
+
+  /**
+   * Updates topic-group subscription preferences. Each entry scopes a topic group to
+   * a specific set of entities.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Topic-group subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicGroupResponse}
+   *
+   * @example Subscribe a topic group to two folders
+   * ```typescript
+   * await subscriptions.updateTopicGroup('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     topicGroupName: 'JobNotifications',
+   *     entities: [
+   *       { id: '<folderId1>', type: 'Folder', isSubscribed: true },
+   *       { id: '<folderId2>', type: 'Folder', isSubscribed: true },
+   *     ],
+   *   },
+   * ]);
+   * ```
+   * @internal
+   */
+  updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse>;
 }
