@@ -1,12 +1,11 @@
 import type { PaginationOptions } from '../../../../utils/pagination/types';
+import { SpanExecutionType as AgentTraceExecutionType } from '../traces.types';
 
 /**
  * Job execution mode filter — `Debug` (test runs) or `Runtime` (production runs).
+ * Alias of {@link SpanExecutionType} (identical value set, shared across the traces module).
  */
-export enum AgentTraceExecutionType {
-  Debug = 'Debug',
-  Runtime = 'Runtime',
-}
+export { AgentTraceExecutionType };
 
 /**
  * Filter fields shared by the trace-level agent endpoints
@@ -100,7 +99,7 @@ export interface SpanResponse {
   startTime: string;
   /** Span end time. `null` while the span is in progress. */
   endTime: string | null;
-  /** Span attributes. */
+  /** Raw span attributes as a JSON string — parse with `JSON.parse()`. */
   attributes: string;
   /** Span status. */
   status: string;
@@ -133,7 +132,7 @@ export interface SpanResponse {
   /** Agent version that produced the span. May be `null`. */
   agentVersion: string | null;
   /**
-   * Raw span context as a JSON string.
+   * Raw span context as a JSON string — parse with `JSON.parse()`.
    * May be `null`.
    */
   context: string | null;
