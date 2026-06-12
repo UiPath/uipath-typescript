@@ -106,8 +106,8 @@ describe('AgentTracesService Unit Tests', () => {
       );
     });
 
-    it('should return an empty array when API returns no data', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the API returns no data points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
       const result = await traceService.getErrorsTimeline();
       expect(result).toEqual([]);
     });
@@ -182,8 +182,8 @@ describe('AgentTracesService Unit Tests', () => {
       );
     });
 
-    it('should return an empty array when API returns no data', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the API returns no data points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
       const result = await traceService.getLatencyTimeline();
       expect(result).toEqual([]);
     });
@@ -263,8 +263,8 @@ describe('AgentTracesService Unit Tests', () => {
       );
     });
 
-    it('should return an empty array when API returns no data', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the API returns no data points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
       const result = await traceService.getUnitConsumption();
       expect(result).toEqual([]);
     });

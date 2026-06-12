@@ -76,11 +76,11 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   async getErrorsTimeline(
     options?: AgentTraceGetErrorsTimelineOptions,
   ): Promise<AgentTraceGetErrorsTimelineResponse[]> {
-    const response = await this.post<{ data?: AgentTraceGetErrorsTimelineResponse[] }>(
+    const response = await this.post<{ data: AgentTraceGetErrorsTimelineResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_ERRORS_TIMELINE,
       this.buildTraceFilterBody(options),
     );
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
@@ -118,11 +118,11 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   async getLatencyTimeline(
     options?: AgentTraceGetLatencyTimelineOptions,
   ): Promise<AgentTraceGetLatencyTimelineResponse[]> {
-    const response = await this.post<{ data?: AgentTraceGetLatencyTimelineResponse[] }>(
+    const response = await this.post<{ data: AgentTraceGetLatencyTimelineResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_LATENCY_TIMELINE,
       this.buildTraceFilterBody(options),
     );
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
@@ -160,11 +160,11 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   async getUnitConsumption(
     options?: AgentTraceGetUnitConsumptionOptions,
   ): Promise<AgentTraceGetUnitConsumptionResponse[]> {
-    const response = await this.post<{ data?: AgentTraceGetUnitConsumptionResponse[] }>(
+    const response = await this.post<{ data: AgentTraceGetUnitConsumptionResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_UNIT_CONSUMPTION,
       this.buildTraceFilterBody(options),
     );
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
