@@ -6,6 +6,7 @@ import { track } from '../../core/telemetry';
 import { BaseService } from '../base';
 
 import type {
+  AllowedMode,
   CategorySubscriptionUpdate,
   PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
@@ -18,6 +19,7 @@ import type {
   SubscriptionGetSupportedChannelsResponse,
   SubscriptionServiceModel,
   SubscriptionUpdateCategoryResponse,
+  SubscriptionUpdateModeResponse,
   SubscriptionUpdatePublisherResponse,
   SubscriptionUpdateTopicGroupResponse,
   SubscriptionUpdateTopicResponse,
@@ -264,5 +266,58 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
       topicGroupSubscriptions: subscriptions,
     }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
+  }
+
+  /**
+   * Activates or deactivates a notification channel for a publisher.
+   *
+   * Use {@link getSupportedChannels} first to check whether the channel is enabled in the tenant.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param publisherId - Publisher GUID
+   * @param mode - Channel and target activation state
+   * @returns Operation result echoing the new mode state
+   * {@link SubscriptionUpdateModeResponse}
+   *
+   * @example Activate email delivery for a publisher
+   * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateMode('<tenantId>', '<publisherId>', {
+   *   name: NotificationMode.Email,
+   *   isActive: true,
+   * });
+   * ```
+   * @internal
+   */
+  @track('Subscriptions.UpdateMode')
+  async updateMode(tenantId: string, publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_MODE, {
+      publisherId,
+      publisherMode: mode,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { publisherId, mode } };
+  }
+
+  /**
+   * Resets the current user's subscriptions for a publisher to the publisher's defaults.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param publisherId - Publisher GUID
+   * @returns The publisher's full subscription state after reset
+   * {@link SubscriptionGetResponse}
+   *
+   * @example
+   * ```typescript
+   * const { publishers } = await subscriptions.reset('<tenantId>', '<publisherId>');
+   * ```
+   * @internal
+   */
+  @track('Subscriptions.Reset')
+  async reset(tenantId: string, publisherId: string): Promise<SubscriptionGetResponse> {
+    const response = await this.post<SubscriptionGetResponse>(SUBSCRIPTION_ENDPOINTS.RESET, {
+      publisherId,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return response.data;
   }
 }

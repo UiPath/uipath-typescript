@@ -34,4 +34,6 @@ export const SUBSCRIPTION_ENDPOINTS = {
   UPDATE_CATEGORY: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/CategorySubscription`,
   UPDATE_PUBLISHER: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/PublisherSubscription`,
   UPDATE_TOPIC_GROUP: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/TopicGroupSubscription`,
+  UPDATE_MODE: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/UpdateMode`,
+  RESET: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/Reset`,
 } as const;

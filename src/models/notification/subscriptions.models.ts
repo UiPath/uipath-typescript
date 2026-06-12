@@ -6,6 +6,7 @@
 import type { OperationResponse } from '../common/types';
 
 import type {
+  AllowedMode,
   CategorySubscriptionUpdate,
   PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
@@ -54,6 +55,12 @@ export type SubscriptionUpdatePublisherResponse = OperationResponse<{
 /** Response from `updateTopicGroup()`. */
 export type SubscriptionUpdateTopicGroupResponse = OperationResponse<{
   subscriptions: TopicGroupSubscriptionUpdate[];
+}>;
+
+/** Response from `updateMode()`. */
+export type SubscriptionUpdateModeResponse = OperationResponse<{
+  publisherId: string;
+  mode: AllowedMode;
 }>;
 
 /**
@@ -232,4 +239,44 @@ export interface SubscriptionServiceModel {
    * @internal
    */
   updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse>;
+
+  /**
+   * Activates or deactivates a notification channel for a publisher.
+   *
+   * Use {@link getSupportedChannels} first to check whether the channel is enabled in the tenant.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param publisherId - Publisher GUID
+   * @param mode - Channel and target activation state
+   * @returns Operation result echoing the new mode state
+   * {@link SubscriptionUpdateModeResponse}
+   *
+   * @example Activate email delivery for a publisher
+   * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateMode('<tenantId>', '<publisherId>', {
+   *   name: NotificationMode.Email,
+   *   isActive: true,
+   * });
+   * ```
+   * @internal
+   */
+  updateMode(tenantId: string, publisherId: string, mode: AllowedMode): Promise<SubscriptionUpdateModeResponse>;
+
+  /**
+   * Resets the current user's subscriptions for a publisher to the publisher's defaults.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param publisherId - Publisher GUID
+   * @returns The publisher's full subscription state after reset
+   * {@link SubscriptionGetResponse}
+   *
+   * @example
+   * ```typescript
+   * const { publishers } = await subscriptions.reset('<tenantId>', '<publisherId>');
+   * ```
+   * @internal
+   */
+  reset(tenantId: string, publisherId: string): Promise<SubscriptionGetResponse>;
 }

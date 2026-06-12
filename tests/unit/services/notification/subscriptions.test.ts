@@ -322,4 +322,86 @@ describe('SubscriptionService Unit Tests', () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
+  describe('updateMode', () => {
+    it('should POST publisherId + publisherMode with tenant header and echo input', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const mode = { name: NotificationMode.Email, isActive: true };
+
+      const result = await subscriptionService.updateMode(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+        NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+        mode
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_MODE,
+        { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, publisherMode: mode },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({
+        success: true,
+        data: { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, mode },
+      });
+    });
+
+    it('should support deactivating a mode', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const mode = { name: NotificationMode.Slack, isActive: false };
+
+      await subscriptionService.updateMode(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+        NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+        mode
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_MODE,
+        { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, publisherMode: mode },
+        { headers: TENANT_HEADER }
+      );
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        subscriptionService.updateMode(
+          NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+          NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+          {
+            name: NotificationMode.InApp,
+            isActive: true,
+          }
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('reset', () => {
+    it('should POST publisherId with tenant header and return the publisher subscription state', async () => {
+      const mockData = { publishers: [createBasicSubscriptionPublisher()] };
+      mockApiClient.post.mockResolvedValue(mockData);
+
+      const result = await subscriptionService.reset(
+        NOTIFICATION_TEST_CONSTANTS.TENANT_ID,
+        NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.RESET,
+        { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual(mockData);
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND));
+
+      await expect(
+        subscriptionService.reset(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID)
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_PUBLISHER_NOT_FOUND);
+    });
+  });
 });

@@ -126,7 +126,17 @@ describe.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // Note: no updateCategory / updateTopicGroup integration tests — they need richer
-  // tenant fixtures (multi-topic category coverage, configured topic groups). Covered
-  // by unit tests for SDK shape.
+  describe('reset', () => {
+    it('should reset publisher subscriptions and return updated state', async () => {
+      const result = await subscriptions.reset(tenantId, firstPublisher.id);
+
+      expect(Array.isArray(result.publishers)).toBe(true);
+      const resetPub = result.publishers.find((p) => p.id === firstPublisher.id);
+      expect(resetPub).toBeDefined();
+    });
+  });
+
+  // Note: no updateCategory / updateTopicGroup / updateMode integration tests — they
+  // need richer tenant fixtures (multi-topic category coverage, configured topic groups,
+  // active Slack/Teams channels). Covered by unit tests for SDK shape.
 });
