@@ -109,4 +109,7 @@ describe.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
       expect(result.data).toEqual({ all: true, read: true });
     });
   });
+
+  // Note: no deleteNotifications / deleteAll integration tests — these destructively
+  // mutate the inbox with no SDK-level undo. Run manually if needed.
 });

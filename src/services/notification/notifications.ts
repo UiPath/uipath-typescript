@@ -10,6 +10,8 @@ import type {
   NotificationGetResponse,
 } from '../../models/notification/notifications.types';
 import type {
+  NotificationDeleteAllResponse,
+  NotificationDeleteResponse,
   NotificationMarkAllReadResponse,
   NotificationServiceModel,
   NotificationUpdateReadResponse,
@@ -167,6 +169,54 @@ export class NotificationService extends BaseService implements NotificationServ
       forceAllRead: true,
     }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { all: true, read: true } };
+  }
+
+  /**
+   * Deletes the given notifications.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param notificationIds - GUIDs of notifications to delete. Must be non-empty —
+   *   the server rejects an empty array with HTTP 400.
+   * @returns Operation result echoing the deleted IDs
+   * {@link NotificationDeleteResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteNotifications('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   */
+  @track('Notifications.DeleteNotifications')
+  async deleteNotifications(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse> {
+    await this.post(NOTIFICATION_ENDPOINTS.DELETE_BULK, {
+      // API spec misspells the key as `notifcationIds` — preserve it.
+      notifcationIds: notificationIds,
+      deleteAll: false,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { notificationIds } };
+  }
+
+  /**
+   * Deletes all notifications from the current user's inbox.
+   *
+   * Uses the server-side `deleteAll` flag — no per-notification IDs are sent.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @returns Operation result confirming the bulk delete
+   * {@link NotificationDeleteAllResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteAll('<tenantId>');
+   * ```
+   */
+  @track('Notifications.DeleteAll')
+  async deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse> {
+    await this.post(NOTIFICATION_ENDPOINTS.DELETE_BULK, {
+      // API spec misspells the key as `notifcationIds` — preserve it.
+      notifcationIds: [],
+      deleteAll: true,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { all: true } };
   }
 
   private async updateRead(

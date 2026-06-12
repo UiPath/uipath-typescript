@@ -34,6 +34,22 @@ export type NotificationMarkAllReadResponse = OperationResponse<{
 }>;
 
 /**
+ * Response from `deleteNotifications()`.
+ *
+ * `notificationIds` echoes the IDs that were deleted.
+ */
+export type NotificationDeleteResponse = OperationResponse<{
+  notificationIds: string[];
+}>;
+
+/**
+ * Response from `deleteAll()`.
+ */
+export type NotificationDeleteAllResponse = OperationResponse<{
+  all: true;
+}>;
+
+/**
  * Public surface of the Notifications service. JSDoc on this interface drives
  * the generated API reference documentation.
  *
@@ -132,4 +148,36 @@ export interface NotificationServiceModel {
    * ```
    */
   markAllRead(tenantId: string): Promise<NotificationMarkAllReadResponse>;
+
+  /**
+   * Deletes the given notifications.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param notificationIds - GUIDs of notifications to delete. Must be non-empty —
+   *   the server rejects an empty array with HTTP 400.
+   * @returns Operation result echoing the deleted IDs
+   * {@link NotificationDeleteResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteNotifications('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   */
+  deleteNotifications(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse>;
+
+  /**
+   * Deletes all notifications from the current user's inbox.
+   *
+   * Uses the server-side `deleteAll` flag — no per-notification IDs are sent.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @returns Operation result confirming the bulk delete
+   * {@link NotificationDeleteAllResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteAll('<tenantId>');
+   * ```
+   */
+  deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse>;
 }
