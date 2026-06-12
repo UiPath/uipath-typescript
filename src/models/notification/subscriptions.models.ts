@@ -203,6 +203,7 @@ export interface SubscriptionServiceModel {
    *   { publisherId: '<publisherId>', isUserOptIn: false },
    * ]);
    * ```
+   * @internal
    */
   updatePublisher(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse>;
 
@@ -228,6 +229,7 @@ export interface SubscriptionServiceModel {
    *   },
    * ]);
    * ```
+   * @internal
    */
   updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse>;
 }

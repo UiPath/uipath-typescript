@@ -219,6 +219,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   { publisherId: '<publisherId>', isUserOptIn: false },
    * ]);
    * ```
+   * @internal
    */
   @track('Subscriptions.UpdatePublisher')
   async updatePublisher(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse> {
@@ -255,6 +256,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   },
    * ]);
    * ```
+   * @internal
    */
   @track('Subscriptions.UpdateTopicGroup')
   async updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse> {
