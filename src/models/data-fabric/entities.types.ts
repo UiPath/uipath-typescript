@@ -1,4 +1,8 @@
 import { PaginationOptions } from "../../utils/pagination/types";
+import { EntityFolderScopedOptions } from "./data-fabric.types";
+
+// Re-export — canonical definition is in `./data-fabric.types`.
+export type { EntityFolderScopedOptions };
 
 /**
  * Entity field data type names (SQL-level types returned by the API)
@@ -313,24 +317,12 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
 }
 
 
-/**
- * Common shape for every folder-scoped Data Fabric entity operation.
- * Forwarded on the wire as the `X-UIPATH-FolderKey` header.
- */
-export interface EntityFolderScopedOptions {
-  /**
-   * Key identifying the folder the entity belongs to. Omit for tenant-level entities.
-   *
-   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
-   */
-  folderKey?: string;
-}
 
 export interface EntityGetAllOptions extends EntityFolderScopedOptions {
   /**
    * When `true`, returns tenant-level and folder-level entities together.
    * Omit (or `false`, the default) to return only tenant-level entities.
-   * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
+   * Ignored when `folderKey` is provided — `folderKey` is preferred over `includeFolderEntities` when both are set.
    *
    * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
    */

@@ -34,7 +34,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * Three call modes:
    * - `getAll()` — default. Returns only tenant-level choice sets.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
-   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` is preferred over `includeFolderChoiceSets` when both are set.
    *
    * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of choice set metadata
@@ -57,10 +57,20 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    */
   @track('Choicesets.GetAll')
   async getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
+    return this.fetchAllChoiceSets(options);
+  }
+
+  /**
+   * Internal helper that performs the choice-set fetch. Kept separate from the
+   * public `getAll()` so that internal callers (e.g. `resolveChoiceSetName`)
+   * can reuse it without triggering double `@track` telemetry.
+   */
+  private async fetchAllChoiceSets(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
     // The choice-set endpoint returns cross-scope results when called without
     // a folder header. To stay tenant-only by default (no OR.Users required),
     // send the tenant-marker UUID as the folder key unless the caller explicitly
-    // opts into cross-scope via includeFolderChoiceSets: true. folderKey always wins.
+    // opts into cross-scope via includeFolderChoiceSets: true. folderKey is
+    // preferred over includeFolderChoiceSets when both are set.
     const folderKey = options?.folderKey
       ?? (options?.includeFolderChoiceSets ? undefined : DATA_FABRIC_TENANT_FOLDER_ID);
 
@@ -130,7 +140,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     // Transform a single item from PascalCase to camelCase
     const transformFn = (item: RawChoiceSetGetResponse): ChoiceSetGetResponse => {
       const camelCased = pascalToCamelCaseKeys(item);
-      return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
+      return transformData(camelCased, EntityMap) as ChoiceSetGetResponse;
     };
 
     // folderKey is header-only — destructure it out so PaginationHelpers doesn't
@@ -153,7 +163,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, downstreamOptions) as any;
+    }, downstreamOptions);
   }
 
   /**
@@ -396,7 +406,10 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   }
 
   private async resolveChoiceSetName(choiceSetId: string, folderKey?: string): Promise<string> {
-    const all = await this.getAll(folderKey === undefined ? undefined : { folderKey });
+    // Use the un-tracked helper directly so we don't fire a duplicate
+    // `Choicesets.GetAll` telemetry event for every insertValueById /
+    // updateValueById call.
+    const all = await this.fetchAllChoiceSets(folderKey === undefined ? undefined : { folderKey });
     const match = all.find(cs => cs.id === choiceSetId);
     if (!match) {
       throw new NotFoundError({ message: `Choice set with id '${choiceSetId}' not found.` });

@@ -509,7 +509,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Three call modes:
    * - `getAll()` — default. Returns only tenant-level entities.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only entities in that folder.
-   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` is preferred over `includeFolderEntities` when both are set.
    *
    * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of entity metadata
@@ -535,11 +535,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // folderKey always wins: when present, scope to that folder via the v1 endpoint + header.
-    // Only when no folderKey is given AND includeFolderEntities is explicitly true does the SDK
-    // switch to the v2 endpoint (returns tenant + folder entities together — requires OR.Users).
-    // Default (no options or includeFolderEntities omitted) stays on the v1 endpoint = tenant only,
-    // no OR.Users required.
+    // folderKey is preferred over includeFolderEntities: when present, scope to that folder
+    // via the v1 endpoint + header. Only when no folderKey is given AND includeFolderEntities
+    // is explicitly true does the SDK switch to the v2 endpoint (returns tenant + folder
+    // entities together — requires OR.Users). Default (no options or includeFolderEntities
+    // omitted) stays on the v1 endpoint = tenant only, no OR.Users required.
     const endpoint = !options?.folderKey && options?.includeFolderEntities
       ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;

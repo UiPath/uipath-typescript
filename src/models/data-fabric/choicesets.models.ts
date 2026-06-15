@@ -37,7 +37,7 @@ export interface ChoiceSetServiceModel {
    * Three call modes:
    * - `getAll()` — default. Returns only tenant-level choice sets.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
-   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` is preferred over `includeFolderChoiceSets` when both are set.
    *
    * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of choice set metadata

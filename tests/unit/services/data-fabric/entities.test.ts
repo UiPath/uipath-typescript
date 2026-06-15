@@ -36,6 +36,7 @@ import type {
 import {
   EntityFieldDataType,
   EntityAggregateFunction,
+  EntityType,
   ExternalField,
   FieldDisplayType,
   QueryFilterOperator,
@@ -45,6 +46,7 @@ import {
   EntityFieldTypeMap,
   EntitySchemaFieldTypeMap,
   FieldDisplayTypeToDataType,
+  ENTITY_TYPE_IDS,
 } from "../../../../src/models/data-fabric/entities.constants";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
@@ -2245,8 +2247,8 @@ describe("EntityService Unit Tests", () => {
           id: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
           name: "UserType",
           folderId: DATA_FABRIC_TENANT_FOLDER_ID,
-          entityType: "ChoiceSet",
-          entityTypeId: 1,
+          entityType: EntityType.ChoiceSet,
+          entityTypeId: ENTITY_TYPE_IDS[EntityType.ChoiceSet],
         });
         expect(f?.choiceSetId).toBe(ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID);
       });
@@ -3104,7 +3106,7 @@ describe("EntityService Unit Tests", () => {
         isRbacEnabled: false,
         fields: [],
         id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        entityType: 0,
+        entityType: EntityType.Entity,
         externalFields: [],
         createdBy: "u",
         createdTime: "t",

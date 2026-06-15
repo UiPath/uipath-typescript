@@ -1,5 +1,5 @@
 import { PaginationOptions } from '../../utils/pagination/types';
-import { EntityFolderScopedOptions } from './entities.types';
+import { EntityFolderScopedOptions } from './data-fabric.types';
 
 /**
  * ChoiceSet Get All Response
@@ -54,7 +54,7 @@ export interface ChoiceSetGetAllOptions extends EntityFolderScopedOptions {
   /**
    * When `true`, also returns folder-level choice sets alongside tenant ones.
    * Omit (or `false`, the default) to return only tenant-level choice sets.
-   * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
+   * Ignored when `folderKey` is provided — `folderKey` is preferred over `includeFolderChoiceSets` when both are set.
    *
    * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
    */

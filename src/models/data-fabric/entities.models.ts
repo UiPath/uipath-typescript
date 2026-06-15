@@ -58,7 +58,7 @@ export interface EntityServiceModel {
    * Three call modes:
    * - `getAll()` — default. Returns only tenant-level entities.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only entities in that folder.
-   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` is preferred over `includeFolderEntities` when both are set.
    *
    * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of entity metadata
