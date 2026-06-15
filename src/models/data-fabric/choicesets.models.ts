@@ -32,26 +32,26 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface ChoiceSetServiceModel {
   /**
-   * Gets choice sets in the org.
+   * Gets choice sets in the tenant.
    *
    * Three call modes:
-   * - `getAll({ includeFolderChoiceSets: false })` — default. Returns only tenant-level choice sets. No `OR.Users` scope required.
-   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. Requires the `OR.Users` OAuth scope.
-   * - `getAll({ includeFolderChoiceSets: false, folderKey: "<uuid>" })` — returns only choice sets in that folder. `folderKey` always wins over `includeFolderChoiceSets`.
+   * - `getAll()` — default. Returns only tenant-level choice sets. No `OR.Users` scope required.
+   * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. Requires the `OR.Users` OAuth scope. `folderKey` (when provided) always wins over this flag.
    *
-   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets, `includeFolderChoiceSets: true` to list tenant + folder choice sets together)
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together)
    * @returns Promise resolving to an array of choice set metadata
    * {@link ChoiceSetGetAllResponse}
    * @example
    * ```typescript
    * // Tenant-only (default — no OR.Users needed)
-   * const tenantChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: false });
+   * const tenantChoiceSets = await choicesets.getAll();
+   *
+   * // A single folder's choice sets (preferred when targeting a specific folder)
+   * const folderChoiceSets = await choicesets.getAll({ folderKey: "<folderKey>" });
    *
    * // Tenant + folder choice sets together (requires OR.Users scope)
    * const allChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: true });
-   *
-   * // A single folder's choice sets
-   * const folderChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: false, folderKey: "<folderKey>" });
    *
    * // Find a specific choice set by name
    * const expenseTypes = tenantChoiceSets.find(cs => cs.name === 'ExpenseTypes');
