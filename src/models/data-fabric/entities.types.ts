@@ -304,7 +304,11 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   referenceEntityId?: string;
   /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
   referenceFieldId?: string;
-  /** Folder key of the reference target when it lives outside the source's folder. Pass `'00000000-0000-0000-0000-000000000000'` for tenant-level system targets. */
+  /**
+   * Folder key of the reference target when it lives outside the source's folder. Pass `'00000000-0000-0000-0000-000000000000'` for tenant-level system targets.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
+   */
   referenceFolderKey?: string;
 }
 
@@ -314,7 +318,11 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
  * Forwarded on the wire as the `X-UIPATH-FolderKey` header.
  */
 export interface EntityFolderScopedOptions {
-  /** Key identifying the folder the entity belongs to. Omit for tenant-level entities. */
+  /**
+   * Key identifying the folder the entity belongs to. Omit for tenant-level entities.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
+   */
   folderKey?: string;
 }
 
@@ -324,6 +332,8 @@ export interface EntityGetAllOptions extends EntityFolderScopedOptions {
    * (requires the `OR.Users` OAuth scope).
    * Omit (or `false`, the default) to return only tenant-level entities — no `OR.Users` needed.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
    */
   includeFolderEntities?: boolean;
 }
