@@ -193,14 +193,10 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const users = await tasks.getUsers(folderId!);
-
-        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
-        if (!user) {
-          throw new Error('No DirectoryUser available to assign task');
+        if (!config.tasksTestUserId) {
+          throw new Error('TASKS_TEST_USER_ID is required in the test config for single-user assignment');
         }
-
-        const userId = user.id;
+        const userId = Number(config.tasksTestUserId);
 
         const result = await tasks.assign({
           taskId: createdTaskId,
@@ -231,14 +227,10 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         let task = await tasks.getById(createdTaskId, {}, folderId!);
 
         if (!task.assignedToUser) {
-          const users = await tasks.getUsers(folderId!);
-
-          const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
-          if (!user) {
-            throw new Error('No DirectoryUser available to assign task');
+          if (!config.tasksTestUserId) {
+            throw new Error('TASKS_TEST_USER_ID is required in the test config for single-user assignment');
           }
-
-          const userId = user.id;
+          const userId = Number(config.tasksTestUserId);
 
           const assignResult = await tasks.assign({
             taskId: createdTaskId,
@@ -280,21 +272,37 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       }
       folderId = Number(config.folderId);
 
+      if (!config.tasksTestUserGroupId) {
+        throw new Error('TASKS_TEST_USER_GROUP_ID is required in the test config for group assignment-criteria tests');
+      }
+      groupId = Number(config.tasksTestUserGroupId);
+
+      if (!config.tasksTestUserId) {
+        throw new Error('TASKS_TEST_USER_ID is required in the test config for single-user assignment-criteria tests');
+      }
+
       const users = await tasks.getUsers(folderId);
 
-      const individual = users.items.find(
-        (u) => u.type === TaskUserType.User || u.type === TaskUserType.DirectoryUser,
-      );
-      if (!individual) {
-        throw new Error('No individual user (User/DirectoryUser) in the folder to test single-user assignment');
+      // Resolve the configured user's name/email for the userNameOrEmail path.
+      const configuredUser = users.items.find((u) => u.id === Number(config.tasksTestUserId));
+      if (!configuredUser) {
+        throw new Error(
+          `TASKS_TEST_USER_ID (${config.tasksTestUserId}) is not a user with task permissions in folder ${folderId}`,
+        );
       }
-      userNameOrEmail = individual.emailAddress || individual.userName;
+      userNameOrEmail = configuredUser.emailAddress || configuredUser.userName;
 
-      const group = users.items.find((u) => u.type === TaskUserType.DirectoryGroup);
-      if (!group) {
-        throw new Error('No DirectoryGroup in the folder to test group assignment');
+      // Fail fast with a clear message if the configured group isn't an
+      // assignable directory group in this folder — otherwise the group
+      // assignment below fails opaquely as success=false.
+      const configuredGroup = users.items.find(
+        (u) => u.type === TaskUserType.DirectoryGroup && u.id === groupId,
+      );
+      if (!configuredGroup) {
+        throw new Error(
+          `TASKS_TEST_USER_GROUP_ID (${groupId}) is not a directory group with task permissions in folder ${folderId}`,
+        );
       }
-      groupId = group.id;
 
       // One reusable External task; unassigned between cases so each assign
       // starts from a clean state. Tasks have no delete API, so cleanup only
@@ -312,7 +320,8 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
       const result = await tasks.assign({ taskId: criteriaTaskId, userNameOrEmail });
 
-      expect(result.success).toBe(true);
+      // On failure, result.data holds Action Center's per-item error details — surface them.
+      expect(result.success, `assign by userNameOrEmail failed: ${JSON.stringify(result.data)}`).toBe(true);
 
       const task = await tasks.getById(criteriaTaskId, {}, folderId);
       expect(task.assignedToUser).toBeDefined();
@@ -334,7 +343,8 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       // fails. The SDK maps the empty body to success=true and echoes the request
       // as `data`; a failure would instead surface error items here. Asserting the
       // exact echoed payload proves the response carried no failure details.
-      expect(result.success).toBe(true);
+      // On failure, result.data holds Action Center's per-item error details — surface them.
+      expect(result.success, `group assign failed: ${JSON.stringify(result.data)}`).toBe(true);
       expect(result.data).toEqual([
         { taskId: criteriaTaskId, userId: groupId, assignmentCriteria: TaskAssignmentCriteria.AllUsers },
       ]);
