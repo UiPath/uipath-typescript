@@ -1,7 +1,11 @@
 /*
- * Apollo Vertex design system styles — bundles Tailwind v4 base + utilities,
- * Apollo's design tokens (semantic colours, typography, radii), and built-in
- * `.dark` overrides. `next-themes` toggles `class="dark"` on <html> and
- * everything else (apollo-wind components, our Tailwind utilities) reacts.
+ * Import apollo-wind's Tailwind source (not the pre-compiled styles.css) so this
+ * app compiles its own utility classes. Brings in Tailwind v4 base/utilities,
+ * Apollo design tokens, and `.dark` overrides (toggled by next-themes).
  */
-@import '@uipath/apollo-wind/styles.css';
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind skips node_modules — scan apollo-wind so its component classes
+   (e.g. the Dialog's p-6/gap-4) regenerate; the second line scans this app. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';

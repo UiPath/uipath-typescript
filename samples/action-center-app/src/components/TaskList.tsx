@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Inbox, Plus, RefreshCw, User, Users } from 'lucide-react'
+import { ChevronRight, Inbox, Plus, RefreshCw, User, Users } from 'lucide-react'
 import { Tasks, TaskStatus, TaskPriority } from '@uipath/uipath-typescript/tasks'
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
@@ -74,9 +74,7 @@ interface Props {
 export function TaskList({ folderId }: Props) {
   const [status, setStatus] = useState<TaskStatus | 'all'>('all')
   const [priority, setPriority] = useState<TaskPriority | 'all'>('all')
-  // Mirrors Action Center's My Tasks / Manage Tasks split via getAll's
-  // `asTaskAdmin` flag — "Manage" lists tasks the user can assign (the context
-  // where group assignment applies).
+  // My Tasks / Manage Tasks split via getAll's `asTaskAdmin` flag.
   const [asTaskAdmin, setAsTaskAdmin] = useState(false)
   const [selected, setSelected] = useState<TaskGetResponse | null>(null)
   const [creating, setCreating] = useState(false)
@@ -178,7 +176,8 @@ export function TaskList({ folderId }: Props) {
                   <TableHead className="w-[12%]">Status</TableHead>
                   <TableHead className="w-[10%]">Priority</TableHead>
                   <TableHead className="w-[14%]">Assignee</TableHead>
-                  <TableHead className="w-[18%]">Created</TableHead>
+                  <TableHead className="w-[14%]">Created</TableHead>
+                  <TableHead className="w-[4%]" aria-label="Open" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -224,6 +223,9 @@ export function TaskList({ folderId }: Props) {
                       <TableCell className="truncate text-muted-foreground">
                         {formatDateTime(task.createdTime)}
                       </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        <ChevronRight className="inline h-4 w-4" aria-hidden />
+                      </TableCell>
                     </TableRow>
                   )
                 })}
@@ -268,6 +270,7 @@ export function TaskList({ folderId }: Props) {
           key={selected.id}
           taskId={selected.id}
           folderId={selected.folderId}
+          isManage={asTaskAdmin}
           onClose={() => setSelected(null)}
           onChanged={refresh}
         />
@@ -283,11 +286,7 @@ export function TaskList({ folderId }: Props) {
   )
 }
 
-/**
- * Skeleton placeholder for the task table. Mirrors the real table's column
- * layout so the page doesn't jump on load — the industry-standard pattern
- * for data-grids (Linear, Notion, Vercel, Stripe all do this).
- */
+/** Skeleton placeholder mirroring the table's columns so the page doesn't jump on load. */
 function TaskTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="rounded-lg border">
@@ -299,7 +298,8 @@ function TaskTableSkeleton({ rows = 8 }: { rows?: number }) {
             <TableHead className="w-[12%]">Status</TableHead>
             <TableHead className="w-[10%]">Priority</TableHead>
             <TableHead className="w-[14%]">Assignee</TableHead>
-            <TableHead className="w-[18%]">Created</TableHead>
+            <TableHead className="w-[14%]">Created</TableHead>
+            <TableHead className="w-[4%]" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -323,6 +323,7 @@ function TaskTableSkeleton({ rows = 8 }: { rows?: number }) {
               <TableCell>
                 <Skeleton className="h-4 w-32" />
               </TableCell>
+              <TableCell />
             </TableRow>
           ))}
         </TableBody>
@@ -359,11 +360,7 @@ function FilterSelect({
   )
 }
 
-/**
- * Inline create form — `Tasks.create` only supports External tasks and needs a
- * target folder, so a Folder ID field is always shown (prefilled from the
- * header filter when one is set).
- */
+/** Inline create form — Tasks.create makes External tasks and needs a target folder. */
 function CreateForm({
   defaultFolderId,
   onClose,
