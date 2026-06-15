@@ -62,6 +62,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** folder-scope options (`folderKey`, `includeFolderEntities`) are in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together)
    * @returns Promise resolving to an array of entity metadata
    * {@link EntityGetResponse}
@@ -108,6 +110,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param id - UUID of the entity
    * @param options - Optional {@link EntityGetByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to entity metadata with operation methods
@@ -150,6 +154,8 @@ export interface EntityServiceModel {
    * Gets entity records by entity ID
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param entityId - UUID of the entity
    * @param options - Query options
@@ -202,6 +208,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
    * @param options - Query options
@@ -236,6 +244,8 @@ export interface EntityServiceModel {
    * Use this method if you need trigger events to fire for the inserted record.
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param id - UUID of the entity
    * @param data - Record to insert
@@ -273,6 +283,8 @@ export interface EntityServiceModel {
    * trigger events to fire for each inserted record.
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param id - UUID of the entity
    * @param data - Array of records to insert
@@ -319,6 +331,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to update
    * @param data - Key-value pairs of fields to update
@@ -349,6 +363,8 @@ export interface EntityServiceModel {
    * Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use {@link updateRecordById} if you need trigger events to fire for each updated record.
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param id - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record id.
@@ -388,6 +404,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -416,6 +434,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
    * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities)
@@ -438,6 +458,8 @@ export interface EntityServiceModel {
    * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
@@ -500,6 +522,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param id - UUID of the entity
    * @param file - CSV file to import as a Blob or File or Uint8Array
    * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
@@ -522,6 +546,8 @@ export interface EntityServiceModel {
    * Downloads an attachment stored in a File-type field of an entity record.
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
@@ -582,6 +608,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to upload the attachment to
    * @param fieldName - Name of the File-type field
@@ -623,6 +651,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
@@ -656,6 +686,8 @@ export interface EntityServiceModel {
    * Creates a new Data Fabric entity with the given schema
    *
    * > **Experimental:** `folderKey` and cross-folder `referenceFolderKey` are in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param name - Entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
@@ -707,6 +739,8 @@ export interface EntityServiceModel {
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
    *
+   * @experimental
+   *
    * @param id - UUID of the entity to delete
    * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving when the entity is deleted
@@ -729,6 +763,8 @@ export interface EntityServiceModel {
    * only when the corresponding fields are provided.
    *
    * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
+   *
+   * @experimental
    *
    * @param id - UUID of the entity to update
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
