@@ -314,7 +314,7 @@ export class PaginationHelpers {
     // into the request body (some APIs only read these from the URL). No-op on GET.
     if (
       config.keepAsQueryParams?.length &&
-      (config.method ?? HTTP_METHODS.GET).toUpperCase() === HTTP_METHODS.POST
+      (config.method ?? HTTP_METHODS.GET) === HTTP_METHODS.POST
     ) {
       const queryString = config.keepAsQueryParams
         .filter(k => prefixedOptions[k] !== undefined && prefixedOptions[k] !== null)

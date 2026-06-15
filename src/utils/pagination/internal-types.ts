@@ -236,7 +236,11 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
 
-  /** Keys baked into the endpoint URL query string on POST instead of the body. No-op on GET. */
+  /**
+   * Keys baked into the endpoint URL query string on POST instead of the body. No-op on GET.
+   * Each key listed here must also appear in `excludeFromPrefix` — otherwise the OData
+   * prefix step renames it to `$<key>` and the URL-baking step won't find it.
+   */
   keepAsQueryParams?: string[];
 
   /** HTTP method to use for the request (default: 'GET') */
