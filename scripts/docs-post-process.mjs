@@ -31,6 +31,12 @@ const sections = [
     removeSource: true,
   },
   {
+    source: 'api/interfaces/TracesServiceModel.md',
+    dest: 'api/interfaces/traces/index.md',
+    header: '---\ntitle: Traces\n---\n',
+    removeSource: true,
+  },
+  {
     source: 'api/interfaces/ConversationalAgentServiceModel.md',
     dest: 'conversational-agent/index.md',
     header: '# Conversational Agent\n\n',

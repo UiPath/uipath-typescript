@@ -1,0 +1,24 @@
+/**
+ * Agent Traces Module
+ *
+ * Provides access to UiPath Agent trace-level analytics — error/latency/unit
+ * consumption timelines and span lookups.
+ *
+ * @example
+ * ```typescript
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+ *
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
+ *
+ * const trace = new AgentTraces(sdk);
+ * const timeline = await trace.getErrorsTimeline();
+ * ```
+ *
+ * @module
+ */
+
+export { AgentTracesService as AgentTraces } from './agent';
+
+export * from '../../../../models/observability/traces/agent';

@@ -27,6 +27,9 @@ export * from './feedback';
 // Agent Memory endpoints
 export * from './memory';
 
+// Agent Traces endpoints
+export * from './agent-traces';
+
 // Traces endpoints
 export * from './traces';
 

@@ -153,6 +153,19 @@ export const AGENTS_INCIDENTS_PAGINATION = {
 };
 
 /**
+ * Traceview spans pagination constants — items sit directly under `data`,
+ * total count under the same envelope location as the agents list. Request
+ * params reuse {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
+ */
+export const TRACEVIEW_SPANS_PAGINATION = {
+  /** Field name for the spans array in the response envelope */
+  ITEMS_FIELD: 'data',
+
+  /** Total count path — same envelope location as the agents list. */
+  TOTAL_COUNT_FIELD: AGENTS_PAGINATION.TOTAL_COUNT_FIELD
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {
