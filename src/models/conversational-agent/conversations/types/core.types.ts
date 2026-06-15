@@ -300,6 +300,7 @@ export interface Exchange {
   spanId?: string;
   /**
    * Timestamp indicating when the exchange ended, if it has ended.
+   * @internal
    */
   endedAt?: string;
   /**
