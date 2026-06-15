@@ -316,17 +316,25 @@ export class PaginationHelpers {
       config.keepAsQueryParams?.length &&
       (config.method ?? HTTP_METHODS.GET) === HTTP_METHODS.POST
     ) {
-      const queryString = config.keepAsQueryParams
-        .filter(k => prefixedOptions[k] !== undefined && prefixedOptions[k] !== null)
-        .map(k => {
-          const encoded = `${encodeURIComponent(k)}=${encodeURIComponent(String(prefixedOptions[k]))}`;
-          delete prefixedOptions[k];
-          return encoded;
-        })
+      const urlKeys = config.keepAsQueryParams.filter(
+        k => prefixedOptions[k] !== undefined && prefixedOptions[k] !== null
+      );
+      const queryString = urlKeys
+        .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(String(prefixedOptions[k]))}`)
         .join('&');
+      for (const k of urlKeys) {
+        delete prefixedOptions[k];
+      }
       if (queryString) {
+        const appendQs = (url: string) => `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
         const baseGetEndpoint = config.getEndpoint;
-        config = { ...config, getEndpoint: (fid?: number) => `${baseGetEndpoint(fid)}?${queryString}` };
+        config = {
+          ...config,
+          getEndpoint: (fid?: number) => appendQs(baseGetEndpoint(fid)),
+          ...(config.getByFolderEndpoint
+            ? { getByFolderEndpoint: appendQs(config.getByFolderEndpoint) }
+            : {}),
+        };
       }
     }
 

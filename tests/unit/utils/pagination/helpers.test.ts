@@ -907,6 +907,53 @@ describe('PaginationHelpers Unit Tests', () => {
         );
       });
 
+      it('should also bake declared keys into getByFolderEndpoint when folderId is supplied (POST, non-paginated)', async () => {
+        const apiResponse = createMockApiResponse([], 0);
+        vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
+
+        const postConfig = {
+          ...mockConfig,
+          method: 'POST',
+          excludeFromPrefix: ['filterGroup', 'expansionLevel'],
+          keepAsQueryParams: ['expansionLevel'],
+        };
+
+        await PaginationHelpers.getAll(postConfig, {
+          filterGroup: { fieldName: 'name', value: 'x' },
+          expansionLevel: 2,
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+        });
+
+        expect(mockServiceAccess.post).toHaveBeenCalledWith(
+          `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_FOLDERS_ITEMS}?expansionLevel=2`,
+          { filterGroup: { fieldName: 'name', value: 'x' } },
+          expect.objectContaining({ headers: { [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() } }),
+        );
+      });
+
+      it('should append with & when the base endpoint already contains a ? query string', async () => {
+        const apiResponse = createMockApiResponse([], 0);
+        vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
+
+        const preResolvedWithQuery = `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS}?source=preset`;
+        const postConfig = {
+          ...mockConfig,
+          method: 'POST',
+          getEndpoint: () => preResolvedWithQuery,
+          getByFolderEndpoint: undefined,
+          excludeFromPrefix: ['expansionLevel'],
+          keepAsQueryParams: ['expansionLevel'],
+        };
+
+        await PaginationHelpers.getAll(postConfig, { expansionLevel: 1 });
+
+        expect(mockServiceAccess.post).toHaveBeenCalledWith(
+          `${preResolvedWithQuery}&expansionLevel=1`,
+          {},
+          expect.anything(),
+        );
+      });
+
       it('should not touch the URL on GET (no-op, keys flow through normal additionalParams)', async () => {
         const apiResponse = createMockApiResponse([], 0);
         vi.mocked(mockServiceAccess.get).mockResolvedValue(apiResponse);
