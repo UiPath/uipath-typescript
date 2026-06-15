@@ -37,9 +37,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -74,9 +72,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get the latency timeline for an agent version within a time window
    * const filtered = await trace.getLatencyTimeline({
@@ -111,9 +107,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get per-agent unit consumption for an agent version within a time window
    * const filtered = await trace.getUnitConsumption({
@@ -170,9 +164,7 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentTraces, AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {
