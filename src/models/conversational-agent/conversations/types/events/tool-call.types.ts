@@ -196,6 +196,7 @@ export interface ToolCallStream {
    *   toolCall.sendToolCallEnd({ output: result });
    * });
    * ```
+   * @internal
    */
   onExecutingToolCall(cb: (event: ExecutingToolCallEvent) => void): () => void;
 

@@ -140,6 +140,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    * Fired when the tool is about to be executed. For client-side tools,
    * the client should begin executing its handler upon receiving this.
    * @returns Cleanup function to remove the handler.
+   * @internal
    */
   public onExecutingToolCall(cb: ExecutingToolCallHandler) {
     this._executingHandlers.push(cb);

@@ -111,6 +111,7 @@ export interface SessionEndingEvent {
 /**
  * A client-side tool that the client supports, declared during exchange start
  * so the server knows which tools to route client-side.
+ * @internal
  */
 export interface ClientSideTool {
   name: string;
@@ -137,6 +138,7 @@ export interface ExchangeStartEvent {
   /**
    * Optional list of client-side tools the client supports. The server validates these against the agent's
    * design-time definitions and forwards them to the runtime so it knows which tools to route client-side.
+   * @internal
    */
   clientSideTools?: ClientSideTool[];
 }
@@ -409,10 +411,12 @@ export interface ToolCallStartEvent {
   inputSchema?: JSONValue;
   /**
    * Output schema — used by the client to render the result form for client-side tools.
+   * @internal
    */
   outputSchema?: JSONValue;
   /**
    * Indicates this tool call should be executed client-side rather than server-side.
+   * @internal
    */
   isClientSideTool?: boolean;
 }
@@ -460,6 +464,7 @@ export interface ToolCallEndEvent {
  * Signals to the client that the tool is about to be executed. Emitted in all scenarios
  * (server-side and client-side tools). For client-side tools, the client should begin
  * executing its registered handler upon receiving this event.
+ * @internal
  */
 export interface ExecutingToolCallEvent {
   /**
@@ -515,6 +520,7 @@ export interface ToolCallEvent {
   /**
    * Signals that the tool is about to be executed. For client-side tools,
    * the client should begin executing its handler upon receiving this event.
+   * @internal
    */
   executingToolCall?: ExecutingToolCallEvent;
   /**
