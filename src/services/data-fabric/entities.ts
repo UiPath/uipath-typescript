@@ -560,8 +560,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
-    // folderKey is header-only — destructure it out so PaginationHelpers doesn't include
-    // it in the POST body alongside the query filters.
+    // folderKey is header-only; expansionLevel must travel as a URL query param (see keepAsQueryParams below).
     const { folderKey, ...rest } = options ?? {} as T;
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
@@ -579,7 +578,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'expansionLevel'],
+      keepAsQueryParams: ['expansionLevel']
     }, downstreamOptions);
   }
 

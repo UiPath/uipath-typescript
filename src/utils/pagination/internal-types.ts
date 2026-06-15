@@ -236,9 +236,12 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
 
+  /** Keys baked into the endpoint URL query string on POST instead of the body. No-op on GET. */
+  keepAsQueryParams?: string[];
+
   /** HTTP method to use for the request (default: 'GET') */
   method?: HttpMethodType;
 
   /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
   headers?: Record<string, string>;
-} 
+}

@@ -309,7 +309,27 @@ export class PaginationHelpers {
     const excludeKeys = config.excludeFromPrefix || [];
     const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
     const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
-    
+
+    // Bake `keepAsQueryParams` keys into the endpoint URL on POST so they aren't merged
+    // into the request body (some APIs only read these from the URL). No-op on GET.
+    if (
+      config.keepAsQueryParams?.length &&
+      (config.method ?? HTTP_METHODS.GET).toUpperCase() === HTTP_METHODS.POST
+    ) {
+      const queryString = config.keepAsQueryParams
+        .filter(k => prefixedOptions[k] !== undefined && prefixedOptions[k] !== null)
+        .map(k => {
+          const encoded = `${encodeURIComponent(k)}=${encodeURIComponent(String(prefixedOptions[k]))}`;
+          delete prefixedOptions[k];
+          return encoded;
+        })
+        .join('&');
+      if (queryString) {
+        const baseGetEndpoint = config.getEndpoint;
+        config = { ...config, getEndpoint: (fid?: number) => `${baseGetEndpoint(fid)}?${queryString}` };
+      }
+    }
+
     // Default pagination options
     const paginationOptions = {
       paginationType: PaginationType.OFFSET,
