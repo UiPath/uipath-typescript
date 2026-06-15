@@ -1,432 +1,68 @@
-<div align="center">
+# UiPath Sites
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="./docs/assets/logo-light.svg">
-  <img src="./docs/assets/logo-dark.svg" alt="UiPath Logo" width="200">
-</picture>
+UiPath Sites is a Codex companion plugin for building UiPath coded apps from `@UiPath Sites` or matched `@Sites` prompts.
 
+It keeps the app-building experience, but for matched UiPath requests it produces a UiPath coded app instead of a Sites-hosted app. Build, package, publish, and deploy are handled through the standard `uipath-coded-apps` workflow and `uip codedapp`.
 
+## What It Does
 
+- Routes `@UiPath Sites` and matched `@Sites` prompts into UiPath coded-app generation.
+- Keeps the final deployment target as UiPath, not Sites hosting.
+- Applies frontend-design guidance for visual polish only.
+- Ensures the UiPath CLI and UiPath Codex skills are available at session start.
+- Defers coded-app structure, auth, SDK usage, functional UI behavior, build, pack, publish, and deploy to `uipath-coded-apps`.
 
-# UiPath TypeScript SDK
+## Example Prompts
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![npm](https://img.shields.io/npm/v/@uipath/uipath-typescript?logo=npm)](https://www.npmjs.com/package/@uipath/uipath-typescript)
-[![GitHub](https://img.shields.io/github/stars/UiPath/uipath-typescript?style=social)](https://github.com/UiPath/uipath-typescript)
+```text
+Build a business-user-friendly case app with an Outlook inbox-style UI for browsing, reviewing, and approving cases.
+Build a data table interface for Data Fabric entities with search, browse, and CRUD capabilities.
+Build an Action Center task inbox for filtering work, reviewing task details, and completing assigned actions.
+```
 
-[Documentation](https://uipath.github.io/uipath-typescript/) • [Getting Started](#getting-started) • [Usage](#usage) • [Samples](#samples)
+## Expected Flow
 
-A comprehensive TypeScript SDK for interacting with UiPath Platform services.
+1. User starts with `@UiPath Sites`, or an `@Sites` prompt that mentions UiPath or coded-app intent.
+2. The plugin routes the request to the UiPath coded-app path.
+3. Codex builds a static Vite + React coded app.
+4. The app uses `@uipath/uipath-typescript` and `uipath.json`.
+5. Functional app behavior follows `uipath-coded-apps` and its relevant references.
+6. Frontend overrides apply only visual presentation and must not replace coded-app functional patterns.
+7. Normal Sites hosting, Cloudflare Worker output, D1, R2, and SIWC are skipped.
+8. The `uipath-coded-apps` skill handles local validation and `uip codedapp` pack, publish, and deploy.
 
-</div>
+## Ownership
 
-<details>
-<summary><strong>Table of Contents</strong></summary>
+- UiPath Sites owns routing, Sites-hosting suppression, and the visual companion layer.
+- `uipath-coded-apps` owns coded-app structure, SDK usage, auth/config, scopes, service-specific references, runtime data handling, functional UI behavior, build, pack, publish, and deploy.
+- `frontend-design-overrides.md` owns visual presentation only and must not redefine functional UI mechanics.
 
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Quick Start](#quick-start)
-- [Authentication](#authentication)
-  - [Authentication Methods](#authentication-methods)
-  - [SDK Initialization](#sdk-initialization)
-  - [OAuth Integration Patterns](#oauth-integration-patterns)
-- [Usage](#usage)
-- [Samples](#samples)
-- [Development](#development)
+## Prerequisites
 
-</details>
+- Codex with plugin support.
+- Node.js and npm.
+- Access to a UiPath tenant where coded apps can be published.
+- A UiPath external application/client ID configured with the scopes required by the generated coded app.
 
-## Overview
-
-The **UiPath TypeScript SDK** is a comprehensive, type-safe library for interacting with UiPath Platform services. Built with modern TypeScript, it provides seamless integration for both browser and Node.js applications, enabling developers to build sophisticated automation solutions with enterprise-grade reliability.
-
-<div align="right">
-
-</div>
-
-## Getting Started
-
-### Prerequisites
-
-- **Node.js** 18.x or higher
-- **npm** 8.x or higher (or yarn/pnpm)
-- **TypeScript** 4.5+ (for TypeScript projects)
-
-### Installation
+The plugin includes a session-start hook that installs or updates `@uipath/cli` globally and runs:
 
 ```bash
-# Using npm
-npm install @uipath/uipath-typescript
-
-# Using yarn
-yarn add @uipath/uipath-typescript
-
-# Using pnpm
-pnpm add @uipath/uipath-typescript
+uip skills install --agent codex
 ```
 
-### Quick Start
-
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
-// Initialize the SDK with OAuth
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  clientId: 'your-client-id',
-  redirectUri: 'your-redirect-uri',
-  scope: 'your-scopes'
-});
-
-// Initialize OAuth flow
-await sdk.initialize();
-
-// Create service instances
-const maestroProcesses = new MaestroProcesses(sdk);
-const tasks = new Tasks(sdk);
-
-// Use the services
-const processes = await maestroProcesses.getAll();
-const allTasks = await tasks.getAll();
-```
-
-<div align="right">
-
-[↑ Back to top](#uipath-typescript-sdk)
-
-</div>
-
-## Authentication
-
-### Authentication Methods
-
-The SDK supports two authentication methods:
-
-For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId, redirectUri, and scope here.
-
-<details>
-<summary><strong>1. OAuth Authentication (Recommended)</strong></summary>
-
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  clientId: 'your-client-id',
-  redirectUri: 'your-redirect-uri',
-  scope: 'your-scopes'
-});
-
-// IMPORTANT: OAuth requires calling initialize()
-await sdk.initialize();
-```
-
-</details>
-
-<details>
-<summary><strong>2. Secret-based Authentication</strong></summary>
-
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
-});
-```
-
-</details>
-
-### SDK Initialization
-
-<details>
-<summary><strong>When to Use initialize()</strong></summary>
-
-The `initialize()` method completes the authentication process for the SDK:
-
-- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
-- **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
-
-#### Example: Secret Authentication (Auto-initialized)
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
-});
-
-// Ready to use immediately - no initialize() needed
-const tasks = new Tasks(sdk);
-const allTasks = await tasks.getAll();
-```
-
-#### Example: OAuth Authentication (Requires initialize)
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  clientId: 'your-client-id',
-  redirectUri: 'http://localhost:3000',
-  scope: 'your-scopes'
-});
-
-// Must initialize before using services
-try {
-  await sdk.initialize();
-  console.log('SDK initialized successfully');
-
-  // Now you can use the SDK
-  const tasks = new Tasks(sdk);
-  const allTasks = await tasks.getAll();
-} catch (error) {
-  console.error('Failed to initialize SDK:', error);
-}
-```
-
-</details>
-
-### OAuth Integration Patterns
-
-<details>
-<summary><strong>View Integration Patterns</strong></summary>
-
-#### Auto-login on App Load
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-useEffect(() => {
-  const initSDK = async () => {
-    const sdk = new UiPath({...oauthConfig});
-    await sdk.initialize();
-  };
-  initSDK();
-}, []);
-```
-
-#### User-Triggered Login
-```typescript
-const onLogin = async () => {
-  await sdk.initialize();
-};
-
-// Handle OAuth callback
-const oauthCompleted = useRef(false);
-useEffect(() => {
-  if (sdk.isInitialized() && !oauthCompleted.current) {
-    oauthCompleted.current = true;
-    sdk.completeOAuth();
-  }
-}, []);
-```
-
-#### Available OAuth Methods
-- `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
-- `sdk.isInitialized()` - Check if SDK initialization completed
-- `sdk.isAuthenticated()` - Check if user has valid token
-- `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
-- `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
-
-</details>
-
-<div align="right">
-
-[↑ Back to top](#uipath-typescript-sdk)
-
-</div>
-
-## Usage
-
-The SDK provides access to the following services through modular imports:
-
-- `MaestroProcesses` from `@uipath/uipath-typescript/maestro-processes` - Manage agentic maestro processes
-- `ProcessInstances` from `@uipath/uipath-typescript/maestro-processes` - Manage maestro process executions
-- `Cases` from `@uipath/uipath-typescript/cases` - Manage maestro case management processes
-- `CaseInstances` from `@uipath/uipath-typescript/cases` - Manage maestro case executions
-- `Tasks` from `@uipath/uipath-typescript/tasks` - Create and manage tasks
-- `Entities` from `@uipath/uipath-typescript/entities` - Data Fabric entity operations
-- `Processes` from `@uipath/uipath-typescript/processes` - Manage Orchestrator processes
-- `Buckets` from `@uipath/uipath-typescript/buckets` - Manage storage buckets in Orchestrator
-- `Queues` from `@uipath/uipath-typescript/queues` - Manage Orchestrator queues
-- `Assets` from `@uipath/uipath-typescript/assets` - Manage Orchestrator assets
-- `ConversationalAgent` from `@uipath/uipath-typescript/conversational-agent` - Interact with Conversational Agents (real-time streaming, conversations, sessions)
-
-<details>
-<summary><strong>View Example Usage</strong></summary>
-
-```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { MaestroProcesses, ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
-import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
-import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
-import { Processes } from '@uipath/uipath-typescript/processes';
-import { Buckets } from '@uipath/uipath-typescript/buckets';
-import { Entities } from '@uipath/uipath-typescript/entities';
-
-// Initialize SDK
-const sdk = new UiPath({ /* config */ });
-
-// Create service instances
-const maestroProcesses = new MaestroProcesses(sdk);
-const processInstances = new ProcessInstances(sdk);
-const cases = new Cases(sdk);
-const caseInstances = new CaseInstances(sdk);
-const tasks = new Tasks(sdk);
-const processes = new Processes(sdk);
-const buckets = new Buckets(sdk);
-const entities = new Entities(sdk);
-
-// Maestro - Get processes and their instances
-const allProcesses = await maestroProcesses.getAll();
-const instances = await processInstances.getAll({
-  processKey: 'my-process',
-  pageSize: 10
-});
-
-// Control Process Instances
-await processInstances.pause(instanceId, 'folder-key');
-await processInstances.resume(instanceId, 'folder-key');
-await processInstances.cancel(instanceId, 'folder-key', {
-  comment: 'Cancelled due to error'
-});
-
-// Maestro Case Instances
-const caseInstance = await caseInstances.getById(instanceId, 'folder-key');
-const stages = await caseInstances.getStages(instanceId, 'folder-key');
-
-// Control Case Instances
-await caseInstances.close(instanceId, 'folder-key', {
-  comment: 'Case resolved successfully'
-});
-
-// Orchestrator Processes - Start a process
-const result = await processes.start({
-  processKey: 'MyProcess_Key',
-}, folderId);
-
-// Tasks - Create, assign, and complete
-const task = await tasks.create({
-  title: 'Review Invoice',
-  priority: 'High'
-}, folderId);
-
-await tasks.assign({
-  taskId: task.id,
-  userNameOrEmail: 'user@company.com'
-}, folderId);
-
-await tasks.complete(TaskType.App, {
-  taskId: task.id,
-  data: {},
-  action: 'submit'
-}, folderId);
-
-// Buckets - File operations
-const bucket = await buckets.getById(bucketId, folderId);
-const fileMetadata = await buckets.getFileMetaData(bucketId, folderId, {
-  prefix: '/invoices/'
-});
-
-// Upload file
-await buckets.uploadFile({
-  bucketId: bucketId,
-  folderId: folderId,
-  prefix: '/folder1'
-});
-
-// Get download URL
-const downloadUrl = await buckets.getReadUri({
-  bucketId: bucketId,
-  folderId: folderId,
-  path: '/folder/file.pdf'
-});
-
-// Data Fabric Entities - CRUD operations
-const entity = await entities.getById('entity-uuid');
-const records = await entities.getAllRecords('entity-uuid', {
-  pageSize: 100,
-  expansionLevel: 1
-});
-
-// Insert records
-await entities.insertRecordsById('entity-uuid', [
-  { name: 'John Doe', email: 'john@company.com', status: 'Active' },
-  { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
-]);
-
-// Update records
-await entities.updateRecordsById('entity-uuid', [
-  { Id: 'record-id-1', status: 'Inactive' }
-]);
-
-// Delete records
-await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
-```
-
-</details>
-
-<div align="right">
-
-[↑ Back to top](#uipath-typescript-sdk)
-
-</div>
-
-## Samples
-
-Check out the [`/samples`](./samples) folder to see sample applications built using the SDK:
-
-- **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
-- **[conversational-agent-app](./samples/conversational-agent-app)**: A Conversational Agent chat application with real-time streaming, conversation management, file attachments, tool call visualization, and feedback
-
-<div align="right">
-
-[↑ Back to top](#uipath-typescript-sdk)
-
-</div>
-
-## Development
-
-Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).
-
-### Running Documentation Locally
-
-To build and serve the documentation locally using MkDocs:
-
-**Prerequisites:**
-- Python
-- Node.js 18.x or higher
-- npm 8.x or higher
-
-**Steps:**
-```bash
-pip3 install -r docs/requirements.txt
-npm run docs:api
-mkdocs build
-mkdocs serve
-```
-
-<div align="right">
-
-[↑ Back to top](#uipath-typescript-sdk)
-
-</div>
+## Troubleshooting
+
+- If the plugin does not route, use `@UiPath Sites` or include both `@Sites` and clear UiPath coded-app intent in the prompt.
+- If cloud actions fail, check `uip login status --output json` and re-login to the target environment, org, and tenant.
+- If a generated project contains `.openai/hosting.json`, Sites hosting assumptions leaked into the flow and should be removed.
+- If another UiPath skill is selected, restate that the target is a UiPath coded app and not an RPA workflow, Solution package, Maestro flow, or platform admin operation.
+- If functional UI behavior breaks, verify the generated app followed the relevant `uipath-coded-apps` reference rather than relying only on visual frontend guidance.
+
+## Versioning
+
+- `0.1.2`: explicit ownership split between routing, coded-app functional behavior, and visual-only frontend guidance.
+- `0.1.1`: modular instruction cleanup and fresh plugin cache version.
+- `0.1.0`: preview release for internal/public testing.
+- `0.1.x`: metadata, docs, prompt, hook, and bug fixes.
+- `0.2.0`: routing, bootstrap, or supported-app behavior changes.
+- `1.0.0`: stable release after marketplace validation and repeated successful demos.
