@@ -13,6 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@uipath/apollo-wind/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@uipath/apollo-wind/components/ui/sheet'
 import { Input } from '@uipath/apollo-wind/components/ui/input'
 import { Label } from '@uipath/apollo-wind/components/ui/label'
 import {
@@ -36,6 +43,8 @@ import {
 interface Props {
   taskId: number
   folderId: number
+  /** Opened from Manage Tasks — gates the Assign/Reassign actions. */
+  isManage: boolean
   onClose: () => void
   /** Called after a mutation so the parent list can refresh. */
   onChanged: () => void
@@ -43,12 +52,8 @@ interface Props {
 
 type Sub = 'assign' | 'reassign' | 'complete' | null
 
-/**
- * Detail modal for one task (via `Tasks.getById`) plus the lifecycle actions.
- * Assign / reassign / complete open small inline forms; unassign runs inline.
- * All mutations use the task-attached methods on the fetched task.
- */
-export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
+/** Task detail panel (Tasks.getById) with lifecycle actions via task-attached methods. */
+export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: Props) {
   const { task, loading, error, reload } = useTask(taskId, folderId)
   const [sub, setSub] = useState<Sub>(null)
   const [busy, setBusy] = useState(false)
@@ -79,12 +84,16 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
 
   return (
     <>
-      <Dialog open onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="truncate">{task?.title ?? `Task #${taskId}`}</DialogTitle>
-          </DialogHeader>
+      <Sheet open onOpenChange={(open) => !open && onClose()}>
+        <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="min-w-0 break-words pr-8">
+              {task?.title ?? `Task #${taskId}`}
+            </SheetTitle>
+          </SheetHeader>
 
+          {/* Scrollable body so the footer stays pinned regardless of content height. */}
+          <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">
           {loading ? (
             <div className="flex justify-center py-6">
               <Spinner label="Loading task…" showLabel />
@@ -94,8 +103,8 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : task ? (
-            <div className="space-y-5 text-sm">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="space-y-4 text-sm">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <Badge variant={statusBadge(task.status).variant}>
                   {statusBadge(task.status).label}
                 </Badge>
@@ -115,26 +124,22 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
                   label="Assignee"
                   value={task.assignedToUser?.displayName ?? 'Unassigned'}
                 />
+                {task.taskSource?.sourceName && (
+                  <Field label="Source" value={task.taskSource.sourceName} />
+                )}
                 <Field label="Created" value={formatDateTime(task.createdTime)} />
                 {task.completedTime && (
                   <Field label="Completed" value={formatDateTime(task.completedTime)} />
                 )}
+                {task.completedByUser?.displayName && (
+                  <Field label="Completed by" value={task.completedByUser.displayName} />
+                )}
+                {(task.actionLabel || task.action) && (
+                  <Field label="Action" value={task.actionLabel ?? task.action ?? ''} />
+                )}
                 {task.externalTag && <Field label="External tag" value={task.externalTag} mono />}
                 <Field label="Key" value={task.key} mono />
               </dl>
-
-              {task.tags && task.tags.length > 0 && (
-                <Section title="Tags">
-                  <div className="flex flex-wrap gap-1.5">
-                    {task.tags.map((t) => (
-                      <Badge key={t.name} variant="secondary">
-                        {t.displayName || t.name}
-                        {t.displayValue ? `: ${t.displayValue}` : ''}
-                      </Badge>
-                    ))}
-                  </div>
-                </Section>
-              )}
 
               {task.data && Object.keys(task.data).length > 0 && (
                 <Section title="Data">
@@ -176,11 +181,15 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
               )}
             </div>
           ) : null}
+          </div>
 
           {task && !isCompleted && (
-            <DialogFooter className="flex-wrap">
-              {!hasAssignee && <Button onClick={() => setSub('assign')}>Assign</Button>}
-              {hasAssignee && (
+            <SheetFooter className="flex-wrap gap-2">
+              {/* Assign/Reassign to others is a Manage Tasks action only. */}
+              {isManage && !hasAssignee && (
+                <Button onClick={() => setSub('assign')}>Assign</Button>
+              )}
+              {isManage && hasAssignee && (
                 <Button variant="outline" onClick={() => setSub('reassign')}>
                   Reassign
                 </Button>
@@ -193,10 +202,10 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
               <Button variant="outline" onClick={() => setSub('complete')}>
                 Complete
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {task && (sub === 'assign' || sub === 'reassign') && (
         <AssignForm
@@ -269,9 +278,8 @@ function AssignForm({
     const id = Number(userId)
     if (!Number.isFinite(id) || id <= 0) return
     const selected = users.find((u) => u.id === id)
-    // Assigning to a directory group needs an assignment criteria so the
-    // backend knows how to distribute the task across the group's members; a
-    // direct (single-user) assignment omits it.
+    // Directory-group assignment needs a criteria to distribute across members;
+    // single-user assignment omits it.
     const opts: TaskAssignOptions =
       selected?.type === TaskUserType.DirectoryGroup
         ? { userId: id, assignmentCriteria: TaskAssignmentCriteria.AllUsers }

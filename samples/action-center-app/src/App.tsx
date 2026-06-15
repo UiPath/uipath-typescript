@@ -17,11 +17,8 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import { TaskList } from './components/TaskList'
 import { ThemeToggle } from './components/Theme'
 
-// Coded App pattern: the SDK fills required fields (clientId, orgName,
-// tenantName, baseUrl, scope, redirectUri) from `<meta name="uipath:*">` tags
-// injected at runtime — by `@uipath/coded-apps-dev` locally (from uipath.json)
-// or by the platform when deployed. The static type insists on those fields,
-// so we pass an empty object cast to satisfy it.
+// Coded App pattern: the SDK fills config from `<meta name="uipath:*">` tags
+// (injected locally by coded-apps-dev or by the platform), so we pass {}.
 const authConfig = {} as UiPathSDKConfig
 
 const FOLDER_STORAGE_KEY = 'action-center-app.folderId'
@@ -29,9 +26,7 @@ const FOLDER_STORAGE_KEY = 'action-center-app.folderId'
 function AppContent() {
   const { isAuthenticated, isLoading, login, logout, error } = useAuth()
 
-  // Action Center tasks are folder-scoped. Persist the choice so it survives a
-  // refresh and the OAuth round-trip. Leaving it blank lists tasks across all
-  // folders the user can view/edit.
+  // Persist the folder filter across refresh/OAuth; blank = all folders.
   const [folderId, setFolderId] = useState<number | null>(() => {
     const stored = localStorage.getItem(FOLDER_STORAGE_KEY)
     const parsed = stored ? Number(stored) : NaN
@@ -101,10 +96,8 @@ function AppContent() {
             />
             <Input
               id="folder-id"
-              // Folder IDs are identifiers, not quantities — `type="text"` with
-              // `inputMode="numeric"` keeps the on-screen numeric keypad on
-              // mobile while dropping the desktop spinner arrows (which would
-              // imply incrementing an ID is meaningful, which it isn't).
+              // type=text + inputMode=numeric: numeric keypad on mobile, no
+              // desktop spinner arrows (incrementing an ID isn't meaningful).
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"

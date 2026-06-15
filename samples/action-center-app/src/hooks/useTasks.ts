@@ -14,10 +14,8 @@ import type { TaskFilters } from '../taskUtils'
  * to keep the sample small; each wraps one part of `TaskServiceModel`.
  */
 
-// Principal types a human task can be assigned to. `Tasks.getUsers` also
-// returns robot / external-application accounts (and a folder may contain only
-// groups, not individual users), so we keep people + directory users + groups
-// and drop the non-human accounts.
+// Human-assignable principals only — drop the robot / external-app accounts
+// that Tasks.getUsers also returns.
 const ASSIGNABLE_TYPES = new Set<TaskUserType>([
   TaskUserType.User,
   TaskUserType.DirectoryUser,
@@ -62,10 +60,8 @@ export function useTasks(
 
   const filter = buildTaskFilter(filters)
 
-  // Reset to page 1 AND clear the previous result set when the folder,
-  // filters, or admin scope change. Clearing `tasks` flips the table into its
-  // loading state immediately instead of letting the stale rows linger until
-  // the new fetch resolves.
+  // On folder/filter/scope change, reset to page 1 and clear rows so the table
+  // shows loading immediately instead of stale data.
   useEffect(() => {
     setPage(1)
     setTasks([])
@@ -81,10 +77,8 @@ export function useTasks(
       const result = await svc.getAll({
         pageSize,
         jumpToPage: page,
-        // Use the raw server property name. The SDK renames `CreationTime` →
-        // `createdTime` on the response, but OData $orderby/$filter run on the
-        // server, which only knows the original `CreationTime` — passing the
-        // SDK alias returns "Invalid OData query options" (400).
+        // Raw server property name: $orderby runs server-side and only knows
+        // `CreationTime` (the SDK alias `createdTime` would 400).
         orderby: 'CreationTime desc',
         ...(folderId != null ? { folderId } : {}),
         ...(filter ? { filter } : {}),
