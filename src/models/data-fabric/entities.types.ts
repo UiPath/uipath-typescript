@@ -328,9 +328,8 @@ export interface EntityFolderScopedOptions {
 
 export interface EntityGetAllOptions extends EntityFolderScopedOptions {
   /**
-   * When `true`, returns tenant-level and folder-level entities together
-   * (requires the `OR.Users` OAuth scope).
-   * Omit (or `false`, the default) to return only tenant-level entities — no `OR.Users` needed.
+   * When `true`, returns tenant-level and folder-level entities together.
+   * Omit (or `false`, the default) to return only tenant-level entities.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
    *
    * @experimental Folder-scoped Data Fabric is in preview — the contract may change.

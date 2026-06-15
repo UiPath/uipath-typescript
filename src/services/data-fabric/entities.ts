@@ -543,9 +543,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Gets entities in the tenant.
    *
    * Three call modes:
-   * - `getAll()` — default. Returns only tenant-level entities. No `OR.Users` scope required.
+   * - `getAll()` — default. Returns only tenant-level entities.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only entities in that folder.
-   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. Requires the `OR.Users` OAuth scope. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` (when provided) always wins over this flag.
    *
    * > **Experimental:** folder-scope options (`folderKey`, `includeFolderEntities`) are in preview — the contract may change.
    *
@@ -560,13 +560,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * // Tenant-only (default — no OR.Users needed)
+   * // Tenant-only (default)
    * const tenantEntities = await entities.getAll();
    *
    * // A single folder's entities (preferred when targeting a specific folder)
    * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
    *
-   * // Tenant + folder entities together (requires OR.Users scope)
+   * // Tenant + folder entities together
    * const allEntities = await entities.getAll({ includeFolderEntities: true });
    *
    * // Call operations on an entity

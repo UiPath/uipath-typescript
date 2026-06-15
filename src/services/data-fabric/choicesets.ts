@@ -32,9 +32,9 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * Gets choice sets in the tenant.
    *
    * Three call modes:
-   * - `getAll()` — default. Returns only tenant-level choice sets. No `OR.Users` scope required.
+   * - `getAll()` — default. Returns only tenant-level choice sets.
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
-   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. Requires the `OR.Users` OAuth scope. `folderKey` (when provided) always wins over this flag.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` (when provided) always wins over this flag.
    *
    * > **Experimental:** folder-scope options (`folderKey`, `includeFolderChoiceSets`) are in preview — the contract may change.
    *
@@ -49,13 +49,13 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * const choiceSets = new ChoiceSets(sdk);
    *
-   * // Tenant-only (default — no OR.Users needed)
+   * // Tenant-only (default)
    * const tenantChoiceSets = await choiceSets.getAll();
    *
    * // A single folder's choice sets (preferred when targeting a specific folder)
    * const folderChoiceSets = await choiceSets.getAll({ folderKey: "<folderKey>" });
    *
-   * // Tenant + folder choice sets together (requires OR.Users scope)
+   * // Tenant + folder choice sets together
    * const allChoiceSets = await choiceSets.getAll({ includeFolderChoiceSets: true });
    * ```
    */

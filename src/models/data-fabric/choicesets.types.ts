@@ -52,9 +52,8 @@ export interface ChoiceSetGetResponse {
 
 export interface ChoiceSetGetAllOptions extends EntityFolderScopedOptions {
   /**
-   * When `true`, also returns folder-level choice sets alongside tenant ones
-   * (requires the `OR.Users` OAuth scope).
-   * Omit (or `false`, the default) to return only tenant-level choice sets — no `OR.Users` needed.
+   * When `true`, also returns folder-level choice sets alongside tenant ones.
+   * Omit (or `false`, the default) to return only tenant-level choice sets.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
    */
   includeFolderChoiceSets?: boolean;
