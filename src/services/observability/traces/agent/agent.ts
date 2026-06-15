@@ -7,12 +7,11 @@ import {
   AgentTraceGetLatencyTimelineResponse,
   AgentTraceGetUnitConsumptionOptions,
   AgentTraceGetUnitConsumptionResponse,
-  SpanResponse,
+  AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
 } from '../../../../models/observability/traces/agent/agent.types';
 import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
-import { RawSpanResponse } from '../../../../models/observability/traces/agent/agent.internal-types';
-import { SpanMap } from '../../../../models/observability/traces/agent/agent.constants';
+import { RawAgentSpanGetResponse } from '../../../../models/observability/traces/agent/agent.internal-types';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
@@ -21,7 +20,6 @@ import {
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
 import { ValidationError } from '../../../../core/errors';
-import { transformData } from '../../../../utils/transform';
 import { PaginationHelpers } from '../../../../utils/pagination/helpers';
 import { PaginationType } from '../../../../utils/pagination/internal-types';
 import type {
@@ -31,12 +29,12 @@ import type {
 } from '../../../../utils/pagination/types';
 
 /**
- * Applies the {@link SpanMap} semantic renames (e.g. `expiryTimeUtc` → `expiredTime`)
- * to a span record. The Traceview API already returns camelCase, so only the
- * field renames are needed.
+ * Maps a raw span record to a {@link AgentSpanGetResponse}
  */
-const transformSpan = (span: RawSpanResponse): SpanResponse =>
-  transformData(span, SpanMap) as unknown as SpanResponse;
+const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
+  const { expiryTimeUtc, ...rest } = span;
+  return { ...rest, expiredTime: expiryTimeUtc };
+};
 
 /**
  * Service for retrieving UiPath Agent trace metrics.
@@ -178,7 +176,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * Retrieves every span belonging to a single trace.
    *
    * @param traceId - Identifier of the trace whose spans should be returned
-   * @returns Promise resolving to an array of {@link SpanResponse}
+   * @returns Promise resolving to an array of {@link AgentSpanGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -192,9 +190,9 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    */
   @track('AgentTraces.GetSpansByTraceId')
-  async getSpansByTraceId(traceId: string): Promise<SpanResponse[]> {
+  async getSpansByTraceId(traceId: string): Promise<AgentSpanGetResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByTraceId' });
-    const response = await this.get<RawSpanResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
+    const response = await this.get<RawAgentSpanGetResponse[]>(AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
     return (response.data ?? []).map(transformSpan);
   }
 
@@ -207,7 +205,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * @param referenceId - Reference id matched against each span's reference hierarchy
    * @param options - Optional pagination and hierarchy/time filters
-   * @returns Promise resolving to a paginated or non-paginated list of {@link SpanResponse}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentSpanGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -244,8 +242,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
+      ? PaginatedResponse<AgentSpanGetResponse>
+      : NonPaginatedResponse<AgentSpanGetResponse>
   > {
     if (!referenceId) throw new ValidationError({ message: 'referenceId is required for getSpansByReference' });
     const { startTime, endTime, ...rest } = options ?? {};
@@ -255,7 +253,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
     };
 
-    return PaginationHelpers.getAll<typeof apiOptions, RawSpanResponse, SpanResponse>({
+    return PaginationHelpers.getAll<typeof apiOptions, RawAgentSpanGetResponse, AgentSpanGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_SPANS_BY_REFERENCE(referenceId),
       method: HTTP_METHODS.GET,
@@ -275,8 +273,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       },
     }, apiOptions) as Promise<
       T extends HasPaginationOptions<T>
-        ? PaginatedResponse<SpanResponse>
-        : NonPaginatedResponse<SpanResponse>
+        ? PaginatedResponse<AgentSpanGetResponse>
+        : NonPaginatedResponse<AgentSpanGetResponse>
     >;
   }
 

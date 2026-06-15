@@ -86,7 +86,7 @@ export interface AgentTraceGetUnitConsumptionOptions extends AgentTraceFilterOpt
 /**
  * A single span record from the trace store.
  */
-export interface SpanResponse {
+export interface AgentSpanGetResponse {
   /** Span ID. */
   id: string;
   /** ID of the trace this span belongs to. */
@@ -99,7 +99,7 @@ export interface SpanResponse {
   startTime: string;
   /** Span end time. `null` while the span is in progress. */
   endTime: string | null;
-  /** Raw span attributes as a JSON string — parse with `JSON.parse()`. */
+  /** Raw span attributes as a JSON string. */
   attributes: string;
   /** Span status. */
   status: string;
@@ -131,10 +131,7 @@ export interface SpanResponse {
   compressionType: string | null;
   /** Agent version that produced the span. May be `null`. */
   agentVersion: string | null;
-  /**
-   * Raw span context as a JSON string — parse with `JSON.parse()`.
-   * May be `null`.
-   */
+  /** Raw span context as a JSON string. May be `null`. */
   context: string | null;
 }
 

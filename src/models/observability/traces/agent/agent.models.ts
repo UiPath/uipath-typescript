@@ -5,7 +5,7 @@ import {
   AgentTraceGetLatencyTimelineResponse,
   AgentTraceGetUnitConsumptionOptions,
   AgentTraceGetUnitConsumptionResponse,
-  SpanResponse,
+  AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
 } from './agent.types';
 import type {
@@ -133,7 +133,7 @@ export interface AgentTracesServiceModel {
    * Retrieves every span belonging to a single trace.
    *
    * @param traceId - Identifier of the trace whose spans should be returned
-   * @returns Promise resolving to an array of {@link SpanResponse}
+   * @returns Promise resolving to an array of {@link AgentSpanGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -146,7 +146,7 @@ export interface AgentTracesServiceModel {
    * });
    * ```
    */
-  getSpansByTraceId(traceId: string): Promise<SpanResponse[]>;
+  getSpansByTraceId(traceId: string): Promise<AgentSpanGetResponse[]>;
 
   /**
    * Retrieves spans whose reference hierarchy contains the given reference id.
@@ -157,7 +157,7 @@ export interface AgentTracesServiceModel {
    *
    * @param referenceId - Reference id matched against each span's reference hierarchy
    * @param options - Optional pagination and hierarchy/time filters
-   * @returns Promise resolving to a paginated or non-paginated list of {@link SpanResponse}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentSpanGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -193,7 +193,7 @@ export interface AgentTracesServiceModel {
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
+      ? PaginatedResponse<AgentSpanGetResponse>
+      : NonPaginatedResponse<AgentSpanGetResponse>
   >;
 }
