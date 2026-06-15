@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core'
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -15,25 +14,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 /**
- * Provides the authenticated UiPath SDK instance. Follows the Coded Apps
- * web-app template: the SDK config is filled from the `<meta name="uipath:*">`
- * tags injected by the platform (or by `@uipath/coded-apps-dev` locally from
- * uipath.json), so callers can pass an empty config object.
+ * Provides the authenticated UiPath SDK instance.
+ *
+ * Coded App pattern: `new UiPath()` (no config) picks up `clientId`,
+ * `orgName`, `tenantName`, `baseUrl`, `scope`, and `redirectUri` from the
+ * `<meta name="uipath:*">` tags injected by `@uipath/coded-apps-dev`
+ * (locally, from `uipath.json`) or by the UiPath platform (in production).
  */
-export function AuthProvider({
-  children,
-  config,
-}: {
-  children: ReactNode
-  config: UiPathSDKConfig
-}) {
-  const [sdk] = useState<UiPath>(() => new UiPath(config))
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [sdk] = useState<UiPath>(() => new UiPath())
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // React Strict Mode double-invokes effects in dev; OAuth codes are
-  // single-use, so guard against completing the exchange twice.
+  // React StrictMode double-invokes effects in dev; the OAuth `code` is
+  // single-use, so calling completeOAuth() twice fails the second time.
   const didInit = useRef(false)
 
   useEffect(() => {
@@ -45,14 +40,19 @@ export function AuthProvider({
       setError(null)
       try {
         if (sdk.isInOAuthCallback()) {
+          // SDK strips ?code & ?state after a successful exchange.
           await sdk.completeOAuth()
-          window.history.replaceState({}, document.title, window.location.pathname)
         }
-        setIsAuthenticated(sdk.isAuthenticated())
       } catch (err) {
-        setError(err instanceof UiPathError ? err.message : 'Authentication failed')
-        setIsAuthenticated(false)
+        // completeOAuth can throw even when the token exchange succeeded
+        // (the code was consumed by another path inside the SDK first). Only
+        // treat the throw as fatal when auth actually didn't go through.
+        if (!sdk.isAuthenticated()) {
+          console.error('Auth init failed:', err)
+          setError(err instanceof UiPathError ? err.message : 'Authentication failed')
+        }
       } finally {
+        setIsAuthenticated(sdk.isAuthenticated())
         setIsLoading(false)
       }
     }
@@ -66,7 +66,9 @@ export function AuthProvider({
       await sdk.initialize()
       setIsAuthenticated(sdk.isAuthenticated())
     } catch (err) {
+      console.error('Login failed:', err)
       setError(err instanceof UiPathError ? err.message : 'Login failed')
+      setIsAuthenticated(false)
     } finally {
       setIsLoading(false)
     }
@@ -87,6 +89,6 @@ export function AuthProvider({
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider')
+  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')
   return ctx
 }

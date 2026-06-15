@@ -5,17 +5,13 @@ import type {
   UserLoginInfo,
 } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from './useAuth'
+import { useAuth } from '../context/AuthContext'
 import { buildTaskFilter } from '../taskUtils'
 import type { TaskFilters } from '../taskUtils'
 
-/**
- * Data hooks for the Action Center Tasks service. All three live in one file
- * to keep the sample small; each wraps one part of `TaskServiceModel`.
- */
+/** Hooks wrapping each method on `TaskServiceModel`, plus `useFolders`. */
 
-// Human-assignable principals only — drop the robot / external-app accounts
-// that Tasks.getUsers also returns.
+// Human-assignable principals only.
 const ASSIGNABLE_TYPES = new Set<TaskUserType>([
   TaskUserType.User,
   TaskUserType.DirectoryUser,
@@ -35,15 +31,7 @@ interface UseTasksResult {
   refresh: () => Promise<void>
 }
 
-/**
- * Lists tasks with server-side pagination + filtering. `folderId` is optional:
- * when omitted, `Tasks.getAll` returns tasks across every folder the user can
- * view/edit (the default manager view); when set, it scopes to that folder.
- *
- * `Tasks.getAll` is OFFSET-paginated, so it supports `jumpToPage` (page-number
- * navigation) and returns `totalCount` — both surfaced here so the table shows
- * real page controls rather than dumping every row in one scroll.
- */
+/** Paginated, filterable list via `Tasks.getAll`. Folder is optional. */
 export function useTasks(
   folderId: number | null,
   filters: TaskFilters,
@@ -60,8 +48,7 @@ export function useTasks(
 
   const filter = buildTaskFilter(filters)
 
-  // On folder/filter/scope change, reset to page 1 and clear rows so the table
-  // shows loading immediately instead of stale data.
+  // Reset page + clear rows on dep change so loading shows immediately.
   useEffect(() => {
     setPage(1)
     setTasks([])
@@ -77,8 +64,7 @@ export function useTasks(
       const result = await svc.getAll({
         pageSize,
         jumpToPage: page,
-        // Raw server property name: $orderby runs server-side and only knows
-        // `CreationTime` (the SDK alias `createdTime` would 400).
+        // Raw server name — `createdTime` (SDK alias) would 400.
         orderby: 'CreationTime desc',
         ...(folderId != null ? { folderId } : {}),
         ...(filter ? { filter } : {}),
@@ -110,11 +96,7 @@ interface UseTaskResult {
   reload: () => Promise<void>
 }
 
-/**
- * Loads one task's full detail (activities, assignments, tags, data) via
- * `Tasks.getById(id, {}, folderId)`. The returned task carries bound methods
- * (`assign`/`reassign`/`unassign`/`complete`) that act on it directly.
- */
+/** Full task detail via `Tasks.getById`. Returned task carries bound action methods. */
 export function useTask(taskId: number | null, folderId: number | null): UseTaskResult {
   const { sdk } = useAuth()
   const [task, setTask] = useState<TaskGetResponse | null>(null)
@@ -146,17 +128,82 @@ export function useTask(taskId: number | null, folderId: number | null): UseTask
   return { task, loading, error, reload }
 }
 
+interface UseFoldersResult {
+  folders: FolderSummary[]
+  loading: boolean
+  error: string | null
+}
+
+/** Minimal projection of an Orchestrator Folder for the dropdown picker. */
+export interface FolderSummary {
+  id: number
+  displayName: string
+  fullyQualifiedName: string
+}
+
+/**
+ * Lists folders via `/odata/Folders` (raw fetch — SDK has no Folders
+ * service). May include folders the user can view but not act in;
+ * downstream task ops surface the actual server error if so. Requires
+ * `OR.Folders.Read`.
+ */
+export function useFolders(): UseFoldersResult {
+  const { sdk } = useAuth()
+  const [folders, setFolders] = useState<FolderSummary[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const { baseUrl, orgName, tenantName } = sdk.config
+        const token = sdk.getToken()
+        if (!token) throw new Error('Not authenticated')
+        const url =
+          `${baseUrl}/${orgName}/${tenantName}/orchestrator_/odata/Folders` +
+          `?$select=Id,DisplayName,FullyQualifiedName&$orderby=FullyQualifiedName`
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        })
+        if (!res.ok) throw new Error(`Folders fetch failed: ${res.status} ${res.statusText}`)
+        const body = (await res.json()) as {
+          value: Array<{ Id: number; DisplayName: string; FullyQualifiedName: string }>
+        }
+        if (cancelled) return
+        setFolders(
+          body.value.map((f) => ({
+            id: f.Id,
+            displayName: f.DisplayName,
+            fullyQualifiedName: f.FullyQualifiedName,
+          })),
+        )
+      } catch (err) {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Failed to load folders')
+        setFolders([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [sdk])
+
+  return { folders, loading, error }
+}
+
 interface UseTaskUsersResult {
   users: UserLoginInfo[]
   loading: boolean
   error: string | null
 }
 
-/**
- * Lists the human users who can be assigned tasks in a folder via
- * `Tasks.getUsers(folderId)`. Each call returns one server-capped page, so we
- * loop the cursor to fetch every user, then keep only real people.
- */
+/** All assignable users in a folder. Loops the cursor; drops robot/external accounts. */
 export function useTaskUsers(folderId: number | null): UseTaskUsersResult {
   const { sdk } = useAuth()
   const [users, setUsers] = useState<UserLoginInfo[]>([])
