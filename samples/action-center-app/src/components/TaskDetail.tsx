@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@uipath/apollo-wind/components/ui/select'
 import { Spinner } from '@uipath/apollo-wind/components/ui/spinner'
-import { useTask, useTaskUsers } from '../hooks/useTasks'
+import { useFolders, useTask, useTaskUsers } from '../hooks/useTasks'
 import {
   statusBadge,
   priorityBadge,
@@ -55,9 +55,14 @@ type Sub = 'assign' | 'reassign' | 'complete' | null
 /** Task detail panel (Tasks.getById) with lifecycle actions via task-attached methods. */
 export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: Props) {
   const { task, loading, error, reload } = useTask(taskId, folderId)
+  const { folders } = useFolders()
   const [sub, setSub] = useState<Sub>(null)
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  // Resolve folder display name; fall back to id.
+  const folderPath =
+    folders.find((f) => f.id === folderId)?.fullyQualifiedName ?? String(folderId)
 
   const afterChange = () => {
     reload()
@@ -73,7 +78,7 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: P
       if (result.success) afterChange()
       else setActionError('Unassign did not complete successfully')
     } catch (err) {
-      setActionError(err instanceof UiPathError ? err.message : 'Unassign failed')
+      setActionError(extractServerMessage(err) ?? 'Unassign failed')
     } finally {
       setBusy(false)
     }
@@ -119,27 +124,49 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: P
                 )}
               </div>
 
-              <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-                <Field
-                  label="Assignee"
-                  value={task.assignedToUser?.displayName ?? 'Unassigned'}
-                />
+              {/* Task Summary — mirrors Action Center's right pane. */}
+              <dl className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1.5">
+                <Field label="Task ID" value={`#${task.id}`} mono />
                 {task.taskSource?.sourceName && (
                   <Field label="Source" value={task.taskSource.sourceName} />
                 )}
-                <Field label="Created" value={formatDateTime(task.createdTime)} />
+                <Field label="Folder path" value={folderPath} />
+                <Field label="Created on" value={formatDateTime(task.createdTime)} />
                 {task.completedTime && (
                   <Field label="Completed" value={formatDateTime(task.completedTime)} />
                 )}
                 {task.completedByUser?.displayName && (
                   <Field label="Completed by" value={task.completedByUser.displayName} />
                 )}
+                {task.taskAssignmentCriteria && (
+                  <Field label="Assignment criteria" value={task.taskAssignmentCriteria} />
+                )}
+                <Field
+                  label="Assigned to"
+                  value={
+                    task.assignedToUser?.displayName ??
+                    (assignedToGroupKey(task) ? 'Directory group' : 'Unassigned')
+                  }
+                />
                 {(task.actionLabel || task.action) && (
                   <Field label="Action" value={task.actionLabel ?? task.action ?? ''} />
                 )}
                 {task.externalTag && <Field label="External tag" value={task.externalTag} mono />}
                 <Field label="Key" value={task.key} mono />
               </dl>
+
+              {task.tags && task.tags.length > 0 && (
+                <Section title="Labels">
+                  <div className="flex flex-wrap gap-1.5">
+                    {task.tags.map((t) => (
+                      <Badge key={t.name} variant="secondary">
+                        {t.displayName || t.name}
+                        {t.displayValue ? `: ${t.displayValue}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </Section>
+              )}
 
               {task.data && Object.keys(task.data).length > 0 && (
                 <Section title="Data">
@@ -153,24 +180,6 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: P
                       </div>
                     ))}
                   </dl>
-                </Section>
-              )}
-
-              {task.activities && task.activities.length > 0 && (
-                <Section title="Activity">
-                  <ul className="space-y-1.5">
-                    {task.activities.map((a, i) => (
-                      <li
-                        key={`${a.taskId}-${i}`}
-                        className="flex items-center justify-between gap-2"
-                      >
-                        <span>{a.activityType}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {formatDateTime(a.createdTime)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
                 </Section>
               )}
 
@@ -243,6 +252,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+/** Assigned to a directory group (no user object, but a key). */
+function assignedToGroupKey(task: TaskGetResponse): boolean {
+  if (task.assignedToUser) return false
+  const key = (task as unknown as { assignedToUserKey?: string | null }).assignedToUserKey
+  return !!key
+}
+
+/** First server message from a failed assign payload. */
+function extractAssignError(data: unknown): string {
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      if (item && typeof item === 'object' && 'errorMessage' in item) {
+        const msg = String((item as { errorMessage?: string }).errorMessage ?? '').trim()
+        if (msg) return msg
+      }
+    }
+  }
+  return 'The assignment did not complete successfully'
+}
+
+/** Server error string from a thrown UiPath/HTTP error. */
+function extractServerMessage(err: unknown): string | null {
+  if (!err) return null
+  if (err instanceof UiPathError && err.message) return err.message
+  const e = err as Record<string, unknown>
+  const candidates = [
+    e.message,
+    (e.body as Record<string, unknown> | undefined)?.message,
+    ((e.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined)?.message,
+  ]
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim()
+  }
+  return null
+}
+
 function renderValue(value: unknown): string {
   if (value === null || value === undefined) return '—'
   if (typeof value === 'object') {
@@ -292,10 +337,11 @@ function AssignForm({
         onDone()
         onClose()
       } else {
-        setSubmitError('The assignment did not complete successfully')
+        // Server-supplied error (e.g. "Already assigned to another user").
+        setSubmitError(extractAssignError(result.data))
       }
     } catch (err) {
-      setSubmitError(err instanceof UiPathError ? err.message : 'Assignment failed')
+      setSubmitError(extractServerMessage(err) ?? 'Assignment failed')
     } finally {
       setBusy(false)
     }
@@ -387,7 +433,7 @@ function CompleteForm({
         setSubmitError('The task did not complete successfully')
       }
     } catch (err) {
-      setSubmitError(err instanceof UiPathError ? err.message : 'Completion failed')
+      setSubmitError(extractServerMessage(err) ?? 'Completion failed')
     } finally {
       setBusy(false)
     }
@@ -399,8 +445,7 @@ function CompleteForm({
         <DialogHeader>
           <DialogTitle>Complete task</DialogTitle>
           <DialogDescription>
-            The action maps to the outcome the workflow expects. Use Reject, or type a custom
-            action and choose Complete.
+            Type the action your workflow expects (e.g. <span className="font-medium">Approve</span> or <span className="font-medium">Reject</span>) and confirm.
           </DialogDescription>
         </DialogHeader>
 
@@ -426,11 +471,8 @@ function CompleteForm({
           <Button variant="outline" onClick={onClose} disabled={busy}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => complete('Reject')} disabled={busy}>
-            Reject
-          </Button>
           <Button onClick={() => complete(action)} disabled={busy || !action.trim()}>
-            {busy ? 'Completing…' : `Complete (${action.trim() || '—'})`}
+            {busy ? 'Completing…' : 'Complete'}
           </Button>
         </DialogFooter>
       </DialogContent>

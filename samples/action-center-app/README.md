@@ -23,10 +23,10 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 | `task.complete(options)` | `components/TaskDetail.tsx` (+ `taskUtils.ts` builds the discriminated-union options) |
 
 By default the app lists tasks across **all folders** you can view/edit. The
-header's **Folder ID** field is an optional filter — leave it blank for all
-folders, or set it to scope the list (persisted to `localStorage`). Per-task
-actions (detail, assign, complete) use each task's own folder, propagated from
-the row; creating a task asks for a target folder.
+toolbar's **Folder** dropdown (populated from `/odata/Folders`) lets you scope
+the list to one folder; the choice is persisted to `localStorage`. Per-task
+actions (assign, complete) use each task's own folder, propagated from the
+row; creating a task picks the target folder from the same dropdown.
 
 ## Files
 
@@ -42,9 +42,12 @@ src/
 ## Prerequisites
 
 - Node.js 20+
-- A UiPath OAuth External Application (client ID) with the **`OR.Tasks`** scope
-- An Orchestrator folder ID that contains Action Center tasks (required only
-  when creating tasks)
+- A UiPath OAuth External Application (client ID) with **`OR.Tasks`** and
+  **`OR.Folders.Read`** scopes (the latter powers the folder dropdown — the
+  SDK doesn't expose a Folders service yet, so the app calls
+  `/odata/Folders` directly with the SDK's access token)
+- An Orchestrator folder that contains Action Center tasks (only needed for
+  testing — leaving the filter on "All folders" still works)
 
 ## Setup
 
@@ -71,13 +74,18 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
 
 ## Notes
 
-- **My Tasks / Manage Tasks tabs:** these map to `getAll`'s `asTaskAdmin` flag,
-  mirroring Action Center. "Manage Tasks" (`asTaskAdmin: true`) lists tasks
-  across folders where you can assign them — the context where assigning to a
-  **group** applies. (The SDK doesn't expose a strict "assigned only to me"
-  view or a task `delete`, so those parts of the product aren't replicated.)
+- **My Tasks vs Manage Tasks:** these map to `getAll`'s `asTaskAdmin` flag.
+  - **My Tasks** — clicking a row opens a quick-complete dialog (Approve /
+    Reject / custom action). An info icon in that dialog opens the full
+    detail sheet on demand. The streamlined flow is the daily worker view.
+  - **Manage Tasks** (`asTaskAdmin: true`) — clicking rows selects them
+    (multi-select), and bulk **Assign** / **Unassign** appear in the
+    toolbar. Surfaces `Tasks.assign(payload[])` and `Tasks.unassign(ids)`
+    in their array forms. When status is filtered to *Pending*, an
+    additional **Assigned to** filter (powered by `Tasks.getUsers`) lets
+    an admin see who's overloaded.
 - **Pagination:** the list uses server-side page navigation (`jumpToPage` +
   `totalCount`); the user picker loops the cursor. No list call assumes one
   response holds every row.
-- **Creation** through the API only supports **external** tasks — form and app
-  tasks are created by the system through workflows.
+- **Creation** through the API only supports **external** tasks — form and
+  app tasks are created by the system through workflows.
