@@ -1,6 +1,12 @@
 import type {
+  AgentConsumptionTimelineOptions,
+  AgentConsumptionTimelineResponse,
   AgentError,
   AgentErrorsOptions,
+  AgentErrorsTimelineOptions,
+  AgentErrorsTimelineResponse,
+  AgentLatencyTimelineOptions,
+  AgentLatencyTimelineResponse,
   AgentListItem,
   AgentListOptions,
 } from './agents.types';
@@ -129,4 +135,142 @@ export interface AgentServiceModel {
       ? PaginatedResponse<AgentError>
       : NonPaginatedResponse<AgentError>
   >;
+
+  /**
+   * Retrieves a time-series of error counts grouped by agent over the requested window.
+   *
+   * Returns one data point per (agent, time bucket). Bucket size is chosen
+   * server-side based on the window length. Optionally filter by folder, agent
+   * name, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentErrorsTimelineOptions}
+   * @returns Promise resolving to {@link AgentErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // All errors in May 2025
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent', 'StoryAgent'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  getErrorsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentErrorsTimelineOptions,
+  ): Promise<AgentErrorsTimelineResponse>;
+
+  /**
+   * Retrieves a time-series of AGU consumption over the requested window.
+   *
+   * Returns one data point per time bucket; bucket size is chosen server-side
+   * based on the window length. Optionally filter by folder, agent, project,
+   * or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentConsumptionTimelineOptions}
+   * @returns Promise resolving to {@link AgentConsumptionTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // AGU consumption timeline in May 2025
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and agents
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent'],
+   *   },
+   * );
+   * ```
+   */
+  getConsumptionTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentConsumptionTimelineOptions,
+  ): Promise<AgentConsumptionTimelineResponse>;
+
+  /**
+   * Retrieves a time-series of agent latency (milliseconds) over the requested
+   * window.
+   *
+   * The API emits one row per percentile per time bucket — typically a P50 row
+   * and a P95 row per bucket. Bucket size is chosen server-side based on the
+   * window length. Optionally filter by folder, agent, project, or process
+   * version.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentLatencyTimelineOptions}
+   * @returns Promise resolving to {@link AgentLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Latency timeline in May 2025
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} ms`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and a single agent
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *   },
+   * );
+   * ```
+   */
+  getLatencyTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentLatencyTimelineOptions,
+  ): Promise<AgentLatencyTimelineResponse>;
 }
