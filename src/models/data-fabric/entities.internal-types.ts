@@ -1,4 +1,4 @@
-import { FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
+import { EntityType, FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
 
 /**
  * Write-side payload shape for creating a new field in a schema upsert call.
@@ -30,7 +30,7 @@ export interface ReferenceEntityPayload {
   id: string;
   name?: string;
   folderId?: string;
-  entityType?: string;
+  entityType?: EntityType;
   entityTypeId?: number;
 }
 

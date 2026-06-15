@@ -538,8 +538,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // folderKey is preferred over includeFolderEntities: when present, scope to that folder
     // via the v1 endpoint + header. Only when no folderKey is given AND includeFolderEntities
     // is explicitly true does the SDK switch to the v2 endpoint (returns tenant + folder
-    // entities together — requires OR.Users). Default (no options or includeFolderEntities
-    // omitted) stays on the v1 endpoint = tenant only, no OR.Users required.
+    // entities together). Default (no options or includeFolderEntities omitted) stays on
+    // the v1 endpoint = tenant only.
     const endpoint = !options?.folderKey && options?.includeFolderEntities
       ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;

@@ -67,10 +67,10 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    */
   private async fetchAllChoiceSets(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
     // The choice-set endpoint returns cross-scope results when called without
-    // a folder header. To stay tenant-only by default (no OR.Users required),
-    // send the tenant-marker UUID as the folder key unless the caller explicitly
-    // opts into cross-scope via includeFolderChoiceSets: true. folderKey is
-    // preferred over includeFolderChoiceSets when both are set.
+    // a folder header. To stay tenant-only by default, send the tenant-marker
+    // UUID as the folder key unless the caller explicitly opts into cross-scope
+    // via includeFolderChoiceSets: true. folderKey is preferred over
+    // includeFolderChoiceSets when both are set.
     const folderKey = options?.folderKey
       ?? (options?.includeFolderChoiceSets ? undefined : DATA_FABRIC_TENANT_FOLDER_ID);
 
