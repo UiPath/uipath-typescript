@@ -10,7 +10,7 @@
 ## Prerequisites
 
 - **Node.js** 20.x or higher
-- **npm** 9.x or higher
+- **npm** 8.x or higher
 
 ## Install the CLI
 

@@ -3,7 +3,7 @@
   "entryPoints": ["src/index.ts"],
   "tsconfig": "tsconfig.json",
   "plugin": ["typedoc-plugin-markdown"],
-  "out": "../../docs/coded-action-apps",
+  "out": "../../docs/coded-action-app-sdk",
   "readme": "none",
   "hideGenerator": true,
   "name": "Coded Action Apps SDK",

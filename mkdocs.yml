@@ -72,11 +72,11 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - llmstxt:
-      full_output: "coded-action-apps/llms.txt"
+      full_output: "coded-action-app-sdk/llms.txt"
       sections:
-        Coded Action Apps:
-          - coded-action-apps/getting-started.md: Getting started with Coded Action App SDK
-          - coded-action-apps/interfaces/CodedActionAppServiceModel.md: Coded Action App service methods
+        Coded Action App SDK:
+          - coded-action-app-sdk/getting-started.md: Getting started with Coded Action App SDK
+          - coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md: Coded Action App service methods
   - llmstxt:
       full_output: "llms-full-content.txt"
       preprocess: "scripts/llms-preprocess.py"
@@ -214,9 +214,12 @@ nav:
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md
-  - Coded Action App SDK:
+  - Coded Action Apps:
       - Getting Started: coded-action-apps/getting-started.md
-      - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppServiceModel.md
+      - CLI Reference: coded-action-apps/cli-reference.md
+      - Coded Action App SDK:
+        - Getting Started: coded-action-app-sdk/getting-started.md
+        - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
