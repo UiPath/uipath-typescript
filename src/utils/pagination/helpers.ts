@@ -178,6 +178,7 @@ export class PaginationHelpers {
       headers: providedHeaders,
       paginationParams,
       additionalParams,
+      urlParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -186,13 +187,20 @@ export class PaginationHelpers {
     const endpoint = getEndpoint(folderId);
     const headers = providedHeaders ?? (folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {});
 
+    // On POST, the caller's options go in the body; urlParams stays in the URL.
+    // On GET, everything is URL — urlParams merges with additionalParams.
+    const isPost = method === HTTP_METHODS.POST;
+    const requestSpec = isPost
+      ? { body: additionalParams, params: urlParams }
+      : { params: { ...additionalParams, ...urlParams } };
+
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
       method,
       endpoint,
       paginationParams,
       {
         headers,
-        params: additionalParams,
+        ...requestSpec,
         pagination: {
           paginationType: options.paginationType || PaginationType.OFFSET,
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
@@ -230,6 +238,7 @@ export class PaginationHelpers {
       folderId,
       headers: providedHeaders,
       additionalParams,
+      urlParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -249,13 +258,13 @@ export class PaginationHelpers {
       response = await serviceAccess.post<any>(
         endpoint,
         additionalParams,
-        { headers }
+        { headers, params: urlParams }
       );
     } else {
       response = await serviceAccess.get<any>(
         endpoint,
         {
-          params: additionalParams,
+          params: { ...additionalParams, ...urlParams },
           headers
         }
       );
@@ -310,34 +319,6 @@ export class PaginationHelpers {
     const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
     const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
 
-    // Bake `keepAsQueryParams` keys into the endpoint URL on POST so they aren't merged
-    // into the request body (some APIs only read these from the URL). No-op on GET.
-    if (
-      config.keepAsQueryParams?.length &&
-      (config.method ?? HTTP_METHODS.GET) === HTTP_METHODS.POST
-    ) {
-      const urlKeys = config.keepAsQueryParams.filter(
-        k => prefixedOptions[k] !== undefined && prefixedOptions[k] !== null
-      );
-      const queryString = urlKeys
-        .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(String(prefixedOptions[k]))}`)
-        .join('&');
-      for (const k of urlKeys) {
-        delete prefixedOptions[k];
-      }
-      if (queryString) {
-        const appendQs = (url: string) => `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
-        const baseGetEndpoint = config.getEndpoint;
-        config = {
-          ...config,
-          getEndpoint: (fid?: number) => appendQs(baseGetEndpoint(fid)),
-          ...(config.getByFolderEndpoint
-            ? { getByFolderEndpoint: appendQs(config.getByFolderEndpoint) }
-            : {}),
-        };
-      }
-    }
-
     // Default pagination options
     const paginationOptions = {
       paginationType: PaginationType.OFFSET,
@@ -355,6 +336,7 @@ export class PaginationHelpers {
         headers: config.headers,
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage !== undefined ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
+        urlParams: config.urlParams,
         transformFn: config.transformFn,
         method: config.method,
         options: {
@@ -373,6 +355,7 @@ export class PaginationHelpers {
       folderId,
       headers: config.headers,
       additionalParams: prefixedOptions,
+      urlParams: config.urlParams,
       transformFn: config.transformFn,
       method: config.method,
       options: {

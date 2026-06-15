@@ -856,117 +856,68 @@ describe('PaginationHelpers Unit Tests', () => {
       expect(result.items).toEqual([]);
     });
 
-    describe('keepAsQueryParams', () => {
-      it('should bake declared keys into the endpoint URL and remove them from the body on POST (non-paginated)', async () => {
+    describe('urlParams', () => {
+      it('should send caller options in body and urlParams in URL on POST (non-paginated)', async () => {
         const apiResponse = createMockApiResponse([], 0);
         vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
 
         const postConfig = {
           ...mockConfig,
           method: 'POST',
-          excludeFromPrefix: ['filterGroup', 'expansionLevel'],
-          keepAsQueryParams: ['expansionLevel'],
+          excludeFromPrefix: ['filterGroup'],
+          urlParams: { expansionLevel: 2 },
         };
 
         await PaginationHelpers.getAll(postConfig, {
           filterGroup: { fieldName: 'name', value: 'x' },
-          expansionLevel: 2,
         });
 
         expect(mockServiceAccess.post).toHaveBeenCalledWith(
-          `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS}?expansionLevel=2`,
+          PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
           { filterGroup: { fieldName: 'name', value: 'x' } },
-          expect.not.objectContaining({ params: expect.anything() }),
+          expect.objectContaining({ params: { expansionLevel: 2 } }),
         );
       });
 
-      it('should bake declared keys into the endpoint URL on POST (paginated)', async () => {
+      it('should send caller options in body and urlParams in URL on POST (paginated)', async () => {
         const mockResponse = createMockPaginatedResponse([]);
         vi.mocked(mockServiceAccess.requestWithPagination).mockResolvedValue(mockResponse);
 
         const postConfig = {
           ...mockConfig,
           method: 'POST',
-          excludeFromPrefix: ['filterGroup', 'expansionLevel'],
-          keepAsQueryParams: ['expansionLevel'],
+          excludeFromPrefix: ['filterGroup'],
+          urlParams: { expansionLevel: 2 },
         };
 
         await PaginationHelpers.getAll(postConfig, {
           filterGroup: { fieldName: 'name', value: 'x' },
-          expansionLevel: 2,
           pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
         });
 
         expect(mockServiceAccess.requestWithPagination).toHaveBeenCalledWith(
           'POST',
-          `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS}?expansionLevel=2`,
+          PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
           expect.objectContaining({ pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE }),
           expect.objectContaining({
-            params: { filterGroup: { fieldName: 'name', value: 'x' } },
+            body: { filterGroup: { fieldName: 'name', value: 'x' } },
+            params: { expansionLevel: 2 },
           }),
         );
       });
 
-      it('should also bake declared keys into getByFolderEndpoint when folderId is supplied (POST, non-paginated)', async () => {
-        const apiResponse = createMockApiResponse([], 0);
-        vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
-
-        const postConfig = {
-          ...mockConfig,
-          method: 'POST',
-          excludeFromPrefix: ['filterGroup', 'expansionLevel'],
-          keepAsQueryParams: ['expansionLevel'],
-        };
-
-        await PaginationHelpers.getAll(postConfig, {
-          filterGroup: { fieldName: 'name', value: 'x' },
-          expansionLevel: 2,
-          folderId: TEST_CONSTANTS.FOLDER_ID,
-        });
-
-        expect(mockServiceAccess.post).toHaveBeenCalledWith(
-          `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_FOLDERS_ITEMS}?expansionLevel=2`,
-          { filterGroup: { fieldName: 'name', value: 'x' } },
-          expect.objectContaining({ headers: { [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() } }),
-        );
-      });
-
-      it('should append with & when the base endpoint already contains a ? query string', async () => {
-        const apiResponse = createMockApiResponse([], 0);
-        vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
-
-        const preResolvedWithQuery = `${PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS}?source=preset`;
-        const postConfig = {
-          ...mockConfig,
-          method: 'POST',
-          getEndpoint: () => preResolvedWithQuery,
-          getByFolderEndpoint: undefined,
-          excludeFromPrefix: ['expansionLevel'],
-          keepAsQueryParams: ['expansionLevel'],
-        };
-
-        await PaginationHelpers.getAll(postConfig, { expansionLevel: 1 });
-
-        expect(mockServiceAccess.post).toHaveBeenCalledWith(
-          `${preResolvedWithQuery}&expansionLevel=1`,
-          {},
-          expect.anything(),
-        );
-      });
-
-      it('should not touch the URL on GET (no-op, keys flow through normal additionalParams)', async () => {
+      it('should merge urlParams into URL params on GET', async () => {
         const apiResponse = createMockApiResponse([], 0);
         vi.mocked(mockServiceAccess.get).mockResolvedValue(apiResponse);
 
         const getConfig = {
           ...mockConfig,
-          excludeFromPrefix: ['filter', 'expansionLevel'],
-          keepAsQueryParams: ['expansionLevel'],
+          excludeFromPrefix: ['filter'],
+          urlParams: { expansionLevel: 1 },
         };
 
         await PaginationHelpers.getAll(getConfig, {
           filter: PAGINATION_TEST_CONSTANTS.FILTER_NAME_EQ_TEST,
-          expansionLevel: 1,
         });
 
         expect(mockServiceAccess.get).toHaveBeenCalledWith(
