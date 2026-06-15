@@ -1,93 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { uipathCodedApps } from '@uipath/coded-apps-dev/vite'
-import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-/**
- * Strip `@layer X { ... }` wrappers from a CSS string, keeping the rules
- * inside. Necessary because the data-table widget ships CSS with raw Tailwind
- * `@layer` directives — a widget-build bug. Tailwind 3 won't accept `@layer
- * base` unless `@tailwind base` is in the same root, so it errors when
- * processing the widget's CSS. Removing the wrapper preserves the rules at
- * the default cascade level, which is fine for our use.
- */
-function stripLayerWrappers(css: string): string {
-  let out = ''
-  let i = 0
-  while (i < css.length) {
-    const match = css.slice(i).match(/^@layer\s+[\w,\s]+\s*\{/)
-    if (match) {
-      i += match[0].length // skip the `@layer X {`
-      let depth = 1
-      while (i < css.length && depth > 0) {
-        const ch = css[i]
-        if (ch === '{') depth++
-        else if (ch === '}') depth--
-        if (depth > 0) out += ch // keep inner content, drop the matching `}`
-        i++
-      }
-    } else {
-      out += css[i]
-      i++
-    }
-  }
-  return out
-}
-
-/**
- * Workaround for a known build-time issue with
- * `@uipath/ui-widgets-datatable`.
- *
- * The widget's compiled CSS ships with raw `@layer` wrappers, which
- * Tailwind 3 rejects if the file doesn't also contain `@tailwind base`.
- * Since the widget auto-imports its own CSS via `import "./DataTable.css"`,
- * those styles end up in Vite's CSS pipeline and the build errors out.
- *
- * This plugin patches the on-disk files in `node_modules` to strip the
- * `@layer` wrappers at startup. Re-runs on every dev startup so a fresh
- * `npm install` is automatically re-patched.
- *
- * TODO: this should be fixed upstream — the widget shouldn't ship CSS
- * with `@layer` directives that require host-app coordination. Delete
- * this plugin when the widget's CSS is fixed.
- */
-function patchWidgetStyles() {
-  const widgetDir = path.resolve(
-    __dirname,
-    'node_modules/@uipath/ui-widgets-datatable/dist',
-  )
-
-  function patch() {
-    if (!fs.existsSync(widgetDir)) return
-
-    const cssFiles: string[] = []
-    function walk(dir: string) {
-      for (const name of fs.readdirSync(dir)) {
-        const full = path.join(dir, name)
-        const stat = fs.statSync(full)
-        if (stat.isDirectory()) walk(full)
-        else if (name.endsWith('.css')) cssFiles.push(full)
-      }
-    }
-    walk(widgetDir)
-
-    for (const file of cssFiles) {
-      const raw = fs.readFileSync(file, 'utf-8')
-      if (!raw.includes('@layer')) continue // already patched
-      fs.writeFileSync(file, stripLayerWrappers(raw))
-    }
-  }
-
-  return {
-    name: 'patch-widget-datatable-styles',
-    config: patch,
-    buildStart: patch,
-  }
-}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -101,7 +18,6 @@ export default defineConfig({
     // index.html during local dev. At deploy time the platform injects
     // production values, so the same SDK init code works in both places.
     uipathCodedApps(),
-    patchWidgetStyles(),
   ],
   // The SDK references `global` (a Node-ism) and `path` internally. In a
   // browser bundle we need a stub for `global` and a polyfill for `path` —

@@ -7,8 +7,8 @@ import { EntitiesList } from './components/EntitiesList'
 import { EntityDetail } from './components/EntityDetail'
 import { ChoiceSetDetail } from './components/ChoiceSetDetail'
 import { ThemeProvider } from './components/ThemeProvider'
-import { Toaster } from '@/components/ui/sonner'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { Toaster } from '@uipath/apollo-wind/components/ui/sonner'
+import { TooltipProvider } from '@uipath/apollo-wind/components/ui/tooltip'
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()

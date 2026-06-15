@@ -1,8 +1,8 @@
 import { Database } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@uipath/apollo-wind/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
 
 export function LoginScreen() {
   const { login, error, isLoading } = useAuth()

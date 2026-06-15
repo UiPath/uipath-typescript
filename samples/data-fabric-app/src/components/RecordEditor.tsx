@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@uipath/apollo-wind/components/ui/sonner'
 import { ChoiceSets, Entities } from '@uipath/uipath-typescript/entities'
 import type { ChoiceSetGetResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
@@ -13,9 +13,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+} from '@uipath/apollo-wind/components/ui/dialog'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
 
 interface Props {
   entityId: string

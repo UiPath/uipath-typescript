@@ -1,7 +1,7 @@
 import { Database } from 'lucide-react'
 import type { EntityField, EntityRow } from '../hooks/useEntity'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
 
 interface Props {
   fields: EntityField[]

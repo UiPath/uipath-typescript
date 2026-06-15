@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ColDef } from 'ag-grid-community'
 import { Calendar, Download, Plus, RefreshCw } from 'lucide-react'
 import { DataTable } from '@uipath/ui-widgets-datatable'
-import { Button } from '@/components/ui/button'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
 import { RecordEditor } from './RecordEditor'
 import { ReadOnlyRecordsTable } from './ReadOnlyRecordsTable'
 import { RowInspector } from './RowInspector'
@@ -14,17 +14,17 @@ import { useAuth } from '../context/AuthContext'
 import { useEntity } from '../hooks/useEntity'
 import { useWidgetToolbarOverrides } from '../hooks/useWidgetToolbar'
 import { exportRecordsAsCsv } from '../lib/csvExport'
-import { toast } from 'sonner'
+import { toast } from '@uipath/apollo-wind/components/ui/sonner'
 import type { EntitySchema } from '../hooks/useEntity'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
 import { ChoiceSetView } from './ChoiceSetView'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@uipath/apollo-wind/components/ui/tooltip'
 import {
   entityNotSupportedReason,
   entityTypeTooltip,

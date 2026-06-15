@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { ListChecks } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
 import { useChoiceSets } from '../hooks/useChoiceSets'
 import { ChoiceSetView } from './ChoiceSetView'
 

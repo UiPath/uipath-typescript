@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@uipath/apollo-wind/components/ui/sonner'
 import { Download } from 'lucide-react'
 import { Entities } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
@@ -12,10 +12,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
+} from '@uipath/apollo-wind/components/ui/dialog'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
 import { downloadBlobAsFile } from '../lib/download'
 
 interface Props {

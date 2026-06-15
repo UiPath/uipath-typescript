@@ -1,11 +1,11 @@
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { Button } from '@/components/ui/button'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@uipath/apollo-wind/components/ui/tooltip'
 
 /**
  * Icon button that cycles through `light → dark → system → light → …`.

@@ -1,8 +1,8 @@
 import { ListChecks, RefreshCw } from 'lucide-react'
 import { useChoiceSet } from '../hooks/useChoiceSet'
-import { Spinner } from './Spinner'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Spinner } from '@uipath/apollo-wind/components/ui/spinner'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
 
 interface Props {
   choiceSetId: string
@@ -55,7 +55,7 @@ export function ChoiceSetView({ choiceSetId }: Props) {
       <div className="rounded-lg border bg-card overflow-hidden">
         {loading ? (
           <div className="p-6 flex justify-center">
-            <Spinner label="Loading values…" />
+            <Spinner label="Loading values…" showLabel />
           </div>
         ) : values.length === 0 && !error ? (
           <div className="px-3 py-12 text-center">

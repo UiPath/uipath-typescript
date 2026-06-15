@@ -8,15 +8,15 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from '@uipath/apollo-wind/components/ui/tooltip'
 import { useEntities } from '../hooks/useEntities'
 import type { EntityListItem } from '../hooks/useEntities'
 import { useChoiceSets } from '../hooks/useChoiceSets'
