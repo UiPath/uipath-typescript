@@ -39,11 +39,7 @@ export interface ChoiceSetServiceModel {
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
    * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` (when provided) always wins over this flag.
    *
-   * > **Experimental:** folder-scope options (`folderKey`, `includeFolderChoiceSets`) are in preview — the contract may change.
-   *
-   * @experimental
-   *
-   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together)
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of choice set metadata
    * {@link ChoiceSetGetAllResponse}
    * @example
@@ -70,12 +66,8 @@ export interface ChoiceSetServiceModel {
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the choice set
-   * @param options - Pagination options and optional `folderKey` (omit for tenant-level choice sets)
+   * @param options - Pagination options and optional `folderKey` (omit for tenant-level choice sets) The `folderKey` property is **experimental**.
    * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetGetResponse}
    * @example
@@ -117,14 +109,10 @@ export interface ChoiceSetServiceModel {
   /**
    * Creates a new Data Fabric choice set
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param name - Choice set name. Must start with a
    *   letter, may contain only letters, numbers, and underscores, length
    *   3–100 characters (e.g., `"expenseTypes"`).
-   * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions})
+   * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the UUID of the created choice set
    *
    * @example
@@ -148,12 +136,8 @@ export interface ChoiceSetServiceModel {
    * **At least one of `displayName` or `description` must be provided** —
    * the call throws `ValidationError` if both are omitted.
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the choice set to update
-   * @param options - Metadata fields to change ({@link ChoiceSetUpdateOptions})
+   * @param options - Metadata fields to change ({@link ChoiceSetUpdateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
@@ -174,12 +158,8 @@ export interface ChoiceSetServiceModel {
   /**
    * Deletes a Data Fabric choice set and all its values.
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the choice set to delete
-   * @param options - Optional {@link ChoiceSetDeleteByIdOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level
+   * @param options - Optional {@link ChoiceSetDeleteByIdOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
    * @returns Promise resolving when the choice set is deleted
    *
    * @example
@@ -200,13 +180,9 @@ export interface ChoiceSetServiceModel {
   /**
    * Inserts a single value into a choice set.
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the parent choice set
    * @param name - Identifier name of the new value (e.g., `"TRAVEL"`)
-   * @param options - Optional fields ({@link ChoiceSetValueInsertOptions})
+   * @param options - Optional fields ({@link ChoiceSetValueInsertOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the inserted value ({@link ChoiceSetValueInsertResponse})
    *
    * @example
@@ -240,13 +216,10 @@ export interface ChoiceSetServiceModel {
    * Only `displayName` is mutable; the value's `name` (identifier) is fixed at
    * insert time and cannot be changed.
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the parent choice set
    * @param valueId - UUID of the value to update
    * @param displayName - New human-readable display name for the value
+   * @param options - Optional {@link ChoiceSetValueUpdateOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level. The `folderKey` property is **experimental**.
    * @returns Promise resolving to the updated value ({@link ChoiceSetValueUpdateResponse})
    *
    * @example
@@ -276,13 +249,9 @@ export interface ChoiceSetServiceModel {
   /**
    * Deletes one or more values from a choice set.
    *
-   * > **Experimental:** `folderKey` (folder-scoped choice sets) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param choiceSetId - UUID of the parent choice set
    * @param valueIds - Array of value UUIDs to delete
-   * @param options - Optional {@link ChoiceSetValueDeleteOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level
+   * @param options - Optional {@link ChoiceSetValueDeleteOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
    * @returns Promise resolving when the values are deleted
    *
    * @example

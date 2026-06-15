@@ -70,12 +70,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets entity metadata by entity ID with attached operation methods
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param id - UUID of the entity
-   * @param options - Optional {@link EntityGetByIdOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityGetByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to entity metadata with schema information and operation methods
    *
    * @example
@@ -122,12 +118,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets entity records by entity ID
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
-   * @param options - Query options including expansionLevel and pagination options
+   * @param options - Query options including expansionLevel and pagination options The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of entity records or paginated response
    *
    * @example
@@ -194,13 +186,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets a single entity record by entity ID and record ID
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
-   * @param options - Query options including `expansionLevel` and `folderKey`
+   * @param options - Query options including `expansionLevel` and `folderKey` The `folderKey` property is **experimental**.
    * @returns Promise resolving to the entity record
    *
    * @example
@@ -240,13 +228,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Inserts a single record into an entity by entity ID
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param data - Record to insert
-   * @param options - Insert options
+   * @param options - Insert options The `folderKey` property is **experimental**.
    * @returns Promise resolving to the inserted record with generated record ID
    *
    * @example
@@ -290,13 +274,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Inserts data into an entity by entity ID using batch insert
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param data - Array of records to insert
-   * @param options - Insert options
+   * @param options - Insert options The `folderKey` property is **experimental**.
    * @returns Promise resolving to insert response
    *
    * @example
@@ -349,14 +329,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Updates a single record in an entity by entity ID
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to update
    * @param data - Key-value pairs of fields to update
-   * @param options - Update options
+   * @param options - Update options The `folderKey` property is **experimental**.
    * @returns Promise resolving to the updated record
    *
    * @example
@@ -400,14 +376,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Updates data in an entity by entity ID
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id,
    *               otherwise the update will fail.
-   * @param options - Update options
+   * @param options - Update options The `folderKey` property is **experimental**.
    * @returns Promise resolving to update response
    *
    * @example
@@ -461,13 +433,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
-   * @param options - Delete options
+   * @param options - Delete options The `folderKey` property is **experimental**.
    * @returns Promise resolving to delete response
    *
    * @example
@@ -511,13 +479,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
    * Use this method if you need trigger events to fire for the deleted record.
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
-   * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to void on success
    * @example
    * ```typescript
@@ -547,11 +511,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only entities in that folder.
    * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` (when provided) always wins over this flag.
    *
-   * > **Experimental:** folder-scope options (`folderKey`, `includeFolderEntities`) are in preview — the contract may change.
-   *
-   * @experimental
-   *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of entity metadata
    *
    * @example
@@ -604,12 +564,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Queries entity records with filters, sorting, aggregates, and pagination
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
@@ -695,13 +651,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Imports records from a CSV file into an entity
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param id - UUID of the entity
    * @param file - CSV file to import (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to import result with record counts
    *
    * @example
@@ -749,14 +701,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Downloads an attachment from an entity record field
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
-   * @param options - Optional {@link EntityDownloadAttachmentOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityDownloadAttachmentOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to Blob containing the file content
    *
    * @example
@@ -796,15 +744,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Uploads an attachment to a File-type field of an entity record
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to upload the attachment to
    * @param fieldName - Name of the File-type field
    * @param file - File to upload (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. `expansionLevel`, `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. `expansionLevel`, `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
    *
    * @example
@@ -854,14 +798,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Removes an attachment from a File-type field of an entity record
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
-   * @param options - Optional {@link EntityDeleteAttachmentOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityDeleteAttachmentOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
    *
    * @example
@@ -929,14 +869,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
-   * > **Experimental:** `folderKey` and cross-folder `referenceFolderKey` are in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param name - Entity name — must start with a letter and contain
    *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
    * @param fields - Array of field definitions
-   * @param options - Optional entity-level settings ({@link EntityCreateOptions})
+   * @param options - Optional entity-level settings ({@link EntityCreateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the ID of the created entity
    *
    * @example
@@ -1000,12 +936,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Deletes a Data Fabric entity and all its records
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param id - UUID of the entity to delete
-   * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities)
+   * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
    * @returns Promise resolving when the entity is deleted
    *
    * @example
@@ -1036,12 +968,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * read-modify-write pattern — concurrent calls on the same entity may silently
    * overwrite each other's changes.
    *
-   * > **Experimental:** `folderKey` (folder-scoped entities) is in preview — the contract may change.
-   *
-   * @experimental
-   *
    * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
