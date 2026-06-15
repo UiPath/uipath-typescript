@@ -22,6 +22,7 @@
 - **After a successful delete in an integration test, remove the resource from `createdRecordIds`** (or the equivalent cleanup array) — if cleanup runs after a delete test, trying to delete an already-deleted record produces a spurious error. Remove it immediately after the delete call succeeds: `createdRecordIds.splice(createdRecordIds.indexOf(id), 1)`.
 - **Consolidate service availability guards in `beforeAll`**, not inline in each test — if a service may be `undefined` (e.g., `getServices().feedback`), check once in `beforeAll` with `if (!service) throw new Error(...)` and assign to a non-nullable `let service!: ServiceType` variable. Repeating the guard in every `it` block is noise and can mask which test actually failed.
 - **Test all meaningful branches for boolean-like conditions** — when a method branches on `param === false` vs other values, add explicit tests for `true`, `false`, and `undefined`. Testing only the `false` branch leaves the `true` branch unverified; a later change from `=== false` to a truthy check would silently break behavior without failing any existing tests.
+- **When sibling methods share a configuration pattern (e.g., `excludeFromPrefix`, fallback logic), each method needs its own test for that pattern** — verifying it on one method does not cover a sibling that uses the same setup. If `excludeFromPrefix` were accidentally dropped from one method, no unit test would catch it unless each method's suite independently verifies the behavior (e.g., that filter keys are sent without `$` prefix).
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
 - Remove unused mock methods. Extract repeated logic into shared helpers.
 
@@ -51,7 +52,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Run `npm run docs:api` to regenerate.
 
 **JSDoc quality rules:**
-- Link response types with `{@link TypeName}` in every method's JSDoc `@returns`.
+- Link response types with `{@link TypeName}` in every method's JSDoc `@returns`. **NEVER** add `{@link TypeName}` inside `@param` descriptions — TypeDoc automatically links parameter types, so adding it is redundant noise.
 - Show how to get prerequisite IDs (e.g., "First, get entities with `entities.getAll()`").
 - Use `<paramName>` placeholder convention for IDs in examples.
 - Use camelCase in examples, matching SDK response format. **NEVER** use PascalCase in JSDoc examples — users will write broken code.
