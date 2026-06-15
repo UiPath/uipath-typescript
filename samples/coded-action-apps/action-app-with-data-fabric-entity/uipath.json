@@ -1,0 +1,4 @@
+{
+  "scope": "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
+  "clientId": "<external-application-clientId>"
+}
