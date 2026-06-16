@@ -46,6 +46,8 @@ docs/                    # MkDocs source; API docs generated via typedoc
 | `@uipath/uipath-typescript/maestro-processes` | MaestroProcesses, ProcessInstances, ProcessIncidents |
 | `@uipath/uipath-typescript/conversational-agent` | ConversationalAgent, Exchanges, Messages |
 
+**Subpath naming is always flat** — nested paths like `@uipath/uipath-typescript/agents/memory` conflict with the core import resolution pattern and break rollup. When a service logically belongs under a domain (e.g., agent memory under agents), use a dash-separated flat name: `@uipath/uipath-typescript/agent-memory`, not `/agents/memory`.
+
 ## Key source files
 
 | Pattern | File |

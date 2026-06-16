@@ -23,10 +23,11 @@
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type *` silently drops runtime values (classes, enums), causing `undefined` errors for SDK consumers. Note: individual `export type { Name }` for specific type-only re-exports is fine — the prohibition is on the wildcard form.
 - When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily.
+- **Time-range parameters in service method options types must be `Date` objects, not strings.** The SDK is responsible for converting to the API's expected format (epoch ms, ISO string, etc.) internally. Accepting raw strings forces callers to know the API's format and breaks when the API format changes. Pattern: `startTime: Date`, `endTime?: Date`. See `getTopRunCount()` (Maestro) for reference.
 
 ## Type naming
 
-- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopRunCountResponse` for `getTopRunCount()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`.
+- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopRunCountResponse` for `getTopRunCount()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`. **NEVER** create a named wrapper type that contains only `items: T[]` — when a method returns a plain collection with no pagination metadata or additional fields, return `T[]` directly.
 - **Raw types**: `Raw{Entity}GetResponse` for the internal shape before method attachment — these live in `*.types.ts`.
 - **Final response type**: `type {Entity}GetResponse = Raw{Entity}GetResponse & {Entity}Methods` — defined in `*.models.ts`, combining raw data with bound methods.
 - **Options types**: `{Entity}GetAllOptions`, `{Entity}GetByIdOptions`, `{Entity}{Operation}Options` (e.g., `TaskAssignmentOptions`, `ProcessInstanceOperationOptions`). Compose with `RequestOptions & PaginationOptions & { ... }` for list methods.
@@ -34,6 +35,7 @@
 - **Use "Options" not "Request"** for parameter types — the entire SDK uses `{Entity}{Operation}Options`.
 - **Required parameters are always positional; Options objects are reserved for optional parameters only.** Required values (IDs, keys, data) are positional arguments. Options objects are always the last parameter, always marked `?`, and contain only optional fields. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
+- **Use `Omit` only when a field must not appear in a type at all.** When a field has a server-side default and is simply not required by callers, mark it `?` optional instead. Using `Omit` implies the field would cause an error if included — it misleads callers into thinking they cannot pass the field. Example: if `assignmentCriteria` defaults to `SingleUser` on the server, the options type should declare it as `assignmentCriteria?: TaskAssignmentCriteria`, not `Omit<BaseOptions, 'assignmentCriteria'>`.
 - **Always use `type` for response types** (intersections, unions, composed types). The only place `interface extends` is required is single-type aliases (`type X = Y`), which break TypeDoc — use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 
 **ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
@@ -133,6 +135,12 @@ Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or 
 **`COUNT_PARAM` must be `undefined`, not `''`**: When a non-OData endpoint doesn't use a count param, set `COUNT_PARAM: undefined` — not `COUNT_PARAM: ''`. An empty string is falsy and causes `base.ts` to fall back to `ODATA_OFFSET_PARAMS.COUNT_PARAM` (`'$count'`) via the `||` operator, silently injecting `{ "$count": true }` into every request body the API never expects.
 
 **`excludeFromPrefix`** — pass to prevent specific keys from getting `$` prefix. Use when keys are service-specific (not OData) query params.
+
+**Header-only options must be destructured before calling `PaginationHelpers.getAll()`** — when an options type includes fields that should only go into HTTP headers (e.g., `folderKey`), destructure those fields out of `options` before passing the remainder to `PaginationHelpers.getAll()`. If you don't, `PaginationHelpers.getAll()` will treat the field as a query/body param, leaking it into the request. Pattern:
+```typescript
+const { folderKey, ...pagedOptions } = options ?? {};
+return PaginationHelpers.getAll({ ..., headers: createHeaders({ [FOLDER_KEY]: folderKey }) }, pagedOptions as T);
+```
 
 **How to add pagination to a new service method:**
 1. Define pagination constants in `src/utils/constants/common.ts`
