@@ -6,10 +6,6 @@ import { Button } from '@uipath/apollo-wind/components/ui/button'
 import { RecordEditor } from './RecordEditor'
 import { ReadOnlyRecordsTable } from './ReadOnlyRecordsTable'
 import { RowInspector } from './RowInspector'
-// Widget styles are loaded via a <link> in index.html (synced from
-// node_modules by the syncWidgetStyles Vite plugin). This avoids PostCSS
-// processing the widget's compiled CSS, which would otherwise trip
-// Tailwind's strict `@layer base` check.
 import { useAuth } from '../context/AuthContext'
 import { useEntity } from '../hooks/useEntity'
 import { useWidgetToolbarOverrides } from '../hooks/useWidgetToolbar'

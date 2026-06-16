@@ -4,6 +4,9 @@ import { downloadBlobAsFile } from './download'
 /** Matches characters that require RFC 4180 quoting in a CSV cell. */
 const CSV_ESCAPE_REGEX = /[",\r\n]/
 
+/** Matches every double quote in a cell so it can be doubled (`"` → `""`). */
+const CSV_QUOTE_REGEX = /"/g
+
 /**
  * Exports the given records to a CSV file and triggers a browser download.
  *
@@ -69,7 +72,7 @@ function formatValue(value: unknown): string {
 function csvCell(input: string): string {
   // RFC 4180 escaping: quote if the value contains delimiters or newlines.
   if (CSV_ESCAPE_REGEX.test(input)) {
-    return `"${input.replace(/"/g, '""')}"`
+    return `"${input.replace(CSV_QUOTE_REGEX, '""')}"`
   }
   return input
 }
