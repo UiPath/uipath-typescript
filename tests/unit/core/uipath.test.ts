@@ -47,6 +47,34 @@ vi.mock('../../../src/core/config/runtime', () => ({
   loadFromMetaTags: mockLoadFromMetaTags,
 }));
 
+// Mock platform utilities so we can simulate host-embedded scenarios.
+// Defaults to non-embedded (matching normal browser / server-side use).
+const { mockPlatform } = vi.hoisted(() => ({
+  mockPlatform: {
+    isBrowser: false,
+    isInActionCenter: false,
+    isHostEmbedded: false,
+    embeddingOrigin: null as string | null,
+  },
+}));
+vi.mock('../../../src/utils/platform', () => mockPlatform);
+
+// Mock host-token-request. getTrustedEmbeddingOrigin is computed from the mocked
+// platform flags so tests keep driving the scenario via mockPlatform.
+const { mockIsValidHostOrigin } = vi.hoisted(() => ({
+  mockIsValidHostOrigin: vi.fn((origin: string) =>
+    ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'].includes(origin)
+  ),
+}));
+vi.mock('../../../src/core/auth/host-token-request', () => ({
+  isValidHostOrigin: mockIsValidHostOrigin,
+  get trustedEmbeddingOrigin() {
+    return mockPlatform.isHostEmbedded && mockPlatform.embeddingOrigin && mockIsValidHostOrigin(mockPlatform.embeddingOrigin)
+      ? mockPlatform.embeddingOrigin
+      : null;
+  },
+}));
+
 // ===== TEST SUITE =====
 describe('UiPath Core', () => {
   describe('Constructor', () => {
@@ -427,6 +455,83 @@ describe('UiPath Core', () => {
       expect(getConfig(sdk1).orgName).toBe('org1');
       expect(getConfig(sdk2).orgName).toBe('org2');
       expect(getContext(sdk1)).not.toBe(getContext(sdk2));
+    });
+  });
+
+  describe('Host-Embedded Seeding', () => {
+    // Mirror the isInActionCenter seeding pattern: when the app is embedded in a
+    // UiPath host frame via the UIP protocol, the SDK must seed an empty token so
+    // that getValidToken() can bootstrap via postMessage without attempting an
+    // OAuth redirect.
+
+    const PARENT_ORIGIN = 'https://cloud.uipath.com';
+
+    const oauthConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+      scope: 'offline_access',
+    };
+
+    afterEach(() => {
+      // Reset platform to non-embedded state after each test so this block's
+      // state never leaks into the next describe (per agent_docs/rules.md).
+      mockPlatform.isBrowser = false;
+      mockPlatform.isInActionCenter = false;
+      mockPlatform.isHostEmbedded = false;
+      mockPlatform.embeddingOrigin = null;
+    });
+
+    it('seeds a token and sets isInitialized() when host-embedded with a trusted embeddingOrigin', () => {
+      mockPlatform.isHostEmbedded = true;
+      mockPlatform.embeddingOrigin = PARENT_ORIGIN;
+
+      const sdk = new UiPath(oauthConfig);
+
+      // Token seeded → isAuthenticated() and isInitialized() are both true
+      expect(sdk.isAuthenticated()).toBe(true);
+      expect(sdk.isInitialized()).toBe(true);
+    });
+
+    it('does NOT redirect on initialize() when host-embedded — returns early because already initialized', async () => {
+      mockPlatform.isHostEmbedded = true;
+      mockPlatform.embeddingOrigin = PARENT_ORIGIN;
+
+      const sdk = new UiPath(oauthConfig);
+      // initialize() must resolve without throwing (no OAuth redirect attempted)
+      await expect(sdk.initialize()).resolves.toBeUndefined();
+      expect(sdk.isInitialized()).toBe(true);
+    });
+
+    it('does NOT seed when host-embedded but embeddingOrigin is not a trusted UiPath origin', () => {
+      mockPlatform.isHostEmbedded = true;
+      mockPlatform.embeddingOrigin = 'https://evil.example.com';
+
+      const sdk = new UiPath(oauthConfig);
+
+      // Not seeded → isInitialized() stays false (normal OAuth path)
+      expect(sdk.isInitialized()).toBe(false);
+    });
+
+    it('does NOT seed when host-embedded but embeddingOrigin is null', () => {
+      mockPlatform.isHostEmbedded = true;
+      mockPlatform.embeddingOrigin = null;
+
+      const sdk = new UiPath(oauthConfig);
+
+      expect(sdk.isInitialized()).toBe(false);
+    });
+
+    it('does NOT seed a normal OAuth app that is not host-embedded (regression guard)', () => {
+      // Neither isHostEmbedded nor isInActionCenter — default state
+      mockPlatform.isHostEmbedded = false;
+      mockPlatform.embeddingOrigin = null;
+
+      const sdk = new UiPath(oauthConfig);
+
+      expect(sdk.isInitialized()).toBe(false);
     });
   });
 

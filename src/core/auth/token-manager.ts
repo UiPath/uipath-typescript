@@ -1,5 +1,5 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser, isInActionCenter, embeddingOrigin, isHostEmbedded } from '../../utils/platform';
+import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
@@ -7,7 +7,7 @@ import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { ActionCenterTokenManager } from './action-center-token-manager';
 import { EmbeddedTokenManager } from './embedded-token-manager';
-import { isValidHostOrigin } from './host-token-request';
+import { trustedEmbeddingOrigin } from './host-token-request';
 import { telemetryClient } from '../telemetry';
 import { extractUserIdFromToken } from '../../utils/encoding';
 
@@ -37,8 +37,8 @@ export class TokenManager {
     if (isInActionCenter) {
       this.actionCenterTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
       this.isOAuth = false;
-    } else if (isHostEmbedded && embeddingOrigin && isValidHostOrigin(embeddingOrigin)) {
-      this.embeddedTokenManager = new EmbeddedTokenManager(embeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
+    } else if (trustedEmbeddingOrigin) {
+      this.embeddedTokenManager = new EmbeddedTokenManager(trustedEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
       this.isOAuth = false;
     }
   }
