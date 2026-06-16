@@ -344,8 +344,8 @@ describe('AgentService Unit Tests', () => {
       expect('limit' in body).toBe(false);
     });
 
-    it('should return an empty array when the envelope omits the data field', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
 
       const result = await agentService.getErrorsTimeline(startTime, endTime, {});
 
@@ -406,8 +406,8 @@ describe('AgentService Unit Tests', () => {
       expect('limit' in body).toBe(false);
     });
 
-    it('should return an empty array when the envelope omits the data field', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
 
       const result = await agentService.getConsumptionTimeline(startTime, endTime, {});
 
@@ -471,8 +471,8 @@ describe('AgentService Unit Tests', () => {
       expect(body['$folderKeys']).toBeUndefined();
     });
 
-    it('should return an empty array when the envelope omits the data field', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
 
       const result = await agentService.getLatencyTimeline(startTime, endTime, {});
 

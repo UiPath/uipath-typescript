@@ -242,12 +242,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
   ): Promise<AgentGetErrorsTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<{ data?: AgentGetErrorsTimelineResponse[] }>(
+    const response = await this.post<{ data: AgentGetErrorsTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
       body,
     );
 
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
@@ -293,12 +293,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
   ): Promise<AgentGetConsumptionTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<{ data?: AgentGetConsumptionTimelineResponse[] }>(
+    const response = await this.post<{ data: AgentGetConsumptionTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE,
       body,
     );
 
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
@@ -345,12 +345,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
   ): Promise<AgentGetLatencyTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<{ data?: AgentGetLatencyTimelineResponse[] }>(
+    const response = await this.post<{ data: AgentGetLatencyTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
       body,
     );
 
-    return response.data.data ?? [];
+    return response.data.data;
   }
 
   /**
