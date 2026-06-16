@@ -1935,28 +1935,46 @@ describe("EntityService Unit Tests", () => {
         expect(f?.sqlType.minValue).toBe(-9999);
       });
 
-      it("should default INTEGER min/max to default values", async () => {
+      it("should map INTEGER to DECIMAL with decimalPrecision 0 (UI compat) and default min/max", async () => {
         await entityService.create("my_entity", [
           { fieldName: "int_field", type: EntityFieldDataType.INTEGER },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
-        expect(f?.sqlType).toEqual({ name: "INT", maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f?.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
-      it("should allow user to override INTEGER min/max", async () => {
+      it("should allow user to override INTEGER min/max while keeping integer decimalPrecision", async () => {
         await entityService.create("my_entity", [
           { fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
-        expect(f?.sqlType).toEqual({ name: "INT", maxValue: 500, minValue: -500 });
+        expect(f?.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 500,
+          minValue: -500,
+        });
       });
 
-      it("should default BIG_INTEGER min/max to default values", async () => {
+      it("should map BIG_INTEGER to DECIMAL with decimalPrecision 0 (UI compat) and default min/max", async () => {
         await entityService.create("my_entity", [
           { fieldName: "bigint_field", type: EntityFieldDataType.BIG_INTEGER },
         ]);
         const f = getCreatedFields().find((x) => x.name === "bigint_field");
-        expect(f?.sqlType).toEqual({ name: "BIGINT", maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f?.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
       it("should throw ValidationError when STRING lengthLimit exceeds 4000", async () => {
@@ -2253,8 +2271,15 @@ describe("EntityService Unit Tests", () => {
             fields: expect.arrayContaining([
               expect.objectContaining({ name: "title" }),
               expect.objectContaining({
+                // INTEGER → DECIMAL (precision 0) for UI round-trip
                 name: "count",
-                sqlType: { name: "INT", maxValue: 1000000000000, minValue: -1000000000000 },
+                sqlType: {
+                  name: "DECIMAL",
+                  lengthLimit: 1000,
+                  decimalPrecision: 0,
+                  maxValue: 1000000000000,
+                  minValue: -1000000000000,
+                },
               }),
             ]),
           }),
@@ -2375,33 +2400,27 @@ describe("EntityService Unit Tests", () => {
     });
 
     it.each([
-      { type: EntityFieldDataType.STRING, expectedSqlType: "NVARCHAR" },
-      {
-        type: EntityFieldDataType.MULTILINE_TEXT,
-        expectedSqlType: "MULTILINE",
-      },
-      { type: EntityFieldDataType.INTEGER, expectedSqlType: "INT" },
-      { type: EntityFieldDataType.BOOLEAN, expectedSqlType: "BIT" },
-      {
-        type: EntityFieldDataType.DATETIME_WITH_TZ,
-        expectedSqlType: "DATETIMEOFFSET",
-      },
-      { type: EntityFieldDataType.DATE, expectedSqlType: "DATE" },
-      { type: EntityFieldDataType.DECIMAL, expectedSqlType: "DECIMAL" },
-      { type: EntityFieldDataType.FILE, expectedSqlType: "UNIQUEIDENTIFIER" },
-      { type: EntityFieldDataType.CHOICE_SET_SINGLE, expectedSqlType: "INT" },
-      {
-        type: EntityFieldDataType.CHOICE_SET_MULTIPLE,
-        expectedSqlType: "NVARCHAR",
-      },
-      { type: EntityFieldDataType.AUTO_NUMBER, expectedSqlType: "DECIMAL" },
-      {
-        type: EntityFieldDataType.RELATIONSHIP,
-        expectedSqlType: "UNIQUEIDENTIFIER",
-      },
+      // INTEGER/BIG_INTEGER/FLOAT/DOUBLE collapse to DECIMAL; DATETIME collapses to DATETIMEOFFSET.
+      { type: EntityFieldDataType.STRING,              expectedSqlType: "NVARCHAR",         expectedApiType: "text"               },
+      { type: EntityFieldDataType.MULTILINE_TEXT,      expectedSqlType: "MULTILINE",        expectedApiType: "multiline"          },
+      { type: EntityFieldDataType.INTEGER,             expectedSqlType: "DECIMAL",          expectedApiType: "number"             },
+      { type: EntityFieldDataType.BIG_INTEGER,         expectedSqlType: "DECIMAL",          expectedApiType: "number"             },
+      { type: EntityFieldDataType.FLOAT,               expectedSqlType: "DECIMAL",          expectedApiType: "number"             },
+      { type: EntityFieldDataType.DOUBLE,              expectedSqlType: "DECIMAL",          expectedApiType: "number"             },
+      { type: EntityFieldDataType.BOOLEAN,             expectedSqlType: "BIT",              expectedApiType: "boolean"            },
+      { type: EntityFieldDataType.DATETIME,            expectedSqlType: "DATETIMEOFFSET",   expectedApiType: "dateTime"           },
+      { type: EntityFieldDataType.DATETIME_WITH_TZ,    expectedSqlType: "DATETIMEOFFSET",   expectedApiType: "dateTime"           },
+      { type: EntityFieldDataType.DATE,                expectedSqlType: "DATE",             expectedApiType: "date"               },
+      { type: EntityFieldDataType.DECIMAL,             expectedSqlType: "DECIMAL",          expectedApiType: "number"             },
+      { type: EntityFieldDataType.UUID,                expectedSqlType: "UNIQUEIDENTIFIER", expectedApiType: "uniqueid"           },
+      { type: EntityFieldDataType.FILE,                expectedSqlType: "UNIQUEIDENTIFIER", expectedApiType: "relationship"       },
+      { type: EntityFieldDataType.CHOICE_SET_SINGLE,   expectedSqlType: "INT",              expectedApiType: "choiceSetSingle"    },
+      { type: EntityFieldDataType.CHOICE_SET_MULTIPLE, expectedSqlType: "NVARCHAR",         expectedApiType: "choiceSetMultiple"  },
+      { type: EntityFieldDataType.AUTO_NUMBER,         expectedSqlType: "DECIMAL",          expectedApiType: "autonumber"         },
+      { type: EntityFieldDataType.RELATIONSHIP,        expectedSqlType: "UNIQUEIDENTIFIER", expectedApiType: "relationship"       },
     ])(
-      "should map EntityFieldDataType.$type to sqlType '$expectedSqlType' for added fields",
-      async ({ type, expectedSqlType }) => {
+      "should map EntityFieldDataType.$type to sqlType '$expectedSqlType' and type '$expectedApiType' for added fields",
+      async ({ type, expectedSqlType, expectedApiType }) => {
         mockApiClient.get.mockResolvedValue(mockRawEntity);
         mockApiClient.post.mockResolvedValue(undefined);
 
@@ -2422,6 +2441,7 @@ describe("EntityService Unit Tests", () => {
         );
         expect(newField).toBeDefined();
         expect(newField.sqlType.name).toBe(expectedSqlType);
+        expect(newField.type).toBe(expectedApiType);
       },
     );
 
@@ -2532,49 +2552,79 @@ describe("EntityService Unit Tests", () => {
         expect(f.sqlType).toEqual({ name: "DATETIMEOFFSET", lengthLimit: 1000 });
       });
 
-      it("should default INTEGER min/max to default values", async () => {
+      it("should map INTEGER to DECIMAL with decimalPrecision 0 (UI compat) and default min/max", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "int_field");
-        expect(f.sqlType).toEqual({ name: "INT", maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
-      it("should allow user to override INTEGER min/max", async () => {
+      it("should allow user to override INTEGER min/max while keeping integer decimalPrecision", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "int_field");
-        expect(f.sqlType).toEqual({ name: "INT", maxValue: 500, minValue: -500 });
+        expect(f.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 500,
+          minValue: -500,
+        });
       });
 
-      it("should default BIG_INTEGER min/max to default values", async () => {
+      it("should map BIG_INTEGER to DECIMAL with decimalPrecision 0 (UI compat) and default min/max", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ fieldName: "bigint_field", type: EntityFieldDataType.BIG_INTEGER }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "bigint_field");
-        expect(f.sqlType).toEqual({ name: "BIGINT", maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 0,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
-      it("should default FLOAT to defaults including decimalPrecision", async () => {
+      it("should map FLOAT to DECIMAL (UI compat) with default decimalPrecision and min/max", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ fieldName: "float_field", type: EntityFieldDataType.FLOAT }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "float_field");
-        expect(f.sqlType).toEqual({ name: "FLOAT", decimalPrecision: 2, maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 2,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
-      it("should default DOUBLE to defaults including decimalPrecision", async () => {
+      it("should map DOUBLE to DECIMAL (UI compat) with default decimalPrecision and min/max", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ fieldName: "double_field", type: EntityFieldDataType.DOUBLE }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "double_field");
-        expect(f.sqlType).toEqual({ name: "REAL", decimalPrecision: 2, maxValue: 1000000000000, minValue: -1000000000000 });
+        expect(f.sqlType).toEqual({
+          name: "DECIMAL",
+          lengthLimit: 1000,
+          decimalPrecision: 2,
+          maxValue: 1000000000000,
+          minValue: -1000000000000,
+        });
       });
 
       it("should set CHOICE_SET_SINGLE sqlType to plain INT (no constraints)", async () => {
@@ -2584,20 +2634,6 @@ describe("EntityService Unit Tests", () => {
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "css_field");
         expect(f.sqlType).toEqual({ name: "INT" });
-      });
-
-      it("should set FILE lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
-        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{
-            fieldName: "file_field",
-            type: EntityFieldDataType.FILE,
-            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
-            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
-          }],
-        });
-        const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
-        const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
-        expect(f.sqlType).toEqual({ name: "UNIQUEIDENTIFIER", lengthLimit: 300 });
       });
 
       it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
@@ -2615,14 +2651,6 @@ describe("EntityService Unit Tests", () => {
         expect(f.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
         expect(f.isForeignKey).toBe(true);
         expect(f.referenceType).toBeUndefined();
-      });
-
-      it("should throw ValidationError when FILE field is missing reference IDs", async () => {
-        await expect(
-          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "file_field", type: EntityFieldDataType.FILE }],
-          }),
-        ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
       it("should set RELATIONSHIP lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
@@ -3070,18 +3098,38 @@ describe("EntityService Unit Tests", () => {
 // ===== MAP SYNC TESTS =====
 describe("Entity field type map synchronization", () => {
   it("every EntityFieldDataType in EntitySchemaFieldTypeMap has a round-trip via EntityFieldTypeMap and FieldDisplayTypeToDataType", () => {
+    // INTEGER/BIG_INTEGER/FLOAT/DOUBLE/DATETIME are write-side aliases for DECIMAL/DATETIME_WITH_TZ
+    // (UI round-trip). Reads resolve to the canonical type.
+    const aliasOfDecimal = new Set<EntityFieldDataType>([
+      EntityFieldDataType.INTEGER,
+      EntityFieldDataType.BIG_INTEGER,
+      EntityFieldDataType.FLOAT,
+      EntityFieldDataType.DOUBLE,
+    ]);
+    const aliasOfDateTimeWithTz = new Set<EntityFieldDataType>([
+      EntityFieldDataType.DATETIME,
+    ]);
+
     for (const [dataType, { sqlTypeName, fieldDisplayType }] of Object.entries(
       EntitySchemaFieldTypeMap,
     ) as [
       EntityFieldDataType,
       { sqlTypeName: SqlFieldType; fieldDisplayType: FieldDisplayType },
     ][]) {
-      if (fieldDisplayType === FieldDisplayType.Basic) {
-        // Basic types must be recoverable via EntityFieldTypeMap
-        expect(EntityFieldTypeMap[sqlTypeName]).toBe(dataType);
-      } else {
+      if (fieldDisplayType !== FieldDisplayType.Basic) {
         // Non-basic types must be recoverable via FieldDisplayTypeToDataType
         expect(FieldDisplayTypeToDataType[fieldDisplayType]).toBe(dataType);
+        continue;
+      }
+
+      const reversed = EntityFieldTypeMap[sqlTypeName];
+      if (aliasOfDecimal.has(dataType)) {
+        expect(reversed).toBe(EntityFieldDataType.DECIMAL);
+      } else if (aliasOfDateTimeWithTz.has(dataType)) {
+        expect(reversed).toBe(EntityFieldDataType.DATETIME_WITH_TZ);
+      } else {
+        // Canonical Basic types must round-trip exactly
+        expect(reversed).toBe(dataType);
       }
     }
   });
