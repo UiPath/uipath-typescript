@@ -294,7 +294,7 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getErrorsTimeline(startTime, endTime);
 
-      expect(result.data).toEqual([mockPoint]);
+      expect(result).toEqual([mockPoint]);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE);
@@ -344,12 +344,12 @@ describe('AgentService Unit Tests', () => {
       expect('limit' in body).toBe(false);
     });
 
-    it('should return undefined data when the envelope omits it', async () => {
+    it('should return an empty array when the envelope omits the data field', async () => {
       mockApiClient.post.mockResolvedValue({});
 
       const result = await agentService.getErrorsTimeline(startTime, endTime, {});
 
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -374,7 +374,7 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getConsumptionTimeline(startTime, endTime);
 
-      expect(result.data).toEqual([mockPoint]);
+      expect(result).toEqual([mockPoint]);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE);
@@ -406,12 +406,12 @@ describe('AgentService Unit Tests', () => {
       expect('limit' in body).toBe(false);
     });
 
-    it('should return undefined data when the envelope omits it', async () => {
+    it('should return an empty array when the envelope omits the data field', async () => {
       mockApiClient.post.mockResolvedValue({});
 
       const result = await agentService.getConsumptionTimeline(startTime, endTime, {});
 
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -444,7 +444,7 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getLatencyTimeline(startTime, endTime);
 
-      expect(result.data).toEqual(mockPoints);
+      expect(result).toEqual(mockPoints);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE);
@@ -471,12 +471,12 @@ describe('AgentService Unit Tests', () => {
       expect(body['$folderKeys']).toBeUndefined();
     });
 
-    it('should return undefined data when the envelope omits it', async () => {
+    it('should return an empty array when the envelope omits the data field', async () => {
       mockApiClient.post.mockResolvedValue({});
 
       const result = await agentService.getLatencyTimeline(startTime, endTime, {});
 
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {

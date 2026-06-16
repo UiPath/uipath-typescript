@@ -154,14 +154,14 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     it('should retrieve the errors timeline', async () => {
       const result = await agents.getErrorsTimeline(startTime, endTime);
 
-      expect(result).toBeDefined();
-      if (!result.data || result.data.length === 0) {
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
         throw new Error(
           'No error timeline points in the test tenant for the configured window — ' +
           'cannot verify response shape. Run errored agents in the tenant or widen the window.',
         );
       }
-      const point = result.data[0];
+      const point = result[0];
       expect(typeof point.name).toBe('string');
       expect(typeof point.value).toBe('number');
       expect(typeof point.date).toBe('string');
@@ -171,8 +171,8 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     it('should apply the limit filter', async () => {
       const result = await agents.getErrorsTimeline(startTime, endTime, { limit: 1 });
 
-      expect(result).toBeDefined();
-      const agentNames = new Set((result.data ?? []).map((point) => point.name));
+      expect(Array.isArray(result)).toBe(true);
+      const agentNames = new Set(result.map((point) => point.name));
       expect(agentNames.size).toBeLessThanOrEqual(1);
     });
   });
@@ -184,14 +184,14 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     it('should retrieve the AGU consumption timeline', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime);
 
-      expect(result).toBeDefined();
-      if (!result.data || result.data.length === 0) {
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
         throw new Error(
           'No consumption timeline points in the test tenant for the configured window — ' +
           'cannot verify response shape. Run agents in the tenant or widen the window.',
         );
       }
-      const point = result.data[0];
+      const point = result[0];
       expect(typeof point.timeSlice).toBe('string');
       expect(typeof point.aguConsumption).toBe('number');
     });
@@ -201,8 +201,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
         folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
       });
 
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.data ?? [])).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
   });
 
@@ -213,14 +212,14 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     it('should retrieve the per-percentile latency timeline', async () => {
       const result = await agents.getLatencyTimeline(startTime, endTime);
 
-      expect(result).toBeDefined();
-      if (!result.data || result.data.length === 0) {
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
         throw new Error(
           'No latency timeline points in the test tenant for the configured window — ' +
           'cannot verify response shape. Run agents in the tenant or widen the window.',
         );
       }
-      const point = result.data[0];
+      const point = result[0];
       expect(typeof point.name).toBe('string');
       expect(typeof point.value).toBe('number');
       expect(typeof point.date).toBe('string');
@@ -232,8 +231,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
       });
 
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.data ?? [])).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
   });
 });

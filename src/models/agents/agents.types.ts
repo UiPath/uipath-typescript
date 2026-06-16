@@ -82,11 +82,11 @@ export interface AgentListItem {
 }
 
 /**
- * Options for {@link AgentServiceModel.getAll}.
+ * Options for getting the list of agents.
  *
  * Composes filter, pagination, and sort options.
  */
-export type AgentListOptions = AgentFilterOptions & PaginationOptions & {
+export type AgentGetAllOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentListOrderBy;
 };
@@ -178,7 +178,7 @@ export interface AgentError {
  *
  * Composes filter, pagination, and sort/group options.
  */
-export type AgentErrorsOptions = AgentFilterOptions & PaginationOptions & {
+export type AgentGetErrorsOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentErrorOrderBy;
   /** Group results by one or more columns. */
@@ -186,93 +186,55 @@ export type AgentErrorsOptions = AgentFilterOptions & PaginationOptions & {
 };
 
 /**
- * One point on an agent's errors timeline — error count for a single time bucket.
+ * A single point on the agent errors timeline
  */
-export interface AgentErrorsTimelinePoint {
+export interface AgentGetErrorsTimelineResponse {
   /** Agent name */
   name: string;
   /** Error count in this time bucket */
   value: number;
-  /** Bucket timestamp (ISO 8601, UTC) */
+  /** Bucket timestamp*/
   date: string;
 }
 
 /**
- * Response from {@link AgentServiceModel.getErrorsTimeline}.
+ * Options for getting the agent errors timeline.
  */
-export interface AgentErrorsTimelineResponse {
-  /** Time-series points, one per (agent, time bucket). May be absent when no data matches. */
-  data?: AgentErrorsTimelinePoint[];
-}
-
-/**
- * Options for {@link AgentServiceModel.getErrorsTimeline}.
- */
-export interface AgentErrorsTimelineOptions extends AgentFilterOptions {
+export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
   /** Max number of agents to return. Defaults to 10 server-side. */
   limit?: number;
 }
 
 /**
- * One point on an agent's consumption timeline — AGU consumption for a single
- * time bucket.
+ * A single point on the agent consumption timeline
  */
-export interface AgentConsumptionTimelinePoint {
-  /** Bucket timestamp (ISO 8601, UTC) */
+export interface AgentGetConsumptionTimelineResponse {
+  /** Bucket timestamp */
   timeSlice: string;
   /** AGU quantity consumed in this time bucket */
   aguConsumption: number;
 }
 
 /**
- * Response from {@link AgentServiceModel.getConsumptionTimeline}.
+ * Options for getting the agent consumption timeline.
  */
-export interface AgentConsumptionTimelineResponse {
-  /** Time-series points, one per bucket. May be absent when no data matches. */
-  data?: AgentConsumptionTimelinePoint[];
-}
+export interface AgentGetConsumptionTimelineOptions extends AgentFilterOptions {}
 
 /**
- * Options for {@link AgentServiceModel.getConsumptionTimeline}.
- *
- * Currently identical to {@link AgentFilterOptions}; named distinctly so that
- * future per-method filters can be added without a breaking change.
+ * A single point on the agent latency timeline
  */
-export interface AgentConsumptionTimelineOptions extends AgentFilterOptions {}
-
-/**
- * One point on an agent's latency timeline — a single (percentile, time bucket)
- * combination. The API emits one row per percentile per bucket, so a typical
- * response includes two points per bucket (one each for P50 and P95).
- */
-export interface AgentLatencyTimelinePoint {
+export interface AgentGetLatencyTimelineResponse {
   /**
    * Percentile label for this point — observed values: `"P50"`, `"P95"`.
-   * The SDK leaves this as a plain string because the API does not publish a
-   * closed set of percentiles.
    */
   name: string;
   /** Latency value in milliseconds. */
   value: number;
-  /** Bucket timestamp (ISO 8601, UTC) */
+  /** Bucket timestamp */
   date: string;
 }
 
 /**
- * Response from {@link AgentServiceModel.getLatencyTimeline}.
+ * Options for getting the agent latency timeline.
  */
-export interface AgentLatencyTimelineResponse {
-  /**
-   * Time-series points, two per bucket (one per percentile). May be absent
-   * when no data matches.
-   */
-  data?: AgentLatencyTimelinePoint[];
-}
-
-/**
- * Options for {@link AgentServiceModel.getLatencyTimeline}.
- *
- * Currently identical to {@link AgentFilterOptions}; named distinctly so that
- * future per-method filters can be added without a breaking change.
- */
-export interface AgentLatencyTimelineOptions extends AgentFilterOptions {}
+export interface AgentGetLatencyTimelineOptions extends AgentFilterOptions {}

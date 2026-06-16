@@ -1,16 +1,16 @@
 import { BaseService } from '../base';
 import {
-  AgentConsumptionTimelineOptions,
-  AgentConsumptionTimelineResponse,
+  AgentGetConsumptionTimelineOptions,
+  AgentGetConsumptionTimelineResponse,
   AgentError,
-  AgentErrorsOptions,
-  AgentErrorsTimelineOptions,
-  AgentErrorsTimelineResponse,
+  AgentGetErrorsOptions,
+  AgentGetErrorsTimelineOptions,
+  AgentGetErrorsTimelineResponse,
   AgentFilterOptions,
-  AgentLatencyTimelineOptions,
-  AgentLatencyTimelineResponse,
+  AgentGetLatencyTimelineOptions,
+  AgentGetLatencyTimelineResponse,
   AgentListItem,
-  AgentListOptions,
+  AgentGetAllOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -81,7 +81,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * ```
    */
   @track('Agents.GetAll')
-  async getAll<T extends AgentListOptions = AgentListOptions>(
+  async getAll<T extends AgentGetAllOptions = AgentGetAllOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -163,7 +163,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * ```
    */
   @track('Agents.GetErrors')
-  async getErrors<T extends AgentErrorsOptions = AgentErrorsOptions>(
+  async getErrors<T extends AgentGetErrorsOptions = AgentGetErrorsOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -201,14 +201,10 @@ export class AgentService extends BaseService implements AgentServiceModel {
   /**
    * Retrieves a time-series of error counts grouped by agent over the requested window.
    *
-   * Returns one data point per (agent, time bucket). Bucket size is chosen
-   * server-side based on the window length. Optionally filter by folder, agent
-   * name, project, or process version.
-   *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
-   * @param options - Optional filters {@link AgentErrorsTimelineOptions}
-   * @returns Promise resolving to {@link AgentErrorsTimelineResponse}
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetErrorsTimelineResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
@@ -220,7 +216,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
    * });
    * ```
@@ -242,29 +238,25 @@ export class AgentService extends BaseService implements AgentServiceModel {
   async getErrorsTimeline(
     startTime: Date,
     endTime: Date,
-    options?: AgentErrorsTimelineOptions,
-  ): Promise<AgentErrorsTimelineResponse> {
+    options?: AgentGetErrorsTimelineOptions,
+  ): Promise<AgentGetErrorsTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<AgentErrorsTimelineResponse>(
+    const response = await this.post<{ data?: AgentGetErrorsTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
       body,
     );
 
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
-   * Retrieves a time-series of AGU consumption over the requested window.
-   *
-   * Returns one data point per time bucket; bucket size is chosen server-side
-   * based on the window length. Optionally filter by folder, agent, project,
-   * or process version.
+   * Retrieves a time-series of AGU (Agent Units) consumption over the requested window.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
-   * @param options - Optional filters {@link AgentConsumptionTimelineOptions}
-   * @returns Promise resolving to {@link AgentConsumptionTimelineResponse}
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetConsumptionTimelineResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
@@ -276,7 +268,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
    * });
    * ```
@@ -297,31 +289,26 @@ export class AgentService extends BaseService implements AgentServiceModel {
   async getConsumptionTimeline(
     startTime: Date,
     endTime: Date,
-    options?: AgentConsumptionTimelineOptions,
-  ): Promise<AgentConsumptionTimelineResponse> {
+    options?: AgentGetConsumptionTimelineOptions,
+  ): Promise<AgentGetConsumptionTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<AgentConsumptionTimelineResponse>(
+    const response = await this.post<{ data?: AgentGetConsumptionTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE,
       body,
     );
 
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
    * Retrieves a time-series of agent latency (milliseconds) over the requested
    * window.
    *
-   * The API emits one row per percentile per time bucket — typically a P50 row
-   * and a P95 row per bucket. Bucket size is chosen server-side based on the
-   * window length. Optionally filter by folder, agent, project, or process
-   * version.
-   *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
-   * @param options - Optional filters {@link AgentLatencyTimelineOptions}
-   * @returns Promise resolving to {@link AgentLatencyTimelineResponse}
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetLatencyTimelineResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
@@ -333,7 +320,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value} ms`);
    * });
    * ```
@@ -354,16 +341,16 @@ export class AgentService extends BaseService implements AgentServiceModel {
   async getLatencyTimeline(
     startTime: Date,
     endTime: Date,
-    options?: AgentLatencyTimelineOptions,
-  ): Promise<AgentLatencyTimelineResponse> {
+    options?: AgentGetLatencyTimelineOptions,
+  ): Promise<AgentGetLatencyTimelineResponse[]> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<AgentLatencyTimelineResponse>(
+    const response = await this.post<{ data?: AgentGetLatencyTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
       body,
     );
 
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
