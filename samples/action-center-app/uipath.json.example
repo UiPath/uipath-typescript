@@ -1,6 +1,6 @@
 {
   "clientId": "<your-oauth-external-app-client-id>",
-  "scope": "OR.Tasks",
+  "scope": "OR.Tasks OR.Folders OR.Buckets",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
   "baseUrl": "https://api.uipath.com",
