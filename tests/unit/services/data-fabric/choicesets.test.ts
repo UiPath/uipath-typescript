@@ -78,10 +78,10 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result[0].createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
       expect(result[0].updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
 
-      // Verify the API call has correct endpoint
+      // Verify the API call — default tenant-only via tenant-marker header
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
       );
     });
 
@@ -107,10 +107,10 @@ describe('ChoiceSetService Unit Tests', () => {
         expect(choiceSet).toHaveProperty('updatedTime');
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via tenant-marker header
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
       );
     });
 
@@ -151,6 +151,64 @@ describe('ChoiceSetService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(choiceSetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({ folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } }
+      );
+    });
+
+    it('should send tenant-marker folder header by default (tenant-only)', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
+      );
+    });
+
+    it('should send tenant-marker folder header when includeFolderChoiceSets is false', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({ includeFolderChoiceSets: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
+      );
+    });
+
+    it('should omit folder header when includeFolderChoiceSets is true (cross-scope)', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({ includeFolderChoiceSets: true });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: {} }
+      );
+    });
+
+    it('should let folderKey win when both folderKey and includeFolderChoiceSets are provided', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+        includeFolderChoiceSets: true,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } }
+      );
     });
 
   });
@@ -301,6 +359,24 @@ describe('ChoiceSetService Unit Tests', () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
+    it('should forward folderKey as X-UIPATH-FolderKey header but NOT include it in the POST body', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      const config = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0] as any;
+      const downstreamOptions = vi.mocked(PaginationHelpers.getAll).mock.calls[0][1] as any;
+
+      // Header is set
+      expect(config.headers).toEqual({ 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY });
+
+      // folderKey must be stripped from downstream options so it never leaks into the POST body
+      expect(downstreamOptions).toBeDefined();
+      expect(downstreamOptions.folderKey).toBeUndefined();
+    });
+
     it('should handle empty results gracefully', async () => {
       const mockResponse = {
         items: [],
@@ -338,7 +414,7 @@ describe('ChoiceSetService Unit Tests', () => {
             folderId: DATA_FABRIC_TENANT_FOLDER_ID,
           },
         },
-        {},
+        { headers: {} },
       );
     });
 
@@ -372,6 +448,24 @@ describe('ChoiceSetService Unit Tests', () => {
         TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.post.mockResolvedValue(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+
+      await choiceSetService.create('expense_types', {
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.CREATE,
+        expect.objectContaining({
+          entityDefinition: expect.objectContaining({
+            folderId: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+    });
   });
 
   describe('updateById', () => {
@@ -389,7 +483,7 @@ describe('ChoiceSetService Unit Tests', () => {
           displayName: 'Renamed Choice Set',
           description: 'Updated description',
         },
-        {},
+        { headers: {} },
       );
     });
 
@@ -436,6 +530,21 @@ describe('ChoiceSetService Unit Tests', () => {
         choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, { displayName: 'x' }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      await choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        displayName: 'Renamed',
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        { displayName: 'Renamed' },
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+    });
   });
 
   describe('deleteById', () => {
@@ -447,7 +556,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
         {},
-        {},
+        { headers: {} },
       );
     });
 
@@ -458,6 +567,20 @@ describe('ChoiceSetService Unit Tests', () => {
       await expect(
         choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.post.mockResolvedValue(true);
+
+      await choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        {},
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
     });
   });
 
@@ -478,7 +601,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME),
         { Name: 'NEW_VAL', DisplayName: 'New Value' },
-        {},
+        { headers: {} },
       );
 
       expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
@@ -526,6 +649,30 @@ describe('ChoiceSetService Unit Tests', () => {
         choiceSetService.insertValueById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, 'NEW_VAL'),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header on both name resolution and insert', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      mockApiClient.post.mockResolvedValue(createMockChoiceSetValueResponse());
+
+      await choiceSetService.insertValueById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        'NEW_VAL',
+        { folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      // Name resolution call (getAll) sends the folder header so folder-scoped sets are found
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+
+      // The insert call itself also forwards the header (server requires it on name-based endpoint)
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME),
+        { Name: 'NEW_VAL' },
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+    });
   });
 
   describe('updateValueById', () => {
@@ -546,7 +693,7 @@ describe('ChoiceSetService Unit Tests', () => {
           CHOICESET_TEST_CONSTANTS.VALUE_ID,
         ),
         { DisplayName: 'Updated' },
-        {},
+        { headers: {} },
       );
 
       expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
@@ -583,6 +730,32 @@ describe('ChoiceSetService Unit Tests', () => {
         ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header on both name resolution and update', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      mockApiClient.post.mockResolvedValue(createMockChoiceSetValueResponse({ DisplayName: 'Renamed' }));
+
+      await choiceSetService.updateValueById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        'Renamed',
+        { folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE_BY_NAME(
+          CHOICESET_TEST_CONSTANTS.CHOICESET_NAME,
+          CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        ),
+        { DisplayName: 'Renamed' },
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
+    });
   });
 
   describe('deleteValuesById', () => {
@@ -598,7 +771,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
         valueIds,
-        {},
+        { headers: {} },
       );
     });
 
@@ -611,6 +784,23 @@ describe('ChoiceSetService Unit Tests', () => {
           CHOICESET_TEST_CONSTANTS.VALUE_ID,
         ]),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.post.mockResolvedValue(true);
+      const valueIds = [CHOICESET_TEST_CONSTANTS.VALUE_ID];
+
+      await choiceSetService.deleteValuesById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        valueIds,
+        { folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        valueIds,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
+      );
     });
   });
 });

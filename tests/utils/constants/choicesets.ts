@@ -21,5 +21,8 @@ export const CHOICESET_TEST_CONSTANTS = {
   VALUE_NAME: 'Application',
   VALUE_DISPLAY_NAME: 'Application',
   VALUE_NUMBER_ID: 3,
+
+  // Folder key used to verify X-UIPATH-FolderKey header forwarding
+  FOLDER_KEY: 'cd6e24d3-2941-4aac-9aba-2ebf38dcceec',
 } as const;
 

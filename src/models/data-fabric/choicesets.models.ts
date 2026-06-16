@@ -1,12 +1,16 @@
 import {
+  ChoiceSetGetAllOptions,
   ChoiceSetGetAllResponse,
   ChoiceSetGetResponse,
   ChoiceSetGetByIdOptions,
   ChoiceSetCreateOptions,
   ChoiceSetUpdateOptions,
+  ChoiceSetDeleteByIdOptions,
   ChoiceSetValueInsertOptions,
   ChoiceSetValueInsertResponse,
-  ChoiceSetValueUpdateResponse
+  ChoiceSetValueUpdateOptions,
+  ChoiceSetValueUpdateResponse,
+  ChoiceSetValueDeleteOptions,
 } from './choicesets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -28,33 +32,32 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface ChoiceSetServiceModel {
   /**
-   * Gets all choice sets in the org
+   * Gets choice sets in the tenant.
    *
+   * Three call modes:
+   * - `getAll()` — default. Returns only tenant-level choice sets.
+   * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only choice sets in that folder.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. `folderKey` is preferred over `includeFolderChoiceSets` when both are set.
+   *
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets — preferred when scoping to a folder; `includeFolderChoiceSets: true` to list tenant + folder choice sets together) The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of choice set metadata
    * {@link ChoiceSetGetAllResponse}
    * @example
    * ```typescript
-   * // Get all choice sets
-   * const allChoiceSets = await choicesets.getAll();
+   * // Tenant-only (default)
+   * const tenantChoiceSets = await choicesets.getAll();
    *
-   * // Iterate through choice sets
-   * allChoiceSets.forEach(choiceSet => {
-   *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
-   *   console.log(`Description: ${choiceSet.description}`);
-   *   console.log(`Created by: ${choiceSet.createdBy}`);
-   * });
+   * // A single folder's choice sets (preferred when targeting a specific folder)
+   * const folderChoiceSets = await choicesets.getAll({ folderKey: "<folderKey>" });
+   *
+   * // Tenant + folder choice sets together
+   * const allChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: true });
    *
    * // Find a specific choice set by name
-   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
-   *
-   * // Check choice set details
-   * if (expenseTypes) {
-   *   console.log(`Last updated: ${expenseTypes.updatedTime}`);
-   *   console.log(`Updated by: ${expenseTypes.updatedBy}`);
-   * }
+   * const expenseTypes = tenantChoiceSets.find(cs => cs.name === 'ExpenseTypes');
    * ```
    */
-  getAll(): Promise<ChoiceSetGetAllResponse[]>;
+  getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]>;
 
   /**
    * Gets choice set values by choice set ID with optional pagination
@@ -64,7 +67,7 @@ export interface ChoiceSetServiceModel {
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param choiceSetId - UUID of the choice set
-   * @param options - Pagination options
+   * @param options - Pagination options and optional `folderKey` (omit for tenant-level choice sets) The `folderKey` property is **experimental**.
    * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetGetResponse}
    * @example
@@ -89,6 +92,9 @@ export interface ChoiceSetServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
+   *
+   * // Folder-scoped choice set
+   * const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
    * ```
    */
   getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
@@ -106,7 +112,7 @@ export interface ChoiceSetServiceModel {
    * @param name - Choice set name. Must start with a
    *   letter, may contain only letters, numbers, and underscores, length
    *   3–100 characters (e.g., `"expenseTypes"`).
-   * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions})
+   * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the UUID of the created choice set
    *
    * @example
@@ -131,7 +137,7 @@ export interface ChoiceSetServiceModel {
    * the call throws `ValidationError` if both are omitted.
    *
    * @param choiceSetId - UUID of the choice set to update
-   * @param options - Metadata fields to change ({@link ChoiceSetUpdateOptions})
+   * @param options - Metadata fields to change ({@link ChoiceSetUpdateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
@@ -153,6 +159,7 @@ export interface ChoiceSetServiceModel {
    * Deletes a Data Fabric choice set and all its values.
    *
    * @param choiceSetId - UUID of the choice set to delete
+   * @param options - Optional {@link ChoiceSetDeleteByIdOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
    * @returns Promise resolving when the choice set is deleted
    *
    * @example
@@ -162,17 +169,20 @@ export interface ChoiceSetServiceModel {
    * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
    *
    * await choicesets.deleteById(expenseTypes.id);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  deleteById(choiceSetId: string): Promise<void>;
+  deleteById(choiceSetId: string, options?: ChoiceSetDeleteByIdOptions): Promise<void>;
 
   /**
    * Inserts a single value into a choice set.
    *
    * @param choiceSetId - UUID of the parent choice set
    * @param name - Identifier name of the new value (e.g., `"TRAVEL"`)
-   * @param options - Optional fields ({@link ChoiceSetValueInsertOptions})
+   * @param options - Optional fields ({@link ChoiceSetValueInsertOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the inserted value ({@link ChoiceSetValueInsertResponse})
    *
    * @example
@@ -185,6 +195,12 @@ export interface ChoiceSetServiceModel {
    *   displayName: 'Travel',
    * });
    * console.log(inserted.id);
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+   *   displayName: 'Travel',
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -203,6 +219,7 @@ export interface ChoiceSetServiceModel {
    * @param choiceSetId - UUID of the parent choice set
    * @param valueId - UUID of the value to update
    * @param displayName - New human-readable display name for the value
+   * @param options - Optional {@link ChoiceSetValueUpdateOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level. The `folderKey` property is **experimental**.
    * @returns Promise resolving to the updated value ({@link ChoiceSetValueUpdateResponse})
    *
    * @example
@@ -214,6 +231,11 @@ export interface ChoiceSetServiceModel {
    * const travel = values.items.find(v => v.name === 'TRAVEL');
    *
    * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel', {
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -221,6 +243,7 @@ export interface ChoiceSetServiceModel {
     choiceSetId: string,
     valueId: string,
     displayName: string,
+    options?: ChoiceSetValueUpdateOptions,
   ): Promise<ChoiceSetValueUpdateResponse>;
 
   /**
@@ -228,6 +251,7 @@ export interface ChoiceSetServiceModel {
    *
    * @param choiceSetId - UUID of the parent choice set
    * @param valueIds - Array of value UUIDs to delete
+   * @param options - Optional {@link ChoiceSetValueDeleteOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
    * @returns Promise resolving when the values are deleted
    *
    * @example
@@ -237,9 +261,12 @@ export interface ChoiceSetServiceModel {
    * const idsToDelete = values.items.slice(0, 2).map(v => v.id);
    *
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void>;
+  deleteValuesById(choiceSetId: string, valueIds: string[], options?: ChoiceSetValueDeleteOptions): Promise<void>;
 }
 

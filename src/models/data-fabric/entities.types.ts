@@ -1,4 +1,8 @@
 import { PaginationOptions } from "../../utils/pagination/types";
+import { EntityFolderScopedOptions } from "./data-fabric.types";
+
+// Re-export — canonical definition is in `./data-fabric.types`.
+export type { EntityFolderScopedOptions };
 
 /**
  * Entity field data type names (SQL-level types returned by the API)
@@ -125,14 +129,8 @@ export interface EntityDeleteOptions extends EntityFolderScopedOptions {
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
-/**
- * Options for {@link EntityServiceModel.deleteRecordById}
- */
 export interface EntityDeleteRecordByIdOptions extends EntityFolderScopedOptions {}
 
-/**
- * Options for {@link EntityServiceModel.importRecordsById}
- */
 export interface EntityImportRecordsByIdOptions extends EntityFolderScopedOptions {}
 
 
@@ -310,26 +308,29 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   referenceEntityId?: string;
   /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
   referenceFieldId?: string;
+  /**
+   * Folder key of the reference target when it lives outside the source's folder. Pass `'00000000-0000-0000-0000-000000000000'` for tenant-level system targets.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
+   */
+  referenceFolderKey?: string;
 }
 
 
-/**
- * Common shape for every folder-scoped Data Fabric entity operation.
- * Forwarded on the wire as the `X-UIPATH-FolderKey` header.
- */
-export interface EntityFolderScopedOptions {
-  /** Key identifying the folder the entity belongs to. Omit for tenant-level entities. */
-  folderKey?: string;
+
+export interface EntityGetAllOptions extends EntityFolderScopedOptions {
+  /**
+   * When `true`, returns tenant-level and folder-level entities together.
+   * Omit (or `false`, the default) to return only tenant-level entities.
+   * Ignored when `folderKey` is provided — `folderKey` is preferred over `includeFolderEntities` when both are set.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
+   */
+  includeFolderEntities?: boolean;
 }
 
-/**
- * Options for {@link EntityServiceModel.getById}
- */
 export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}
 
-/**
- * Options for {@link EntityServiceModel.deleteById}
- */
 export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
 
 /**

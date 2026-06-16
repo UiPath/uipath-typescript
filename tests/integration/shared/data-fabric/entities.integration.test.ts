@@ -17,21 +17,26 @@ import {
   QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
 
 /**
  * Fetches and caches choice set values for a given choice set ID.
+ * When the target choice set lives in a folder (not tenant-level), pass that
+ * folder's key so the lookup carries the X-UIPATH-FolderKey header — otherwise
+ * the server returns empty values and required CS fields end up undefined.
  */
-async function getChoiceSetValues(choiceSetId: string): Promise<any[]> {
-  if (choiceSetValueCache.has(choiceSetId)) {
-    return choiceSetValueCache.get(choiceSetId)!;
+async function getChoiceSetValues(choiceSetId: string, folderKey?: string): Promise<any[]> {
+  const cacheKey = `${folderKey ?? ''}::${choiceSetId}`;
+  if (choiceSetValueCache.has(cacheKey)) {
+    return choiceSetValueCache.get(cacheKey)!;
   }
   const { choiceSets } = getServices();
-  const result = await choiceSets.getById(choiceSetId);
+  const result = await choiceSets.getById(choiceSetId, folderKey ? { folderKey } : undefined);
   const values = result.items || [];
-  choiceSetValueCache.set(choiceSetId, values);
+  choiceSetValueCache.set(cacheKey, values);
   return values;
 }
 
@@ -120,7 +125,12 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
       const choiceSetId = field.choiceSetId || field.referenceChoiceSet?.id;
       if (!choiceSetId) continue;
 
-      const values = await getChoiceSetValues(choiceSetId);
+      // When the target CS lives in a folder, the lookup needs that folder's
+      // key to return values. Tenant-level CS targets carry the all-zeros
+      // folderId — treat that as "no folder header".
+      const csFolderId = field.referenceChoiceSet?.folderId;
+      const csFolderKey = csFolderId && csFolderId !== DATA_FABRIC_TENANT_FOLDER_ID ? csFolderId : undefined;
+      const values = await getChoiceSetValues(choiceSetId, csFolderKey);
       if (values.length === 0) continue;
 
       if (field.fieldDisplayType === FieldDisplayType.ChoiceSetSingle) {
@@ -197,6 +207,63 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof entity.getAllRecords).toBe('function');
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
+    });
+
+    // The Data Fabric entity list is scoped exclusively: omitting folderKey returns
+    // only tenant entities; passing folderKey returns only entities in that folder.
+    // The two sets are disjoint.
+    it('should return only folder-scoped entities when folderKey is provided', async () => {
+      const { entities } = getServices();
+      const folderKey = getTestConfig().folderKey;
+
+      if (!folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is required to exercise folder-scoped getAll');
+      }
+
+      const [tenantEntities, folderEntities] = await Promise.all([
+        entities.getAll(),
+        entities.getAll({ folderKey }),
+      ]);
+
+      expect(Array.isArray(folderEntities)).toBe(true);
+
+      // Every folder-scoped entity carries the requested folder key
+      for (const entity of folderEntities) {
+        expect(entity.folderId).toBe(folderKey);
+      }
+
+      // Tenant scope and folder scope are disjoint — no entity appears in both
+      const folderIds = new Set(folderEntities.map((e) => e.id));
+      for (const tenantEntity of tenantEntities) {
+        expect(folderIds.has(tenantEntity.id)).toBe(false);
+      }
+    });
+
+    // includeFolderEntities switches to the v2 endpoint, which returns tenant-level and
+    // folder-level entities together — a superset of the default tenant-only result.
+    // Requires the OR.Users OAuth scope on the integration token.
+    it('should return tenant and folder entities together when includeFolderEntities is true', async () => {
+      const { entities } = getServices();
+
+      const [tenantEntities, allEntities] = await Promise.all([
+        entities.getAll(),
+        entities.getAll({ includeFolderEntities: true }),
+      ]);
+
+      expect(Array.isArray(allEntities)).toBe(true);
+      // The combined list is a superset of the tenant-only list
+      expect(allEntities.length).toBeGreaterThanOrEqual(tenantEntities.length);
+
+      const allIds = new Set(allEntities.map((e) => e.id));
+      for (const tenantEntity of tenantEntities) {
+        expect(allIds.has(tenantEntity.id)).toBe(true);
+      }
+
+      // Each entity still carries metadata with methods attached
+      for (const entity of allEntities) {
+        expect(entity.id).toBeDefined();
+        expect(typeof entity.getAllRecords).toBe('function');
+      }
     });
   });
 
@@ -1332,18 +1399,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   // ─── Folder-scoped record CRUD ────────────────────────────────────────────
-  // Verifies that every record-CRUD method correctly forwards the
-  // X-UIPATH-FolderKey header for an entity that lives in a non-tenant folder.
-  //
-  // Uses a pre-existing folder-scoped entity (DATA_FABRIC_TEST_FOLDER_ENTITY_ID)
-  // so the suite runs with the standard integration-test PAT — entity schema
-  // create/delete are NOT exercised here (they live in the skipped schema-write
-  // describes above).
-  //
-  // Skipped when DATA_FABRIC_TEST_FOLDER_ENTITY_ID is not configured — CI does
-  // not yet provision a persistent folder-scoped test entity. Run locally by
-  // setting both INTEGRATION_TEST_FOLDER_KEY and DATA_FABRIC_TEST_FOLDER_ENTITY_ID.
-  describe.skipIf(!process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || !process.env.INTEGRATION_TEST_FOLDER_KEY)('Folder-scoped record CRUD', () => {
+  // Mirrors the tenant-scope record CRUD block above, but against a folder-scoped
+  // entity (DATA_FABRIC_TEST_FOLDER_ENTITY_ID + INTEGRATION_TEST_FOLDER_KEY).
+  // Record CRUD works with PAT auth; schema create/delete on the folder entity
+  // is NOT exercised here (lives in the describe.skip schema-write blocks above).
+  describe('Folder-scoped record CRUD', () => {
     let folderEntityId!: string;
     let folderKey!: string;
     let folderEntityMetadata!: RawEntityGetResponse;
@@ -1351,8 +1411,14 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     beforeAll(async () => {
       const config = getTestConfig();
-      folderKey = config.folderKey!;
-      folderEntityId = config.dataFabricTestFolderEntityId!;
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is required for folder-scoped record CRUD tests');
+      }
+      if (!config.dataFabricTestFolderEntityId) {
+        throw new Error('DATA_FABRIC_TEST_FOLDER_ENTITY_ID is required — set to the UUID of a folder-scoped entity in the same folder');
+      }
+      folderKey = config.folderKey;
+      folderEntityId = config.dataFabricTestFolderEntityId;
 
       // Fetch schema once so per-test record bodies match the entity's shape.
       const { entities } = getServices();

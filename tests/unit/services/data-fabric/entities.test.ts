@@ -36,6 +36,7 @@ import type {
 import {
   EntityFieldDataType,
   EntityAggregateFunction,
+  EntityType,
   ExternalField,
   FieldDisplayType,
   QueryFilterOperator,
@@ -45,10 +46,12 @@ import {
   EntityFieldTypeMap,
   EntitySchemaFieldTypeMap,
   FieldDisplayTypeToDataType,
+  ENTITY_TYPE_IDS,
 } from "../../../../src/models/data-fabric/entities.constants";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
+import { DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints/data-fabric";
 import { SqlFieldType, FieldSchemaPayload } from "@/models/data-fabric/entities.internal-types";
 
 // ===== MOCKING =====
@@ -336,10 +339,10 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via v1 endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {},
+        { headers: {} },
       );
 
       expect(result[0].fields).toBeDefined();
@@ -395,10 +398,10 @@ describe("EntityService Unit Tests", () => {
         });
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via v1 endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {},
+        { headers: {} },
       );
     });
 
@@ -408,6 +411,53 @@ describe("EntityService Unit Tests", () => {
 
       await expect(entityService.getAll()).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE,
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should call the v2 endpoint when includeFolderEntities is true (cross-scope)", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ includeFolderEntities: true });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2,
+        { headers: {} },
+      );
+    });
+
+    it("should call the v1 endpoint when includeFolderEntities is false (tenant-only)", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ includeFolderEntities: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: {} },
+      );
+    });
+
+    it("should let folderKey win and call v1 with the header when both folderKey and includeFolderEntities are provided", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        includeFolderEntities: true,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
   });
@@ -2149,6 +2199,97 @@ describe("EntityService Unit Tests", () => {
         ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
+      it("should embed { id, folderId } in referenceEntity for cross-folder RELATIONSHIP when referenceFolderKey is set", async () => {
+        await entityService.create("my_entity", [{
+          fieldName: "rel_field",
+          type: EntityFieldDataType.RELATIONSHIP,
+          referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+          referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+          referenceFolderKey: ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY,
+        }]);
+
+        // No GET — payload is built from caller inputs only
+        expect(mockApiClient.get).not.toHaveBeenCalled();
+
+        const f = getCreatedFields().find((x) => x.name === "rel_field");
+        expect(f?.referenceEntity).toEqual({
+          id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+          folderId: ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY,
+        });
+        expect(f?.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
+        expect(f?.isForeignKey).toBe(true);
+        expect(f?.referenceType).toBe("ManyToOne");
+      });
+
+      it("should look up name for cross-folder CHOICE_SET target (API requires name, not folderId)", async () => {
+        // Choice-set endpoint resolves the target by name, so the SDK fetches it
+        mockApiClient.get.mockResolvedValue({
+          id: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
+          name: "UserType",
+          folderId: DATA_FABRIC_TENANT_FOLDER_ID,
+        });
+
+        await entityService.create("my_entity", [{
+          fieldName: "userType",
+          type: EntityFieldDataType.CHOICE_SET_SINGLE,
+          choiceSetId: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
+          referenceFolderKey: DATA_FABRIC_TENANT_FOLDER_ID,
+        }]);
+
+        // Tenant marker → no folder header on the lookup
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID),
+          { headers: {} },
+        );
+
+        const f = getCreatedFields().find((x) => x.name === "userType");
+        expect(f?.referenceChoiceSet).toEqual({
+          id: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
+          name: "UserType",
+          folderId: DATA_FABRIC_TENANT_FOLDER_ID,
+          entityType: EntityType.ChoiceSet,
+          entityTypeId: ENTITY_TYPE_IDS[EntityType.ChoiceSet],
+        });
+        expect(f?.choiceSetId).toBe(ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID);
+      });
+
+      it("should use folder header on choice-set lookup when referenceFolderKey is a folder UUID", async () => {
+        mockApiClient.get.mockResolvedValue({
+          id: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
+          name: "FolderCS",
+          folderId: ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY,
+        });
+
+        await entityService.create("my_entity", [{
+          fieldName: "cat",
+          type: EntityFieldDataType.CHOICE_SET_SINGLE,
+          choiceSetId: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
+          referenceFolderKey: ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY,
+        }]);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID),
+          { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY } },
+        );
+
+        const f = getCreatedFields().find((x) => x.name === "cat");
+        expect(f?.referenceChoiceSet?.name).toBe("FolderCS");
+      });
+
+      it("should emit a bare { id } reference when referenceFolderKey is omitted (same-scope default)", async () => {
+        await entityService.create("my_entity", [{
+          fieldName: "rel_field",
+          type: EntityFieldDataType.RELATIONSHIP,
+          referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+          referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+        }]);
+
+        expect(mockApiClient.get).not.toHaveBeenCalled();
+
+        const f = getCreatedFields().find((x) => x.name === "rel_field");
+        expect(f?.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
+      });
+
       it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
         await entityService.create("my_entity", [{
           fieldName: "file_field",
@@ -2965,7 +3106,7 @@ describe("EntityService Unit Tests", () => {
         isRbacEnabled: false,
         fields: [],
         id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        entityType: 0,
+        entityType: EntityType.Entity,
         externalFields: [],
         createdBy: "u",
         createdTime: "t",
