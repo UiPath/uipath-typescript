@@ -38,3 +38,6 @@ export * from './agents';
 
 // Governance endpoints
 export * from './governance';
+
+// Notification endpoints
+export * from './notification';
