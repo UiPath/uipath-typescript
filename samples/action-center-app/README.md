@@ -4,7 +4,10 @@ A minimal React + TypeScript [UiPath Coded Web App](https://docs.uipath.com/)
 demonstrating the `@uipath/uipath-typescript` SDK's **Tasks (Action Center)**
 service. It's an operational dashboard for triaging human tasks: list and
 filter them across your folders, view detail, assign / reassign / unassign,
-complete (approve / reject), and create external tasks.
+complete (approve / reject), and create external tasks. **Document Validation
+tasks** open the
+[`@uipath/ui-widgets-validation-station`](https://github.com/UiPath/uipath-ui-widgets/pkgs/npm/ui-widgets-validation-station)
+widget so a reviewer can validate the extracted document data inline.
 
 Built on UiPath's [Apollo Vertex](https://apollo-vertex.vercel.app/) design
 system via [`@uipath/apollo-wind`](https://www.npmjs.com/package/@uipath/apollo-wind).
@@ -21,6 +24,7 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 | `Tasks.create({ title, priority }, folderId)` | `components/TaskList.tsx` (create form) |
 | `task.assign` / `task.reassign` / `task.unassign` | `components/TaskDetail.tsx` |
 | `task.complete(options)` | `components/TaskDetail.tsx` (+ `taskUtils.ts` builds the discriminated-union options) |
+| `Tasks.getById(id, { taskType: TaskType.DocumentValidation }, folderId)` + `task.complete({ type: TaskType.DocumentValidation, … })` | `components/DocumentValidationDialog.tsx` — loads the validation payload and submits it |
 
 By default the app lists tasks across **all folders** you can view/edit. The
 toolbar's **Folder** dropdown (populated from `/odata/Folders`) lets you scope
@@ -37,15 +41,18 @@ src/
   hooks/useAuth.tsx   — OAuth/PKCE via the SDK (Coded Apps template)
   hooks/useTasks.ts   — useTasks + useTask + useTaskUsers
   components/Theme.tsx, TaskList.tsx, TaskDetail.tsx
+  components/DocumentValidationDialog.tsx — validation-station host for Document Validation tasks
 ```
 
 ## Prerequisites
 
 - Node.js 20+
-- A UiPath OAuth External Application (client ID) with **`OR.Tasks`** and
-  **`OR.Folders.Read`** scopes (the latter powers the folder dropdown — the
-  SDK doesn't expose a Folders service yet, so the app calls
-  `/odata/Folders` directly with the SDK's access token)
+- A UiPath OAuth External Application (client ID) with **`OR.Tasks`**,
+  **`OR.Folders.Read`**, and **`OR.Buckets`** scopes. `OR.Folders.Read` powers
+  the folder dropdown (the SDK doesn't expose a Folders service yet, so the app
+  calls `/odata/Folders` directly with the SDK's access token); `OR.Buckets`
+  lets the validation-station widget fetch the document binary referenced by a
+  Document Validation task.
 - An Orchestrator folder that contains Action Center tasks (only needed for
   testing — leaving the filter on "All folders" still works)
 
@@ -78,6 +85,8 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
   - **My Tasks** — clicking a row opens a quick-complete dialog (Approve /
     Reject / custom action). An info icon in that dialog opens the full
     detail sheet on demand. The streamlined flow is the daily worker view.
+    A **Document Validation** task instead opens the validation-station widget
+    (see below).
   - **Manage Tasks** (`asTaskAdmin: true`) — clicking rows selects them
     (multi-select), and bulk **Assign** / **Unassign** appear in the
     toolbar. Surfaces `Tasks.assign(payload[])` and `Tasks.unassign(ids)`
@@ -89,3 +98,11 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
   response holds every row.
 - **Creation** through the API only supports **external** tasks — form and
   app tasks are created by the system through workflows.
+- **Document Validation:** selecting a task of type `DocumentValidationTask`
+  (from a My Tasks row, or via **Validate document** in the detail sheet) opens
+  a near-fullscreen dialog hosting `@uipath/ui-widgets-validation-station`. The
+  widget renders the source document next to the extracted fields; **Save**
+  validates and keeps the task open, **Submit** validates then completes it via
+  `task.complete({ type: TaskType.DocumentValidation, action: 'Completed' })`.
+  `vite.config.ts` copies the widget's `du-assets` (PDF renderer + translations)
+  into the production bundle so document rendering works after deploy.

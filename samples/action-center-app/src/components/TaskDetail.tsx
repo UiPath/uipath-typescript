@@ -48,12 +48,17 @@ interface Props {
   onClose: () => void
   /** Called after a mutation so the parent list can refresh. */
   onChanged: () => void
+  /**
+   * Provided only for Document Validation tasks — opens the validation-station
+   * widget. When set, a "Validate document" action replaces the generic Complete.
+   */
+  onValidate?: () => void
 }
 
 type Sub = 'assign' | 'reassign' | 'complete' | null
 
 /** Task detail panel (Tasks.getById) with lifecycle actions via task-attached methods. */
-export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: Props) {
+export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onValidate }: Props) {
   const { task, loading, error, reload } = useTask(taskId, folderId)
   const { folders } = useFolders()
   const [sub, setSub] = useState<Sub>(null)
@@ -208,9 +213,13 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged }: P
                   {busy ? 'Unassigning…' : 'Unassign'}
                 </Button>
               )}
-              <Button variant="outline" onClick={() => setSub('complete')}>
-                Complete
-              </Button>
+              {onValidate ? (
+                <Button onClick={onValidate}>Validate document</Button>
+              ) : (
+                <Button variant="outline" onClick={() => setSub('complete')}>
+                  Complete
+                </Button>
+              )}
             </SheetFooter>
           )}
         </SheetContent>

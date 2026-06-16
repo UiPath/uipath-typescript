@@ -18,6 +18,7 @@ import {
   TaskAssignmentCriteria,
   TaskPriority,
   TaskStatus,
+  TaskType,
   TaskUserType,
 } from '@uipath/uipath-typescript/tasks'
 import type {
@@ -83,6 +84,7 @@ import {
   taskTypeLabel,
 } from '../taskUtils'
 import { TaskDetail } from './TaskDetail'
+import { DocumentValidationDialog } from './DocumentValidationDialog'
 
 const STATUS_OPTIONS: Array<TaskStatus | 'all'> = [
   'all',
@@ -128,6 +130,9 @@ export function TaskList() {
   // Dialog state.
   const [completeTask, setCompleteTask] = useState<TaskGetResponse | null>(null)
   const [detailTask, setDetailTask] = useState<TaskGetResponse | null>(null)
+  // Document Validation tasks open the validation-station widget instead of
+  // the generic Complete dialog.
+  const [validationTask, setValidationTask] = useState<TaskGetResponse | null>(null)
   const [creating, setCreating] = useState(false)
   const [bulkAction, setBulkAction] = useState<'assign' | 'reassign' | null>(null)
 
@@ -313,6 +318,8 @@ export function TaskList() {
                       data-state={isSelected ? 'selected' : undefined}
                       onClick={() => {
                         if (asTaskAdmin) toggleSelect(task.id)
+                        else if (task.type === TaskType.DocumentValidation)
+                          setValidationTask(task)
                         else setCompleteTask(task)
                       }}
                       className="cursor-pointer"
@@ -450,6 +457,29 @@ export function TaskList() {
           isManage={asTaskAdmin}
           onClose={() => setDetailTask(null)}
           onChanged={refresh}
+          onValidate={
+            detailTask.type === TaskType.DocumentValidation
+              ? () => {
+                  const target = detailTask
+                  setDetailTask(null)
+                  setValidationTask(target)
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {validationTask && (
+        <DocumentValidationDialog
+          key={validationTask.id}
+          taskId={validationTask.id}
+          folderId={validationTask.folderId}
+          title={validationTask.title}
+          onClose={() => setValidationTask(null)}
+          onCompleted={() => {
+            setValidationTask(null)
+            refresh()
+          }}
         />
       )}
 

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Tasks, TaskUserType } from '@uipath/uipath-typescript/tasks'
 import type {
+  TaskGetByIdOptions,
   TaskGetResponse,
+  TaskType,
   UserLoginInfo,
 } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
@@ -96,8 +98,17 @@ interface UseTaskResult {
   reload: () => Promise<void>
 }
 
-/** Full task detail via `Tasks.getById`. Returned task carries bound action methods. */
-export function useTask(taskId: number | null, folderId: number | null): UseTaskResult {
+/**
+ * Full task detail via `Tasks.getById`. Returned task carries bound action
+ * methods. Pass `taskType` to fetch the full type-specific payload — e.g.
+ * `TaskType.DocumentValidation` returns the document-validation data the
+ * validation-station widget renders.
+ */
+export function useTask(
+  taskId: number | null,
+  folderId: number | null,
+  taskType?: TaskType,
+): UseTaskResult {
   const { sdk } = useAuth()
   const [task, setTask] = useState<TaskGetResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -112,14 +123,15 @@ export function useTask(taskId: number | null, folderId: number | null): UseTask
     setError(null)
     try {
       const svc = new Tasks(sdk)
-      setTask(await svc.getById(taskId, {}, folderId ?? undefined))
+      const options: TaskGetByIdOptions = taskType ? { taskType } : {}
+      setTask(await svc.getById(taskId, options, folderId ?? undefined))
     } catch (err) {
       setError(err instanceof UiPathError ? err.message : 'Failed to load task')
       setTask(null)
     } finally {
       setLoading(false)
     }
-  }, [sdk, taskId, folderId])
+  }, [sdk, taskId, folderId, taskType])
 
   useEffect(() => {
     reload()
