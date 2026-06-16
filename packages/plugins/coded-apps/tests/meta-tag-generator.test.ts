@@ -12,7 +12,7 @@ const fullConfig: UiPathConfig = {
 }
 
 describe('generateMetaTagsForVite', () => {
-  it('generates correct Vite meta tags for all keys', () => {
+  it('generates correct Vite meta tags for all known SDK keys', () => {
     const tags = generateMetaTagsForVite(fullConfig)
     expect(tags).toHaveLength(6)
 
@@ -35,7 +35,7 @@ describe('generateMetaTagsForVite', () => {
     expect(tags[0].attrs.name).toBe('uipath:scope')
   })
 
-  it('maps all config keys to correct meta tag names', () => {
+  it('maps all known SDK keys to correct meta tag names', () => {
     const tags = generateMetaTagsForVite(fullConfig)
     const names = tags.map(t => t.attrs.name).sort()
     expect(names).toEqual([
@@ -47,22 +47,47 @@ describe('generateMetaTagsForVite', () => {
       'uipath:tenant-name',
     ])
   })
+
+  it('injects arbitrary keys from uipath.json as kebab-case meta tags', () => {
+    const config: UiPathConfig = {
+      ...fullConfig,
+      folderKey: 'my-folder-key-123',
+      cdnBase: 'https://cdn.example.com',
+    }
+    const tags = generateMetaTagsForVite(config)
+    expect(tags).toHaveLength(8)
+
+    const folderTag = tags.find(t => t.attrs.name === 'uipath:folder-key')
+    expect(folderTag).toBeDefined()
+    expect(folderTag!.attrs.content).toBe('my-folder-key-123')
+
+    const cdnTag = tags.find(t => t.attrs.name === 'uipath:cdn-base')
+    expect(cdnTag).toBeDefined()
+    expect(cdnTag!.attrs.content).toBe('https://cdn.example.com')
+  })
 })
 
 describe('generateMetaTagsHtml', () => {
   it('generates HTML meta tags string', () => {
-    const html = generateMetaTagsHtml({ scope: 'OR.Execution', clientId: 'my-client' } as UiPathConfig)
+    const html = generateMetaTagsHtml({ scope: 'OR.Execution', clientId: 'my-client' })
     expect(html).toContain('<meta name="uipath:scope" content="OR.Execution">')
     expect(html).toContain('<meta name="uipath:client-id" content="my-client">')
   })
 
   it('returns empty string for empty config', () => {
-    expect(generateMetaTagsHtml({} as UiPathConfig)).toBe('')
+    expect(generateMetaTagsHtml({})).toBe('')
   })
 
   it('preserves values exactly as provided in config', () => {
-    const config = { scope: 'OR.Administration OR.Administration.Read' } as UiPathConfig
+    const config: UiPathConfig = { scope: 'OR.Administration OR.Administration.Read' }
     const html = generateMetaTagsHtml(config)
     expect(html).toContain('content="OR.Administration OR.Administration.Read"')
+  })
+
+  it('injects arbitrary keys as kebab-case meta tags in HTML format', () => {
+    const config: UiPathConfig = { folderKey: 'abc-123', appBase: '/my-app' }
+    const html = generateMetaTagsHtml(config)
+    expect(html).toContain('<meta name="uipath:folder-key" content="abc-123">')
+    expect(html).toContain('<meta name="uipath:app-base" content="/my-app">')
   })
 })

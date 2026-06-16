@@ -10,7 +10,18 @@ export interface Options {
 }
 
 /**
- * UiPath SDK configuration
+ * Well-known SDK configuration keys recognized by the UiPath SDK at runtime.
+ * Used for validation and format suggestions (e.g. snake_case → camelCase).
+ */
+export type ValidConfigKey = 'clientId' | 'scope' | 'orgName' | 'tenantName' | 'baseUrl' | 'redirectUri'
+
+/**
+ * UiPath configuration from uipath.json.
+ *
+ * Includes well-known SDK keys (clientId, scope, etc.) plus any additional
+ * keys the developer adds. All keys are injected as `<meta name="uipath:<kebab-case-key>">` tags
+ * into the local dev index.html, so adding a new key here (e.g. folderKey) automatically
+ * produces `<meta name="uipath:folder-key" content="...">` — no plugin changes needed.
  */
 export interface UiPathConfig {
   clientId?: string
@@ -19,12 +30,8 @@ export interface UiPathConfig {
   tenantName?: string
   baseUrl?: string
   redirectUri?: string
+  [key: string]: string | undefined
 }
-
-/**
- * Valid configuration key
- */
-export type ValidConfigKey = keyof UiPathConfig
 
 
 /**

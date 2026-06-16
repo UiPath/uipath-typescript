@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeKey, findMatchingKey, isValidKey, ValidationCollector, createPluginError, formatList } from '../src/core/utils'
+import { normalizeKey, findMatchingKey, isValidKey, camelToKebab, ValidationCollector, createPluginError, formatList } from '../src/core/utils'
 
 describe('normalizeKey', () => {
   it('normalizes camelCase to lowercase', () => {
@@ -75,6 +75,28 @@ describe('isValidKey', () => {
     expect(isValidKey('client_id')).toBe(false)
     expect(isValidKey('BASEURL')).toBe(false)
     expect(isValidKey('unknown')).toBe(false)
+  })
+})
+
+describe('camelToKebab', () => {
+  it('converts camelCase to kebab-case', () => {
+    expect(camelToKebab('folderKey')).toBe('folder-key')
+    expect(camelToKebab('cdnBase')).toBe('cdn-base')
+    expect(camelToKebab('appBase')).toBe('app-base')
+  })
+
+  it('converts multi-word camelCase', () => {
+    expect(camelToKebab('myCustomField')).toBe('my-custom-field')
+    expect(camelToKebab('someLongPropertyName')).toBe('some-long-property-name')
+  })
+
+  it('preserves already lowercase single words', () => {
+    expect(camelToKebab('scope')).toBe('scope')
+    expect(camelToKebab('name')).toBe('name')
+  })
+
+  it('handles strings with numbers', () => {
+    expect(camelToKebab('field2Value')).toBe('field2-value')
   })
 })
 

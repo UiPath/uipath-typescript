@@ -66,10 +66,12 @@ describe('validateConfig', () => {
       expect(result.errors.some(e => e.includes('base-url') && e.includes('baseUrl'))).toBe(true)
     })
 
-    it('warns on unknown keys', () => {
-      const config = { ...fullConfig, unknownKey: 'value' }
+    it('accepts unknown keys without warnings (they are injected as meta tags)', () => {
+      const config = { ...fullConfig, folderKey: 'abc-123', customField: 'value' }
       const result = validateConfig(config, false)
-      expect(result.warnings.some(w => w.includes('unknownKey'))).toBe(true)
+      expect(result.isValid).toBe(true)
+      expect(result.warnings).toEqual([])
+      expect(result.errors).toEqual([])
     })
   })
 })
