@@ -215,6 +215,11 @@ const serviceEntries = [
     output: 'document-understanding/index'
   },
   {
+    name: 'orchestrator-du-module',
+    input: 'src/services/orchestrator/du-module/index.ts',
+    output: 'orchestrator-du-module/index'
+  },
+  {
     name: 'agents',
     input: 'src/services/agents/index.ts',
     output: 'agents/index'

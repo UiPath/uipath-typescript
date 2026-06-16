@@ -186,6 +186,16 @@
                 "default": "./dist/document-understanding/index.cjs"
             }
         },
+        "./orchestrator-du-module": {
+            "import": {
+                "types": "./dist/orchestrator-du-module/index.d.ts",
+                "default": "./dist/orchestrator-du-module/index.mjs"
+            },
+            "require": {
+                "types": "./dist/orchestrator-du-module/index.d.ts",
+                "default": "./dist/orchestrator-du-module/index.cjs"
+            }
+        },
         "./agents": {
             "import": {
                 "types": "./dist/agents/index.d.ts",

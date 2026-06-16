@@ -13,3 +13,5 @@ export * from './queues.types';
 export * from './queues.models';
 export * from './attachments.types';
 export * from './attachments.models';
+export * from "./orchestrator-du-module.types";
+export * from "./orchestrator-du-module.models";
