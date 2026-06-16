@@ -178,6 +178,7 @@ export class PaginationHelpers {
       headers: providedHeaders,
       paginationParams,
       additionalParams,
+      urlParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -186,13 +187,20 @@ export class PaginationHelpers {
     const endpoint = getEndpoint(folderId);
     const headers = providedHeaders ?? (folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {});
 
+    // On POST, the caller's options go in the body; urlParams stays in the URL.
+    // On GET, everything is URL — urlParams merges with additionalParams.
+    const isPost = method === HTTP_METHODS.POST;
+    const requestSpec = isPost
+      ? { body: additionalParams, params: urlParams }
+      : { params: { ...additionalParams, ...urlParams } };
+
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
       method,
       endpoint,
       paginationParams,
       {
         headers,
-        params: additionalParams,
+        ...requestSpec,
         pagination: {
           paginationType: options.paginationType || PaginationType.OFFSET,
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
@@ -230,6 +238,7 @@ export class PaginationHelpers {
       folderId,
       headers: providedHeaders,
       additionalParams,
+      urlParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -249,13 +258,13 @@ export class PaginationHelpers {
       response = await serviceAccess.post<any>(
         endpoint,
         additionalParams,
-        { headers }
+        { headers, params: urlParams }
       );
     } else {
       response = await serviceAccess.get<any>(
         endpoint,
         {
-          params: additionalParams,
+          params: { ...additionalParams, ...urlParams },
           headers
         }
       );
@@ -309,7 +318,7 @@ export class PaginationHelpers {
     const excludeKeys = config.excludeFromPrefix || [];
     const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
     const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
-    
+
     // Default pagination options
     const paginationOptions = {
       paginationType: PaginationType.OFFSET,
@@ -327,6 +336,7 @@ export class PaginationHelpers {
         headers: config.headers,
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage !== undefined ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
+        urlParams: config.urlParams,
         transformFn: config.transformFn,
         method: config.method,
         options: {
@@ -345,6 +355,7 @@ export class PaginationHelpers {
       folderId,
       headers: config.headers,
       additionalParams: prefixedOptions,
+      urlParams: config.urlParams,
       transformFn: config.transformFn,
       method: config.method,
       options: {
