@@ -193,7 +193,7 @@ export interface AgentGetErrorsTimelineResponse {
   name: string;
   /** Error count in this time bucket */
   value: number;
-  /** Bucket timestamp*/
+  /** Bucket timestamp (ISO 8601, UTC) */
   date: string;
 }
 
@@ -209,7 +209,7 @@ export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
  * A single point on the agent consumption timeline
  */
 export interface AgentGetConsumptionTimelineResponse {
-  /** Bucket timestamp */
+  /** Bucket timestamp (ISO 8601, UTC) */
   timeSlice: string;
   /** AGU quantity consumed in this time bucket */
   aguConsumption: number;
@@ -230,7 +230,7 @@ export interface AgentGetLatencyTimelineResponse {
   name: string;
   /** Latency value in milliseconds. */
   value: number;
-  /** Bucket timestamp */
+  /** Bucket timestamp (ISO 8601, UTC) */
   date: string;
 }
 
