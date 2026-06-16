@@ -406,6 +406,21 @@ describe('AgentService Unit Tests', () => {
       expect('limit' in body).toBe(false);
     });
 
+    it('should omit undefined options from the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getConsumptionTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+      expect('agentNames' in body).toBe(false);
+      expect('agentId' in body).toBe(false);
+      expect('projectKeys' in body).toBe(false);
+      expect('processVersion' in body).toBe(false);
+    });
+
     it('should return an empty array when the timeline has no points', async () => {
       mockApiClient.post.mockResolvedValue({ data: [] });
 
@@ -469,6 +484,21 @@ describe('AgentService Unit Tests', () => {
       expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
       expect(body.processVersion).toBe(AGENT_TEST_CONSTANTS.PROCESS_VERSION);
       expect(body['$folderKeys']).toBeUndefined();
+    });
+
+    it('should omit undefined options from the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getLatencyTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+      expect('agentNames' in body).toBe(false);
+      expect('agentId' in body).toBe(false);
+      expect('projectKeys' in body).toBe(false);
+      expect('processVersion' in body).toBe(false);
     });
 
     it('should return an empty array when the timeline has no points', async () => {
