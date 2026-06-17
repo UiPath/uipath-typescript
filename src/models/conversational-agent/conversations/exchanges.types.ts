@@ -65,7 +65,7 @@ export interface ExchangeGetByIdOptions {
   messageSort?: SortOrder;
 }
 
-export type ExchangeEndResponse = ExchangeGetResponse;
+export interface ExchangeEndResponse extends ExchangeGetResponse {}
 
 // ==================== Feedback Types ====================
 
