@@ -879,82 +879,84 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
 
     // Custom user-defined RELATIONSHIP fields must follow the same expansion rules as
-    // system reference fields. This builds an isolated source→target schema, inserts a
-    // record on each side, and verifies the FK column inflates correctly per level.
-    // skip: entities.create() requires the entity.schema.write scope, which PAT tokens
-    // cannot hold (returns insufficient_scope) — runtime schema creation needs OAuth.
-    // The CreatedBy test above already validates the expansionLevel-via-URL fix under PAT.
-    it.skip('should expand a custom RELATIONSHIP field at each expansionLevel (0-3)', async () => {
-      const { entities } = getServices();
-      const stamp = generateRandomString(8).toLowerCase();
+    // system reference fields, but verifying this requires creating an isolated
+    // source→target schema at runtime. entities.create() needs the entity.schema.write
+    // scope, which PAT tokens cannot hold (insufficient_scope) — so this stays skipped,
+    // matching the other schema-write describe.skip blocks below. The CreatedBy test
+    // above already validates the expansionLevel-via-URL fix under PAT.
+    describe.skip('RELATIONSHIP field expansion (requires schema-write scope)', () => {
+      it('should expand a custom RELATIONSHIP field at each expansionLevel (0-3)', async () => {
+        const { entities } = getServices();
+        const stamp = generateRandomString(8).toLowerCase();
 
-      // 1. Target entity with a user-defined string field we can assert on at L2+.
-      const targetId = await entities.create(`sdk_target_${stamp}`, [
-        { fieldName: 'label', type: EntityFieldDataType.STRING, isRequired: true },
-      ]);
-      createdEntityIds.push(targetId);
+        // 1. Target entity with a user-defined string field we can assert on at L2+.
+        const targetId = await entities.create(`sdk_target_${stamp}`, [
+          { fieldName: 'label', type: EntityFieldDataType.STRING, isRequired: true },
+        ]);
+        createdEntityIds.push(targetId);
 
-      const targetMeta = await entities.getById(targetId);
-      const targetPk = targetMeta.fields.find(f => f.isPrimaryKey);
-      if (!targetPk?.id) {
-        throw new Error(`Target entity ${targetId} has no primary-key field`);
-      }
+        const targetMeta = await entities.getById(targetId);
+        const targetPk = targetMeta.fields.find(f => f.isPrimaryKey);
+        if (!targetPk?.id) {
+          throw new Error(`Target entity ${targetId} has no primary-key field`);
+        }
 
-      // 2. Source entity with a RELATIONSHIP field bound to target.Id.
-      const sourceId = await entities.create(`sdk_source_${stamp}`, [
-        { fieldName: 'name', type: EntityFieldDataType.STRING },
-        {
-          fieldName: 'parent',
-          type: EntityFieldDataType.RELATIONSHIP,
-          referenceEntityId: targetId,
-          referenceFieldId: targetPk.id,
-        },
-      ]);
-      createdEntityIds.push(sourceId);
+        // 2. Source entity with a RELATIONSHIP field bound to target.Id.
+        const sourceId = await entities.create(`sdk_source_${stamp}`, [
+          { fieldName: 'name', type: EntityFieldDataType.STRING },
+          {
+            fieldName: 'parent',
+            type: EntityFieldDataType.RELATIONSHIP,
+            referenceEntityId: targetId,
+            referenceFieldId: targetPk.id,
+          },
+        ]);
+        createdEntityIds.push(sourceId);
 
-      // 3. Insert a target record so the FK has something to resolve.
-      const labelValue = `Target_${stamp}`;
-      const targetInsert = await entities.insertRecordById(targetId, { label: labelValue });
-      const targetRecordId = targetInsert.Id;
-      registerResource('entityRecords', { entityId: targetId, recordIds: [targetRecordId] });
+        // 3. Insert a target record so the FK has something to resolve.
+        const labelValue = `Target_${stamp}`;
+        const targetInsert = await entities.insertRecordById(targetId, { label: labelValue });
+        const targetRecordId = targetInsert.Id;
+        registerResource('entityRecords', { entityId: targetId, recordIds: [targetRecordId] });
 
-      // 4. Insert the source record with the FK populated.
-      const sourceInsert = await entities.insertRecordById(sourceId, {
-        name: `Source_${stamp}`,
-        parent: targetRecordId,
+        // 4. Insert the source record with the FK populated.
+        const sourceInsert = await entities.insertRecordById(sourceId, {
+          name: `Source_${stamp}`,
+          parent: targetRecordId,
+        });
+        registerResource('entityRecords', { entityId: sourceId, recordIds: [sourceInsert.Id] });
+
+        // 5. Query the source at every expansion level.
+        const levels = [0, 1, 2, 3] as const;
+        const responses = await Promise.all(
+          levels.map(level => entities.queryRecordsById(sourceId, { expansionLevel: level, pageSize: 10 })),
+        );
+
+        const sourceRecords = responses.map(r =>
+          (r.items as Record<string, any>[]).find(item => item.Id === sourceInsert.Id),
+        );
+        sourceRecords.forEach((rec, i) => {
+          expect(rec, `expansionLevel=${levels[i]} did not return the inserted source record`).toBeDefined();
+        });
+        const [l0, l1, l2, l3] = sourceRecords as Record<string, any>[];
+
+        // L0: FK is the raw target record Id string.
+        expect(typeof l0.parent).toBe('string');
+        expect(l0.parent).toBe(targetRecordId);
+
+        // L1+: FK inflates into an object envelope carrying the target Id.
+        for (const [level, rec] of [[1, l1], [2, l2], [3, l3]] as const) {
+          expect(typeof rec.parent, `L${level} parent should be object`).toBe('object');
+          expect(rec.parent, `L${level} parent should not be null`).not.toBeNull();
+          expect(rec.parent, `L${level} parent should carry target Id`).toHaveProperty('Id', targetRecordId);
+        }
+
+        // L2 surfaces the user-defined `label` field from the target record.
+        expect(l2.parent.label).toBe(labelValue);
+
+        // L3 cannot shrink relative to L2.
+        expect(Object.keys(l3.parent).length).toBeGreaterThanOrEqual(Object.keys(l2.parent).length);
       });
-      registerResource('entityRecords', { entityId: sourceId, recordIds: [sourceInsert.Id] });
-
-      // 5. Query the source at every expansion level.
-      const levels = [0, 1, 2, 3] as const;
-      const responses = await Promise.all(
-        levels.map(level => entities.queryRecordsById(sourceId, { expansionLevel: level, pageSize: 10 })),
-      );
-
-      const sourceRecords = responses.map(r =>
-        (r.items as Record<string, any>[]).find(item => item.Id === sourceInsert.Id),
-      );
-      sourceRecords.forEach((rec, i) => {
-        expect(rec, `expansionLevel=${levels[i]} did not return the inserted source record`).toBeDefined();
-      });
-      const [l0, l1, l2, l3] = sourceRecords as Record<string, any>[];
-
-      // L0: FK is the raw target record Id string.
-      expect(typeof l0.parent).toBe('string');
-      expect(l0.parent).toBe(targetRecordId);
-
-      // L1+: FK inflates into an object envelope carrying the target Id.
-      for (const [level, rec] of [[1, l1], [2, l2], [3, l3]] as const) {
-        expect(typeof rec.parent, `L${level} parent should be object`).toBe('object');
-        expect(rec.parent, `L${level} parent should not be null`).not.toBeNull();
-        expect(rec.parent, `L${level} parent should carry target Id`).toHaveProperty('Id', targetRecordId);
-      }
-
-      // L2 surfaces the user-defined `label` field from the target record.
-      expect(l2.parent.label).toBe(labelValue);
-
-      // L3 cannot shrink relative to L2.
-      expect(Object.keys(l3.parent).length).toBeGreaterThanOrEqual(Object.keys(l2.parent).length);
     });
   });
 
