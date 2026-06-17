@@ -198,8 +198,11 @@ npm run build
 Built bundle lives in `dist/`. From there:
 
 ```bash
+# One-time: install the codedapp tool plugin for the uip CLI.
+uip tools install codedapp
+
 # Sign in with the uip CLI (interactive — pick the org + tenant to deploy to).
-uip login -it
+uip login --it
 
 uip codedapp pack ./dist --name data-fabric-app --version 1.0.0
 uip codedapp publish

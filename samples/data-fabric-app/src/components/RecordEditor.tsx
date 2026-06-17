@@ -243,7 +243,7 @@ export function RecordEditor({
           ))}
         </form>
 
-        <DialogFooter className="shrink-0 pt-4">
+        <DialogFooter className="mt-6 shrink-0">
           <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>
