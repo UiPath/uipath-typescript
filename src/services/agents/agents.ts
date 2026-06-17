@@ -1,9 +1,16 @@
 import { BaseService } from '../base';
 import {
+  AgentGetConsumptionTimelineOptions,
+  AgentGetConsumptionTimelineResponse,
   AgentError,
-  AgentErrorsOptions,
+  AgentGetErrorsOptions,
+  AgentGetErrorsTimelineOptions,
+  AgentGetErrorsTimelineResponse,
+  AgentFilterOptions,
+  AgentGetLatencyTimelineOptions,
+  AgentGetLatencyTimelineResponse,
   AgentListItem,
-  AgentListOptions,
+  AgentGetAllOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -74,7 +81,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * ```
    */
   @track('Agents.GetAll')
-  async getAll<T extends AgentListOptions = AgentListOptions>(
+  async getAll<T extends AgentGetAllOptions = AgentGetAllOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -156,7 +163,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * ```
    */
   @track('Agents.GetErrors')
-  async getErrors<T extends AgentErrorsOptions = AgentErrorsOptions>(
+  async getErrors<T extends AgentGetErrorsOptions = AgentGetErrorsOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -189,5 +196,183 @@ export class AgentService extends BaseService implements AgentServiceModel {
         ? PaginatedResponse<AgentError>
         : NonPaginatedResponse<AgentError>
     >;
+  }
+
+  /**
+   * Retrieves a time-series of error counts grouped by agent over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // All errors in May 2025
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent', 'StoryAgent'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetErrorsTimeline')
+  async getErrorsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetErrorsTimelineOptions,
+  ): Promise<AgentGetErrorsTimelineResponse[]> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<{ data: AgentGetErrorsTimelineResponse[] }>(
+      AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Retrieves a time-series of AGU (Agent Units) consumption over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetConsumptionTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // AGU consumption timeline in May 2025
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and agents
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent'],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetConsumptionTimeline')
+  async getConsumptionTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetConsumptionTimelineOptions,
+  ): Promise<AgentGetConsumptionTimelineResponse[]> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<{ data: AgentGetConsumptionTimelineResponse[] }>(
+      AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Retrieves a time-series of agent latency (milliseconds) over the requested
+   * window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Latency timeline in May 2025
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} ms`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and a single agent
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetLatencyTimeline')
+  async getLatencyTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetLatencyTimelineOptions,
+  ): Promise<AgentGetLatencyTimelineResponse[]> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<{ data: AgentGetLatencyTimelineResponse[] }>(
+      AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Builds the common POST request body shared by the agent filter endpoints —
+   * the required time window plus any optional folder/agent/project/process
+   * filters. Undefined options are omitted so the server applies its defaults.
+   */
+  private buildAgentFilterBody(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentFilterOptions & { limit?: number },
+  ): Record<string, unknown> {
+    const body: Record<string, unknown> = {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+    };
+    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
+    if (options?.agentNames !== undefined) body.agentNames = options.agentNames;
+    if (options?.projectKeys !== undefined) body.projectKeys = options.projectKeys;
+    if (options?.agentId !== undefined) body.agentId = options.agentId;
+    if (options?.processVersion !== undefined) body.processVersion = options.processVersion;
+    if (options?.limit !== undefined) body.limit = options.limit;
+    return body;
   }
 }

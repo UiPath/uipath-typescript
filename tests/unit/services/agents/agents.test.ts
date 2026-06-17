@@ -279,4 +279,242 @@ describe('AgentService Unit Tests', () => {
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getErrorsTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockPoint = {
+      name: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+      value: 4,
+      date: AGENT_TEST_CONSTANTS.TIMELINE_DATE,
+    };
+
+    it('should return the timeline points with only the window in the body when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [mockPoint] });
+
+      const result = await agentService.getErrorsTimeline(startTime, endTime);
+
+      expect(result).toEqual([mockPoint]);
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.folderKeys).toBeUndefined();
+      expect(body.limit).toBeUndefined();
+    });
+
+    it('should include all filters in the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      const agentNames = [AGENT_TEST_CONSTANTS.AGENT_NAME_1, AGENT_TEST_CONSTANTS.AGENT_NAME_2];
+      const projectKeys = [AGENT_TEST_CONSTANTS.PROJECT_KEY];
+
+      await agentService.getErrorsTimeline(startTime, endTime, {
+        folderKeys,
+        agentNames,
+        projectKeys,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        limit: 5,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body.agentNames).toEqual(agentNames);
+      expect(body.projectKeys).toEqual(projectKeys);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+      expect(body.processVersion).toBe(AGENT_TEST_CONSTANTS.PROCESS_VERSION);
+      expect(body.limit).toBe(5);
+      expect(body['$folderKeys']).toBeUndefined();
+    });
+
+    it('should omit undefined options from the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getErrorsTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+      expect('agentNames' in body).toBe(false);
+      expect('agentId' in body).toBe(false);
+      expect('limit' in body).toBe(false);
+    });
+
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const result = await agentService.getErrorsTimeline(startTime, endTime, {});
+
+      expect(result).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getErrorsTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getConsumptionTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockPoint = {
+      timeSlice: AGENT_TEST_CONSTANTS.TIMELINE_DATE,
+      aguConsumption: 1.4,
+    };
+
+    it('should return the timeline points with only the window in the body when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [mockPoint] });
+
+      const result = await agentService.getConsumptionTimeline(startTime, endTime);
+
+      expect(result).toEqual([mockPoint]);
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.folderKeys).toBeUndefined();
+    });
+
+    it('should include all filters in the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      const agentNames = [AGENT_TEST_CONSTANTS.AGENT_NAME_1];
+
+      await agentService.getConsumptionTimeline(startTime, endTime, {
+        folderKeys,
+        agentNames,
+        projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body.agentNames).toEqual(agentNames);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+      expect(body['$folderKeys']).toBeUndefined();
+      // consumption timeline has no limit option
+      expect('limit' in body).toBe(false);
+    });
+
+    it('should omit undefined options from the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getConsumptionTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+      expect('agentNames' in body).toBe(false);
+      expect('agentId' in body).toBe(false);
+      expect('projectKeys' in body).toBe(false);
+      expect('processVersion' in body).toBe(false);
+    });
+
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const result = await agentService.getConsumptionTimeline(startTime, endTime, {});
+
+      expect(result).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getConsumptionTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getLatencyTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockPoints = [
+      {
+        name: AGENT_TEST_CONSTANTS.LATENCY_PERCENTILE_P50,
+        value: 120,
+        date: AGENT_TEST_CONSTANTS.TIMELINE_DATE,
+      },
+      {
+        name: AGENT_TEST_CONSTANTS.LATENCY_PERCENTILE_P95,
+        value: 480,
+        date: AGENT_TEST_CONSTANTS.TIMELINE_DATE,
+      },
+    ];
+
+    it('should return the per-percentile timeline points with only the window in the body when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue({ data: mockPoints });
+
+      const result = await agentService.getLatencyTimeline(startTime, endTime);
+
+      expect(result).toEqual(mockPoints);
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.folderKeys).toBeUndefined();
+    });
+
+    it('should include all filters in the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+
+      await agentService.getLatencyTimeline(startTime, endTime, {
+        folderKeys,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+      expect(body.processVersion).toBe(AGENT_TEST_CONSTANTS.PROCESS_VERSION);
+      expect(body['$folderKeys']).toBeUndefined();
+    });
+
+    it('should omit undefined options from the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getLatencyTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+      expect('agentNames' in body).toBe(false);
+      expect('agentId' in body).toBe(false);
+      expect('projectKeys' in body).toBe(false);
+      expect('processVersion' in body).toBe(false);
+    });
+
+    it('should return an empty array when the timeline has no points', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const result = await agentService.getLatencyTimeline(startTime, endTime, {});
+
+      expect(result).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getLatencyTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });

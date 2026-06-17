@@ -146,4 +146,92 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(second.previousCursor).toBeDefined();
     });
   });
+
+  describe('getErrorsTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve the errors timeline', async () => {
+      const result = await agents.getErrorsTimeline(startTime, endTime);
+
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
+        throw new Error(
+          'No error timeline points in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      const point = result[0];
+      expect(typeof point.name).toBe('string');
+      expect(typeof point.value).toBe('number');
+      expect(typeof point.date).toBe('string');
+      expect(Number.isNaN(new Date(point.date).getTime())).toBe(false);
+    });
+
+    it('should apply the limit filter', async () => {
+      const result = await agents.getErrorsTimeline(startTime, endTime, { limit: 1 });
+
+      expect(Array.isArray(result)).toBe(true);
+      const agentNames = new Set(result.map((point) => point.name));
+      expect(agentNames.size).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('getConsumptionTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve the AGU consumption timeline', async () => {
+      const result = await agents.getConsumptionTimeline(startTime, endTime);
+
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
+        throw new Error(
+          'No consumption timeline points in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const point = result[0];
+      expect(typeof point.timeSlice).toBe('string');
+      expect(typeof point.aguConsumption).toBe('number');
+    });
+
+    it('should scope to a single folder', async () => {
+      const result = await agents.getConsumptionTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('getLatencyTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve the per-percentile latency timeline', async () => {
+      const result = await agents.getLatencyTimeline(startTime, endTime);
+
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
+        throw new Error(
+          'No latency timeline points in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const point = result[0];
+      expect(typeof point.name).toBe('string');
+      expect(typeof point.value).toBe('number');
+      expect(typeof point.date).toBe('string');
+      expect(Number.isNaN(new Date(point.date).getTime())).toBe(false);
+    });
+
+    it('should scope to a single agent', async () => {
+      const result = await agents.getLatencyTimeline(startTime, endTime, {
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });

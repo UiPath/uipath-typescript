@@ -82,11 +82,11 @@ export interface AgentListItem {
 }
 
 /**
- * Options for {@link AgentServiceModel.getAll}.
+ * Options for getting the list of agents.
  *
  * Composes filter, pagination, and sort options.
  */
-export type AgentListOptions = AgentFilterOptions & PaginationOptions & {
+export type AgentGetAllOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentListOrderBy;
 };
@@ -178,9 +178,63 @@ export interface AgentError {
  *
  * Composes filter, pagination, and sort/group options.
  */
-export type AgentErrorsOptions = AgentFilterOptions & PaginationOptions & {
+export type AgentGetErrorsOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentErrorOrderBy;
   /** Group results by one or more columns. */
   groupBy?: AgentErrorSortColumn[];
 };
+
+/**
+ * A single point on the agent errors timeline
+ */
+export interface AgentGetErrorsTimelineResponse {
+  /** Agent name */
+  name: string;
+  /** Error count in this time bucket */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC) */
+  date: string;
+}
+
+/**
+ * Options for getting the agent errors timeline.
+ */
+export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
+  /** Max number of agents to return. Defaults to 10 server-side. */
+  limit?: number;
+}
+
+/**
+ * A single point on the agent consumption timeline
+ */
+export interface AgentGetConsumptionTimelineResponse {
+  /** Bucket timestamp (ISO 8601, UTC) */
+  timeSlice: string;
+  /** AGU quantity consumed in this time bucket */
+  aguConsumption: number;
+}
+
+/**
+ * Options for getting the agent consumption timeline.
+ */
+export interface AgentGetConsumptionTimelineOptions extends AgentFilterOptions {}
+
+/**
+ * A single point on the agent latency timeline
+ */
+export interface AgentGetLatencyTimelineResponse {
+  /**
+   * Percentile label for this point — observed values: `"P50"`, `"P95"`.
+   */
+  name: string;
+  /** Latency value in milliseconds. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC) */
+  date: string;
+}
+
+/**
+ * Options for getting the agent latency timeline.
+ */
+export interface AgentGetLatencyTimelineOptions extends AgentFilterOptions {}

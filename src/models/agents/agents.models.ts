@@ -1,8 +1,14 @@
 import type {
+  AgentGetConsumptionTimelineOptions,
+  AgentGetConsumptionTimelineResponse,
   AgentError,
-  AgentErrorsOptions,
+  AgentGetErrorsOptions,
+  AgentGetErrorsTimelineOptions,
+  AgentGetErrorsTimelineResponse,
+  AgentGetLatencyTimelineOptions,
+  AgentGetLatencyTimelineResponse,
   AgentListItem,
-  AgentListOptions,
+  AgentGetAllOptions,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -64,7 +70,7 @@ export interface AgentServiceModel {
    * }
    * ```
    */
-  getAll<T extends AgentListOptions = AgentListOptions>(
+  getAll<T extends AgentGetAllOptions = AgentGetAllOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -120,7 +126,7 @@ export interface AgentServiceModel {
    * }
    * ```
    */
-  getErrors<T extends AgentErrorsOptions = AgentErrorsOptions>(
+  getErrors<T extends AgentGetErrorsOptions = AgentGetErrorsOptions>(
     startTime: Date,
     endTime: Date,
     options?: T,
@@ -129,4 +135,129 @@ export interface AgentServiceModel {
       ? PaginatedResponse<AgentError>
       : NonPaginatedResponse<AgentError>
   >;
+
+  /**
+   * Retrieves a time-series of error counts grouped by agent over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // All errors in May 2025
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent', 'StoryAgent'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  getErrorsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetErrorsTimelineOptions,
+  ): Promise<AgentGetErrorsTimelineResponse[]>;
+
+  /**
+   * Retrieves a time-series of AGU (Agent Units) consumption over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetConsumptionTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // AGU consumption timeline in May 2025
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and agents
+   * const result = await agents.getConsumptionTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent'],
+   *   },
+   * );
+   * ```
+   */
+  getConsumptionTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetConsumptionTimelineOptions,
+  ): Promise<AgentGetConsumptionTimelineResponse[]>;
+
+  /**
+   * Retrieves a time-series of agent latency (milliseconds) over the requested
+   * window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to an array of {@link AgentGetLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Latency timeline in May 2025
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} ms`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and a single agent
+   * const result = await agents.getLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *   },
+   * );
+   * ```
+   */
+  getLatencyTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetLatencyTimelineOptions,
+  ): Promise<AgentGetLatencyTimelineResponse[]>;
 }
