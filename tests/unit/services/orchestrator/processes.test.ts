@@ -22,6 +22,7 @@ import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessStartR
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { RequestOptions } from '../../../../src/models/common';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
+import { ProcessMap } from '../../../../src/models/orchestrator/processes.constants';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -151,11 +152,22 @@ describe('ProcessService Unit Tests', () => {
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      
+
       // Mock PaginationHelpers.getAll to throw error
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should pass ProcessMap as fieldMap so SDK names work in filter/orderby', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await service.getAll({ filter: "processName eq 'X'", orderby: 'createdTime desc' });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ fieldMap: ProcessMap }),
+        expect.objectContaining({ filter: "processName eq 'X'", orderby: 'createdTime desc' }),
+      );
     });
 
   });
@@ -188,6 +200,26 @@ describe('ProcessService Unit Tests', () => {
           }),
           params: expect.any(Object)
         })
+      );
+    });
+
+    it('should rewrite SDK field names in select back to API names', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOrchestratorProcess());
+
+      await service.getById(
+        PROCESS_TEST_CONSTANTS.PROCESS_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { select: 'processName,packageKey,createdTime' },
+      );
+
+      // processName → releaseName, packageKey → processKey, createdTime → creationTime
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            $select: 'releaseName,processKey,creationTime',
+          }),
+        }),
       );
     });
 

@@ -10,7 +10,7 @@ import {
 import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
 import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
-import { addPrefixToKeys } from '../transform';
+import { addPrefixToKeys, rewriteODataRequestFields } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined, resolveNestedField } from '../object';
 import { decodeBase64 } from '../encoding/base64';
@@ -314,10 +314,16 @@ export class PaginationHelpers {
       processedOptions = config.processParametersFn(restOptions, folderId);
     }
     
+    // Rewrite SDK field names → API field names inside OData filter/orderby/
+    // select/expand strings, so consumers can use renamed fields end-to-end.
+    const rewrittenOptions = config.fieldMap
+      ? rewriteODataRequestFields(processedOptions, config.fieldMap)
+      : processedOptions;
+
     // Apply ODATA prefix to keys (excluding specified keys)
     const excludeKeys = config.excludeFromPrefix || [];
-    const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
-    const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
+    const keysToPrefix = Object.keys(rewrittenOptions).filter(k => !excludeKeys.includes(k));
+    const prefixedOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
 
     // Default pagination options
     const paginationOptions = {

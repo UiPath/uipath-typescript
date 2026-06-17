@@ -19,7 +19,7 @@ import {
   BucketDeleteFileOptions
 } from '../../../models/orchestrator/buckets.types';
 import { BucketServiceModel } from '../../../models/orchestrator/buckets.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, rewriteODataRequestFields, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
 import { filterUndefined } from '../../../utils/object';
 import { createHeaders } from '../../../utils/http/headers';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
@@ -62,10 +62,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }
     
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Prefix all keys in options with $ for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+
+    // Rewrite renamed SDK field names → API names inside OData strings, then
+    // prefix all keys in options with $ for OData.
+    const rewrittenOptions = rewriteODataRequestFields(options, BucketMap);
+    const keysToPrefix = Object.keys(rewrittenOptions);
+    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<BucketGetResponse>(
       BUCKET_ENDPOINTS.GET_BY_ID(id),
@@ -110,6 +112,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       name,
       options,
       (raw) => pascalToCamelCaseKeys(raw) as BucketGetResponse,
+      BucketMap,
     );
   }
 
@@ -174,6 +177,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformBucketResponse,
+      fieldMap: BucketMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -303,6 +307,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
       transformFn: transformBlobItem,
+      fieldMap: BucketMap,
       pagination: {
         paginationType: PaginationType.TOKEN,
         itemsField: BUCKET_PAGINATION.ITEMS_FIELD,
@@ -513,9 +518,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       fallbackFolderKey: this.config.folderKey,
     });
 
+    const rewrittenReadUriOptions = rewriteODataRequestFields(restOptions, BucketMap);
     const queryOptions = {
       expiryInMinutes,
-      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+      ...addPrefixToKeys(rewrittenReadUriOptions, ODATA_PREFIX, Object.keys(rewrittenReadUriOptions))
     };
 
     return this._getUri(
@@ -686,6 +692,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => BUCKET_ENDPOINTS.GET_FILES(bucketId),
       transformFn: transformBucketFile,
+      fieldMap: BucketMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -757,9 +764,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   ): Promise<BucketGetUriResponse> {
     const { bucketId, path, expiryInMinutes, headers, ...restOptions } = options;
 
+    const rewrittenWriteUriOptions = rewriteODataRequestFields(restOptions, BucketMap);
     const queryOptions = {
       expiryInMinutes,
-      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+      ...addPrefixToKeys(rewrittenWriteUriOptions, ODATA_PREFIX, Object.keys(rewrittenWriteUriOptions))
     };
 
     return this._getUri(

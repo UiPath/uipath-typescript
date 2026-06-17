@@ -113,5 +113,23 @@ describe('AttachmentService Unit Tests', () => {
         attachmentService.getById(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID)
       ).rejects.toThrow(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
     });
+
+    it('should rewrite SDK field names in select back to API names', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAttachment());
+
+      await attachmentService.getById(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID, {
+        select: 'createdTime,lastModifiedTime',
+      });
+
+      // createdTime → creationTime, lastModifiedTime → lastModificationTime
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'creationTime,lastModificationTime',
+          }),
+        })
+      );
+    });
   });
 });

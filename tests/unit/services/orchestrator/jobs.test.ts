@@ -19,7 +19,7 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
-import { JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../../src/models/orchestrator/jobs.constants';
+import { JOB_KEY_RESOLUTION_CHUNK_SIZE, JobMap } from '../../../../src/models/orchestrator/jobs.constants';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -158,6 +158,25 @@ describe('JobService Unit Tests', () => {
       await expect(jobService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
+    it('should pass JobMap as fieldMap so SDK names work in filter/orderby/select', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedJobCollection(),
+      );
+
+      await jobService.getAll({
+        filter: "processName eq 'InvoiceBot' and folderId eq 7",
+        orderby: 'createdTime desc',
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ fieldMap: JobMap }),
+        expect.objectContaining({
+          filter: "processName eq 'InvoiceBot' and folderId eq 7",
+          orderby: 'createdTime desc',
+        }),
+      );
+    });
+
     it('should attach getOutput method to transformed job objects', async () => {
       const mockResponse = createMockTransformedJobCollection();
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -229,6 +248,25 @@ describe('JobService Unit Tests', () => {
       expect(typeof result.getOutput).toBe('function');
       expect(result.stop).toBeDefined();
       expect(typeof result.stop).toBe('function');
+    });
+
+    it('should rewrite SDK field names in select back to API names', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        select: 'processName,createdTime,folderId',
+      });
+
+      // processName → releaseName, createdTime → creationTime, folderId → organizationUnitId
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            $select: 'releaseName,creationTime,organizationUnitId',
+          }),
+        }),
+      );
     });
 
     it('should pass expand and select options with OData prefix', async () => {

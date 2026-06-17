@@ -23,6 +23,7 @@ import { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ODATA_PAGINATION } from '../../../../src/utils/constants/common';
 import { PaginationType } from '../../../../src/utils/pagination/internal-types';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
+import { BucketMap } from '../../../../src/models/orchestrator/buckets.constants';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -415,6 +416,17 @@ describe('BucketService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(bucketService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should pass BucketMap as fieldMap so SDK names work in filter/orderby', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await bucketService.getAll({ filter: "path eq '/foo'" });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({ fieldMap: BucketMap }),
+        expect.objectContaining({ filter: "path eq '/foo'" }),
+      );
     });
   });
 

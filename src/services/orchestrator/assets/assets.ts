@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
@@ -70,6 +70,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       getEndpoint: (folderId) => folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformAssetResponse,
+      fieldMap: AssetMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -104,9 +105,10 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   @track('Assets.GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+
+    const rewrittenOptions = rewriteODataRequestFields(options, AssetMap);
+    const keysToPrefix = Object.keys(rewrittenOptions);
+    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<AssetGetResponse>(
       ASSET_ENDPOINTS.GET_BY_ID(id),
@@ -155,6 +157,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       name,
       options,
       (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+      AssetMap,
     );
   }
 

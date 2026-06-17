@@ -46,6 +46,12 @@ export interface JobServiceModel {
    *   filter: "state eq 'Running'"
    * });
    *
+   * // Filter and sort by SDK field names — same names you read from the response
+   * const recentInvoiceJobs = await jobs.getAll({
+   *   filter: "processName eq 'InvoiceBot'",
+   *   orderby: 'createdTime desc',
+   * });
+   *
    * // First page with pagination
    * const page1 = await jobs.getAll({ pageSize: 10 });
    *

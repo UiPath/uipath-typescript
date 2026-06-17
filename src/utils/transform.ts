@@ -377,6 +377,121 @@ export function transformRequest<T extends object>(
 }
 
 /**
+ * OData query-string keys whose values may contain field identifiers that
+ * need rewriting from SDK names → API names.
+ */
+const ODATA_FIELD_PARAM_KEYS = ['filter', 'orderby', 'select', 'expand'] as const;
+
+const ODATA_IDENT_START = /[A-Za-z_]/;
+const ODATA_IDENT_PART = /[A-Za-z0-9_]/;
+
+/**
+ * Rewrites SDK field identifiers to API field identifiers inside an OData
+ * expression string (`$filter`, `$orderby`, `$select`, `$expand`).
+ *
+ * Field maps (e.g. `JobMap`) rename API fields → SDK fields on responses, so
+ * SDK consumers see the renamed names. Without this rewrite, the same name
+ * in a `filter` string would be forwarded verbatim and the API (which still
+ * uses the original name) would reject it.
+ *
+ * The rewriter walks the expression char-by-char, tracking single-quoted
+ * string literals (with `''` as the OData escape) so identifiers inside
+ * quoted values are left untouched. Identifier tokens match the OData
+ * grammar `[A-Za-z_][A-Za-z0-9_]*` and are replaced when present in the
+ * reversed field map.
+ *
+ * @example
+ * ```typescript
+ * const requestMap = { processName: 'releaseName' };
+ * rewriteODataIdentifiers("processName eq 'processName'", requestMap);
+ * // "releaseName eq 'processName'"  — identifier rewritten, literal preserved
+ * ```
+ */
+export function rewriteODataIdentifiers(expression: string, requestMap: Record<string, string>): string {
+  if (!expression) return expression;
+  let result = '';
+  let buffer = '';
+  let inString = false;
+
+  const flush = () => {
+    if (buffer.length === 0) return;
+    result += requestMap[buffer] ?? buffer;
+    buffer = '';
+  };
+
+  for (let i = 0; i < expression.length; i++) {
+    const c = expression[i];
+    if (inString) {
+      if (c === "'") {
+        if (expression[i + 1] === "'") {
+          result += "''";
+          i++;
+          continue;
+        }
+        inString = false;
+        result += c;
+      } else {
+        result += c;
+      }
+      continue;
+    }
+    if (c === "'") {
+      flush();
+      inString = true;
+      result += c;
+      continue;
+    }
+    const isStart = buffer.length === 0 && ODATA_IDENT_START.test(c);
+    const isPart = buffer.length > 0 && ODATA_IDENT_PART.test(c);
+    if (isStart || isPart) {
+      buffer += c;
+    } else {
+      flush();
+      result += c;
+    }
+  }
+  flush();
+  return result;
+}
+
+/**
+ * Applies OData identifier rewriting to the recognized OData string params
+ * (`filter`, `orderby`, `select`, `expand`) in an options object, using the
+ * reversed form of a response field map. Returns a shallow copy with the
+ * relevant values rewritten; other keys pass through unchanged.
+ *
+ * Used at the OData edge so SDK consumers can refer to renamed fields by
+ * their SDK name throughout — for reading the response and for filtering /
+ * sorting / projecting / expanding.
+ *
+ * @param options The OData query options as authored with SDK field names
+ * @param responseMap The response field map (API → SDK); reversed internally
+ *
+ * @example
+ * ```typescript
+ * // JobMap renames releaseName → processName on responses.
+ * rewriteODataRequestFields({ filter: "processName eq 'X'" }, JobMap);
+ * // { filter: "releaseName eq 'X'" }
+ * ```
+ */
+export function rewriteODataRequestFields<T extends Record<string, any>>(
+  options: T,
+  responseMap: FieldMapping,
+): T {
+  if (!options || !responseMap) return options;
+  const requestMap = reverseMap(responseMap);
+  if (Object.keys(requestMap).length === 0) return options;
+  const result: Record<string, any> = { ...options };
+  for (const key of ODATA_FIELD_PARAM_KEYS) {
+    const value = result[key];
+    if (typeof value === 'string') {
+      result[key] = rewriteODataIdentifiers(value, requestMap);
+    }
+  }
+  return result as T;
+}
+
+/**
  * Renames fields in an object in-place
  * @param obj The object to modify
  * @param fieldMappings Object mapping source field names to target field names

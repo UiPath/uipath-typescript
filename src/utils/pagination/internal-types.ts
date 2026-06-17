@@ -1,6 +1,7 @@
 import { PaginationOptions, PaginatedResponse, PaginationMethodUnion } from './types';
 import { RequestSpec } from '../../models/common/request-spec';
 import { HTTP_METHODS } from '../constants/common';
+import { FieldMapping } from '../transform';
 
 /**
  * Type for HTTP methods derived from HTTP_METHODS constant
@@ -239,6 +240,14 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
 
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
+
+  /**
+   * Optional response field map (API → SDK) used to rewrite SDK field names
+   * back to API field names inside OData `filter`, `orderby`, `select`, and
+   * `expand` string values before the request is sent. Enables consumers to
+   * reference renamed fields by their SDK name end-to-end.
+   */
+  fieldMap?: FieldMapping;
 
   /**
    * Pre-built URL query parameters that always travel in the URL query string,

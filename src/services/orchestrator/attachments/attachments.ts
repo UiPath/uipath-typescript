@@ -4,7 +4,7 @@ import {
   AttachmentGetByIdOptions,
 } from '../../../models/orchestrator/attachments.types';
 import { AttachmentServiceModel } from '../../../models/orchestrator/attachments.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, transformData } from '../../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, rewriteODataRequestFields, transformData } from '../../../utils/transform';
 import { ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
@@ -33,9 +33,11 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
       throw new ValidationError({ message: 'id is required for getById' });
     }
 
-    // Prefix all keys in options with $ for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+    // Rewrite renamed SDK field names back to API names inside OData strings,
+    // then prefix all keys in options with $ for OData.
+    const rewrittenOptions = rewriteODataRequestFields(options, AttachmentsMap);
+    const keysToPrefix = Object.keys(rewrittenOptions);
+    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
 
     const response = await this.get<AttachmentResponse>(
       ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(id),

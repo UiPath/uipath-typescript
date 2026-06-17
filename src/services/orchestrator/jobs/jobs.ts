@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
@@ -59,6 +59,12 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    *   filter: "state eq 'Running'"
    * });
    *
+   * // Filter and sort by SDK field names — same names you read from the response
+   * const recentInvoiceJobs = await jobs.getAll({
+   *   filter: "processName eq 'InvoiceBot'",
+   *   orderby: 'createdTime desc',
+   * });
+   *
    * // First page with pagination
    * const page1 = await jobs.getAll({ pageSize: 10 });
    *
@@ -92,6 +98,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       getEndpoint: () => JOB_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: JOB_ENDPOINTS.GET_ALL,
       transformFn: transformJobResponse,
+      fieldMap: JobMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -142,8 +149,9 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const keysToPrefix = Object.keys(options ?? {});
-    const apiOptions = options ? addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix) : {};
+    const rewrittenOptions = options ? rewriteODataRequestFields(options, JobMap) : undefined;
+    const keysToPrefix = Object.keys(rewrittenOptions ?? {});
+    const apiOptions = rewrittenOptions ? addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix) : {};
 
     const response = await this.get<Record<string, unknown>>(
       JOB_ENDPOINTS.GET_BY_KEY(id),
