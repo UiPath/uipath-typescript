@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementStats, InstanceStats } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementStats, InstanceStats, ProcessStatsRequest } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -221,7 +221,7 @@ export function expectValidElementStats(element: ElementStats): void {
 /** Minimal interface for services that support getElementStats integration testing */
 interface ElementStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+  getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]>;
 }
 
 /**
@@ -246,13 +246,13 @@ export async function testGetElementStats(
     throw new Error(`No package versions available for ${serviceName} getElementStats test`);
   }
 
-  const result = await service.getElementStats(
-    process.processKey,
-    process.packageId,
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    new Date(),
-    packageVersion
-  );
+  const result = await service.getElementStats({
+    processKey: process.processKey,
+    packageId: process.packageId,
+    packageVersion,
+    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endTime: new Date(),
+  });
 
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);
@@ -288,7 +288,7 @@ export function expectValidInstanceStats(stats: InstanceStats): void {
 /** Minimal interface for services that support getInstanceStats integration testing */
 interface InstanceStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
+  getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats>;
 }
 
 /**
@@ -313,13 +313,13 @@ export async function testGetInstanceStats(
     throw new Error(`No package versions available for ${serviceName} getInstanceStats test`);
   }
 
-  const result = await service.getInstanceStats(
-    process.processKey,
-    process.packageId,
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    new Date(),
-    packageVersion
-  );
+  const result = await service.getInstanceStats({
+    processKey: process.processKey,
+    packageId: process.packageId,
+    packageVersion,
+    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endTime: new Date(),
+  });
 
   expect(result).toBeDefined();
   expectValidInstanceStats(result);

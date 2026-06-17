@@ -426,17 +426,18 @@ describe('MaestroProcessesService', () => {
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');
+    const statsRequest = {
+      processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+      startTime: startDate,
+      endTime: endDate,
+    };
 
     it('should retrieve element stats', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        startDate,
-        endDate,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats(statsRequest);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
@@ -462,13 +463,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        startDate,
-        endDate,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats(statsRequest);
 
       expect(result).toEqual([]);
     });
@@ -476,15 +471,7 @@ describe('MaestroProcessesService', () => {
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(
-        service.getElementStats(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-          startDate,
-          endDate,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        )
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getElementStats(statsRequest)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -493,17 +480,18 @@ describe('MaestroProcessesService', () => {
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');
+    const statsRequest = {
+      processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+      startTime: startDate,
+      endTime: endDate,
+    };
 
     it('should retrieve instance stats', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getInstanceStats(
-        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        startDate,
-        endDate,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getInstanceStats(statsRequest);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
@@ -532,15 +520,7 @@ describe('MaestroProcessesService', () => {
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(
-        service.getInstanceStats(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-          startDate,
-          endDate,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        )
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getInstanceStats(statsRequest)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

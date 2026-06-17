@@ -41,13 +41,13 @@ describe('Case Models', () => {
 
         await caseObj.getElementStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getElementStats).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        expect(mockService.getElementStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
           startTime,
           endTime,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        );
+        });
       });
     });
 
@@ -63,13 +63,13 @@ describe('Case Models', () => {
 
         await caseObj.getInstanceStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getInstanceStats).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        expect(mockService.getInstanceStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
           startTime,
           endTime,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        );
+        });
       });
     });
   });

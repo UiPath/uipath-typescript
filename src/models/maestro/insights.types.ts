@@ -165,6 +165,25 @@ export interface InstanceStats extends DurationStats {
 }
 
 /**
+ * Required request parameters for process-scoped insights stats endpoints
+ * (`getElementStats`, `getInstanceStats`).
+ *
+ * Identifies a single process+package+version and the time range to aggregate over.
+ */
+export interface ProcessStatsRequest {
+  /** Process key to filter by */
+  processKey: string;
+  /** Package identifier */
+  packageId: string;
+  /** Package version to filter by */
+  packageVersion: string;
+  /** Start of the time range to query */
+  startTime: Date;
+  /** End of the time range to query */
+  endTime: Date;
+}
+
+/**
  * Per-element execution counts and duration percentiles for a BPMN element within a process or case.
  */
 export interface ElementStats extends DurationStats {

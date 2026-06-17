@@ -2,7 +2,7 @@ import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTop
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
-import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
+import type { ProcessStatsRequest, TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
@@ -332,11 +332,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
@@ -345,13 +341,13 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * const process = processes[0];
    *
    * // Get element metrics for that process
-   * const elements = await maestroProcesses.getElementStats(
-   *   process.processKey,
-   *   process.packageId,
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   process.packageVersions[0]
-   * );
+   * const elements = await maestroProcesses.getElementStats({
+   *   processKey: process.processKey,
+   *   packageId: process.packageId,
+   *   packageVersion: process.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * // Analyze element performance
    * for (const element of elements) {
@@ -369,10 +365,10 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * ```
    */
   @track('MaestroProcesses.GetElementStats')
-  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+  async getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]> {
     const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(request)
     );
     return data ?? [];
   }
@@ -383,11 +379,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * Returns total instance counts broken down by status (running, completed, faulted, etc.)
    * and the average execution duration for all instances of a process within a time range.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
@@ -396,13 +388,13 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * const process = processes[0];
    *
    * // Get instance status breakdown for that process
-   * const counts = await maestroProcesses.getInstanceStats(
-   *   process.processKey,
-   *   process.packageId,
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   process.packageVersions[0]
-   * );
+   * const counts = await maestroProcesses.getInstanceStats({
+   *   processKey: process.processKey,
+   *   packageId: process.packageId,
+   *   packageVersion: process.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * console.log(`Total: ${counts.totalCount}`);
    * console.log(`Running: ${counts.runningCount}, Completed: ${counts.completedCount}`);
@@ -417,10 +409,10 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * ```
    */
   @track('MaestroProcesses.GetInstanceStats')
-  async getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
+  async getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats> {
     const { data } = await this.post<RawInstanceStats>(
       MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
-      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(request)
     );
     return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
   }

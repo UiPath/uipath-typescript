@@ -2,7 +2,7 @@ import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountR
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
-import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
+import type { ProcessStatsRequest, TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
@@ -303,11 +303,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
@@ -316,13 +312,13 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * const caseItem = allCases[0];
    *
    * // Get element metrics for that case
-   * const elements = await cases.getElementStats(
-   *   caseItem.processKey,
-   *   caseItem.packageId,
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   caseItem.packageVersions[0]
-   * );
+   * const elements = await cases.getElementStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * // Find elements with failures
    * const failedElements = elements.filter(e => e.failCount > 0);
@@ -339,10 +335,10 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * ```
    */
   @track('Cases.GetElementStats')
-  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+  async getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]> {
     const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(request)
     );
     return data ?? [];
   }
@@ -353,11 +349,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * Returns total instance counts broken down by status (running, completed, faulted, etc.)
    * and the average execution duration for all instances of a case within a time range.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
@@ -366,13 +358,13 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * const caseItem = allCases[0];
    *
    * // Get instance status breakdown for that case
-   * const counts = await cases.getInstanceStats(
-   *   caseItem.processKey,
-   *   caseItem.packageId,
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   caseItem.packageVersions[0]
-   * );
+   * const counts = await cases.getInstanceStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * console.log(`Total: ${counts.totalCount}`);
    * console.log(`Completed: ${counts.completedCount}, Faulted: ${counts.faultedCount}`);
@@ -386,10 +378,10 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * ```
    */
   @track('Cases.GetInstanceStats')
-  async getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
+  async getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats> {
     const { data } = await this.post<RawInstanceStats>(
       MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
-      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(request)
     );
     return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
   }

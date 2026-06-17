@@ -347,13 +347,13 @@ describe('CasesService', () => {
     it('should retrieve element stats for case instances', async () => {
       mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS]);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
-        new Date('2026-04-01T00:00:00Z'),
-        new Date('2026-05-01T00:00:00Z'),
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats({
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        startTime: new Date('2026-04-01T00:00:00Z'),
+        endTime: new Date('2026-05-01T00:00:00Z'),
+      });
 
       expect(result).toHaveLength(2);
       expect(result[0].elementId).toBe('Event_start');
@@ -375,13 +375,13 @@ describe('CasesService', () => {
     it('should retrieve instance stats for case instances', async () => {
       mockApiClient.post.mockResolvedValue(MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_STATS);
 
-      const result = await service.getInstanceStats(
-        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
-        new Date('2026-04-01T00:00:00Z'),
-        new Date('2026-05-01T00:00:00Z'),
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getInstanceStats({
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        startTime: new Date('2026-04-01T00:00:00Z'),
+        endTime: new Date('2026-05-01T00:00:00Z'),
+      });
 
       expect(result.totalCount).toBe(276);
       expect(result.completedCount).toBe(275);

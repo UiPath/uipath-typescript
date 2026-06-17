@@ -42,13 +42,13 @@ describe('Process Models', () => {
 
         await process.getElementStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getElementStats).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        expect(mockService.getElementStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
           startTime,
           endTime,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        );
+        });
       });
 
       it('should throw when processKey is undefined', () => {
@@ -82,13 +82,13 @@ describe('Process Models', () => {
 
         await process.getInstanceStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getInstanceStats).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        expect(mockService.getInstanceStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
           startTime,
           endTime,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        );
+        });
       });
 
       it('should throw when processKey is undefined', () => {
