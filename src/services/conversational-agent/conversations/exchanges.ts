@@ -222,7 +222,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   /**
    * Ends an exchange, setting the endedAt timestamp and stopping any running agent job
    *
-   * @internal
+   * @experimental
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange to end
    * @returns Promise resolving to {@link ExchangeEndResponse}

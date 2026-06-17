@@ -129,7 +129,7 @@ export interface ExchangeServiceModel {
   /**
    * Ends an exchange, setting the endedAt timestamp and stopping any running agent job
    *
-   * @internal
+   * @experimental
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange to end
    * @returns Promise resolving to {@link ExchangeEndResponse}
@@ -242,7 +242,7 @@ export interface ConversationExchangeServiceModel {
   /**
    * Ends an exchange in this conversation
    *
-   * @internal
+   * @experimental
    * @param exchangeId - The exchange to end
    * @returns Promise resolving to {@link ExchangeEndResponse}
    *
