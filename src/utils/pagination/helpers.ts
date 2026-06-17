@@ -178,7 +178,7 @@ export class PaginationHelpers {
       headers: providedHeaders,
       paginationParams,
       additionalParams,
-      urlParams,
+      queryParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -187,12 +187,12 @@ export class PaginationHelpers {
     const endpoint = getEndpoint(folderId);
     const headers = providedHeaders ?? (folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {});
 
-    // On POST, the caller's options go in the body; urlParams stays in the URL.
-    // On GET, everything is URL — urlParams merges with additionalParams.
+    // On POST, the caller's options go in the body; queryParams stays in the URL.
+    // On GET, everything is URL — queryParams merges with additionalParams.
     const isPost = method === HTTP_METHODS.POST;
     const requestSpec = isPost
-      ? { body: additionalParams, params: urlParams }
-      : { params: { ...additionalParams, ...urlParams } };
+      ? { body: additionalParams, params: queryParams }
+      : { params: { ...additionalParams, ...queryParams } };
 
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
       method,
@@ -238,7 +238,7 @@ export class PaginationHelpers {
       folderId,
       headers: providedHeaders,
       additionalParams,
-      urlParams,
+      queryParams,
       transformFn,
       method = HTTP_METHODS.GET,
       options = {}
@@ -258,13 +258,13 @@ export class PaginationHelpers {
       response = await serviceAccess.post<any>(
         endpoint,
         additionalParams,
-        { headers, params: urlParams }
+        { headers, params: queryParams }
       );
     } else {
       response = await serviceAccess.get<any>(
         endpoint,
         {
-          params: { ...additionalParams, ...urlParams },
+          params: { ...additionalParams, ...queryParams },
           headers
         }
       );
@@ -336,7 +336,7 @@ export class PaginationHelpers {
         headers: config.headers,
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage !== undefined ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
-        urlParams: config.urlParams,
+        queryParams: config.queryParams,
         transformFn: config.transformFn,
         method: config.method,
         options: {
@@ -355,7 +355,7 @@ export class PaginationHelpers {
       folderId,
       headers: config.headers,
       additionalParams: prefixedOptions,
-      urlParams: config.urlParams,
+      queryParams: config.queryParams,
       transformFn: config.transformFn,
       method: config.method,
       options: {

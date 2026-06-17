@@ -75,7 +75,7 @@ export interface GetAllPaginatedParams<T, R = T> {
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
   /** URL query params kept in the URL regardless of HTTP method. */
-  urlParams?: Record<string, string | number | boolean>;
+  queryParams?: Record<string, string | number | boolean>;
   /**
    * Optional function to transform API response items.
    */
@@ -110,7 +110,7 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   headers?: Record<string, string>;
   additionalParams: Record<string, any>;
   /** URL query params kept in the URL regardless of HTTP method. */
-  urlParams?: Record<string, string | number | boolean>;
+  queryParams?: Record<string, string | number | boolean>;
   /**
    * Optional function to transform API response items.
    */
@@ -245,7 +245,7 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
    * regardless of HTTP method. Use `createParams({ ... })` to build this.
    * Typical use: response-shape modifiers on POST endpoints (e.g. `expansionLevel`).
    */
-  urlParams?: Record<string, string | number | boolean>;
+  queryParams?: Record<string, string | number | boolean>;
 
   /** HTTP method to use for the request (default: 'GET') */
   method?: HttpMethodType;

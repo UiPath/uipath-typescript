@@ -856,8 +856,8 @@ describe('PaginationHelpers Unit Tests', () => {
       expect(result.items).toEqual([]);
     });
 
-    describe('urlParams', () => {
-      it('should send caller options in body and urlParams in URL on POST (non-paginated)', async () => {
+    describe('queryParams', () => {
+      it('should send caller options in body and queryParams in URL on POST (non-paginated)', async () => {
         const apiResponse = createMockApiResponse([], 0);
         vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
 
@@ -865,7 +865,7 @@ describe('PaginationHelpers Unit Tests', () => {
           ...mockConfig,
           method: 'POST',
           excludeFromPrefix: ['filterGroup'],
-          urlParams: { expansionLevel: 2 },
+          queryParams: { expansionLevel: 2 },
         };
 
         await PaginationHelpers.getAll(postConfig, {
@@ -879,7 +879,7 @@ describe('PaginationHelpers Unit Tests', () => {
         );
       });
 
-      it('should send caller options in body and urlParams in URL on POST (paginated)', async () => {
+      it('should send caller options in body and queryParams in URL on POST (paginated)', async () => {
         const mockResponse = createMockPaginatedResponse([]);
         vi.mocked(mockServiceAccess.requestWithPagination).mockResolvedValue(mockResponse);
 
@@ -887,7 +887,7 @@ describe('PaginationHelpers Unit Tests', () => {
           ...mockConfig,
           method: 'POST',
           excludeFromPrefix: ['filterGroup'],
-          urlParams: { expansionLevel: 2 },
+          queryParams: { expansionLevel: 2 },
         };
 
         await PaginationHelpers.getAll(postConfig, {
@@ -906,14 +906,14 @@ describe('PaginationHelpers Unit Tests', () => {
         );
       });
 
-      it('should merge urlParams into URL params on GET', async () => {
+      it('should merge queryParams into URL params on GET', async () => {
         const apiResponse = createMockApiResponse([], 0);
         vi.mocked(mockServiceAccess.get).mockResolvedValue(apiResponse);
 
         const getConfig = {
           ...mockConfig,
           excludeFromPrefix: ['filter'],
-          urlParams: { expansionLevel: 1 },
+          queryParams: { expansionLevel: 1 },
         };
 
         await PaginationHelpers.getAll(getConfig, {

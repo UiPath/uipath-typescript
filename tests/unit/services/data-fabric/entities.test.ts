@@ -1557,7 +1557,7 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should route expansionLevel to urlParams and strip it from the body options", async () => {
+    it("should route expansionLevel to queryParams and strip it from the body options", async () => {
       let capturedConfig: any;
       let capturedDownstream: any;
       vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config, downstream) => {
@@ -1573,8 +1573,8 @@ describe("EntityService Unit Tests", () => {
       expect(capturedConfig.getEndpoint()).toBe(
         DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       );
-      // expansionLevel is hoisted into urlParams (URL) — same pattern as insertRecordById / updateRecordById.
-      expect(capturedConfig.urlParams).toEqual({
+      // expansionLevel is hoisted into queryParams (URL) — same pattern as insertRecordById / updateRecordById.
+      expect(capturedConfig.queryParams).toEqual({
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
       // It must not also appear in the downstream (body) options.
