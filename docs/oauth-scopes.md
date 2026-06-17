@@ -255,10 +255,3 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-
-## Document Understanding
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `submitExceptionReport()` | `OR.Tasks` or `OR.Tasks.Write` |
-| `processExtractedData()` | `OR.Tasks` or `OR.Tasks.Write` |

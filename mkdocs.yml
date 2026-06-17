@@ -211,7 +211,6 @@ nav:
           - Traces:
             - api/interfaces/traces/index.md
             - Agent: api/interfaces/AgentTracesServiceModel.md
-          - Orchestrator DU Module: api/interfaces/OrchestratorDuModuleServiceModel.md
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md
