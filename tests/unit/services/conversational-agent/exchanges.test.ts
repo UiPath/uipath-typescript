@@ -455,7 +455,7 @@ describe('ExchangeService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.id).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID);
       expect(result.exchangeId).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID);
-      expect(result.endedAt).toBe('2024-01-01T12:00:00.000Z');
+      expect(result.endedTime).toBe('2024-01-01T12:00:00.000Z');
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         EXCHANGE_ENDPOINTS.END(

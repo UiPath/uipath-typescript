@@ -127,7 +127,7 @@ export interface ExchangeServiceModel {
   ): Promise<FeedbackCreateResponse>;
 
   /**
-   * Ends an exchange, setting the endedAt timestamp and stopping any running agent job
+   * Ends an exchange, setting the endedTime timestamp and stopping any running agent job
    *
    * @experimental
    * @param conversationId - The conversation containing the exchange
@@ -136,7 +136,7 @@ export interface ExchangeServiceModel {
    * @example
    * ```typescript
    * const endedExchange = await exchanges.end(conversationId, exchangeId);
-   * console.log(`Exchange ended at: ${endedExchange.endedAt}`);
+   * console.log(`Exchange ended at: ${endedExchange.endedTime}`);
    * ```
    */
   end(
@@ -249,7 +249,7 @@ export interface ConversationExchangeServiceModel {
    * @example
    * ```typescript
    * const endedExchange = await conversation.exchanges.end(exchangeId);
-   * console.log(`Exchange ended at: ${endedExchange.endedAt}`);
+   * console.log(`Exchange ended at: ${endedExchange.endedTime}`);
    * ```
    */
   end(exchangeId: string): Promise<ExchangeEndResponse>;

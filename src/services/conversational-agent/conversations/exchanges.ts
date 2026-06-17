@@ -220,7 +220,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   }
 
   /**
-   * Ends an exchange, setting the endedAt timestamp and stopping any running agent job
+   * Ends an exchange, setting the endedTime timestamp and stopping any running agent job
    *
    * @experimental
    * @param conversationId - The conversation containing the exchange
@@ -230,7 +230,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @example
    * ```typescript
    * const endedExchange = await exchanges.end(conversationId, exchangeId);
-   * console.log(`Exchange ended at: ${endedExchange.endedAt}`);
+   * console.log(`Exchange ended at: ${endedExchange.endedTime}`);
    * ```
    */
   @track('ConversationalAgent.Exchanges.End')

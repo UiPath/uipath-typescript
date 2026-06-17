@@ -301,7 +301,7 @@ export interface Exchange {
   /**
    * Timestamp indicating when the exchange ended, if it has ended.
    */
-  endedAt?: string;
+  endedTime?: string;
   /**
    * The optional feedback rating given by the user.
    */
