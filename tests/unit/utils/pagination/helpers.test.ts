@@ -855,5 +855,81 @@ describe('PaginationHelpers Unit Tests', () => {
       expect(mockServiceAccess.get).toHaveBeenCalled();
       expect(result.items).toEqual([]);
     });
+
+    describe('queryParams', () => {
+      it('should send caller options in body and queryParams in URL on POST (non-paginated)', async () => {
+        const apiResponse = createMockApiResponse([], 0);
+        vi.mocked(mockServiceAccess.post).mockResolvedValue(apiResponse);
+
+        const postConfig = {
+          ...mockConfig,
+          method: 'POST',
+          excludeFromPrefix: ['filterGroup'],
+          queryParams: { expansionLevel: 2 },
+        };
+
+        await PaginationHelpers.getAll(postConfig, {
+          filterGroup: { fieldName: 'name', value: 'x' },
+        });
+
+        expect(mockServiceAccess.post).toHaveBeenCalledWith(
+          PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+          { filterGroup: { fieldName: 'name', value: 'x' } },
+          expect.objectContaining({ params: { expansionLevel: 2 } }),
+        );
+      });
+
+      it('should send caller options in body and queryParams in URL on POST (paginated)', async () => {
+        const mockResponse = createMockPaginatedResponse([]);
+        vi.mocked(mockServiceAccess.requestWithPagination).mockResolvedValue(mockResponse);
+
+        const postConfig = {
+          ...mockConfig,
+          method: 'POST',
+          excludeFromPrefix: ['filterGroup'],
+          queryParams: { expansionLevel: 2 },
+        };
+
+        await PaginationHelpers.getAll(postConfig, {
+          filterGroup: { fieldName: 'name', value: 'x' },
+          pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
+        });
+
+        expect(mockServiceAccess.requestWithPagination).toHaveBeenCalledWith(
+          'POST',
+          PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+          expect.objectContaining({ pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE }),
+          expect.objectContaining({
+            body: { filterGroup: { fieldName: 'name', value: 'x' } },
+            params: { expansionLevel: 2 },
+          }),
+        );
+      });
+
+      it('should merge queryParams into URL params on GET', async () => {
+        const apiResponse = createMockApiResponse([], 0);
+        vi.mocked(mockServiceAccess.get).mockResolvedValue(apiResponse);
+
+        const getConfig = {
+          ...mockConfig,
+          excludeFromPrefix: ['filter'],
+          queryParams: { expansionLevel: 1 },
+        };
+
+        await PaginationHelpers.getAll(getConfig, {
+          filter: PAGINATION_TEST_CONSTANTS.FILTER_NAME_EQ_TEST,
+        });
+
+        expect(mockServiceAccess.get).toHaveBeenCalledWith(
+          PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+          expect.objectContaining({
+            params: {
+              filter: PAGINATION_TEST_CONSTANTS.FILTER_NAME_EQ_TEST,
+              expansionLevel: 1,
+            },
+          }),
+        );
+      });
+    });
   });
 });

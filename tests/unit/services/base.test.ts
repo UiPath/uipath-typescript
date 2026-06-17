@@ -407,7 +407,7 @@ describe('BaseService Unit Tests', () => {
       expect(params).not.toHaveProperty(ODATA_OFFSET_PARAMS.COUNT_PARAM);
     });
 
-    it('should merge pagination params into the body for POST and clear query params', async () => {
+    it('should merge pagination params into body for POST while leaving caller params in the URL', async () => {
       mockApiClient.post.mockResolvedValue({ value: [TEST_RESPONSE], totalRecordCount: 1 });
 
       await service.exposedRequestWithPagination(
@@ -423,14 +423,14 @@ describe('BaseService Unit Tests', () => {
 
       const [calledPath, calledBody, calledOptions] = mockApiClient.post.mock.calls[0];
       expect(calledPath).toBe(TEST_PATH);
+      // Pagination state lands in body. Caller's body keys are preserved. No URL keys leak in.
       expect(calledBody).toEqual({
         filter: 'abc',
-        extra: 'query',
         [ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM]: 10,
         [ODATA_OFFSET_PARAMS.COUNT_PARAM]: true,
       });
-      expect(calledOptions.params).toBeUndefined();
-      expect(calledOptions.body).toEqual(calledBody);
+      // Caller's URL params are respected — no longer clobbered.
+      expect(calledOptions.params).toEqual({ extra: 'query' });
     });
 
     it('should fall back to itemsCount heuristic for hasNextPage when totalCount is missing', async () => {

@@ -1505,7 +1505,7 @@ describe("EntityService Unit Tests", () => {
             itemsField: "value",
             totalCountField: "totalRecordCount",
           }),
-          excludeFromPrefix: expect.arrayContaining(["expansionLevel", "filterGroup", "sortOptions"]),
+          excludeFromPrefix: expect.arrayContaining(["filterGroup", "sortOptions"]),
         }),
         undefined,
       );
@@ -1557,10 +1557,12 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should pass expansionLevel through excludeFromPrefix without ODATA prefix", async () => {
+    it("should route expansionLevel to queryParams and strip it from the body options", async () => {
       let capturedConfig: any;
-      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config) => {
+      let capturedDownstream: any;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config, downstream) => {
         capturedConfig = config;
+        capturedDownstream = downstream;
         return { items: [], totalCount: 0 };
       });
 
@@ -1568,13 +1570,15 @@ describe("EntityService Unit Tests", () => {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
 
-      // expansionLevel is in excludeFromPrefix — no URL manipulation
       expect(capturedConfig.getEndpoint()).toBe(
         DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       );
-      expect(capturedConfig.getEndpoint()).not.toContain("expansionLevel");
-      expect(capturedConfig.excludeFromPrefix).toContain("expansionLevel");
-      // no processParametersFn — same pattern as getAllRecords
+      // expansionLevel is hoisted into queryParams (URL) — same pattern as insertRecordById / updateRecordById.
+      expect(capturedConfig.queryParams).toEqual({
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+      });
+      // It must not also appear in the downstream (body) options.
+      expect(capturedDownstream).not.toHaveProperty("expansionLevel");
       expect(capturedConfig.processParametersFn).toBeUndefined();
     });
 

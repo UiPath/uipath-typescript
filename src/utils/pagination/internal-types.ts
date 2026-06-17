@@ -74,6 +74,8 @@ export interface GetAllPaginatedParams<T, R = T> {
   headers?: Record<string, string>;
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
+  /** URL query params kept in the URL regardless of HTTP method. */
+  queryParams?: Record<string, string | number | boolean>;
   /**
    * Optional function to transform API response items.
    */
@@ -107,6 +109,8 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
   headers?: Record<string, string>;
   additionalParams: Record<string, any>;
+  /** URL query params kept in the URL regardless of HTTP method. */
+  queryParams?: Record<string, string | number | boolean>;
   /**
    * Optional function to transform API response items.
    */
@@ -236,9 +240,16 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
 
+  /**
+   * Pre-built URL query parameters that always travel in the URL query string,
+   * regardless of HTTP method. Use `createParams({ ... })` to build this.
+   * Typical use: response-shape modifiers on POST endpoints (e.g. `expansionLevel`).
+   */
+  queryParams?: Record<string, string | number | boolean>;
+
   /** HTTP method to use for the request (default: 'GET') */
   method?: HttpMethodType;
 
   /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
   headers?: Record<string, string>;
-} 
+}
