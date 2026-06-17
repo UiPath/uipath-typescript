@@ -1,0 +1,4 @@
+{
+  "scope": "OR.Buckets.Read",
+  "clientId": "<external-application-clientId>"
+}

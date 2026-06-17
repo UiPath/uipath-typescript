@@ -1,0 +1,46 @@
+{
+    "inputs": {
+        "type": "object",
+        "properties": {
+            "applicantName": {
+                "type": "string",
+                "required": true
+            },
+            "loanAmount": {
+                "required": false,
+                "type": "number"
+            },
+            "creditScore": {
+                "required": false,
+                "type": "number"
+            }
+        }
+    },
+    "outputs": {
+        "type": "object",
+        "properties": {
+            "riskFactor": {
+                "type": "integer",
+                "required": true
+            },
+            "reviewerComments": {
+                "type": "string"
+            }
+        }
+    },
+    "inOuts": {
+        "type": "object",
+        "properties": {}
+    },
+    "outcomes": {
+        "type": "object",
+        "properties": {
+            "Approve": {
+                "type": "string"
+            },
+            "Reject": {
+                "type": "string"
+            }
+        }
+    }
+}
