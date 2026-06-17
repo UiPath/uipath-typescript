@@ -9,6 +9,16 @@ import {
   AgentFilterOptions,
   AgentGetLatencyTimelineOptions,
   AgentGetLatencyTimelineResponse,
+  AgentGetTopErroredAgentsOptions,
+  AgentGetTopErroredAgentsResponse,
+  AgentGetTopConsumingAgentsOptions,
+  AgentGetTopConsumingAgentsResponse,
+  AgentGetIncidentDistributionOptions,
+  AgentGetIncidentDistributionResponse,
+  AgentGetSummaryOptions,
+  AgentGetSummaryResponse,
+  AgentGetUnitConsumptionSummaryOptions,
+  AgentGetUnitConsumptionSummaryResponse,
   AgentListItem,
   AgentGetAllOptions,
 } from '../../models/agents/agents.types';
@@ -351,6 +361,282 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data.data;
+  }
+
+  /**
+   * Retrieves the top-N agents ranked by error count over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetTopErroredAgentsResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top errored agents in May 2025
+   * const result = await agents.getTopErroredAgents(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((agent) => {
+   *   console.log(`${agent.name}: ${agent.count} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getTopErroredAgents(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopErroredAgents')
+  async getTopErroredAgents(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetTopErroredAgentsOptions,
+  ): Promise<AgentGetTopErroredAgentsResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<AgentGetTopErroredAgentsResponse>(
+      AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+      body,
+    );
+
+    return response.data ?? {};
+  }
+
+  /**
+   * Retrieves the top-N agents ranked by unit consumption over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetTopConsumingAgentsResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top consuming agents in May 2025
+   * const result = await agents.getTopConsumingAgents(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Total consumed: ${result.totalConsumed}`);
+   * result.agents?.forEach((agent) => {
+   *   console.log(`${agent.agentName}: ${agent.consumedQuantity}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top 5 healthy autonomous agents
+   * const result = await agents.getTopConsumingAgents(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     limit: 5,
+   *     healthy: true,
+   *     agentTypes: [AgentType.Autonomous],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopConsumingAgents')
+  async getTopConsumingAgents(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetTopConsumingAgentsOptions,
+  ): Promise<AgentGetTopConsumingAgentsResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.healthy !== undefined) body.healthy = options.healthy;
+    if (options?.healthThreshold !== undefined) body.healthThreshold = options.healthThreshold;
+    if (options?.agentTypes?.length) body.agentTypes = options.agentTypes.join(',');
+
+    const response = await this.post<{ data?: AgentGetTopConsumingAgentsResponse }>(
+      AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+      body,
+    );
+
+    return response.data.data ?? {};
+  }
+
+  /**
+   * Retrieves the distribution of incidents across types — errors, escalations,
+   * and policy violations — over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetIncidentDistributionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Incident distribution in May 2025
+   * const result = await agents.getIncidentDistribution(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Errors: ${result.errorCount}, Escalations: ${result.escalationCount}, Policy: ${result.policyCount}`);
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders
+   * const result = await agents.getIncidentDistribution(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetIncidentDistribution')
+  async getIncidentDistribution(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetIncidentDistributionOptions,
+  ): Promise<AgentGetIncidentDistributionResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<{ data?: AgentGetIncidentDistributionResponse }>(
+      AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
+      body,
+    );
+
+    return response.data.data ?? {};
+  }
+
+  /**
+   * Retrieves an aggregate per-agent and overall job/success/duration summary
+   * over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Summary for May 2025
+   * const result = await agents.getSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Success rate: ${result.currentPeriodSummary?.successRate}%`);
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Runtime-only summary with lookback comparison
+   * const result = await agents.getSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetSummary')
+  async getSummary(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetSummaryOptions,
+  ): Promise<AgentGetSummaryResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.lookbackPeriodAnalysis !== undefined) body.lookbackPeriodAnalysis = options.lookbackPeriodAnalysis;
+    if (options?.processKey !== undefined) body.processKey = options.processKey;
+    if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+
+    const response = await this.post<{ data?: AgentGetSummaryResponse }>(
+      AGENTS_ENDPOINTS.GET_SUMMARY,
+      body,
+    );
+
+    return response.data.data ?? {};
+  }
+
+  /**
+   * Retrieves an aggregate AGU/PLTU unit consumption summary per agent over the
+   * requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetUnitConsumptionSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Unit consumption summary for May 2025
+   * const result = await agents.getUnitConsumptionSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`AGU complete jobs: ${result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs}`);
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Runtime-only summary with lookback comparison
+   * const result = await agents.getUnitConsumptionSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetUnitConsumptionSummary')
+  async getUnitConsumptionSummary(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetUnitConsumptionSummaryOptions,
+  ): Promise<AgentGetUnitConsumptionSummaryResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.lookbackPeriodAnalysis !== undefined) body.lookbackPeriodAnalysis = options.lookbackPeriodAnalysis;
+    if (options?.processKey !== undefined) body.processKey = options.processKey;
+    if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+
+    const response = await this.post<{ data?: AgentGetUnitConsumptionSummaryResponse }>(
+      AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
+      body,
+    );
+
+    return response.data.data ?? {};
   }
 
   /**

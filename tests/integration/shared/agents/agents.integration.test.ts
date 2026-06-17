@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
+import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -232,6 +233,186 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       });
 
       expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('getTopErroredAgents', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve top-N agents ranked by error count', async () => {
+      const result = await agents.getTopErroredAgents(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (typeof result.totalErrors === 'number') {
+        expect(result.totalErrors).toBeGreaterThanOrEqual(0);
+      }
+      if (!result.data || result.data.length === 0) {
+        throw new Error(
+          'No errored agents in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      const entry = result.data[0];
+      expect(typeof entry.name).toBe('string');
+      expect(typeof entry.count).toBe('number');
+      expect(typeof entry.agentId).toBe('string');
+      expect(typeof entry.firstSeenJob.jobKey).toBe('string');
+      expect(entry.lastSeenJob).toBeDefined();
+    });
+
+    it('should respect the limit option', async () => {
+      const result = await agents.getTopErroredAgents(startTime, endTime, { limit: 3 });
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error(
+          'No errored agents in the test tenant for the configured window — ' +
+          'cannot verify limit option. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.data.length).toBeLessThanOrEqual(3);
+    });
+  });
+
+  describe('getTopConsumingAgents', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve top-N consuming agents with aggregate totals', async () => {
+      const result = await agents.getTopConsumingAgents(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // Window dates are echoed as .NET-formatted strings (not ISO)
+      if (result.startDate !== undefined) expect(typeof result.startDate).toBe('string');
+      if (typeof result.totalConsumed === 'number') {
+        expect(result.totalConsumed).toBeGreaterThanOrEqual(0);
+      }
+      if (!result.agents || result.agents.length === 0) {
+        throw new Error(
+          'No consuming agents in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const agent = result.agents[0];
+      expect(typeof agent.agentId).toBe('string');
+      expect(typeof agent.agentName).toBe('string');
+      expect(agent.firstSeenJob).toBeDefined();
+      expect(agent.lastSeenJob).toBeDefined();
+    });
+
+    it('should accept a limit and an agentTypes filter', async () => {
+      const result = await agents.getTopConsumingAgents(startTime, endTime, {
+        limit: 3,
+        agentTypes: [AgentType.Autonomous],
+      });
+
+      expect(result).toBeDefined();
+      if (result.agents && result.agents.length > 0) {
+        expect(result.agents.length).toBeLessThanOrEqual(3);
+      }
+    });
+  });
+
+  describe('getIncidentDistribution', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve incident counts across categories without a pagination field', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect((result as { pagination?: unknown }).pagination).toBeUndefined();
+      if (typeof result.errorCount === 'number') {
+        expect(result.errorCount).toBeGreaterThanOrEqual(0);
+      }
+      if (typeof result.escalationCount === 'number') {
+        expect(result.escalationCount).toBeGreaterThanOrEqual(0);
+      }
+      if (typeof result.policyCount === 'number') {
+        expect(result.policyCount).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should scope to a single folder', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve an aggregate summary with a per-agent breakdown', async () => {
+      const result = await agents.getSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No summary data in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const period = result.currentPeriodSummary;
+      expect(typeof period.totalJobs).toBe('number');
+      expect(typeof period.successRate).toBe('number');
+      expect(Array.isArray(period.agents)).toBe(true);
+    });
+
+    it('should include a lookback summary when requested', async () => {
+      const result = await agents.getSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No summary data in the test tenant for the configured window — ' +
+          'cannot verify lookback. Run agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.lookbackPeriodSummary).toBeDefined();
+    });
+  });
+
+  describe('getUnitConsumptionSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve an aggregate AGU/PLTU summary with a per-agent breakdown', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No unit-consumption summary in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const period = result.currentPeriodSummary;
+      expect(typeof period.totalAgentUnitConsumption.completeJobs).toBe('number');
+      expect(typeof period.totalPlatformUnitConsumption.completeJobs).toBe('number');
+      expect(Array.isArray(period.agentConsumption)).toBe(true);
+    });
+
+    it('should include a lookback summary when requested', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No unit-consumption summary in the test tenant for the configured window — ' +
+          'cannot verify lookback. Run agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.lookbackPeriodSummary).toBeDefined();
     });
   });
 });

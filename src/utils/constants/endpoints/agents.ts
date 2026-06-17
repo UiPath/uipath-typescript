@@ -15,4 +15,14 @@ export const AGENTS_ENDPOINTS = {
   GET_CONSUMPTION_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/consumptionTimeline`,
   /** Time-series of agent latency (per-percentile) over the requested window. */
   GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/latencyTimeline`,
+  /** Top-N agents by error count over the requested window. */
+  GET_TOP_ERRORED_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/topErroredAgents`,
+  /** Top-N agents by unit consumption over the requested window. */
+  GET_TOP_CONSUMING_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/consumption`,
+  /** Distribution of incidents across types (errors, escalations, policy). */
+  GET_INCIDENT_DISTRIBUTION: `${INSIGHTS_RTM_BASE}/Agents/incidentDistribution`,
+  /** Aggregate per-agent and overall job/success/duration summary over the requested window. */
+  GET_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary`,
+  /** Aggregate AGU/PLTU consumption per agent over the requested window. */
+  GET_UNIT_CONSUMPTION_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary/unit-consumption`,
 } as const;
