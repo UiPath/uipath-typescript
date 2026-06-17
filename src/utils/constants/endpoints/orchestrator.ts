@@ -82,3 +82,11 @@ export const ASSET_ENDPOINTS = {
 export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
   GET_BY_ID: (id: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${id})`,
 } as const;
+
+/**
+ * Orchestrator DU Module Endpoints (validation flows)
+ */
+export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
+  SUBMIT_EXCEPTION_REPORT: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/SubmitExceptionReport`,
+  PROCESS_EXTRACTED_DATA: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/ProcessExtractedData`,
+} as const;
