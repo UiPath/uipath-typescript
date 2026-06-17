@@ -979,7 +979,10 @@ describe('TaskService Unit Tests', () => {
     });
 
     it('should pass TaskMap as fieldMap so SDK names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: createMockTasks(0),
+        totalCount: 0,
+      });
 
       await taskService.getAll({
         filter: "createdTime gt 2025-01-01",

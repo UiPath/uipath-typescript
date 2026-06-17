@@ -407,7 +407,7 @@ const ODATA_IDENT_PART = /[A-Za-z0-9_]/;
  * // "releaseName eq 'processName'"  — identifier rewritten, literal preserved
  * ```
  */
-export function rewriteODataIdentifiers(expression: string, requestMap: Record<string, string>): string {
+export function rewriteODataIdentifiers(expression: string, requestMap: FieldMapping): string {
   if (!expression) return expression;
   let result = '';
   let buffer = '';

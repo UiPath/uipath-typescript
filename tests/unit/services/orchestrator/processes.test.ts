@@ -160,7 +160,10 @@ describe('ProcessService Unit Tests', () => {
     });
 
     it('should pass ProcessMap as fieldMap so SDK names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: createMockOrchestratorProcesses(0),
+        totalCount: 0,
+      });
 
       await service.getAll({ filter: "processName eq 'X'", orderby: 'createdTime desc' });
 

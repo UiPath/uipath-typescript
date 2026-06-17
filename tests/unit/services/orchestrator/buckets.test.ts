@@ -419,7 +419,10 @@ describe('BucketService Unit Tests', () => {
     });
 
     it('should pass BucketMap as fieldMap so SDK names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: createMockBuckets(0),
+        totalCount: 0,
+      });
 
       await bucketService.getAll({ filter: "path eq '/foo'" });
 
