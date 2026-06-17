@@ -1,5 +1,6 @@
 import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
+import { embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 
 export const AUTHENTICATION_TIMEOUT = 8000;
 
@@ -28,6 +29,17 @@ export function isTokenExpired(tokenInfo: TokenInfo): boolean {
   if (!tokenInfo?.expiresAt) return true;
   return new Date() >= tokenInfo.expiresAt;
 }
+
+/**
+ * The validated host origin when the app is running as a trusted, generic
+ * host-embedded app (`?host=embed&basedomain=<origin>` with an allowlisted
+ * UiPath origin); otherwise null. Shared by TokenManager (to create the
+ * EmbeddedTokenManager) and UiPath init (to seed an empty token so getValidToken
+ * can bootstrap the postMessage token flow), which previously duplicated this
+ * condition inline.
+ */
+export const trustedEmbeddingOrigin: string | null =
+  isHostEmbedded && embeddingOrigin && isValidHostOrigin(embeddingOrigin) ? embeddingOrigin : null;
 
 export interface HostTokenResponse {
   accessToken: string;

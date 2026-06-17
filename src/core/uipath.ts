@@ -9,6 +9,7 @@ import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
+import { trustedEmbeddingOrigin } from './auth/host-token-request';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -136,10 +137,12 @@ export class UiPath implements IUiPath {
     // Track SDK initialization
     trackEvent('Sdk.Auth');
 
-    /** Auto-initialize for secret-based auth
-     * When viewed in Action Center, initialize tokenInfo with empty token. When an sdk call is made Action Center passes the token to sdk.
+    /** Auto-initialize for secret-based auth, Action Center, and generic host-embedded apps.
+     * When viewed in Action Center or embedded in a UiPath host frame via the UIP protocol,
+     * initialize tokenInfo with an empty token so getValidToken() can bootstrap via postMessage.
+     * When an sdk call is made, the host passes the token to the sdk.
      */
-    if (hasSecretAuth || isInActionCenter) {
+    if (hasSecretAuth || isInActionCenter || trustedEmbeddingOrigin) {
       this.#authService.authenticateWithSecret(config.secret ?? '');
       this.#initialized = true;
     }

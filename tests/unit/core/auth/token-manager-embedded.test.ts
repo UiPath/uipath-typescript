@@ -31,13 +31,23 @@ vi.mock('@/core/auth/embedded-token-manager', () => ({
 
 import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
 
-// isValidHostOrigin is called in TokenManager when isHostEmbedded is true
-vi.mock('@/core/auth/host-token-request', () => ({
-  isValidHostOrigin: vi.fn((origin: string) =>
-    ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'].includes(origin)
-  ),
-  isTokenExpired: vi.fn(() => false),
-}));
+// TokenManager reads the trustedEmbeddingOrigin const at construction time.
+// Expose it as a getter that derives from the (mocked) platform flags, so tests
+// keep driving the scenario by mutating platform.isHostEmbedded / embeddingOrigin.
+vi.mock('@/core/auth/host-token-request', async () => {
+  const platform = await import('@/utils/platform');
+  const ALLOWED = ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'];
+  const isValidHostOrigin = (origin: string | null): boolean => !!origin && ALLOWED.includes(origin);
+  return {
+    isValidHostOrigin: vi.fn(isValidHostOrigin),
+    isTokenExpired: vi.fn(() => false),
+    get trustedEmbeddingOrigin() {
+      return platform.isHostEmbedded && platform.embeddingOrigin && isValidHostOrigin(platform.embeddingOrigin)
+        ? platform.embeddingOrigin
+        : null;
+    },
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Mock ActionCenterTokenManager
