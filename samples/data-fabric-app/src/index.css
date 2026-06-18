@@ -1,0 +1,232 @@
+/*
+ * Apollo Vertex design system.
+ *
+ * Importing apollo-wind's Tailwind source (not the pre-compiled styles.css) so
+ * this app compiles its own utility classes — the pre-compiled bundle only
+ * contains the classes apollo-wind's components use, which misses anything
+ * this app composes inline. `tailwind.css` pulls in Tailwind v4 base/utilities
+ * plus Apollo's design tokens (semantic colours, typography, radii) and
+ * `.dark` overrides (toggled by next-themes).
+ */
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind v4 skips node_modules — scan apollo-wind so its component classes
+   (e.g. Dialog's p-6 / gap-4) regenerate; the second line scans this app. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';
+
+/*
+ * AG Grid (v33+) theme overrides via CSS variables.
+ *
+ * The data-table widget hard-codes `theme: themeQuartz`, which means the
+ * body `light`/`dark` class doesn't reach AG Grid through normal channels.
+ * AG Grid reads its colours from `--ag-*` CSS variables though, so we can
+ * override those globally and they take effect. Light mode uses Quartz
+ * defaults; dark mode maps to apollo-wind tokens so the grid matches the
+ * rest of the app.
+ */
+/*
+ * IMPORTANT: apollo-core defines `--border` as the CSS `border` shorthand
+ * (`1px solid #a4b1b8`), not a colour. The actual colour tokens are
+ * namespaced `--color-*`. For table dividers specifically, apollo ships
+ * `--color-border-grid` (#f4f5f7 light / #273139 dark) — much subtler than
+ * the general-purpose `--color-border` and the design-system convention
+ * for table grid lines.
+ */
+:root {
+  --ag-active-color: var(--color-primary);
+  --ag-selected-row-background-color: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  --ag-row-hover-color: var(--color-background-selected);
+  --ag-header-background-color: var(--color-background-secondary);
+  --ag-border-color: var(--color-border-disabled);
+  --ag-row-border-color: var(--color-border-grid);
+  --ag-font-family: inherit;
+  --ag-font-size: 0.875rem;
+  --ag-grid-size: 6px;
+  --ag-header-height: 44px;
+  --ag-cell-horizontal-padding: 12px;
+
+  /* Quartz draws two vertical lines per header gap: one via
+     .ag-header-cell::before (the "column separator") and another via
+     .ag-header-cell-resize::after (the "resize handle"). We want a single
+     visible line — enable the separator, hide the resize handle's static
+     visual (resize still works on hover). Using `--color-border` because
+     apollo-core's `--color-border-grid` and `--color-border-disabled`
+     happen to share their RGB value with the dark header background in
+     dark mode, which renders them invisible (upstream contrast issue). */
+  --ag-header-column-separator-display: block;
+  --ag-header-column-separator-height: 60%;
+  --ag-header-column-separator-width: 1px;
+  --ag-header-column-separator-color: var(--color-border);
+  --ag-header-column-resize-handle-display: none;
+}
+
+/* Minor polish AG Grid tokens don't cover. */
+.ag-header-cell-label {
+  font-weight: 600;
+}
+.ag-cell-wrap-text {
+  word-break: break-word;
+}
+.ag-row {
+  transition: background-color 80ms ease;
+}
+
+/*
+ * Vertically centre cell content. `autoHeight: true` on columns grows rows to
+ * fit wrapped values; without this the single-line cells hug the top instead
+ * of the row's vertical midpoint.
+ *
+ * Scoped to non-editing cells — when a cell enters edit mode the widget
+ * mounts its editor *inside*, and `display: flex` pushes that to a second
+ * line. The `:not()` keeps editors well-behaved.
+ */
+.ag-cell:not(.ag-cell-inline-editing):not(.ag-cell-not-inline-editing-placeholder) {
+  display: flex;
+  align-items: center;
+}
+
+/*
+ * Loading state — the widget renders `<div class="datatable-loading">Loading...</div>`
+ * top-aligned in the (much taller) wrapping card. Centre it, prepend a
+ * CSS-only spinner via ::before, and swap the default text via ::after.
+ */
+.datatable-loading {
+  height: 100% !important;
+  min-height: 240px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0 !important; /* hide bare text; we render our own via ::after */
+  color: var(--color-foreground-muted);
+}
+.datatable-loading::before,
+.datatable-loading::after {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.datatable-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: datafabric-loading-spin 0.7s linear infinite;
+  opacity: 0.85;
+}
+.datatable-loading::after {
+  content: 'Loading records…';
+  letter-spacing: 0;
+}
+@keyframes datafabric-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Same treatment for the widget's error state. */
+.datatable-error {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--color-error-text);
+  font-size: 0.875rem;
+}
+
+/*
+ * Widget toolbar polish — out of the box the toolbar buttons sit too tight
+ * and lack horizontal padding. Add a divider between toolbar and grid.
+ */
+.uipath-datatable-container > div:first-child {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-disabled);
+  gap: 0.625rem !important;
+  justify-content: flex-end;
+}
+.uipath-datatable-container > div:first-child button {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
+}
+/* Hide the widget's "Group by" dropdown — not part of this sample's UX. */
+.uipath-datatable-container > div:first-child > div.ml-auto {
+  display: none !important;
+}
+
+/*
+ * Collapse the widget toolbar when it has no visible buttons. We hide some
+ * actions via useWidgetToolbarOverrides; an empty toolbar row with padding
+ * + border would leave a stray strip above the grid, so collapse it.
+ */
+.uipath-datatable-container
+  > div:first-child:not(:has(button:not([style*='display: none']))) {
+  display: none !important;
+}
+
+/*
+ * Make the widget fill its wrapping div. EntityDetail wraps the widget in a
+ * fixed-height div so AG Grid has a viewport to expand into, but the widget's
+ * own .uipath-datatable-container sizes to content by default — leaving empty
+ * space between the pagination row and the wrapping card on tall screens.
+ */
+.uipath-datatable-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.uipath-datatable-container > div:last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.uipath-datatable-container .ag-paging-panel {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+}
+.uipath-datatable-container .ag-root-wrapper-body {
+  margin-bottom: 0 !important;
+}
+
+/*
+ * The widget mounts its own `<section aria-label="Notifications alt+T">`
+ * inside .uipath-datatable-container; even empty it takes layout space (Sonner
+ * uses a fixed-height region), creating the trailing gap below pagination. We
+ * render our own Toaster at the app root, so hide the widget's instance.
+ */
+.uipath-datatable-container > section[aria-label*='Notifications'] {
+  display: none !important;
+}
+
+/* Dark-mode AG Grid overrides — apollo-core's `--color-*` tokens swap on
+   `.dark`, so referencing them here Just Works for both themes. */
+.dark {
+  --ag-foreground-color: var(--color-foreground);
+  --ag-background-color: var(--color-background);
+  --ag-header-foreground-color: var(--color-foreground);
+  --ag-header-background-color: var(--color-background-secondary);
+  --ag-row-hover-color: var(--color-background-selected);
+  --ag-selected-row-background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  --ag-odd-row-background-color: var(--color-background);
+  --ag-border-color: var(--color-border-grid);
+  --ag-row-border-color: var(--color-border-grid);
+  --ag-secondary-border-color: var(--color-border-grid);
+  --ag-modal-overlay-background-color: color-mix(in oklab, var(--color-background) 66%, transparent);
+  --ag-control-panel-background-color: var(--color-background-raised);
+  --ag-subheader-background-color: var(--color-background-raised);
+  --ag-input-background-color: var(--color-background-raised);
+  --ag-input-border-color: var(--color-border-grid);
+  --ag-input-focus-border-color: var(--color-primary);
+  --ag-disabled-foreground-color: var(--color-foreground-disable);
+  --ag-active-color: var(--color-primary);
+  --ag-checkbox-checked-color: var(--color-primary);
+  --ag-checkbox-unchecked-color: var(--color-foreground-muted);
+  --ag-range-selection-border-color: var(--color-primary);
+  --ag-tooltip-background-color: var(--color-background-raised);
+}
