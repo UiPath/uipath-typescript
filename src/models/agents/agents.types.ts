@@ -320,19 +320,11 @@ export interface AgentConsumption {
 
 /**
  * Response from getting the top agents by consumption.
- *
- * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
- * fields below are returned directly.
  */
 export interface AgentGetTopConsumptionResponse {
-  /**
-   * Window start date as the API returned it.
-   *
-   * Format: .NET default `M/d/yyyy h:mm:ss tt` (e.g., `"5/1/2025 12:00:00 AM"`)
-   * — NOT ISO 8601. Use `new Date(value)` to parse into a Date.
-   */
+  /** Window start date. */
   startDate?: string;
-  /** Window end date. Same format as `startDate`. */
+  /** Window end date. */
   endDate?: string;
   /** Total quantity consumed across all matching agents in the window. */
   totalConsumed?: number;
@@ -375,11 +367,6 @@ export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
 
 /**
  * Distribution of incidents across types over the requested window.
- *
- * The API wraps this payload in a `data` envelope (and emits a vestigial
- * `pagination` object alongside it that carries no useful information on this
- * non-paginated endpoint); the SDK unwraps the `data` and drops `pagination`
- * so the fields below are returned directly.
  */
 export interface AgentGetIncidentDistributionResponse {
   /** Number of error-type incidents in the window */
