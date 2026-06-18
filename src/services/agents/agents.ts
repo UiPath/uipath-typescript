@@ -519,8 +519,8 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Retrieves the distribution of incidents across types — errors, escalations,
-   * and policy violations — over the requested window.
+   * Retrieves breakdown of agent incidents count — errors, escalations,
+   * and policy violations over a requested window.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
@@ -568,8 +568,10 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Retrieves an aggregate per-agent and overall job/success/duration summary
-   * over the requested window.
+   * Retrieves a job-execution summary for the requested window: overall totals
+   * (total jobs, successful jobs, success rate, average duration) alongside a
+   * per-agent breakdown. When `lookbackPeriodAnalysis` is enabled, a comparable
+   * summary for the preceding window of equal length is included too.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
