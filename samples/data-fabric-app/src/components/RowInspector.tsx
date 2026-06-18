@@ -3,8 +3,8 @@ import { toast } from '@uipath/apollo-wind/components/ui/sonner'
 import { Download } from 'lucide-react'
 import { Entities } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
+import type { EntityGetResponse, EntityRecord } from '@uipath/uipath-typescript/entities'
 import { useAuth } from '../context/AuthContext'
-import type { EntitySchema, EntityRow } from '../hooks/useEntity'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import { downloadBlobAsFile } from '../lib/download'
 interface Props {
   entityId: string
   recordId: string
-  schema: EntitySchema
+  schema: EntityGetResponse
   onClose: () => void
 }
 
@@ -37,7 +37,7 @@ interface Props {
  */
 export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
   const { sdk } = useAuth()
-  const [record, setRecord] = useState<EntityRow | null>(null)
+  const [record, setRecord] = useState<EntityRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [downloadingField, setDownloadingField] = useState<string | null>(null)
@@ -48,8 +48,11 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
       setLoading(true)
       setError(null)
       try {
-        const svc = new Entities(sdk)
-        const r = (await svc.getRecordById(entityId, recordId)) as EntityRow
+        const entityService = new Entities(sdk)
+        const r = (await entityService.getRecordById(
+          entityId,
+          recordId,
+        )) as EntityRecord
         if (!cancelled) setRecord(r)
       } catch (err) {
         if (!cancelled) {
@@ -70,8 +73,12 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
   const handleDownload = async (fieldName: string) => {
     setDownloadingField(fieldName)
     try {
-      const svc = new Entities(sdk)
-      const blob = await svc.downloadAttachment(entityId, recordId, fieldName)
+      const entityService = new Entities(sdk)
+      const blob = await entityService.downloadAttachment(
+        entityId,
+        recordId,
+        fieldName,
+      )
       // Use the field name as filename. The blob has a `type` so the browser
       // will pick a sensible default extension, but we can't recover the
       // original filename without it being stored elsewhere.

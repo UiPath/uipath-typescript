@@ -43,9 +43,9 @@ export function useChoiceSets(): UseChoiceSetsResult {
     setLoading(true)
     setError(null)
     try {
-      const svc = new ChoiceSets(sdk)
+      const choiceSetService = new ChoiceSets(sdk)
       // `ChoiceSets.getAll()` returns `ChoiceSetGetAllResponse[]` directly.
-      const list = await svc.getAll()
+      const list = await choiceSetService.getAll()
       setChoiceSets(list)
     } catch (err) {
       setError(

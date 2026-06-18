@@ -1,11 +1,12 @@
 import { Database } from 'lucide-react'
-import type { EntityField, EntityRow } from '../hooks/useEntity'
+import type { EntityRecord } from '@uipath/uipath-typescript/entities'
+import type { EntityField } from '../hooks/useEntity'
 import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
 
 interface Props {
   fields: EntityField[]
-  records: EntityRow[]
+  records: EntityRecord[]
   loading: boolean
   error: string | null
   /** Click handler on the `Id` cell — opens the Row Inspector if provided. */

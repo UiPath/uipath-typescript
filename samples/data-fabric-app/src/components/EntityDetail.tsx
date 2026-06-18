@@ -11,7 +11,7 @@ import { useEntity } from '../hooks/useEntity'
 import { useWidgetToolbarOverrides } from '../hooks/useWidgetToolbar'
 import { exportRecordsAsCsv } from '../lib/csvExport'
 import { toast } from '@uipath/apollo-wind/components/ui/sonner'
-import type { EntitySchema } from '../hooks/useEntity'
+import type { EntityGetResponse } from '@uipath/uipath-typescript/entities'
 import { Skeleton } from '@uipath/apollo-wind/components/ui/skeleton'
 import { ChoiceSetView } from './ChoiceSetView'
 import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
@@ -28,8 +28,8 @@ import {
   isVirtualDataObject,
 } from '../lib/entityTypes'
 
-// Re-export types from the hook so any external imports keep working.
-export type { EntityField, EntityRow, EntitySchema } from '../hooks/useEntity'
+// Re-export the field-metadata helper type so any external imports keep working.
+export type { EntityField } from '../hooks/useEntity'
 
 interface Props {
   entityId: string
@@ -399,7 +399,7 @@ function EntityHeader({
   badgeTooltip,
   readOnly,
 }: {
-  schema: EntitySchema
+  schema: EntityGetResponse
   showTypeBadge: boolean
   badgeLabel: string | undefined
   badgeTooltip: string
@@ -450,7 +450,7 @@ function EntityHeader({
   )
 }
 
-function SchemaTable({ fields }: { fields: EntitySchema['fields'] }) {
+function SchemaTable({ fields }: { fields: EntityGetResponse['fields'] }) {
   return (
     <table className="w-full">
       <thead className="text-left text-xs text-muted-foreground">

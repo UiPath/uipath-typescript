@@ -1,4 +1,5 @@
-import type { EntityRow, EntityField } from '../hooks/useEntity'
+import type { EntityRecord } from '@uipath/uipath-typescript/entities'
+import type { EntityField } from '../hooks/useEntity'
 import { downloadBlobAsFile } from './download'
 
 /** Matches characters that require RFC 4180 quoting in a CSV cell. */
@@ -25,7 +26,7 @@ const CSV_QUOTE_REGEX = /"/g
 export function exportRecordsAsCsv(
   filename: string,
   fields: EntityField[],
-  records: EntityRow[],
+  records: EntityRecord[],
 ): void {
   // Pick exportable columns: skip attachments. Put Id first.
   const exportable = fields.filter((f) => !f.isAttachment)

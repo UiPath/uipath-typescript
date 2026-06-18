@@ -20,15 +20,9 @@ import { entityNotSupportedReason } from '../lib/entityTypes'
  */
 export type EntityField = FieldMetaData & { displayName?: string }
 
-/** Entity schema returned by `Entities.getById()`. */
-export type EntitySchema = EntityGetResponse
-
-/** A single record. `Id` is always present; other fields are dynamic per entity. */
-export type EntityRow = EntityRecord
-
 export interface UseEntityResult {
-  schema: EntitySchema | null
-  records: EntityRow[]
+  schema: EntityGetResponse | null
+  records: EntityRecord[]
   loading: boolean
   recordsLoading: boolean
   error: string | null
@@ -42,7 +36,7 @@ export interface UseEntityResult {
    * wait for React's next render to see updated state (handy for things
    * like CSV export where we want the new data immediately).
    */
-  reloadRecords: () => Promise<EntityRow[]>
+  reloadRecords: () => Promise<EntityRecord[]>
 }
 
 /**
@@ -69,15 +63,15 @@ export interface UseEntityResult {
  */
 export function useEntity(entityId: string): UseEntityResult {
   const { sdk } = useAuth()
-  const [schema, setSchema] = useState<EntitySchema | null>(null)
-  const [records, setRecords] = useState<EntityRow[]>([])
+  const [schema, setSchema] = useState<EntityGetResponse | null>(null)
+  const [records, setRecords] = useState<EntityRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [recordsLoading, setRecordsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recordsError, setRecordsError] = useState<string | null>(null)
 
   const fetchRecords = useCallback(
-    async (entity: EntitySchema): Promise<EntityRow[]> => {
+    async (entity: EntityGetResponse): Promise<EntityRecord[]> => {
       if (entityNotSupportedReason(entity)) {
         // VDOs, InternalEntity, SystemEntity, ChoiceSet — the records endpoint
         // doesn't apply. The UI shows a friendly notice instead.
@@ -87,20 +81,22 @@ export function useEntity(entityId: string): UseEntityResult {
       setRecordsLoading(true)
       setRecordsError(null)
       try {
-        const svc = new Entities(sdk)
+        const entityService = new Entities(sdk)
         // Each `getAllRecords` call returns ONE server-capped page — passing no
         // options does NOT return every row. Loop the cursor and accumulate so
         // the full record set is available to CSV export (which must not
         // silently truncate large entities to the first page).
-        const all: EntityRow[] = []
-        let page = await svc.getAllRecords(entityId, { pageSize: 100 })
-        all.push(...page.items)
+        const allRecords: EntityRecord[] = []
+        let page = await entityService.getAllRecords(entityId, { pageSize: 100 })
+        allRecords.push(...page.items)
         while (page.hasNextPage && page.nextCursor) {
-          page = await svc.getAllRecords(entityId, { cursor: page.nextCursor })
-          all.push(...page.items)
+          page = await entityService.getAllRecords(entityId, {
+            cursor: page.nextCursor,
+          })
+          allRecords.push(...page.items)
         }
-        setRecords(all)
-        return all
+        setRecords(allRecords)
+        return allRecords
       } catch (err) {
         setRecordsError(
           err instanceof UiPathError ? err.message : 'Failed to load records',
@@ -113,7 +109,7 @@ export function useEntity(entityId: string): UseEntityResult {
     [sdk, entityId],
   )
 
-  const reloadRecords = useCallback(async (): Promise<EntityRow[]> => {
+  const reloadRecords = useCallback(async (): Promise<EntityRecord[]> => {
     if (!schema) return []
     return fetchRecords(schema)
   }, [schema, fetchRecords])
@@ -124,8 +120,8 @@ export function useEntity(entityId: string): UseEntityResult {
     setRecords([])
     setRecordsError(null)
     try {
-      const svc = new Entities(sdk)
-      const entity = await svc.getById(entityId)
+      const entityService = new Entities(sdk)
+      const entity = await entityService.getById(entityId)
       setSchema(entity)
       // NOTE: We deliberately do NOT call `fetchRecords` here. The records
       // widget (`<DataTable>`) owns its own data layer and runs

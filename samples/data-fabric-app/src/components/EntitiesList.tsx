@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@uipath/apollo-wind/components/ui/tooltip'
 import { useEntities } from '../hooks/useEntities'
-import type { EntityListItem } from '../hooks/useEntities'
+import type { EntityGetResponse } from '@uipath/uipath-typescript/entities'
 import { useChoiceSets } from '../hooks/useChoiceSets'
 import type { ChoiceSetListItem } from '../hooks/useChoiceSets'
 import { entityTypeTooltip, isVirtualDataObject } from '../lib/entityTypes'
@@ -369,7 +369,7 @@ function EntityRow({
   selected,
   onSelect,
 }: {
-  entity: EntityListItem
+  entity: EntityGetResponse
   selected: boolean
   onSelect: (id: string) => void
 }) {

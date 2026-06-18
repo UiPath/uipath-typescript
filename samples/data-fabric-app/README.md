@@ -9,7 +9,6 @@ A sample React + TypeScript application for browsing and managing **UiPath Data 
 ```typescript
 // Core SDK for authentication
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 // Entities + ChoiceSets services
 import { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';

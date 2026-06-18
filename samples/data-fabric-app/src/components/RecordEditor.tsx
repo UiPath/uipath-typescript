@@ -88,11 +88,11 @@ export function RecordEditor({
     if (choiceSetIds.length === 0) return
     let cancelled = false
     const load = async () => {
-      const svc = new ChoiceSets(sdk)
+      const choiceSetService = new ChoiceSets(sdk)
       const next: Record<string, ChoiceSetGetResponse[]> = {}
       for (const id of choiceSetIds) {
         try {
-          const { items } = await svc.getById(id, { pageSize: 100 })
+          const { items } = await choiceSetService.getById(id, { pageSize: 100 })
           next[id] = items
         } catch (err) {
           console.error(`Failed to load choice set ${id}:`, err)
@@ -142,7 +142,7 @@ export function RecordEditor({
 
     setSaving(true)
     try {
-      const svc = new Entities(sdk)
+      const entityService = new Entities(sdk)
 
       const payload: Record<string, unknown> = {}
       for (const f of regularFields) {
@@ -153,14 +153,14 @@ export function RecordEditor({
 
       // `insertRecordById` returns `EntityInsertResponse extends EntityRecord`,
       // so `Id` is guaranteed to be present.
-      const result = await svc.insertRecordById(entityId, payload)
+      const result = await entityService.insertRecordById(entityId, payload)
       const recordId = result.Id
 
       // Upload attachments. Each is a separate API call against the new
       // record id; we don't fail the whole save if one fails.
       for (const [fieldName, file] of Object.entries(files)) {
         try {
-          await svc.uploadAttachment(entityId, recordId, fieldName, file)
+          await entityService.uploadAttachment(entityId, recordId, fieldName, file)
         } catch (err) {
           toast.error(`Upload ${fieldName} failed`, {
             description:
