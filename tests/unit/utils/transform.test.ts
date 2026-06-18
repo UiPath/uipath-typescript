@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   rewriteODataIdentifiers,
-  rewriteODataRequestFields,
+  transformOptions,
 } from '../../../src/utils/transform';
 
 describe('rewriteODataIdentifiers', () => {
@@ -99,7 +99,7 @@ describe('rewriteODataIdentifiers', () => {
   });
 });
 
-describe('rewriteODataRequestFields', () => {
+describe('transformOptions', () => {
   // Response map: API → SDK (reversed internally before applying).
   const responseMap = {
     releaseName: 'processName',
@@ -108,7 +108,7 @@ describe('rewriteODataRequestFields', () => {
   };
 
   it('rewrites all four OData string params', () => {
-    const out = rewriteODataRequestFields(
+    const out = transformOptions(
       {
         filter: "processName eq 'X'",
         orderby: 'createdTime desc',
@@ -126,7 +126,7 @@ describe('rewriteODataRequestFields', () => {
   });
 
   it('passes through unrelated options unchanged', () => {
-    const out = rewriteODataRequestFields(
+    const out = transformOptions(
       {
         filter: "processName eq 'X'",
         pageSize: 10,
@@ -142,7 +142,7 @@ describe('rewriteODataRequestFields', () => {
   });
 
   it('ignores non-string values on OData keys', () => {
-    const out = rewriteODataRequestFields(
+    const out = transformOptions(
       { filter: undefined, orderby: null as unknown as string },
       responseMap,
     );
@@ -151,12 +151,12 @@ describe('rewriteODataRequestFields', () => {
 
   it('is a no-op when the response map is empty', () => {
     const input = { filter: "processName eq 'X'" };
-    expect(rewriteODataRequestFields(input, {})).toEqual(input);
+    expect(transformOptions(input, {})).toEqual(input);
   });
 
   it('does not mutate the input object', () => {
     const input = { filter: "processName eq 'X'" };
-    const out = rewriteODataRequestFields(input, responseMap);
+    const out = transformOptions(input, responseMap);
     expect(input.filter).toBe("processName eq 'X'");
     expect(out.filter).toBe("releaseName eq 'X'");
   });

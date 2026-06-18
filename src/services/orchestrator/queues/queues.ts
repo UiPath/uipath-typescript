@@ -5,7 +5,7 @@ import {
   QueueGetByIdOptions
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { QUEUE_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -81,7 +81,6 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       getEndpoint: (folderId) => folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformQueueResponse,
-      fieldMap: QueueMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -115,10 +114,9 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    const rewrittenOptions = rewriteODataRequestFields(options, QueueMap);
-    const keysToPrefix = Object.keys(rewrittenOptions);
-    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
+    
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<QueueGetResponse>(
       QUEUE_ENDPOINTS.GET_BY_ID(id),

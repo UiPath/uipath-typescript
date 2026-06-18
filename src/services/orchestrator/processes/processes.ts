@@ -10,7 +10,7 @@ import {
   ProcessStartOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData, transformRequest } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -87,7 +87,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
       transformFn: transformProcessResponse,
-      fieldMap: ProcessMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -188,11 +187,9 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       startInfo: apiRequest
     };
 
-    // Rewrite SDK field names → API field names inside OData strings, then
-    // prefix all query parameter keys with '$' for OData.
-    const rewrittenQueryOptions = rewriteODataRequestFields(queryOptions, ProcessMap);
-    const keysToPrefix = Object.keys(rewrittenQueryOptions);
-    const apiOptions = addPrefixToKeys(rewrittenQueryOptions, ODATA_PREFIX, keysToPrefix);
+    // Prefix all query parameter keys with '$' for OData
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
 
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
@@ -231,10 +228,9 @@ export class ProcessService extends FolderScopedService implements ProcessServic
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    const rewrittenOptions = rewriteODataRequestFields(options, ProcessMap);
-    const keysToPrefix = Object.keys(rewrittenOptions);
-    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
+    
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<ProcessGetResponse>(
       PROCESS_ENDPOINTS.GET_BY_ID(id),
@@ -283,7 +279,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       name,
       options,
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
-      ProcessMap,
     );
   }
 }

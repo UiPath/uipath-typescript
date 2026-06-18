@@ -3,7 +3,7 @@ import { CollectionResponse, FolderScopedOptions } from '../models/common/types'
 import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
 import { ODATA_PREFIX } from '../utils/constants/common';
-import { addPrefixToKeys, rewriteODataRequestFields, FieldMapping } from '../utils/transform';
+import { addPrefixToKeys } from '../utils/transform';
 import { NotFoundError } from '../core/errors';
 import { validateName } from '../utils/validation/name-validator';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
@@ -38,14 +38,12 @@ export class FolderScopedService extends BaseService {
     endpoint: string,
     folderId: number,
     options: Record<string, any> = {},
-    transformFn?: (item: T) => R,
-    fieldMap?: FieldMapping,
+    transformFn?: (item: T) => R
   ): Promise<R[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
-    const rewrittenOptions = fieldMap ? rewriteODataRequestFields(options, fieldMap) : options;
-    const keysToPrefix = Object.keys(rewrittenOptions);
-    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
 
     const response = await this.get<CollectionResponse<T>>(
       endpoint,
@@ -90,7 +88,6 @@ export class FolderScopedService extends BaseService {
     name: string,
     options: FolderScopedOptions,
     transform: (raw: TRaw) => T,
-    fieldMap?: FieldMapping,
   ): Promise<T> {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
@@ -103,11 +100,8 @@ export class FolderScopedService extends BaseService {
       fallbackFolderKey: this.config.folderKey,
     });
 
-    const rewrittenQueryOptions = fieldMap
-      ? rewriteODataRequestFields(queryOptions, fieldMap)
-      : queryOptions;
     const apiOptions = {
-      ...addPrefixToKeys(rewrittenQueryOptions, ODATA_PREFIX, Object.keys(rewrittenQueryOptions)),
+      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, Object.keys(queryOptions)),
       '$filter': `Name eq '${validatedName.replace(SINGLE_QUOTE_RE, "''")}'`,
       '$top': '1',
     };

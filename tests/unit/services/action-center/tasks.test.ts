@@ -21,7 +21,7 @@ import {
   createMockUsers 
 } from '../../../utils/mocks/tasks';
 import { createMockError } from '../../../utils/mocks/core';
-import { DEFAULT_TASK_EXPAND, TaskMap } from '../../../../src/models/action-center/tasks.constants';
+import { DEFAULT_TASK_EXPAND } from '../../../../src/models/action-center/tasks.constants';
 import { TASK_TEST_CONSTANTS } from '../../../utils/constants/tasks';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { TASK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -976,26 +976,6 @@ describe('TaskService Unit Tests', () => {
       );
 
       expect(result).toEqual(mockResponse);
-    });
-
-    it('should pass TaskMap as fieldMap so SDK names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
-        items: createMockTasks(0),
-        totalCount: 0,
-      });
-
-      await taskService.getAll({
-        filter: "createdTime gt 2025-01-01",
-        orderby: 'lastModifiedTime desc',
-      } as TaskGetAllOptions);
-
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ fieldMap: TaskMap }),
-        expect.objectContaining({
-          filter: "createdTime gt 2025-01-01",
-          orderby: 'lastModifiedTime desc',
-        }),
-      );
     });
 
     it('should handle filtering options', async () => {

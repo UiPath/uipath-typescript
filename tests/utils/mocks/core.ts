@@ -17,7 +17,7 @@ export const mockTransformUtils = {
   transformData: vi.fn((data) => data),
   applyDataTransforms: vi.fn((data) => data),
   addPrefixToKeys: vi.fn((obj) => obj),
-  rewriteODataRequestFields: vi.fn((options) => options),
+  transformOptions: vi.fn((options) => options),
 };
 
 /**

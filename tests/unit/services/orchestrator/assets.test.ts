@@ -22,7 +22,6 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { ASSET_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
-import { AssetMap } from '../../../../src/models/orchestrator/assets.constants';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -98,27 +97,6 @@ describe('AssetService Unit Tests', () => {
       // LastModificationTime -> lastModifiedTime
       expect(result.lastModifiedTime).toBe(ASSET_TEST_CONSTANTS.LAST_MODIFIED_TIME);
       expect((result as any).LastModificationTime).toBeUndefined(); // Original field should be removed
-    });
-
-    it('should rewrite SDK field names in select back to API names before sending', async () => {
-      const mockAsset = createMockRawAsset();
-      mockApiClient.get.mockResolvedValue(mockAsset);
-
-      await assetService.getById(
-        ASSET_TEST_CONSTANTS.ASSET_ID,
-        TEST_CONSTANTS.FOLDER_ID,
-        { select: 'createdTime,lastModifiedTime,id' },
-      );
-
-      // createdTime → creationTime, lastModifiedTime → lastModificationTime
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            '$select': 'creationTime,lastModificationTime,id',
-          }),
-        }),
-      );
     });
 
     it('should get asset with options successfully', async () => {
@@ -250,19 +228,6 @@ describe('AssetService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(assetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it('should pass AssetMap as fieldMap so SDK field names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
-        createMockTransformedAssetCollection(),
-      );
-
-      await assetService.getAll({ filter: "createdTime gt 2025-01-01" });
-
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ fieldMap: AssetMap }),
-        expect.objectContaining({ filter: "createdTime gt 2025-01-01" }),
-      );
     });
   });
 

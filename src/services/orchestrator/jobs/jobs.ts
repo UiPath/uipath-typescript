@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformOptions, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
@@ -149,7 +149,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const rewrittenOptions = options ? rewriteODataRequestFields(options, JobMap) : undefined;
+    const rewrittenOptions = options ? transformOptions(options, JobMap) : undefined;
     const keysToPrefix = Object.keys(rewrittenOptions ?? {});
     const apiOptions = rewrittenOptions ? addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix) : {};
 

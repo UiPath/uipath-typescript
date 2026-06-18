@@ -29,7 +29,7 @@ import { processODataArrayResponse } from '../../utils/object';
 import { HasPaginationOptions, NonPaginatedResponse, PaginatedResponse } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
-import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, rewriteODataRequestFields, transformData } from '../../utils/transform';
+import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { BaseService } from '../base';
 
 /**
@@ -219,7 +219,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
       getEndpoint: () => endpoint,
       transformFn: transformTaskResponse,
       processParametersFn: this.processTaskParameters,
-      fieldMap: TaskMap,
       excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -273,11 +272,9 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Add default expand parameters
     const modifiedOptions = this.addDefaultExpand(restOptions);
 
-    // Rewrite renamed SDK field names → API names inside OData strings, then
-    // prefix all keys in options for OData.
-    const rewrittenOptions = rewriteODataRequestFields(modifiedOptions, TaskMap);
-    const keysToPrefix = Object.keys(rewrittenOptions);
-    const apiOptions = addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix);
+    // prefix all keys in options
+    const keysToPrefix = Object.keys(modifiedOptions);
+    const apiOptions = addPrefixToKeys(modifiedOptions, ODATA_PREFIX, keysToPrefix);
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_BY_ID(id),
       {

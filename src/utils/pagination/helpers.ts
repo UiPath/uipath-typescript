@@ -10,7 +10,7 @@ import {
 import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
 import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
-import { addPrefixToKeys, rewriteODataRequestFields } from '../transform';
+import { addPrefixToKeys, transformOptions } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined, resolveNestedField } from '../object';
 import { decodeBase64 } from '../encoding/base64';
@@ -317,7 +317,7 @@ export class PaginationHelpers {
     // Rewrite SDK field names → API field names inside OData filter/orderby/
     // select/expand strings, so consumers can use renamed fields end-to-end.
     const rewrittenOptions = config.fieldMap
-      ? rewriteODataRequestFields(processedOptions, config.fieldMap)
+      ? transformOptions(processedOptions, config.fieldMap)
       : processedOptions;
 
     // Apply ODATA prefix to keys (excluding specified keys)

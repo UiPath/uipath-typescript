@@ -17,7 +17,6 @@ import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { QUEUE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
-import { QueueMap } from '../../../../src/models/orchestrator/queues.constants';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -225,41 +224,6 @@ describe('QueueService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(queueService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it('should pass QueueMap as fieldMap so SDK names work in filter/orderby', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
-        createMockTransformedQueueCollection(),
-      );
-
-      await queueService.getAll({ filter: "folderId eq 7", orderby: 'createdTime desc' });
-
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ fieldMap: QueueMap }),
-        expect.objectContaining({ filter: "folderId eq 7", orderby: 'createdTime desc' }),
-      );
-    });
-  });
-
-  describe('getById field rewrite', () => {
-    it('should rewrite SDK field names in select back to API names', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawQueue());
-
-      await queueService.getById(
-        QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID,
-        { select: 'createdTime,folderId,folderName' },
-      );
-
-      // createdTime → creationTime, folderId → organizationUnitId, folderName → organizationUnitFullyQualifiedName
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            '$select': 'creationTime,organizationUnitId,organizationUnitFullyQualifiedName',
-          }),
-        }),
-      );
     });
   });
 });

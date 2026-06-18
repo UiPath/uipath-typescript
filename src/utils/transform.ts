@@ -455,12 +455,13 @@ export function rewriteODataIdentifiers(expression: string, requestMap: FieldMap
 }
 
 /**
- * Applies OData identifier rewriting to the recognized OData string params
- * (`filter`, `orderby`, `select`, `expand`) in an options object, using the
+ * Symmetric counterpart of {@link transformRequest} for OData query options:
+ * rewrites SDK field identifiers inside the recognized OData string params
+ * (`filter`, `orderby`, `select`, `expand`) to their API names using the
  * reversed form of a response field map. Returns a shallow copy with the
  * relevant values rewritten; other keys pass through unchanged.
  *
- * Used at the OData edge so SDK consumers can refer to renamed fields by
+ * Use at the OData edge so SDK consumers can refer to renamed fields by
  * their SDK name throughout — for reading the response and for filtering /
  * sorting / projecting / expanding.
  *
@@ -470,11 +471,11 @@ export function rewriteODataIdentifiers(expression: string, requestMap: FieldMap
  * @example
  * ```typescript
  * // JobMap renames releaseName → processName on responses.
- * rewriteODataRequestFields({ filter: "processName eq 'X'" }, JobMap);
+ * transformOptions({ filter: "processName eq 'X'" }, JobMap);
  * // { filter: "releaseName eq 'X'" }
  * ```
  */
-export function rewriteODataRequestFields<T extends Record<string, any>>(
+export function transformOptions<T extends Record<string, any>>(
   options: T,
   responseMap: FieldMapping,
 ): T {
