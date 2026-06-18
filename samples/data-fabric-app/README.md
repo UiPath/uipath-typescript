@@ -124,33 +124,32 @@ Open `http://localhost:5173`.
 ```
 src/
 ├── components/
-│   ├── ChoiceSetDetail.tsx   # Right pane when a choice set is selected
-│   ├── ChoiceSetView.tsx     # Values table for one choice set
-│   ├── EntitiesList.tsx      # Left sidebar (Entities + Choice Sets sections)
-│   ├── EntityDetail.tsx      # Right pane when an entity is selected
-│   ├── Header.tsx            # App header + Sign out
-│   ├── LoginScreen.tsx       # OAuth login screen
-│   ├── RecordEditor.tsx      # Modal form for create + edit
-│   ├── RowInspector.tsx      # Read-only modal showing all fields incl. system
-│   ├── ThemeProvider.tsx     # Light/dark mode wiring (next-themes)
-│   ├── ThemeToggle.tsx       # Sun/moon toggle button
-│   └── ui/                   # shadcn primitives (Button, Dialog, ...)
+│   ├── ChoiceSetDetail.tsx       # Right pane when a choice set is selected
+│   ├── ChoiceSetView.tsx         # Values table for one choice set
+│   ├── EntitiesList.tsx          # Left sidebar (Entities + Choice Sets sections)
+│   ├── EntityDetail.tsx          # Right pane when an entity is selected
+│   ├── Header.tsx                # App header + Sign out
+│   ├── LoginScreen.tsx           # OAuth login screen
+│   ├── ReadOnlyRecordsTable.tsx  # Records grid for read-only entities (e.g. SystemEntity)
+│   ├── RecordEditor.tsx          # Modal form for create + edit
+│   ├── RowInspector.tsx          # Read-only modal showing all fields incl. system
+│   ├── ThemeProvider.tsx         # Light/dark mode wiring (next-themes)
+│   └── ThemeToggle.tsx           # Sun/moon toggle button
+├── context/
+│   └── AuthContext.tsx           # SDK init + auth context
 ├── hooks/
-│   ├── useAuth.tsx           # SDK init + auth context
-│   ├── useChoiceSet.ts       # ChoiceSets.getById
-│   ├── useChoiceSets.ts      # ChoiceSets.getAll
-│   ├── useEntities.ts        # Entities.getAll
-│   ├── useEntity.ts          # Entities.getById + record fetcher
-│   └── useWidgetToolbar.ts   # Hides widget actions we've replaced in our UI
+│   ├── useChoiceSet.ts           # ChoiceSets.getById
+│   ├── useChoiceSets.ts          # ChoiceSets.getAll
+│   ├── useEntities.ts            # Entities.getAll
+│   ├── useEntity.ts              # Entities.getById + record fetcher
+│   └── useWidgetToolbar.ts       # Hides widget actions we've replaced in our UI
 ├── lib/
-│   ├── csvExport.ts          # Records → CSV download
-│   ├── download.ts           # Blob → file helper
-│   ├── entityTypes.ts        # VDO / Case / ChoiceSet detection
-│   ├── utils.ts              # shadcn `cn` helper
-│   └── widgetCompat.ts       # Widget/SDK telemetry shim
-├── App.tsx                   # Routes between EntityDetail / ChoiceSetDetail
-├── index.css                 # Apollo Vertex tokens, AG Grid overrides
-└── main.tsx                  # Entry point
+│   ├── csvExport.ts              # Records → CSV download
+│   ├── download.ts               # Blob → file helper
+│   └── entityTypes.ts            # Entity-type classification (VDO / ChoiceSet / read-only)
+├── App.tsx                       # Routes between EntityDetail / ChoiceSetDetail
+├── index.css                     # Apollo Vertex tokens, AG Grid overrides
+└── main.tsx                      # Entry point
 ```
 
 ## Key Features
