@@ -237,12 +237,12 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopErroredAgents', () => {
+  describe('getTopErrorCount', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
     it('should retrieve top-N agents ranked by error count', async () => {
-      const result = await agents.getTopErroredAgents(startTime, endTime);
+      const result = await agents.getTopErrorCount(startTime, endTime);
 
       expect(result).toBeDefined();
       if (typeof result.totalErrors === 'number') {
@@ -263,7 +263,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
 
     it('should respect the limit option', async () => {
-      const result = await agents.getTopErroredAgents(startTime, endTime, { limit: 3 });
+      const result = await agents.getTopErrorCount(startTime, endTime, { limit: 3 });
 
       if (!result.data || result.data.length === 0) {
         throw new Error(
@@ -275,12 +275,12 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopConsumingAgents', () => {
+  describe('getTopConsumption', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
     it('should retrieve top-N consuming agents with aggregate totals', async () => {
-      const result = await agents.getTopConsumingAgents(startTime, endTime);
+      const result = await agents.getTopConsumption(startTime, endTime);
 
       expect(result).toBeDefined();
       // Window dates are echoed as .NET-formatted strings (not ISO)
@@ -302,7 +302,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
 
     it('should accept a limit and an agentTypes filter', async () => {
-      const result = await agents.getTopConsumingAgents(startTime, endTime, {
+      const result = await agents.getTopConsumption(startTime, endTime, {
         limit: 3,
         agentTypes: [AgentType.Autonomous],
       });

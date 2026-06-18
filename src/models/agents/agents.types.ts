@@ -241,10 +241,10 @@ export interface AgentGetLatencyTimelineResponse {
 export interface AgentGetLatencyTimelineOptions extends AgentFilterOptions {}
 
 /**
- * One entry in the top-errored agents list — one agent with its error count
+ * One entry in the top-error-count list — one agent with its error count
  * and first/last observed failing jobs.
  */
-export interface AgentTopErroredAgent {
+export interface AgentTopErrorCount {
   /** Agent name */
   name: string;
   /** Error count for this agent over the requested window */
@@ -258,19 +258,19 @@ export interface AgentTopErroredAgent {
 }
 
 /**
- * Response from getting the top-errored agents.
+ * Response from getting the top agents by error count.
  */
-export interface AgentGetTopErroredAgentsResponse {
+export interface AgentGetTopErrorCountResponse {
   /** Total error count across all agents in the window. */
   totalErrors?: number;
   /** Top-N agents ranked by error count. May be absent when no data matches. */
-  data?: AgentTopErroredAgent[];
+  data?: AgentTopErrorCount[];
 }
 
 /**
- * Options for getting the top-errored agents.
+ * Options for getting the top agents by error count.
  */
-export interface AgentGetTopErroredAgentsOptions extends AgentFilterOptions {
+export interface AgentGetTopErrorCountOptions extends AgentFilterOptions {
   /** Max number of agents to return. Defaults to 10 server-side. */
   limit?: number;
 }
@@ -287,7 +287,7 @@ export enum AgentType {
 }
 
 /**
- * Per-agent consumption entry returned by getting the top-consuming agents.
+ * Per-agent consumption entry returned by getting the top agents by consumption.
  */
 export interface AgentConsumption {
   /** Agent ID (GUID) */
@@ -307,12 +307,12 @@ export interface AgentConsumption {
 }
 
 /**
- * Response from getting the top-consuming agents.
+ * Response from getting the top agents by consumption.
  *
  * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
  * fields below are returned directly.
  */
-export interface AgentGetTopConsumingAgentsResponse {
+export interface AgentGetTopConsumptionResponse {
   /**
    * Window start date as the API returned it.
    *
@@ -335,9 +335,9 @@ export interface AgentGetTopConsumingAgentsResponse {
 }
 
 /**
- * Options for getting the top-consuming agents.
+ * Options for getting the top agents by consumption.
  */
-export interface AgentGetTopConsumingAgentsOptions extends AgentFilterOptions {
+export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
   /** Max number of agents to return. Defaults to 10 server-side. */
   limit?: number;
   /**

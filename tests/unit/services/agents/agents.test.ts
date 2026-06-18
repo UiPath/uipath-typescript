@@ -519,7 +519,7 @@ describe('AgentService Unit Tests', () => {
     });
   });
 
-  describe('getTopErroredAgents', () => {
+  describe('getTopErrorCount', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
     const mockJob = {
@@ -547,13 +547,13 @@ describe('AgentService Unit Tests', () => {
     it('should return the object with only the window in the body when no options are provided', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await agentService.getTopErroredAgents(startTime, endTime);
+      const result = await agentService.getTopErrorCount(startTime, endTime);
 
       expect(result.totalErrors).toBe(68);
       expect(result.data).toEqual(mockResponse.data);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
-      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS);
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_ERROR_COUNT);
       expect(body.startTime).toBe(startTime.toISOString());
       expect(body.endTime).toBe(endTime.toISOString());
       expect('limit' in body).toBe(false);
@@ -563,7 +563,7 @@ describe('AgentService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue({});
 
       const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
-      await agentService.getTopErroredAgents(startTime, endTime, {
+      await agentService.getTopErrorCount(startTime, endTime, {
         folderKeys,
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
@@ -581,7 +581,7 @@ describe('AgentService Unit Tests', () => {
     it('should omit undefined fields when the API returns an empty object', async () => {
       mockApiClient.post.mockResolvedValue({});
 
-      const result = await agentService.getTopErroredAgents(startTime, endTime);
+      const result = await agentService.getTopErrorCount(startTime, endTime);
 
       expect(result.totalErrors).toBeUndefined();
       expect(result.data).toBeUndefined();
@@ -591,12 +591,12 @@ describe('AgentService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
 
       await expect(
-        agentService.getTopErroredAgents(startTime, endTime),
+        agentService.getTopErrorCount(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
 
-  describe('getTopConsumingAgents', () => {
+  describe('getTopConsumption', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
     const mockJob = {
@@ -631,7 +631,7 @@ describe('AgentService Unit Tests', () => {
     it('should unwrap the data envelope and return the flat payload', async () => {
       mockApiClient.post.mockResolvedValue({ data: mockPayload });
 
-      const result = await agentService.getTopConsumingAgents(startTime, endTime);
+      const result = await agentService.getTopConsumption(startTime, endTime);
 
       expect(result.totalConsumed).toBe(42.5);
       expect(result.agents).toEqual(mockPayload.agents);
@@ -639,7 +639,7 @@ describe('AgentService Unit Tests', () => {
       expect((result as { data?: unknown }).data).toBeUndefined();
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
-      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS);
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION);
       expect(body.startTime).toBe(startTime.toISOString());
       expect(body.endTime).toBe(endTime.toISOString());
     });
@@ -647,7 +647,7 @@ describe('AgentService Unit Tests', () => {
     it('should send health filters and join agentTypes into a comma-separated string', async () => {
       mockApiClient.post.mockResolvedValue({ data: {} });
 
-      await agentService.getTopConsumingAgents(startTime, endTime, {
+      await agentService.getTopConsumption(startTime, endTime, {
         limit: 5,
         healthy: true,
         healthThreshold: 80,
@@ -664,7 +664,7 @@ describe('AgentService Unit Tests', () => {
     it('should send healthy:false distinct from unset', async () => {
       mockApiClient.post.mockResolvedValue({ data: {} });
 
-      await agentService.getTopConsumingAgents(startTime, endTime, { healthy: false });
+      await agentService.getTopConsumption(startTime, endTime, { healthy: false });
 
       const [, body] = mockApiClient.post.mock.calls[0];
       expect(body.healthy).toBe(false);
@@ -673,7 +673,7 @@ describe('AgentService Unit Tests', () => {
     it('should return an empty object when the envelope data is absent', async () => {
       mockApiClient.post.mockResolvedValue({});
 
-      const result = await agentService.getTopConsumingAgents(startTime, endTime);
+      const result = await agentService.getTopConsumption(startTime, endTime);
 
       expect(result).toEqual({});
     });
@@ -682,7 +682,7 @@ describe('AgentService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
 
       await expect(
-        agentService.getTopConsumingAgents(startTime, endTime),
+        agentService.getTopConsumption(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });

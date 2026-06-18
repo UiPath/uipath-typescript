@@ -9,10 +9,10 @@ import {
   AgentFilterOptions,
   AgentGetLatencyTimelineOptions,
   AgentGetLatencyTimelineResponse,
-  AgentGetTopErroredAgentsOptions,
-  AgentGetTopErroredAgentsResponse,
-  AgentGetTopConsumingAgentsOptions,
-  AgentGetTopConsumingAgentsResponse,
+  AgentGetTopErrorCountOptions,
+  AgentGetTopErrorCountResponse,
+  AgentGetTopConsumptionOptions,
+  AgentGetTopConsumptionResponse,
   AgentGetIncidentDistributionOptions,
   AgentGetIncidentDistributionResponse,
   AgentGetSummaryOptions,
@@ -406,15 +406,15 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
    * @param options - Optional filters
-   * @returns Promise resolving to {@link AgentGetTopErroredAgentsResponse}
+   * @returns Promise resolving to {@link AgentGetTopErrorCountResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
    *
    * const agents = new Agents(sdk);
    *
-   * // Top errored agents in May 2025
-   * const result = await agents.getTopErroredAgents(
+   * // Top agents by error count in May 2025
+   * const result = await agents.getTopErrorCount(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
@@ -425,7 +425,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * @example
    * ```typescript
    * // Scope to specific folders and top 5 agents
-   * const result = await agents.getTopErroredAgents(
+   * const result = await agents.getTopErrorCount(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    *   {
@@ -435,16 +435,16 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * );
    * ```
    */
-  @track('Agents.GetTopErroredAgents')
-  async getTopErroredAgents(
+  @track('Agents.GetTopErrorCount')
+  async getTopErrorCount(
     startTime: Date,
     endTime: Date,
-    options?: AgentGetTopErroredAgentsOptions,
-  ): Promise<AgentGetTopErroredAgentsResponse> {
+    options?: AgentGetTopErrorCountOptions,
+  ): Promise<AgentGetTopErrorCountResponse> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<AgentGetTopErroredAgentsResponse>(
-      AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+    const response = await this.post<AgentGetTopErrorCountResponse>(
+      AGENTS_ENDPOINTS.GET_TOP_ERROR_COUNT,
       body,
     );
 
@@ -457,15 +457,15 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
    * @param options - Optional filters
-   * @returns Promise resolving to {@link AgentGetTopConsumingAgentsResponse}
+   * @returns Promise resolving to {@link AgentGetTopConsumptionResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
    *
    * const agents = new Agents(sdk);
    *
-   * // Top consuming agents in May 2025
-   * const result = await agents.getTopConsumingAgents(
+   * // Top agents by consumption in May 2025
+   * const result = await agents.getTopConsumption(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
@@ -481,7 +481,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * const agents = new Agents(sdk);
    *
    * // Top 5 healthy autonomous agents
-   * const result = await agents.getTopConsumingAgents(
+   * const result = await agents.getTopConsumption(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    *   {
@@ -492,19 +492,19 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * );
    * ```
    */
-  @track('Agents.GetTopConsumingAgents')
-  async getTopConsumingAgents(
+  @track('Agents.GetTopConsumption')
+  async getTopConsumption(
     startTime: Date,
     endTime: Date,
-    options?: AgentGetTopConsumingAgentsOptions,
-  ): Promise<AgentGetTopConsumingAgentsResponse> {
+    options?: AgentGetTopConsumptionOptions,
+  ): Promise<AgentGetTopConsumptionResponse> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
     if (options?.healthy !== undefined) body.healthy = options.healthy;
     if (options?.healthThreshold !== undefined) body.healthThreshold = options.healthThreshold;
     if (options?.agentTypes?.length) body.agentTypes = options.agentTypes.join(',');
 
-    const response = await this.post<{ data?: AgentGetTopConsumingAgentsResponse }>(
-      AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+    const response = await this.post<{ data?: AgentGetTopConsumptionResponse }>(
+      AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION,
       body,
     );
 

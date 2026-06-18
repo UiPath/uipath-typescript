@@ -7,10 +7,10 @@ import type {
   AgentGetErrorsTimelineResponse,
   AgentGetLatencyTimelineOptions,
   AgentGetLatencyTimelineResponse,
-  AgentGetTopErroredAgentsOptions,
-  AgentGetTopErroredAgentsResponse,
-  AgentGetTopConsumingAgentsOptions,
-  AgentGetTopConsumingAgentsResponse,
+  AgentGetTopErrorCountOptions,
+  AgentGetTopErrorCountResponse,
+  AgentGetTopConsumptionOptions,
+  AgentGetTopConsumptionResponse,
   AgentGetIncidentDistributionOptions,
   AgentGetIncidentDistributionResponse,
   AgentGetSummaryOptions,
@@ -277,15 +277,15 @@ export interface AgentServiceModel {
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
    * @param options - Optional filters
-   * @returns Promise resolving to {@link AgentGetTopErroredAgentsResponse}
+   * @returns Promise resolving to {@link AgentGetTopErrorCountResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
    *
    * const agents = new Agents(sdk);
    *
-   * // Top errored agents in May 2025
-   * const result = await agents.getTopErroredAgents(
+   * // Top agents by error count in May 2025
+   * const result = await agents.getTopErrorCount(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
@@ -296,7 +296,7 @@ export interface AgentServiceModel {
    * @example
    * ```typescript
    * // Scope to specific folders and top 5 agents
-   * const result = await agents.getTopErroredAgents(
+   * const result = await agents.getTopErrorCount(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    *   {
@@ -306,11 +306,11 @@ export interface AgentServiceModel {
    * );
    * ```
    */
-  getTopErroredAgents(
+  getTopErrorCount(
     startTime: Date,
     endTime: Date,
-    options?: AgentGetTopErroredAgentsOptions,
-  ): Promise<AgentGetTopErroredAgentsResponse>;
+    options?: AgentGetTopErrorCountOptions,
+  ): Promise<AgentGetTopErrorCountResponse>;
 
   /**
    * Retrieves the top-N agents ranked by unit consumption over the requested window.
@@ -318,15 +318,15 @@ export interface AgentServiceModel {
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
    * @param options - Optional filters
-   * @returns Promise resolving to {@link AgentGetTopConsumingAgentsResponse}
+   * @returns Promise resolving to {@link AgentGetTopConsumptionResponse}
    * @example
    * ```typescript
    * import { Agents } from '@uipath/uipath-typescript/agents';
    *
    * const agents = new Agents(sdk);
    *
-   * // Top consuming agents in May 2025
-   * const result = await agents.getTopConsumingAgents(
+   * // Top agents by consumption in May 2025
+   * const result = await agents.getTopConsumption(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
@@ -342,7 +342,7 @@ export interface AgentServiceModel {
    * const agents = new Agents(sdk);
    *
    * // Top 5 healthy autonomous agents
-   * const result = await agents.getTopConsumingAgents(
+   * const result = await agents.getTopConsumption(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    *   {
@@ -353,11 +353,11 @@ export interface AgentServiceModel {
    * );
    * ```
    */
-  getTopConsumingAgents(
+  getTopConsumption(
     startTime: Date,
     endTime: Date,
-    options?: AgentGetTopConsumingAgentsOptions,
-  ): Promise<AgentGetTopConsumingAgentsResponse>;
+    options?: AgentGetTopConsumptionOptions,
+  ): Promise<AgentGetTopConsumptionResponse>;
 
   /**
    * Retrieves the distribution of incidents across types — errors, escalations,
