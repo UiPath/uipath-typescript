@@ -1,5 +1,12 @@
-import { TaskStatus, TaskPriority, TaskType, TaskSlaStatus } from '@uipath/uipath-typescript/tasks'
-import type { TaskCompleteOptions } from '@uipath/uipath-typescript/tasks'
+import {
+  TaskStatus,
+  TaskPriority,
+  TaskType,
+  TaskSlaStatus,
+  TaskAssignmentCriteria,
+} from '@uipath/uipath-typescript/tasks'
+import type { TaskCompleteOptions, TaskGetResponse } from '@uipath/uipath-typescript/tasks'
+import { UiPathError } from '@uipath/uipath-typescript/core'
 import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
 
 /**
@@ -123,4 +130,35 @@ export function buildCompleteOptions(type: TaskType, action: string): TaskComple
     default:
       return { type: TaskType.External, action }
   }
+}
+
+/**
+ * "Assigned to group" — the task is distributed across a directory group
+ * (a group `taskAssignmentCriteria`) with no individual `assignedToUser` yet.
+ * `SingleUser` (or unset) is a direct assignment, not a group.
+ */
+export function assignedToGroup(task: TaskGetResponse): boolean {
+  if (task.assignedToUser) return false
+  const criteria = task.taskAssignmentCriteria
+  return criteria != null && criteria !== TaskAssignmentCriteria.SingleUser
+}
+
+/**
+ * Pulls the server-supplied error string out of a thrown error.
+ * Looks at common Orchestrator shapes: `err.message`, `err.body.message`,
+ * `err.response.data.message` (e.g. `{ message, errorCode, traceId }`).
+ */
+export function extractServerMessage(err: unknown): string | null {
+  if (!err) return null
+  if (err instanceof UiPathError && err.message) return err.message
+  const e = err as Record<string, unknown>
+  const candidates = [
+    e.message,
+    (e.body as Record<string, unknown> | undefined)?.message,
+    ((e.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined)?.message,
+  ]
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim()) return c.trim()
+  }
+  return null
 }

@@ -76,7 +76,9 @@ import { Tabs, TabsList, TabsTrigger } from '@uipath/apollo-wind/components/ui/t
 import { useAuth } from '../context/AuthContext'
 import { useFolders, useTasks, useTaskUsers } from '../hooks/useTasks'
 import {
+  assignedToGroup,
   buildCompleteOptions,
+  extractServerMessage,
   formatDateTime,
   priorityBadge,
   slaBadge,
@@ -1105,33 +1107,6 @@ function FilterSelect({
       </SelectContent>
     </Select>
   )
-}
-
-/** "Assigned to group" — `assignedToUserKey` set but no user object. */
-function assignedToGroup(task: TaskGetResponse): boolean {
-  if (task.assignedToUser) return false
-  const key = (task as unknown as { assignedToUserKey?: string | null }).assignedToUserKey
-  return !!key
-}
-
-/**
- * Pulls the server-supplied error string out of a thrown error.
- * Looks at common Orchestrator shapes: `err.message`, `err.body.message`,
- * `err.response.data.message` (e.g. `{ message, errorCode, traceId }`).
- */
-function extractServerMessage(err: unknown): string | null {
-  if (!err) return null
-  if (err instanceof UiPathError && err.message) return err.message
-  const e = err as Record<string, unknown>
-  const candidates = [
-    e.message,
-    (e.body as Record<string, unknown> | undefined)?.message,
-    ((e.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined)?.message,
-  ]
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) return c.trim()
-  }
-  return null
 }
 
 /**
