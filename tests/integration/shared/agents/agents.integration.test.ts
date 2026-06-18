@@ -245,10 +245,11 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       const result = await agents.getTopErrorCount(startTime, endTime);
 
       expect(result).toBeDefined();
-      if (typeof result.totalErrors === 'number') {
-        expect(result.totalErrors).toBeGreaterThanOrEqual(0);
-      }
-      if (!result.data || result.data.length === 0) {
+      // totalErrors and data are always present — 0 / [] when nothing matched.
+      expect(typeof result.totalErrors).toBe('number');
+      expect(result.totalErrors).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(result.data)).toBe(true);
+      if (result.data.length === 0) {
         throw new Error(
           'No errored agents in the test tenant for the configured window — ' +
           'cannot verify response shape. Run errored agents in the tenant or widen the window.',
@@ -265,7 +266,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     it('should respect the limit option', async () => {
       const result = await agents.getTopErrorCount(startTime, endTime, { limit: 3 });
 
-      if (!result.data || result.data.length === 0) {
+      if (result.data.length === 0) {
         throw new Error(
           'No errored agents in the test tenant for the configured window — ' +
           'cannot verify limit option. Run errored agents in the tenant or widen the window.',

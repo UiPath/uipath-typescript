@@ -262,9 +262,9 @@ export interface AgentTopErrorCount {
  */
 export interface AgentGetTopErrorCountResponse {
   /** Total error count across all agents in the window. */
-  totalErrors?: number;
-  /** Top-N agents ranked by error count. May be absent when no data matches. */
-  data?: AgentTopErrorCount[];
+  totalErrors: number;
+  /** Top-N agents ranked by error count. */
+  data: AgentTopErrorCount[];
 }
 
 /**

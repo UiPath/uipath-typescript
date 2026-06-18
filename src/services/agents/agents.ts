@@ -24,6 +24,10 @@ import {
   AgentGetAllOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
+import type {
+  RawAgentGetSummaryResponse,
+  RawAgentSummaryPeriod,
+} from '../../models/agents/agents.internal-types';
 import { JobState } from '../../models/common/types';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import {
@@ -65,14 +69,15 @@ function toJobState(raw: string): JobState {
 }
 
 /**
- * Returns a copy of a summary period with every agent's `lastJobStatus`
- * normalized to a {@link JobState}.
+ * Transforms a raw summary period into the public shape, normalizing every
+ * agent's raw `lastJobStatus` string to a {@link JobState}. Tolerates a missing
+ * `agents` array (treated as empty).
  */
-function normalizeSummaryPeriod(period?: AgentSummaryPeriod): AgentSummaryPeriod | undefined {
+function normalizeSummaryPeriod(period?: RawAgentSummaryPeriod): AgentSummaryPeriod | undefined {
   if (!period) return period;
   return {
     ...period,
-    agents: period.agents.map((agent) => ({ ...agent, lastJobStatus: toJobState(agent.lastJobStatus) })),
+    agents: (period.agents ?? []).map((agent) => ({ ...agent, lastJobStatus: toJobState(agent.lastJobStatus) })),
   };
 }
 
@@ -418,7 +423,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * result.data?.forEach((agent) => {
+   * result.data.forEach((agent) => {
    *   console.log(`${agent.name}: ${agent.count} errors`);
    * });
    * ```
@@ -448,7 +453,9 @@ export class AgentService extends BaseService implements AgentServiceModel {
       body,
     );
 
-    return response.data ?? {};
+    // The endpoint always returns the full shape — { totalErrors: 0, data: [] }
+    // even when nothing matched (and on the 403 path) — so no fallback is needed.
+    return response.data;
   }
 
   /**
@@ -610,7 +617,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
     if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
     if (options?.executionType !== undefined) body.executionType = options.executionType;
 
-    const response = await this.post<{ data?: AgentGetSummaryResponse }>(
+    const response = await this.post<{ data?: RawAgentGetSummaryResponse }>(
       AGENTS_ENDPOINTS.GET_SUMMARY,
       body,
     );

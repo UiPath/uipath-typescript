@@ -578,13 +578,14 @@ describe('AgentService Unit Tests', () => {
       expect(body['$folderKeys']).toBeUndefined();
     });
 
-    it('should omit undefined fields when the API returns an empty object', async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it('should return totalErrors 0 and an empty data array when no agents matched', async () => {
+      // The endpoint always serializes the full shape, even when empty.
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
 
       const result = await agentService.getTopErrorCount(startTime, endTime);
 
-      expect(result.totalErrors).toBeUndefined();
-      expect(result.data).toBeUndefined();
+      expect(result.totalErrors).toBe(0);
+      expect(result.data).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -873,6 +874,15 @@ describe('AgentService Unit Tests', () => {
       const result = await agentService.getSummary(startTime, endTime);
 
       expect(result).toEqual({});
+    });
+
+    it('should not throw when a period omits the agents array', async () => {
+      const { agents: _agents, ...periodWithoutAgents } = mockPeriod;
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: periodWithoutAgents } });
+
+      const result = await agentService.getSummary(startTime, endTime);
+
+      expect(result.currentPeriodSummary?.agents).toEqual([]);
     });
 
     it('should propagate API errors', async () => {

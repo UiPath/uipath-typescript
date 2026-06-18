@@ -289,7 +289,7 @@ export interface AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * result.data?.forEach((agent) => {
+   * result.data.forEach((agent) => {
    *   console.log(`${agent.name}: ${agent.count} errors`);
    * });
    * ```
