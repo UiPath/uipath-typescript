@@ -1,0 +1,41 @@
+{
+  "name": "uipath-sites",
+  "version": "0.1.0",
+  "description": "Build polished UiPath coded apps and deploy them with uip codedapp.",
+  "author": {
+    "name": "UiPath",
+    "url": "https://www.uipath.com"
+  },
+  "homepage": "https://github.com/UiPath/uipath-typescript",
+  "repository": "https://github.com/UiPath/uipath-typescript",
+  "license": "MIT",
+  "keywords": [
+    "uipath",
+    "sites",
+    "coded-apps",
+    "uipath-typescript",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "UiPath Sites",
+    "shortDescription": "Build polished UiPath coded apps.",
+    "longDescription": "UiPath Sites helps users generate polished UiPath coded apps instead of Sites-hosted apps. It routes matched UiPath app requests to the coded-app workflow, applies frontend-design guidance for UI quality, and keeps build, package, publish, and deploy aligned with uip codedapp.",
+    "developerName": "UiPath",
+    "category": "Productivity",
+    "capabilities": [
+      "Write",
+      "Run"
+    ],
+    "websiteURL": "https://github.com/UiPath/uipath-typescript",
+    "privacyPolicyURL": "https://www.uipath.com/legal/trust-and-security/privacy-policy",
+    "termsOfServiceURL": "https://www.uipath.com/legal/trust-and-security/legal-terms",
+    "composerIcon": "./assets/uipath-glyph-square.jpg",
+    "logo": "./assets/uipath-glyph-square.jpg",
+    "defaultPrompt": [
+      "Build a business-user-friendly case app with an Outlook inbox-style UI for browsing, reviewing, and approving cases.",
+      "Build a data table interface for Data Fabric entities with search, browse, and CRUD capabilities.",
+      "Build an Action Center task inbox for filtering work, reviewing task details, and completing assigned actions."
+    ]
+  }
+}

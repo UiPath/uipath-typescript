@@ -1,0 +1,20 @@
+{
+  "name": "uipath-sites-marketplace",
+  "interface": {
+    "displayName": "UiPath Sites Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "uipath-sites",
+      "source": {
+        "source": "local",
+        "path": "./plugins/uipath-sites"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
