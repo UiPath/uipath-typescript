@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { TaskStatus, TaskUserType, TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks'
 import type { TaskGetResponse, TaskAssignOptions } from '@uipath/uipath-typescript/tasks'
-import { UiPathError } from '@uipath/uipath-typescript/core'
 import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
 import { Badge } from '@uipath/apollo-wind/components/ui/badge'
 import { Button } from '@uipath/apollo-wind/components/ui/button'
@@ -32,12 +31,14 @@ import {
 import { Spinner } from '@uipath/apollo-wind/components/ui/spinner'
 import { useFolders, useTask, useTaskUsers } from '../hooks/useTasks'
 import {
+  assignedToGroup,
   statusBadge,
   priorityBadge,
   slaBadge,
   formatDateTime,
   taskTypeLabel,
   buildCompleteOptions,
+  extractServerMessage,
 } from '../taskUtils'
 
 interface Props {
@@ -122,11 +123,14 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
                   {priorityBadge(task.priority).label}
                 </Badge>
                 <Badge variant="secondary">{taskTypeLabel(task.type)}</Badge>
-                {slaBadge(task.taskSlaDetail?.status) && (
-                  <Badge variant={slaBadge(task.taskSlaDetail?.status)!.variant}>
-                    SLA: {slaBadge(task.taskSlaDetail?.status)!.label}
-                  </Badge>
-                )}
+                {(() => {
+                  const sla = slaBadge(task.taskSlaDetail?.status)
+                  return (
+                    sla && (
+                      <Badge variant={sla.variant}>SLA: {sla.label}</Badge>
+                    )
+                  )
+                })()}
               </div>
 
               {/* Task Summary — mirrors Action Center's right pane. */}
@@ -150,7 +154,7 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
                   label="Assigned to"
                   value={
                     task.assignedToUser?.displayName ??
-                    (assignedToGroupKey(task) ? 'Directory group' : 'Unassigned')
+                    (assignedToGroup(task) ? 'Directory group' : 'Unassigned')
                   }
                 />
                 {(task.actionLabel || task.action) && (
@@ -261,13 +265,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-/** Assigned to a directory group (no user object, but a key). */
-function assignedToGroupKey(task: TaskGetResponse): boolean {
-  if (task.assignedToUser) return false
-  const key = (task as unknown as { assignedToUserKey?: string | null }).assignedToUserKey
-  return !!key
-}
-
 /** First server message from a failed assign payload. */
 function extractAssignError(data: unknown): string {
   if (Array.isArray(data)) {
@@ -279,22 +276,6 @@ function extractAssignError(data: unknown): string {
     }
   }
   return 'The assignment did not complete successfully'
-}
-
-/** Server error string from a thrown UiPath/HTTP error. */
-function extractServerMessage(err: unknown): string | null {
-  if (!err) return null
-  if (err instanceof UiPathError && err.message) return err.message
-  const e = err as Record<string, unknown>
-  const candidates = [
-    e.message,
-    (e.body as Record<string, unknown> | undefined)?.message,
-    ((e.response as Record<string, unknown> | undefined)?.data as Record<string, unknown> | undefined)?.message,
-  ]
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) return c.trim()
-  }
-  return null
 }
 
 function renderValue(value: unknown): string {

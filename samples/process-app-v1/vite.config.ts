@@ -24,5 +24,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@uipath/uipath-typescript'],
   },
-  base: './',
 })
