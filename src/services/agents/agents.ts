@@ -63,7 +63,7 @@ const VALID_JOB_STATES = new Set<string>(Object.values(JobState));
  * unrecognized falls back to {@link JobState.Unknown} rather than throwing.
  */
 function toJobState(raw: string): JobState {
-  if (raw in JOB_STATUS_ALIASES) return JOB_STATUS_ALIASES[raw];
+  if (Object.prototype.hasOwnProperty.call(JOB_STATUS_ALIASES, raw)) return JOB_STATUS_ALIASES[raw];
   if (VALID_JOB_STATES.has(raw)) return raw as JobState;
   return JobState.Unknown;
 }
@@ -73,8 +73,7 @@ function toJobState(raw: string): JobState {
  * agent's raw `lastJobStatus` string to a {@link JobState}. Tolerates a missing
  * `agents` array (treated as empty).
  */
-function normalizeSummaryPeriod(period?: RawAgentSummaryPeriod): AgentSummaryPeriod | undefined {
-  if (!period) return period;
+function normalizeSummaryPeriod(period: RawAgentSummaryPeriod): AgentSummaryPeriod {
   return {
     ...period,
     agents: (period.agents ?? []).map((agent) => ({ ...agent, lastJobStatus: toJobState(agent.lastJobStatus) })),
@@ -475,7 +474,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-06-01T00:00:00Z'),
    * );
    * console.log(`Total consumed: ${result.totalConsumed}`);
-   * result.agents?.forEach((agent) => {
+   * result.agents.forEach((agent) => {
    *   console.log(`${agent.agentName}: ${agent.consumedQuantity}`);
    * });
    * ```
@@ -508,12 +507,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
     if (options?.healthThreshold !== undefined) body.healthThreshold = options.healthThreshold;
     if (options?.agentTypes?.length) body.agentTypes = options.agentTypes.join(',');
 
-    const response = await this.post<{ data?: AgentGetTopConsumptionResponse }>(
+    const response = await this.post<{ data: AgentGetTopConsumptionResponse }>(
       AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION,
       body,
     );
 
-    return response.data.data ?? {};
+    return response.data.data;
   }
 
   /**
@@ -557,12 +556,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
   ): Promise<AgentGetIncidentDistributionResponse> {
     const body = this.buildAgentFilterBody(startTime, endTime, options);
 
-    const response = await this.post<{ data?: AgentGetIncidentDistributionResponse }>(
+    const response = await this.post<{ data: AgentGetIncidentDistributionResponse }>(
       AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
       body,
     );
 
-    return response.data.data ?? {};
+    return response.data.data;
   }
 
   /**
@@ -586,7 +585,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * console.log(`Success rate: ${result.currentPeriodSummary?.successRate}%`);
+   * console.log(`Success rate: ${result.currentPeriodSummary.successRate}%`);
    * ```
    * @example
    * ```typescript
@@ -617,18 +616,17 @@ export class AgentService extends BaseService implements AgentServiceModel {
     if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
     if (options?.executionType !== undefined) body.executionType = options.executionType;
 
-    const response = await this.post<{ data?: RawAgentGetSummaryResponse }>(
+    const response = await this.post<{ data: RawAgentGetSummaryResponse }>(
       AGENTS_ENDPOINTS.GET_SUMMARY,
       body,
     );
 
     const summary = response.data.data;
-    if (!summary) return {};
-
     return {
-      ...summary,
       currentPeriodSummary: normalizeSummaryPeriod(summary.currentPeriodSummary),
-      lookbackPeriodSummary: normalizeSummaryPeriod(summary.lookbackPeriodSummary),
+      lookbackPeriodSummary: summary.lookbackPeriodSummary
+        ? normalizeSummaryPeriod(summary.lookbackPeriodSummary)
+        : undefined,
     };
   }
 
@@ -651,7 +649,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs}`);
+   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary.totalAgentUnitConsumption.completeJobs}`);
    * ```
    * @example
    * ```typescript
@@ -682,12 +680,12 @@ export class AgentService extends BaseService implements AgentServiceModel {
     if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
     if (options?.executionType !== undefined) body.executionType = options.executionType;
 
-    const response = await this.post<{ data?: AgentGetUnitConsumptionSummaryResponse }>(
+    const response = await this.post<{ data: AgentGetUnitConsumptionSummaryResponse }>(
       AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
       body,
     );
 
-    return response.data.data ?? {};
+    return response.data.data;
   }
 
   /**

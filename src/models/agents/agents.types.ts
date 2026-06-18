@@ -323,19 +323,19 @@ export interface AgentConsumption {
  */
 export interface AgentGetTopConsumptionResponse {
   /** Window start date. */
-  startDate?: string;
+  startDate: string;
   /** Window end date. */
-  endDate?: string;
+  endDate: string;
   /** Total quantity consumed across all matching agents in the window. */
-  totalConsumed?: number;
+  totalConsumed: number;
   /** Total Agent Units quantity consumed. */
-  totalAGUConsumed?: number;
+  totalAGUConsumed: number;
   /** Total Platform Units quantity consumed. */
-  totalPLTUConsumed?: number;
+  totalPLTUConsumed: number;
   /** Limit applied (echoed from the request). */
-  limit?: number;
-  /** Top-N agents ranked by consumption. May be absent when no data matches. */
-  agents?: AgentConsumption[];
+  limit: number;
+  /** Top-N agents ranked by consumption. Empty array when no agents matched. */
+  agents: AgentConsumption[];
 }
 
 /**
@@ -370,11 +370,11 @@ export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
  */
 export interface AgentGetIncidentDistributionResponse {
   /** Number of error-type incidents in the window */
-  errorCount?: number;
+  errorCount: number;
   /** Number of escalation-type incidents in the window */
-  escalationCount?: number;
+  escalationCount: number;
   /** Number of policy-type incidents in the window */
-  policyCount?: number;
+  policyCount: number;
 }
 
 /**
@@ -441,8 +441,8 @@ export interface AgentSummaryPeriod {
  * Response from getting the agent summary.
  */
 export interface AgentGetSummaryResponse {
-  /** Aggregate stats for the requested window */
-  currentPeriodSummary?: AgentSummaryPeriod;
+  /** Aggregate stats for the requested window. Always present. */
+  currentPeriodSummary: AgentSummaryPeriod;
   /** Aggregate stats for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
   lookbackPeriodSummary?: AgentSummaryPeriod;
 }
@@ -540,8 +540,8 @@ export interface AgentUnitConsumptionPeriod {
  * Response from getting the agent unit consumption summary.
  */
 export interface AgentGetUnitConsumptionSummaryResponse {
-  /** Aggregate consumption for the requested window */
-  currentPeriodSummary?: AgentUnitConsumptionPeriod;
+  /** Aggregate consumption for the requested window. Always present. */
+  currentPeriodSummary: AgentUnitConsumptionPeriod;
   /** Aggregate consumption for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
   lookbackPeriodSummary?: AgentUnitConsumptionPeriod;
 }

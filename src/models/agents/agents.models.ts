@@ -331,7 +331,7 @@ export interface AgentServiceModel {
    *   new Date('2025-06-01T00:00:00Z'),
    * );
    * console.log(`Total consumed: ${result.totalConsumed}`);
-   * result.agents?.forEach((agent) => {
+   * result.agents.forEach((agent) => {
    *   console.log(`${agent.agentName}: ${agent.consumedQuantity}`);
    * });
    * ```
@@ -419,7 +419,7 @@ export interface AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * console.log(`Success rate: ${result.currentPeriodSummary?.successRate}%`);
+   * console.log(`Success rate: ${result.currentPeriodSummary.successRate}%`);
    * ```
    * @example
    * ```typescript
@@ -463,7 +463,7 @@ export interface AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs}`);
+   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary.totalAgentUnitConsumption.completeJobs}`);
    * ```
    * @example
    * ```typescript

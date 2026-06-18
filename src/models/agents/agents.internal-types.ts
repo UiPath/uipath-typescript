@@ -35,6 +35,6 @@ export interface RawAgentSummaryPeriod {
  * {@link AgentGetSummaryResponse}.
  */
 export interface RawAgentGetSummaryResponse {
-  currentPeriodSummary?: RawAgentSummaryPeriod;
+  currentPeriodSummary: RawAgentSummaryPeriod;
   lookbackPeriodSummary?: RawAgentSummaryPeriod;
 }

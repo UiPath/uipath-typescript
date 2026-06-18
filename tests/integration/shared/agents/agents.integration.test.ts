@@ -284,12 +284,13 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       const result = await agents.getTopConsumption(startTime, endTime);
 
       expect(result).toBeDefined();
-      // Window dates are echoed as .NET-formatted strings (not ISO)
-      if (result.startDate !== undefined) expect(typeof result.startDate).toBe('string');
-      if (typeof result.totalConsumed === 'number') {
-        expect(result.totalConsumed).toBeGreaterThanOrEqual(0);
-      }
-      if (!result.agents || result.agents.length === 0) {
+      // Totals and window dates are always present; agents is [] when none matched.
+      expect(typeof result.startDate).toBe('string');
+      expect(typeof result.endDate).toBe('string');
+      expect(typeof result.totalConsumed).toBe('number');
+      expect(result.totalConsumed).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(result.agents)).toBe(true);
+      if (result.agents.length === 0) {
         throw new Error(
           'No consuming agents in the test tenant for the configured window — ' +
           'cannot verify response shape. Run agents in the tenant or widen the window.',
@@ -309,9 +310,8 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       });
 
       expect(result).toBeDefined();
-      if (result.agents && result.agents.length > 0) {
-        expect(result.agents.length).toBeLessThanOrEqual(3);
-      }
+      expect(Array.isArray(result.agents)).toBe(true);
+      expect(result.agents.length).toBeLessThanOrEqual(3);
     });
   });
 
@@ -324,15 +324,13 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
       expect(result).toBeDefined();
       expect((result as { pagination?: unknown }).pagination).toBeUndefined();
-      if (typeof result.errorCount === 'number') {
-        expect(result.errorCount).toBeGreaterThanOrEqual(0);
-      }
-      if (typeof result.escalationCount === 'number') {
-        expect(result.escalationCount).toBeGreaterThanOrEqual(0);
-      }
-      if (typeof result.policyCount === 'number') {
-        expect(result.policyCount).toBeGreaterThanOrEqual(0);
-      }
+      // All three counts are always present (default 0).
+      expect(typeof result.errorCount).toBe('number');
+      expect(result.errorCount).toBeGreaterThanOrEqual(0);
+      expect(typeof result.escalationCount).toBe('number');
+      expect(result.escalationCount).toBeGreaterThanOrEqual(0);
+      expect(typeof result.policyCount).toBe('number');
+      expect(result.policyCount).toBeGreaterThanOrEqual(0);
     });
 
     it('should scope to a single folder', async () => {
@@ -353,12 +351,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
       expect(result).toBeDefined();
       expect(result.lookbackPeriodSummary).toBeUndefined();
-      if (!result.currentPeriodSummary) {
-        throw new Error(
-          'No summary data in the test tenant for the configured window — ' +
-          'cannot verify response shape. Run agents in the tenant or widen the window.',
-        );
-      }
+      // currentPeriodSummary is always present.
       const period = result.currentPeriodSummary;
       expect(typeof period.totalJobs).toBe('number');
       expect(typeof period.successRate).toBe('number');
@@ -377,12 +370,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
         executionType: AgentExecutionType.Runtime,
       });
 
-      if (!result.currentPeriodSummary) {
-        throw new Error(
-          'No summary data in the test tenant for the configured window — ' +
-          'cannot verify lookback. Run agents in the tenant or widen the window.',
-        );
-      }
+      expect(result.currentPeriodSummary).toBeDefined();
       expect(result.lookbackPeriodSummary).toBeDefined();
     });
   });
@@ -396,12 +384,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
       expect(result).toBeDefined();
       expect(result.lookbackPeriodSummary).toBeUndefined();
-      if (!result.currentPeriodSummary) {
-        throw new Error(
-          'No unit-consumption summary in the test tenant for the configured window — ' +
-          'cannot verify response shape. Run agents in the tenant or widen the window.',
-        );
-      }
+      // currentPeriodSummary is always present.
       const period = result.currentPeriodSummary;
       expect(typeof period.totalAgentUnitConsumption.completeJobs).toBe('number');
       expect(typeof period.totalPlatformUnitConsumption.completeJobs).toBe('number');
@@ -414,12 +397,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
         executionType: AgentExecutionType.Runtime,
       });
 
-      if (!result.currentPeriodSummary) {
-        throw new Error(
-          'No unit-consumption summary in the test tenant for the configured window — ' +
-          'cannot verify lookback. Run agents in the tenant or widen the window.',
-        );
-      }
+      expect(result.currentPeriodSummary).toBeDefined();
       expect(result.lookbackPeriodSummary).toBeDefined();
     });
   });

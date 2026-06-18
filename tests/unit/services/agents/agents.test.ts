@@ -643,10 +643,12 @@ describe('AgentService Unit Tests', () => {
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION);
       expect(body.startTime).toBe(startTime.toISOString());
       expect(body.endTime).toBe(endTime.toISOString());
+      // healthy omitted → absent from the body (distinct from healthy:false)
+      expect('healthy' in body).toBe(false);
     });
 
     it('should send health filters and join agentTypes into a comma-separated string', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
 
       await agentService.getTopConsumption(startTime, endTime, {
         limit: 5,
@@ -663,20 +665,12 @@ describe('AgentService Unit Tests', () => {
     });
 
     it('should send healthy:false distinct from unset', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
 
       await agentService.getTopConsumption(startTime, endTime, { healthy: false });
 
       const [, body] = mockApiClient.post.mock.calls[0];
       expect(body.healthy).toBe(false);
-    });
-
-    it('should return an empty object when the envelope data is absent', async () => {
-      mockApiClient.post.mockResolvedValue({});
-
-      const result = await agentService.getTopConsumption(startTime, endTime);
-
-      expect(result).toEqual({});
     });
 
     it('should propagate API errors', async () => {
@@ -715,7 +709,7 @@ describe('AgentService Unit Tests', () => {
     });
 
     it('should include filters in the body', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
 
       const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
       await agentService.getIncidentDistribution(startTime, endTime, {
@@ -726,14 +720,6 @@ describe('AgentService Unit Tests', () => {
       const [, body] = mockApiClient.post.mock.calls[0];
       expect(body.folderKeys).toEqual(folderKeys);
       expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
-    });
-
-    it('should return an empty object when the envelope data is absent', async () => {
-      mockApiClient.post.mockResolvedValue({});
-
-      const result = await agentService.getIncidentDistribution(startTime, endTime);
-
-      expect(result).toEqual({});
     });
 
     it('should propagate API errors', async () => {
@@ -792,7 +778,7 @@ describe('AgentService Unit Tests', () => {
     });
 
     it('should send lookbackPeriodAnalysis, processKey and folderKey (singular, distinct from folderKeys)', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
 
       await agentService.getSummary(startTime, endTime, {
         folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
@@ -808,8 +794,17 @@ describe('AgentService Unit Tests', () => {
       expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
     });
 
+    it('should send lookbackPeriodAnalysis:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(false);
+    });
+
     it('should send executionType as its string name', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
 
       await agentService.getSummary(startTime, endTime, {
         executionType: AgentExecutionType.Runtime,
@@ -855,7 +850,7 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
 
-      expect(result.currentPeriodSummary?.agents.map((a) => a.lastJobStatus)).toEqual([
+      expect(result.currentPeriodSummary.agents.map((a) => a.lastJobStatus)).toEqual([
         JobState.Successful,
         JobState.Cancelled,
         JobState.Running,
@@ -865,15 +860,7 @@ describe('AgentService Unit Tests', () => {
       // Normalization is applied to the lookback period too, not just the current one.
       expect(result.lookbackPeriodSummary?.agents[0].lastJobStatus).toBe(JobState.Successful);
       // The raw API label must not leak through.
-      expect(result.currentPeriodSummary?.agents[0].lastJobStatus).not.toBe('Success');
-    });
-
-    it('should return an empty object when the envelope data is absent', async () => {
-      mockApiClient.post.mockResolvedValue({});
-
-      const result = await agentService.getSummary(startTime, endTime);
-
-      expect(result).toEqual({});
+      expect(result.currentPeriodSummary.agents[0].lastJobStatus).not.toBe('Success');
     });
 
     it('should not throw when a period omits the agents array', async () => {
@@ -882,7 +869,7 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getSummary(startTime, endTime);
 
-      expect(result.currentPeriodSummary?.agents).toEqual([]);
+      expect(result.currentPeriodSummary.agents).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -932,7 +919,7 @@ describe('AgentService Unit Tests', () => {
     });
 
     it('should send lookbackPeriodAnalysis, processKey, folderKey and executionType', async () => {
-      mockApiClient.post.mockResolvedValue({ data: {} });
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
 
       await agentService.getUnitConsumptionSummary(startTime, endTime, {
         lookbackPeriodAnalysis: true,
@@ -948,6 +935,15 @@ describe('AgentService Unit Tests', () => {
       expect(body.executionType).toBe('Runtime');
     });
 
+    it('should send lookbackPeriodAnalysis:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getUnitConsumptionSummary(startTime, endTime, { lookbackPeriodAnalysis: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(false);
+    });
+
     it('should return both periods when the API includes a lookback summary', async () => {
       mockApiClient.post.mockResolvedValue({
         data: { currentPeriodSummary: mockPeriod, lookbackPeriodSummary: mockPeriod },
@@ -959,14 +955,6 @@ describe('AgentService Unit Tests', () => {
 
       expect(result.currentPeriodSummary).toEqual(mockPeriod);
       expect(result.lookbackPeriodSummary).toEqual(mockPeriod);
-    });
-
-    it('should return an empty object when the envelope data is absent', async () => {
-      mockApiClient.post.mockResolvedValue({});
-
-      const result = await agentService.getUnitConsumptionSummary(startTime, endTime);
-
-      expect(result).toEqual({});
     });
 
     it('should propagate API errors', async () => {
