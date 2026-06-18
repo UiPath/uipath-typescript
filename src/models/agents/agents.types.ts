@@ -28,9 +28,9 @@ export enum AgentListSortColumn {
   HealthScore = 'HealthScore',
   LastIncident = 'LastIncident',
   FolderName = 'FolderName',
-  /** Quantity of AGU (Agent Units) consumed */
+  /** Quantity of Agent Units consumed */
   QuantityAGU = 'QuantityAGU',
-  /** Quantity of PLTU (Platform Units) consumed */
+  /** Quantity of Platform Units consumed */
   QuantityPLTU = 'QuantityPLTU',
   FolderPath = 'FolderPath',
 }
@@ -41,7 +41,10 @@ export enum AgentListSortColumn {
 export interface AgentListOrderBy {
   /** Column to sort by */
   column: AgentListSortColumn;
-  /** Sort descending. Defaults to false. */
+  /**
+   * Sort descending. Defaults to false.
+   * @default false
+   */
   desc?: boolean;
 }
 
@@ -76,9 +79,9 @@ export interface AgentListItem {
   unitsQuantity: number;
   /** Display name of the units (if any). May be `null` or `""`. */
   unitsName: string | null;
-  /** Quantity of AGU (Agent Units) consumed by this agent */
+  /** Quantity of Agent Units consumed by this agent */
   quantityAGU: number;
-  /** Quantity of PLTU (Platform Units) consumed by this agent */
+  /** Quantity of Platform Units consumed by this agent */
   quantityPLTU: number;
 }
 
@@ -137,7 +140,10 @@ export enum AgentErrorSortColumn {
 export interface AgentErrorOrderBy {
   /** Column to sort by */
   column: AgentErrorSortColumn;
-  /** Sort descending. Defaults to false (ascending) server-side. */
+  /**
+   * Sort descending. Defaults to false (ascending) server-side.
+   * @default false
+   */
   desc?: boolean;
 }
 
@@ -202,7 +208,10 @@ export interface AgentGetErrorsTimelineResponse {
  * Options for getting the agent errors timeline.
  */
 export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
-  /** Max number of agents to return. Defaults to 10 server-side. */
+  /**
+   * Max number of agents to return. Defaults to 10 server-side.
+   * @default 10
+   */
   limit?: number;
 }
 
@@ -212,7 +221,7 @@ export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
 export interface AgentGetConsumptionTimelineResponse {
   /** Bucket timestamp (ISO 8601, UTC) */
   timeSlice: string;
-  /** AGU quantity consumed in this time bucket */
+  /** Agent Units quantity consumed in this time bucket */
   aguConsumption: number;
 }
 
@@ -271,7 +280,10 @@ export interface AgentGetTopErrorCountResponse {
  * Options for getting the top agents by error count.
  */
 export interface AgentGetTopErrorCountOptions extends AgentFilterOptions {
-  /** Max number of agents to return. Defaults to 10 server-side. */
+  /**
+   * Max number of agents to return. Defaults to 10 server-side.
+   * @default 10
+   */
   limit?: number;
 }
 
@@ -296,9 +308,9 @@ export interface AgentConsumption {
   agentName: string;
   /** Total quantity consumed by this agent. `null` if no consumption is recorded. */
   consumedQuantity: number | null;
-  /** AGU quantity consumed. `null` if no consumption is recorded. */
+  /** Agent Units quantity consumed. `null` if no consumption is recorded. */
   consumedAGUQuantity: number | null;
-  /** PLTU quantity consumed. `null` if no consumption is recorded. */
+  /** Platform Units quantity consumed. `null` if no consumption is recorded. */
   consumedPLTUQuantity: number | null;
   /** First job in the window where this agent recorded consumption */
   firstSeenJob: AgentJobInfo;
@@ -324,9 +336,9 @@ export interface AgentGetTopConsumptionResponse {
   endDate?: string;
   /** Total quantity consumed across all matching agents in the window. */
   totalConsumed?: number;
-  /** Total AGU quantity consumed. */
+  /** Total Agent Units quantity consumed. */
   totalAGUConsumed?: number;
-  /** Total PLTU quantity consumed. */
+  /** Total Platform Units quantity consumed. */
   totalPLTUConsumed?: number;
   /** Limit applied (echoed from the request). */
   limit?: number;
@@ -338,7 +350,10 @@ export interface AgentGetTopConsumptionResponse {
  * Options for getting the top agents by consumption.
  */
 export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
-  /** Max number of agents to return. Defaults to 10 server-side. */
+  /**
+   * Max number of agents to return. Defaults to 10 server-side.
+   * @default 10
+   */
   limit?: number;
   /**
    * Health-based filter. `true` returns only healthy agents, `false` only
@@ -348,6 +363,7 @@ export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
   /**
    * Health-score cutoff used when `healthy` is set. Defaults to 75.0
    * server-side.
+   * @default 75.0
    */
   healthThreshold?: number;
   /**
@@ -464,6 +480,7 @@ export interface AgentGetSummaryOptions extends AgentFilterOptions {
   /**
    * When `true`, It also computes a `lookbackPeriodSummary` for the
    * prior window of equal length. Defaults to `false` server-side.
+   * @default false
    */
   lookbackPeriodAnalysis?: boolean;
   /** Filter to a specific process by key (GUID). */
@@ -508,21 +525,21 @@ export interface AgentUnitConsumptionEntry {
   firstJobFinished: string;
   /** Last job completion timestamp (ISO 8601). `"0001-01-01T00:00:00"` if no completion in the period. */
   lastJobFinished: string;
-  /** AGU consumption for this agent, split by job completion status */
+  /** Agent Units consumption for this agent, split by job completion status */
   agentUnitConsumption: AgentJobConsumptionSummary;
-  /** Platform unit (PLTU) consumption for this agent, split by job completion status */
+  /** Platform Units consumption for this agent, split by job completion status */
   platformUnitConsumption: AgentJobConsumptionSummary;
 }
 
 /**
- * Aggregate AGU/PLTU consumption for a single period within an
+ * Aggregate Agent Units and Platform Units consumption for a single period within an
  * {@link AgentGetUnitConsumptionSummaryResponse} — covers the requested window
  * for either the current period or an optional lookback period.
  */
 export interface AgentUnitConsumptionPeriod {
-  /** Total AGU consumed across all agents in the period, split by job completion */
+  /** Total Agent Units consumed across all agents in the period, split by job completion */
   totalAgentUnitConsumption: AgentJobConsumptionSummary;
-  /** Total platform units (PLTU) consumed across all agents in the period, split by job completion */
+  /** Total Platform Units consumed across all agents in the period, split by job completion */
   totalPlatformUnitConsumption: AgentJobConsumptionSummary;
   /** Period start time (ISO 8601, UTC) */
   startTime: string;

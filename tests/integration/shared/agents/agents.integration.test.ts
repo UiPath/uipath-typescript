@@ -183,7 +183,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
-    it('should retrieve the AGU consumption timeline', async () => {
+    it('should retrieve the Agent Units consumption timeline', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime);
 
       expect(Array.isArray(result)).toBe(true);
@@ -391,7 +391,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
-    it('should retrieve an aggregate AGU/PLTU summary with a per-agent breakdown', async () => {
+    it('should retrieve an aggregate Agent Units and Platform Units summary with a per-agent breakdown', async () => {
       const result = await agents.getUnitConsumptionSummary(startTime, endTime);
 
       expect(result).toBeDefined();

@@ -303,7 +303,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Retrieves a time-series of AGU (Agent Units) consumption over the requested window.
+   * Retrieves a time-series of Agent Units consumption over the requested window.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
@@ -315,13 +315,13 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *
    * const agents = new Agents(sdk);
    *
-   * // AGU consumption timeline in May 2025
+   * // Agent Units consumption timeline in May 2025
    * const result = await agents.getConsumptionTimeline(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
    * result.forEach((point) => {
-   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} Agent Units`);
    * });
    * ```
    * @example
@@ -633,7 +633,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Retrieves an aggregate AGU/PLTU unit consumption summary per agent over the
+   * Retrieves an aggregate Agent Units and Platform Units consumption summary per agent over the
    * requested window.
    *
    * @param startTime - Inclusive lower bound for the query window
@@ -651,7 +651,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
-   * console.log(`AGU complete jobs: ${result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs}`);
+   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs}`);
    * ```
    * @example
    * ```typescript
