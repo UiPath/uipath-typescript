@@ -465,7 +465,7 @@ export enum AgentExecutionType {
  */
 export interface AgentGetSummaryOptions extends AgentFilterOptions {
   /**
-   * When `true`, It also computes a `lookbackPeriodSummary` for the
+   * When `true`, it also computes a `lookbackPeriodSummary` for the
    * prior window of equal length. Defaults to `false` server-side.
    * @default false
    */
