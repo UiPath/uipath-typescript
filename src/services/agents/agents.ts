@@ -453,8 +453,6 @@ export class AgentService extends BaseService implements AgentServiceModel {
       body,
     );
 
-    // The endpoint always returns the full shape — { totalErrors: 0, data: [] }
-    // even when nothing matched (and on the 403 path) — so no fallback is needed.
     return response.data;
   }
 
@@ -487,7 +485,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *
    * const agents = new Agents(sdk);
    *
-   * // Top 5 healthy autonomous agents
+   * // Top 5 healthy autonomous agents by consumption
    * const result = await agents.getTopConsumption(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),

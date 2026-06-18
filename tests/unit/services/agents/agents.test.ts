@@ -560,7 +560,7 @@ describe('AgentService Unit Tests', () => {
     });
 
     it('should include all filters in the body without OData prefixing', async () => {
-      mockApiClient.post.mockResolvedValue({});
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
 
       const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
       await agentService.getTopErrorCount(startTime, endTime, {
