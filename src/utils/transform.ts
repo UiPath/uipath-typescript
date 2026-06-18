@@ -382,8 +382,15 @@ export function transformRequest<T extends object>(
  */
 const ODATA_FIELD_PARAM_KEYS = ['filter', 'orderby', 'select', 'expand'] as const;
 
-const ODATA_IDENT_START = /[A-Za-z_]/;
-const ODATA_IDENT_PART = /[A-Za-z0-9_]/;
+/**
+ * Matches one token at a time in an OData expression:
+ *   1. A single-quoted string literal, allowing the `''` escape sequence —
+ *      consumed atomically so identifiers inside the literal can't match.
+ *   2. An OData identifier (`[A-Za-z_][A-Za-z0-9_]*`).
+ * Anything else (whitespace, operators, parens, commas) is left alone by
+ * `String.prototype.replace`, which only substitutes matched substrings.
+ */
+const ODATA_TOKEN_RE = /'(?:[^']|'')*'|[A-Za-z_][A-Za-z0-9_]*/g;
 
 /**
  * Rewrites SDK field identifiers to API field identifiers inside an OData
@@ -394,11 +401,9 @@ const ODATA_IDENT_PART = /[A-Za-z0-9_]/;
  * in a `filter` string would be forwarded verbatim and the API (which still
  * uses the original name) would reject it.
  *
- * The rewriter walks the expression char-by-char, tracking single-quoted
- * string literals (with `''` as the OData escape) so identifiers inside
- * quoted values are left untouched. Identifier tokens match the OData
- * grammar `[A-Za-z_][A-Za-z0-9_]*` and are replaced when present in the
- * reversed field map.
+ * Quoted string literals (with the OData `''` escape) are preserved exactly:
+ * the token regex consumes them whole, so identifiers inside literals never
+ * match. Identifier tokens are looked up in the reversed field map.
  *
  * @example
  * ```typescript
@@ -409,49 +414,9 @@ const ODATA_IDENT_PART = /[A-Za-z0-9_]/;
  */
 export function rewriteODataIdentifiers(expression: string, requestMap: FieldMapping): string {
   if (!expression) return expression;
-  let result = '';
-  let buffer = '';
-  let inString = false;
-
-  const flush = () => {
-    if (buffer.length === 0) return;
-    result += requestMap[buffer] ?? buffer;
-    buffer = '';
-  };
-
-  for (let i = 0; i < expression.length; i++) {
-    const c = expression[i];
-    if (inString) {
-      if (c === "'") {
-        if (expression[i + 1] === "'") {
-          result += "''";
-          i++;
-          continue;
-        }
-        inString = false;
-        result += c;
-      } else {
-        result += c;
-      }
-      continue;
-    }
-    if (c === "'") {
-      flush();
-      inString = true;
-      result += c;
-      continue;
-    }
-    const isStart = buffer.length === 0 && ODATA_IDENT_START.test(c);
-    const isPart = buffer.length > 0 && ODATA_IDENT_PART.test(c);
-    if (isStart || isPart) {
-      buffer += c;
-    } else {
-      flush();
-      result += c;
-    }
-  }
-  flush();
-  return result;
+  return expression.replace(ODATA_TOKEN_RE, (match) =>
+    match.startsWith("'") ? match : (requestMap[match] ?? match),
+  );
 }
 
 /**
