@@ -69,7 +69,7 @@ describe('rewriteODataIdentifiers', () => {
     ).toBe("processNameSuffix eq 'X'");
   });
 
-  it('does not rewrite operators that happen to overlap map keys', () => {
+  it('rewrites tokens that overlap OData operators when present in the map (caller must avoid key collisions)', () => {
     // Map contains identifier `eq` (pathological — operator collision).
     // Demonstrates that token replacement is purely lookup-based: callers
     // are expected to keep their field maps free of operator collisions.
@@ -143,7 +143,7 @@ describe('transformOptions', () => {
 
   it('ignores non-string values on OData keys', () => {
     const out = transformOptions(
-      { filter: undefined, orderby: null as unknown as string },
+      { filter: undefined, orderby: null },
       responseMap,
     );
     expect(out).toEqual({ filter: undefined, orderby: null });
