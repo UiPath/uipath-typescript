@@ -1,4 +1,5 @@
 import type { PaginationOptions } from '../../utils/pagination/types';
+import { JobState } from '../common/types';
 
 /**
  * Filter fields shared by agent endpoints that accept a
@@ -403,8 +404,12 @@ export interface AgentSummaryEntry {
   firstJobFinished: string;
   /** Last job completion timestamp (ISO 8601, UTC) */
   lastJobFinished: string;
-  /** Status of the most recent run (e.g., "Success", "Faulted", "Running") */
-  lastJobStatus: string;
+  /**
+   * Status of the most recent run, normalized to {@link JobState}. The API's
+   * `Success` label maps to {@link JobState.Successful}; any unrecognized value
+   * becomes {@link JobState.Unknown}.
+   */
+  lastJobStatus: JobState;
 }
 
 /**
@@ -431,11 +436,6 @@ export interface AgentSummaryPeriod {
 
 /**
  * Response from getting the agent summary.
- *
- * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
- * period summaries are returned directly. `lookbackPeriodSummary` is only
- * present when the request set `lookbackPeriodAnalysis: true` (the API uses
- * Newtonsoft `NullValueHandling.Ignore` and omits the key otherwise).
  */
 export interface AgentGetSummaryResponse {
   /** Aggregate stats for the requested window */
@@ -462,7 +462,7 @@ export enum AgentExecutionType {
  */
 export interface AgentGetSummaryOptions extends AgentFilterOptions {
   /**
-   * When `true`, the API also computes a `lookbackPeriodSummary` for the
+   * When `true`, It also computes a `lookbackPeriodSummary` for the
    * prior window of equal length. Defaults to `false` server-side.
    */
   lookbackPeriodAnalysis?: boolean;
@@ -471,8 +471,7 @@ export interface AgentGetSummaryOptions extends AgentFilterOptions {
   /**
    * Filter to a specific folder by key (GUID).
    *
-   * Note: this is a distinct field from the inherited {@link AgentFilterOptions.folderKeys}
-   * (plural array). The summary endpoint accepts both — `folderKey` selects a
+   * The summary endpoint accepts both — `folderKey` selects a
    * single folder, `folderKeys` filters the lookup to a list of folders.
    */
   folderKey?: string;
@@ -497,10 +496,6 @@ export interface AgentJobConsumptionSummary {
 /**
  * Per-agent (process + folder) unit consumption entry within an
  * {@link AgentUnitConsumptionPeriod}.
- *
- * Note: `firstJobFinished` and `lastJobFinished` come back as
- * `"0001-01-01T00:00:00"` (.NET `DateTime.MinValue` sentinel) when the period
- * had no completed jobs for this agent — treat that value as "no completion".
  */
 export interface AgentUnitConsumptionEntry {
   /** Folder key (GUID) the agent ran in */
@@ -539,11 +534,6 @@ export interface AgentUnitConsumptionPeriod {
 
 /**
  * Response from getting the agent unit consumption summary.
- *
- * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
- * period summaries are returned directly. `lookbackPeriodSummary` is only
- * present when the request set `lookbackPeriodAnalysis: true` (the API uses
- * Newtonsoft `NullValueHandling.Ignore` and omits the key otherwise).
  */
 export interface AgentGetUnitConsumptionSummaryResponse {
   /** Aggregate consumption for the requested window */

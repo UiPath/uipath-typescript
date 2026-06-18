@@ -17,12 +17,14 @@ import {
   AgentGetIncidentDistributionResponse,
   AgentGetSummaryOptions,
   AgentGetSummaryResponse,
+  AgentSummaryPeriod,
   AgentGetUnitConsumptionSummaryOptions,
   AgentGetUnitConsumptionSummaryResponse,
   AgentListItem,
   AgentGetAllOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
+import { JobState } from '../../models/common/types';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
@@ -38,6 +40,41 @@ import type {
   NonPaginatedResponse,
   PaginatedResponse,
 } from '../../utils/pagination/types';
+
+/**
+ * Raw `lastJobStatus` strings the agent-summary API emits that don't match a
+ * {@link JobState} value verbatim. `Success` is the API's short label for a
+ * successful run, normalized to `Successful`. (`Cancelled` is a canonical
+ * JobState value and passes through unchanged — it is not aliased to `Stopped`.)
+ */
+const JOB_STATUS_ALIASES: Record<string, JobState> = {
+  Success: JobState.Successful,
+};
+
+const VALID_JOB_STATES = new Set<string>(Object.values(JobState));
+
+/**
+ * Permissively maps a raw `lastJobStatus` string to a {@link JobState}. Known
+ * aliases are translated first, canonical values pass through, and anything
+ * unrecognized falls back to {@link JobState.Unknown} rather than throwing.
+ */
+function toJobState(raw: string): JobState {
+  if (raw in JOB_STATUS_ALIASES) return JOB_STATUS_ALIASES[raw];
+  if (VALID_JOB_STATES.has(raw)) return raw as JobState;
+  return JobState.Unknown;
+}
+
+/**
+ * Returns a copy of a summary period with every agent's `lastJobStatus`
+ * normalized to a {@link JobState}.
+ */
+function normalizeSummaryPeriod(period?: AgentSummaryPeriod): AgentSummaryPeriod | undefined {
+  if (!period) return period;
+  return {
+    ...period,
+    agents: period.agents.map((agent) => ({ ...agent, lastJobStatus: toJobState(agent.lastJobStatus) })),
+  };
+}
 
 /**
  * Service for interacting with the UiPath Agents API.
@@ -578,7 +615,14 @@ export class AgentService extends BaseService implements AgentServiceModel {
       body,
     );
 
-    return response.data.data ?? {};
+    const summary = response.data.data;
+    if (!summary) return {};
+
+    return {
+      ...summary,
+      currentPeriodSummary: normalizeSummaryPeriod(summary.currentPeriodSummary),
+      lookbackPeriodSummary: normalizeSummaryPeriod(summary.lookbackPeriodSummary),
+    };
   }
 
   /**

@@ -5,6 +5,7 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { AGENTS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { AgentErrorSortColumn, AgentListSortColumn, AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 // ===== MOCKING =====
@@ -768,13 +769,18 @@ describe('AgentService Unit Tests', () => {
         },
       ],
     };
+    // Same period with lastJobStatus normalized from the raw 'Success' to JobState.Successful.
+    const expectedPeriod = {
+      ...mockPeriod,
+      agents: [{ ...mockPeriod.agents[0], lastJobStatus: JobState.Successful }],
+    };
 
     it('should unwrap the data envelope; lookback is undefined when not requested', async () => {
       mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
 
       const result = await agentService.getSummary(startTime, endTime);
 
-      expect(result.currentPeriodSummary).toEqual(mockPeriod);
+      expect(result.currentPeriodSummary).toEqual(expectedPeriod);
       expect(result.lookbackPeriodSummary).toBeUndefined();
       expect((result as { data?: unknown }).data).toBeUndefined();
 
@@ -819,8 +825,46 @@ describe('AgentService Unit Tests', () => {
 
       const result = await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
 
-      expect(result.currentPeriodSummary).toEqual(mockPeriod);
-      expect(result.lookbackPeriodSummary).toEqual(mockPeriod);
+      expect(result.currentPeriodSummary).toEqual(expectedPeriod);
+      expect(result.lookbackPeriodSummary).toEqual(expectedPeriod);
+    });
+
+    it('should normalize lastJobStatus across both periods, mapping aliases and unknowns to JobState', async () => {
+      const makeAgent = (lastJobStatus: string) => ({
+        ...mockPeriod.agents[0],
+        lastJobStatus,
+      });
+      mockApiClient.post.mockResolvedValue({
+        data: {
+          currentPeriodSummary: {
+            ...mockPeriod,
+            // raw -> expected: Success->Successful (aliased); Cancelled,
+            // Running, Faulted pass through unchanged; garbage->Unknown
+            agents: [
+              makeAgent('Success'),
+              makeAgent('Cancelled'),
+              makeAgent('Running'),
+              makeAgent('Faulted'),
+              makeAgent('NotARealStatus'),
+            ],
+          },
+          lookbackPeriodSummary: { ...mockPeriod, agents: [makeAgent('Success')] },
+        },
+      });
+
+      const result = await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
+
+      expect(result.currentPeriodSummary?.agents.map((a) => a.lastJobStatus)).toEqual([
+        JobState.Successful,
+        JobState.Cancelled,
+        JobState.Running,
+        JobState.Faulted,
+        JobState.Unknown,
+      ]);
+      // Normalization is applied to the lookback period too, not just the current one.
+      expect(result.lookbackPeriodSummary?.agents[0].lastJobStatus).toBe(JobState.Successful);
+      // The raw API label must not leak through.
+      expect(result.currentPeriodSummary?.agents[0].lastJobStatus).not.toBe('Success');
     });
 
     it('should return an empty object when the envelope data is absent', async () => {

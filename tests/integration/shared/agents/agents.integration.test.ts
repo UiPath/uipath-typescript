@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
 import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -361,6 +362,12 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(typeof period.totalJobs).toBe('number');
       expect(typeof period.successRate).toBe('number');
       expect(Array.isArray(period.agents)).toBe(true);
+      // Every lastJobStatus must be normalized to a valid JobState — no raw
+      // labels (e.g. 'Success', 'Cancelled') leaking through the transform.
+      const validStates = new Set<string>(Object.values(JobState));
+      for (const agent of period.agents) {
+        expect(validStates.has(agent.lastJobStatus)).toBe(true);
+      }
     });
 
     it('should include a lookback summary when requested', async () => {
