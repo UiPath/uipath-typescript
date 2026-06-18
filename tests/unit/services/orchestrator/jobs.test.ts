@@ -19,7 +19,7 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
-import { JOB_KEY_RESOLUTION_CHUNK_SIZE, JobMap } from '../../../../src/models/orchestrator/jobs.constants';
+import { JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../../src/models/orchestrator/jobs.constants';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -158,7 +158,7 @@ describe('JobService Unit Tests', () => {
       await expect(jobService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
-    it('should pass JobMap as fieldMap so SDK names work in filter/orderby/select', async () => {
+    it('should translate SDK field names to API names in filter/orderby before delegating', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedJobCollection(),
       );
@@ -168,11 +168,13 @@ describe('JobService Unit Tests', () => {
         orderby: 'createdTime desc',
       });
 
+      // Options arriving at PaginationHelpers should already be in API field space:
+      // processName → releaseName, folderId → organizationUnitId, createdTime → creationTime.
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ fieldMap: JobMap }),
+        expect.any(Object),
         expect.objectContaining({
-          filter: "processName eq 'InvoiceBot' and folderId eq 7",
-          orderby: 'createdTime desc',
+          filter: "releaseName eq 'InvoiceBot' and organizationUnitId eq 7",
+          orderby: 'creationTime desc',
         }),
       );
     });

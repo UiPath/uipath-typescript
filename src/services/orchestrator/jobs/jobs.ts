@@ -93,12 +93,16 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       return createJobWithMethods(rawJob, this);
     };
 
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, JobMap) as T : options;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => JOB_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: JOB_ENDPOINTS.GET_ALL,
       transformFn: transformJobResponse,
-      fieldMap: JobMap,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -109,7 +113,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
         },
       },
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
