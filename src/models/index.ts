@@ -14,4 +14,4 @@ export * from './orchestrator';
 export * from './action-center';
 
 // Document Understanding models
-export * from './document-understanding';
+export * as DuFramework from './document-understanding/framework';
