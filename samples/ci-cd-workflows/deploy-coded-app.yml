@@ -1,6 +1,7 @@
 # Deploy a UiPath Coded App via the uip CLI.
 #
-# Trigger: push to main (auto-deploy), or manual dispatch.
+# Usage: copy this file into your project's .github/workflows/ directory.
+#
 # Prerequisites:
 #   - UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET stored as repo secrets
 #     (from an external app registered in UiPath with Apps + OR scopes)
