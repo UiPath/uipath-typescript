@@ -96,7 +96,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     // Rewrite renamed SDK field names → API names inside OData strings
     // before delegating, mirroring the transformRequest pattern used for
     // request bodies.
-    const apiOptions = options ? transformOptions(options, JobMap) as T : options;
+    const apiOptions = options ? transformOptions(options, JobMap) : options;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
