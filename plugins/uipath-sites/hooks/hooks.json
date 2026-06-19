@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${PLUGIN_ROOT}/hooks/ensure-uip.sh\"",
+            "timeout": 180,
+            "once": true,
+            "statusMessage": "Checking uip and UiPath skills installation..."
+          }
+        ]
+      }
+    ]
+  }
+}
