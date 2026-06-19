@@ -42,7 +42,7 @@ export interface AgentListOrderBy {
   /** Column to sort by */
   column: AgentListSortColumn;
   /**
-   * Sort descending. Defaults to false.
+   * Sort descending.
    * @default false
    */
   desc?: boolean;
@@ -141,7 +141,7 @@ export interface AgentErrorOrderBy {
   /** Column to sort by */
   column: AgentErrorSortColumn;
   /**
-   * Sort descending. Defaults to false (ascending) server-side.
+   * Sort descending.
    * @default false
    */
   desc?: boolean;
@@ -209,7 +209,7 @@ export interface AgentGetErrorsTimelineResponse {
  */
 export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
   /**
-   * Max number of agents to return. Defaults to 10 server-side.
+   * Max number of agents to return.
    * @default 10
    */
   limit?: number;
@@ -250,8 +250,8 @@ export interface AgentGetLatencyTimelineResponse {
 export interface AgentGetLatencyTimelineOptions extends AgentFilterOptions {}
 
 /**
- * One entry in the top-error-count list — one agent with its error count
- * and first/last observed failing jobs.
+ * A single agent's error count over the requested window, with the first and
+ * last jobs where errors were observed.
  */
 export interface AgentTopErrorCount {
   /** Agent name */
@@ -299,7 +299,8 @@ export enum AgentType {
 }
 
 /**
- * Per-agent consumption entry returned by getting the top agents by consumption.
+ * A single agent's unit consumption over the requested window, with the first
+ * and last jobs where consumption was recorded.
  */
 export interface AgentConsumption {
   /** Agent ID (GUID) */

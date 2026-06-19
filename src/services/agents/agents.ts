@@ -45,12 +45,6 @@ import type {
   PaginatedResponse,
 } from '../../utils/pagination/types';
 
-/**
- * Raw `lastJobStatus` strings the agent-summary API emits that don't match a
- * {@link JobState} value verbatim. `Success` is the API's short label for a
- * successful run, normalized to `Successful`. (`Cancelled` is a canonical
- * JobState value and passes through unchanged — it is not aliased to `Stopped`.)
- */
 const JOB_STATUS_ALIASES: Record<string, JobState> = {
   Success: JobState.Successful,
 };
