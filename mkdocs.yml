@@ -214,7 +214,8 @@ nav:
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md
-      - "CI/CD: GitHub Actions": coded-apps/ci-cd-github-actions.md
+      - CI/CD Recipes:
+        - GitHub Actions: coded-apps/ci-cd-github-actions.md
   - Coded Action Apps:
       - Getting Started: coded-action-apps/getting-started.md
       - CLI Reference: coded-action-apps/cli-reference.md
