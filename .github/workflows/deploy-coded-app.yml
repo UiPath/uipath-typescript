@@ -9,6 +9,9 @@
 
 name: Deploy Coded App
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
