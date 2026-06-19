@@ -8,7 +8,7 @@ Deploys a coded app (React, Vue, etc.) to UiPath using external app authenticati
 
 **Setup:**
 
-1. Register an external app in UiPath Cloud Portal with scopes: `Apps`, `OR.Administration`, `OR.Execution`
+1. Register an external app in UiPath Cloud Portal with scopes: `Apps`, `OR.Folders.Read`, `OR.Administration`, `OR.Execution`
 2. Assign the external app to the target Orchestrator folder
 3. Add `UIPATH_CLIENT_ID` and `UIPATH_CLIENT_SECRET` as GitHub repo secrets
 4. Copy `deploy-coded-app.yml` into your project's `.github/workflows/` directory

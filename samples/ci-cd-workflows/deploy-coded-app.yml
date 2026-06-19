@@ -64,7 +64,7 @@ jobs:
             --tenant "$UIPATH_TENANT" \
             --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
             --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
-            --scope "Apps OR.Administration OR.Execution"
+            --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
 
       - name: Pack
         run: uip codedapp pack ./dist
