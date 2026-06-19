@@ -1,6 +1,6 @@
 # CI/CD: GitHub Actions
 
-This page gives you a complete `.github/workflows/deploy.yml` that **installs the CLI, authenticates with an External Application, packs, publishes, and deploys a Coded App**. Drop it into your repo, add two secrets, and it runs.
+A sample GitHub Actions workflow to pack, publish, and deploy a Coded App using the `uip` CLI with external app authentication.
 
 ## Prerequisites
 
