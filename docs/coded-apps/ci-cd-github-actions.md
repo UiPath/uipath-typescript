@@ -6,12 +6,11 @@ A sample GitHub Actions workflow to pack, publish, and deploy a Coded App using 
 
 Before copying the YAML below:
 
-1. **Create an External Application** in UiPath Cloud Portal with scopes: `Apps`, `OR.Folders.Read`, `OR.Administration`, `OR.Execution`.
-2. **Assign the external app** to the target Orchestrator folder (Settings → Manage Access → Assign external app).
+1. **Create a Confidential External Application** in UiPath Admin portal with application scopes: `Apps`, `OR.Folders.Read`, `OR.Administration`, `OR.Execution`.
+2. **Assign the external app** to the Orchestrator folder where you will be deploying your app (Settings → Manage Access → Assign external app).
 3. **Store the secrets** in the repository settings:
     - Settings → Secrets and variables → Actions → New repository secret.
     - Add `UIPATH_CLIENT_ID` and `UIPATH_CLIENT_SECRET` as **secrets**.
-    - Add `UIPATH_ORG` and `UIPATH_TENANT` as **variables** (not secrets — they're not sensitive).
 
 ## .github/workflows/deploy.yml
 
@@ -30,15 +29,15 @@ on:
       path-name:
         description: "URL path name (https://<org>.uipath.host/<path-name>)"
         required: true
-      environment:
-        description: "Target environment"
+      org:
+        description: "UiPath organization name"
         required: true
-        default: "alpha"
-        type: choice
-        options:
-          - alpha
-          - staging
-          - cloud
+      tenant:
+        description: "UiPath tenant name"
+        required: true
+      folder-key:
+        description: "Orchestrator folder key (UUID)"
+        required: true
 
 env:
   NODE_VERSION: "20"
@@ -61,92 +60,55 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Pin to a specific version for reproducible builds
       - name: Install uip CLI
         run: npm install -g @uipath/uip
 
+      # Authenticates using external app client credentials
       - name: Login to UiPath
         run: |
           uip login \
-            --authority "https://${{ inputs.environment }}.uipath.com" \
-            --organization "${{ vars.UIPATH_ORG }}" \
-            --tenant "${{ vars.UIPATH_TENANT }}" \
+            --organization "${{ inputs.org }}" \
+            --tenant "${{ inputs.tenant }}" \
             --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
             --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
             --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
 
+      # Creates a .nupkg package from the built app
       - name: Pack
         run: uip codedapp pack ./dist
 
+      # Uploads .nupkg to Orchestrator and registers the app version
       - name: Publish
         run: uip codedapp publish --name "${{ inputs.app-name }}"
 
+      # Deploys to the specified folder — app becomes available at https://<org>.uipath.host/<path-name>
       - name: Deploy
         run: |
           uip codedapp deploy \
             --name "${{ inputs.app-name }}" \
-            --path-name "${{ inputs.path-name }}"
+            --path-name "${{ inputs.path-name }}" \
+            --folder-key "${{ inputs.folder-key }}"
 ```
-
-## Walkthrough
-
-### Login
-
-```yaml
-uip login \
-  --authority "https://alpha.uipath.com" \
-  --organization "myorg" \
-  --tenant "mytenant" \
-  --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
-  --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
-  --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
-```
-
-Authenticates using the external app's client credentials. The `--scope` flag requests:
-
-| Scope | Why |
-|---|---|
-| `Apps` | Access to Apps service APIs (publish, deploy, list) |
-| `OR.Folders.Read` | Read folder metadata from Orchestrator during deploy |
-| `OR.Administration` | Manage deployment resources |
-| `OR.Execution` | Execute deployment operations |
-
-### Pack
-
-```yaml
-uip codedapp pack ./dist
-```
-
-Creates a `.nupkg` package from your built app in `./dist`. Output goes to `.uipath/` directory.
-
-### Publish
-
-```yaml
-uip codedapp publish --name "my-app"
-```
-
-Uploads the `.nupkg` to Orchestrator and registers the coded app version in Apps service.
-
-### Deploy
-
-```yaml
-uip codedapp deploy --name "my-app" --path-name "my-app-url"
-```
-
-Deploys the published version to a folder. The app becomes available at `https://<org>.uipath.host/<path-name>`.
 
 ## Common variations
 
 ### Deploy on push to main
 
-Replace `workflow_dispatch` with:
+Replace `workflow_dispatch` with a push trigger and hardcode the values:
 
 ```yaml
 on:
   push:
     branches: [main]
-```
 
-And hardcode the app name and path instead of using inputs.
+env:
+  APP_NAME: "my-app"
+  PATH_NAME: "my-app"
+  ORG: "myorg"
+  TENANT: "mytenant"
+  FOLDER_KEY: "8645d674-92d8-4281-9aef-43f3e3608ded"
+```
 
 ### Pin CLI version
 
