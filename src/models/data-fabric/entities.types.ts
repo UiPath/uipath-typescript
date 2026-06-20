@@ -236,7 +236,8 @@ export interface EntityAggregate {
  * A join pulls related records together by matching a field on the base (left)
  * entity (`joinFieldName`) to a field on a related (right) entity
  * (`relatedFieldName`). Pass one {@link EntityJoin} per related entity; supplying
- * several composes a multi-entity (multi-join) query.
+ * several composes a multi-entity (multi-join) query. Up to 3 joins are
+ * supported, and all of them must share the same {@link JoinType}.
  *
  * @example
  * ```typescript
@@ -283,7 +284,11 @@ export type EntityQueryRecordsOptions = {
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
   groupBy?: string[];
-  /** Cross-entity joins. Each entry joins one related entity into the query; supply several for a multi-join query. */
+  /**
+   * Cross-entity joins. Each entry joins one related entity into the query;
+   * supply several for a multi-join query. A maximum of 3 joins is supported,
+   * and all joins must be of the same {@link JoinType}.
+   */
   joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
 
