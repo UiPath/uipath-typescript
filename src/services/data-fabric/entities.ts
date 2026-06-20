@@ -565,7 +565,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Queries entity records with filters, sorting, aggregates, and pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination The `folderKey` property is **experimental**.
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
@@ -613,6 +613,29 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   ],
    * });
    *
+   * // Multi-join: pull fields from related entities into the query
+   * import { JoinType } from '@uipath/uipath-typescript/entities';
+   *
+   * await entities.queryRecordsById("<entityId>", {
+   *   selectedFields: ["Id", "amount"],
+   *   joins: [
+   *     {
+   *       entityName: "Order",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "customerId",
+   *       relatedEntityName: "Customer",
+   *       relatedFieldName: "Id",
+   *     },
+   *     {
+   *       entityName: "Customer",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "regionId",
+   *       relatedEntityName: "Region",
+   *       relatedFieldName: "Id",
+   *     },
+   *   ],
+   * });
+   *
    * // Folder-scoped entity: pass the entity's folder key
    * await entities.queryRecordsById("<entityId>", {
    *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
@@ -644,7 +667,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins']
     }, downstreamOptions);
   }
 

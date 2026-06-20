@@ -39,6 +39,7 @@ import {
   EntityType,
   ExternalField,
   FieldDisplayType,
+  JoinType,
   QueryFilterOperator,
   RawEntityGetResponse,
 } from "../../../../src/models/data-fabric/entities.types";
@@ -1704,6 +1705,94 @@ describe("EntityService Unit Tests", () => {
             { function: "MIN",   field: "score" },
             { function: "MAX",   field: "score" },
             { function: "SUM",   field: "amount" },
+          ],
+        }),
+      );
+    });
+
+    it("should pass joins through to PaginationHelpers.getAll", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      const options = {
+        selectedFields: ["Id", "amount"],
+        joins: [
+          {
+            entityName: "Order",
+            joinType: JoinType.LeftJoin,
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+          {
+            entityName: "Customer",
+            joinType: JoinType.LeftJoin,
+            joinFieldName: "regionId",
+            relatedEntityName: "Region",
+            relatedFieldName: "Id",
+          },
+        ],
+      };
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          selectedFields: options.selectedFields,
+          joins: options.joins,
+        }),
+      );
+    });
+
+    it("should include joins in excludeFromPrefix so OData $ prefix is not added", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        joins: [
+          {
+            entityName: "Order",
+            joinType: JoinType.LeftJoin,
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeFromPrefix: expect.arrayContaining(["joins"]),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should send joinType as the JoinType enum string value", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        joins: [
+          {
+            entityName: "Order",
+            joinType: JoinType.LeftJoin,
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          joins: [
+            {
+              entityName: "Order",
+              joinType: "LeftJoin",
+              joinFieldName: "customerId",
+              relatedEntityName: "Customer",
+              relatedFieldName: "Id",
+            },
           ],
         }),
       );
