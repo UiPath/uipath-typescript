@@ -47,6 +47,7 @@ jobs:
       - name: Login to UiPath
         run: |
           uip login \
+            --authority "https://alpha.uipath.com" \
             --organization "${{ env.ORG }}" \
             --tenant "${{ env.TENANT }}" \
             --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
