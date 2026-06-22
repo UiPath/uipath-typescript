@@ -55,11 +55,6 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
-   * const runningJobs = await jobs.getAll({
-   *   filter: "state eq 'Running'"
-   * });
-   *
-   * // Filter and sort by SDK field names — same names you read from the response
    * const recentInvoiceJobs = await jobs.getAll({
    *   filter: "processName eq 'InvoiceBot'",
    *   orderby: 'createdTime desc',
@@ -153,9 +148,8 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const rewrittenOptions = options ? transformOptions(options, JobMap) : undefined;
-    const keysToPrefix = Object.keys(rewrittenOptions ?? {});
-    const apiOptions = rewrittenOptions ? addPrefixToKeys(rewrittenOptions, ODATA_PREFIX, keysToPrefix) : {};
+    const apiFieldOptions = options ? transformOptions(options, JobMap) : {};
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.get<Record<string, unknown>>(
       JOB_ENDPOINTS.GET_BY_KEY(id),

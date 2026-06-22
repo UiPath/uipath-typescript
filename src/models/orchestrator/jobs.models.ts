@@ -42,11 +42,6 @@ export interface JobServiceModel {
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
-   * const runningJobs = await jobs.getAll({
-   *   filter: "state eq 'Running'"
-   * });
-   *
-   * // Filter and sort by SDK field names — same names you read from the response
    * const recentInvoiceJobs = await jobs.getAll({
    *   filter: "processName eq 'InvoiceBot'",
    *   orderby: 'createdTime desc',
