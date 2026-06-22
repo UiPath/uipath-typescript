@@ -515,6 +515,8 @@ describe('MaestroProcessesService', () => {
       expect(result.p50DurationMs).toBe(3500000);
       expect(result.p95DurationMs).toBe(6500000);
       expect(result.p99DurationMs).toBe(8000000);
+      expect((result as any).countOfAllInstances).toBeUndefined();
+      expect((result as any).countOfRunning).toBeUndefined();
     });
 
     it('should handle API errors', async () => {
