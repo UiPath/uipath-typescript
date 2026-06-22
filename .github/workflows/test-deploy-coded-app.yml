@@ -36,12 +36,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install uip CLI
-        run: npm install -g @uipath/cli
+      - name: Install uip CLI and codedapp tool
+        run: |
+          mv .npmrc .npmrc.bak
+          npm install -g @uipath/cli
+          uip tools install codedapp
+          mv .npmrc.bak .npmrc
         working-directory: .
-
-      - name: Install codedapp tool
-        run: uip tools install codedapp
 
       - name: Login to UiPath
         run: |
