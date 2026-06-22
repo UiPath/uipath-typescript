@@ -116,7 +116,7 @@ env:
   PATH_NAME: "my-app"
   ORG: "myorg"
   TENANT: "mytenant"
-  FOLDER_KEY: "8645d674-92d8-4281-9aef-43f3e3608ded"
+  FOLDER_KEY: "<your-folder-key>"
 
 jobs:
   deploy:
