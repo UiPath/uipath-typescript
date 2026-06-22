@@ -305,9 +305,11 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   sourceType: JobSourceType;
   batchExecutionKey: string;
   info: string | null;
-  createdTime: string; 
+  createdTime: string;
   startingScheduleId: number | null;
   processName: string;
+  /** Key of the process (a.k.a. release) this job was started from. Renamed from the API's `releaseKey` via `ProcessMap`. */
+  processKey: string;
   type: JobType;
   inputFile: string | null;
   outputArguments: string | null;
