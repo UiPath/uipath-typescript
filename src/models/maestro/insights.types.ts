@@ -119,21 +119,12 @@ export interface GetTopDurationResponse extends GetTopBaseResponse {
 }
 
 /**
- * Element count by status for a BPMN element within a process or case
+ * Duration percentile stats shared by Insights aggregate endpoints (per-element and per-process/case).
+ *
+ * For instance-level stats, durations are computed over terminal instances only
+ * (Completed, Cancelled, Deleted) and default to `0` when no terminal instances exist.
  */
-export interface ElementStats {
-  /** BPMN element identifier */
-  elementId: string;
-  /** Number of successful executions */
-  successCount: number;
-  /** Number of failed executions */
-  failCount: number;
-  /** Number of terminated executions */
-  terminatedCount: number;
-  /** Number of paused executions */
-  pausedCount: number;
-  /** Number of in-progress executions */
-  inProgressCount: number;
+export interface DurationStats {
   /** Minimum duration in milliseconds */
   minDurationMs: number;
   /** Maximum duration in milliseconds */
@@ -146,5 +137,67 @@ export interface ElementStats {
   p95DurationMs: number;
   /** 99th percentile duration in milliseconds */
   p99DurationMs: number;
+}
+
+/**
+ * Instance count and duration stats aggregated by status for a process or case within a time range.
+ *
+ * Duration fields are computed over terminal instances only (Completed, Cancelled, Deleted)
+ * and default to `0` when no terminal instances exist in the time range.
+ */
+export interface InstanceStats extends DurationStats {
+  /** Total number of instances across all statuses */
+  totalCount: number;
+  /** Number of currently running instances */
+  runningCount: number;
+  /** Number of instances in transitioning state */
+  transitioningCount: number;
+  /** Number of paused instances */
+  pausedCount: number;
+  /** Number of faulted instances */
+  faultedCount: number;
+  /** Number of completed instances */
+  completedCount: number;
+  /** Number of cancelled instances */
+  cancelledCount: number;
+  /** Number of deleted instances */
+  deletedCount: number;
+}
+
+/**
+ * Required request parameters for process-scoped insights stats endpoints
+ * (`getElementStats`, `getInstanceStats`).
+ *
+ * Identifies a single process+package+version and the time range to aggregate over.
+ */
+export interface MaestroProcessStatsRequest {
+  /** Process key to filter by */
+  processKey: string;
+  /** Package identifier */
+  packageId: string;
+  /** Package version to filter by */
+  packageVersion: string;
+  /** Start of the time range to query */
+  startTime: Date;
+  /** End of the time range to query */
+  endTime: Date;
+}
+
+/**
+ * Per-element execution counts and duration percentiles for a BPMN element within a process or case.
+ */
+export interface ElementStats extends DurationStats {
+  /** BPMN element identifier */
+  elementId: string;
+  /** Number of successful executions */
+  successCount: number;
+  /** Number of failed executions */
+  failCount: number;
+  /** Number of terminated executions */
+  terminatedCount: number;
+  /** Number of paused executions */
+  pausedCount: number;
+  /** Number of in-progress executions */
+  inProgressCount: number;
 }
 

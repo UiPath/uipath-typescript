@@ -1,6 +1,6 @@
 import { ApiResponse } from '../base';
 import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
-import type { TopQueryOptions } from '../../models/maestro';
+import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -62,24 +62,21 @@ export async function fetchInstanceStatusTimeline(
 }
 
 /**
- * Builds the request body for the ElementCountByStatus endpoint.
+ * Builds the commonParams request body for Insights RTM endpoints
+ * that filter by process key, package, time range, and version.
  *
- * @param processKey - Process key to filter by
- * @param packageId - Package identifier
- * @param startTime - Start of the time range to query
- * @param endTime - End of the time range to query
- * @param packageVersion - Package version to filter by
- * @returns Request body for the ElementCountByStatus endpoint
+ * @param request - Process scope + time range to aggregate over
+ * @returns Request body with commonParams
  * @internal
  */
-export function buildElementCountByStatusBody(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string) {
+export function buildInsightsCommonBody(request: MaestroProcessStatsRequest) {
   return {
     commonParams: {
-      processKey,
-      packageId,
-      startTime: startTime.getTime(),
-      endTime: endTime.getTime(),
-      version: packageVersion
+      processKey: request.processKey,
+      packageId: request.packageId,
+      startTime: request.startTime.getTime(),
+      endTime: request.endTime.getTime(),
+      version: request.packageVersion
     }
   };
 }

@@ -19,7 +19,8 @@ describe('Case Models', () => {
       getInstanceStatusTimeline: vi.fn(),
       getTopFaultedCount: vi.fn(),
       getTopExecutionDuration: vi.fn(),
-      getElementStats: vi.fn()
+      getElementStats: vi.fn(),
+      getInstanceStats: vi.fn()
     } as any;
   });
 
@@ -36,17 +37,35 @@ describe('Case Models', () => {
         const startTime = new Date('2026-04-01T00:00:00Z');
         const endTime = new Date('2026-05-01T00:00:00Z');
 
-        mockService.getElementStats = vi.fn().mockResolvedValue([]);
-
         await caseObj.getElementStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getElementStats).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        expect(mockService.getElementStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
           startTime,
           endTime,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        );
+        });
+      });
+    });
+
+    describe('case.getInstanceStats()', () => {
+      it('should call service.getInstanceStats with bound processKey and packageId', async () => {
+        const mockCaseData = createMockCase();
+        const caseObj = createCaseWithMethods(mockCaseData, mockService);
+
+        const startTime = new Date('2026-04-01T00:00:00Z');
+        const endTime = new Date('2026-05-01T00:00:00Z');
+
+        await caseObj.getInstanceStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
+
+        expect(mockService.getInstanceStats).toHaveBeenCalledWith({
+          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+          startTime,
+          endTime,
+        });
       });
     });
   });

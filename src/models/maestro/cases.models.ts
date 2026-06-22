@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -248,31 +248,74 @@ export interface CasesServiceModel {
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
-   * // Get element metrics for a case
-   * const elements = await cases.getElementStats(
-   *   '<processKey>',
-   *   '<packageId>',
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   '1.0.1'
-   * );
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get element metrics for that case
+   * const elements = await cases.getElementStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * // Find elements with failures
    * const failedElements = elements.filter(e => e.failCount > 0);
    * for (const element of failedElements) {
    *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
    * }
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundElements = await caseItem.getElementStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
    * ```
    */
-  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+  getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]>;
+
+  /**
+   * Get instance stats for a case.
+   *
+   * Returns total instance counts broken down by status (running, completed, faulted, etc.)
+   * and the average execution duration for all instances of a case within a time range.
+   *
+   * @param request - Process scope + time range to aggregate over
+   * @returns Promise resolving to {@link InstanceStats}
+   * @example
+   * ```typescript
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get instance status breakdown for that case
+   * const counts = await cases.getInstanceStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
+   *
+   * console.log(`Total: ${counts.totalCount}`);
+   * console.log(`Completed: ${counts.completedCount}, Faulted: ${counts.faultedCount}`);
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundCounts = await caseItem.getInstanceStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
+   * ```
+   */
+  getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
 }
 
 // Method interface that will be added to case objects
@@ -286,6 +329,16 @@ export interface CaseMethods {
    * @returns Promise resolving to an array of {@link ElementStats}
    */
   getElementStats(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+
+  /**
+   * Get instance stats for this case
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to {@link InstanceStats}
+   */
+  getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
 }
 
 // Combined type for case data with methods
@@ -304,7 +357,25 @@ function createCaseMethods(caseData: CaseGetAllResponse, service: CasesServiceMo
       if (!caseData.processKey) throw new Error('Process key is undefined');
       if (!caseData.packageId) throw new Error('Package ID is undefined');
 
-      return service.getElementStats(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
+      return service.getElementStats({
+        processKey: caseData.processKey,
+        packageId: caseData.packageId,
+        packageVersion,
+        startTime,
+        endTime,
+      });
+    },
+    getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
+      if (!caseData.processKey) throw new Error('Process key is undefined');
+      if (!caseData.packageId) throw new Error('Package ID is undefined');
+
+      return service.getInstanceStats({
+        processKey: caseData.processKey,
+        packageId: caseData.packageId,
+        packageVersion,
+        startTime,
+        endTime,
+      });
     }
   };
 }

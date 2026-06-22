@@ -426,17 +426,18 @@ describe('MaestroProcessesService', () => {
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');
+    const statsRequest = {
+      processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+      startTime: startDate,
+      endTime: endDate,
+    };
 
     it('should retrieve element stats', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        startDate,
-        endDate,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats(statsRequest);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
@@ -462,13 +463,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        startDate,
-        endDate,
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats(statsRequest);
 
       expect(result).toEqual([]);
     });
@@ -476,15 +471,58 @@ describe('MaestroProcessesService', () => {
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(
-        service.getElementStats(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-          startDate,
-          endDate,
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        )
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getElementStats(statsRequest)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getInstanceStats', () => {
+    const mockResponse = MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_STATS;
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+    const statsRequest = {
+      processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+      startTime: startDate,
+      endTime: endDate,
+    };
+
+    it('should retrieve instance stats', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getInstanceStats(statsRequest);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
+        {
+          commonParams: {
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+          }
+        },
+        {}
+      );
+      expect(result.totalCount).toBe(276);
+      expect(result.completedCount).toBe(275);
+      expect(result.transitioningCount).toBe(1);
+      expect(result.avgDurationMs).toBe(3992314);
+      expect(result.minDurationMs).toBe(763);
+      expect(result.maxDurationMs).toBe(8702314);
+      expect(result.p50DurationMs).toBe(3500000);
+      expect(result.p95DurationMs).toBe(6500000);
+      expect(result.p99DurationMs).toBe(8000000);
+      expect((result as any).countOfAllInstances).toBeUndefined();
+      expect((result as any).countOfRunning).toBeUndefined();
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(service.getInstanceStats(statsRequest)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

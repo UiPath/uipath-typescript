@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementStats } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -221,7 +221,7 @@ export function expectValidElementStats(element: ElementStats): void {
 /** Minimal interface for services that support getElementStats integration testing */
 interface ElementStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+  getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]>;
 }
 
 /**
@@ -246,13 +246,13 @@ export async function testGetElementStats(
     throw new Error(`No package versions available for ${serviceName} getElementStats test`);
   }
 
-  const result = await service.getElementStats(
-    process.processKey,
-    process.packageId,
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    new Date(),
-    packageVersion
-  );
+  const result = await service.getElementStats({
+    processKey: process.processKey,
+    packageId: process.packageId,
+    packageVersion,
+    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endTime: new Date(),
+  });
 
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);
@@ -260,4 +260,67 @@ export async function testGetElementStats(
   if (result.length > 0) {
     expectValidElementStats(result[0]);
   }
+}
+
+/**
+ * Validates that an InstanceStats object has the expected shape
+ * with all required numeric fields.
+ *
+ * @param stats - Instance stats object to validate
+ */
+export function expectValidInstanceStats(stats: InstanceStats): void {
+  expect(typeof stats.totalCount).toBe('number');
+  expect(typeof stats.runningCount).toBe('number');
+  expect(typeof stats.transitioningCount).toBe('number');
+  expect(typeof stats.pausedCount).toBe('number');
+  expect(typeof stats.faultedCount).toBe('number');
+  expect(typeof stats.completedCount).toBe('number');
+  expect(typeof stats.cancelledCount).toBe('number');
+  expect(typeof stats.deletedCount).toBe('number');
+  expect(typeof stats.minDurationMs).toBe('number');
+  expect(typeof stats.maxDurationMs).toBe('number');
+  expect(typeof stats.avgDurationMs).toBe('number');
+  expect(typeof stats.p50DurationMs).toBe('number');
+  expect(typeof stats.p95DurationMs).toBe('number');
+  expect(typeof stats.p99DurationMs).toBe('number');
+}
+
+/** Minimal interface for services that support getInstanceStats integration testing */
+interface InstanceStatsService {
+  getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
+  getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
+}
+
+/**
+ * Integration test helper: fetches a process/case, calls getInstanceStats,
+ * and validates the response shape. Shared between MaestroProcesses and Cases.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ * @param serviceName - Name for error messages (e.g., 'processes')
+ */
+export async function testGetInstanceStats(
+  service: InstanceStatsService,
+  serviceName: string
+): Promise<void> {
+  const processes = await service.getAll();
+  if (processes.length === 0) {
+    throw new Error(`No ${serviceName} available for testing getInstanceStats`);
+  }
+
+  const process = processes[0];
+  const packageVersion = process.packageVersions[0];
+  if (!packageVersion) {
+    throw new Error(`No package versions available for ${serviceName} getInstanceStats test`);
+  }
+
+  const result = await service.getInstanceStats({
+    processKey: process.processKey,
+    packageId: process.packageId,
+    packageVersion,
+    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endTime: new Date(),
+  });
+
+  expect(result).toBeDefined();
+  expectValidInstanceStats(result);
 }
