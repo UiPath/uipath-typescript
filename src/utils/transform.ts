@@ -58,6 +58,12 @@ export function transformData<T extends object>(
   data: T | T[],
   fieldMapping: FieldMapping
 ): T {
+  // Pass null/undefined through unchanged — callers (e.g. AttachmentService.getById)
+  // may invoke this on optional fields that an OData `select` excluded.
+  if (data == null) {
+    return data as T;
+  }
+
   // Handle array of objects
   if (Array.isArray(data)) {
     return data.map(item => transformData(item, fieldMapping)) as unknown as T;

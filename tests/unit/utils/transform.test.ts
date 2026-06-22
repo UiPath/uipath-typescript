@@ -52,6 +52,16 @@ describe('transformData', () => {
   it('returns an empty object for empty input', () => {
     expect(transformData({}, { a: 'b' })).toEqual({});
   });
+
+  it('passes null through unchanged (callers may invoke on optional fields)', () => {
+    // @ts-expect-error — intentionally bypass the T-constrained signature to verify runtime safety.
+    expect(transformData(null, { a: 'b' })).toBe(null);
+  });
+
+  it('passes undefined through unchanged (callers may invoke on optional fields)', () => {
+    // @ts-expect-error — intentionally bypass the T-constrained signature to verify runtime safety.
+    expect(transformData(undefined, { a: 'b' })).toBe(undefined);
+  });
 });
 
 describe('rewriteODataIdentifiers', () => {
