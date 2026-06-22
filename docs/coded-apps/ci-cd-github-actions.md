@@ -2,6 +2,9 @@
 
 A sample GitHub Actions workflow to pack, publish, and deploy a Coded App using the `uip` CLI with external app authentication.
 
+!!! note
+    Requires `@uipath/cli` version **1.1.0** or later.
+
 ## Prerequisites
 
 Before copying the YAML below:
@@ -148,9 +151,3 @@ jobs:
             --folder-key "${{ env.FOLDER_KEY }}"
 ```
 
-### Pin CLI version
-
-```yaml
-- name: Install uip CLI
-  run: npm install -g @uipath/cli@1.4.0
-```
