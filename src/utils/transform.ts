@@ -455,14 +455,13 @@ export function rewriteODataIdentifiers(expression: string, requestMap: FieldMap
  * // { filter: "releaseName eq 'X'" }
  * ```
  */
-export function transformOptions<T extends Record<string, any>>(
+export function transformOptions<T extends object>(
   options: T,
   responseMap: FieldMapping,
 ): T {
-  if (!options || !responseMap) return options;
   const requestMap = reverseMap(responseMap);
   if (Object.keys(requestMap).length === 0) return options;
-  const result: Record<string, any> = { ...options };
+  const result: Record<string, unknown> = { ...(options as Record<string, unknown>) };
   for (const key of ODATA_FIELD_PARAM_KEYS) {
     const value = result[key];
     if (typeof value === 'string') {
