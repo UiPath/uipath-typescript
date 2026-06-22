@@ -16,11 +16,20 @@ export type FieldMapping = {
 };
 
 /**
- * Transforms data by mapping fields according to the provided field mapping
+ * Transforms data by renaming each key in `data` exactly once, using the
+ * mapping (`sourceField → targetField`). Keys not present in the mapping
+ * pass through unchanged. The original (pre-rename) key is dropped — the
+ * result contains only the renamed key.
+ *
+ * Each rename is independent. If the mapping happens to contain chained
+ * entries (`a → b` and `b → c`), they do NOT compose: a field named `a`
+ * in `data` becomes `b` (not `c`), because the renames are applied based
+ * on the original data's keys, not the running result.
+ *
  * @param data The source data to transform
  * @param fieldMapping Object mapping source field names to target field names
  * @returns Transformed data with mapped field names
- * 
+ *
  * @example
  * ```typescript
  * // Single object transformation
@@ -28,7 +37,7 @@ export type FieldMapping = {
  * const mapping = { id: 'userId', userName: 'name' };
  * const result = transformData(data, mapping);
  * // result = { userId: '123', name: 'john' }
- * 
+ *
  * // Array transformation
  * const dataArray = [
  *   { id: '123', userName: 'john' },
@@ -39,6 +48,10 @@ export type FieldMapping = {
  * //   { userId: '123', name: 'john' },
  * //   { userId: '456', name: 'jane' }
  * // ]
+ *
+ * // No chaining — `a → b` does not become `a → c` even if the map has `b → c`.
+ * transformData({ a: 1 }, { a: 'b', b: 'c' });
+ * // result = { b: 1 }
  * ```
  */
 export function transformData<T extends object>(
@@ -50,18 +63,14 @@ export function transformData<T extends object>(
     return data.map(item => transformData(item, fieldMapping)) as unknown as T;
   }
 
-  // Handle single object
-  const result = { ...data };
-  
-  for (const [sourceField, targetField] of Object.entries(fieldMapping)) {
-    if (sourceField in result) {
-      const value = result[sourceField as keyof T];
-      delete result[sourceField as keyof T];
-      (result as any)[targetField] = value;
-    }
+  // Walk the ORIGINAL data's keys, look up each in the mapping. One rename
+  // per data key — no mutation of an in-progress result, so chains can't form.
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    const renamedKey = fieldMapping[key] ?? key;
+    result[renamedKey] = value;
   }
-
-  return result;
+  return result as T;
 }
 
 /**

@@ -1,8 +1,58 @@
 import { describe, expect, it } from 'vitest';
 import {
   rewriteODataIdentifiers,
+  transformData,
   transformOptions,
 } from '../../../src/utils/transform';
+
+describe('transformData', () => {
+  it('renames a single mapped key', () => {
+    expect(transformData({ id: '123', userName: 'john' }, { id: 'userId', userName: 'name' }))
+      .toEqual({ userId: '123', name: 'john' });
+  });
+
+  it('passes through keys that are not in the mapping', () => {
+    expect(transformData({ id: 1, other: 'x' }, { id: 'userId' }))
+      .toEqual({ userId: 1, other: 'x' });
+  });
+
+  it('drops the original key (does not keep both source and target)', () => {
+    const result = transformData({ releaseKey: 'abc' }, { releaseKey: 'processKey' });
+    expect(result).toEqual({ processKey: 'abc' });
+    expect((result as Record<string, unknown>).releaseKey).toBeUndefined();
+  });
+
+  it('does NOT chain renames through the mapping (a→b→c becomes b, not c)', () => {
+    // The chaining behaviour of the previous implementation is intentionally removed:
+    // each rename is independent and applies only when the source is in the input.
+    expect(transformData({ a: 1 }, { a: 'b', b: 'c' })).toEqual({ b: 1 });
+  });
+
+  it('handles inputs that match BOTH ends of a chained mapping without producing a chain', () => {
+    // Both `releaseKey` and `processKey` present in input → each is renamed once,
+    // independently. No silent overwriting via chained rename.
+    const out = transformData(
+      { releaseKey: 'list-val', processKey: 'start-val' },
+      { releaseKey: 'processKey', processKey: 'packageKey' },
+    );
+    // Both target keys are present, each carrying the value from their own source.
+    // (Last-write-wins is irrelevant here since target keys don't collide.)
+    expect(out).toEqual({ processKey: 'list-val', packageKey: 'start-val' });
+  });
+
+  it('recurses through arrays of objects', () => {
+    expect(
+      transformData(
+        [{ id: 1 }, { id: 2 }],
+        { id: 'userId' },
+      ),
+    ).toEqual([{ userId: 1 }, { userId: 2 }]);
+  });
+
+  it('returns an empty object for empty input', () => {
+    expect(transformData({}, { a: 'b' })).toEqual({});
+  });
+});
 
 describe('rewriteODataIdentifiers', () => {
   const requestMap = {
