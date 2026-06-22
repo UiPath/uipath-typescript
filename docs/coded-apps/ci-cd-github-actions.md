@@ -6,7 +6,7 @@ A sample GitHub Actions workflow to pack, publish, and deploy a Coded App using 
 
 Before copying the YAML below:
 
-1. **Create a Confidential External Application** in UiPath Admin portal with application scopes: `Apps`, `OR.Folders.Read`, `OR.Administration`, `OR.Execution`.
+1. **Create a Confidential External Application** in UiPath Admin portal with application scopes: `Apps`, `OR.Folders.Read`, `OR.Execution`.
 2. **Assign the external app** to the Orchestrator folder where you will be deploying your app (Settings → Manage Access → Assign external app).
 3. **Store the secrets** in the repository settings:
     - Settings → Secrets and variables → Actions → New repository secret.
@@ -75,7 +75,7 @@ jobs:
             --tenant "${{ inputs.tenant }}" \
             --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
             --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
-            --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
+            --scope "Apps OR.Folders.Read OR.Execution"
 
       # Creates a .nupkg package from the built app
       - name: Pack
@@ -137,7 +137,7 @@ jobs:
             --tenant "${{ env.TENANT }}" \
             --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
             --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
-            --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
+            --scope "Apps OR.Folders.Read OR.Execution"
       - run: uip codedapp pack ./dist --name "${{ env.APP_NAME }}"
       - run: uip codedapp publish --name "${{ env.APP_NAME }}"
       - name: Deploy
