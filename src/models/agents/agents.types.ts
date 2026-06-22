@@ -1,4 +1,5 @@
 import type { PaginationOptions } from '../../utils/pagination/types';
+import { JobState } from '../common/types';
 
 /**
  * Filter fields shared by agent endpoints that accept a
@@ -27,9 +28,9 @@ export enum AgentListSortColumn {
   HealthScore = 'HealthScore',
   LastIncident = 'LastIncident',
   FolderName = 'FolderName',
-  /** Quantity of AGU (Agent Units) consumed */
+  /** Quantity of Agent Units consumed */
   QuantityAGU = 'QuantityAGU',
-  /** Quantity of PLTU (Platform Units) consumed */
+  /** Quantity of Platform Units consumed */
   QuantityPLTU = 'QuantityPLTU',
   FolderPath = 'FolderPath',
 }
@@ -40,7 +41,10 @@ export enum AgentListSortColumn {
 export interface AgentListOrderBy {
   /** Column to sort by */
   column: AgentListSortColumn;
-  /** Sort descending. Defaults to false. */
+  /**
+   * Sort descending.
+   * @default false
+   */
   desc?: boolean;
 }
 
@@ -75,9 +79,9 @@ export interface AgentListItem {
   unitsQuantity: number;
   /** Display name of the units (if any). May be `null` or `""`. */
   unitsName: string | null;
-  /** Quantity of AGU (Agent Units) consumed by this agent */
+  /** Quantity of Agent Units consumed by this agent */
   quantityAGU: number;
-  /** Quantity of PLTU (Platform Units) consumed by this agent */
+  /** Quantity of Platform Units consumed by this agent */
   quantityPLTU: number;
 }
 
@@ -136,7 +140,10 @@ export enum AgentErrorSortColumn {
 export interface AgentErrorOrderBy {
   /** Column to sort by */
   column: AgentErrorSortColumn;
-  /** Sort descending. Defaults to false (ascending) server-side. */
+  /**
+   * Sort descending.
+   * @default false
+   */
   desc?: boolean;
 }
 
@@ -201,7 +208,10 @@ export interface AgentGetErrorsTimelineResponse {
  * Options for getting the agent errors timeline.
  */
 export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
-  /** Max number of agents to return. Defaults to 10 server-side. */
+  /**
+   * Max number of agents to return.
+   * @default 10
+   */
   limit?: number;
 }
 
@@ -211,7 +221,7 @@ export interface AgentGetErrorsTimelineOptions extends AgentFilterOptions {
 export interface AgentGetConsumptionTimelineResponse {
   /** Bucket timestamp (ISO 8601, UTC) */
   timeSlice: string;
-  /** AGU quantity consumed in this time bucket */
+  /** Agent Units quantity consumed in this time bucket */
   aguConsumption: number;
 }
 
@@ -238,3 +248,310 @@ export interface AgentGetLatencyTimelineResponse {
  * Options for getting the agent latency timeline.
  */
 export interface AgentGetLatencyTimelineOptions extends AgentFilterOptions {}
+
+/**
+ * A single agent's error count over the requested window, with the first and
+ * last jobs where errors were observed.
+ */
+export interface AgentTopErrorCount {
+  /** Agent name */
+  name: string;
+  /** Error count for this agent over the requested window */
+  count: number;
+  /** Agent ID (GUID) */
+  agentId: string;
+  /** First job in the window where this agent reported errors */
+  firstSeenJob: AgentJobInfo;
+  /** Last job in the window where this agent reported errors */
+  lastSeenJob: AgentJobInfo;
+}
+
+/**
+ * Response from getting the top agents by error count.
+ */
+export interface AgentGetTopErrorCountResponse {
+  /** Total error count across all agents in the window. */
+  totalErrors: number;
+  /** Top-N agents ranked by error count. */
+  data: AgentTopErrorCount[];
+}
+
+/**
+ * Options for getting the top agents by error count.
+ */
+export interface AgentGetTopErrorCountOptions extends AgentFilterOptions {
+  /**
+   * Max number of agents to return. Defaults to 10 server-side.
+   * @default 10
+   */
+  limit?: number;
+}
+
+/**
+ * Agent type, used to filter consumption results.
+ *
+ * Wire format is the string name, per the API's `StringEnumConverter` serialization.
+ */
+export enum AgentType {
+  Autonomous = 'Autonomous',
+  Conversational = 'Conversational',
+  Coded = 'Coded',
+}
+
+/**
+ * A single agent's unit consumption over the requested window, with the first
+ * and last jobs where consumption was recorded.
+ */
+export interface AgentConsumption {
+  /** Agent ID (GUID) */
+  agentId: string;
+  /** Agent display name */
+  agentName: string;
+  /** Total quantity consumed by this agent. `null` if no consumption is recorded. */
+  consumedQuantity: number | null;
+  /** Agent Units quantity consumed. `null` if no consumption is recorded. */
+  consumedAGUQuantity: number | null;
+  /** Platform Units quantity consumed. `null` if no consumption is recorded. */
+  consumedPLTUQuantity: number | null;
+  /** First job in the window where this agent recorded consumption */
+  firstSeenJob: AgentJobInfo;
+  /** Last job in the window where this agent recorded consumption */
+  lastSeenJob: AgentJobInfo;
+}
+
+/**
+ * Response from getting the top agents by consumption.
+ */
+export interface AgentGetTopConsumptionResponse {
+  /** Window start date. */
+  startDate: string;
+  /** Window end date. */
+  endDate: string;
+  /** Total quantity consumed across all matching agents in the window. */
+  totalConsumed: number;
+  /** Total Agent Units quantity consumed. */
+  totalAGUConsumed: number;
+  /** Total Platform Units quantity consumed. */
+  totalPLTUConsumed: number;
+  /** Limit applied (echoed from the request). */
+  limit: number;
+  /** Top-N agents ranked by consumption. Empty array when no agents matched. */
+  agents: AgentConsumption[];
+}
+
+/**
+ * Options for getting the top agents by consumption.
+ */
+export interface AgentGetTopConsumptionOptions extends AgentFilterOptions {
+  /**
+   * Max number of agents to return. Defaults to 10 server-side.
+   * @default 10
+   */
+  limit?: number;
+  /**
+   * Health-based filter. `true` returns only healthy agents, `false` only
+   * unhealthy. Omit to include both.
+   */
+  healthy?: boolean;
+  /**
+   * Health-score cutoff used when `healthy` is set. Defaults to 75.0
+   * server-side.
+   * @default 75.0
+   */
+  healthThreshold?: number;
+  /**
+   * Filter to specific agent types. Multiple types are combined with `OR` and
+   * sent to the API as a comma-separated string.
+   */
+  agentTypes?: AgentType[];
+}
+
+/**
+ * Distribution of incidents across types over the requested window.
+ */
+export interface AgentGetIncidentDistributionResponse {
+  /** Number of error-type incidents in the window */
+  errorCount: number;
+  /** Number of escalation-type incidents in the window */
+  escalationCount: number;
+  /** Number of policy-type incidents in the window */
+  policyCount: number;
+}
+
+/**
+ * Options for getting the incident distribution.
+ *
+ * Currently identical to {@link AgentFilterOptions}; named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentGetIncidentDistributionOptions extends AgentFilterOptions {}
+
+/**
+ * Per-agent (process + folder) stats within an {@link AgentSummaryPeriod}.
+ */
+export interface AgentSummaryEntry {
+  /** Process key (GUID) */
+  processKey: string;
+  /** Folder key (GUID) the agent ran in */
+  folderKey: string;
+  /** Process version */
+  processVersion: string;
+  /** Total job runs in the period */
+  totalJobs: number;
+  /** Number of successful runs in the period */
+  successfulJobs: number;
+  /** Success rate as a percentage (0-100) */
+  successRate: number;
+  /** Average run duration in seconds */
+  averageDurationSeconds: number;
+  /** First job completion timestamp (ISO 8601, UTC) */
+  firstJobFinished: string;
+  /** Last job completion timestamp (ISO 8601, UTC) */
+  lastJobFinished: string;
+  /**
+   * Status of the most recent run, normalized to {@link JobState}. The API's
+   * `Success` label maps to {@link JobState.Successful}; any unrecognized value
+   * becomes {@link JobState.Unknown}.
+   */
+  lastJobStatus: JobState;
+}
+
+/**
+ * Aggregate stats for a single period within an {@link AgentGetSummaryResponse}
+ * — covers the requested window for either the current period or an optional
+ * lookback period.
+ */
+export interface AgentSummaryPeriod {
+  /** Total job runs across all agents in the period */
+  totalJobs: number;
+  /** Number of successful runs across all agents in the period */
+  successfulJobs: number;
+  /** Overall success rate as a percentage (0-100) */
+  successRate: number;
+  /** Average run duration in seconds across all agents in the period */
+  averageDurationSeconds: number;
+  /** Period start time (ISO 8601, UTC) */
+  startTime: string;
+  /** Period end time (ISO 8601, UTC) */
+  endTime: string;
+  /** Per-agent breakdown */
+  agents: AgentSummaryEntry[];
+}
+
+/**
+ * Response from getting the agent summary.
+ */
+export interface AgentGetSummaryResponse {
+  /** Aggregate stats for the requested window. Always present. */
+  currentPeriodSummary: AgentSummaryPeriod;
+  /** Aggregate stats for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
+  lookbackPeriodSummary?: AgentSummaryPeriod;
+}
+
+/**
+ * Job execution mode filter accepted by the summary endpoints.
+ *
+ * Wire format is the string name (`"Debug"` / `"Runtime"`), per the API's
+ * `StringEnumConverter` serialization.
+ */
+export enum AgentExecutionType {
+  /** Test runs */
+  Debug = 'Debug',
+  /** Production runs */
+  Runtime = 'Runtime',
+}
+
+/**
+ * Options for getting the agent summary.
+ */
+export interface AgentGetSummaryOptions extends AgentFilterOptions {
+  /**
+   * When `true`, it also computes a `lookbackPeriodSummary` for the
+   * prior window of equal length. Defaults to `false` server-side.
+   * @default false
+   */
+  lookbackPeriodAnalysis?: boolean;
+  /** Filter to a specific process by key (GUID). */
+  processKey?: string;
+  /**
+   * Filter to a specific folder by key (GUID).
+   *
+   * The summary endpoint accepts both — `folderKey` selects a
+   * single folder, `folderKeys` filters the lookup to a list of folders.
+   */
+  folderKey?: string;
+  /**
+   * Filter to a specific execution type — `Debug` (test runs) or
+   * `Runtime` (production runs).
+   */
+  executionType?: AgentExecutionType;
+}
+
+/**
+ * Job-type breakdown of unit consumption — completed jobs vs jobs still in
+ * progress at query time.
+ */
+export interface AgentJobConsumptionSummary {
+  /** Units consumed by jobs that have completed in the period */
+  completeJobs: number;
+  /** Units consumed by jobs still in progress at query time */
+  incompleteJobs: number;
+}
+
+/**
+ * Per-agent (process + folder) unit consumption entry within an
+ * {@link AgentUnitConsumptionPeriod}.
+ */
+export interface AgentUnitConsumptionEntry {
+  /** Folder key (GUID) the agent ran in */
+  folderKey: string;
+  /** Process key (GUID) */
+  processKey: string;
+  /** Process version */
+  processVersion: string;
+  /** First job completion timestamp (ISO 8601). `"0001-01-01T00:00:00"` if no completion in the period. */
+  firstJobFinished: string;
+  /** Last job completion timestamp (ISO 8601). `"0001-01-01T00:00:00"` if no completion in the period. */
+  lastJobFinished: string;
+  /** Agent Units consumption for this agent, split by job completion status */
+  agentUnitConsumption: AgentJobConsumptionSummary;
+  /** Platform Units consumption for this agent, split by job completion status */
+  platformUnitConsumption: AgentJobConsumptionSummary;
+}
+
+/**
+ * Aggregate Agent Units and Platform Units consumption for a single period within an
+ * {@link AgentGetUnitConsumptionSummaryResponse} — covers the requested window
+ * for either the current period or an optional lookback period.
+ */
+export interface AgentUnitConsumptionPeriod {
+  /** Total Agent Units consumed across all agents in the period, split by job completion */
+  totalAgentUnitConsumption: AgentJobConsumptionSummary;
+  /** Total Platform Units consumed across all agents in the period, split by job completion */
+  totalPlatformUnitConsumption: AgentJobConsumptionSummary;
+  /** Period start time (ISO 8601, UTC) */
+  startTime: string;
+  /** Period end time (ISO 8601, UTC) */
+  endTime: string;
+  /** Per-agent consumption breakdown */
+  agentConsumption: AgentUnitConsumptionEntry[];
+}
+
+/**
+ * Response from getting the agent unit consumption summary.
+ */
+export interface AgentGetUnitConsumptionSummaryResponse {
+  /** Aggregate consumption for the requested window. Always present. */
+  currentPeriodSummary: AgentUnitConsumptionPeriod;
+  /** Aggregate consumption for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
+  lookbackPeriodSummary?: AgentUnitConsumptionPeriod;
+}
+
+/**
+ * Options for getting the agent unit consumption summary.
+ *
+ * Currently identical to {@link AgentGetSummaryOptions} (the API uses the same
+ * `AgentsSummaryRequest` schema for both endpoints); named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentGetUnitConsumptionSummaryOptions extends AgentGetSummaryOptions {}

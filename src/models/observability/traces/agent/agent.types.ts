@@ -63,7 +63,7 @@ export interface AgentTraceGetLatencyTimelineOptions extends AgentTraceFilterOpt
 
 /**
  * Per-agent unit consumption totals over the requested window (trace-level) —
- * a flat per-(agent, version, folder) breakdown of AGU and PLTU consumed.
+ * a flat per-(agent, version, folder) breakdown of Agent Units and Platform Units consumed.
  */
 export interface AgentTraceGetUnitConsumptionResponse {
   /** Agent ID these totals belong to. */

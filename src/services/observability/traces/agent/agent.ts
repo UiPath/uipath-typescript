@@ -138,7 +138,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * // Get per-agent unit consumption
    * const result = await trace.getUnitConsumption();
    * result.forEach((row) => {
-   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
+   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} Agent Units, ${row.platformUnitsConsumed} Platform Units`);
    * });
    * ```
    * @example

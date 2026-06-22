@@ -8,7 +8,7 @@ export const AGENT_TRACES_ENDPOINTS = {
   GET_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/errorsTimeline`,
   /** Trace-level time-series of latency (decimal seconds per series). */
   GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/latencyTimeline`,
-  /** Trace-level per-agent AGU/PLTU consumption totals. */
+  /** Trace-level per-agent Agent Units and Platform Units consumption totals. */
   GET_UNIT_CONSUMPTION: `${INSIGHTS_RTM_BASE}/Traceview/unitConsumption`,
   /** All spans for a single trace (flat array, not paginated). */
   GET_SPANS_BY_TRACE_ID: (traceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/${traceId}`,

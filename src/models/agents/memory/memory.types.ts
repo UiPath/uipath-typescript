@@ -48,7 +48,10 @@ export interface AgentMemoryGetCallsTimelineOptions extends AgentMemoryFilterOpt
  * Options for retrieving the top memory spaces.
  */
 export interface AgentMemoryGetTopSpacesOptions extends AgentMemoryFilterOptions {
-  /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 when omitted. */
+  /**
+   * Maximum number of memory spaces to return, ranked by memory count.
+   * @default 5
+   */
   limit?: number;
 }
 

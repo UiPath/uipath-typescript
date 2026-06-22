@@ -30,7 +30,10 @@ export enum JobState {
   Successful = 'Successful',
   Stopped = 'Stopped',
   Suspended = 'Suspended',
-  Resumed = 'Resumed'
+  Resumed = 'Resumed',
+  Cancelled = 'Cancelled',
+  /** Server-side fallback for an unrecognized or missing job state. */
+  Unknown = 'Unknown'
 }
 
 export interface BaseOptions {
