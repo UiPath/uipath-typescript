@@ -62,7 +62,7 @@ jobs:
 
       # you can also pin to a specific version for reproducible builds
       - name: Install uip CLI
-        run: npm install -g @uipath/uip
+        run: npm install -g @uipath/cli
 
       - name: Install codedapp tool
         run: uip tools install codedapp
@@ -128,7 +128,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
       - run: npm run build
-      - run: npm install -g @uipath/uip
+      - run: npm install -g @uipath/cli
       - run: uip tools install codedapp
       - name: Login
         run: |
@@ -152,5 +152,5 @@ jobs:
 
 ```yaml
 - name: Install uip CLI
-  run: npm install -g @uipath/uip@1.4.0
+  run: npm install -g @uipath/cli@1.4.0
 ```
