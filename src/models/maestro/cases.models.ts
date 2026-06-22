@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, ProcessStatsRequest } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -279,7 +279,7 @@ export interface CasesServiceModel {
    * );
    * ```
    */
-  getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]>;
+  getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]>;
 
   /**
    * Get instance stats for a case.
@@ -315,7 +315,7 @@ export interface CasesServiceModel {
    * );
    * ```
    */
-  getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats>;
+  getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
 }
 
 // Method interface that will be added to case objects

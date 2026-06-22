@@ -2,7 +2,7 @@ import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTop
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
-import type { ProcessStatsRequest, TimelineOptions, TopQueryOptions } from '../../../models/maestro';
+import type { MaestroProcessStatsRequest, TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
@@ -365,7 +365,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * ```
    */
   @track('MaestroProcesses.GetElementStats')
-  async getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]> {
+  async getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]> {
     const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
       buildInsightsCommonBody(request)
@@ -409,7 +409,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * ```
    */
   @track('MaestroProcesses.GetInstanceStats')
-  async getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats> {
+  async getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats> {
     const { data } = await this.post<RawInstanceStats>(
       MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
       buildInsightsCommonBody(request)

@@ -170,7 +170,7 @@ export interface InstanceStats extends DurationStats {
  *
  * Identifies a single process+package+version and the time range to aggregate over.
  */
-export interface ProcessStatsRequest {
+export interface MaestroProcessStatsRequest {
   /** Process key to filter by */
   processKey: string;
   /** Package identifier */

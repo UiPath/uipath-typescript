@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementStats, InstanceStats, ProcessStatsRequest } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -221,7 +221,7 @@ export function expectValidElementStats(element: ElementStats): void {
 /** Minimal interface for services that support getElementStats integration testing */
 interface ElementStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]>;
+  getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]>;
 }
 
 /**
@@ -288,7 +288,7 @@ export function expectValidInstanceStats(stats: InstanceStats): void {
 /** Minimal interface for services that support getInstanceStats integration testing */
 interface InstanceStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats>;
+  getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
 }
 
 /**

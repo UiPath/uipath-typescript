@@ -1,6 +1,6 @@
 import { ApiResponse } from '../base';
 import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
-import type { ProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
+import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -69,7 +69,7 @@ export async function fetchInstanceStatusTimeline(
  * @returns Request body with commonParams
  * @internal
  */
-export function buildInsightsCommonBody(request: ProcessStatsRequest) {
+export function buildInsightsCommonBody(request: MaestroProcessStatsRequest) {
   return {
     commonParams: {
       processKey: request.processKey,

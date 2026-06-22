@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, ProcessStatsRequest } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -308,7 +308,7 @@ export interface MaestroProcessesServiceModel {
    * );
    * ```
    */
-  getElementStats(request: ProcessStatsRequest): Promise<ElementStats[]>;
+  getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]>;
 
   /**
    * Get instance stats for a process.
@@ -345,7 +345,7 @@ export interface MaestroProcessesServiceModel {
    * );
    * ```
    */
-  getInstanceStats(request: ProcessStatsRequest): Promise<InstanceStats>;
+  getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
 }
 
 // Method interface that will be added to process objects
