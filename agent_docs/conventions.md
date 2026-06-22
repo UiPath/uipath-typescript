@@ -9,6 +9,7 @@
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
 - **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
+- **Generic constraints on utility functions: use `T extends object`, not `T extends Record<string, unknown>`** — interface types (e.g., `JobGetAllOptions`) do not structurally satisfy `Record<string, unknown>` because they lack an index signature, causing TS2345 at call sites. Use `T extends object` (matching the `transformRequest` pattern) and cast internally: `const result: Record<string, unknown> = { ...options as Record<string, unknown> }`. **NEVER** remove an explicit type cast just because the return type is `T` — but equally, **never add a redundant `as T`** when the function signature already returns `T`; the compiler infers it.
 - Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers force callers to add unnecessary `undefined` checks for fields that are always present, and mask real type errors when the field is guaranteed.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
@@ -40,7 +41,7 @@
 
 **ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
 
-Method names: **singular** for single-item ops (`insertRecordById`), **plural** for batch (`insertRecordsById`). **NEVER** use `batch` prefix — the SDK convention is singular/plural to distinguish cardinality.
+Method names: **singular** for single-item ops (`insertRecordById`), **plural** for batch (`insertRecordsById`). **NEVER** use `batch` prefix — the SDK convention is singular/plural to distinguish cardinality. **Aggregation/summary methods use `getTop{Noun}`** (e.g., `getTopRunCount`, `getTopConsumption`, `getTopErrorCount`) — not `getTop{VerbingNoun}` (not `getTopConsumingAgents`, `getTopErroredAgents`). The noun names the metric being ranked, not the entity type.
 
 **Singular vs batch patterns:**
 
@@ -165,6 +166,8 @@ Types in `{domain}.types.ts` are public (re-exported through barrel). Types in `
 **Put in `types.ts`:** All types in public method signatures, `Raw{Entity}GetResponse` types that users compose with `{Entity}Methods`.
 
 **NEVER** re-export `internal-types.ts` through `index.ts` — re-exporting pollutes the public API and creates breaking-change risk when internal formats change.
+
+**NEVER** derive a `Raw*` internal type from a public response type (e.g., `type RawSpanResponse = Omit<SpanResponse, 'someField'>`). If the public type changes, the raw type breaks silently and the compiler won't catch the mismatch. Define raw types independently from first principles — they describe the API wire format, which is a separate concern from the SDK's public shape.
 
 **Avoid cross-domain type imports** — when a response type is used by multiple service domains (e.g., returned by both `cases` and `processes` methods), place it in the domain-level shared types file that fits semantically (e.g., `insights.types.ts` for insights-related types shared across Maestro services). **NEVER** import a type from a different service domain's types file (e.g., `cases.models` importing from `processes.types`) — such imports create hidden coupling that breaks when type ownership shifts.
 
