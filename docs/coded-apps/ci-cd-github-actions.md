@@ -60,9 +60,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Pin to a specific version for reproducible builds
+      # you can also pin to a specific version for reproducible builds
       - name: Install uip CLI
         run: npm install -g @uipath/uip
+
+      - name: Install codedapp tool
+        run: uip tools install codedapp
 
       # Authenticates using external app client credentials
       - name: Login to UiPath
@@ -76,7 +79,7 @@ jobs:
 
       # Creates a .nupkg package from the built app
       - name: Pack
-        run: uip codedapp pack ./dist
+        run: uip codedapp pack ./dist --name "${{ inputs.app-name }}"
 
       # Uploads .nupkg to Orchestrator and registers the app version
       - name: Publish
@@ -95,19 +98,54 @@ jobs:
 
 ### Deploy on push to main
 
-Replace `workflow_dispatch` with a push trigger and hardcode the values:
+Replace `workflow_dispatch` with a push trigger and use `env` variables instead of `inputs`:
 
 ```yaml
+name: Deploy Coded App
+
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
 
 env:
+  NODE_VERSION: "20"
   APP_NAME: "my-app"
   PATH_NAME: "my-app"
   ORG: "myorg"
   TENANT: "mytenant"
   FOLDER_KEY: "8645d674-92d8-4281-9aef-43f3e3608ded"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+      - run: npm run build
+      - run: npm install -g @uipath/uip
+      - run: uip tools install codedapp
+      - name: Login
+        run: |
+          uip login \
+            --organization "${{ env.ORG }}" \
+            --tenant "${{ env.TENANT }}" \
+            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
+            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
+            --scope "Apps OR.Folders.Read OR.Administration OR.Execution"
+      - run: uip codedapp pack ./dist --name "${{ env.APP_NAME }}"
+      - run: uip codedapp publish --name "${{ env.APP_NAME }}"
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "${{ env.APP_NAME }}" \
+            --path-name "${{ env.PATH_NAME }}" \
+            --folder-key "${{ env.FOLDER_KEY }}"
 ```
 
 ### Pin CLI version
