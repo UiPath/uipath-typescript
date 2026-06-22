@@ -308,7 +308,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   createdTime: string;
   startingScheduleId: number | null;
   processName: string;
-  /** Key of the process (a.k.a. release) this job was started from. Renamed from the API's `releaseKey` via `ProcessMap`. */
+  /** Key of the process this job was started from. */
   processKey: string;
   type: JobType;
   inputFile: string | null;
