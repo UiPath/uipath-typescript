@@ -37,7 +37,7 @@ jobs:
         run: npm run build
 
       - name: Install uip CLI
-        run: npm install -g @uipath/uip
+        run: npm install -g @uipath/cli
         working-directory: .
 
       - name: Install codedapp tool
