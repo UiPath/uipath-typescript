@@ -37,8 +37,6 @@ describe('Case Models', () => {
         const startTime = new Date('2026-04-01T00:00:00Z');
         const endTime = new Date('2026-05-01T00:00:00Z');
 
-        mockService.getElementStats = vi.fn().mockResolvedValue([]);
-
         await caseObj.getElementStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
         expect(mockService.getElementStats).toHaveBeenCalledWith({
@@ -58,8 +56,6 @@ describe('Case Models', () => {
 
         const startTime = new Date('2026-04-01T00:00:00Z');
         const endTime = new Date('2026-05-01T00:00:00Z');
-
-        mockService.getInstanceStats = vi.fn().mockResolvedValue({});
 
         await caseObj.getInstanceStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
