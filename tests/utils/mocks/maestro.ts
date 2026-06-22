@@ -8,7 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
-import type { InstanceStatusTimelineResponse, GetTopRunCountResponse, GetTopDurationResponse } from '../../../src/models/maestro/insights.types';
+import type { InstanceStatusTimelineResponse, IncidentTimelinePoint, GetTopRunCountResponse, GetTopDurationResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 
@@ -651,6 +651,19 @@ export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStat
   return createMockBaseResponse({
     startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1,
     status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED,
+    count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2,
+  }, overrides);
+};
+
+/**
+ * Creates a mock IncidentTimelinePoint response item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock IncidentTimelinePoint object
+ */
+export const createMockIncidentTimelinePoint = (overrides: Partial<IncidentTimelinePoint> = {}): IncidentTimelinePoint => {
+  return createMockBaseResponse({
+    startTime: MAESTRO_TEST_CONSTANTS.INCIDENTS_TIMELINE_START_1,
+    endTime: MAESTRO_TEST_CONSTANTS.INCIDENTS_TIMELINE_END_1,
     count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2,
   }, overrides);
 };

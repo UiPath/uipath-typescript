@@ -78,6 +78,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
@@ -104,6 +105,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 

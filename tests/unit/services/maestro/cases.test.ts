@@ -10,6 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockIncidentTimelinePoint,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
@@ -223,6 +224,30 @@ describe('CasesService', () => {
       expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true }),
+        }),
+        {},
+      );
+    });
+  });
+
+  describe('getIncidentsTimeline', () => {
+    it('should call fetchIncidentsTimeline with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue({
+        dataPoints: [createMockIncidentTimelinePoint()],
+      });
+
+      const result = await service.getIncidentsTimeline(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INCIDENTS_TIMELINE_START_1);
+      expect(result[0].count).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
         expect.objectContaining({
           commonParams: expect.objectContaining({ isCaseManagement: true }),
         }),

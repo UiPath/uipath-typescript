@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, IncidentTimelinePoint } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -230,6 +230,48 @@ export interface MaestroProcessesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get incident counts over time for maestro processes.
+   *
+   * Returns time-grouped incident counts, useful for rendering "incidents over time"
+   * monitoring charts. Use `groupBy` to control the time bucket size (hour, day, or week) —
+   * defaults to day if not provided. Each point includes the bucket's `startTime`, `endTime`,
+   * and incident `count`.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for time bucketing granularity and filters
+   * @returns Promise resolving to an array of {@link IncidentTimelinePoint}
+   *
+   * @example
+   * ```typescript
+   * // Get daily incident counts for the last 30 days
+   * const now = new Date();
+   * const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+   * const timeline = await maestroProcesses.getIncidentsTimeline(thirtyDaysAgo, now);
+   *
+   * for (const point of timeline) {
+   *   console.log(`${point.startTime} — ${point.count} incidents`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * // Get an hourly breakdown filtered to a single process
+   * const timeline = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Hour,
+   *   processKey: '<processKey>',
+   * });
+   * ```
+   */
+  getIncidentsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<IncidentTimelinePoint[]>;
 
   /**
    * Get the top 5 processes ranked by total duration within a time range.

@@ -196,6 +196,13 @@ export const MAESTRO_TEST_CONSTANTS = {
   INSIGHTS_COUNT_1: 1,
   ERROR_INSIGHTS_FAILED: 'Failed to fetch instance status by date',
 
+  // Insights IncidentsTimeline constants
+  INCIDENTS_TIMELINE_START_1: '2026-05-04T00:00:00',
+  INCIDENTS_TIMELINE_END_1: '2026-05-11T00:00:00',
+  INCIDENTS_TIMELINE_START_2: '2026-05-11T00:00:00',
+  INCIDENTS_TIMELINE_END_2: '2026-05-18T00:00:00',
+  ERROR_INCIDENTS_TIMELINE_FAILED: 'Failed to fetch incidents timeline',
+
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
   EXTERNAL_LINK: 'https://test.uipath.com/task/123',
