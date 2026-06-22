@@ -42,8 +42,9 @@ export interface JobServiceModel {
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
-   * const runningJobs = await jobs.getAll({
-   *   filter: "state eq 'Running'"
+   * const recentInvoiceJobs = await jobs.getAll({
+   *   filter: "processName eq 'InvoiceBot'",
+   *   orderby: 'createdTime desc',
    * });
    *
    * // First page with pagination

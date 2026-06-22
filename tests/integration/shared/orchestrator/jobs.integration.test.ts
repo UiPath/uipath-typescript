@@ -61,6 +61,27 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
     });
+
+    it('should retrieve jobs filtered and sorted by SDK field names', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      // Uses SDK names that the field map renames:
+      //   processName → releaseName, createdTime → creationTime.
+      // If the rewriter doesn't translate these, the API returns 400.
+      const result = await jobs.getAll({
+        folderId,
+        pageSize: 5,
+        orderby: 'createdTime desc',
+        select: 'key,processName,state,createdTime',
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      // Response is also in SDK shape — `createdTime` is the renamed key.
+      if (result.items.length > 0) {
+        expect(result.items[0]).toHaveProperty('createdTime');
+      }
+    });
   });
 
   describe('getById', () => {
