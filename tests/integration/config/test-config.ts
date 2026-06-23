@@ -20,6 +20,12 @@ export interface IntegrationConfig {
   dataFabricTestFolderEntityId?: string;
   dataFabricTestChoiceSetId?: string;
   dataFabricTestAttachmentField?: string;
+  // Cross-entity join fixture for the queryRecordsById join test. All four must
+  // be set together; when any is missing the join integration test is skipped.
+  dataFabricTestJoinEntityName?: string;
+  dataFabricTestJoinFieldName?: string;
+  dataFabricTestJoinRelatedEntityName?: string;
+  dataFabricTestJoinRelatedFieldName?: string;
   orchestratorAttachmentId?: string;
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
@@ -75,6 +81,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestFolderEntityId: typeof rawConfig.dataFabricTestFolderEntityId === 'string' ? rawConfig.dataFabricTestFolderEntityId : undefined,
     dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
+    dataFabricTestJoinEntityName: typeof rawConfig.dataFabricTestJoinEntityName === 'string' ? rawConfig.dataFabricTestJoinEntityName : undefined,
+    dataFabricTestJoinFieldName: typeof rawConfig.dataFabricTestJoinFieldName === 'string' ? rawConfig.dataFabricTestJoinFieldName : undefined,
+    dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
+    dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
@@ -114,6 +124,10 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestFolderEntityId: process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || undefined,
     dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
+    dataFabricTestJoinEntityName: process.env.DATA_FABRIC_TEST_JOIN_ENTITY_NAME || undefined,
+    dataFabricTestJoinFieldName: process.env.DATA_FABRIC_TEST_JOIN_FIELD_NAME || undefined,
+    dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
+    dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,

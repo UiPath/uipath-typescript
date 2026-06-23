@@ -571,7 +571,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -614,8 +614,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    *
    * // Multi-join: pull fields from related entities into the query
-   * import { JoinType } from '@uipath/uipath-typescript/entities';
-   *
    * await entities.queryRecordsById("<entityId>", {
    *   selectedFields: ["Id", "amount"],
    *   joins: [
