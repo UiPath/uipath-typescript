@@ -680,6 +680,165 @@ describe('ExchangeEventHelper', () => {
     });
   });
 
+  describe('client-side stop (sendExchangeEnd mid-stream)', () => {
+    it('should stop exchange while assistant message is streaming', () => {
+      const { emitSpy, exchange } = createExchange();
+
+      // User sends a message
+      const userMessage = exchange.startMessage({ messageId: 'user-msg', role: MessageRole.User });
+      userMessage.sendContentPart({ data: 'Tell me a long story' });
+      userMessage.sendMessageEnd();
+
+      // Assistant starts responding (server dispatches events)
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          startMessage: { role: MessageRole.Assistant },
+        },
+      });
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          contentPart: {
+            contentPartId: 'cp-1',
+            startContentPart: { mimeType: 'text/plain' },
+          },
+        },
+      });
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          contentPart: {
+            contentPartId: 'cp-1',
+            chunk: { data: 'Once upon a time...' },
+          },
+        },
+      });
+
+      emitSpy.mockClear();
+
+      // Client triggers stop mid-stream
+      exchange.sendExchangeEnd();
+
+      expect(exchange.ended).toBe(true);
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            exchangeId: EXCHANGE_ID,
+            endExchange: {},
+          }),
+        })
+      );
+    });
+
+    it('should prevent further message operations after client-side stop', () => {
+      const { exchange } = createExchange();
+
+      // Assistant is streaming
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          startMessage: { role: MessageRole.Assistant },
+        },
+      });
+
+      // Client stops the exchange
+      exchange.sendExchangeEnd();
+
+      // No new messages can be started
+      expect(() => exchange.startMessage({ messageId: 'new-msg' })).toThrow(
+        ConversationEventInvalidOperationError
+      );
+    });
+
+    it('should trigger onExchangeEnd handler on echo after client sends stop', () => {
+      const { emitSpy, exchange } = createExchange();
+      const endSpy = vi.fn();
+      exchange.onExchangeEnd(endSpy);
+
+      // Simulate assistant streaming
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          startMessage: { role: MessageRole.Assistant },
+        },
+      });
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          contentPart: {
+            contentPartId: 'cp-1',
+            chunk: { data: 'partial response...' },
+          },
+        },
+      });
+
+      // Client sends stop
+      exchange.sendExchangeEnd();
+
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            exchangeId: EXCHANGE_ID,
+            endExchange: {},
+          }),
+        })
+      );
+
+      // Server echoes the endExchange back — handler fires
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        endExchange: {},
+      });
+
+      expect(endSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should stop exchange during tool call execution', () => {
+      const { emitSpy, exchange } = createExchange();
+
+      // Assistant starts a tool call
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          startMessage: { role: MessageRole.Assistant },
+        },
+      });
+      exchange.dispatch({
+        exchangeId: EXCHANGE_ID,
+        message: {
+          messageId: 'assistant-msg',
+          toolCall: {
+            toolCallId: 'tc-1',
+            startToolCall: { toolName: 'search' },
+          },
+        },
+      });
+
+      emitSpy.mockClear();
+
+      // Client triggers stop while tool call is in progress
+      exchange.sendExchangeEnd();
+
+      expect(exchange.ended).toBe(true);
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            exchangeId: EXCHANGE_ID,
+            endExchange: {},
+          }),
+        })
+      );
+    });
+  });
+
   describe('replay', () => {
     it('should generate correct event sequence', () => {
       const events = Array.from(ExchangeEventHelperImpl.replay({

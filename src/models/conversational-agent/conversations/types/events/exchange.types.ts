@@ -228,12 +228,23 @@ export interface ExchangeStream {
   getMessage(messageId: string): MessageStream | undefined;
 
   /**
-   * Ends the exchange
+   * Ends the exchange. Stops further events for that exchange from being received.
+   * Use this to stop an in-progress agent response from the client side.
    *
    * @param endExchange - Optional end event data
    *
-   * @example Manually ending an exchange
+   * @example Manually ending an exchange and stopping a response mid-stream
    * ```typescript
+   * session.onExchangeStart((exchange) => {
+   *   stopButton.addEventListener('click', () => exchange.sendExchangeEnd());
+   * });
+   * ```
+   *
+   * @example End an exchange after sending a message
+   * ```typescript
+   * const exchange = session.startExchange();
+   * exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * // Later, stop the response
    * exchange.sendExchangeEnd();
    * ```
    */
