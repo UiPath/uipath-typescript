@@ -14,7 +14,6 @@ import {
 } from '../../models/data-fabric/directory.types';
 import {
   DataFabricDirectoryAssignPayload,
-  RawDataFabricDirectoryEntry,
   DataFabricDirectoryRevokePayload,
   RawDataFabricDirectoryListResponse,
 } from '../../models/data-fabric/directory.internal-types';
@@ -186,7 +185,7 @@ export class DataFabricDirectoryService extends BaseService implements DataFabri
   async list(options: DataFabricDirectoryListOptions = {}): Promise<DataFabricDirectoryListResponse> {
     const params = createParams({
       skip: options.skip,
-      top: options.top ?? DEFAULT_DIRECTORY_PAGE_SIZE,
+      top: clampDirectoryPageSize(options.top),
     });
     const response = await this.get<RawDataFabricDirectoryListResponse>(
       DATA_FABRIC_ENDPOINTS.DIRECTORY.GET_ALL,

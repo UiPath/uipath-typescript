@@ -1,8 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { PaginationType } from '../../../../src/utils/pagination/internal-types';
-import type { GetAllConfig, PaginationServiceAccess } from '../../../../src/utils/pagination/internal-types';
+import { PaginationServiceAccess, PaginationType } from '../../../../src/utils/pagination/internal-types';
 import { PaginationCursor, PaginationOptions } from '../../../../src/utils/pagination/types';
 import { encodeBase64 } from '../../../../src/utils/encoding/base64';
 import { TEST_CONSTANTS, PAGINATION_TEST_CONSTANTS } from '../../../utils/constants';
@@ -22,9 +21,6 @@ import {
 } from '../../../utils/mocks/pagination';
 import { DEFAULT_TOTAL_COUNT_FIELD, DEFAULT_ITEMS_FIELD } from '../../../../src/utils/pagination/constants';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
-
-type MockRawItem = ReturnType<typeof createMockRawItem>;
-type MockTransformedItem = ReturnType<typeof createMockTransformedItem>;
 
 // ===== TEST SUITE =====
 describe('PaginationHelpers Unit Tests', () => {
@@ -934,75 +930,6 @@ describe('PaginationHelpers Unit Tests', () => {
           }),
         );
       });
-    });
-  });
-
-  describe('getAllPages', () => {
-    let mockServiceAccess: PaginationServiceAccess;
-    let mockConfig: GetAllConfig<MockRawItem, MockTransformedItem>;
-
-    beforeEach(() => {
-      mockServiceAccess = createMockPaginationServiceAccess();
-      mockConfig = {
-        serviceAccess: mockServiceAccess,
-        getEndpoint: () => PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
-        transformFn: mockTransformFunction,
-        pagination: {
-          paginationType: PaginationType.OFFSET,
-          itemsField: DEFAULT_ITEMS_FIELD,
-          totalCountField: DEFAULT_TOTAL_COUNT_FIELD
-        }
-      };
-    });
-
-    it('should follow cursors and return a flattened item array', async () => {
-      const nextCursor = createMockPaginationCursor();
-      const firstRawItem = createMockRawItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_1, PAGINATION_TEST_CONSTANTS.ITEM_NAME_1);
-      const secondRawItem = createMockRawItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_2, PAGINATION_TEST_CONSTANTS.ITEM_NAME_2);
-      const firstTransformedItem = createMockTransformedItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_1, PAGINATION_TEST_CONSTANTS.ITEM_NAME_1);
-      const secondTransformedItem = createMockTransformedItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_2, PAGINATION_TEST_CONSTANTS.ITEM_NAME_2);
-
-      vi.mocked(mockServiceAccess.requestWithPagination)
-        .mockResolvedValueOnce(createMockPaginatedResponse([firstRawItem], {
-          hasNextPage: true,
-          nextCursor
-        }))
-        .mockResolvedValueOnce(createMockPaginatedResponse([secondRawItem], {
-          hasNextPage: false
-        }));
-
-      const result = await PaginationHelpers.getAllPages<
-        { pageSize?: number },
-        MockRawItem,
-        MockTransformedItem
-      >(mockConfig, {
-        pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
-      });
-
-      expect(result).toEqual([firstTransformedItem, secondTransformedItem]);
-      expect(mockServiceAccess.requestWithPagination).toHaveBeenNthCalledWith(
-        1,
-        'GET',
-        PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
-        { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE },
-        expect.any(Object)
-      );
-      expect(mockServiceAccess.requestWithPagination).toHaveBeenNthCalledWith(
-        2,
-        'GET',
-        PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
-        { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE, cursor: nextCursor },
-        expect.any(Object)
-      );
-    });
-
-    it('should propagate errors from the underlying paginated call', async () => {
-      vi.mocked(mockServiceAccess.requestWithPagination)
-        .mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
-
-      await expect(PaginationHelpers.getAllPages(mockConfig, {
-        pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
-      })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

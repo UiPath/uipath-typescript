@@ -93,6 +93,17 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       });
     });
 
+    it('should clamp top to the maximum directory page size', async () => {
+      mockApiClient.get.mockResolvedValue({ totalCount: 0, results: [] });
+
+      await directoryService.list({ top: 500 });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.DIRECTORY.GET_ALL,
+        { params: { top: 100 } }
+      );
+    });
+
     it('should reject invalid directory response formats', async () => {
       mockApiClient.get.mockResolvedValue({ value: [] });
 

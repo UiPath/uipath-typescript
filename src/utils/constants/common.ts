@@ -56,6 +56,7 @@ export const CHOICESET_VALUES_PAGINATION = {
   TOTAL_COUNT_FIELD: 'totalRecordCount'
 };
 
+/**
  * Bucket pagination constants for token-based pagination
  */
 export const BUCKET_PAGINATION = {
