@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
@@ -7,7 +7,7 @@ import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildInsightsCommonBody } from '../insights';
+import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -189,7 +189,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -216,6 +216,14 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @example
    * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
    * // Get all-time data (from Unix epoch to now)
    * const allTime = await maestroProcesses.getInstanceStatusTimeline(new Date(0), new Date());
    * ```
@@ -226,7 +234,66 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
-    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, false, options);
+    const { data } = await this.post<InstanceStatusTimelineResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      buildInsightsTimelineBody(startTime, endTime, false, options),
+    );
+    return data ?? [];
+  }
+
+  /**
+   * Get incident counts aggregated by time bucket for maestro processes.
+   *
+   * Returns time-grouped counts of incidents that occurred within each bucket,
+   * useful for rendering incident time-series charts. Use `groupBy` to control
+   * the time bucket size (hour, day, or week) — defaults to day if not provided.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily incident counts for the last 7 days
+   * const now = new Date();
+   * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+   * const incidents = await maestroProcesses.getIncidentsTimeline(sevenDaysAgo, now);
+   *
+   * for (const incident of incidents) {
+   *   console.log(`${incident.startTime} → ${incident.endTime}: ${incident.count} incidents`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * // Get weekly breakdown
+   * const incidents = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   */
+  @track('MaestroProcesses.GetIncidentsTimeline')
+  async getIncidentsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<IncidentTimelineResponse[]> {
+    const { data } = await this.post<{ dataPoints?: IncidentTimelineResponse[] }>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+      buildInsightsTimelineBody(startTime, endTime, false, options),
+    );
+    return data?.dataPoints ?? [];
   }
 
   /**

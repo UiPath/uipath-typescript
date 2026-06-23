@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
+import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -194,7 +194,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -221,6 +221,14 @@ export interface MaestroProcessesServiceModel {
    *
    * @example
    * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
    * // Get all-time data (from Unix epoch to now)
    * const allTime = await maestroProcesses.getInstanceStatusTimeline(new Date(0), new Date());
    * ```
@@ -230,6 +238,54 @@ export interface MaestroProcessesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get incident counts aggregated by time bucket for maestro processes.
+   *
+   * Returns time-grouped counts of incidents that occurred within each bucket,
+   * useful for rendering incident time-series charts. Use `groupBy` to control
+   * the time bucket size (hour, day, or week) — defaults to day if not provided.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily incident counts for the last 7 days
+   * const now = new Date();
+   * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+   * const incidents = await maestroProcesses.getIncidentsTimeline(sevenDaysAgo, now);
+   *
+   * for (const incident of incidents) {
+   *   console.log(`${incident.startTime} → ${incident.endTime}: ${incident.count} incidents`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * // Get weekly breakdown
+   * const incidents = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   */
+  getIncidentsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<IncidentTimelineResponse[]>;
 
   /**
    * Get the top 5 processes ranked by total duration within a time range.
@@ -376,6 +432,26 @@ export interface ProcessMethods {
    * @returns Promise resolving to {@link InstanceStats}
    */
   getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
+
+  /**
+   * Get instance status counts aggregated by date for this process.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity (processKey is auto-captured from this process)
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
+   */
+  getInstanceStatusTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get incident counts aggregated by time bucket for this process.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity (processKey is auto-captured from this process)
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
+   */
+  getIncidentsTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<IncidentTimelineResponse[]>;
 }
 
 // Combined type for process data with methods
@@ -419,6 +495,16 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
         startTime,
         endTime,
       });
+    },
+    getInstanceStatusTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<InstanceStatusTimelineResponse[]> {
+      if (!processData.processKey) throw new Error('Process key is undefined');
+
+      return service.getInstanceStatusTimeline(startTime, endTime, { ...options, processKeys: [processData.processKey] });
+    },
+    getIncidentsTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<IncidentTimelineResponse[]> {
+      if (!processData.processKey) throw new Error('Process key is undefined');
+
+      return service.getIncidentsTimeline(startTime, endTime, { ...options, processKeys: [processData.processKey] });
     }
   };
 }

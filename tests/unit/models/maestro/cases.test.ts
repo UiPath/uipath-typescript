@@ -17,6 +17,7 @@ describe('Case Models', () => {
       getAll: vi.fn(),
       getTopRunCount: vi.fn(),
       getInstanceStatusTimeline: vi.fn(),
+      getIncidentsTimeline: vi.fn(),
       getTopFaultedCount: vi.fn(),
       getTopExecutionDuration: vi.fn(),
       getElementStats: vi.fn(),
@@ -66,6 +67,46 @@ describe('Case Models', () => {
           startTime,
           endTime,
         });
+      });
+    });
+
+    describe('case.getInstanceStatusTimeline()', () => {
+      it('should call service.getInstanceStatusTimeline with bound processKey', async () => {
+        const mockCaseData = createMockCase();
+        const caseObj = createCaseWithMethods(mockCaseData, mockService);
+
+        const startTime = new Date('2026-04-01T00:00:00Z');
+        const endTime = new Date('2026-05-01T00:00:00Z');
+
+        mockService.getInstanceStatusTimeline = vi.fn().mockResolvedValue([]);
+
+        await caseObj.getInstanceStatusTimeline(startTime, endTime);
+
+        expect(mockService.getInstanceStatusTimeline).toHaveBeenCalledWith(
+          startTime,
+          endTime,
+          { processKeys: [MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY] }
+        );
+      });
+    });
+
+    describe('case.getIncidentsTimeline()', () => {
+      it('should call service.getIncidentsTimeline with bound processKey', async () => {
+        const mockCaseData = createMockCase();
+        const caseObj = createCaseWithMethods(mockCaseData, mockService);
+
+        const startTime = new Date('2026-04-01T00:00:00Z');
+        const endTime = new Date('2026-05-01T00:00:00Z');
+
+        mockService.getIncidentsTimeline = vi.fn().mockResolvedValue([]);
+
+        await caseObj.getIncidentsTimeline(startTime, endTime);
+
+        expect(mockService.getIncidentsTimeline).toHaveBeenCalledWith(
+          startTime,
+          endTime,
+          { processKeys: [MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY] }
+        );
       });
     });
   });

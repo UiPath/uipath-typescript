@@ -10,6 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockIncidentTimelineResponse,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
@@ -211,7 +212,7 @@ describe('CasesService', () => {
   });
 
   describe('getInstanceStatusTimeline', () => {
-    it('should call fetchInstanceStatusTimeline with isCaseManagement true', async () => {
+    it('should call InstanceStatusByDate with isCaseManagement true', async () => {
       mockApiClient.post.mockResolvedValue([createMockInstanceStatusTimeline()]);
 
       const result = await service.getInstanceStatusTimeline(
@@ -228,6 +229,41 @@ describe('CasesService', () => {
         }),
         {},
       );
+    });
+  });
+
+  describe('getIncidentsTimeline', () => {
+    it('should call IncidentsByTimeWindow with isCaseManagement true and unwrap dataPoints', async () => {
+      mockApiClient.post.mockResolvedValue({
+        dataPoints: [createMockIncidentTimelineResponse()],
+      });
+
+      const result = await service.getIncidentsTimeline(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_START_1);
+      expect(result[0].endTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_END_1);
+      expect(result[0].count).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_COUNT_1);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true }),
+        }),
+        {},
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(MAESTRO_TEST_CONSTANTS.ERROR_INCIDENTS_TIMELINE_FAILED),
+      );
+
+      await expect(
+        service.getIncidentsTimeline(new Date(), new Date()),
+      ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INCIDENTS_TIMELINE_FAILED);
     });
   });
 

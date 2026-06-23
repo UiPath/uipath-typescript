@@ -80,6 +80,12 @@ export interface TimelineOptions {
    * @default TimeInterval.Day
    */
   groupBy?: TimeInterval;
+  /** Filter by package identifier */
+  packageId?: string;
+  /** Filter by package version */
+  version?: string;
+  /** Filter by one or more process keys. Pass `['<processKey>']` for a single process. */
+  processKeys?: string[];
 }
 
 /**
@@ -107,6 +113,18 @@ export interface InstanceStatusTimelineResponse {
   /** Instance status */
   status: InstanceFinalStatus;
   /** Number of instances with this status in the time bucket */
+  count: number;
+}
+
+/**
+ * Incident count within a specific time bucket.
+ */
+export interface IncidentTimelineResponse {
+  /** Start of the time bucket in local timezone (ISO 8601, e.g. `"2026-05-04T00:00:00"`) */
+  startTime: string;
+  /** End of the time bucket in local timezone (ISO 8601, e.g. `"2026-05-11T00:00:00"`) */
+  endTime: string;
+  /** Number of incidents that occurred within this time bucket */
   count: number;
 }
 
