@@ -200,6 +200,19 @@ describe('ToolCallEventHelper', () => {
       expect((toolCall as any)._endHandlers).toHaveLength(0);
     });
 
+    it('should register and unregister onExecutingToolCall handler', () => {
+      const { toolCall } = createToolCall();
+      const handler = vi.fn();
+      const cleanup = toolCall.onExecutingToolCall(handler);
+
+      toolCall.dispatch({ toolCallId: TOOL_CALL_ID, executingToolCall: { input: { a: 1 } } });
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      cleanup();
+      toolCall.dispatch({ toolCallId: TOOL_CALL_ID, executingToolCall: { input: { a: 2 } } });
+      expect(handler).toHaveBeenCalledTimes(1); // not called again after cleanup
+    });
+
     it('should register and unregister onToolCallConfirm handler', () => {
       const { toolCall } = createToolCall();
       const handler = vi.fn();
@@ -346,6 +359,59 @@ describe('ToolCallEventHelper', () => {
 
       expect(confirmSpy).toHaveBeenCalledWith({ approved: true, input: { query: 'q' } });
       expect(toolCall.ended).toBe(false);
+    });
+
+    it('should dispatch executingToolCall to executing handlers', () => {
+      const { toolCall } = createToolCall();
+      const executingSpy = vi.fn();
+      toolCall.onExecutingToolCall(executingSpy);
+
+      toolCall.dispatch({
+        toolCallId: TOOL_CALL_ID,
+        executingToolCall: { input: { expression: '2+2' } },
+      });
+
+      expect(executingSpy).toHaveBeenCalledWith({ input: { expression: '2+2' } });
+      expect(toolCall.ended).toBe(false);
+    });
+
+    it('should dispatch executingToolCall with timestamp', () => {
+      const { toolCall } = createToolCall();
+      const executingSpy = vi.fn();
+      toolCall.onExecutingToolCall(executingSpy);
+
+      toolCall.dispatch({
+        toolCallId: TOOL_CALL_ID,
+        executingToolCall: { timestamp: '2025-06-05T10:00:02Z', input: { query: 'test' } },
+      });
+
+      expect(executingSpy).toHaveBeenCalledWith({ timestamp: '2025-06-05T10:00:02Z', input: { query: 'test' } });
+    });
+
+    it('should not invoke end handlers when dispatching executingToolCall', () => {
+      const { toolCall } = createToolCall();
+      const endSpy = vi.fn();
+      toolCall.onToolCallEnd(endSpy);
+
+      toolCall.dispatch({
+        toolCallId: TOOL_CALL_ID,
+        executingToolCall: { input: {} },
+      });
+
+      expect(endSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore executingToolCall events for different toolCallId', () => {
+      const { toolCall } = createToolCall();
+      const executingSpy = vi.fn();
+      toolCall.onExecutingToolCall(executingSpy);
+
+      toolCall.dispatch({
+        toolCallId: 'other-tc',
+        executingToolCall: { input: {} },
+      });
+
+      expect(executingSpy).not.toHaveBeenCalled();
     });
 
     it('should not invoke end handlers when dispatching confirmToolCall', () => {
@@ -580,6 +646,19 @@ describe('ToolCallEventHelper', () => {
 
       toolCall.resume();
       expect(metaSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('should buffer executingToolCall event when paused', () => {
+      const { toolCall } = createToolCall();
+      const executingSpy = vi.fn();
+      toolCall.onExecutingToolCall(executingSpy);
+
+      toolCall.pause();
+      toolCall.dispatch({ toolCallId: TOOL_CALL_ID, executingToolCall: { input: { x: 1 } } });
+      expect(executingSpy).not.toHaveBeenCalled();
+
+      toolCall.resume();
+      expect(executingSpy).toHaveBeenCalledWith({ input: { x: 1 } });
     });
 
     it('should buffer tool call end event when paused', () => {

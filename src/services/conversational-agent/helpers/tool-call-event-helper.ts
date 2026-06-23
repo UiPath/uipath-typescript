@@ -13,6 +13,7 @@ import {
   ConversationEventValidationError,
   type ErrorEndEventOptions,
   type ErrorStartEventOptions,
+  type ExecutingToolCallHandler,
   type ToolCallConfirmationHandler,
   type ToolCallEndHandler
 } from './conversation-event-helper-common';
@@ -30,6 +31,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
 
   protected readonly _endHandlers = new Array<ToolCallEndHandler>();
   protected readonly _confirmHandlers = new Array<ToolCallConfirmationHandler>();
+  protected readonly _executingHandlers = new Array<ExecutingToolCallHandler>();
 
   constructor(
     public readonly message: MessageEventHelper,
@@ -134,6 +136,21 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
   }
 
   /**
+   * Registers a handler for executingToolCall events.
+   * Fired when the tool is about to be executed. For client-side tools,
+   * the client should begin executing its handler upon receiving this.
+   * @returns Cleanup function to remove the handler.
+   * @internal
+   */
+  public onExecutingToolCall(cb: ExecutingToolCallHandler) {
+    this._executingHandlers.push(cb);
+    return () => {
+      const index = this._executingHandlers.indexOf(cb);
+      if (index >= 0) this._executingHandlers.splice(index, 1);
+    };
+  }
+
+  /**
    * Sends an error start event for this tool call.
    */
   public sendErrorStart(args: ErrorStartEventOptions) {
@@ -224,6 +241,11 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
     if (toolCallEvent.confirmToolCall) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this._confirmHandlers.forEach(cb => cb(toolCallEvent.confirmToolCall!));
+    }
+
+    if (toolCallEvent.executingToolCall) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this._executingHandlers.forEach(cb => cb(toolCallEvent.executingToolCall!));
     }
 
     if (toolCallEvent.endToolCall) {

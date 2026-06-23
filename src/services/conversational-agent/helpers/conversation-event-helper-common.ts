@@ -23,6 +23,7 @@ import type {
   SessionStartedEvent,
   SessionStartEvent,
   Simplify,
+  ExecutingToolCallEvent,
   ToolCallConfirmationEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
@@ -78,6 +79,7 @@ export type ToolCallEndHandler = (endToolCall: ToolCallEndEvent) => void;
 export type ToolCallStartHandler = (toolCall: ToolCallEventHelper) => void;
 export type ToolCallStartHandlerAsync = (toolCall: ToolCallEventHelper) => Promise<ToolCallEndEvent | void>;
 export type ToolCallConfirmationHandler = (confirmToolCall: ToolCallConfirmationEvent) => void;
+export type ExecutingToolCallHandler = (event: ExecutingToolCallEvent) => void;
 export type ToolCallConfirmHandler = (args: ToolCallConfirmationHandlerArgs) => void;
 export type ToolCallCompletedHandler = (completedToolCall: CompletedToolCall) => void;
 export type ContentPartCompletedHandler = (completedContentPart: CompletedContentPart) => void;
