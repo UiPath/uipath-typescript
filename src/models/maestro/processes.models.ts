@@ -258,8 +258,8 @@ export interface MaestroProcessesServiceModel {
    * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
    * const incidents = await maestroProcesses.getIncidentsTimeline(sevenDaysAgo, now);
    *
-   * for (const point of incidents) {
-   *   console.log(`${point.startTime} → ${point.endTime}: ${point.count} incidents`);
+   * for (const incident of incidents) {
+   *   console.log(`${incident.startTime} → ${incident.endTime}: ${incident.count} incidents`);
    * }
    * ```
    *
