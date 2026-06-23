@@ -10,7 +10,7 @@ import {
   ProcessStartOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -79,8 +79,13 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       : NonPaginatedResponse<ProcessGetResponse>
   > {
     // Transformation function for processes
-    const transformProcessResponse = (process: any) => 
+    const transformProcessResponse = (process: any) =>
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
+
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, ProcessMap) : options;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -97,7 +102,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
         }
       }
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
@@ -187,9 +192,10 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       startInfo: apiRequest
     };
 
-    // Prefix all query parameter keys with '$' for OData
-    const keysToPrefix = Object.keys(queryOptions);
-    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
+    // Rewrite renamed SDK field names → API names inside OData strings,
+    // then prefix all query parameter keys with '$' for OData.
+    const apiFieldOptions = transformOptions(queryOptions, ProcessMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
@@ -228,10 +234,10 @@ export class ProcessService extends FolderScopedService implements ProcessServic
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
+    const apiFieldOptions = transformOptions(options, ProcessMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
+
     const response = await this.get<ProcessGetResponse>(
       PROCESS_ENDPOINTS.GET_BY_ID(id),
       { 
@@ -279,6 +285,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       name,
       options,
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
+      ProcessMap,
     );
   }
 }

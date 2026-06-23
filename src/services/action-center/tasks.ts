@@ -29,7 +29,7 @@ import { processODataArrayResponse } from '../../utils/object';
 import { HasPaginationOptions, NonPaginatedResponse, PaginatedResponse } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
-import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../utils/transform';
 import { BaseService } from '../base';
 
 /**
@@ -214,6 +214,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
       ) as TaskGetResponse;
     };
 
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, TaskMap) : options;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => endpoint,
@@ -230,7 +235,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              // OData OFFSET parameter
         }
       }
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
@@ -272,9 +277,10 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Add default expand parameters
     const modifiedOptions = this.addDefaultExpand(restOptions);
 
-    // prefix all keys in options
-    const keysToPrefix = Object.keys(modifiedOptions);
-    const apiOptions = addPrefixToKeys(modifiedOptions, ODATA_PREFIX, keysToPrefix);
+    // Rewrite renamed SDK field names → API names inside OData strings,
+    // then prefix all keys for OData.
+    const apiFieldOptions = transformOptions(modifiedOptions, TaskMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_BY_ID(id),
       {
