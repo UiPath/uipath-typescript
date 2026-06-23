@@ -506,6 +506,25 @@ describe('ProcessService Unit Tests', () => {
       );
     });
 
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        select: 'name,processName,createdTime',
+      });
+
+      // processName → releaseName, createdTime → creationTime (from ProcessMap reversed).
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,releaseName,creationTime',
+          }),
+        }),
+      );
+    });
+
     it('should route a numeric folderId to X-UIPATH-OrganizationUnitId', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
 

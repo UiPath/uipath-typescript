@@ -305,6 +305,25 @@ describe('AssetService Unit Tests', () => {
       );
     });
 
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        select: 'name,createdTime,lastModifiedTime',
+      });
+
+      // createdTime → creationTime, lastModifiedTime → lastModificationTime.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,lastModificationTime',
+          }),
+        }),
+      );
+    });
+
     it('should route a numeric folderId to X-UIPATH-OrganizationUnitId', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
 
