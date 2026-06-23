@@ -1959,6 +1959,22 @@ describe("EntityService Unit Tests", () => {
         expect(f?.sqlType).toEqual({ name: "MULTILINE", lengthLimit: 200 });
       });
 
+      it("should default MULTILINE_MAX lengthLimit to 128 KB", async () => {
+        await entityService.create("my_entity", [
+          { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX },
+        ]);
+        const f = getCreatedFields().find((x) => x.name === "mlmax_field");
+        expect(f?.sqlType).toEqual({ name: "MULTILINE_MAX", lengthLimit: 128 * 1024 });
+      });
+
+      it("should use user-provided lengthLimit for MULTILINE_MAX fields", async () => {
+        await entityService.create("my_entity", [
+          { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 5000 },
+        ]);
+        const f = getCreatedFields().find((x) => x.name === "mlmax_field");
+        expect(f?.sqlType).toEqual({ name: "MULTILINE_MAX", lengthLimit: 5000 });
+      });
+
       it("should default DECIMAL constraints to default values", async () => {
         await entityService.create("my_entity", [
           { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL },
@@ -2037,6 +2053,15 @@ describe("EntityService Unit Tests", () => {
             { fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10001 },
           ]),
         ).rejects.toThrow(/lengthLimit 10001 out of range \[1, 10000\]/);
+        expect(mockApiClient.post).not.toHaveBeenCalled();
+      });
+
+      it("should throw ValidationError when MULTILINE_MAX lengthLimit exceeds 128 KB", async () => {
+        await expect(
+          entityService.create("my_entity", [
+            { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 131073 },
+          ]),
+        ).rejects.toThrow(/lengthLimit 131073 out of range \[1, 131072\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
       });
 
@@ -2524,6 +2549,10 @@ describe("EntityService Unit Tests", () => {
       {
         type: EntityFieldDataType.MULTILINE_TEXT,
         expectedSqlType: "MULTILINE",
+      },
+      {
+        type: EntityFieldDataType.MULTILINE_MAX,
+        expectedSqlType: "MULTILINE_MAX",
       },
       { type: EntityFieldDataType.INTEGER, expectedSqlType: "INT" },
       { type: EntityFieldDataType.BOOLEAN, expectedSqlType: "BIT" },

@@ -186,6 +186,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets a single entity record by entity ID and record ID
    *
+   * Returns the full record, including the complete content of `MULTILINE_MAX` fields.
+   * List/query methods (`getAllRecords`, `queryRecordsById`) return a size marker
+   * (e.g. `"HasValue=true Length=512"`) for `MULTILINE_MAX` fields instead of the content —
+   * use this method to retrieve the full value.
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
    * @param options - Query options including `expansionLevel` and `folderKey` The `folderKey` property is **experimental**.
@@ -1361,6 +1366,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
         return { lengthLimit: field.lengthLimit ?? defaults.STRING_LENGTH_LIMIT };
       case EntityFieldDataType.MULTILINE_TEXT:
         return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_TEXT_LENGTH_LIMIT };
+      case EntityFieldDataType.MULTILINE_MAX:
+        return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_MAX_LENGTH_LIMIT };
       case EntityFieldDataType.DECIMAL:
         return {
           lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
