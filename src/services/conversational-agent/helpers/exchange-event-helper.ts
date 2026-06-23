@@ -140,7 +140,9 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
   }
 
   /**
-   * Ends the exchange with optional end event data.
+   * Ends the exchange. Stops further events for that exchange from being received.
+   * Can be called from either the client side (to stop an in-progress response) or
+   * the server/agent side (to signal natural completion).
    * @throws Error if exchange has already ended.
    */
   public sendExchangeEnd(endExchange: ExchangeEndEvent = {}) {

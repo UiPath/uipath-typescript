@@ -38,6 +38,7 @@ import type { ConnectionStatus } from '@/core/websocket';
  *     S -->|onExchangeStart| E["ExchangeStream"]
  *     S -->|onSessionEnd| SE(["session closed"])
  *     E -->|onMessageStart| M["MessageStream"]
+ *     E -->|sendExchangeEnd| STOP(["stop response"])
  *     E -->|onExchangeEnd| EE(["exchange complete"])
  *     M -->|onContentPartStart| CP["ContentPartStream"]
  *     M -->|onToolCallStart| TC["ToolCallStream"]
@@ -81,10 +82,20 @@ import type { ConnectionStatus } from '@/core/websocket';
  *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
  * });
  *
- * // 5. End session when done
+ * // 5. Stop a response mid-stream
+ * // Use sendExchangeEnd() on any active exchange to stop the agent
+ * session.onSessionStarted(() => {
+ *   const exchange = session.startExchange();
+ *   exchange.sendMessageWithContentPart({ data: 'Tell me a long story' });
+ *
+ *   // Stop after 5 seconds
+ *   setTimeout(() => exchange.sendExchangeEnd(), 5000);
+ * });
+ *
+ * // 6. End session when done
  * conversation.endSession();
  *
- * // 6. Retrieve conversation history (offline)
+ * // 7. Retrieve conversation history (offline)
  * const exchanges = await conversation.exchanges.getAll();
  * ```
  */
