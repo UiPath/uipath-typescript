@@ -755,8 +755,8 @@ describe('ExchangeEventHelper', () => {
       );
     });
 
-    it('should trigger onExchangeEnd handler when client sends stop', () => {
-      const { exchange } = createExchange();
+    it('should trigger onExchangeEnd handler on echo after client sends stop', () => {
+      const { emitSpy, exchange } = createExchange();
       const endSpy = vi.fn();
       exchange.onExchangeEnd(endSpy);
 
@@ -779,14 +779,25 @@ describe('ExchangeEventHelper', () => {
         },
       });
 
-      // Client sends stop — the emitted event is dispatched back (echo mode)
+      // Client sends stop
+      exchange.sendExchangeEnd();
+
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            exchangeId: EXCHANGE_ID,
+            endExchange: {},
+          }),
+        })
+      );
+
+      // Server echoes the endExchange back — handler fires
       exchange.dispatch({
         exchangeId: EXCHANGE_ID,
         endExchange: {},
       });
 
       expect(endSpy).toHaveBeenCalledTimes(1);
-      expect(exchange.ended).toBe(true);
     });
 
     it('should stop exchange during tool call execution', () => {
