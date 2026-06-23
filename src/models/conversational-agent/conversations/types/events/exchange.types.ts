@@ -233,7 +233,7 @@ export interface ExchangeStream {
    *
    * @param endExchange - Optional end event data
    *
-   * @example Stop a response mid-stream
+   * @example Manually ending an exchange and stopping a response mid-stream
    * ```typescript
    * session.onExchangeStart((exchange) => {
    *   stopButton.addEventListener('click', () => exchange.sendExchangeEnd());
