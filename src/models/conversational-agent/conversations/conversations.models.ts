@@ -18,7 +18,7 @@ import type {
   ConversationAttachmentCreateResponse
 } from './conversations.types';
 import type { ExchangeServiceModel, ConversationExchangeServiceModel } from './exchanges.models';
-import type { ExchangeGetByIdOptions, CreateFeedbackOptions, ExchangeEndResponse } from './exchanges.types';
+import type { ExchangeGetByIdOptions, CreateFeedbackOptions } from './exchanges.types';
 import type { PaginatedResponse } from '@/utils/pagination';
 import type { ConnectionStatus, ConnectionStatusChangedHandler } from '@/core/websocket';
 import type { SessionStream } from './types/events/session.types';
@@ -559,11 +559,6 @@ function createConversationMethods(
         if (!conversationData.id) throw new Error('Conversation ID is undefined');
         if (!exchangeService) throw new Error('Exchange methods are not available.');
         return exchangeService.createFeedback(conversationData.id, exchangeId, options);
-      },
-      end(exchangeId: string): Promise<ExchangeEndResponse> {
-        if (!conversationData.id) throw new Error('Conversation ID is undefined');
-        if (!exchangeService) throw new Error('Exchange methods are not available.');
-        return exchangeService.end(conversationData.id, exchangeId);
       }
     },
 

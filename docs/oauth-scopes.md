@@ -159,7 +159,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
-| `end()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ### Messages
 

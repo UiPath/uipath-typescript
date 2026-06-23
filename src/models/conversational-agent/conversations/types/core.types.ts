@@ -299,10 +299,6 @@ export interface Exchange {
    */
   spanId?: string;
   /**
-   * Timestamp indicating when the exchange ended, if it has ended.
-   */
-  endedTime?: string;
-  /**
    * The optional feedback rating given by the user.
    */
   feedbackRating?: FeedbackRating;

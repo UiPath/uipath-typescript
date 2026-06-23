@@ -26,9 +26,7 @@ export const EXCHANGE_ENDPOINTS = {
   GET: (conversationId: string, exchangeId: string) =>
     `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}`,
   CREATE_FEEDBACK: (conversationId: string, exchangeId: string) =>
-    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}/feedback`,
-  END: (conversationId: string, exchangeId: string) =>
-    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}/end`
+    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}/feedback`
 } as const;
 
 /**

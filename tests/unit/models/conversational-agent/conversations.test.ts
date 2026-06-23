@@ -59,8 +59,7 @@ describe('Conversation Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       createFeedback: vi.fn(),
-      end: vi.fn(),
-    };
+    } as any;
   });
 
   afterEach(() => {
@@ -96,7 +95,6 @@ describe('Conversation Models', () => {
       expect(typeof conversation.exchanges.getAll).toBe('function');
       expect(typeof conversation.exchanges.getById).toBe('function');
       expect(typeof conversation.exchanges.createFeedback).toBe('function');
-      expect(typeof conversation.exchanges.end).toBe('function');
     });
   });
 
@@ -464,42 +462,6 @@ describe('Conversation Models', () => {
 
         expect(
           () => conversation.exchanges.createFeedback(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, { rating: FeedbackRating.Positive })
-        ).toThrow('Exchange methods are not available');
-      });
-    });
-
-    describe('exchanges.end()', () => {
-      it('should delegate to exchangeService.end', async () => {
-        const mockResponse = {};
-        (mockExchangeService.end as any).mockResolvedValue(mockResponse);
-
-        const data = createMockConversationData();
-        const conversation = createConversationWithMethods(data, mockService, mockSessionMethods, mockExchangeService);
-
-        const result = await conversation.exchanges.end(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID);
-
-        expect(mockExchangeService.end).toHaveBeenCalledWith(
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it('should throw error if conversation id is undefined', () => {
-        const data = createMockConversationData({ id: undefined });
-        const conversation = createConversationWithMethods(data, mockService, mockSessionMethods, mockExchangeService);
-
-        expect(
-          () => conversation.exchanges.end(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)
-        ).toThrow('Conversation ID is undefined');
-      });
-
-      it('should throw error if exchange service is not available', () => {
-        const data = createMockConversationData();
-        const conversation = createConversationWithMethods(data, mockService, mockSessionMethods);
-
-        expect(
-          () => conversation.exchanges.end(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)
         ).toThrow('Exchange methods are not available');
       });
     });

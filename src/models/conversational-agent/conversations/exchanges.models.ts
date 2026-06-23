@@ -7,8 +7,7 @@ import type {
   ExchangeGetByIdOptions,
   CreateFeedbackOptions,
   FeedbackCreateResponse,
-  ExchangeGetResponse,
-  ExchangeEndResponse
+  ExchangeGetResponse
 } from './exchanges.types';
 import type { PaginatedResponse } from '@/utils/pagination';
 
@@ -125,24 +124,6 @@ export interface ExchangeServiceModel {
     exchangeId: string,
     options: CreateFeedbackOptions
   ): Promise<FeedbackCreateResponse>;
-
-  /**
-   * Ends an exchange, setting the endedTime timestamp and stopping any running agent job
-   *
-   * @experimental
-   * @param conversationId - The conversation containing the exchange
-   * @param exchangeId - The exchange to end
-   * @returns Promise resolving to {@link ExchangeEndResponse}
-   * @example
-   * ```typescript
-   * const endedExchange = await exchanges.end(conversationId, exchangeId);
-   * console.log(`Exchange ended at: ${endedExchange.endedTime}`);
-   * ```
-   */
-  end(
-    conversationId: string,
-    exchangeId: string
-  ): Promise<ExchangeEndResponse>;
 }
 
 /**
@@ -238,19 +219,4 @@ export interface ConversationExchangeServiceModel {
     exchangeId: string,
     options: CreateFeedbackOptions
   ): Promise<FeedbackCreateResponse>;
-
-  /**
-   * Ends an exchange in this conversation
-   *
-   * @experimental
-   * @param exchangeId - The exchange to end
-   * @returns Promise resolving to {@link ExchangeEndResponse}
-   *
-   * @example
-   * ```typescript
-   * const endedExchange = await conversation.exchanges.end(exchangeId);
-   * console.log(`Exchange ended at: ${endedExchange.endedTime}`);
-   * ```
-   */
-  end(exchangeId: string): Promise<ExchangeEndResponse>;
 }
