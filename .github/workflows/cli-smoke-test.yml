@@ -1,0 +1,184 @@
+name: CLI Smoke Test
+
+on:
+  schedule:
+    # 3:30 UTC = 9:00 AM IST, daily
+    - cron: '30 3 * * *'
+  workflow_dispatch: {} # manual trigger for testing
+
+permissions: {}
+
+env:
+  ALPHA_AUTHORITY: https://alpha.uipath.com
+  ORG: popoc
+  TENANT: adetenant
+  FOLDER_KEY: 8645d674-92d8-4281-9aef-43f3e3608ded
+
+jobs:
+  stable-cli:
+    name: Stable CLI (npm @latest)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      APP_NAME: cli-smoke-stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CLI (npm @latest)
+        run: |
+          npm i -g @uipath/cli@latest
+          uip tools update
+          echo "CLI version: $(uip --version)"
+          uip tools list
+
+      - name: Login
+        run: |
+          uip login \
+            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
+            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
+            --authority "${{ env.ALPHA_AUTHORITY }}" \
+            --tenant "${{ env.TENANT }}"
+
+      - name: Pack
+        run: |
+          VERSION="0.0.$(date +%Y%m%d)"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          uip codedapp pack \
+            --name "$APP_NAME" \
+            --version "$VERSION" \
+            fixtures/smoke-test-app
+
+      - name: Publish
+        run: |
+          uip codedapp publish \
+            --name "$APP_NAME" \
+            --version "$VERSION"
+
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "$APP_NAME" \
+            --folder-key "${{ env.FOLDER_KEY }}"
+
+      - name: Health check
+        run: |
+          APP_URL="https://${{ env.ORG }}.uipath.host/${APP_NAME}"
+          echo "Checking $APP_URL"
+          for i in 1 2 3; do
+            if curl -sf --max-time 10 "$APP_URL" > /dev/null; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
+
+  alpha-cli:
+    name: Alpha CLI (GH Packages)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      APP_NAME: cli-smoke-alpha
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CLI (GH Packages)
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ~/.npmrc
+          echo "@uipath:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          npm i -g @uipath/cli
+          uip tools update
+          echo "CLI version: $(uip --version)"
+          uip tools list
+
+      - name: Login
+        run: |
+          uip login \
+            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
+            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
+            --authority "${{ env.ALPHA_AUTHORITY }}" \
+            --tenant "${{ env.TENANT }}"
+
+      - name: Pack
+        run: |
+          VERSION="0.0.$(date +%Y%m%d)"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          uip codedapp pack \
+            --name "$APP_NAME" \
+            --version "$VERSION" \
+            fixtures/smoke-test-app
+
+      - name: Publish
+        run: |
+          uip codedapp publish \
+            --name "$APP_NAME" \
+            --version "$VERSION"
+
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "$APP_NAME" \
+            --folder-key "${{ env.FOLDER_KEY }}"
+
+      - name: Health check
+        run: |
+          APP_URL="https://${{ env.ORG }}.uipath.host/${APP_NAME}"
+          echo "Checking $APP_URL"
+          for i in 1 2 3; do
+            if curl -sf --max-time 10 "$APP_URL" > /dev/null; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
+
+  notify:
+    name: Slack Alert on Failure
+    runs-on: ubuntu-latest
+    needs: [stable-cli, alpha-cli]
+    if: failure()
+    permissions: {}
+    steps:
+      - name: Post to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL not set — skipping notification"
+            exit 0
+          fi
+
+          FAILED_JOBS=""
+          if [ "${{ needs.stable-cli.result }}" = "failure" ]; then
+            FAILED_JOBS="stable-cli (npm @latest)"
+          fi
+          if [ "${{ needs.alpha-cli.result }}" = "failure" ]; then
+            [ -n "$FAILED_JOBS" ] && FAILED_JOBS="$FAILED_JOBS, "
+            FAILED_JOBS="${FAILED_JOBS}alpha-cli (GH Packages)"
+          fi
+
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-type: application/json' \
+            -d "{\"text\":\":red_circle: *CLI Smoke Test Failed*\nJobs: ${FAILED_JOBS}\nRun: ${RUN_URL}\"}"
