@@ -22,9 +22,10 @@ export enum EntityFieldDataType {
   MULTILINE_TEXT = "MULTILINE_TEXT",
   /**
    * Large multi-line text (up to 128 KB). Unlike {@link MULTILINE_TEXT}, the full
-   * value is lazy-loaded: list/query methods (`getAllRecords`, `queryRecordsById`)
-   * return a size marker (e.g. `"HasValue=true Length=512"`) instead of the content.
-   * Use `getRecordById` to fetch the full value of a single record.
+   * value is lazy-loaded: list/query methods ({@link EntityServiceModel.getAllRecords},
+   * {@link EntityServiceModel.queryRecordsById}) return a size marker
+   * (e.g. `"HasValue=true Length=512"`) instead of the content.
+   * Use {@link EntityServiceModel.getRecordById} to fetch the full value of a single record.
    */
   MULTILINE_MAX = "MULTILINE_MAX",
   FILE = "FILE",
