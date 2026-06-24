@@ -11,10 +11,12 @@ on:
 permissions: {}
 
 env:
+  NODE_VERSION: "20"
   ALPHA_AUTHORITY: https://alpha.uipath.com
   ORG: popoc
   TENANT: adetenant
   FOLDER_KEY: 8645d674-92d8-4281-9aef-43f3e3608ded
+  LOGIN_SCOPE: "Apps OR.Folders.Read OR.Execution"
 
 jobs:
   stable-cli:
@@ -31,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install CLI (npm @latest)
         run: |
@@ -41,32 +43,36 @@ jobs:
           uip tools list
 
       - name: Login
+        env:
+          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
+          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
         run: |
           uip login \
-            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
-            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
             --authority "${{ env.ALPHA_AUTHORITY }}" \
-            --tenant "${{ env.TENANT }}"
+            --organization "${{ env.ORG }}" \
+            --tenant "${{ env.TENANT }}" \
+            --client-id "$UIPATH_CLIENT_ID" \
+            --client-secret "$UIPATH_CLIENT_SECRET" \
+            --scope "${{ env.LOGIN_SCOPE }}"
 
       - name: Pack
         run: |
           VERSION="0.0.$(date +%Y%m%d)"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           uip codedapp pack \
+            fixtures/smoke-test-app \
             --name "$APP_NAME" \
-            --version "$VERSION" \
-            fixtures/smoke-test-app
+            --version "$VERSION"
 
       - name: Publish
         run: |
-          uip codedapp publish \
-            --name "$APP_NAME" \
-            --version "$VERSION"
+          uip codedapp publish --name "$APP_NAME"
 
       - name: Deploy
         run: |
           uip codedapp deploy \
             --name "$APP_NAME" \
+            --path-name "$APP_NAME" \
             --folder-key "${{ env.FOLDER_KEY }}"
 
       - name: Health check
@@ -99,7 +105,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install CLI (GH Packages)
         run: |
@@ -111,32 +117,36 @@ jobs:
           uip tools list
 
       - name: Login
+        env:
+          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
+          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
         run: |
           uip login \
-            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
-            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
             --authority "${{ env.ALPHA_AUTHORITY }}" \
-            --tenant "${{ env.TENANT }}"
+            --organization "${{ env.ORG }}" \
+            --tenant "${{ env.TENANT }}" \
+            --client-id "$UIPATH_CLIENT_ID" \
+            --client-secret "$UIPATH_CLIENT_SECRET" \
+            --scope "${{ env.LOGIN_SCOPE }}"
 
       - name: Pack
         run: |
           VERSION="0.0.$(date +%Y%m%d)"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           uip codedapp pack \
+            fixtures/smoke-test-app \
             --name "$APP_NAME" \
-            --version "$VERSION" \
-            fixtures/smoke-test-app
+            --version "$VERSION"
 
       - name: Publish
         run: |
-          uip codedapp publish \
-            --name "$APP_NAME" \
-            --version "$VERSION"
+          uip codedapp publish --name "$APP_NAME"
 
       - name: Deploy
         run: |
           uip codedapp deploy \
             --name "$APP_NAME" \
+            --path-name "$APP_NAME" \
             --folder-key "${{ env.FOLDER_KEY }}"
 
       - name: Health check
