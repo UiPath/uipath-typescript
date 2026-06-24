@@ -76,7 +76,7 @@ describe('BaseService Unit Tests', () => {
   beforeEach(() => {
     ({ instance } = createServiceTestDependencies());
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as unknown as ApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
     service = new TestableBaseService(instance);
   });
 

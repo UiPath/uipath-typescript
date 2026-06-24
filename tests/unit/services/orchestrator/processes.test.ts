@@ -48,7 +48,7 @@ describe('ProcessService Unit Tests', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     service = new ProcessService(instance);
 
@@ -411,7 +411,7 @@ describe('ProcessService Unit Tests', () => {
 
     it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new ProcessService(instance);
 
       const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
@@ -566,7 +566,7 @@ describe('ProcessService Unit Tests', () => {
     it('should fall back to SDK init-time folderKey when no folder is provided', async () => {
       // Simulates the coded-app meta-tag (`uipath:folder-key`) path.
       const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new ProcessService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
@@ -583,7 +583,7 @@ describe('ProcessService Unit Tests', () => {
 
     it('should suppress the init-time folderKey fallback when the caller provides explicit folder', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new ProcessService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });

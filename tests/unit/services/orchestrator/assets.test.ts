@@ -48,7 +48,7 @@ describe('AssetService Unit Tests', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -363,7 +363,7 @@ describe('AssetService Unit Tests', () => {
     it('should fall back to SDK init-time folderKey when no folder is provided', async () => {
       // Simulates the coded-app meta-tag (`uipath:folder-key`) path.
       const { instance } = createServiceTestDependencies({ folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new AssetService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
@@ -380,7 +380,7 @@ describe('AssetService Unit Tests', () => {
 
     it('should suppress the init-time folderKey fallback when the caller provides explicit folder', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new AssetService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
