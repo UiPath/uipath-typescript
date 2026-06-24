@@ -22,8 +22,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     GET_ALL_V2: `${DATAFABRIC_BASE}/api/v2/Entity`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
+    // v2 single-record read. Returns the full record including complete MULTILINE_MAX
+    // content, unlike list/query endpoints which project a size marker for those fields.
     GET_RECORD_BY_ID: (entityId: string, recordId: string) =>
-      `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read/${recordId}`,
+      `${DATAFABRIC_BASE}/api/v2/EntityService/entity/${entityId}/read/${recordId}`,
     INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert`,
     BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert-batch`,
     UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update/${recordId}`,
