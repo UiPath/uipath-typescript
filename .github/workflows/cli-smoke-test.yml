@@ -36,7 +36,7 @@ jobs:
       - name: Install CLI (npm @latest)
         run: |
           npm i -g @uipath/cli@latest
-          uip tools update
+          uip tools install codedapp
           echo "CLI version: $(uip --version)"
           uip tools list
 
@@ -106,7 +106,7 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ~/.npmrc
           echo "@uipath:registry=https://npm.pkg.github.com" >> ~/.npmrc
           npm i -g @uipath/cli
-          uip tools update
+          uip tools install codedapp
           echo "CLI version: $(uip --version)"
           uip tools list
 
