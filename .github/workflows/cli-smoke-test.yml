@@ -5,6 +5,8 @@ on:
     # 3:30 UTC = 9:00 AM IST, daily
     - cron: '30 3 * * *'
   workflow_dispatch: {} # manual trigger for testing
+  push:
+    branches: [feat/cli-smoke-test] # temporary: remove before merging to main
 
 permissions: {}
 
