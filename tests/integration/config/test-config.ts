@@ -11,6 +11,13 @@ export interface IntegrationConfig {
   secret: string;
   timeout: number;
   skipCleanup: boolean;
+  /**
+   * Whether the configured PAT carries the `DataFabric.Schema.Write` scope.
+   * Defaults to false (the standard test environment lacks it). Set
+   * `SCHEMA_WRITE_SCOPE_AVAILABLE=true` to enable schema-write-dependent tests
+   * (entity create/update, MULTILINE_MAX lifecycle).
+   */
+  schemaWriteScopeAvailable: boolean;
   folderId?: string;
   folderKey?: string;
   folderPath?: string;
@@ -66,6 +73,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     secret: rawConfig.secret as string,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
+    schemaWriteScopeAvailable: rawConfig.schemaWriteScopeAvailable === true,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
     folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
     folderPath: typeof rawConfig.folderPath === 'string' ? rawConfig.folderPath : undefined,
@@ -105,6 +113,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
       : 30000,
     skipCleanup: process.env.INTEGRATION_TEST_SKIP_CLEANUP === 'true',
+    schemaWriteScopeAvailable: process.env.SCHEMA_WRITE_SCOPE_AVAILABLE === 'true',
     folderId: process.env.INTEGRATION_TEST_FOLDER_ID || undefined,
     folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
     folderPath: process.env.INTEGRATION_TEST_FOLDER_PATH || undefined,
