@@ -1,0 +1,19 @@
+name: Weekly Coverage (main)
+
+# Runs the full coverage pipeline against main on a schedule. PR checks only run
+# coverage against PR branches, so this keeps SonarCloud's main-branch analysis
+# up to date.
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Every Monday at 06:00 UTC
+  workflow_dispatch:        # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    uses: ./.github/workflows/coverage.yml
+    secrets: inherit
+    with:
+      ref_label: main

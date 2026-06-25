@@ -1,0 +1,140 @@
+name: Coverage
+
+# Reusable workflow holding the full coverage pipeline (unit + integration +
+# SonarCloud). Invoked by pr-checks.yml on pull requests and by
+# weekly-coverage.yml on a schedule so the integration-test secret mapping
+# lives in exactly one place.
+on:
+  workflow_call:
+    inputs:
+      ref_label:
+        description: Branch label shown in the run summary
+        type: string
+        required: false
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run SDK Tests
+        run: npm run test:coverage -- --run
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/lcov.info
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Set Integration Test Configuration
+        id: config
+        run: |
+          # Configuration for the development environment
+          echo "env_name=development" >> $GITHUB_OUTPUT
+          echo "base_url=${{ secrets.UIPATH_BASE_URL_DEV || secrets.UIPATH_BASE_URL }}" >> $GITHUB_OUTPUT
+          echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
+          echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
+          echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
+          echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
+          echo "integration_test_folder_key=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY }}" >> $GITHUB_OUTPUT
+          echo "integration_test_folder_path=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_PATH_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER_PATH }}" >> $GITHUB_OUTPUT
+          echo "orchestrator_test_process_key=${{ secrets.UIPATH_INTEGRATION_TEST_PROCESS_KEY_DEV || secrets.UIPATH_INTEGRATION_TEST_PROCESS_KEY }}" >> $GITHUB_OUTPUT
+          echo "data_fabric_test_entity_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_ENTITY_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ENTITY_ID }}" >> $GITHUB_OUTPUT
+          echo "data_fabric_test_choiceset_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID }}" >> $GITHUB_OUTPUT
+          echo "data_fabric_test_attachment_field=${{ secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD }}" >> $GITHUB_OUTPUT
+          echo "data_fabric_test_folder_entity_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_FOLDER_ENTITY_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_FOLDER_ENTITY_ID }}" >> $GITHUB_OUTPUT
+          echo "orchestrator_attachment_id=${{ secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID_DEV || secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID }}" >> $GITHUB_OUTPUT
+          echo "jobs_test_folder_id=${{ secrets.UIPATH_JOBS_TEST_FOLDER_ID_DEV || secrets.UIPATH_JOBS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
+          echo "traces_test_trace_id=${{ secrets.UIPATH_TRACES_TEST_TRACE_ID_DEV || secrets.UIPATH_TRACES_TEST_TRACE_ID }}" >> $GITHUB_OUTPUT
+          echo "tasks_test_user_group_id=${{ secrets.UIPATH_TASKS_TEST_USER_GROUP_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_GROUP_ID }}" >> $GITHUB_OUTPUT
+          echo "tasks_test_user_id=${{ secrets.UIPATH_TASKS_TEST_USER_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_ID }}" >> $GITHUB_OUTPUT
+
+      - name: Create Integration Test Configuration
+        run: |
+          cat > tests/.env.integration << EOF
+          # Auto-generated configuration for development environment
+          # Branch: ${{ inputs.ref_label }}
+          UIPATH_BASE_URL=${{ steps.config.outputs.base_url }}
+          UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
+          UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
+          UIPATH_SECRET=${{ steps.config.outputs.secret }}
+          INTEGRATION_TEST_TIMEOUT=30000
+          INTEGRATION_TEST_SKIP_CLEANUP=false
+          INTEGRATION_TEST_FOLDER_ID=${{ steps.config.outputs.integration_test_folder_id }}
+          INTEGRATION_TEST_FOLDER_KEY=${{ steps.config.outputs.integration_test_folder_key }}
+          INTEGRATION_TEST_FOLDER_PATH=${{ steps.config.outputs.integration_test_folder_path }}
+          DATA_FABRIC_TEST_ENTITY_ID=${{ steps.config.outputs.data_fabric_test_entity_id }}
+          DATA_FABRIC_TEST_CHOICESET_ID=${{ steps.config.outputs.data_fabric_test_choiceset_id }}
+          DATA_FABRIC_TEST_ATTACHMENT_FIELD=${{ steps.config.outputs.data_fabric_test_attachment_field }}
+          DATA_FABRIC_TEST_FOLDER_ENTITY_ID=${{ steps.config.outputs.data_fabric_test_folder_entity_id }}
+          ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
+          ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
+          JOBS_TEST_FOLDER_ID=${{ steps.config.outputs.jobs_test_folder_id }}
+          TRACES_TEST_TRACE_ID=${{ steps.config.outputs.traces_test_trace_id }}
+          TASKS_TEST_USER_GROUP_ID=${{ steps.config.outputs.tasks_test_user_group_id }}
+          TASKS_TEST_USER_ID=${{ steps.config.outputs.tasks_test_user_id }}
+          EOF
+
+      - name: Run Integration Tests
+        run: npm run test:integration:coverage -- --run
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage
+          path: coverage-integration/lcov.info
+
+      - name: SonarCloud Scan
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Generate Summary
+        if: success()
+        run: |
+          echo "## ✅ Coverage Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ inputs.ref_label }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`development\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Completed Checks:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependencies installed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Typecheck passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SDK tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate Failure Summary
+        if: failure()
+        run: |
+          echo "## ❌ Coverage Checks Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ inputs.ref_label }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** \`development\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the logs above to identify and fix the issues." >> $GITHUB_STEP_SUMMARY
