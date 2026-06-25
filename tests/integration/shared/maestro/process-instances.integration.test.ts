@@ -220,6 +220,46 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
     });
   });
 
+  describe('retry', () => {
+    let faultedInstanceId!: string;
+    let folderKey!: string;
+
+    beforeAll(async () => {
+      const { processInstances } = getServices();
+      const config = getTestConfig();
+
+      if (!config.folderKey) {
+        throw new Error('No folderKey configured for testing');
+      }
+      folderKey = config.folderKey;
+
+      const instances = await processInstances.getAll({ pageSize: 50 });
+      const faulted = instances.items.find((inst) =>
+        /fault|fail/i.test(inst.latestRunStatus ?? '')
+      );
+
+      if (!faulted) {
+        throw new Error(
+          'No faulted process instance available in the test tenant to exercise retry. ' +
+            'Seed a faulted instance in the "Integration Test" folder.'
+        );
+      }
+      faultedInstanceId = faulted.instanceId;
+    });
+
+    it('should retry a faulted process instance', async () => {
+      const { processInstances } = getServices();
+
+      const result = await processInstances.retry(faultedInstanceId, folderKey, {
+        comment: 'Integration test retry',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+    });
+  });
+
   describe('Instance details', () => {
     it('should retrieve process variables', async () => {
       if (!testInstanceId) {
