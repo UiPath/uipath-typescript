@@ -102,7 +102,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   }
 
   /**
-   * Get a process instance by ID with operation methods (cancel, pause, resume)
+   * Get a process instance by ID with operation methods (cancel, pause, resume, retry)
    * @param id The ID of the instance to retrieve
    * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstanceGetResponse>
@@ -261,7 +261,29 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
+    return {
+      success: true,
+      data: response.data
+    };
+  }
+
+  /**
+   * Retry a faulted process instance
+   *
+   * Re-runs the failed elements of the instance (and the elements that follow) within
+   * the same instance, spawning new jobs. Use to recover from transient/flaky failures.
+   * @param instanceId The ID of the instance to retry
+   * @param folderKey The folder key for authorization
+   * @param options Optional retry options with comment
+   * @returns Promise resolving to operation result with updated instance data
+   */
+  @track('ProcessInstances.Retry')
+  async retry(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RETRY(instanceId), options || {}, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+
     return {
       success: true,
       data: response.data
