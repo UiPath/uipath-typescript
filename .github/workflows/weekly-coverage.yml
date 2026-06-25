@@ -11,6 +11,13 @@ on:
 permissions:
   contents: read
 
+# Serialize a manual dispatch against the scheduled run so two coverage passes
+# don't hit the same dev tenant's integration data at once. Let an in-flight run
+# finish rather than cancelling it.
+concurrency:
+  group: weekly-coverage
+  cancel-in-progress: false
+
 jobs:
   coverage:
     uses: ./.github/workflows/coverage.yml
