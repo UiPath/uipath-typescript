@@ -12,6 +12,9 @@
         "agentic-ai"
     ],
     "type": "module",
+    "engines": {
+        "npm": ">=11.5.0"
+    },
     "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
