@@ -20,6 +20,20 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `ping()` | `ConnectionService` or `ConnectionServiceUser` |
 | `reauthenticate()` | `ConnectionService` |
 
+## Integration Service — Elements
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getObjects()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getActivities()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getEventObjects()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getEventObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getInstanceObjects()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getInstanceObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getInstanceEventObjects()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getInstanceEventObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
+
 ## Assets
 
 | Method | OAuth Scope |
