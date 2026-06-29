@@ -20,3 +20,4 @@ export const INSIGHTS_RTM_BASE = 'insightsrtm_';
  * Do NOT remove the leading `../`. See real-API curl confirmation in the PR description.
  */
 export const NOTIFICATION_BASE = '../notificationservice_';
+export const CONNECTIONS_BASE = 'connections_';

@@ -41,3 +41,6 @@ export * from './governance';
 
 // Notification endpoints
 export * from './notification';
+
+// Integration Service endpoints
+export * from './integration-service';
