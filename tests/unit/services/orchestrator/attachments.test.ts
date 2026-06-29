@@ -132,5 +132,25 @@ describe('AttachmentService Unit Tests', () => {
         }),
       );
     });
+
+    it('should rewrite both AttachmentsMap and BucketMap field names in OData strings', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAttachment());
+
+      await attachmentService.getById(
+        ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+        { select: 'name,createdTime,blobFileAccess/path,blobFileAccess/httpMethod' },
+      );
+
+      // AttachmentsMap: createdTime → creationTime.
+      // BucketMap (applied to nested blobFileAccess fields): path → fullPath, httpMethod → verb.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,blobFileAccess/fullPath,blobFileAccess/verb',
+          }),
+        }),
+      );
+    });
   });
 });
