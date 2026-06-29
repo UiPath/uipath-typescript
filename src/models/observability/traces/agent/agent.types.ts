@@ -154,3 +154,164 @@ export type AgentTraceGetSpansByReferenceOptions = PaginationOptions & {
   /** Execution type filter */
   executionType?: AgentTraceExecutionType;
 };
+
+// ─── Agentic Governance ─────────────────────────────────────────────────────
+
+/**
+ * Evaluation mode of an agentic-governance decision.
+ */
+export enum AgentGovernanceMode {
+  /** Policy evaluated and logged, but not enforced. */
+  Audit = 'AUDIT',
+  /** Policy evaluated and enforced. */
+  Enforce = 'ENFORCE',
+  /** Unrecognized or missing mode. */
+  Unknown = 'Unknown',
+}
+
+/**
+ * Verdict of an agentic-governance decision. Also used for the enforcement
+ * action actually applied, which carries the same allow/deny vocabulary.
+ */
+export enum AgentGovernanceVerdict {
+  /** Allowed — not a violation. */
+  Allow = 'ALLOW',
+  /** Denied — counts as a violation. */
+  Deny = 'DENY',
+  /** Unrecognized or missing verdict. */
+  Unknown = 'Unknown',
+}
+
+/**
+ * One agentic-governance decision row (a governance-checker span).
+ */
+export interface AgentGovernanceTrace {
+  /** Tenant ID (GUID). May be `null`. */
+  tenantId: string | null;
+  /** Decision window start time. */
+  startTime: string;
+  /** Decision window end time. May be `null`. */
+  endTime: string | null;
+  /** Trace ID (GUID). May be `null`. */
+  traceId: string | null;
+  /** Job key (GUID). May be `null`. */
+  jobKey: string | null;
+  /** Folder key (GUID). May be `null`. */
+  folderKey: string | null;
+  /** Runtime the evaluator ran in (context, not a filter). May be `null`. */
+  source: string | null;
+  /** Policy ID. May be `null`. */
+  policyId: string | null;
+  /** Policy display name. May be `null`. */
+  policyName: string | null;
+  /** Governance pack name. May be `null`. */
+  packName: string | null;
+  /** Governance hook (e.g. `BEFORE_MODEL`). May be `null`. */
+  hook: string | null;
+  /** Evaluation mode, normalized to {@link AgentGovernanceMode} ({@link AgentGovernanceMode.Unknown} when missing/unrecognized). */
+  mode: AgentGovernanceMode;
+  /** Enforcement action applied (enforce mode), normalized to {@link AgentGovernanceVerdict}. */
+  actionApplied: AgentGovernanceVerdict;
+  /** Verdict, normalized to {@link AgentGovernanceVerdict} (`Deny` = violation). */
+  evaluatorResult: AgentGovernanceVerdict;
+  /** Human-readable reason. May be `null`. */
+  reason: string | null;
+  /** Resolved agent ID (GUID). May be `null`. */
+  agentId: string | null;
+  /** Agent display name. May be `null`. */
+  agentName: string | null;
+}
+
+/**
+ * Options for {@link AgentTracesServiceModel.getGovernanceTraces}.
+ *
+ * Composes optional filters and pagination. The required window start is a
+ * positional `startTime` argument.
+ */
+export type AgentGovernanceTracesOptions = PaginationOptions & {
+  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
+  endTime?: Date;
+  /** Filter on the governance hook. */
+  hook?: string;
+  /** Filter on the verdict. */
+  evaluatorResult?: AgentGovernanceVerdict;
+  /** Filter on a single policy ID. */
+  policyId?: string;
+  /** Filter on a single agent by its project key. */
+  agentId?: string;
+  /** When `true`, restrict to violations (deny verdicts). */
+  violationsOnly?: boolean;
+};
+
+/**
+ * One breakdown entry in the governance summary — counts for a single key.
+ */
+export interface AgentGovernanceCountItem {
+  /** Breakdown key — hook value, agent id, policy id, or pack name, depending on the breakdown. May be `null`. */
+  key: string | null;
+  /** Display name (populated for the policy and agent breakdowns). May be `null`. */
+  name: string | null;
+  /** Number of decisions for this key. */
+  count: number;
+  /** Number of violations (deny verdicts) for this key. */
+  violationCount: number;
+}
+
+/**
+ * Sections the governance summary can compute. `action` and `mode` are opt-in.
+ */
+export enum AgentGovernanceSection {
+  /** Scalar totals (`total`, `violations`). */
+  Totals = 'totals',
+  /** Breakdown by governance hook. */
+  Hook = 'hook',
+  /** Breakdown by agent. */
+  Agent = 'agent',
+  /** Breakdown by policy. */
+  Policy = 'policy',
+  /** Breakdown by governance pack. */
+  Pack = 'pack',
+  /** Breakdown by enforcement action (opt-in). */
+  Action = 'action',
+  /** Breakdown by evaluation mode (opt-in). */
+  Mode = 'mode',
+}
+
+/**
+ * Aggregated agentic-governance posture over the requested window.
+ */
+export interface AgentGovernanceSummaryResponse {
+  /** Total decisions in the window. */
+  total: number;
+  /** Total violations (deny verdicts). */
+  violations: number;
+  /** Breakdown by governance hook. */
+  byHook: AgentGovernanceCountItem[];
+  /** Breakdown by agent. */
+  byAgent: AgentGovernanceCountItem[];
+  /** Breakdown by policy. */
+  byPolicy: AgentGovernanceCountItem[];
+  /** Breakdown by governance pack. */
+  byPack: AgentGovernanceCountItem[];
+  /** Breakdown by enforcement action. Present only when `action` is requested in `sections`. */
+  byAction?: AgentGovernanceCountItem[];
+  /** Breakdown by evaluation mode. Present only when `mode` is requested in `sections`. */
+  byMode?: AgentGovernanceCountItem[];
+}
+
+/**
+ * Options for {@link AgentTracesServiceModel.getGovernanceSummary}.
+ */
+export interface AgentGovernanceSummaryOptions {
+  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
+  endTime?: Date;
+  /** Top-N size for each breakdown. */
+  topN?: number;
+  /** Restrict totals and breakdowns to a single governance pack. */
+  packName?: string;
+  /**
+   * Which sections to compute. Omit for the default set
+   * (`totals`, `hook`, `agent`, `policy`, `pack`); `action` and `mode` are opt-in.
+   */
+  sections?: AgentGovernanceSection[];
+}

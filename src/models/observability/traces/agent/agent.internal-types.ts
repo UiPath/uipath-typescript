@@ -50,3 +50,30 @@ export interface RawAgentSpanGetResponse {
   /** Raw span context as a JSON string. May be `null`. */
   context: string | null;
 }
+
+/**
+ * Raw agentic-governance decision row as returned by the API, before the
+ * `mode` / `actionApplied` / `evaluatorResult` fields are normalized to enums.
+ */
+export interface RawAgentGovernanceTrace {
+  tenantId: string | null;
+  startTime: string;
+  endTime: string | null;
+  traceId: string | null;
+  jobKey: string | null;
+  folderKey: string | null;
+  source: string | null;
+  policyId: string | null;
+  policyName: string | null;
+  packName: string | null;
+  hook: string | null;
+  /** Raw evaluation-mode string (e.g. `AUDIT`, `ENFORCE`). */
+  mode: string | null;
+  /** Raw enforcement-action string. */
+  actionApplied: string | null;
+  /** Raw verdict string (e.g. `ALLOW`, `DENY`). */
+  evaluatorResult: string | null;
+  reason: string | null;
+  agentId: string | null;
+  agentName: string | null;
+}

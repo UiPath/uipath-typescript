@@ -44,4 +44,10 @@ export const AGENT_TEST_CONSTANTS = {
   SPAN_EXPIRY_TIME: '2025-07-01T00:00:00.000Z',
   ORGANIZATION_ID: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f90',
   ERROR_GENERIC: 'Agents API error',
+  GOV_HOOK: 'BEFORE_MODEL',
+  GOV_POLICY_ID: 'ISO42001-guardrail-prompt-injection',
+  GOV_POLICY_NAME: 'AI system impact assessment',
+  GOV_PACK_NAME: 'ISO/IEC 42001:2023 Runtime',
+  GOV_REASON: 'Prompt injection was detected with a probability of 0.',
+  GOV_AGENT_NAME: 'customer-care-assistant-for-acmecare',
 } as const;

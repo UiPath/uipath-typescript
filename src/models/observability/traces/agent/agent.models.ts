@@ -7,6 +7,10 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
+  AgentGovernanceTrace,
+  AgentGovernanceTracesOptions,
+  AgentGovernanceSummaryResponse,
+  AgentGovernanceSummaryOptions,
 } from './agent.types';
 import type {
   HasPaginationOptions,
@@ -188,4 +192,90 @@ export interface AgentTracesServiceModel {
       ? PaginatedResponse<AgentSpanGetResponse>
       : NonPaginatedResponse<AgentSpanGetResponse>
   >;
+
+  /**
+   * Retrieves raw agentic-governance decision rows (governance-checker spans),
+   * scoped to the caller's tenant.
+   *
+   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
+   * `cursor`, or `jumpToPage`) are provided, otherwise a
+   * {@link NonPaginatedResponse}. The endpoint returns no total-count, so
+   * `hasNextPage` is inferred from page fullness.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, filters, and pagination
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceTrace}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Decision rows since a start time
+   * const result = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'));
+   * result.items.forEach((row) => {
+   *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
+   *
+   * // Violations only, for one agent, paginated
+   * const page = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), {
+   *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   violationsOnly: true,
+   *   agentId: '<agentProjectKey>',
+   *   pageSize: 25,
+   * });
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   * }
+   * ```
+   */
+  getGovernanceTraces<T extends AgentGovernanceTracesOptions = AgentGovernanceTracesOptions>(
+    startTime: Date,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentGovernanceTrace>
+      : NonPaginatedResponse<AgentGovernanceTrace>
+  >;
+
+  /**
+   * Retrieves the aggregated agentic-governance posture over the requested
+   * window — scalar totals plus top-N breakdowns by hook, agent, policy, and
+   * pack. The `byAction` and `byMode` breakdowns are opt-in (request them via
+   * `sections`).
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, top-N, pack scope, and sections
+   * @returns Promise resolving to {@link AgentGovernanceSummaryResponse}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Default posture since a start time
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'));
+   * console.log(`${summary.violations} / ${summary.total} violations`);
+   * summary.byPolicy.forEach((p) => console.log(`${p.key}: ${p.violationCount}`));
+   * ```
+   * @example
+   * ```typescript
+   * import { AgentGovernanceSection } from '@uipath/uipath-typescript/traces';
+   *
+   * // Top 5 per breakdown, scoped to a pack, including the opt-in action/mode sections
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'), {
+   *   topN: 5,
+   *   packName: 'ISO/IEC 42001:2023 Runtime',
+   *   sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
+   * });
+   * ```
+   */
+  getGovernanceSummary(
+    startTime: Date,
+    options?: AgentGovernanceSummaryOptions,
+  ): Promise<AgentGovernanceSummaryResponse>;
 }

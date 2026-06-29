@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
 import { AgentTraces } from '../../../../../src/services/observability/traces/agent';
-import { AgentTraceExecutionType } from '../../../../../src/models/observability/traces/agent/agent.types';
+import {
+  AgentTraceExecutionType,
+  AgentGovernanceMode,
+  AgentGovernanceVerdict,
+  AgentGovernanceSection,
+} from '../../../../../src/models/observability/traces/agent/agent.types';
 import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 /**
@@ -172,6 +177,72 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       if (result.hasNextPage) {
         expect(result.nextCursor).toBeDefined();
       }
+    });
+  });
+
+  describe('getGovernanceTraces', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const validModes = new Set<string>(Object.values(AgentGovernanceMode));
+    const validVerdicts = new Set<string>(Object.values(AgentGovernanceVerdict));
+
+    it('should retrieve agentic-governance decision rows with mode/verdict normalized to enums', async () => {
+      const result = await trace.getGovernanceTraces(startTime, { endTime });
+
+      expect(Array.isArray(result.items)).toBe(true);
+      if (result.items.length === 0) {
+        throw new Error(
+          'No governance decision rows in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run governed agents in the tenant or widen the window.',
+        );
+      }
+      const row = result.items[0];
+      expect(typeof row.startTime).toBe('string');
+      // mode/verdict/action must be normalized to enum members (never a raw label).
+      expect(validModes.has(row.mode)).toBe(true);
+      expect(validVerdicts.has(row.evaluatorResult)).toBe(true);
+      expect(validVerdicts.has(row.actionApplied)).toBe(true);
+    });
+
+    it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
+      const result = await trace.getGovernanceTraces(startTime, { endTime, violationsOnly: true, pageSize: 2 });
+
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(typeof result.hasNextPage).toBe('boolean');
+      expect(result.currentPage).toBe(1);
+      if (result.hasNextPage) {
+        expect(result.nextCursor).toBeDefined();
+      }
+    });
+  });
+
+  describe('getGovernanceSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve the aggregated posture with default breakdowns present', async () => {
+      const result = await trace.getGovernanceSummary(startTime, { endTime });
+
+      expect(typeof result.total).toBe('number');
+      expect(typeof result.violations).toBe('number');
+      expect(Array.isArray(result.byHook)).toBe(true);
+      expect(Array.isArray(result.byAgent)).toBe(true);
+      expect(Array.isArray(result.byPolicy)).toBe(true);
+      expect(Array.isArray(result.byPack)).toBe(true);
+      // Opt-in breakdowns are absent unless requested.
+      expect(result.byAction).toBeUndefined();
+      expect(result.byMode).toBeUndefined();
+    });
+
+    it('should include the opt-in action and mode breakdowns when requested', async () => {
+      const result = await trace.getGovernanceSummary(startTime, {
+        endTime,
+        topN: 5,
+        sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
+      });
+
+      expect(Array.isArray(result.byAction)).toBe(true);
+      expect(Array.isArray(result.byMode)).toBe(true);
     });
   });
 });

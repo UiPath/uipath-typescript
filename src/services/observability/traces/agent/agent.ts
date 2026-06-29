@@ -9,14 +9,24 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
+  AgentGovernanceTrace,
+  AgentGovernanceTracesOptions,
+  AgentGovernanceSummaryResponse,
+  AgentGovernanceSummaryOptions,
+  AgentGovernanceMode,
+  AgentGovernanceVerdict,
 } from '../../../../models/observability/traces/agent/agent.types';
 import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
-import { RawAgentSpanGetResponse } from '../../../../models/observability/traces/agent/agent.internal-types';
+import {
+  RawAgentSpanGetResponse,
+  RawAgentGovernanceTrace,
+} from '../../../../models/observability/traces/agent/agent.internal-types';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
   AGENTS_OFFSET_PARAMS,
   TRACEVIEW_SPANS_PAGINATION,
+  GOVERNANCE_AGENTIC_TRACES_PAGINATION,
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
 import { ValidationError } from '../../../../core/errors';
@@ -35,6 +45,28 @@ const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
   const { expiryTimeUtc, ...rest } = span;
   return { ...rest, expiredTime: expiryTimeUtc };
 };
+
+const GOVERNANCE_MODES = new Set<string>(Object.values(AgentGovernanceMode));
+const GOVERNANCE_VERDICTS = new Set<string>(Object.values(AgentGovernanceVerdict));
+
+/** Permissively maps a raw mode string to {@link AgentGovernanceMode}; missing/unrecognized → `Unknown`. */
+const toGovernanceMode = (raw: string | null): AgentGovernanceMode =>
+  raw !== null && GOVERNANCE_MODES.has(raw) ? (raw as AgentGovernanceMode) : AgentGovernanceMode.Unknown;
+
+/** Permissively maps a raw verdict/action string to {@link AgentGovernanceVerdict}; missing/unrecognized → `Unknown`. */
+const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict =>
+  raw !== null && GOVERNANCE_VERDICTS.has(raw) ? (raw as AgentGovernanceVerdict) : AgentGovernanceVerdict.Unknown;
+
+/**
+ * Normalizes a raw agentic-governance row, mapping the mode/verdict/action
+ * strings to their enums while leaving the other fields untouched.
+ */
+const transformGovernanceTrace = (row: RawAgentGovernanceTrace): AgentGovernanceTrace => ({
+  ...row,
+  mode: toGovernanceMode(row.mode),
+  actionApplied: toGovernanceVerdict(row.actionApplied),
+  evaluatorResult: toGovernanceVerdict(row.evaluatorResult),
+});
 
 /**
  * Service for retrieving UiPath Agent trace metrics.
@@ -268,6 +300,137 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
         ? PaginatedResponse<AgentSpanGetResponse>
         : NonPaginatedResponse<AgentSpanGetResponse>
     >;
+  }
+
+  /**
+   * Retrieves raw agentic-governance decision rows (governance-checker spans),
+   * scoped to the caller's tenant.
+   *
+   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
+   * `cursor`, or `jumpToPage`) are provided, otherwise a
+   * {@link NonPaginatedResponse}. The endpoint returns no total-count, so
+   * `hasNextPage` is inferred from page fullness.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, filters, and pagination
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceTrace}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Decision rows since a start time
+   * const result = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'));
+   * result.items.forEach((row) => {
+   *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
+   *
+   * // Violations only, for one agent, paginated
+   * const page = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), {
+   *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   violationsOnly: true,
+   *   agentId: '<agentProjectKey>',
+   *   pageSize: 25,
+   * });
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   * }
+   * ```
+   */
+  @track('AgentTraces.GetGovernanceTraces')
+  async getGovernanceTraces<T extends AgentGovernanceTracesOptions = AgentGovernanceTracesOptions>(
+    startTime: Date,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentGovernanceTrace>
+      : NonPaginatedResponse<AgentGovernanceTrace>
+  > {
+    const { endTime, ...rest } = options ?? {};
+    const apiOptions = {
+      ...rest,
+      startTime: startTime.toISOString(),
+      ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
+    };
+
+    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceTrace, AgentGovernanceTrace>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_TRACES,
+      method: HTTP_METHODS.POST,
+      transformFn: transformGovernanceTrace,
+      excludeFromPrefix: Object.keys(apiOptions),
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: GOVERNANCE_AGENTIC_TRACES_PAGINATION.ITEMS_FIELD,
+        totalCountField: GOVERNANCE_AGENTIC_TRACES_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: AGENTS_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false,
+          zeroBased: true,
+        },
+      },
+    }, apiOptions) as Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<AgentGovernanceTrace>
+        : NonPaginatedResponse<AgentGovernanceTrace>
+    >;
+  }
+
+  /**
+   * Retrieves the aggregated agentic-governance posture over the requested
+   * window — scalar totals plus top-N breakdowns by hook, agent, policy, and
+   * pack. The `byAction` and `byMode` breakdowns are opt-in (request them via
+   * `sections`).
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, top-N, pack scope, and sections
+   * @returns Promise resolving to {@link AgentGovernanceSummaryResponse}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Default posture since a start time
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'));
+   * console.log(`${summary.violations} / ${summary.total} violations`);
+   * summary.byPolicy.forEach((p) => console.log(`${p.key}: ${p.violationCount}`));
+   * ```
+   * @example
+   * ```typescript
+   * import { AgentGovernanceSection } from '@uipath/uipath-typescript/traces';
+   *
+   * // Top 5 per breakdown, scoped to a pack, including the opt-in action/mode sections
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'), {
+   *   topN: 5,
+   *   packName: 'ISO/IEC 42001:2023 Runtime',
+   *   sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
+   * });
+   * ```
+   */
+  @track('AgentTraces.GetGovernanceSummary')
+  async getGovernanceSummary(
+    startTime: Date,
+    options?: AgentGovernanceSummaryOptions,
+  ): Promise<AgentGovernanceSummaryResponse> {
+    const body: Record<string, unknown> = { startTime: startTime.toISOString() };
+    if (options?.endTime !== undefined) body.endTime = options.endTime.toISOString();
+    if (options?.topN !== undefined) body.topN = options.topN;
+    if (options?.packName !== undefined) body.packName = options.packName;
+    if (options?.sections !== undefined) body.sections = options.sections;
+
+    const response = await this.post<AgentGovernanceSummaryResponse>(
+      AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_SUMMARY,
+      body,
+    );
+    return response.data;
   }
 
   private buildTraceFilterBody(
