@@ -238,6 +238,11 @@ const serviceEntries = [
     name: 'functions',
     input: 'src/services/orchestrator/functions/index.ts',
     output: 'functions/index'
+  },
+  {
+    name: 'is-connections',
+    input: 'src/services/integration-service/connections/index.ts',
+    output: 'is-connections/index'
   }
 ];
 
