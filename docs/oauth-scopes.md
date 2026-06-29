@@ -2,6 +2,15 @@
 
 This page lists the specific OAuth scopes required in external app for each SDK method.
 
+## Integration Service — Connectors
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getById()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getDefaultConnection()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getConnections()` | `ConnectionService` or `ConnectionServiceUser` |
+
 ## Integration Service — Connections
 
 | Method | OAuth Scope |
