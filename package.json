@@ -216,6 +216,16 @@
                 "default": "./dist/governance/index.cjs"
             }
         },
+        "./is-connectors": {
+            "import": {
+                "types": "./dist/is-connectors/index.d.ts",
+                "default": "./dist/is-connectors/index.mjs"
+            },
+            "require": {
+                "types": "./dist/is-connectors/index.d.ts",
+                "default": "./dist/is-connectors/index.cjs"
+            }
+        },
         "./is-connections": {
             "import": {
                 "types": "./dist/is-connections/index.d.ts",
