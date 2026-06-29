@@ -22,6 +22,7 @@ export * from './attachments';
 export * from './memory';
 export * from './traces';
 export * from './governance';
+export * from './integration-service';
 
 // Re-export constants for convenience
 export * from '../constants';

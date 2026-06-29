@@ -228,6 +228,11 @@ const serviceEntries = [
     name: 'governance',
     input: 'src/services/governance/index.ts',
     output: 'governance/index'
+  },
+  {
+    name: 'is-connections',
+    input: 'src/services/integration-service/connections/index.ts',
+    output: 'is-connections/index'
   }
 ];
 

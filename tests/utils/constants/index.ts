@@ -19,3 +19,4 @@ export * from './memory';
 export * from './traces';
 export * from './agents';
 export * from './governance';
+export * from './integration-service';

@@ -38,3 +38,6 @@ export * from './agents';
 
 // Governance endpoints
 export * from './governance';
+
+// Integration Service endpoints
+export * from './integration-service';

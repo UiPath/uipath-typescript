@@ -9,3 +9,4 @@ export const IDENTITY_BASE = 'identity_';
 export const AUTOPILOT_BASE = 'autopilotforeveryone_';
 export const LLMOPS_BASE = 'llmopstenant_';
 export const INSIGHTS_RTM_BASE = 'insightsrtm_';
+export const CONNECTIONS_BASE = 'connections_';
