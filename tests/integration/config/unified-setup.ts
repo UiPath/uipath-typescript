@@ -16,6 +16,9 @@ import { AgentMemory } from '../../../src/services/agents/memory';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
+import { ConnectorsService } from '../../../src/services/integration-service/connectors/connectors';
+import { ConnectionsService } from '../../../src/services/integration-service/connections/connections';
+import { ElementsService } from '../../../src/services/integration-service/elements/elements';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -56,6 +59,9 @@ export interface TestServices {
   traces?: Traces;
   agents?: Agents;
   governance?: Governance;
+  isConnectors?: ConnectorsService;
+  isConnections?: ConnectionsService;
+  isElements?: ElementsService;
 }
 
 /**
@@ -141,6 +147,9 @@ function createV1Services(config: IntegrationConfig): TestServices {
     traces: new Traces(sdk),
     agents: new Agents(sdk),
     governance: new Governance(sdk),
+    isConnectors: new ConnectorsService(sdk),
+    isConnections: new ConnectionsService(sdk),
+    isElements: new ElementsService(sdk),
   };
 }
 
