@@ -34,6 +34,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getInstanceEventObjects()` | `ConnectionService` or `ConnectionServiceUser` |
 | `getInstanceEventObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
 
+## Integration Service — Execution
+
+| Function | OAuth Scope |
+|----------|-------------|
+| `execute()` | `ConnectionService` or `ConnectionServiceUser` (plus any third-party scopes required by the underlying connection) |
+
 ## Assets
 
 | Method | OAuth Scope |
