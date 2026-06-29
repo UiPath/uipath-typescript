@@ -33,16 +33,8 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
       throw new ValidationError({ message: 'id is required for getById' });
     }
 
-    // Rewrite renamed SDK field names → API names inside OData strings,
-    // then prefix all keys with $ for OData. The response applies BOTH
-    // AttachmentsMap (top-level time fields) and BucketMap (on the nested
-    // blobFileAccess), so user-supplied OData strings may reference either
-    // namespace (e.g. createdTime, blobFileAccess/path).
-    //
-    // Merge into a single map and apply once so the existing no-chaining
-    // guarantee in transformOptions covers us — sequential calls would
-    // chain if a future entry in one map produced a value that became a
-    // key in the other.
+    // Response applies both maps (BucketMap on blobFileAccess, AttachmentsMap on top-level);
+    // merge so SDK names from either are rewritten in one pass.
     const apiFieldOptions = transformOptions(options, { ...AttachmentsMap, ...BucketMap });
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
