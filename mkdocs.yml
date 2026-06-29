@@ -201,6 +201,7 @@ nav:
           - Functions: api/interfaces/FunctionServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
           - Integration Service:
+            - Connectors: api/interfaces/ConnectorsServiceModel.md
             - Connections: api/interfaces/ConnectionsServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
