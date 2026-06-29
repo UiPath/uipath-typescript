@@ -24,6 +24,10 @@ export interface IntegrationConfig {
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
   tasksTestUserId?: string;
+  isConnectorKey?: string;
+  isConnectionId?: string;
+  isEventOperation?: string;
+  isObjectName?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -79,6 +83,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
+    isConnectorKey: typeof rawConfig.isConnectorKey === 'string' ? rawConfig.isConnectorKey : undefined,
+    isConnectionId: typeof rawConfig.isConnectionId === 'string' ? rawConfig.isConnectionId : undefined,
+    isEventOperation: typeof rawConfig.isEventOperation === 'string' ? rawConfig.isEventOperation : undefined,
+    isObjectName: typeof rawConfig.isObjectName === 'string' ? rawConfig.isObjectName : undefined,
   };
 }
 
@@ -118,6 +126,10 @@ export function loadIntegrationConfig(): IntegrationConfig {
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
+    isConnectorKey: process.env.INTEGRATION_SERVICE_TEST_CONNECTOR_KEY || undefined,
+    isConnectionId: process.env.INTEGRATION_SERVICE_TEST_CONNECTION_ID || undefined,
+    isEventOperation: process.env.INTEGRATION_SERVICE_TEST_EVENT_OPERATION || undefined,
+    isObjectName: process.env.INTEGRATION_SERVICE_TEST_OBJECT_NAME || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
