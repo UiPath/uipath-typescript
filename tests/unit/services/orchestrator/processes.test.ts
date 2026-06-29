@@ -470,6 +470,28 @@ describe('ProcessService Unit Tests', () => {
       await expect(service.start(request)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
+
+    it('should rewrite renamed SDK field names in query options before calling the API', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        filter: "processName eq 'InvoiceBot'",
+      });
+
+      // processName → releaseName (ProcessMap reversed).
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.any(Object),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': "releaseName eq 'InvoiceBot'",
+          }),
+        }),
+      );
+    });
   });
 
   describe('getByName', () => {
