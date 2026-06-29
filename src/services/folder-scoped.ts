@@ -80,8 +80,9 @@ export class FolderScopedService extends BaseService {
    * @param name - Resource name to search for
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) + OData query options (`expand`, `select`)
    * @param transform - Maps a raw OData item to the typed response (e.g. PascalCase → camelCase via field map)
-   * @param requestFieldMap - Optional response field map (API → SDK) used to rewrite SDK field
-   *   names back to API names in user-supplied `expand` / `select` (symmetric counterpart to `transform`)
+   * @param responseFieldMap - Optional response field map (API → SDK), reversed internally by
+   *   `transformOptions` to rewrite SDK field names back to API names in user-supplied
+   *   `expand` / `select` (symmetric counterpart to `transform`)
    * @throws ValidationError when inputs are malformed; NotFoundError when no match
    */
   protected async getByNameLookup<TRaw extends object, T>(
@@ -90,7 +91,7 @@ export class FolderScopedService extends BaseService {
     name: string,
     options: FolderScopedOptions,
     transform: (raw: TRaw) => T,
-    requestFieldMap?: FieldMapping,
+    responseFieldMap?: FieldMapping,
   ): Promise<T> {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
@@ -103,8 +104,8 @@ export class FolderScopedService extends BaseService {
       fallbackFolderKey: this.config.folderKey,
     });
 
-    const apiFieldOptions = requestFieldMap
-      ? transformOptions(queryOptions, requestFieldMap)
+    const apiFieldOptions = responseFieldMap
+      ? transformOptions(queryOptions, responseFieldMap)
       : queryOptions;
 
     const apiOptions = {
