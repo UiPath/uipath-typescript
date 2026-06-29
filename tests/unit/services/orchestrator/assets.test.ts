@@ -229,6 +229,47 @@ describe('AssetService Unit Tests', () => {
 
       await expect(assetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should translate SDK field names to API names in filter/orderby before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedAssetCollection(),
+      );
+
+      await assetService.getAll({
+        filter: "createdTime gt 2026-01-01",
+        orderby: 'lastModifiedTime desc',
+      });
+
+      // createdTime → creationTime, lastModifiedTime → lastModificationTime.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: 'creationTime gt 2026-01-01',
+          orderby: 'lastModificationTime desc',
+        }),
+      );
+    });
+  });
+
+  describe('OData field rewrite in getById', () => {
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAsset());
+
+      await assetService.getById(
+        ASSET_TEST_CONSTANTS.ASSET_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { select: 'name,createdTime,lastModifiedTime' },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,lastModificationTime',
+          }),
+        }),
+      );
+    });
   });
 
   describe('getByName', () => {
@@ -259,6 +300,25 @@ describe('AssetService Unit Tests', () => {
           params: expect.objectContaining({
             '$filter': `Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME}'`,
             '$top': '1',
+          }),
+        }),
+      );
+    });
+
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        select: 'name,createdTime,lastModifiedTime',
+      });
+
+      // createdTime → creationTime, lastModifiedTime → lastModificationTime.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,lastModificationTime',
           }),
         }),
       );

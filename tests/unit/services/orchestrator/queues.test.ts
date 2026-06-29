@@ -225,5 +225,48 @@ describe('QueueService Unit Tests', () => {
 
       await expect(queueService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should translate SDK field names to API names in filter/orderby before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueCollection(),
+      );
+
+      await queueService.getAll({
+        filter: "folderName eq 'Finance' and folderId eq 7",
+        orderby: 'createdTime desc',
+      });
+
+      // Options arriving at PaginationHelpers should already be in API field space:
+      // folderName → organizationUnitFullyQualifiedName, folderId → organizationUnitId,
+      // createdTime → creationTime.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: "organizationUnitFullyQualifiedName eq 'Finance' and organizationUnitId eq 7",
+          orderby: 'creationTime desc',
+        }),
+      );
+    });
+  });
+
+  describe('OData field rewrite in getById', () => {
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+
+      await queueService.getById(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { select: 'name,createdTime,folderId' },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,organizationUnitId',
+          }),
+        }),
+      );
+    });
   });
 });

@@ -19,7 +19,7 @@ import {
   BucketDeleteFileOptions
 } from '../../../models/orchestrator/buckets.types';
 import { BucketServiceModel } from '../../../models/orchestrator/buckets.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, transformOptions, arrayDictionaryToRecord } from '../../../utils/transform';
 import { filterUndefined } from '../../../utils/object';
 import { createHeaders } from '../../../utils/http/headers';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
@@ -299,6 +299,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const transformBlobItem = (item: any) =>
       transformData(item, BucketMap) as BlobItem;
 
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating.
+    const apiRestOptions = transformOptions(restOptions, BucketMap);
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
@@ -314,7 +318,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       },
       excludeFromPrefix: ['prefix'], // Bucket-specific param, not OData
       headers,
-    }, restOptions) as any;
+    }, apiRestOptions) as any;
   }
 
   /**
@@ -513,9 +517,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       fallbackFolderKey: this.config.folderKey,
     });
 
+    const apiRestOptions = transformOptions(restOptions, BucketMap);
     const queryOptions = {
       expiryInMinutes,
-      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+      ...addPrefixToKeys(apiRestOptions, ODATA_PREFIX, Object.keys(apiRestOptions))
     };
 
     return this._getUri(
@@ -682,6 +687,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const transformBucketFile = (file: Record<string, unknown>) =>
       transformData(pascalToCamelCaseKeys(file), BucketMap) as BucketFile;
 
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating.
+    const apiRestOptions = transformOptions(restOptions, BucketMap);
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => BUCKET_ENDPOINTS.GET_FILES(bucketId),
@@ -698,7 +707,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       },
       excludeFromPrefix: ['directory', 'recursive', 'fileNameRegex'],
       headers,
-    }, { ...restOptions, directory: '/', recursive: true }) as any;
+    }, { ...apiRestOptions, directory: '/', recursive: true }) as any;
   }
 
   /**
@@ -757,9 +766,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   ): Promise<BucketGetUriResponse> {
     const { bucketId, path, expiryInMinutes, headers, ...restOptions } = options;
 
+    const apiRestOptions = transformOptions(restOptions, BucketMap);
     const queryOptions = {
       expiryInMinutes,
-      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+      ...addPrefixToKeys(apiRestOptions, ODATA_PREFIX, Object.keys(apiRestOptions))
     };
 
     return this._getUri(

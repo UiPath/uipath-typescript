@@ -151,11 +151,31 @@ describe('ProcessService Unit Tests', () => {
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      
+
       // Mock PaginationHelpers.getAll to throw error
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should translate SDK field names to API names in filter/orderby before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockOrchestratorProcesses(),
+      );
+
+      await service.getAll({
+        filter: "processName eq 'InvoiceBot' and processKey eq 'abc'",
+        orderby: 'createdTime desc',
+      });
+
+      // processName → releaseName, processKey → releaseKey, createdTime → creationTime.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: "releaseName eq 'InvoiceBot' and releaseKey eq 'abc'",
+          orderby: 'creationTime desc',
+        }),
+      );
     });
 
   });
@@ -221,9 +241,28 @@ describe('ProcessService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(service.getById(
-        PROCESS_TEST_CONSTANTS.PROCESS_ID, 
+        PROCESS_TEST_CONSTANTS.PROCESS_ID,
         TEST_CONSTANTS.FOLDER_ID
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawOrchestratorProcess());
+
+      await service.getById(
+        PROCESS_TEST_CONSTANTS.PROCESS_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { select: 'name,processName,createdTime' },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,releaseName,creationTime',
+          }),
+        }),
+      );
     });
   });
 
@@ -431,6 +470,28 @@ describe('ProcessService Unit Tests', () => {
       await expect(service.start(request)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
+
+    it('should rewrite renamed SDK field names in query options before calling the API', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        filter: "processName eq 'InvoiceBot'",
+      });
+
+      // processName → releaseName (ProcessMap reversed).
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.any(Object),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': "releaseName eq 'InvoiceBot'",
+          }),
+        }),
+      );
+    });
   });
 
   describe('getByName', () => {
@@ -462,6 +523,25 @@ describe('ProcessService Unit Tests', () => {
           params: expect.objectContaining({
             '$filter': `Name eq '${PROCESS_TEST_CONSTANTS.PROCESS_NAME}'`,
             '$top': '1',
+          }),
+        }),
+      );
+    });
+
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        select: 'name,processName,createdTime',
+      });
+
+      // processName → releaseName, createdTime → creationTime (from ProcessMap reversed).
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,releaseName,creationTime',
           }),
         }),
       );

@@ -21,7 +21,8 @@ import {
   createMockUsers 
 } from '../../../utils/mocks/tasks';
 import { createMockError } from '../../../utils/mocks/core';
-import { DEFAULT_TASK_EXPAND } from '../../../../src/models/action-center/tasks.constants';
+import { DEFAULT_TASK_EXPAND, TaskMap } from '../../../../src/models/action-center/tasks.constants';
+import { transformOptions } from '../../../../src/utils/transform';
 import { TASK_TEST_CONSTANTS } from '../../../utils/constants/tasks';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { TASK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -905,6 +906,30 @@ describe('TaskService Unit Tests', () => {
         })
       );
     });
+
+    it('should run options through transformOptions with TaskMap before prefixing for OData', async () => {
+      const taskId = 123;
+      const mockTask = createMockTasks(1)[0];
+      mockApiClient.get.mockResolvedValue(mockTask);
+      vi.mocked(transformOptions).mockClear();
+
+      await taskService.getById(
+        taskId,
+        { select: 'title,createdTime,completedTime' },
+        TEST_CONSTANTS.FOLDER_ID,
+      );
+
+      // transformOptions is invoked with the default-expand-augmented options
+      // + TaskMap so SDK names in select get rewritten to API names before
+      // addPrefixToKeys runs.
+      expect(transformOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          select: 'title,createdTime,completedTime',
+          expand: DEFAULT_TASK_EXPAND,
+        }),
+        TaskMap,
+      );
+    });
   });
 
   describe('getAll', () => {
@@ -1082,6 +1107,25 @@ describe('TaskService Unit Tests', () => {
 
       // Verify the non-admin endpoint was used (default behavior)
       expect(capturedEndpoint).toBe(TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS);
+    });
+
+    it('should run options through transformOptions with TaskMap before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: createMockTasks(0),
+        totalCount: 0,
+      });
+      vi.mocked(transformOptions).mockClear();
+
+      const options = {
+        filter: "createdTime gt 2026-01-01 and folderId eq 7",
+        orderby: 'completedTime desc',
+      };
+      await taskService.getAll(options);
+
+      // transformOptions is invoked with the user's options + TaskMap so SDK
+      // field names like createdTime / folderId / completedTime are rewritten
+      // to API names before the request is built.
+      expect(transformOptions).toHaveBeenCalledWith(options, TaskMap);
     });
   });
 

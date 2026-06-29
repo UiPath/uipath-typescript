@@ -613,6 +613,23 @@ describe('BucketService Unit Tests', () => {
         TEST_CONSTANTS.FOLDER_ID
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should translate SDK field names to API names in filter before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 } as any);
+
+      await bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        filter: "path eq '/data/file.pdf'",
+      });
+
+      // path → fullPath (from BucketMap reversed).
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: "fullPath eq '/data/file.pdf'",
+        }),
+      );
+    });
   });
 
   describe('uploadFile', () => {
@@ -1206,6 +1223,26 @@ describe('BucketService Unit Tests', () => {
         path: BUCKET_TEST_CONSTANTS.FILE_PATH
       })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID, select: 'uri,httpMethod' },
+      );
+
+      // httpMethod → verb (from BucketMap reversed).
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'uri,verb',
+          }),
+        }),
+      );
+    });
   });
 
   describe('getReadUri — positional form', () => {
@@ -1536,6 +1573,23 @@ describe('BucketService Unit Tests', () => {
         BUCKET_TEST_CONSTANTS.BUCKET_ID,
         { folderId: TEST_CONSTANTS.FOLDER_ID },
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should translate SDK field names to API names in filter before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [] } as any);
+
+      await bucketService.getFiles(BUCKET_TEST_CONSTANTS.BUCKET_ID, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        filter: "path eq '/folder/file.pdf' and httpMethod eq 'GET'",
+      });
+
+      // path → fullPath, httpMethod → verb (from BucketMap).
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: "fullPath eq '/folder/file.pdf' and verb eq 'GET'",
+        }),
+      );
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   QueueGetByIdOptions
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { QUEUE_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -73,8 +73,13 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       : NonPaginatedResponse<QueueGetResponse>
   > {
     // Transformation function for queues
-    const transformQueueResponse = (queue: any) => 
+    const transformQueueResponse = (queue: any) =>
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
+
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, QueueMap) : options;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -91,7 +96,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
         }
       }
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
@@ -114,9 +119,9 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+
+    const apiFieldOptions = transformOptions(options, QueueMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
     
     const response = await this.get<QueueGetResponse>(
       QUEUE_ENDPOINTS.GET_BY_ID(id),
