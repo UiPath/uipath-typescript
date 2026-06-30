@@ -521,9 +521,24 @@ describe('AgentTracesService Unit Tests', () => {
         AgentGovernanceVerdict.Unknown,
         AgentGovernanceVerdict.Unknown,
       ]);
-      expect(result.items[1].actionApplied).toBe(AgentGovernanceVerdict.Unknown);
-      // Raw label must not leak through.
+      // actionApplied is a raw string passthrough (the enforcement action), null in audit mode.
+      expect(result.items[0].actionApplied).toBe('ALLOW');
+      expect(result.items[1].actionApplied).toBeNull();
+      // Raw label must not leak through on the enum fields.
       expect((result.items[0].mode as string)).not.toBe('enforce');
+    });
+
+    it('should match mode/verdict/action case-insensitively (API returns lowercase too)', async () => {
+      mockApiClient.post.mockResolvedValue({
+        items: [buildGovRow({ mode: 'audit', evaluatorResult: 'deny', actionApplied: 'allow' })],
+      });
+
+      const result = await traceService.getGovernanceChecks(startTime);
+
+      expect(result.items[0].mode).toBe(AgentGovernanceMode.Audit);
+      expect(result.items[0].evaluatorResult).toBe(AgentGovernanceVerdict.Deny);
+      // actionApplied is a raw passthrough string — not case-folded.
+      expect(result.items[0].actionApplied).toBe('allow');
     });
 
     it('should send pageSize + 0-based pageNumber in the body when pageSize is provided', async () => {
@@ -598,6 +613,9 @@ describe('AgentTracesService Unit Tests', () => {
       byAgent: [{ key: AGENT_TEST_CONSTANTS.AGENT_ID, name: AGENT_TEST_CONSTANTS.GOV_AGENT_NAME, count: 20, violationCount: 1 }],
       byPolicy: [{ key: AGENT_TEST_CONSTANTS.GOV_POLICY_ID, name: AGENT_TEST_CONSTANTS.GOV_POLICY_NAME, count: 2, violationCount: 0 }],
       byPack: [{ key: AGENT_TEST_CONSTANTS.GOV_PACK_NAME, name: null, count: 26, violationCount: 3 }],
+      // Always present; empty unless the action/mode sections are requested.
+      byAction: [],
+      byMode: [],
     };
 
     it('should return the flat summary and send only startTime in the body by default', async () => {
@@ -608,9 +626,9 @@ describe('AgentTracesService Unit Tests', () => {
       expect(result.total).toBe(26);
       expect(result.violations).toBe(3);
       expect(result.byPolicy[0].key).toBe(AGENT_TEST_CONSTANTS.GOV_POLICY_ID);
-      // Opt-in breakdowns absent when not requested.
-      expect(result.byAction).toBeUndefined();
-      expect(result.byMode).toBeUndefined();
+      // Opt-in breakdowns are present but empty when not requested.
+      expect(result.byAction).toEqual([]);
+      expect(result.byMode).toEqual([]);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_SUMMARY);

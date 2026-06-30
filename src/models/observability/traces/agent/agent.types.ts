@@ -155,10 +155,10 @@ export type AgentTraceGetSpansByReferenceOptions = PaginationOptions & {
   executionType?: AgentTraceExecutionType;
 };
 
-// ─── Agentic Governance ─────────────────────────────────────────────────────
+// ─── Governance ─────────────────────────────────────────────────────
 
 /**
- * Evaluation mode of an agentic-governance decision.
+ * Evaluation mode of a governance check.
  */
 export enum AgentGovernanceMode {
   /** Policy evaluated and logged, but not enforced. */
@@ -170,8 +170,7 @@ export enum AgentGovernanceMode {
 }
 
 /**
- * Verdict of an agentic-governance decision. Also used for the enforcement
- * action actually applied, which carries the same allow/deny vocabulary.
+ * Verdict of a governance check (`Deny` = violation).
  */
 export enum AgentGovernanceVerdict {
   /** Allowed — not a violation. */
@@ -183,7 +182,7 @@ export enum AgentGovernanceVerdict {
 }
 
 /**
- * One agentic-governance decision row (a governance-checker span).
+ * A single governance check — one policy's allow/deny decision for an agent run.
  */
 export interface AgentGovernanceCheck {
   /** Tenant ID (GUID). May be `null`. */
@@ -210,8 +209,8 @@ export interface AgentGovernanceCheck {
   hook: string | null;
   /** Evaluation mode, normalized to {@link AgentGovernanceMode} ({@link AgentGovernanceMode.Unknown} when missing/unrecognized). */
   mode: AgentGovernanceMode;
-  /** Enforcement action applied (enforce mode), normalized to {@link AgentGovernanceVerdict}. */
-  actionApplied: AgentGovernanceVerdict;
+  /** Enforcement action applied. `null` in audit mode (no action enforced). */
+  actionApplied: string | null;
   /** Verdict, normalized to {@link AgentGovernanceVerdict} (`Deny` = violation). */
   evaluatorResult: AgentGovernanceVerdict;
   /** Human-readable reason. May be `null`. */
@@ -223,10 +222,7 @@ export interface AgentGovernanceCheck {
 }
 
 /**
- * Options for {@link AgentTracesServiceModel.getGovernanceChecks}.
- *
- * Composes optional filters and pagination. The required window start is a
- * positional `startTime` argument.
+ * Options for the governance checks query — optional filters plus pagination.
  */
 export type AgentGovernanceChecksOptions = PaginationOptions & {
   /** Exclusive upper bound for the query window. Defaults to now when omitted. */
@@ -278,7 +274,7 @@ export enum AgentGovernanceSection {
 }
 
 /**
- * Aggregated agentic-governance posture over the requested window.
+ * Aggregated governance posture over the requested window.
  */
 export interface AgentGovernanceSummaryResponse {
   /** Total decisions in the window. */
@@ -293,17 +289,17 @@ export interface AgentGovernanceSummaryResponse {
   byPolicy: AgentGovernanceCountItem[];
   /** Breakdown by governance pack. */
   byPack: AgentGovernanceCountItem[];
-  /** Breakdown by enforcement action. Present only when `action` is requested in `sections`. */
-  byAction?: AgentGovernanceCountItem[];
-  /** Breakdown by evaluation mode. Present only when `mode` is requested in `sections`. */
-  byMode?: AgentGovernanceCountItem[];
+  /** Breakdown by enforcement action. Empty unless `action` is requested in `sections`. */
+  byAction: AgentGovernanceCountItem[];
+  /** Breakdown by evaluation mode. Empty unless `mode` is requested in `sections`. */
+  byMode: AgentGovernanceCountItem[];
 }
 
 /**
- * Options for {@link AgentTracesServiceModel.getGovernanceSummary}.
+ * Options for the governance summary.
  */
 export interface AgentGovernanceSummaryOptions {
-  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
+  /** Inclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Top-N size for each breakdown. */
   topN?: number;

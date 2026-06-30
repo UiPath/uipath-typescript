@@ -14,8 +14,8 @@ export const AGENT_TRACES_ENDPOINTS = {
   GET_SPANS_BY_TRACE_ID: (traceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/${traceId}`,
   /** Paginated spans whose reference hierarchy contains the given reference id. */
   GET_SPANS_BY_REFERENCE: (referenceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/reference/${referenceId}`,
-  /** Paginated raw agentic-governance decision rows. */
+  /** Paginated raw governance decision rows. */
   GET_GOVERNANCE_CHECKS: `${INSIGHTS_RTM_BASE}/Governance/agentic/traces`,
-  /** Aggregated agentic-governance posture (totals + top-N breakdowns). */
+  /** Aggregated governance posture (totals + top-N breakdowns). */
   GET_GOVERNANCE_SUMMARY: `${INSIGHTS_RTM_BASE}/Governance/agentic/summary`,
 } as const;

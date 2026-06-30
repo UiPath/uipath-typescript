@@ -194,8 +194,8 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves raw agentic-governance decision rows (governance-checker spans),
-   * scoped to the caller's tenant.
+   * Retrieves runtime governance checks — per policy allow/deny decisions —
+   * over the requested window, tenant-scoped.
    *
    * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
    * `cursor`, or `jumpToPage`) are provided, otherwise a
@@ -243,10 +243,8 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves the aggregated agentic-governance posture over the requested
-   * window — scalar totals plus top-N breakdowns by hook, agent, policy, and
-   * pack. The `byAction` and `byMode` breakdowns are opt-in (request them via
-   * `sections`).
+   * Retrieves a governance summary over the requested window — total and
+   * violation counts plus top-N breakdowns by hook, agent, policy, and pack.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections

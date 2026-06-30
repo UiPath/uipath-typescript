@@ -49,22 +49,25 @@ const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
 const GOVERNANCE_MODES = new Set<string>(Object.values(AgentGovernanceMode));
 const GOVERNANCE_VERDICTS = new Set<string>(Object.values(AgentGovernanceVerdict));
 
-/** Permissively maps a raw mode string to {@link AgentGovernanceMode}; missing/unrecognized → `Unknown`. */
-const toGovernanceMode = (raw: string | null): AgentGovernanceMode =>
-  raw !== null && GOVERNANCE_MODES.has(raw) ? (raw as AgentGovernanceMode) : AgentGovernanceMode.Unknown;
+/** Maps a raw mode string to {@link AgentGovernanceMode}, case-insensitively; missing/unrecognized → `Unknown`. */
+const toGovernanceMode = (raw: string | null): AgentGovernanceMode => {
+  const value = raw?.toUpperCase();
+  return value !== undefined && GOVERNANCE_MODES.has(value) ? (value as AgentGovernanceMode) : AgentGovernanceMode.Unknown;
+};
 
-/** Permissively maps a raw verdict/action string to {@link AgentGovernanceVerdict}; missing/unrecognized → `Unknown`. */
-const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict =>
-  raw !== null && GOVERNANCE_VERDICTS.has(raw) ? (raw as AgentGovernanceVerdict) : AgentGovernanceVerdict.Unknown;
+/** Maps a raw verdict/action string to {@link AgentGovernanceVerdict}, case-insensitively; missing/unrecognized → `Unknown`. */
+const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict => {
+  const value = raw?.toUpperCase();
+  return value !== undefined && GOVERNANCE_VERDICTS.has(value) ? (value as AgentGovernanceVerdict) : AgentGovernanceVerdict.Unknown;
+};
 
 /**
- * Normalizes a raw agentic-governance row, mapping the mode/verdict/action
- * strings to their enums while leaving the other fields untouched.
+ * Normalizes a raw governance row, mapping the mode and verdict strings to
+ * their enums while leaving the other fields untouched.
  */
 const transformGovernanceCheck = (row: RawAgentGovernanceCheck): AgentGovernanceCheck => ({
   ...row,
   mode: toGovernanceMode(row.mode),
-  actionApplied: toGovernanceVerdict(row.actionApplied),
   evaluatorResult: toGovernanceVerdict(row.evaluatorResult),
 });
 
@@ -303,8 +306,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   }
 
   /**
-   * Retrieves raw agentic-governance decision rows (governance-checker spans),
-   * scoped to the caller's tenant.
+   * Retrieves runtime governance checks — per policy allow/deny decisions —
+   * over the requested window.
    *
    * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
    * `cursor`, or `jumpToPage`) are provided, otherwise a
@@ -384,10 +387,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   }
 
   /**
-   * Retrieves the aggregated agentic-governance posture over the requested
-   * window — scalar totals plus top-N breakdowns by hook, agent, policy, and
-   * pack. The `byAction` and `byMode` breakdowns are opt-in (request them via
-   * `sections`).
+   * Retrieves a governance summary over the requested window — total and
+   * violation counts plus top-N breakdowns by hook, agent, policy, and pack.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections

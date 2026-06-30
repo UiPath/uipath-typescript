@@ -198,10 +198,11 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       }
       const row = result.items[0];
       expect(typeof row.startTime).toBe('string');
-      // mode/verdict/action must be normalized to enum members (never a raw label).
+      // mode/verdict are normalized to enum members (never a raw label).
       expect(validModes.has(row.mode)).toBe(true);
       expect(validVerdicts.has(row.evaluatorResult)).toBe(true);
-      expect(validVerdicts.has(row.actionApplied)).toBe(true);
+      // actionApplied is the raw enforcement action — a string, or null in audit mode.
+      expect(row.actionApplied === null || typeof row.actionApplied === 'string').toBe(true);
     });
 
     it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
@@ -229,9 +230,9 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       expect(Array.isArray(result.byAgent)).toBe(true);
       expect(Array.isArray(result.byPolicy)).toBe(true);
       expect(Array.isArray(result.byPack)).toBe(true);
-      // Opt-in breakdowns are absent unless requested.
-      expect(result.byAction).toBeUndefined();
-      expect(result.byMode).toBeUndefined();
+      // Opt-in breakdowns are always present, but empty unless requested.
+      expect(Array.isArray(result.byAction)).toBe(true);
+      expect(Array.isArray(result.byMode)).toBe(true);
     });
 
     it('should include the opt-in action and mode breakdowns when requested', async () => {

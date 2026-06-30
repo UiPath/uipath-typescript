@@ -166,7 +166,7 @@ export const TRACEVIEW_SPANS_PAGINATION = {
 };
 
 /**
- * Agentic-governance traces pagination constants — decision rows sit directly
+ * Governance checks pagination constants — decision rows sit directly
  * under `items`. This endpoint returns no total-count field, so
  * `TOTAL_COUNT_FIELD` points at an absent field; `hasNextPage` falls back to
  * page-fullness (a full page implies there may be more). Request params reuse
