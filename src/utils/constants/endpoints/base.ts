@@ -10,3 +10,4 @@ export const AUTOPILOT_BASE = 'autopilotforeveryone_';
 export const LLMOPS_BASE = 'llmopstenant_';
 export const INSIGHTS_RTM_BASE = 'insightsrtm_';
 export const CONNECTIONS_BASE = 'connections_';
+export const ELEMENTS_BASE = 'elements_/v3/element';

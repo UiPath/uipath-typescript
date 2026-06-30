@@ -226,6 +226,16 @@
                 "default": "./dist/is-connectors/index.cjs"
             }
         },
+        "./is-elements": {
+            "import": {
+                "types": "./dist/is-elements/index.d.ts",
+                "default": "./dist/is-elements/index.mjs"
+            },
+            "require": {
+                "types": "./dist/is-elements/index.d.ts",
+                "default": "./dist/is-elements/index.cjs"
+            }
+        },
         "./is-connections": {
             "import": {
                 "types": "./dist/is-connections/index.d.ts",
