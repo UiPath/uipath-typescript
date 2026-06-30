@@ -26,7 +26,7 @@ import {
   HTTP_METHODS,
   AGENTS_OFFSET_PARAMS,
   TRACEVIEW_SPANS_PAGINATION,
-  GOVERNANCE_AGENTIC_CHECKS_PAGINATION,
+  GOVERNANCE_CHECKS_PAGINATION,
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
 import { ValidationError } from '../../../../core/errors';
@@ -369,8 +369,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       excludeFromPrefix: Object.keys(apiOptions),
       pagination: {
         paginationType: PaginationType.OFFSET,
-        itemsField: GOVERNANCE_AGENTIC_CHECKS_PAGINATION.ITEMS_FIELD,
-        totalCountField: GOVERNANCE_AGENTIC_CHECKS_PAGINATION.TOTAL_COUNT_FIELD,
+        itemsField: GOVERNANCE_CHECKS_PAGINATION.ITEMS_FIELD,
+        totalCountField: GOVERNANCE_CHECKS_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
           pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
           offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
