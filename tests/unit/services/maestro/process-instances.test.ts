@@ -503,9 +503,7 @@ describe('ProcessInstancesService', () => {
 
       mockApiClient.post.mockResolvedValue(mockApiResponse);
 
-
       const result = await service.retry(instanceId, folderKey, options);
-
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.RETRY(instanceId),
@@ -531,9 +529,7 @@ describe('ProcessInstancesService', () => {
 
       mockApiClient.post.mockResolvedValue(mockApiResponse);
 
-
       const result = await service.retry(instanceId, folderKey);
-
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.RETRY(instanceId),
@@ -553,7 +549,6 @@ describe('ProcessInstancesService', () => {
 
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
-
 
       await expect(service.retry(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
