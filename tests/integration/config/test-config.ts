@@ -8,6 +8,7 @@ export interface IntegrationConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  tenantId?: string;
   secret: string;
   timeout: number;
   skipCleanup: boolean;
@@ -63,6 +64,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     baseUrl: rawConfig.baseUrl as string,
     orgName: rawConfig.orgName as string,
     tenantName: rawConfig.tenantName as string,
+    tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     secret: rawConfig.secret as string,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
@@ -100,6 +102,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     baseUrl: process.env.UIPATH_BASE_URL,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
+    tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
     secret: process.env.UIPATH_SECRET,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
