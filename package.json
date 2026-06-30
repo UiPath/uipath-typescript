@@ -245,6 +245,16 @@
                 "types": "./dist/is-connections/index.d.ts",
                 "default": "./dist/is-connections/index.cjs"
             }
+        },
+        "./is-execution": {
+            "import": {
+                "types": "./dist/is-execution/index.d.ts",
+                "default": "./dist/is-execution/index.mjs"
+            },
+            "require": {
+                "types": "./dist/is-execution/index.d.ts",
+                "default": "./dist/is-execution/index.cjs"
+            }
         }
     },
     "files": [
