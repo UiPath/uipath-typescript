@@ -9,8 +9,8 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
-  AgentGovernanceTrace,
-  AgentGovernanceTracesOptions,
+  AgentGovernanceCheck,
+  AgentGovernanceChecksOptions,
   AgentGovernanceSummaryResponse,
   AgentGovernanceSummaryOptions,
   AgentGovernanceMode,
@@ -19,14 +19,14 @@ import {
 import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
 import {
   RawAgentSpanGetResponse,
-  RawAgentGovernanceTrace,
+  RawAgentGovernanceCheck,
 } from '../../../../models/observability/traces/agent/agent.internal-types';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
   AGENTS_OFFSET_PARAMS,
   TRACEVIEW_SPANS_PAGINATION,
-  GOVERNANCE_AGENTIC_TRACES_PAGINATION,
+  GOVERNANCE_AGENTIC_CHECKS_PAGINATION,
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
 import { ValidationError } from '../../../../core/errors';
@@ -61,7 +61,7 @@ const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict =>
  * Normalizes a raw agentic-governance row, mapping the mode/verdict/action
  * strings to their enums while leaving the other fields untouched.
  */
-const transformGovernanceTrace = (row: RawAgentGovernanceTrace): AgentGovernanceTrace => ({
+const transformGovernanceCheck = (row: RawAgentGovernanceCheck): AgentGovernanceCheck => ({
   ...row,
   mode: toGovernanceMode(row.mode),
   actionApplied: toGovernanceVerdict(row.actionApplied),
@@ -313,7 +313,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceTrace}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheck}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -321,7 +321,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * const trace = new AgentTraces(sdk);
    *
    * // Decision rows since a start time
-   * const result = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'));
+   * const result = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'));
    * result.items.forEach((row) => {
    *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
    * });
@@ -331,25 +331,25 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
    *
    * // Violations only, for one agent, paginated
-   * const page = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), {
+   * const page = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   violationsOnly: true,
    *   agentId: '<agentProjectKey>',
    *   pageSize: 25,
    * });
    * if (page.hasNextPage && page.nextCursor) {
-   *   const next = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   *   const next = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
    * }
    * ```
    */
-  @track('AgentTraces.GetGovernanceTraces')
-  async getGovernanceTraces<T extends AgentGovernanceTracesOptions = AgentGovernanceTracesOptions>(
+  @track('AgentTraces.GetGovernanceChecks')
+  async getGovernanceChecks<T extends AgentGovernanceChecksOptions = AgentGovernanceChecksOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentGovernanceTrace>
-      : NonPaginatedResponse<AgentGovernanceTrace>
+      ? PaginatedResponse<AgentGovernanceCheck>
+      : NonPaginatedResponse<AgentGovernanceCheck>
   > {
     const { endTime, ...rest } = options ?? {};
     const apiOptions = {
@@ -358,16 +358,16 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
     };
 
-    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceTrace, AgentGovernanceTrace>({
+    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceCheck, AgentGovernanceCheck>({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_TRACES,
+      getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_CHECKS,
       method: HTTP_METHODS.POST,
-      transformFn: transformGovernanceTrace,
+      transformFn: transformGovernanceCheck,
       excludeFromPrefix: Object.keys(apiOptions),
       pagination: {
         paginationType: PaginationType.OFFSET,
-        itemsField: GOVERNANCE_AGENTIC_TRACES_PAGINATION.ITEMS_FIELD,
-        totalCountField: GOVERNANCE_AGENTIC_TRACES_PAGINATION.TOTAL_COUNT_FIELD,
+        itemsField: GOVERNANCE_AGENTIC_CHECKS_PAGINATION.ITEMS_FIELD,
+        totalCountField: GOVERNANCE_AGENTIC_CHECKS_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
           pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
           offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
@@ -378,8 +378,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       },
     }, apiOptions) as Promise<
       T extends HasPaginationOptions<T>
-        ? PaginatedResponse<AgentGovernanceTrace>
-        : NonPaginatedResponse<AgentGovernanceTrace>
+        ? PaginatedResponse<AgentGovernanceCheck>
+        : NonPaginatedResponse<AgentGovernanceCheck>
     >;
   }
 

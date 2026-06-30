@@ -7,8 +7,8 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
-  AgentGovernanceTrace,
-  AgentGovernanceTracesOptions,
+  AgentGovernanceCheck,
+  AgentGovernanceChecksOptions,
   AgentGovernanceSummaryResponse,
   AgentGovernanceSummaryOptions,
 } from './agent.types';
@@ -204,7 +204,7 @@ export interface AgentTracesServiceModel {
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceTrace}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheck}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -212,7 +212,7 @@ export interface AgentTracesServiceModel {
    * const trace = new AgentTraces(sdk);
    *
    * // Decision rows since a start time
-   * const result = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'));
+   * const result = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'));
    * result.items.forEach((row) => {
    *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
    * });
@@ -222,24 +222,24 @@ export interface AgentTracesServiceModel {
    * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
    *
    * // Violations only, for one agent, paginated
-   * const page = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), {
+   * const page = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   violationsOnly: true,
    *   agentId: '<agentProjectKey>',
    *   pageSize: 25,
    * });
    * if (page.hasNextPage && page.nextCursor) {
-   *   const next = await trace.getGovernanceTraces(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   *   const next = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
    * }
    * ```
    */
-  getGovernanceTraces<T extends AgentGovernanceTracesOptions = AgentGovernanceTracesOptions>(
+  getGovernanceChecks<T extends AgentGovernanceChecksOptions = AgentGovernanceChecksOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentGovernanceTrace>
-      : NonPaginatedResponse<AgentGovernanceTrace>
+      ? PaginatedResponse<AgentGovernanceCheck>
+      : NonPaginatedResponse<AgentGovernanceCheck>
   >;
 
   /**

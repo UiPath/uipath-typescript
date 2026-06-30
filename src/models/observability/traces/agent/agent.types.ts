@@ -185,7 +185,7 @@ export enum AgentGovernanceVerdict {
 /**
  * One agentic-governance decision row (a governance-checker span).
  */
-export interface AgentGovernanceTrace {
+export interface AgentGovernanceCheck {
   /** Tenant ID (GUID). May be `null`. */
   tenantId: string | null;
   /** Decision window start time. */
@@ -223,12 +223,12 @@ export interface AgentGovernanceTrace {
 }
 
 /**
- * Options for {@link AgentTracesServiceModel.getGovernanceTraces}.
+ * Options for {@link AgentTracesServiceModel.getGovernanceChecks}.
  *
  * Composes optional filters and pagination. The required window start is a
  * positional `startTime` argument.
  */
-export type AgentGovernanceTracesOptions = PaginationOptions & {
+export type AgentGovernanceChecksOptions = PaginationOptions & {
   /** Exclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Filter on the governance hook. */

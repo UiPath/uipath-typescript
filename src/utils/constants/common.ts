@@ -172,7 +172,7 @@ export const TRACEVIEW_SPANS_PAGINATION = {
  * page-fullness (a full page implies there may be more). Request params reuse
  * {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
  */
-export const GOVERNANCE_AGENTIC_TRACES_PAGINATION = {
+export const GOVERNANCE_AGENTIC_CHECKS_PAGINATION = {
   /** Field name for the decision-rows array in the response. */
   ITEMS_FIELD: 'items',
 
