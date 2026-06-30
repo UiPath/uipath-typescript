@@ -43,7 +43,6 @@ const inputSchema = {
 function setupInputSchema(knownInputs = {}, redirectUri = DEFAULT_REDIRECT_URI, oauthScopes = DEFAULT_SCOPES_MESSAGE) {
   return {
     type: "object",
-    additionalProperties: false,
     required: [
       "appType",
       "environment",
@@ -56,46 +55,39 @@ function setupInputSchema(knownInputs = {}, redirectUri = DEFAULT_REDIRECT_URI, 
     properties: {
       appType: {
         type: "string",
-        title: "App type",
         description: "Choose the UiPath coded app type.",
         enum: ["Coded Web App", "Coded Action App"],
         default: knownInputs.appType || "Coded Web App"
       },
       environment: {
         type: "string",
-        title: "UiPath environment",
         description: "Target UiPath environment.",
         enum: ["cloud", "staging", "alpha"],
         default: knownInputs.environment || "cloud"
       },
       appName: {
         type: "string",
-        title: "App name",
         description: "UiPath coded app package/display name.",
         default: knownInputs.appName || ""
       },
       externalClientId: {
         type: "string",
-        title: "External client ID",
         description:
           `OAuth external application client ID. It must be configured with redirect URI ${redirectUri} and scopes: ${oauthScopes}`,
         default: knownInputs.externalClientId || ""
       },
       organizationName: {
         type: "string",
-        title: "Organization name",
         description: "UiPath organization name.",
         default: knownInputs.organizationName || knownInputs.orgName || ""
       },
       tenantName: {
         type: "string",
-        title: "Tenant name",
         description: "UiPath tenant name.",
         default: knownInputs.tenantName || "DefaultTenant"
       },
       deploymentFolder: {
         type: "string",
-        title: "Deployment folder",
         description: "Folder key or folder name to resolve for publish/deploy.",
         default: knownInputs.deploymentFolder || knownInputs.folderName || knownInputs.folderKey || ""
       }
@@ -143,7 +135,7 @@ function textContent(text) {
   return [{ type: "text", text }];
 }
 
-function fallbackResult(reason, args = {}) {
+function fallbackResult(reason, args = {}, diagnostic = {}) {
   const redirectUri = args.redirectUri || DEFAULT_REDIRECT_URI;
   const oauthScopes = args.oauthScopes || DEFAULT_SCOPES_MESSAGE;
   const fallbackPrompt = [
@@ -165,11 +157,48 @@ function fallbackResult(reason, args = {}) {
     structuredContent: {
       status: "fallback_required",
       reason,
+      diagnostic,
       redirectUri,
       oauthScopes,
       fallbackPrompt
     },
     isError: false
+  };
+}
+
+function getElicitationData(elicitationResult) {
+  if (!elicitationResult || elicitationResult.action !== "accept") {
+    return null;
+  }
+
+  // Wire-level MCP currently uses `content`, while some SDK helpers expose
+  // accepted form values as `data`. Accept both so client/server version
+  // differences do not force a fallback after a successful form submission.
+  if (elicitationResult.content && typeof elicitationResult.content === "object") {
+    return elicitationResult.content;
+  }
+  if (elicitationResult.data && typeof elicitationResult.data === "object") {
+    return elicitationResult.data;
+  }
+  return null;
+}
+
+function resultDiagnostic(elicitationResult) {
+  if (!elicitationResult || typeof elicitationResult !== "object") {
+    return { resultType: typeof elicitationResult };
+  }
+
+  return {
+    action: elicitationResult.action || null,
+    topLevelKeys: Object.keys(elicitationResult),
+    contentKeys:
+      elicitationResult.content && typeof elicitationResult.content === "object"
+        ? Object.keys(elicitationResult.content)
+        : [],
+    dataKeys:
+      elicitationResult.data && typeof elicitationResult.data === "object"
+        ? Object.keys(elicitationResult.data)
+        : []
   };
 }
 
@@ -213,11 +242,17 @@ async function collectUiPathCodedAppInputs(args = {}) {
     return fallbackResult(cause.message || "The MCP input form could not be completed.", args);
   }
 
-  if (!elicitationResult || elicitationResult.action !== "accept" || !elicitationResult.content) {
-    return fallbackResult("The MCP input form was cancelled or declined.", args);
+  const elicitationData = getElicitationData(elicitationResult);
+
+  if (!elicitationData) {
+    return fallbackResult(
+      "The MCP input form was cancelled, declined, or returned no accepted form data.",
+      args,
+      resultDiagnostic(elicitationResult)
+    );
   }
 
-  const inputs = normalizedInputs(elicitationResult.content, args);
+  const inputs = normalizedInputs(elicitationData, args);
 
   return {
     content: textContent(
