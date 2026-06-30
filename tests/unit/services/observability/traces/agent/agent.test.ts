@@ -496,6 +496,8 @@ describe('AgentTracesService Unit Tests', () => {
       expect(body.endTime).toBeUndefined();
       expect(body.pageNumber).toBeUndefined();
       expect(body.pageSize).toBeUndefined();
+      // omitted boolean filter is absent from the body (distinct from violationsOnly:false)
+      expect('violationsOnly' in body).toBe(false);
     });
 
     it('should normalize mode/verdict/action to enums, mapping unrecognized and null values to Unknown', async () => {
