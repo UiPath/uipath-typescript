@@ -1,7 +1,7 @@
 {
   "name": "uipath-sites",
-  "version": "0.1.0",
-  "description": "Build polished UiPath coded apps and deploy them with uip codedapp.",
+  "version": "0.2.0",
+  "description": "Build polished UiPath coded apps with structured setup input and deploy them with uip codedapp.",
   "author": {
     "name": "UiPath",
     "url": "https://www.uipath.com"
@@ -17,13 +17,15 @@
     "codex"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "UiPath Sites",
     "shortDescription": "Build polished UiPath coded apps.",
-    "longDescription": "UiPath Sites helps users generate polished UiPath coded apps instead of Sites-hosted apps. It routes matched UiPath app requests to the coded-app workflow, applies frontend-design guidance for UI quality, and keeps build, package, publish, and deploy aligned with uip codedapp.",
+    "longDescription": "UiPath Sites helps users generate polished UiPath coded apps with a structured setup input gate instead of Sites-hosted apps. It routes matched UiPath app requests to the coded-app workflow, applies frontend-design guidance for UI quality, and keeps build, package, publish, and deploy aligned with uip codedapp.",
     "developerName": "UiPath",
     "category": "Productivity",
     "capabilities": [
+      "Interactive",
       "Write",
       "Run"
     ],

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "uipath-sites-inputs": {
+      "command": "node",
+      "args": [
+        "./mcp/uipath-sites-inputs/server.cjs"
+      ],
+      "startup_timeout_sec": 10,
+      "tool_timeout_sec": 300
+    }
+  }
+}
