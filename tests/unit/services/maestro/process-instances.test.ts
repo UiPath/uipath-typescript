@@ -190,6 +190,7 @@ describe('ProcessInstancesService', () => {
       expect(result).toHaveProperty('cancel');
       expect(result).toHaveProperty('pause');
       expect(result).toHaveProperty('resume');
+      expect(result).toHaveProperty('retry');
       expect(result).toHaveProperty('getExecutionHistory');
       expect(result).toHaveProperty('getBpmn');
       expect(result).toHaveProperty('getVariables');
@@ -485,6 +486,71 @@ describe('ProcessInstancesService', () => {
 
       
       await expect(service.resume(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('retry', () => {
+    it('should retry process instance successfully', async () => {
+
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const options: ProcessInstanceOperationOptions = {
+        comment: 'Retrying instance'
+      };
+      const mockApiResponse = createMockMaestroApiOperationResponse({
+        status: 'Running'
+      });
+
+      mockApiClient.post.mockResolvedValue(mockApiResponse);
+
+      const result = await service.retry(instanceId, folderKey, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.RETRY(instanceId),
+        options,
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockApiResponse);
+    });
+
+    it('should retry process instance without options', async () => {
+
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const mockApiResponse = createMockMaestroApiOperationResponse({
+        status: 'Running'
+      });
+
+      mockApiClient.post.mockResolvedValue(mockApiResponse);
+
+      const result = await service.retry(instanceId, folderKey);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.RETRY(instanceId),
+        {},
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockApiResponse);
+    });
+
+    it('should handle API errors', async () => {
+
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(service.retry(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

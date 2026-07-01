@@ -21,6 +21,7 @@ export const MAESTRO_ENDPOINTS = {
     CANCEL: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/cancel`,
     PAUSE: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/pause`,
     RESUME: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/resume`,
+    RETRY: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/retry`,
   },
   INCIDENTS: {
     GET_ALL: `${PIMS_BASE}/api/v1/incidents/summary`,

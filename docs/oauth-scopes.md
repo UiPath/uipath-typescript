@@ -96,6 +96,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
+| `retry()` | `PIMS` |
 
 ## Maestro Cases
 
