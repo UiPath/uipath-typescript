@@ -503,7 +503,7 @@ describe('AgentTracesService Unit Tests', () => {
       expect('violationsOnly' in body).toBe(false);
     });
 
-    it('should normalize mode/verdict/action to enums, mapping unrecognized and null values to Unknown', async () => {
+    it('should normalize mode/verdict to enums, mapping unrecognized and null values to Unknown', async () => {
       mockApiClient.post.mockResolvedValue({
         items: [
           buildGovRow({ mode: 'ENFORCE', evaluatorResult: 'DENY', actionApplied: 'ALLOW' }),
@@ -531,7 +531,7 @@ describe('AgentTracesService Unit Tests', () => {
       expect((result.items[0].mode as string)).not.toBe('enforce');
     });
 
-    it('should match mode/verdict/action case-insensitively (API returns lowercase too)', async () => {
+    it('should match mode/verdict case-insensitively (API returns lowercase too)', async () => {
       mockApiClient.post.mockResolvedValue({
         items: [buildGovRow({ mode: 'audit', evaluatorResult: 'deny', actionApplied: 'allow' })],
       });
