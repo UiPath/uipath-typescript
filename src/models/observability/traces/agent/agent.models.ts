@@ -149,10 +149,6 @@ export interface AgentTracesServiceModel {
   /**
    * Retrieves spans whose reference hierarchy contains the given reference id.
    *
-   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
-   * `cursor`, or `jumpToPage`) are provided, otherwise a
-   * {@link NonPaginatedResponse}.
-   *
    * @param referenceId - Reference id matched against each span's reference hierarchy
    * @param options - Optional pagination and hierarchy/time filters
    * @returns Promise resolving to a paginated or non-paginated list of {@link AgentSpanGetResponse}
@@ -194,13 +190,11 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves runtime governance decisions — each a policy's allow/deny result —
+   * Retrieves runtime governance decisions — each policy's allow/deny result —
    * over the requested window.
    *
-   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
-   * `cursor`, or `jumpToPage`) are provided, otherwise a
-   * {@link NonPaginatedResponse}. The endpoint returns no total-count, so
-   * `hasNextPage` is inferred from page fullness.
+   * The endpoint returns no total-count, so `hasNextPage` is inferred from
+   * page fullness.
    *
    * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
