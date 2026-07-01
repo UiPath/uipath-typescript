@@ -9,6 +9,9 @@ import {
   CasesService,
   CaseInstancesService,
   EntityService,
+  ChoiceSetService,
+  DataFabricDirectoryService,
+  DataFabricRoleService,
   TaskService,
   ProcessService,
   BucketService,
@@ -133,6 +136,9 @@ describe('UiPath Legacy Pattern', () => {
       expect(entities).toBeDefined();
       expect(entities).toBeInstanceOf(EntityService);
       expect(entities.getAll).toBeDefined();
+      expect(entities.choicesets).toBeInstanceOf(ChoiceSetService);
+      expect(entities.roles).toBeInstanceOf(DataFabricRoleService);
+      expect(entities.directory).toBeInstanceOf(DataFabricDirectoryService);
     });
   });
 

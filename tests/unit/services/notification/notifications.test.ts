@@ -34,7 +34,7 @@ describe('NotificationService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as unknown as ApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
     notificationService = new NotificationService(instance);
