@@ -1,0 +1,188 @@
+name: CLI Smoke Test
+
+on:
+  schedule:
+    # 3:30 UTC = 9:00 AM IST, daily
+    - cron: '30 3 * * *'
+  workflow_dispatch: {} # manual trigger for testing
+
+permissions: {}
+
+env:
+  NODE_VERSION: "20"
+  ALPHA_AUTHORITY: https://alpha.uipath.com
+  ORG: popoc
+  TENANT: adetenant
+  FOLDER_KEY: 8645d674-92d8-4281-9aef-43f3e3608ded
+  LOGIN_SCOPE: "Apps OR.Folders.Read OR.Execution"
+
+jobs:
+  stable-cli:
+    name: Stable CLI (npm @latest)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # Unique per run — always a fresh publish + deploy, no collisions
+      APP_NAME: smoke-s-${{ github.run_number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install CLI (npm @latest)
+        run: |
+          npm i -g @uipath/cli@latest
+          uip tools install codedapp
+          echo "CLI version: $(uip --version)"
+          uip tools list
+
+      - name: Login
+        env:
+          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
+          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
+        run: |
+          uip login \
+            --authority "${{ env.ALPHA_AUTHORITY }}" \
+            --organization "${{ env.ORG }}" \
+            --tenant "${{ env.TENANT }}" \
+            --client-id "$UIPATH_CLIENT_ID" \
+            --client-secret "$UIPATH_CLIENT_SECRET" \
+            --scope "${{ env.LOGIN_SCOPE }}"
+
+      - name: Pack
+        run: |
+          uip codedapp pack \
+            fixtures/smoke-test-app \
+            --name "$APP_NAME" \
+            --version "1.0.0"
+
+      - name: Publish
+        run: |
+          uip codedapp publish --name "$APP_NAME"
+
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "$APP_NAME" \
+            --folder-key "${{ env.FOLDER_KEY }}"
+
+      - name: Health check
+        run: |
+          APP_URL="https://${{ env.ORG }}.uipath.host/${APP_NAME}"
+          echo "Checking $APP_URL"
+          for i in 1 2 3; do
+            if curl -sf --max-time 10 "$APP_URL" > /dev/null; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
+
+  alpha-cli:
+    name: Alpha CLI (GH Packages)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      APP_NAME: smoke-a-${{ github.run_number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install CLI (GH Packages)
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          echo "@uipath:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          npm i -g @uipath/cli
+          uip tools install codedapp
+          echo "CLI version: $(uip --version)"
+          uip tools list
+
+      - name: Login
+        env:
+          UIPATH_CLIENT_ID: ${{ secrets.UIPATH_CLIENT_ID }}
+          UIPATH_CLIENT_SECRET: ${{ secrets.UIPATH_CLIENT_SECRET }}
+        run: |
+          uip login \
+            --authority "${{ env.ALPHA_AUTHORITY }}" \
+            --organization "${{ env.ORG }}" \
+            --tenant "${{ env.TENANT }}" \
+            --client-id "$UIPATH_CLIENT_ID" \
+            --client-secret "$UIPATH_CLIENT_SECRET" \
+            --scope "${{ env.LOGIN_SCOPE }}"
+
+      - name: Pack
+        run: |
+          uip codedapp pack \
+            fixtures/smoke-test-app \
+            --name "$APP_NAME" \
+            --version "1.0.0"
+
+      - name: Publish
+        run: |
+          uip codedapp publish --name "$APP_NAME"
+
+      - name: Deploy
+        run: |
+          uip codedapp deploy \
+            --name "$APP_NAME" \
+            --folder-key "${{ env.FOLDER_KEY }}"
+
+      - name: Health check
+        run: |
+          APP_URL="https://${{ env.ORG }}.uipath.host/${APP_NAME}"
+          echo "Checking $APP_URL"
+          for i in 1 2 3; do
+            if curl -sf --max-time 10 "$APP_URL" > /dev/null; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
+
+  notify:
+    name: Slack Alert on Failure
+    runs-on: ubuntu-latest
+    needs: [stable-cli, alpha-cli]
+    if: failure() || contains(needs.*.result, 'cancelled')
+    permissions: {}
+    steps:
+      - name: Build failure message
+        id: msg
+        run: |
+          FAILED_JOBS=""
+          if [ "${{ needs.stable-cli.result }}" = "failure" ] || [ "${{ needs.stable-cli.result }}" = "cancelled" ]; then
+            FAILED_JOBS="stable-cli (npm @latest)"
+          fi
+          if [ "${{ needs.alpha-cli.result }}" = "failure" ] || [ "${{ needs.alpha-cli.result }}" = "cancelled" ]; then
+            [ -n "$FAILED_JOBS" ] && FAILED_JOBS="$FAILED_JOBS, "
+            FAILED_JOBS="${FAILED_JOBS}alpha-cli (GH Packages)"
+          fi
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "text=:red_circle: *CLI Smoke Test Failed*\nJobs: ${FAILED_JOBS}\nRun: ${RUN_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Post to Slack
+        uses: slackapi/slack-github-action@v3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "C0AMP09RXH7"
+            text: "${{ steps.msg.outputs.text }}"
