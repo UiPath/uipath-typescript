@@ -72,7 +72,6 @@ jobs:
         run: |
           uip codedapp deploy \
             --name "$APP_NAME" \
-            --path-name "$APP_NAME" \
             --folder-key "${{ env.FOLDER_KEY }}"
 
       - name: Health check
@@ -146,7 +145,6 @@ jobs:
         run: |
           uip codedapp deploy \
             --name "$APP_NAME" \
-            --path-name "$APP_NAME" \
             --folder-key "${{ env.FOLDER_KEY }}"
 
       - name: Health check
