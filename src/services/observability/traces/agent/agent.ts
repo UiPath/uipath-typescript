@@ -306,9 +306,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * Retrieves runtime governance decisions — each policy's allow/deny result —
    * over the requested window.
    *
-   * The endpoint returns no total-count, so `hasNextPage` is inferred from
-   * page fullness.
-   *
    * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
    * @param startTime - Inclusive lower bound for the query window
