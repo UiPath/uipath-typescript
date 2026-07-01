@@ -190,8 +190,10 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves runtime governance decisions — each policy's allow/deny result —
-   * over the requested window.
+   * Lists individual governance decisions from agent execution traces — each
+   * policy check's allow/deny outcome with its agent, policy, pack, hook, and
+   * mode, plus the trace it belongs to — over the requested window. Filterable
+   * and paginated.
    *
    * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
