@@ -109,7 +109,7 @@ jobs:
 
       - name: Install CLI (GH Packages)
         run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
           echo "@uipath:registry=https://npm.pkg.github.com" >> ~/.npmrc
           npm i -g @uipath/cli
           uip tools install codedapp
