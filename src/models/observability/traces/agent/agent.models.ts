@@ -7,8 +7,8 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
-  AgentGovernanceCheckGetResponse,
-  AgentGovernanceChecksOptions,
+  AgentGovernanceDecisionGetResponse,
+  AgentGovernanceDecisionsOptions,
   AgentGovernanceGetSummaryResponse,
   AgentGovernanceSummaryOptions,
 } from './agent.types';
@@ -194,7 +194,7 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves runtime governance checks — per policy allow/deny decisions —
+   * Retrieves runtime governance decisions — each a policy's allow/deny result —
    * over the requested window.
    *
    * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
@@ -206,7 +206,7 @@ export interface AgentTracesServiceModel {
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheckGetResponse}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceDecisionGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -214,7 +214,7 @@ export interface AgentTracesServiceModel {
    * const trace = new AgentTraces(sdk);
    *
    * // Decision rows since a start time
-   * const result = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'));
+   * const result = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'));
    * result.items.forEach((row) => {
    *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
    * });
@@ -222,14 +222,14 @@ export interface AgentTracesServiceModel {
    * @example
    * ```typescript
    * // Violations only, for one agent, paginated
-   * const page = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), {
+   * const page = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'), {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   violationsOnly: true,
    *   agentId: '<agentProjectKey>',
    *   pageSize: 25,
    * });
    * if (page.hasNextPage && page.nextCursor) {
-   *   const next = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   *   const next = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
    * }
    * ```
    * @example
@@ -238,7 +238,7 @@ export interface AgentTracesServiceModel {
    *
    * // Non-admin callers get a 403
    * try {
-   *   await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'));
+   *   await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'));
    * } catch (error) {
    *   if (isAuthorizationError(error)) {
    *     console.error('Governance data requires an organization admin.');
@@ -246,13 +246,13 @@ export interface AgentTracesServiceModel {
    * }
    * ```
    */
-  getGovernanceChecks<T extends AgentGovernanceChecksOptions = AgentGovernanceChecksOptions>(
+  getGovernanceDecisions<T extends AgentGovernanceDecisionsOptions = AgentGovernanceDecisionsOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentGovernanceCheckGetResponse>
-      : NonPaginatedResponse<AgentGovernanceCheckGetResponse>
+      ? PaginatedResponse<AgentGovernanceDecisionGetResponse>
+      : NonPaginatedResponse<AgentGovernanceDecisionGetResponse>
   >;
 
   /**

@@ -180,14 +180,14 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getGovernanceChecks', () => {
+  describe('getGovernanceDecisions', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
     const validModes = new Set<string>(Object.values(AgentGovernanceMode));
     const validVerdicts = new Set<string>(Object.values(AgentGovernanceVerdict));
 
     it('should retrieve agentic-governance decision rows with mode/verdict normalized to enums', async () => {
-      const result = await trace.getGovernanceChecks(startTime, { endTime });
+      const result = await trace.getGovernanceDecisions(startTime, { endTime });
 
       expect(Array.isArray(result.items)).toBe(true);
       if (result.items.length === 0) {
@@ -206,7 +206,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
     });
 
     it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
-      const result = await trace.getGovernanceChecks(startTime, { endTime, violationsOnly: true, pageSize: 2 });
+      const result = await trace.getGovernanceDecisions(startTime, { endTime, violationsOnly: true, pageSize: 2 });
 
       expect(result.items.length).toBeLessThanOrEqual(2);
       expect(typeof result.hasNextPage).toBe('boolean');

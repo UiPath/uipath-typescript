@@ -456,7 +456,7 @@ describe('AgentTracesService Unit Tests', () => {
     });
   });
 
-  describe('getGovernanceChecks', () => {
+  describe('getGovernanceDecisions', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
@@ -484,14 +484,14 @@ describe('AgentTracesService Unit Tests', () => {
     it('should return a non-paginated response with the window in the body and no pagination params', async () => {
       mockApiClient.post.mockResolvedValue({ items: [buildGovRow()] });
 
-      const result = await traceService.getGovernanceChecks(startTime);
+      const result = await traceService.getGovernanceDecisions(startTime);
 
       expect(result.items[0].mode).toBe(AgentGovernanceMode.Audit);
       expect(result.items[0].evaluatorResult).toBe(AgentGovernanceVerdict.Allow);
       expect((result as { hasNextPage?: boolean }).hasNextPage).toBeUndefined();
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
-      expect(endpoint).toBe(AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_CHECKS);
+      expect(endpoint).toBe(AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_DECISIONS);
       expect(body.startTime).toBe(startTime.toISOString());
       expect(body.endTime).toBeUndefined();
       expect(body.pageNumber).toBeUndefined();
@@ -509,7 +509,7 @@ describe('AgentTracesService Unit Tests', () => {
         ],
       });
 
-      const result = await traceService.getGovernanceChecks(startTime);
+      const result = await traceService.getGovernanceDecisions(startTime);
 
       expect(result.items.map((r) => r.mode)).toEqual([
         AgentGovernanceMode.Enforce,
@@ -533,7 +533,7 @@ describe('AgentTracesService Unit Tests', () => {
         items: [buildGovRow({ mode: 'audit', evaluatorResult: 'deny', actionApplied: 'allow' })],
       });
 
-      const result = await traceService.getGovernanceChecks(startTime);
+      const result = await traceService.getGovernanceDecisions(startTime);
 
       expect(result.items[0].mode).toBe(AgentGovernanceMode.Audit);
       expect(result.items[0].evaluatorResult).toBe(AgentGovernanceVerdict.Deny);
@@ -544,7 +544,7 @@ describe('AgentTracesService Unit Tests', () => {
     it('should send pageSize + 0-based pageNumber in the body when pageSize is provided', async () => {
       mockApiClient.post.mockResolvedValue({ items: [] });
 
-      await traceService.getGovernanceChecks(startTime, { pageSize: 25 });
+      await traceService.getGovernanceDecisions(startTime, { pageSize: 25 });
 
       const [, body] = mockApiClient.post.mock.calls[0];
       expect(body.pageSize).toBe(25);
@@ -554,19 +554,19 @@ describe('AgentTracesService Unit Tests', () => {
     it('should infer hasNextPage from page fullness (no total-count field)', async () => {
       mockApiClient.post.mockResolvedValue({ items: [buildGovRow(), buildGovRow()] });
 
-      const full = await traceService.getGovernanceChecks(startTime, { pageSize: 2 });
+      const full = await traceService.getGovernanceDecisions(startTime, { pageSize: 2 });
       expect(full.hasNextPage).toBe(true);
       expect(full.totalCount).toBeUndefined();
 
       mockApiClient.post.mockResolvedValue({ items: [buildGovRow()] });
-      const partial = await traceService.getGovernanceChecks(startTime, { pageSize: 2 });
+      const partial = await traceService.getGovernanceDecisions(startTime, { pageSize: 2 });
       expect(partial.hasNextPage).toBe(false);
     });
 
     it('should send filters in the body without OData prefixing', async () => {
       mockApiClient.post.mockResolvedValue({ items: [] });
 
-      await traceService.getGovernanceChecks(startTime, {
+      await traceService.getGovernanceDecisions(startTime, {
         endTime,
         hook: AGENT_TEST_CONSTANTS.GOV_HOOK,
         evaluatorResult: AgentGovernanceVerdict.Deny,
@@ -589,7 +589,7 @@ describe('AgentTracesService Unit Tests', () => {
     it('should send violationsOnly:false distinct from unset', async () => {
       mockApiClient.post.mockResolvedValue({ items: [] });
 
-      await traceService.getGovernanceChecks(startTime, { violationsOnly: false });
+      await traceService.getGovernanceDecisions(startTime, { violationsOnly: false });
 
       const [, body] = mockApiClient.post.mock.calls[0];
       expect(body.violationsOnly).toBe(false);
@@ -598,7 +598,7 @@ describe('AgentTracesService Unit Tests', () => {
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
 
-      await expect(traceService.getGovernanceChecks(startTime)).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      await expect(traceService.getGovernanceDecisions(startTime)).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
 

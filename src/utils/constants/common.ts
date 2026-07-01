@@ -166,13 +166,13 @@ export const TRACEVIEW_SPANS_PAGINATION = {
 };
 
 /**
- * Governance checks pagination constants — decision rows sit directly
+ * Governance decisions pagination constants — decision rows sit directly
  * under `items`. This endpoint returns no total-count field, so
  * `TOTAL_COUNT_FIELD` points at an absent field; `hasNextPage` falls back to
  * page-fullness (a full page implies there may be more). Request params reuse
  * {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
  */
-export const GOVERNANCE_CHECKS_PAGINATION = {
+export const GOVERNANCE_DECISIONS_PAGINATION = {
   /** Field name for the decision-rows array in the response. */
   ITEMS_FIELD: 'items',
 

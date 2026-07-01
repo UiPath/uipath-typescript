@@ -158,7 +158,7 @@ export type AgentTraceGetSpansByReferenceOptions = PaginationOptions & {
 // ─── Governance ─────────────────────────────────────────────────────
 
 /**
- * Evaluation mode of a governance check.
+ * Evaluation mode of a governance decision.
  */
 export enum AgentGovernanceMode {
   /** Policy evaluated and logged, but not enforced. */
@@ -170,7 +170,7 @@ export enum AgentGovernanceMode {
 }
 
 /**
- * Verdict of a governance check (`Deny` = violation).
+ * Verdict of a governance decision (`Deny` = violation).
  */
 export enum AgentGovernanceVerdict {
   /** Allowed — not a violation. */
@@ -182,9 +182,9 @@ export enum AgentGovernanceVerdict {
 }
 
 /**
- * A single governance check — one policy's allow/deny decision for an agent run.
+ * A single governance decision — one policy's allow/deny result for an agent run.
  */
-export interface AgentGovernanceCheckGetResponse {
+export interface AgentGovernanceDecisionGetResponse {
   /** Tenant ID (GUID). */
   tenantId: string | null;
   /** Decision window start time — ISO 8601, UTC. */
@@ -222,9 +222,9 @@ export interface AgentGovernanceCheckGetResponse {
 }
 
 /**
- * Options for the governance checks query — optional filters plus pagination.
+ * Options for the governance decisions query — optional filters plus pagination.
  */
-export type AgentGovernanceChecksOptions = PaginationOptions & {
+export type AgentGovernanceDecisionsOptions = PaginationOptions & {
   /** Inclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Filter on the governance hook. */
