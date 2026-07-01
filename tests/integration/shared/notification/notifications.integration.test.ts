@@ -121,4 +121,40 @@ describe.skip.each(modes)('Notifications - Integration Tests [%s]', (mode) => {
       expect(entry).not.toHaveProperty('partitionKey');
     });
   });
+
+  describe('mark-read flows', () => {
+    it('should mark a single notification as read and reflect the change via getAll', async () => {
+      const unread = await notifications.getAll(tenantId, { filter: 'hasRead eq false', pageSize: 1 });
+      if (unread.items.length === 0) {
+        throw new Error(
+          'No unread notifications in the inbox — cannot validate markAsRead. Trigger one on the test tenant.'
+        );
+      }
+      const target = unread.items[0];
+
+      const mark = await notifications.markAsRead(tenantId, [target.id]);
+      expect(mark.success).toBe(true);
+      expect(mark.data.notificationIds).toEqual([target.id]);
+      expect(mark.data.read).toBe(true);
+
+      // Restore so subsequent runs see the same fixture
+      const restore = await notifications.markAsUnread(tenantId, [target.id]);
+      expect(restore.success).toBe(true);
+      expect(restore.data.read).toBe(false);
+    });
+
+    it('markAllAsRead should succeed without per-id payload', async () => {
+      // Snapshot one unread notification before the bulk operation so we can restore inbox state.
+      const preSnapshot = await notifications.getAll(tenantId, { filter: 'hasRead eq false', pageSize: 1 });
+
+      const result = await notifications.markAllAsRead(tenantId);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ all: true, read: true });
+
+      // Restore so subsequent runs can still find unread notifications for the markAsRead test.
+      if (preSnapshot.items.length > 0) {
+        await notifications.markAsUnread(tenantId, [preSnapshot.items[0].id]);
+      }
+    });
+  });
 });

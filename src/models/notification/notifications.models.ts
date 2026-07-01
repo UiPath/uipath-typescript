@@ -12,6 +12,8 @@ import type {
 import type {
   NotificationGetAllOptions,
   NotificationGetResponse,
+  NotificationMarkAllReadResponse,
+  NotificationUpdateReadResponse,
 } from './notifications.types';
 
 /**
@@ -67,4 +69,51 @@ export interface NotificationServiceModel {
       ? PaginatedResponse<NotificationGetResponse>
       : NonPaginatedResponse<NotificationGetResponse>
   >;
+
+  /**
+   * Marks the given notifications as read.
+   *
+   * @param tenantId - Tenant GUID
+   * @param notificationIds - GUIDs of notifications to mark read
+   * @returns Operation result echoing the affected IDs and new read state
+   * {@link NotificationUpdateReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markAsRead('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   * @internal
+   */
+  markAsRead(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+
+  /**
+   * Marks the given notifications as unread.
+   *
+   * @param tenantId - Tenant GUID
+   * @param notificationIds - GUIDs of notifications to mark unread
+   * @returns Operation result echoing the affected IDs and new read state
+   * {@link NotificationUpdateReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markAsUnread('<tenantId>', ['<notificationId>']);
+   * ```
+   * @internal
+   */
+  markAsUnread(tenantId: string, notificationIds: string[]): Promise<NotificationUpdateReadResponse>;
+
+  /**
+   * Marks all notifications in the current user's inbox as read.
+   *
+   * @param tenantId - Tenant GUID
+   * @returns Operation result confirming the bulk update
+   * {@link NotificationMarkAllReadResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.markAllAsRead('<tenantId>');
+   * ```
+   * @internal
+   */
+  markAllAsRead(tenantId: string): Promise<NotificationMarkAllReadResponse>;
 }

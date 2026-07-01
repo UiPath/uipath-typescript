@@ -101,6 +101,91 @@ describe('NotificationService Unit Tests', () => {
     });
   });
 
+  describe('markAsRead', () => {
+    it('should POST per-id read=true entries with tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const ids = [
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID,
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2,
+      ];
+
+      const result = await notificationService.markAsRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        {
+          notifications: [
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID, read: true },
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2, read: true },
+          ],
+          forceAllRead: false,
+        },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { notificationIds: ids, read: true } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
+
+      await expect(
+        notificationService.markAsRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
+    });
+  });
+
+  describe('markAsUnread', () => {
+    it('should POST per-id read=false entries with tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const ids = [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID];
+
+      const result = await notificationService.markAsUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        {
+          notifications: [
+            { notificationId: NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID, read: false },
+          ],
+          forceAllRead: false,
+        },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { notificationIds: ids, read: false } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
+
+      await expect(
+        notificationService.markAsUnread(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
+    });
+  });
+
+  describe('markAllAsRead', () => {
+    it('should POST forceAllRead=true with empty notifications array and tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const result = await notificationService.markAllAsRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.UPDATE_READ,
+        { notifications: [], forceAllRead: true },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { all: true, read: true } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
+
+      await expect(
+        notificationService.markAllAsRead(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
+    });
+  });
+
   describe('response transformation', () => {
     it('strips internal fields and renames isRead → hasRead in the returned notifications', async () => {
       const raw: RawNotificationEntry = createBasicNotificationEntry();
