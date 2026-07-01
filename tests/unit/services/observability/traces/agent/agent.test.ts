@@ -10,6 +10,7 @@ import {
   AgentGovernanceVerdict,
   AgentGovernanceSection,
 } from '../../../../../../src/models/observability/traces/agent/agent.types';
+import type { RawAgentGovernanceDecisionGetResponse } from '../../../../../../src/models/observability/traces/agent/agent.internal-types';
 import { AGENT_TEST_CONSTANTS } from '../../../../../utils/constants';
 
 // ===== MOCKING =====
@@ -460,7 +461,9 @@ describe('AgentTracesService Unit Tests', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
-    const buildGovRow = (overrides: Record<string, unknown> = {}) => ({
+    const buildGovRow = (
+      overrides: Partial<RawAgentGovernanceDecisionGetResponse> = {},
+    ): RawAgentGovernanceDecisionGetResponse => ({
       tenantId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
       startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
       endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
