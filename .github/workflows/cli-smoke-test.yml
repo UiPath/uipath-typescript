@@ -161,17 +161,17 @@ jobs:
     name: Slack Alert on Failure
     runs-on: ubuntu-latest
     needs: [stable-cli, alpha-cli]
-    if: failure()
+    if: failure() || contains(needs.*.result, 'cancelled')
     permissions: {}
     steps:
       - name: Build failure message
         id: msg
         run: |
           FAILED_JOBS=""
-          if [ "${{ needs.stable-cli.result }}" = "failure" ]; then
+          if [ "${{ needs.stable-cli.result }}" = "failure" ] || [ "${{ needs.stable-cli.result }}" = "cancelled" ]; then
             FAILED_JOBS="stable-cli (npm @latest)"
           fi
-          if [ "${{ needs.alpha-cli.result }}" = "failure" ]; then
+          if [ "${{ needs.alpha-cli.result }}" = "failure" ] || [ "${{ needs.alpha-cli.result }}" = "cancelled" ]; then
             [ -n "$FAILED_JOBS" ] && FAILED_JOBS="$FAILED_JOBS, "
             FAILED_JOBS="${FAILED_JOBS}alpha-cli (GH Packages)"
           fi
