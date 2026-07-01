@@ -299,7 +299,7 @@ export interface AgentGovernanceGetSummaryResponse {
  * Options for the governance summary.
  */
 export interface AgentGovernanceSummaryOptions {
-  /** Inclusive upper bound for the query window. Defaults to now when omitted. */
+  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Top-N size for each breakdown. */
   topN?: number;
