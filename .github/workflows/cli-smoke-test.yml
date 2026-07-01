@@ -163,7 +163,7 @@ jobs:
     name: Slack Alert on Failure
     runs-on: ubuntu-latest
     needs: [stable-cli, alpha-cli]
-    if: always() # temporary: revert to failure() after testing Slack
+    if: failure()
     permissions: {}
     steps:
       - name: Build failure message
