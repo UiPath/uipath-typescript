@@ -378,7 +378,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: GOVERNANCE_DECISIONS_PAGINATION.ITEMS_FIELD,
-        totalCountField: GOVERNANCE_DECISIONS_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
           pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
           offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
