@@ -163,18 +163,12 @@ jobs:
     name: Slack Alert on Failure
     runs-on: ubuntu-latest
     needs: [stable-cli, alpha-cli]
-    if: failure()
+    if: always() # temporary: revert to failure() after testing Slack
     permissions: {}
     steps:
-      - name: Post to Slack
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Build failure message
+        id: msg
         run: |
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "::warning::SLACK_WEBHOOK_URL not set — skipping notification"
-            exit 0
-          fi
-
           FAILED_JOBS=""
           if [ "${{ needs.stable-cli.result }}" = "failure" ]; then
             FAILED_JOBS="stable-cli (npm @latest)"
@@ -183,9 +177,14 @@ jobs:
             [ -n "$FAILED_JOBS" ] && FAILED_JOBS="$FAILED_JOBS, "
             FAILED_JOBS="${FAILED_JOBS}alpha-cli (GH Packages)"
           fi
-
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "text=:red_circle: *CLI Smoke Test Failed*\nJobs: ${FAILED_JOBS}\nRun: ${RUN_URL}" >> "$GITHUB_OUTPUT"
 
-          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-type: application/json' \
-            -d "{\"text\":\":red_circle: *CLI Smoke Test Failed*\nJobs: ${FAILED_JOBS}\nRun: ${RUN_URL}\"}"
+      - name: Post to Slack
+        uses: slackapi/slack-github-action@v3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "C0BEDPVQ1LK"
+            text: "${{ steps.msg.outputs.text }}"
