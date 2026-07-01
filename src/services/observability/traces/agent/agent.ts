@@ -46,9 +46,7 @@ const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
   return { ...rest, expiredTime: expiryTimeUtc };
 };
 
-// Case-insensitive lookups from a raw API value → enum member. Keys are the
-// enum values upper-cased, so the normalized (upper-cased) raw input matches
-// regardless of the enum member's own casing (e.g. the mixed-case `Unknown`).
+// Case-insensitive lookups from a raw API value → enum member (keys upper-cased).
 const GOVERNANCE_MODE_BY_VALUE = new Map<string, AgentGovernanceMode>(
   Object.values(AgentGovernanceMode).map((mode) => [mode.toUpperCase(), mode]),
 );
