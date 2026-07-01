@@ -175,6 +175,5 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         expect(downloadedFile).toBeDefined();
       });
     });
-  },
-  { timeout: 30000 }
+  }
 );

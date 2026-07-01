@@ -40,7 +40,7 @@ describe('JobService Unit Tests', () => {
     mockApiClient = createMockApiClient();
     mockApiClient.getValidToken = vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     vi.mocked(PaginationHelpers.getAll).mockReset();
 

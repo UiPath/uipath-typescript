@@ -51,7 +51,7 @@ describe('BucketService Unit Tests', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -273,7 +273,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should fall back to SDK init-time folderKey when no folder is provided', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new BucketService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockBucketApiResponse()] });
@@ -290,7 +290,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should suppress the init-time folderKey fallback when caller provides explicit folder', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new BucketService(instance);
 
       mockApiClient.get.mockResolvedValue({ value: [createMockBucketApiResponse()] });
@@ -575,7 +575,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new BucketService(instance);
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
@@ -926,7 +926,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new BucketService(instance);
       mockApiClient.get.mockResolvedValue(createMockWriteUriApiResponse());
       const originalFetch = globalThis.fetch;
@@ -1188,7 +1188,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new BucketService(instance);
       mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
 
