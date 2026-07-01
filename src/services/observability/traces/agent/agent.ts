@@ -9,9 +9,9 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
-  AgentGovernanceCheck,
+  AgentGovernanceCheckGetResponse,
   AgentGovernanceChecksOptions,
-  AgentGovernanceSummaryResponse,
+  AgentGovernanceGetSummaryResponse,
   AgentGovernanceSummaryOptions,
   AgentGovernanceMode,
   AgentGovernanceVerdict,
@@ -19,7 +19,7 @@ import {
 import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
 import {
   RawAgentSpanGetResponse,
-  RawAgentGovernanceCheck,
+  RawAgentGovernanceCheckGetResponse,
 } from '../../../../models/observability/traces/agent/agent.internal-types';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
@@ -65,7 +65,7 @@ const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict => {
  * Normalizes a raw governance row, mapping the mode and verdict strings to
  * their enums while leaving the other fields untouched.
  */
-const transformGovernanceCheck = (row: RawAgentGovernanceCheck): AgentGovernanceCheck => ({
+const transformGovernanceCheck = (row: RawAgentGovernanceCheckGetResponse): AgentGovernanceCheckGetResponse => ({
   ...row,
   mode: toGovernanceMode(row.mode),
   evaluatorResult: toGovernanceVerdict(row.evaluatorResult),
@@ -316,7 +316,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheck}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheckGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -331,8 +331,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
-   *
    * // Violations only, for one agent, paginated
    * const page = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
@@ -351,8 +349,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentGovernanceCheck>
-      : NonPaginatedResponse<AgentGovernanceCheck>
+      ? PaginatedResponse<AgentGovernanceCheckGetResponse>
+      : NonPaginatedResponse<AgentGovernanceCheckGetResponse>
   > {
     const { endTime, ...rest } = options ?? {};
     const apiOptions = {
@@ -361,7 +359,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
     };
 
-    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceCheck, AgentGovernanceCheck>({
+    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceCheckGetResponse, AgentGovernanceCheckGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_CHECKS,
       method: HTTP_METHODS.POST,
@@ -381,8 +379,8 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
       },
     }, apiOptions) as Promise<
       T extends HasPaginationOptions<T>
-        ? PaginatedResponse<AgentGovernanceCheck>
-        : NonPaginatedResponse<AgentGovernanceCheck>
+        ? PaginatedResponse<AgentGovernanceCheckGetResponse>
+        : NonPaginatedResponse<AgentGovernanceCheckGetResponse>
     >;
   }
 
@@ -392,7 +390,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections
-   * @returns Promise resolving to {@link AgentGovernanceSummaryResponse}
+   * @returns Promise resolving to {@link AgentGovernanceGetSummaryResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -420,14 +418,14 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
   async getGovernanceSummary(
     startTime: Date,
     options?: AgentGovernanceSummaryOptions,
-  ): Promise<AgentGovernanceSummaryResponse> {
+  ): Promise<AgentGovernanceGetSummaryResponse> {
     const body: Record<string, unknown> = { startTime: startTime.toISOString() };
     if (options?.endTime !== undefined) body.endTime = options.endTime.toISOString();
     if (options?.topN !== undefined) body.topN = options.topN;
     if (options?.packName !== undefined) body.packName = options.packName;
     if (options?.sections !== undefined) body.sections = options.sections;
 
-    const response = await this.post<AgentGovernanceSummaryResponse>(
+    const response = await this.post<AgentGovernanceGetSummaryResponse>(
       AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_SUMMARY,
       body,
     );

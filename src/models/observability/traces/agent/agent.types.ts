@@ -184,7 +184,7 @@ export enum AgentGovernanceVerdict {
 /**
  * A single governance check — one policy's allow/deny decision for an agent run.
  */
-export interface AgentGovernanceCheck {
+export interface AgentGovernanceCheckGetResponse {
   /** Tenant ID (GUID). May be `null`. */
   tenantId: string | null;
   /** Decision window start time. */
@@ -276,7 +276,7 @@ export enum AgentGovernanceSection {
 /**
  * Aggregated governance posture over the requested window.
  */
-export interface AgentGovernanceSummaryResponse {
+export interface AgentGovernanceGetSummaryResponse {
   /** Total decisions in the window. */
   total: number;
   /** Total violations (deny verdicts). */

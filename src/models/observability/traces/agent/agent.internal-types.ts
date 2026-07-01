@@ -55,7 +55,7 @@ export interface RawAgentSpanGetResponse {
  * Raw governance check row as returned by the API, before the
  * `mode` and `evaluatorResult` fields are normalized to enums.
  */
-export interface RawAgentGovernanceCheck {
+export interface RawAgentGovernanceCheckGetResponse {
   tenantId: string | null;
   startTime: string;
   endTime: string | null;

@@ -7,9 +7,9 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
-  AgentGovernanceCheck,
+  AgentGovernanceCheckGetResponse,
   AgentGovernanceChecksOptions,
-  AgentGovernanceSummaryResponse,
+  AgentGovernanceGetSummaryResponse,
   AgentGovernanceSummaryOptions,
 } from './agent.types';
 import type {
@@ -204,7 +204,7 @@ export interface AgentTracesServiceModel {
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheck}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheckGetResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -219,8 +219,6 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentGovernanceVerdict } from '@uipath/uipath-typescript/traces';
-   *
    * // Violations only, for one agent, paginated
    * const page = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
@@ -238,8 +236,8 @@ export interface AgentTracesServiceModel {
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentGovernanceCheck>
-      : NonPaginatedResponse<AgentGovernanceCheck>
+      ? PaginatedResponse<AgentGovernanceCheckGetResponse>
+      : NonPaginatedResponse<AgentGovernanceCheckGetResponse>
   >;
 
   /**
@@ -248,7 +246,7 @@ export interface AgentTracesServiceModel {
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections
-   * @returns Promise resolving to {@link AgentGovernanceSummaryResponse}
+   * @returns Promise resolving to {@link AgentGovernanceGetSummaryResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/traces';
@@ -275,5 +273,5 @@ export interface AgentTracesServiceModel {
   getGovernanceSummary(
     startTime: Date,
     options?: AgentGovernanceSummaryOptions,
-  ): Promise<AgentGovernanceSummaryResponse>;
+  ): Promise<AgentGovernanceGetSummaryResponse>;
 }
