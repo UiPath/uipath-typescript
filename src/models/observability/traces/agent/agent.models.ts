@@ -202,7 +202,7 @@ export interface AgentTracesServiceModel {
    * {@link NonPaginatedResponse}. The endpoint returns no total-count, so
    * `hasNextPage` is inferred from page fullness.
    *
-   * @remarks Requires the caller to be an organization admin; other callers receive an empty result.
+   * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
@@ -232,6 +232,19 @@ export interface AgentTracesServiceModel {
    *   const next = await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
    * }
    * ```
+   * @example
+   * ```typescript
+   * import { isAuthorizationError } from '@uipath/uipath-typescript/core';
+   *
+   * // Non-admin callers get a 403
+   * try {
+   *   await trace.getGovernanceChecks(new Date('2025-05-01T00:00:00Z'));
+   * } catch (error) {
+   *   if (isAuthorizationError(error)) {
+   *     console.error('Governance data requires an organization admin.');
+   *   }
+   * }
+   * ```
    */
   getGovernanceChecks<T extends AgentGovernanceChecksOptions = AgentGovernanceChecksOptions>(
     startTime: Date,
@@ -246,7 +259,7 @@ export interface AgentTracesServiceModel {
    * Retrieves a governance summary over the requested window — total and
    * violation counts plus top-N breakdowns by hook, agent, policy, and pack.
    *
-   * @remarks Requires the caller to be an organization admin; other callers receive an empty result.
+   * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections
@@ -272,6 +285,19 @@ export interface AgentTracesServiceModel {
    *   packName: 'ISO/IEC 42001:2023 Runtime',
    *   sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
    * });
+   * ```
+   * @example
+   * ```typescript
+   * import { isAuthorizationError } from '@uipath/uipath-typescript/core';
+   *
+   * // Non-admin callers get a 403
+   * try {
+   *   await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'));
+   * } catch (error) {
+   *   if (isAuthorizationError(error)) {
+   *     console.error('Governance data requires an organization admin.');
+   *   }
+   * }
    * ```
    */
   getGovernanceSummary(
