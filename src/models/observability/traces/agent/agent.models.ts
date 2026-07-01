@@ -202,6 +202,8 @@ export interface AgentTracesServiceModel {
    * {@link NonPaginatedResponse}. The endpoint returns no total-count, so
    * `hasNextPage` is inferred from page fullness.
    *
+   * @remarks Requires the caller to be an organization admin; other callers receive an empty result.
+   *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, filters, and pagination
    * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceCheckGetResponse}
@@ -243,6 +245,8 @@ export interface AgentTracesServiceModel {
   /**
    * Retrieves a governance summary over the requested window — total and
    * violation counts plus top-N breakdowns by hook, agent, policy, and pack.
+   *
+   * @remarks Requires the caller to be an organization admin; other callers receive an empty result.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param options - Optional window end, top-N, pack scope, and sections
