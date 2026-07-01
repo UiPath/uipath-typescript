@@ -1254,7 +1254,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     this.validateFieldConstraints(fieldType, field, field.fieldName);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
     const isFile = fieldType === EntityFieldDataType.FILE;
-    if ((isRelationship || isFile) && (!field.referenceEntityId || !field.referenceFieldId)) {
+    if (isRelationship && (!field.referenceEntityId || !field.referenceFieldId)) {
       throw new ValidationError({
         message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
       });
@@ -1264,6 +1264,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // server-side; fall back to a bare {id} when no meta was fetched.
     const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId === undefined ? undefined : { id: field.referenceEntityId });
     const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
+    // FILE: server wires refs to EntityAttachment
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
@@ -1282,9 +1283,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...((isRelationship || isFile) && { isForeignKey: true }),
       ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      ...(referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
+      ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
-      ...(field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
+      ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
     };
   }
 
