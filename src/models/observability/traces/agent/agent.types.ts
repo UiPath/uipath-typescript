@@ -225,7 +225,7 @@ export interface AgentGovernanceCheckGetResponse {
  * Options for the governance checks query — optional filters plus pagination.
  */
 export type AgentGovernanceChecksOptions = PaginationOptions & {
-  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
+  /** Inclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Filter on the governance hook. */
   hook?: string;
@@ -299,7 +299,7 @@ export interface AgentGovernanceGetSummaryResponse {
  * Options for the governance summary.
  */
 export interface AgentGovernanceSummaryOptions {
-  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
+  /** Inclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: Date;
   /** Top-N size for each breakdown. */
   topN?: number;
