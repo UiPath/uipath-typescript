@@ -46,20 +46,23 @@ const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
   return { ...rest, expiredTime: expiryTimeUtc };
 };
 
-const GOVERNANCE_MODES = new Set<string>(Object.values(AgentGovernanceMode));
-const GOVERNANCE_VERDICTS = new Set<string>(Object.values(AgentGovernanceVerdict));
+// Case-insensitive lookups from a raw API value → enum member. Keys are the
+// enum values upper-cased, so the normalized (upper-cased) raw input matches
+// regardless of the enum member's own casing (e.g. the mixed-case `Unknown`).
+const GOVERNANCE_MODE_BY_VALUE = new Map<string, AgentGovernanceMode>(
+  Object.values(AgentGovernanceMode).map((mode) => [mode.toUpperCase(), mode]),
+);
+const GOVERNANCE_VERDICT_BY_VALUE = new Map<string, AgentGovernanceVerdict>(
+  Object.values(AgentGovernanceVerdict).map((verdict) => [verdict.toUpperCase(), verdict]),
+);
 
 /** Maps a raw mode string to {@link AgentGovernanceMode}, case-insensitively; missing/unrecognized → `Unknown`. */
-const toGovernanceMode = (raw: string | null): AgentGovernanceMode => {
-  const value = raw?.toUpperCase();
-  return value !== undefined && GOVERNANCE_MODES.has(value) ? (value as AgentGovernanceMode) : AgentGovernanceMode.Unknown;
-};
+const toGovernanceMode = (raw: string | null): AgentGovernanceMode =>
+  (raw != null ? GOVERNANCE_MODE_BY_VALUE.get(raw.toUpperCase()) : undefined) ?? AgentGovernanceMode.Unknown;
 
-/** Maps a raw verdict/action string to {@link AgentGovernanceVerdict}, case-insensitively; missing/unrecognized → `Unknown`. */
-const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict => {
-  const value = raw?.toUpperCase();
-  return value !== undefined && GOVERNANCE_VERDICTS.has(value) ? (value as AgentGovernanceVerdict) : AgentGovernanceVerdict.Unknown;
-};
+/** Maps a raw verdict string to {@link AgentGovernanceVerdict}, case-insensitively; missing/unrecognized → `Unknown`. */
+const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict =>
+  (raw != null ? GOVERNANCE_VERDICT_BY_VALUE.get(raw.toUpperCase()) : undefined) ?? AgentGovernanceVerdict.Unknown;
 
 /**
  * Normalizes a raw governance row, mapping the mode and verdict strings to
