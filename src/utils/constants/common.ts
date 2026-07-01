@@ -166,6 +166,18 @@ export const TRACEVIEW_SPANS_PAGINATION = {
 };
 
 /**
+ * Governance decisions pagination constants — decision rows sit directly
+ * under `items`. This endpoint returns no total-count field, so no
+ * `TOTAL_COUNT_FIELD` is defined; `hasNextPage` falls back to page-fullness
+ * (a full page implies there may be more). Request params reuse
+ * {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
+ */
+export const GOVERNANCE_DECISIONS_PAGINATION = {
+  /** Field name for the decision-rows array in the response. */
+  ITEMS_FIELD: 'items',
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {

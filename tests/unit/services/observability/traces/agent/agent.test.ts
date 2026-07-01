@@ -4,7 +4,13 @@ import { AgentTracesService } from '../../../../../../src/services/observability
 import { ApiClient } from '../../../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../../../utils/setup';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../../../src/utils/constants/endpoints';
-import { AgentTraceExecutionType } from '../../../../../../src/models/observability/traces/agent/agent.types';
+import {
+  AgentTraceExecutionType,
+  AgentGovernanceMode,
+  AgentGovernanceVerdict,
+  AgentGovernanceSection,
+} from '../../../../../../src/models/observability/traces/agent/agent.types';
+import type { RawAgentGovernanceDecisionGetResponse } from '../../../../../../src/models/observability/traces/agent/agent.internal-types';
 import { AGENT_TEST_CONSTANTS } from '../../../../../utils/constants';
 
 // ===== MOCKING =====
@@ -448,6 +454,214 @@ describe('AgentTracesService Unit Tests', () => {
     it('should throw ValidationError when referenceId is empty', async () => {
       await expect(traceService.getSpansByReference('')).rejects.toThrow('referenceId is required');
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getGovernanceDecisions', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    const buildGovRow = (
+      overrides: Partial<RawAgentGovernanceDecisionGetResponse> = {},
+    ): RawAgentGovernanceDecisionGetResponse => ({
+      tenantId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      source: '10',
+      policyId: AGENT_TEST_CONSTANTS.GOV_POLICY_ID,
+      policyName: AGENT_TEST_CONSTANTS.GOV_POLICY_NAME,
+      packName: AGENT_TEST_CONSTANTS.GOV_PACK_NAME,
+      hook: AGENT_TEST_CONSTANTS.GOV_HOOK,
+      mode: 'AUDIT',
+      actionApplied: 'ALLOW',
+      evaluatorResult: 'ALLOW',
+      reason: AGENT_TEST_CONSTANTS.GOV_REASON,
+      agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      agentName: AGENT_TEST_CONSTANTS.GOV_AGENT_NAME,
+      ...overrides,
+    });
+
+    it('should return a non-paginated response with the window in the body and no pagination params', async () => {
+      mockApiClient.post.mockResolvedValue({ items: [buildGovRow()] });
+
+      const result = await traceService.getGovernanceDecisions(startTime);
+
+      expect(result.items[0].mode).toBe(AgentGovernanceMode.Audit);
+      expect(result.items[0].evaluatorResult).toBe(AgentGovernanceVerdict.Allow);
+      expect((result as { hasNextPage?: boolean }).hasNextPage).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_DECISIONS);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBeUndefined();
+      expect(body.pageNumber).toBeUndefined();
+      expect(body.pageSize).toBeUndefined();
+      // omitted boolean filter is absent from the body (distinct from violationsOnly:false)
+      expect('violationsOnly' in body).toBe(false);
+    });
+
+    it('should normalize mode/verdict to enums, mapping unrecognized and null values to Unknown', async () => {
+      mockApiClient.post.mockResolvedValue({
+        items: [
+          buildGovRow({ mode: 'ENFORCE', evaluatorResult: 'DENY', actionApplied: 'ALLOW' }),
+          buildGovRow({ mode: 'WEIRD', evaluatorResult: 'BLOCK', actionApplied: null }),
+          buildGovRow({ mode: null, evaluatorResult: null, actionApplied: null }),
+        ],
+      });
+
+      const result = await traceService.getGovernanceDecisions(startTime);
+
+      expect(result.items.map((r) => r.mode)).toEqual([
+        AgentGovernanceMode.Enforce,
+        AgentGovernanceMode.Unknown,
+        AgentGovernanceMode.Unknown,
+      ]);
+      expect(result.items.map((r) => r.evaluatorResult)).toEqual([
+        AgentGovernanceVerdict.Deny,
+        AgentGovernanceVerdict.Unknown,
+        AgentGovernanceVerdict.Unknown,
+      ]);
+      // actionApplied is a raw string passthrough (the enforcement action), null in audit mode.
+      expect(result.items[0].actionApplied).toBe('ALLOW');
+      expect(result.items[1].actionApplied).toBeNull();
+      // Raw label must not leak through on the enum fields.
+      expect((result.items[0].mode as string)).not.toBe('enforce');
+    });
+
+    it('should match mode/verdict case-insensitively (API returns lowercase too)', async () => {
+      mockApiClient.post.mockResolvedValue({
+        items: [buildGovRow({ mode: 'audit', evaluatorResult: 'deny', actionApplied: 'allow' })],
+      });
+
+      const result = await traceService.getGovernanceDecisions(startTime);
+
+      expect(result.items[0].mode).toBe(AgentGovernanceMode.Audit);
+      expect(result.items[0].evaluatorResult).toBe(AgentGovernanceVerdict.Deny);
+      // actionApplied is a raw passthrough string — not case-folded.
+      expect(result.items[0].actionApplied).toBe('allow');
+    });
+
+    it('should send pageSize + 0-based pageNumber in the body when pageSize is provided', async () => {
+      mockApiClient.post.mockResolvedValue({ items: [] });
+
+      await traceService.getGovernanceDecisions(startTime, { pageSize: 25 });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.pageSize).toBe(25);
+      expect(body.pageNumber).toBe(0);
+    });
+
+    it('should infer hasNextPage from page fullness (no total-count field)', async () => {
+      mockApiClient.post.mockResolvedValue({ items: [buildGovRow(), buildGovRow()] });
+
+      const full = await traceService.getGovernanceDecisions(startTime, { pageSize: 2 });
+      expect(full.hasNextPage).toBe(true);
+      expect(full.totalCount).toBeUndefined();
+
+      mockApiClient.post.mockResolvedValue({ items: [buildGovRow()] });
+      const partial = await traceService.getGovernanceDecisions(startTime, { pageSize: 2 });
+      expect(partial.hasNextPage).toBe(false);
+    });
+
+    it('should send filters in the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue({ items: [] });
+
+      await traceService.getGovernanceDecisions(startTime, {
+        endTime,
+        hook: AGENT_TEST_CONSTANTS.GOV_HOOK,
+        evaluatorResult: AgentGovernanceVerdict.Deny,
+        policyId: AGENT_TEST_CONSTANTS.GOV_POLICY_ID,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        violationsOnly: true,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.hook).toBe(AGENT_TEST_CONSTANTS.GOV_HOOK);
+      expect(body.evaluatorResult).toBe(AgentGovernanceVerdict.Deny);
+      expect(body.policyId).toBe(AGENT_TEST_CONSTANTS.GOV_POLICY_ID);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+      expect(body.violationsOnly).toBe(true);
+      expect(body['$hook']).toBeUndefined();
+    });
+
+    it('should send violationsOnly:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ items: [] });
+
+      await traceService.getGovernanceDecisions(startTime, { violationsOnly: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.violationsOnly).toBe(false);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(traceService.getGovernanceDecisions(startTime)).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getGovernanceSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    const mockSummary = {
+      total: 26,
+      violations: 3,
+      byHook: [{ key: AGENT_TEST_CONSTANTS.GOV_HOOK, name: null, count: 12, violationCount: 2 }],
+      byAgent: [{ key: AGENT_TEST_CONSTANTS.AGENT_ID, name: AGENT_TEST_CONSTANTS.GOV_AGENT_NAME, count: 20, violationCount: 1 }],
+      byPolicy: [{ key: AGENT_TEST_CONSTANTS.GOV_POLICY_ID, name: AGENT_TEST_CONSTANTS.GOV_POLICY_NAME, count: 2, violationCount: 0 }],
+      byPack: [{ key: AGENT_TEST_CONSTANTS.GOV_PACK_NAME, name: null, count: 26, violationCount: 3 }],
+      // Always present; empty unless the action/mode sections are requested.
+      byAction: [],
+      byMode: [],
+    };
+
+    it('should return the flat summary and send only startTime in the body by default', async () => {
+      mockApiClient.post.mockResolvedValue(mockSummary);
+
+      const result = await traceService.getGovernanceSummary(startTime);
+
+      expect(result.total).toBe(26);
+      expect(result.violations).toBe(3);
+      expect(result.byPolicy[0].key).toBe(AGENT_TEST_CONSTANTS.GOV_POLICY_ID);
+      // Opt-in breakdowns are present but empty when not requested.
+      expect(result.byAction).toEqual([]);
+      expect(result.byMode).toEqual([]);
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_SUMMARY);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect('endTime' in body).toBe(false);
+      expect('topN' in body).toBe(false);
+      expect('sections' in body).toBe(false);
+    });
+
+    it('should send endTime, topN, packName and sections in the body', async () => {
+      mockApiClient.post.mockResolvedValue(mockSummary);
+
+      await traceService.getGovernanceSummary(startTime, {
+        endTime,
+        topN: 5,
+        packName: AGENT_TEST_CONSTANTS.GOV_PACK_NAME,
+        sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.topN).toBe(5);
+      expect(body.packName).toBe(AGENT_TEST_CONSTANTS.GOV_PACK_NAME);
+      expect(body.sections).toEqual(['action', 'mode']);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(traceService.getGovernanceSummary(startTime)).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
 });
