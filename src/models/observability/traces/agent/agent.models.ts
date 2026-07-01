@@ -249,8 +249,9 @@ export interface AgentTracesServiceModel {
   >;
 
   /**
-   * Retrieves a governance summary over the requested window — total and
-   * violation counts plus top-N breakdowns by hook, agent, policy, and pack.
+   * Summarizes governance decisions across agent execution traces — total
+   * decisions and violations, plus top breakdowns by hook, agent, policy, and
+   * pack — over the requested window. Filterable.
    *
    * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
    *
