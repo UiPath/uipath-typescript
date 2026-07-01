@@ -74,7 +74,7 @@ export interface ProcessInstancesServiceModel {
   >;
 
   /**
-   * Get a process instance by ID with operation methods (cancel, pause, resume)
+   * Get a process instance by ID with operation methods (cancel, pause, resume, retry)
    * @param id The ID of the instance to retrieve
    * @param folderKey The folder key for authorization
    * @returns Promise resolving to a process instance
@@ -200,6 +200,36 @@ export interface ProcessInstancesServiceModel {
   resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
+   * Retry a faulted process instance
+   *
+   * Re-runs the failed elements of the instance (and the elements that follow) within the
+   * same instance, spawning new jobs. Use to recover from transient/flaky failures.
+   * @param instanceId The ID of the instance to retry
+   * @param folderKey The folder key for authorization
+   * @param options Optional retry options with comment
+   * @returns Promise resolving to operation result with instance data
+   * @example
+   * ```typescript
+   * // Retry a faulted process instance
+   * const result = await processInstances.retry(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Or using instance method
+   * const instance = await processInstances.getById(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   * if (instance.latestRunStatus === 'Faulted') {
+   *   const result = await instance.retry({ comment: 'Retrying flaky failure' });
+   *   console.log(`Retried: ${result.success}`);
+   * }
+   * ```
+   */
+  retry(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
    * Get global variables for a process instance
    * 
    * @param instanceId The ID of the instance to get variables for
@@ -286,6 +316,14 @@ export interface ProcessInstanceMethods {
   resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
+   * Retries this faulted process instance
+   *
+   * @param options - Optional retry options with comment
+   * @returns Promise resolving to operation result
+   */
+  retry(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
    * Gets incidents for this process instance
    * 
    * @returns Promise resolving to array of incidents for this instance
@@ -346,6 +384,13 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
       
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async retry(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.retry(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async getIncidents(): Promise<ProcessIncidentGetResponse[]> {

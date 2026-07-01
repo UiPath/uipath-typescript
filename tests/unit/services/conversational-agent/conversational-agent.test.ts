@@ -23,7 +23,7 @@ vi.mock('@/core/http/api-client');
 
 // Mock SessionManager to avoid WebSocket side effects
 vi.mock('@/services/conversational-agent/conversations/session/session-manager', () => ({
-  SessionManager: vi.fn().mockImplementation(() => ({
+  SessionManager: vi.fn().mockImplementation(function () { return ({
     connectionStatus: 'Disconnected',
     isConnected: false,
     connectionError: null,
@@ -31,7 +31,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
-  }))
+  }); })
 }));
 
 // ===== TEST SUITE =====
@@ -43,7 +43,7 @@ describe('ConversationalAgentService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     conversationalAgent = new ConversationalAgentService(instance);
   });
@@ -55,7 +55,7 @@ describe('ConversationalAgentService Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { externalUserId: 'user-123' });
 
@@ -69,7 +69,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should not pass any optional headers when no options are provided', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance);
 
@@ -83,7 +83,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass surfaceName as x-uipath-conversational-surfacename header when set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { surfaceName: 'agent_builder_frontend' });
 
@@ -97,7 +97,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass surfaceVersion as x-uipath-conversational-surfaceversion header when set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { surfaceVersion: '1.2.3' });
 
@@ -111,7 +111,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass all optional headers together when externalUserId, surfaceName, and surfaceVersion are set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, {
         externalUserId: 'user-123',

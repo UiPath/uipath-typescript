@@ -309,6 +309,9 @@ await processInstances.resume(instanceId, 'folder-key');
 await processInstances.cancel(instanceId, 'folder-key', {
   comment: 'Cancelled due to error'
 });
+await processInstances.retry(instanceId, 'folder-key', {
+  comment: 'Retrying flaky failure'
+});
 
 // Maestro Case Instances
 const caseInstance = await caseInstances.getById(instanceId, 'folder-key');

@@ -30,7 +30,7 @@ describe('AgentTracesService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as never);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as never; });
     traceService = new AgentTracesService(instance);
   });
 

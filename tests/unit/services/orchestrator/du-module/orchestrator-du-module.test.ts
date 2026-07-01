@@ -55,7 +55,7 @@ describe('OrchestratorDuModuleService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     service = new OrchestratorDuModuleService(instance);
   });
