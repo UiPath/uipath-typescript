@@ -1,0 +1,11 @@
+/*
+ * Import apollo-wind's Tailwind source (not the pre-compiled styles.css) so this
+ * app compiles its own utility classes. Brings in Tailwind v4 base/utilities,
+ * Apollo design tokens, and `.dark` overrides (toggled by next-themes).
+ */
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind skips node_modules — scan apollo-wind so its component classes
+   (e.g. the Dialog's p-6/gap-4) regenerate; the second line scans this app. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';
