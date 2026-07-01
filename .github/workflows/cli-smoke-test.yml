@@ -25,7 +25,8 @@ jobs:
     permissions:
       contents: read
     env:
-      APP_NAME: cli-smoke-stable
+      # Unique per run — always a fresh publish + deploy, no collisions
+      APP_NAME: smoke-s-${{ github.run_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,12 +58,10 @@ jobs:
 
       - name: Pack
         run: |
-          VERSION="0.0.$(date +%Y%m%d)"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           uip codedapp pack \
             fixtures/smoke-test-app \
             --name "$APP_NAME" \
-            --version "$VERSION"
+            --version "1.0.0"
 
       - name: Publish
         run: |
@@ -96,7 +95,7 @@ jobs:
       contents: read
       packages: read
     env:
-      APP_NAME: cli-smoke-alpha
+      APP_NAME: smoke-a-${{ github.run_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -130,12 +129,10 @@ jobs:
 
       - name: Pack
         run: |
-          VERSION="0.0.$(date +%Y%m%d)"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           uip codedapp pack \
             fixtures/smoke-test-app \
             --name "$APP_NAME" \
-            --version "$VERSION"
+            --version "1.0.0"
 
       - name: Publish
         run: |
