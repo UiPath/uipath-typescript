@@ -195,7 +195,7 @@ export interface AgentTracesServiceModel {
 
   /**
    * Retrieves runtime governance checks — per policy allow/deny decisions —
-   * over the requested window, tenant-scoped.
+   * over the requested window.
    *
    * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
    * `cursor`, or `jumpToPage`) are provided, otherwise a

@@ -105,33 +105,33 @@ export interface AgentSpanGetResponse {
   status: string;
   /** Organization ID (GUID). */
   organizationId: string;
-  /** Tenant ID (GUID). May be `null`. */
+  /** Tenant ID (GUID). */
   tenantId: string | null;
-  /** Span retention expiry time. May be `null`. */
+  /** Span retention expiry time. */
   expiredTime: string | null;
-  /** Folder key (GUID) the span was recorded in. May be `null`. */
+  /** Folder key (GUID) the span was recorded in. */
   folderKey: string | null;
-  /** Span source. May be `null`. */
+  /** Span source. */
   source: string | null;
-  /** Span type. May be `null`. */
+  /** Span type. */
   spanType: string | null;
-  /** Process key (GUID). May be `null`. */
+  /** Process key (GUID). */
   processKey: string | null;
-  /** Job key (GUID). May be `null`. */
+  /** Job key (GUID). */
   jobKey: string | null;
-  /** Reference ID (GUID). May be `null`. */
+  /** Reference ID (GUID). */
   referenceId: string | null;
-  /** Verbosity level. May be `null`. */
+  /** Verbosity level. */
   verbosityLevel: string | null;
   /** Record last-updated time. */
   updatedAt: string;
   /** Whether the span payload is stored as a large payload. */
   isLargePayload: boolean;
-  /** Payload compression type. May be `null`. */
+  /** Payload compression type. */
   compressionType: string | null;
-  /** Agent version that produced the span. May be `null`. */
+  /** Agent version that produced the span. */
   agentVersion: string | null;
-  /** Raw span context as a JSON string. May be `null`. */
+  /** Raw span context as a JSON string. */
   context: string | null;
 }
 
@@ -185,27 +185,27 @@ export enum AgentGovernanceVerdict {
  * A single governance check — one policy's allow/deny decision for an agent run.
  */
 export interface AgentGovernanceCheckGetResponse {
-  /** Tenant ID (GUID). May be `null`. */
+  /** Tenant ID (GUID). */
   tenantId: string | null;
-  /** Decision window start time. */
+  /** Decision window start time — ISO 8601, UTC. */
   startTime: string;
-  /** Decision window end time. May be `null`. */
+  /** Decision window end time — ISO 8601, UTC. */
   endTime: string | null;
-  /** Trace ID (GUID). May be `null`. */
+  /** Trace ID (GUID). */
   traceId: string | null;
-  /** Job key (GUID). May be `null`. */
+  /** Job key (GUID). */
   jobKey: string | null;
-  /** Folder key (GUID). May be `null`. */
+  /** Folder key (GUID). */
   folderKey: string | null;
-  /** Runtime the evaluator ran in (context, not a filter). May be `null`. */
+  /** Runtime the evaluator ran in (context, not a filter). */
   source: string | null;
-  /** Policy ID. May be `null`. */
+  /** Policy ID. */
   policyId: string | null;
-  /** Policy display name. May be `null`. */
+  /** Policy display name. */
   policyName: string | null;
-  /** Governance pack name. May be `null`. */
+  /** Governance pack name. */
   packName: string | null;
-  /** Governance hook (e.g. `BEFORE_MODEL`). May be `null`. */
+  /** Governance hook (e.g. `BEFORE_MODEL`). */
   hook: string | null;
   /** Evaluation mode, normalized to {@link AgentGovernanceMode} ({@link AgentGovernanceMode.Unknown} when missing/unrecognized). */
   mode: AgentGovernanceMode;
@@ -213,11 +213,11 @@ export interface AgentGovernanceCheckGetResponse {
   actionApplied: string | null;
   /** Verdict, normalized to {@link AgentGovernanceVerdict} (`Deny` = violation). */
   evaluatorResult: AgentGovernanceVerdict;
-  /** Human-readable reason. May be `null`. */
+  /** Human-readable reason. */
   reason: string | null;
-  /** Resolved agent ID (GUID). May be `null`. */
+  /** Resolved agent ID (GUID). */
   agentId: string | null;
-  /** Agent display name. May be `null`. */
+  /** Agent display name. */
   agentName: string | null;
 }
 
@@ -243,9 +243,9 @@ export type AgentGovernanceChecksOptions = PaginationOptions & {
  * One breakdown entry in the governance summary — counts for a single key.
  */
 export interface AgentGovernanceCountItem {
-  /** Breakdown key — hook value, agent id, policy id, or pack name, depending on the breakdown. May be `null`. */
+  /** The value this row groups by — the distinct hook, agent id, policy id, or pack name for this breakdown. */
   key: string | null;
-  /** Display name (populated for the policy and agent breakdowns). May be `null`. */
+  /** Display name (populated for the policy and agent breakdowns). */
   name: string | null;
   /** Number of decisions for this key. */
   count: number;

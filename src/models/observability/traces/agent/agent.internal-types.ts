@@ -21,33 +21,33 @@ export interface RawAgentSpanGetResponse {
   status: string;
   /** Organization ID (GUID). */
   organizationId: string;
-  /** Tenant ID (GUID). May be `null`. */
+  /** Tenant ID (GUID). */
   tenantId: string | null;
-  /** Span retention expiry time. May be `null`. */
+  /** Span retention expiry time. */
   expiryTimeUtc: string | null;
-  /** Folder key (GUID) the span was recorded in. May be `null`. */
+  /** Folder key (GUID) the span was recorded in. */
   folderKey: string | null;
-  /** Span source. May be `null`. */
+  /** Span source. */
   source: string | null;
-  /** Span type. May be `null`. */
+  /** Span type. */
   spanType: string | null;
-  /** Process key (GUID). May be `null`. */
+  /** Process key (GUID). */
   processKey: string | null;
-  /** Job key (GUID). May be `null`. */
+  /** Job key (GUID). */
   jobKey: string | null;
-  /** Reference ID (GUID). May be `null`. */
+  /** Reference ID (GUID). */
   referenceId: string | null;
-  /** Verbosity level. May be `null`. */
+  /** Verbosity level. */
   verbosityLevel: string | null;
   /** Record last-updated time. */
   updatedAt: string;
   /** Whether the span payload is stored as a large payload. */
   isLargePayload: boolean;
-  /** Payload compression type. May be `null`. */
+  /** Payload compression type. */
   compressionType: string | null;
-  /** Agent version that produced the span. May be `null`. */
+  /** Agent version that produced the span. */
   agentVersion: string | null;
-  /** Raw span context as a JSON string. May be `null`. */
+  /** Raw span context as a JSON string. */
   context: string | null;
 }
 
