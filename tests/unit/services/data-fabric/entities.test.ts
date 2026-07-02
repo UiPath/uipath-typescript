@@ -2760,6 +2760,21 @@ describe("EntityService Unit Tests", () => {
         expect(f.referenceType).toBeUndefined();
       });
 
+      it("should strip caller-provided referenceEntityId/referenceFieldId on FILE (server discards them anyway)", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          addFields: [{
+            fieldName: "file_field",
+            type: EntityFieldDataType.FILE,
+            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+          }],
+        });
+        const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
+        const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
+        expect(f.referenceEntity).toBeUndefined();
+        expect(f.referenceField).toBeUndefined();
+      });
+
       it("should set RELATIONSHIP lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{

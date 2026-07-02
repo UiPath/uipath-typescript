@@ -1264,7 +1264,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // server-side; fall back to a bare {id} when no meta was fetched.
     const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId === undefined ? undefined : { id: field.referenceEntityId });
     const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
-    // FILE: server wires refs to EntityAttachment
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
@@ -1283,6 +1282,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...((isRelationship || isFile) && { isForeignKey: true }),
       ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
+      // FILE: server auto-wires refs to the EntityAttachment system entity; caller-sent UUIDs would fail the server's relationship pre-check.
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
       ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
