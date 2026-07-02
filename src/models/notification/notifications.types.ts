@@ -105,3 +105,19 @@ export type NotificationMarkAllReadResponse = OperationResponse<{
   all: true;
   read: true;
 }>;
+
+/**
+ * Response from `deleteByIds()`.
+ *
+ * `notificationIds` echoes the IDs that were deleted.
+ */
+export type NotificationDeleteResponse = OperationResponse<{
+  notificationIds: string[];
+}>;
+
+/**
+ * Response from `deleteAll()`.
+ */
+export type NotificationDeleteAllResponse = OperationResponse<{
+  all: true;
+}>;

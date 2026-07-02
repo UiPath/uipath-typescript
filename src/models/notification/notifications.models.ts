@@ -10,6 +10,8 @@ import type {
 } from '../../utils/pagination/types';
 
 import type {
+  NotificationDeleteAllResponse,
+  NotificationDeleteResponse,
   NotificationGetAllOptions,
   NotificationGetResponse,
   NotificationMarkAllReadResponse,
@@ -116,4 +118,35 @@ export interface NotificationServiceModel {
    * @internal
    */
   markAllAsRead(tenantId: string): Promise<NotificationMarkAllReadResponse>;
+
+  /**
+   * Deletes the given notifications.
+   *
+   * @param tenantId - Tenant GUID
+   * @param notificationIds - GUIDs of notifications to delete. Must be non-empty.
+   * @returns Operation result echoing the deleted IDs
+   * {@link NotificationDeleteResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteByIds('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   * @internal
+   */
+  deleteByIds(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse>;
+
+  /**
+   * Deletes all notifications from the current user's inbox.
+   *
+   * @param tenantId - Tenant GUID
+   * @returns Operation result confirming the bulk delete
+   * {@link NotificationDeleteAllResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteAll('<tenantId>');
+   * ```
+   * @internal
+   */
+  deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse>;
 }

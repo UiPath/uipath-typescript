@@ -6,6 +6,8 @@ import { track } from '../../core/telemetry';
 import { BaseService } from '../base';
 
 import type {
+  NotificationDeleteAllResponse,
+  NotificationDeleteResponse,
   NotificationGetAllOptions,
   NotificationGetResponse,
   NotificationMarkAllReadResponse,
@@ -185,6 +187,53 @@ export class NotificationService extends BaseService implements NotificationServ
       forceAllRead: true,
     }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { all: true, read: true } };
+  }
+
+  /**
+   * Deletes the given notifications.
+   *
+   * @param tenantId - Tenant GUID
+   * @param notificationIds - GUIDs of notifications to delete. Must be non-empty.
+   * @returns Operation result echoing the deleted IDs
+   * {@link NotificationDeleteResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteByIds('<tenantId>', ['<notificationId-1>', '<notificationId-2>']);
+   * ```
+   * @internal
+   */
+  @track('Notifications.DeleteByIds')
+  async deleteByIds(tenantId: string, notificationIds: string[]): Promise<NotificationDeleteResponse> {
+    await this.post(NOTIFICATION_ENDPOINTS.DELETE_BULK, {
+      // API spec misspells the key as `notifcationIds` — preserve it.
+      notifcationIds: notificationIds,
+      deleteAll: false,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { notificationIds } };
+  }
+
+  /**
+   * Deletes all notifications from the current user's inbox.
+   *
+   * @param tenantId - Tenant GUID
+   * @returns Operation result confirming the bulk delete
+   * {@link NotificationDeleteAllResponse}
+   *
+   * @example
+   * ```typescript
+   * await notifications.deleteAll('<tenantId>');
+   * ```
+   * @internal
+   */
+  @track('Notifications.DeleteAll')
+  async deleteAll(tenantId: string): Promise<NotificationDeleteAllResponse> {
+    await this.post(NOTIFICATION_ENDPOINTS.DELETE_BULK, {
+      // API spec misspells the key as `notifcationIds` — preserve it.
+      notifcationIds: [],
+      deleteAll: true,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { all: true } };
   }
 
   private async updateRead(
