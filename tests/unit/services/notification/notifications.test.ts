@@ -186,6 +186,56 @@ describe('NotificationService Unit Tests', () => {
     });
   });
 
+  describe('deleteByIds', () => {
+    it('should POST notifcationIds (preserving the API typo), deleteAll=false, and tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const ids = [
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID,
+        NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID_2,
+      ];
+
+      const result = await notificationService.deleteByIds(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, ids);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.DELETE_BULK,
+        { notifcationIds: ids, deleteAll: false },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { notificationIds: ids } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND));
+
+      await expect(
+        notificationService.deleteByIds(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [NOTIFICATION_TEST_CONSTANTS.NOTIFICATION_ID])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_NOTIFICATION_NOT_FOUND);
+    });
+  });
+
+  describe('deleteAll', () => {
+    it('should POST deleteAll=true with empty notifcationIds array and tenant header', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const result = await notificationService.deleteAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        NOTIFICATION_ENDPOINTS.DELETE_BULK,
+        { notifcationIds: [], deleteAll: true },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { all: true } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        notificationService.deleteAll(NOTIFICATION_TEST_CONSTANTS.TENANT_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
   describe('response transformation', () => {
     it('strips internal fields and renames isRead → hasRead in the returned notifications', async () => {
       const raw: RawNotificationEntry = createBasicNotificationEntry();

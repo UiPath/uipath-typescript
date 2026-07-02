@@ -16,4 +16,5 @@ const NOTIFICATION_API_BASE = `${NOTIFICATION_BASE}/notificationserviceapi`;
 export const NOTIFICATION_ENDPOINTS = {
   GET_ALL: `${NOTIFICATION_API_BASE}/odata/v1/NotificationEntry`,
   UPDATE_READ: `${NOTIFICATION_API_BASE}/odata/v1/NotificationEntry/UiPath.NotificationService.Api.UpdateRead`,
+  DELETE_BULK: `${NOTIFICATION_API_BASE}/odata/v1/NotificationEntry/UiPath.NotificationService.Api.DeleteBulk`,
 } as const;
