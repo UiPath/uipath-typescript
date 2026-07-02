@@ -3,6 +3,7 @@
  */
 
 import type { PaginationOptions } from '../../utils/pagination/types';
+import type { OperationResponse } from '../common/types';
 
 /**
  * Priority level assigned to a notification by the publisher.
@@ -86,3 +87,21 @@ export type NotificationGetAllOptions = PaginationOptions & {
   filter?: string;
   orderby?: string;
 };
+
+/**
+ * Response from `markAsRead()` / `markAsUnread()`.
+ *
+ * `notificationIds` echoes the IDs that were marked; `read` reflects the new state.
+ */
+export type NotificationUpdateReadResponse = OperationResponse<{
+  notificationIds: string[];
+  read: boolean;
+}>;
+
+/**
+ * Response from `markAllAsRead()`.
+ */
+export type NotificationMarkAllReadResponse = OperationResponse<{
+  all: true;
+  read: true;
+}>;

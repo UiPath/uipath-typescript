@@ -9,6 +9,7 @@ export const NOTIFICATION_TEST_CONSTANTS = {
 
   // Notification entry identifiers
   NOTIFICATION_ID: '11111111-1111-4111-8111-111111111111',
+  NOTIFICATION_ID_2: '22222222-2222-4222-8222-222222222222',
 
   // Publisher / topic IDs used inside notification-entry fixtures
   PUBLISHER_ID: '44444444-4444-4444-4444-444444444444',
@@ -27,4 +28,7 @@ export const NOTIFICATION_TEST_CONSTANTS = {
 
   // Unix epoch seconds (API returns seconds, not ms)
   PUBLISHED_ON: 1780981200,
+
+  // Error messages
+  ERROR_NOTIFICATION_NOT_FOUND: 'Notification not found',
 } as const;
