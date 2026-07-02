@@ -41,6 +41,37 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getAll filtering', () => {
+    it('should filter case processes by packageId', async () => {
+      const { cases } = getServices();
+
+      const all = await cases.getAll();
+      if (all.length === 0) {
+        throw new Error('No case processes available to test packageId filtering');
+      }
+
+      const { packageId } = all[0];
+      const filtered = await cases.getAll({ packageId });
+
+      expect(Array.isArray(filtered)).toBe(true);
+      expect(filtered.length).toBeGreaterThan(0);
+      for (const caseItem of filtered) {
+        expect(caseItem.packageId).toBe(packageId);
+      }
+    });
+
+    it('should accept a started-time range filter', async () => {
+      const { cases } = getServices();
+
+      const result = await cases.getAll({
+        startTime: new Date(0),
+        endTime: new Date(),
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
   describe.skip('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();

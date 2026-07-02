@@ -3,7 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
+import { CaseGetAllResponse, CaseGetAllOptions, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
 import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
@@ -24,6 +24,12 @@ import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineRespon
  */
 export interface CasesServiceModel {
   /**
+   * Get all case management processes with their instance statistics.
+   *
+   * Returns every case process with aggregated instance counts by status. Pass `options`
+   * to narrow the results by process key, package, or the time range their instances started in.
+   *
+   * @param options - Optional filters (processKey, packageId, startTime, endTime)
    * @returns Promise resolving to an array of {@link CaseGetAllWithMethodsResponse}
    * @example
    * ```typescript
@@ -37,8 +43,18 @@ export interface CasesServiceModel {
    *   console.log(`Completed instances: ${caseProcess.completedCount}`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter by package and the time range instances started in
+   * const filtered = await cases.getAll({
+   *   packageId: '<packageId>',
+   *   startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   endTime: new Date(),
+   * });
+   * ```
    */
-  getAll(): Promise<CaseGetAllWithMethodsResponse[]>;
+  getAll(options?: CaseGetAllOptions): Promise<CaseGetAllWithMethodsResponse[]>;
 
   /**
    * Get the top 5 case processes ranked by run count within a time range.

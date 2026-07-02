@@ -6,6 +6,21 @@
 import { GetTopRunCountResponse, GetTopDurationResponse, GetTopFaultedCountResponse } from './insights.types';
 
 /**
+ * Optional filters for {@link CasesServiceModel.getAll}.
+ * All fields are optional — pass any combination to narrow the returned case processes.
+ */
+export interface CaseGetAllOptions {
+  /** Filter by case process key */
+  processKey?: string;
+  /** Filter by package identifier */
+  packageId?: string;
+  /** Only include case processes with instances started at or after this time */
+  startTime?: Date;
+  /** Only include case processes with instances started at or before this time */
+  endTime?: Date;
+}
+
+/**
  * Case information with instance statistics
  */
 export interface CaseGetAllResponse {

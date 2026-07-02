@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetAllOptions, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
@@ -17,7 +17,12 @@ import { createParams } from '../../../utils/http/params';
  */
 export class CasesService extends BaseService implements CasesServiceModel {
   /**
-   * Get all case management processes with their instance statistics
+   * Get all case management processes with their instance statistics.
+   *
+   * Returns every case process with aggregated instance counts by status. Pass `options`
+   * to narrow the results by process key, package, or the time range their instances started in.
+   *
+   * @param options - Optional filters (processKey, packageId, startTime, endTime)
    * @returns Promise resolving to an array of {@link CaseGetAllWithMethodsResponse}
    *
    * @example
@@ -34,11 +39,25 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   console.log(`Completed instances: ${caseProcess.completedCount}`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter by package and the time range instances started in
+   * const filtered = await cases.getAll({
+   *   packageId: '<packageId>',
+   *   startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   endTime: new Date(),
+   * });
+   * ```
    */
   @track('Cases.GetAll')
-  async getAll(): Promise<CaseGetAllWithMethodsResponse[]> {
+  async getAll(options?: CaseGetAllOptions): Promise<CaseGetAllWithMethodsResponse[]> {
     const params = createParams({
-      processType: ProcessType.CaseManagement
+      processType: ProcessType.CaseManagement,
+      processKey: options?.processKey,
+      packageId: options?.packageId,
+      startedTimeUtcStart: options?.startTime?.toISOString(),
+      startedTimeUtcEnd: options?.endTime?.toISOString(),
     });
 
     const response = await this.get<{ processes: Omit<CaseGetAllResponse, 'name'>[] }>(
