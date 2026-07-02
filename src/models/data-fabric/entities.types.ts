@@ -231,6 +231,41 @@ export interface EntityAggregate {
 }
 
 /**
+ * A single cross-entity JOIN clause for a structured query.
+ *
+ * A join pulls related records together by matching a field on the base (left)
+ * entity (`joinFieldName`) to a field on a related (right) entity
+ * (`relatedFieldName`). Pass one {@link EntityJoin} per related entity; supplying
+ * several composes a multi-entity (multi-join) query. Up to 3 joins are
+ * supported, and all of them must share the same {@link JoinType}.
+ *
+ * @example
+ * ```typescript
+ * import { JoinType } from '@uipath/uipath-typescript/entities';
+ *
+ * const join: EntityJoin = {
+ *   entityName: "Order",
+ *   joinType: JoinType.LeftJoin,
+ *   joinFieldName: "customerId",
+ *   relatedEntityName: "Customer",
+ *   relatedFieldName: "Id",
+ * };
+ * ```
+ */
+export interface EntityJoin {
+  /** Name of the base (left) entity that owns `joinFieldName`. */
+  entityName?: string;
+  /** Join type to apply (see {@link JoinType}). */
+  joinType?: JoinType;
+  /** Field on `entityName` used as the join key. */
+  joinFieldName?: string;
+  /** Name of the related (right) entity to join in. */
+  relatedEntityName?: string;
+  /** Field on `relatedEntityName` matched against `joinFieldName`. */
+  relatedFieldName?: string;
+}
+
+/**
  * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
@@ -249,6 +284,12 @@ export type EntityQueryRecordsOptions = {
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
   groupBy?: string[];
+  /**
+   * Cross-entity joins. Each entry joins one related entity into the query;
+   * supply several for a multi-join query. A maximum of 3 joins is supported,
+   * and all joins must be of the same {@link JoinType}.
+   */
+  joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
 
 /**

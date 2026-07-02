@@ -236,6 +236,10 @@ Tests skip gracefully when:
 | `MAESTRO_TEST_PROCESS_KEY` | Pre-existing Maestro process for read-only tests | (optional) |
 | `ORCHESTRATOR_TEST_PROCESS_KEY` | Pre-existing Orchestrator process for start tests | (optional) |
 | `DATA_FABRIC_TEST_ENTITY_ID` | Pre-existing Data Fabric entity for record tests | (optional) |
+| `DATA_FABRIC_TEST_JOIN_ENTITY_NAME` | Base entity name for the `queryRecordsById` join test | (optional) |
+| `DATA_FABRIC_TEST_JOIN_FIELD_NAME` | Join key field on the base entity | (optional) |
+| `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (optional) |
+| `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (optional) |
 
 ## Test Data Management
 

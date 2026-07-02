@@ -418,12 +418,12 @@ export interface EntityServiceModel {
    * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination The `folderKey` property is **experimental**.
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -463,6 +463,20 @@ export interface EntityServiceModel {
    *   aggregates: [
    *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
    *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
+   *
+   * // Multi-join: pull fields from related entities into the query
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["Id", "amount"],
+   *   joins: [
+   *     {
+   *       entityName: "Order",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "customerId",
+   *       relatedEntityName: "Customer",
+   *       relatedFieldName: "Id",
+   *     },
    *   ],
    * });
    * ```
@@ -884,12 +898,12 @@ export interface EntityMethods {
   /**
    * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -917,6 +931,20 @@ export interface EntityMethods {
    *   aggregates: [
    *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
    *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
+   *
+   * // Multi-join: pull fields from related entities into the query
+   * await entity.queryRecords({
+   *   selectedFields: ["Id", "amount"],
+   *   joins: [
+   *     {
+   *       entityName: "Order",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "customerId",
+   *       relatedEntityName: "Customer",
+   *       relatedFieldName: "Id",
+   *     },
    *   ],
    * });
    * ```
