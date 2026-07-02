@@ -97,7 +97,6 @@ export class FolderScopedService extends BaseService {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
-    // --- Override resolution (POC) ---
     // The compiled code passes the DEFAULT name (e.g. "CustomerConfig").
     // At runtime, check if an admin override exists for this resource.
     // If so, use the overridden name and folderPath for the API call.

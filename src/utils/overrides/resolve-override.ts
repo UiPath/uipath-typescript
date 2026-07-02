@@ -1,5 +1,5 @@
 /**
- * POC: Runtime resource override resolution.
+ * Runtime resource override resolution.
  *
  * Reads the override dict from <script type="application/json" id="uipath-overrides">
  * injected into index.html at deploy time (by syncResourceOverwritesToCdn).
