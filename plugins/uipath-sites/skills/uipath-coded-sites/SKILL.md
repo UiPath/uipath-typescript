@@ -10,7 +10,7 @@ Use this skill when the user wants a UiPath coded app through either entry point
 - `@UiPath Sites`
 - `@Sites` with UiPath or coded-app intent
 
-This skill is the router/orchestrator only. Keep the detailed behavior in the reference files and the installed `uipath-coded-apps` skill.
+This skill is the router/orchestrator only. Keep the detailed behavior in the reference files, the bundled MCP input tool, and the installed `uipath-coded-apps` skill.
 
 When this skill matches, use it as the only app-generation routing skill. Do not pair it with external design skills such as `interface-design`, `ui-ux-pro-max`, or `frontend-design`; load this skill's [references/frontend-design-overrides.md](references/frontend-design-overrides.md) instead.
 
@@ -18,6 +18,7 @@ When this skill matches, use it as the only app-generation routing skill. Do not
 
 - This `uipath-coded-sites` skill owns routing, reference orchestration, and skill boundaries only.
 - [references/codex-overrides.md](references/codex-overrides.md) owns Codex behavior: mandatory initial input collection, Claude-specific question-tool translation, localhost usage, login mismatch handling, deploy command override, and skill boundary reinforcement.
+- The bundled `uipath-sites-inputs` MCP server owns optional structured setup input collection for the mandatory initial gate. It does not own app generation, SDK behavior, auth semantics, build, publish, or deploy.
 - [references/uipath-typescript.md](references/uipath-typescript.md) owns Sites-to-coded-app compatibility: static Vite/React shape, relative assets, `base: './'`, `getAppBase()`, and no Sites hosting output.
 - The installed `uipath-coded-apps` skill owns all coded-app functional behavior: app type, project structure, SDK usage, auth/config, OAuth scopes, service-specific references, runtime data handling, functional UI correctness, local validation, build, pack, publish, and deploy.
 - [references/frontend-design-overrides.md](references/frontend-design-overrides.md) owns visual presentation only: professional app shell, typography, palette, spacing, hierarchy, interaction polish, responsive styling, and accessibility styling.
@@ -26,7 +27,7 @@ When this skill matches, use it as the only app-generation routing skill. Do not
 
 For every matched request, load and apply these sources in order before generating files or running commands:
 
-1. [references/codex-overrides.md](references/codex-overrides.md) for Codex behavior, mandatory initial input collection, local-run rules, login mismatch handling, deploy command behavior, and skill boundaries.
+1. [references/codex-overrides.md](references/codex-overrides.md) for Codex behavior, mandatory initial input collection, MCP input tool preference, local-run rules, login mismatch handling, deploy command behavior, and skill boundaries.
 2. The installed `uipath-coded-apps` skill and all relevant `uipath-coded-apps/references/*` files for app type, service APIs, functional UI behavior, SDK patterns, local validation, and deploy flow.
 3. [references/uipath-typescript.md](references/uipath-typescript.md) for Sites-to-UiPath-coded-app compatibility rules.
 4. [references/frontend-design-overrides.md](references/frontend-design-overrides.md) for visual presentation guidance only.
@@ -37,6 +38,7 @@ If these sources conflict, use this ownership rule:
 
 - `uipath-coded-apps` wins for coded-app technical and functional behavior.
 - `codex-overrides.md` wins for Codex-specific interaction and command adaptation.
+- the bundled MCP input tool is only an input-collection transport; it must follow the input requirements from `codex-overrides.md` and `uipath-coded-apps`.
 - `uipath-typescript.md` wins for Sites-to-coded-app compatibility.
 - `frontend-design-overrides.md` may style the UI, but must not replace functional patterns from `uipath-coded-apps`.
 
