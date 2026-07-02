@@ -304,9 +304,9 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
   choiceSetId?: string;
-  /** UUID of the referenced entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  /** UUID of the referenced entity (required when `type` is `RELATIONSHIP`; ignored for `FILE`). */
   referenceEntityId?: string;
-  /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP`; ignored for `FILE`). */
   referenceFieldId?: string;
   /**
    * Folder key of the reference target when it lives outside the source's folder. Pass `'00000000-0000-0000-0000-000000000000'` for tenant-level system targets.

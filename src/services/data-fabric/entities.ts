@@ -1254,7 +1254,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     this.validateFieldConstraints(fieldType, field, field.fieldName);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
     const isFile = fieldType === EntityFieldDataType.FILE;
-    if ((isRelationship || isFile) && (!field.referenceEntityId || !field.referenceFieldId)) {
+    if (isRelationship && (!field.referenceEntityId || !field.referenceFieldId)) {
       throw new ValidationError({
         message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
       });
@@ -1282,9 +1282,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...((isRelationship || isFile) && { isForeignKey: true }),
       ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      ...(referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
+      // FILE: server auto-wires refs to the EntityAttachment system entity; caller-sent UUIDs would fail the server's relationship pre-check.
+      ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
-      ...(field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
+      ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
     };
   }
 
