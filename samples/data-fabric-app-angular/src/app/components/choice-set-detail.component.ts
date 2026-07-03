@@ -103,13 +103,16 @@ export class ChoiceSetDetailComponent {
     try {
       const choiceSetService = new ChoiceSets(this.auth.sdk)
       const all = await choiceSetService.getAll()
+      // Bail if the user switched choice sets while this request was in
+      // flight — a late response must not clobber the newer selection.
+      if (id !== this.choiceSetId()) return
       this.metadata.set(all.find((cs) => cs.id === id) ?? null)
     } catch (err) {
       // Header metadata is decorative — the values table below surfaces
       // its own errors, so just log here.
       console.error('Failed to load choice set metadata:', err)
     } finally {
-      this.loading.set(false)
+      if (id === this.choiceSetId()) this.loading.set(false)
     }
   }
 

@@ -357,16 +357,20 @@ export class EntityDetailComponent {
     try {
       const entityService = new Entities(this.auth.sdk)
       const entity = await entityService.getById(entityId)
+      // Bail if the user switched entities while this request was in
+      // flight — a late response must not clobber the newer entity's state.
+      if (entityId !== this.entityId()) return
       this.schema.set(entity)
       // Unlike the React sample (where the data-table widget owns the record
       // fetch), this app renders its own grid — so load the records here.
       await this.loadRecords()
     } catch (err) {
+      if (entityId !== this.entityId()) return
       this.error.set(
         err instanceof UiPathError ? err.message : 'Failed to load entity',
       )
     } finally {
-      this.loading.set(false)
+      if (entityId === this.entityId()) this.loading.set(false)
     }
   }
 
@@ -386,30 +390,36 @@ export class EntityDetailComponent {
       this.records.set([])
       return []
     }
+    // Capture the id up-front: every page fetch targets this entity, and a
+    // late response must not clobber state after the user switches away.
+    const entityId = this.entityId()
     this.recordsLoading.set(true)
     this.recordsError.set(null)
     try {
       const entityService = new Entities(this.auth.sdk)
       const allRecords: EntityRecord[] = []
-      let page = await entityService.getAllRecords(this.entityId(), {
+      let page = await entityService.getAllRecords(entityId, {
         pageSize: 100,
       })
       allRecords.push(...page.items)
       while (page.hasNextPage && page.nextCursor) {
-        page = await entityService.getAllRecords(this.entityId(), {
+        if (entityId !== this.entityId()) return []
+        page = await entityService.getAllRecords(entityId, {
           cursor: page.nextCursor,
         })
         allRecords.push(...page.items)
       }
+      if (entityId !== this.entityId()) return []
       this.records.set(allRecords)
       return allRecords
     } catch (err) {
+      if (entityId !== this.entityId()) return []
       this.recordsError.set(
         err instanceof UiPathError ? err.message : 'Failed to load records',
       )
       return []
     } finally {
-      this.recordsLoading.set(false)
+      if (entityId === this.entityId()) this.recordsLoading.set(false)
     }
   }
 

@@ -15,6 +15,19 @@ import { IconX } from './icons'
 type FieldValues = Record<string, unknown>
 
 /**
+ * Formats a Date as the `YYYY-MM-DDTHH:mm` local-time string that
+ * `<input type="datetime-local">` expects — the inverse of `coerce()`'s
+ * local-parse → UTC-serialise round trip.
+ */
+function toDateTimeLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  )
+}
+
+/**
  * Modal form for creating or editing a single entity record.
  *
  * SDK calls used:
@@ -341,10 +354,17 @@ export class RecordEditorComponent implements OnInit {
     if (typeof value === 'boolean') return String(value)
     const kind = this.inputKind(field)
     if (kind === 'DATE' && typeof value === 'string') return value.slice(0, 10)
-    // The browser inputs want YYYY-MM-DDTHH:mm — slicing a longer string
-    // keeps it valid even when the SDK returns an ISO 8601 string with a
-    // timezone offset (e.g. DATETIME_WITH_TZ → "2024-10-22T17:00:00+00:00").
+    // `<input type="datetime-local">` wants YYYY-MM-DDTHH:mm in the user's
+    // LOCAL timezone. The server value is an ISO 8601 instant (often with a
+    // timezone offset), so format its local components — the exact inverse
+    // of `coerce()`, which parses the input as local time and serialises to
+    // UTC. Slicing the ISO string instead would reinterpret the UTC wall
+    // time as local and shift the value by the UTC offset on every save.
     if (kind === 'DATETIME' && typeof value === 'string') {
+      const parsed = new Date(value)
+      if (Number.isFinite(parsed.getTime())) {
+        return toDateTimeLocalInputValue(parsed)
+      }
       return value.slice(0, 16)
     }
     if (typeof value === 'object') {
@@ -425,7 +445,13 @@ export class RecordEditorComponent implements OnInit {
       const payload: Record<string, unknown> = {}
       for (const field of this.regularFields()) {
         const raw = this.values()[field.name]
-        if (raw === '' || raw === undefined || raw === null) continue
+        if (raw === '' || raw === undefined || raw === null) {
+          // Create mode: omit untouched fields entirely. Edit mode: send an
+          // explicit null so clearing a field actually clears it server-side
+          // — omitting it would silently keep the old value.
+          if (this.isEdit()) payload[field.name] = null
+          continue
+        }
         payload[field.name] = this.coerce(raw, field)
       }
 

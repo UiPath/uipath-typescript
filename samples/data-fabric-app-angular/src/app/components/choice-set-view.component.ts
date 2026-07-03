@@ -141,6 +141,9 @@ export class ChoiceSetViewComponent {
   }
 
   async reload(): Promise<void> {
+    // Capture the id up-front — a late response for a previously selected
+    // choice set must not clobber the current one's state.
+    const choiceSetId = this.choiceSetId()
     this.loading.set(true)
     this.error.set(null)
     try {
@@ -150,23 +153,26 @@ export class ChoiceSetViewComponent {
       // so the full set of choice values loads and the count shown in the
       // UI is accurate.
       const allValues: ChoiceSetGetResponse[] = []
-      let page = await choiceSetService.getById(this.choiceSetId(), {
+      let page = await choiceSetService.getById(choiceSetId, {
         pageSize: 100,
       })
       allValues.push(...page.items)
       while (page.hasNextPage && page.nextCursor) {
-        page = await choiceSetService.getById(this.choiceSetId(), {
+        if (choiceSetId !== this.choiceSetId()) return
+        page = await choiceSetService.getById(choiceSetId, {
           cursor: page.nextCursor,
         })
         allValues.push(...page.items)
       }
+      if (choiceSetId !== this.choiceSetId()) return
       this.values.set(allValues)
     } catch (err) {
+      if (choiceSetId !== this.choiceSetId()) return
       this.error.set(
         err instanceof UiPathError ? err.message : 'Failed to load choice set',
       )
     } finally {
-      this.loading.set(false)
+      if (choiceSetId === this.choiceSetId()) this.loading.set(false)
     }
   }
 }
