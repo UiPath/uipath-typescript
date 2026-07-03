@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out-tsc/
+
+# Angular cache
+.angular/
+
+# Tenant-specific credentials — copy uipath.json.example instead
+uipath.json
+
+# Misc
+.DS_Store
+npm-debug.log*
