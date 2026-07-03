@@ -101,14 +101,9 @@ jobs:
 
 ### Deploy on push to main
 
-Replace `workflow_dispatch` with a push trigger and use `env` variables instead of `inputs`:
+Replace the `on:` trigger and hardcode values as `env` variables instead of `inputs`:
 
 ```yaml
-name: Deploy Coded App
-
-permissions:
-  contents: read
-
 on:
   push:
     branches: [main]
@@ -120,34 +115,7 @@ env:
   ORG: "myorg"
   TENANT: "mytenant"
   FOLDER_KEY: "<your-folder-key>"
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - run: npm ci
-      - run: npm run build
-      - run: npm install -g @uipath/cli
-      - run: uip tools install codedapp
-      - name: Login
-        run: |
-          uip login \
-            --organization "${{ env.ORG }}" \
-            --tenant "${{ env.TENANT }}" \
-            --client-id "${{ secrets.UIPATH_CLIENT_ID }}" \
-            --client-secret "${{ secrets.UIPATH_CLIENT_SECRET }}" \
-            --scope "Apps OR.Folders.Read OR.Execution"
-      - run: uip codedapp pack ./dist --name "${{ env.APP_NAME }}"
-      - run: uip codedapp publish --name "${{ env.APP_NAME }}"
-      - name: Deploy
-        run: |
-          uip codedapp deploy \
-            --name "${{ env.APP_NAME }}" \
-            --path-name "${{ env.PATH_NAME }}" \
-            --folder-key "${{ env.FOLDER_KEY }}"
 ```
+
+Then replace all `${{ inputs.* }}` references in the steps with `${{ env.* }}` (e.g. `${{ inputs.app-name }}` → `${{ env.APP_NAME }}`).
 
