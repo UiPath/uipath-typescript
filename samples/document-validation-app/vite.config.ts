@@ -13,7 +13,7 @@ const WC_ROOT = dirname(
 
 // Stylesheets the web component fetches (as raw CSS) at runtime to adopt into its
 // shadow root.
-const WC_RUNTIME_CSS = ['styles.css', 'fonts.css'];
+const WC_RUNTIME_CSS = ['styles.css'];
 
 // BUILD: place the web component's runtime files next to the emitted JS chunks, where
 // `import.meta.url` will resolve them.
