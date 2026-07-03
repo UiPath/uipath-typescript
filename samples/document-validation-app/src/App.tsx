@@ -1,16 +1,6 @@
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 import ValidationInbox from './components/ValidationInbox';
-
-const authConfig: UiPathSDKConfig = {
-  clientId: import.meta.env.VITE_UIPATH_CLIENT_ID,
-  orgName: import.meta.env.VITE_UIPATH_ORG_NAME,
-  tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME,
-  baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
-  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI,
-  scope: import.meta.env.VITE_UIPATH_SCOPE,
-};
 
 function AppContent() {
   const { isAuthenticated, isLoading, error, login, logout } = useAuth();
@@ -62,7 +52,7 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider config={authConfig}>
+    <AuthProvider>
       <AppContent />
     </AuthProvider>
   );

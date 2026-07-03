@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react';
+import { uipathCodedApps } from '@uipath/coded-apps-dev/vite';
 import { cp, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
@@ -69,17 +70,13 @@ function serveDuValidationStationRawCss(): Plugin {
 export default defineConfig({
   plugins: [
     react(),
+    uipathCodedApps(),
     copyDuValidationStationAssets(),
     serveDuValidationStationRawCss(),
   ],
   base: './',
   define: {
     global: 'globalThis',
-  },
-  resolve: {
-    alias: {
-      path: 'path-browserify',
-    },
   },
   optimizeDeps: {
     include: ['@uipath/uipath-typescript'],

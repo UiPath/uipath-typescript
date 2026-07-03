@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,11 +13,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConfig }> = ({ children, config }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sdk] = useState<UiPath>(() => new UiPath(config));
+  const [sdk] = useState<UiPath>(() => new UiPath());
   const didInit = useRef(false);
 
   useEffect(() => {

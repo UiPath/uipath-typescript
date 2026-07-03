@@ -30,28 +30,28 @@ A sample React + TypeScript + Vite application that demonstrates building a huma
      - `OR.Tasks` — list and complete validation tasks
      - `OR.Buckets` — fetch the document binary referenced by the task
      - `OR.Folders` — resolve the folder the task belongs to
-4. Save and copy the generated **Application ID** — this is the `VITE_UIPATH_CLIENT_ID` value below.
+4. Save and copy the generated **Application ID** — this is the `clientId` value below.
 
 > Add a separate Redirect URI entry for any other environment (e.g., a staging URL). Do not use wildcards.
 
-## Populate `.env`
+## Configure `uipath.json`
 
 Copy the template and fill in the values:
 
 ```bash
-cp .env.example .env
+cp uipath.example.json uipath.json
 ```
 
-| Variable | Where to find it | Example |
-|----------|------------------|---------|
-| `VITE_UIPATH_CLIENT_ID` | Application ID from the External Application you just created | `12345678-aaaa-bbbb-cccc-1234567890ab` |
-| `VITE_UIPATH_ORG_NAME` | The organization slug in your UiPath Cloud URL (`cloud.uipath.com/<org>/<tenant>/...`) | `acme` |
-| `VITE_UIPATH_TENANT_NAME` | The tenant slug, in the same URL | `DefaultTenant` |
-| `VITE_UIPATH_BASE_URL` | UiPath Cloud API host. Leave as the default unless you use a regional endpoint | `https://cloud.uipath.com` |
-| `VITE_UIPATH_REDIRECT_URI` | Must match the Redirect URI registered on the External Application **exactly** | `http://localhost:5173/` |
-| `VITE_UIPATH_SCOPE` | Space-separated scopes — must be a subset of the scopes granted to the External Application | `OR.Tasks OR.Buckets OR.Folders` |
+| Field | Where to find it | Example |
+|-------|------------------|---------|
+| `clientId` | Application ID from the External Application you just created | `12345678-aaaa-bbbb-cccc-1234567890ab` |
+| `orgName` | The organization slug in your UiPath Cloud URL (`cloud.uipath.com/<org>/<tenant>/...`) | `acme` |
+| `tenantName` | The tenant slug, in the same URL | `DefaultTenant` |
+| `baseUrl` | UiPath Cloud API host. Leave as the default unless you use a regional endpoint | `https://api.uipath.com` |
+| `redirectUri` | Must match the Redirect URI registered on the External Application **exactly** | `http://localhost:5173/` |
+| `scope` | Space-separated scopes — must be a subset of the scopes granted to the External Application | `OR.Tasks OR.Buckets OR.Folders` |
 
-Never commit `.env`. The client ID is not a secret, but the file is gitignored to keep environment-specific values out of source control.
+Never commit `uipath.json`. The client ID is not a secret, but the file is gitignored to keep environment-specific values out of source control. The `@uipath/coded-apps-dev` Vite plugin reads `uipath.json` and injects the values as `<meta>` tags during local dev; in production, the UiPath platform injects them at deploy time.
 
 ## Install, run, and build
 
@@ -89,7 +89,7 @@ The web component bundle is also excluded from Vite's dependency pre-bundling (`
 
 ## Troubleshooting
 
-- **Callback fails with `redirect_uri_mismatch`** — the value in `VITE_UIPATH_REDIRECT_URI` and the URL you opened in the browser must both match the External Application's Redirect URI character-for-character (scheme, host, port, path, trailing slash).
+- **Callback fails with `redirect_uri_mismatch`** — the `redirectUri` in `uipath.json` and the URL you opened in the browser must both match the External Application's Redirect URI character-for-character (scheme, host, port, path, trailing slash).
 - **`insufficient_scope` when loading tasks** — the External Application is missing one of `OR.Tasks`, `OR.Buckets`, or `OR.Folders`. Update the app, then sign out and sign back in to get a new token.
 - **A tab is empty** — the signed-in user has no tasks in that status (Pending / Unassigned / Completed), or no access to the folder the tasks live in. Verify in Action Center first.
 - **Validation station shows a blank panel in production but works in dev** — the asset copy step in `vite.config.ts` did not run, so `du-assets/`, `styles.css`, `fonts.css`, or `media/` are missing from the bundle. Confirm the copy plugin is registered and rebuild.
