@@ -50,7 +50,16 @@ export default function injectUiPathMetaTags(...args) {
     return indexHtml
   }
 
-  const config = JSON.parse(readFileSync(configPath, 'utf-8'))
+  let config
+  try {
+    config = JSON.parse(readFileSync(configPath, 'utf-8'))
+  } catch (error) {
+    console.error(
+      `[uipath-meta-tags] Failed to parse ${configPath} — skipping meta tag ` +
+        `injection. Fix the JSON syntax and rebuild. (${error.message})`,
+    )
+    return indexHtml
+  }
   const tags = Object.entries(META_TAG_NAMES)
     .filter(([key]) => config[key])
     .map(

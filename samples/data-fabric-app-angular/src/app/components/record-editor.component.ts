@@ -14,13 +14,15 @@ import { IconX } from './icons'
 
 type FieldValues = Record<string, unknown>
 
+/** Zero-pads a date/time component to two digits. */
+const pad = (n: number) => String(n).padStart(2, '0')
+
 /**
  * Formats a Date as the `YYYY-MM-DDTHH:mm` local-time string that
  * `<input type="datetime-local">` expects — the inverse of `coerce()`'s
  * local-parse → UTC-serialise round trip.
  */
 function toDateTimeLocalInputValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
   return (
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
     `T${pad(date.getHours())}:${pad(date.getMinutes())}`
