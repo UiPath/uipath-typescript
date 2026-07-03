@@ -298,6 +298,13 @@ export class RecordEditorComponent implements OnInit {
   readonly values = signal<FieldValues>({})
   readonly pickedFiles = signal<Record<string, File>>({})
   readonly removingAttachment = signal<string | null>(null)
+  /**
+   * Field names whose existing attachment was deleted in this session.
+   * Tracked locally instead of mutating the parent-owned `record()` input —
+   * in-place mutation bypasses the signal graph and would silently stop
+   * re-rendering under OnPush/zoneless change detection.
+   */
+  readonly removedAttachments = signal<ReadonlySet<string>>(new Set())
 
   /**
    * Choice-set values keyed by choice-set id, loaded once when the modal
@@ -400,7 +407,8 @@ export class RecordEditorComponent implements OnInit {
 
   hasExistingAttachment(field: FieldMetaData): boolean {
     const record = this.record()
-    return !!record && record[field.name] != null && record[field.name] !== ''
+    if (!record || this.removedAttachments().has(field.name)) return false
+    return record[field.name] != null && record[field.name] !== ''
   }
 
   /** Deletes the record's existing attachment for this field immediately. */
@@ -412,7 +420,7 @@ export class RecordEditorComponent implements OnInit {
       const entityService = new Entities(this.auth.sdk)
       await entityService.deleteAttachment(this.entityId(), record.Id, field.name)
       // Reflect the removal locally so the "Remove" button disappears.
-      record[field.name] = null
+      this.removedAttachments.update((prev) => new Set(prev).add(field.name))
       this.toast.success(`Removed ${field.displayName || field.name}`)
     } catch (err) {
       this.toast.error(
@@ -590,15 +598,20 @@ export class RecordEditorComponent implements OnInit {
     }
     const choiceSetService = new ChoiceSets(this.auth.sdk)
     const next: Record<string, ChoiceSetGetResponse[]> = {}
-    for (const id of ids) {
-      try {
-        const { items } = await choiceSetService.getById(id, { pageSize: 100 })
-        next[id] = items
-      } catch (err) {
-        console.error(`Failed to load choice set ${id}:`, err)
-        next[id] = []
+    // Independent API calls — fetch all referenced choice sets in parallel.
+    // A single failed set degrades to an empty picker without blocking the
+    // others.
+    const results = await Promise.allSettled(
+      ids.map((id) => choiceSetService.getById(id, { pageSize: 100 })),
+    )
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        next[ids[index]] = result.value.items
+      } else {
+        console.error(`Failed to load choice set ${ids[index]}:`, result.reason)
+        next[ids[index]] = []
       }
-    }
+    })
     this.choiceSetValues.set(next)
     this.choiceSetsLoaded.set(true)
   }
