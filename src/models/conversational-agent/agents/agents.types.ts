@@ -17,6 +17,11 @@ export interface AgentStartingPrompt {
 }
 
 /**
+ * Display mode for tool calls
+ */
+export type ConversationalDisplayMode = 'FullTrace' | 'InputsAndOutputs' | 'ToolNameOnly';
+
+/**
  * Agent appearance configuration
  */
 export interface AgentAppearance {
@@ -26,6 +31,8 @@ export interface AgentAppearance {
   welcomeDescription?: string;
   /** Starting prompts for users to choose from */
   startingPrompts?: AgentStartingPrompt[];
+  /** Display mode for tool calls */
+  displayMode: ConversationalDisplayMode;
 }
 
 /**
