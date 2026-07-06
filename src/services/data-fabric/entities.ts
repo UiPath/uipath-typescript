@@ -118,6 +118,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets entity records by entity ID
    *
+   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
+   * instead of the full content — use {@link getRecordById} to retrieve the full value.
+   *
    * @param entityId - UUID of the entity
    * @param options - Query options including expansionLevel and pagination options The `folderKey` property is **experimental**.
    * @returns Promise resolving to an array of entity records or paginated response
@@ -568,6 +571,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Queries entity records with filters, sorting, aggregates, and pagination
+   *
+   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
+   * instead of the full content — use {@link getRecordById} to retrieve the full value.
    *
    * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination The `folderKey` property is **experimental**.
