@@ -48,6 +48,7 @@ export class AuthService {
     this.isLoading.set(true)
     this.error.set(null)
     try {
+      this.sdk.setMultiLogin()
       await this.sdk.initialize()
       this.isAuthenticated.set(this.sdk.isAuthenticated())
     } catch (err) {
