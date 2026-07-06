@@ -1,11 +1,25 @@
-import { Component, inject, input, output, signal } from '@angular/core'
-import type { OnInit } from '@angular/core'
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core'
+import type { AfterViewInit, OnDestroy, OnInit } from '@angular/core'
 import { Entities } from '@uipath/uipath-typescript/entities'
-import type { EntityGetResponse, EntityRecord } from '@uipath/uipath-typescript/entities'
+import type {
+  EntityGetResponse,
+  EntityRecord,
+  FieldMetaData,
+} from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { AuthService } from '../core/auth.service'
 import { ToastService } from '../core/toast.service'
 import { downloadBlobAsFile } from '../lib/download'
+import { recordFieldValue } from '../lib/format'
 import { IconDownload, IconX } from './icons'
 
 /**
@@ -70,8 +84,12 @@ import { IconDownload, IconX } from './icons'
     .skeleton-row { display: flex; gap: 12px; }
   `,
   template: `
-    <div class="dialog-backdrop" (click)="onBackdropClick($event)">
-      <div class="dialog" role="dialog" aria-modal="true">
+    <div
+      class="dialog-backdrop"
+      (mousedown)="onBackdropMouseDown($event)"
+      (click)="onBackdropClick($event)"
+    >
+      <div class="dialog" #dialogRoot tabindex="-1" role="dialog" aria-modal="true">
         <button type="button" class="dialog-close" aria-label="Close" (click)="closed.emit()">
           <icon-x />
         </button>
@@ -111,7 +129,7 @@ import { IconDownload, IconX } from './icons'
                     </td>
                     <td class="field-value">
                       @if (field.isAttachment) {
-                        @if (rec[field.name]) {
+                        @if (fieldValue(rec, field)) {
                           <button
                             type="button"
                             class="btn btn-outline btn-sm"
@@ -128,12 +146,12 @@ import { IconDownload, IconX } from './icons'
                         } @else {
                           <span class="value-empty">no attachment</span>
                         }
-                      } @else if (isEmpty(rec[field.name])) {
+                      } @else if (isEmpty(fieldValue(rec, field))) {
                         <span class="value-empty">empty</span>
-                      } @else if (isObject(rec[field.name])) {
-                        <pre class="value-object">{{ pretty(rec[field.name]) }}</pre>
+                      } @else if (isObject(fieldValue(rec, field))) {
+                        <pre class="value-object">{{ pretty(fieldValue(rec, field)) }}</pre>
                       } @else {
-                        <span class="value-mono">{{ rec[field.name] }}</span>
+                        <span class="value-mono">{{ fieldValue(rec, field) }}</span>
                       }
                     </td>
                   </tr>
@@ -152,7 +170,7 @@ import { IconDownload, IconX } from './icons'
     </div>
   `,
 })
-export class RowInspectorComponent implements OnInit {
+export class RowInspectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly auth = inject(AuthService)
   private readonly toast = inject(ToastService)
 
@@ -166,8 +184,38 @@ export class RowInspectorComponent implements OnInit {
   readonly error = signal<string | null>(null)
   readonly downloadingField = signal<string | null>(null)
 
+  private readonly dialogRoot =
+    viewChild.required<ElementRef<HTMLElement>>('dialogRoot')
+  /** Element to restore focus to when the dialog closes. */
+  private readonly previouslyFocused =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null
+  /**
+   * Whether the current click gesture STARTED on the backdrop. Checking the
+   * click target alone closes the dialog when a text-selection drag that
+   * began inside the dialog is released over the backdrop.
+   */
+  private mouseDownOnBackdrop = false
+
   ngOnInit(): void {
     void this.load()
+  }
+
+  ngAfterViewInit(): void {
+    this.dialogRoot().nativeElement.focus()
+  }
+
+  ngOnDestroy(): void {
+    this.previouslyFocused?.focus()
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closed.emit()
+  }
+
+  /** Records come back keyed by field name OR displayName — check both. */
+  fieldValue(record: EntityRecord, field: FieldMetaData): unknown {
+    return recordFieldValue(record, field)
   }
 
   private async load(): Promise<void> {
@@ -213,8 +261,15 @@ export class RowInspectorComponent implements OnInit {
     }
   }
 
+  onBackdropMouseDown(event: MouseEvent): void {
+    this.mouseDownOnBackdrop = event.target === event.currentTarget
+  }
+
   onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.closed.emit()
+    if (this.mouseDownOnBackdrop && event.target === event.currentTarget) {
+      this.closed.emit()
+    }
+    this.mouseDownOnBackdrop = false
   }
 
   isEmpty(value: unknown): boolean {

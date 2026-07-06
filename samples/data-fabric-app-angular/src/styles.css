@@ -214,6 +214,9 @@ button {
 
 .alert-description {
   color: var(--muted-foreground);
+  /* API error messages contain unbroken tokens (URLs, GUIDs) — wrap them
+     rather than overflowing the alert box. */
+  overflow-wrap: anywhere;
 }
 
 .alert-destructive .alert-description {
@@ -313,6 +316,11 @@ button {
   justify-content: center;
   padding: 24px;
   z-index: 50;
+  /* A scroll container with contained overscroll swallows wheel events over
+     the backdrop — otherwise they chain up and scroll the records pane
+     behind the modal. */
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .dialog {
@@ -339,12 +347,20 @@ button {
   margin-top: 3px;
 }
 
+/* The dialog receives focus on open (tabindex="-1") for keyboard/screen-
+   reader users — the container itself doesn't need a visible focus ring. */
+.dialog:focus {
+  outline: none;
+}
+
 .dialog-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding-right: 4px;
   margin-top: 16px;
+  /* Don't hand the wheel to the page once this hits its scroll limit. */
+  overscroll-behavior: contain;
 }
 
 .dialog-footer {

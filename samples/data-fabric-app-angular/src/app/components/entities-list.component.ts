@@ -275,6 +275,7 @@ import {
                     type="button"
                     class="row-btn"
                     [class.selected]="selectedEntityId() === entity.id"
+                    [title]="entity.displayName || entity.name"
                     (click)="selectEntity.emit(entity.id)"
                   >
                     <div class="row-main">

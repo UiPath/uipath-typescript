@@ -32,7 +32,9 @@ import { IconX } from './icons'
     .toast-success { border-left: 3px solid #3d9a5f; }
     .toast-error { border-left: 3px solid var(--destructive); }
     .toast-info { border-left: 3px solid var(--primary); }
-    .toast-message { font-weight: 500; flex: 1; min-width: 0; }
+    /* overflow-wrap: API error messages carry unbroken tokens (URLs,
+       GUIDs) that would otherwise overflow the 340px card. */
+    .toast-message { font-weight: 500; flex: 1; min-width: 0; overflow-wrap: anywhere; }
     .toast-description {
       font-weight: 400;
       color: var(--muted-foreground);

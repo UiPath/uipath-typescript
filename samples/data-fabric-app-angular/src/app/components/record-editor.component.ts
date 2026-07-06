@@ -1,5 +1,15 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core'
-import type { OnInit } from '@angular/core'
+import {
+  Component,
+  computed,
+  ElementRef,
+  HostListener,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core'
+import type { AfterViewInit, OnDestroy, OnInit } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { ChoiceSets, Entities } from '@uipath/uipath-typescript/entities'
 import type {
@@ -10,6 +20,7 @@ import type {
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { AuthService } from '../core/auth.service'
 import { ToastService } from '../core/toast.service'
+import { recordFieldValue } from '../lib/format'
 import { IconX } from './icons'
 
 type FieldValues = Record<string, unknown>
@@ -80,8 +91,12 @@ function toDateTimeLocalInputValue(date: Date): string {
     input[type='file'] { font-size: 13px; color: var(--foreground); }
   `,
   template: `
-    <div class="dialog-backdrop" (click)="onBackdropClick($event)">
-      <div class="dialog" role="dialog" aria-modal="true">
+    <div
+      class="dialog-backdrop"
+      (mousedown)="onBackdropMouseDown($event)"
+      (click)="onBackdropClick($event)"
+    >
+      <div class="dialog" #dialogRoot tabindex="-1" role="dialog" aria-modal="true">
         <button type="button" class="dialog-close" aria-label="Close" (click)="closed.emit()">
           <icon-x />
         </button>
@@ -279,7 +294,7 @@ function toDateTimeLocalInputValue(date: Date): string {
     </div>
   `,
 })
-export class RecordEditorComponent implements OnInit {
+export class RecordEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly auth = inject(AuthService)
   private readonly toast = inject(ToastService)
 
@@ -314,6 +329,19 @@ export class RecordEditorComponent implements OnInit {
   readonly choiceSetValues = signal<Record<string, ChoiceSetGetResponse[]>>({})
   readonly choiceSetsLoaded = signal(false)
 
+  private readonly dialogRoot =
+    viewChild.required<ElementRef<HTMLElement>>('dialogRoot')
+  /** Element to restore focus to when the dialog closes. */
+  private readonly previouslyFocused =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null
+  /**
+   * Whether the current click gesture STARTED on the backdrop. Checking the
+   * click target alone closes the dialog when a text-selection drag that
+   * began inside a form field is released over the backdrop — silently
+   * discarding everything the user typed.
+   */
+  private mouseDownOnBackdrop = false
+
   readonly isEdit = computed(() => this.record() !== null)
   readonly regularFields = computed(() =>
     this.fields().filter((f) => !f.isAttachment),
@@ -325,6 +353,19 @@ export class RecordEditorComponent implements OnInit {
   ngOnInit(): void {
     this.values.set(this.initialValues())
     void this.loadChoiceSets()
+  }
+
+  ngAfterViewInit(): void {
+    this.dialogRoot().nativeElement.focus()
+  }
+
+  ngOnDestroy(): void {
+    this.previouslyFocused?.focus()
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closed.emit()
   }
 
   /** Returns the choice-set id this field references, or null. */
@@ -408,7 +449,8 @@ export class RecordEditorComponent implements OnInit {
   hasExistingAttachment(field: FieldMetaData): boolean {
     const record = this.record()
     if (!record || this.removedAttachments().has(field.name)) return false
-    return record[field.name] != null && record[field.name] !== ''
+    const value = recordFieldValue(record, field)
+    return value != null && value !== ''
   }
 
   /** Deletes the record's existing attachment for this field immediately. */
@@ -432,8 +474,15 @@ export class RecordEditorComponent implements OnInit {
     }
   }
 
+  onBackdropMouseDown(event: MouseEvent): void {
+    this.mouseDownOnBackdrop = event.target === event.currentTarget
+  }
+
   onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.closed.emit()
+    if (this.mouseDownOnBackdrop && event.target === event.currentTarget) {
+      this.closed.emit()
+    }
+    this.mouseDownOnBackdrop = false
   }
 
   onSubmit(event: Event): void {
@@ -442,6 +491,10 @@ export class RecordEditorComponent implements OnInit {
   }
 
   async save(): Promise<void> {
+    // Re-entrancy guard: the footer button disables while saving, but the
+    // form's implicit submission (Enter in a text field) is not disabled —
+    // without this, a double Enter inserts the record twice.
+    if (this.saving()) return
     this.saveError.set(null)
     if (!this.validate()) {
       this.saveError.set('Please fill all required fields.')
@@ -541,11 +594,7 @@ export class RecordEditorComponent implements OnInit {
     const state: FieldValues = {}
     const record = this.record()
     for (const field of this.regularFields()) {
-      // Records come back keyed by field name OR displayName depending on
-      // the entity; check both when prefilling in edit mode.
-      const existing =
-        record?.[field.name] ??
-        (field.displayName ? record?.[field.displayName] : undefined)
+      const existing = record ? recordFieldValue(record, field) : undefined
       state[field.name] = existing ?? ''
     }
     return state

@@ -1,6 +1,6 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core'
 import type { EntityRecord, FieldMetaData } from '@uipath/uipath-typescript/entities'
-import { formatCell } from '../lib/format'
+import { formatCell, recordFieldValue } from '../lib/format'
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -255,7 +255,12 @@ export class RecordsTableComponent {
       if (typeof av === 'number' && typeof bv === 'number') {
         return (av - bv) * direction
       }
-      return String(av).localeCompare(String(bv)) * direction
+      // Reference / choice-set values are objects — String() would compare
+      // "[object Object]" to itself and silently not sort. Compare by the
+      // same projection the cells display.
+      const as = typeof av === 'object' ? formatCell(av) : String(av)
+      const bs = typeof bv === 'object' ? formatCell(bv) : String(bv)
+      return as.localeCompare(bs) * direction
     })
   })
 
@@ -284,6 +289,15 @@ export class RecordsTableComponent {
       this.records()
       this.page.set(0)
       this.clearSelection()
+    })
+    // Reset the sort only when the SCHEMA changes (entity switch) — the
+    // fields array is replaced on schema load but stable across record
+    // refreshes, so a user's sort survives Refresh but a stale sort key
+    // never leaks onto the next entity's columns.
+    effect(() => {
+      this.fields()
+      this.sortField.set(null)
+      this.sortAsc.set(true)
     })
   }
 
@@ -344,6 +358,6 @@ export class RecordsTableComponent {
    * the entity — check both.
    */
   private rawValue(row: EntityRecord, field: FieldMetaData): unknown {
-    return row[field.name] ?? (field.displayName ? row[field.displayName] : undefined)
+    return recordFieldValue(row, field)
   }
 }

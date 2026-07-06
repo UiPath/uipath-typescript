@@ -46,7 +46,10 @@ import { IconListChecks } from './icons'
           @if (loading() && !metadata()) {
             <span class="skeleton" style="height: 26px; width: 190px"></span>
           } @else {
-            <h2 class="title truncate">
+            <h2
+              class="title truncate"
+              [title]="metadata()?.displayName || metadata()?.name || 'Choice set'"
+            >
               {{ metadata()?.displayName || metadata()?.name || 'Choice set' }}
             </h2>
           }

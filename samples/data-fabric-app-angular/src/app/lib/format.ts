@@ -1,3 +1,21 @@
+import type { EntityRecord, FieldMetaData } from '@uipath/uipath-typescript/entities'
+
+/**
+ * Reads a field's value from a record. Records come back keyed by field
+ * `name` OR `displayName` depending on the entity — check both. Every
+ * consumer (grid, inspector, editor, CSV export) must use this so an
+ * entity that keys by displayName renders consistently everywhere.
+ */
+export function recordFieldValue(
+  record: EntityRecord,
+  field: FieldMetaData,
+): unknown {
+  return (
+    record[field.name] ??
+    (field.displayName ? record[field.displayName] : undefined)
+  )
+}
+
 /**
  * Renders a single cell value for the records table. Mirrors the formatting
  * used by csv-export so the UI and the exported CSV agree on what each

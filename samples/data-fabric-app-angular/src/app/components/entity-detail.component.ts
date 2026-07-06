@@ -116,7 +116,10 @@ import { IconDownload, IconPlus, IconRefresh, IconTrash } from './icons'
         <div class="detail-top">
           <div class="detail-heading">
             <div class="title-row">
-              <h2 class="title truncate">
+              <h2
+                class="title truncate"
+                [title]="schema()!.displayName || schema()!.name"
+              >
                 {{ schema()!.displayName || schema()!.name }}
               </h2>
               @if (badgeLabel(); as badge) {
