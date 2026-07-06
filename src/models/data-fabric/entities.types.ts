@@ -241,7 +241,7 @@ export interface EntityAggregate {
  *
  * @example
  * ```typescript
- * import { JoinType } from '@uipath/uipath-typescript/entities';
+ * import { EntityJoin, JoinType } from '@uipath/uipath-typescript/entities';
  *
  * const join: EntityJoin = {
  *   entityName: "Order",
