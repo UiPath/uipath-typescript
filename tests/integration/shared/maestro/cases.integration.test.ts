@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -45,6 +45,14 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
       await testGetInstanceStatusTimeline(cases);
+    });
+  });
+
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getIncidentsTimeline', () => {
+    it('should retrieve incident counts bucketed by time for case management', async () => {
+      const { cases } = getServices();
+      await testGetIncidentsTimeline(cases);
     });
   });
 
@@ -187,6 +195,14 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     it('should retrieve element stats for a case', async () => {
       const { cases } = getServices();
       await testGetElementStats(cases, 'cases');
+    });
+  });
+
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceStats', () => {
+    it('should retrieve instance stats for a case', async () => {
+      const { cases } = getServices();
+      await testGetInstanceStats(cases, 'cases');
     });
   });
 });

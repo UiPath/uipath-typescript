@@ -34,7 +34,7 @@ describe('ExchangeService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAllPaginated).mockReset();
@@ -49,7 +49,7 @@ describe('ExchangeService Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ExchangeService(instance, { externalUserId: 'user-123' });
 
@@ -63,7 +63,7 @@ describe('ExchangeService Unit Tests', () => {
 
     it('should not pass external user id header when externalUserId is not set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ExchangeService(instance);
 

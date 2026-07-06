@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
     const logger = { emit };
     const getLogger = vi.fn(() => logger);
     const provider = { getLogger };
-    const LoggerProvider = vi.fn(() => provider);
+    const LoggerProvider = vi.fn(function () { return provider; });
     const BatchLogRecordProcessor = vi.fn();
     return { emit, logger, getLogger, provider, LoggerProvider, BatchLogRecordProcessor };
 });

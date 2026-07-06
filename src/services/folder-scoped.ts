@@ -3,7 +3,7 @@ import { CollectionResponse, FolderScopedOptions } from '../models/common/types'
 import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
 import { ODATA_PREFIX } from '../utils/constants/common';
-import { addPrefixToKeys } from '../utils/transform';
+import { addPrefixToKeys, transformOptions, FieldMapping } from '../utils/transform';
 import { NotFoundError } from '../core/errors';
 import { validateName } from '../utils/validation/name-validator';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
@@ -80,6 +80,9 @@ export class FolderScopedService extends BaseService {
    * @param name - Resource name to search for
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) + OData query options (`expand`, `select`)
    * @param transform - Maps a raw OData item to the typed response (e.g. PascalCase → camelCase via field map)
+   * @param responseFieldMap - Optional response field map (API → SDK), reversed internally by
+   *   `transformOptions` to rewrite SDK field names back to API names in user-supplied
+   *   `expand` / `select` (symmetric counterpart to `transform`)
    * @throws ValidationError when inputs are malformed; NotFoundError when no match
    */
   protected async getByNameLookup<TRaw extends object, T>(
@@ -88,6 +91,7 @@ export class FolderScopedService extends BaseService {
     name: string,
     options: FolderScopedOptions,
     transform: (raw: TRaw) => T,
+    responseFieldMap?: FieldMapping,
   ): Promise<T> {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
@@ -100,8 +104,12 @@ export class FolderScopedService extends BaseService {
       fallbackFolderKey: this.config.folderKey,
     });
 
+    const apiFieldOptions = responseFieldMap
+      ? transformOptions(queryOptions, responseFieldMap)
+      : queryOptions;
+
     const apiOptions = {
-      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, Object.keys(queryOptions)),
+      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
       '$filter': `Name eq '${validatedName.replace(SINGLE_QUOTE_RE, "''")}'`,
       '$top': '1',
     };

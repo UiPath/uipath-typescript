@@ -1,11 +1,13 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
-import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
-import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
+import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
+import { transformData } from '../../../utils/transform';
+import type { MaestroProcessStatsRequest, TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
 import { createCaseWithMethods, CaseGetAllWithMethodsResponse } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildElementCountByStatusBody } from '../insights';
+import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBody } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -158,7 +160,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -185,6 +187,14 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @example
    * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
    * // Get all-time data (from Unix epoch to now)
    * const allTime = await cases.getInstanceStatusTimeline(new Date(0), new Date());
    * ```
@@ -195,7 +205,66 @@ export class CasesService extends BaseService implements CasesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
-    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
+    const { data } = await this.post<InstanceStatusTimelineResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      buildInsightsTimelineBody(startTime, endTime, true, options),
+    );
+    return data ?? [];
+  }
+
+  /**
+   * Get incident counts aggregated by time bucket for case management processes.
+   *
+   * Returns time-grouped counts of incidents that occurred within each bucket,
+   * useful for rendering incident time-series charts. Use `groupBy` to control
+   * the time bucket size (hour, day, or week) — defaults to day if not provided.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily incident counts for the last 7 days
+   * const now = new Date();
+   * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+   * const incidents = await cases.getIncidentsTimeline(sevenDaysAgo, now);
+   *
+   * for (const incident of incidents) {
+   *   console.log(`${incident.startTime} → ${incident.endTime}: ${incident.count} incidents`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/cases';
+   *
+   * // Get weekly breakdown
+   * const incidents = await cases.getIncidentsTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   */
+  @track('Cases.GetIncidentsTimeline')
+  async getIncidentsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<IncidentTimelineResponse[]> {
+    const { data } = await this.post<{ dataPoints?: IncidentTimelineResponse[] }>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+      buildInsightsTimelineBody(startTime, endTime, true, options),
+    );
+    return data?.dataPoints ?? [];
   }
 
   /**
@@ -301,37 +370,87 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
    *
-   * @param processKey - Process key to filter by
-   * @param packageId - Package identifier
-   * @param startTime - Start of the time range to query
-   * @param endTime - End of the time range to query
-   * @param packageVersion - Package version to filter by
+   * @param request - Process scope + time range to aggregate over
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
-   * // Get element metrics for a case
-   * const elements = await cases.getElementStats(
-   *   '<processKey>',
-   *   '<packageId>',
-   *   new Date('2026-04-01'),
-   *   new Date(),
-   *   '1.0.1'
-   * );
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get element metrics for that case
+   * const elements = await cases.getElementStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
    *
    * // Find elements with failures
    * const failedElements = elements.filter(e => e.failCount > 0);
    * for (const element of failedElements) {
    *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
    * }
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundElements = await caseItem.getElementStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
    * ```
    */
   @track('Cases.GetElementStats')
-  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+  async getElementStats(request: MaestroProcessStatsRequest): Promise<ElementStats[]> {
     const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(request)
     );
     return data ?? [];
+  }
+
+  /**
+   * Get instance stats for a case.
+   *
+   * Returns total instance counts broken down by status (running, completed, faulted, etc.)
+   * and the average execution duration for all instances of a case within a time range.
+   *
+   * @param request - Process scope + time range to aggregate over
+   * @returns Promise resolving to {@link InstanceStats}
+   * @example
+   * ```typescript
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get instance status breakdown for that case
+   * const counts = await cases.getInstanceStats({
+   *   processKey: caseItem.processKey,
+   *   packageId: caseItem.packageId,
+   *   packageVersion: caseItem.packageVersions[0],
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   * });
+   *
+   * console.log(`Total: ${counts.totalCount}`);
+   * console.log(`Completed: ${counts.completedCount}, Faulted: ${counts.faultedCount}`);
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundCounts = await caseItem.getInstanceStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
+   * ```
+   */
+  @track('Cases.GetInstanceStats')
+  async getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats> {
+    const { data } = await this.post<RawInstanceStats>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
+      buildInsightsCommonBody(request)
+    );
+    return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
   }
 
   /**

@@ -10,6 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockIncidentTimelineResponse,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
@@ -33,7 +34,7 @@ describe('CasesService', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     service = new CasesService(instance);
   });
@@ -211,7 +212,7 @@ describe('CasesService', () => {
   });
 
   describe('getInstanceStatusTimeline', () => {
-    it('should call fetchInstanceStatusTimeline with isCaseManagement true', async () => {
+    it('should call InstanceStatusByDate with isCaseManagement true', async () => {
       mockApiClient.post.mockResolvedValue([createMockInstanceStatusTimeline()]);
 
       const result = await service.getInstanceStatusTimeline(
@@ -228,6 +229,41 @@ describe('CasesService', () => {
         }),
         {},
       );
+    });
+  });
+
+  describe('getIncidentsTimeline', () => {
+    it('should call IncidentsByTimeWindow with isCaseManagement true and unwrap dataPoints', async () => {
+      mockApiClient.post.mockResolvedValue({
+        dataPoints: [createMockIncidentTimelineResponse()],
+      });
+
+      const result = await service.getIncidentsTimeline(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_START_1);
+      expect(result[0].endTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_END_1);
+      expect(result[0].count).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_COUNT_1);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true }),
+        }),
+        {},
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(MAESTRO_TEST_CONSTANTS.ERROR_INCIDENTS_TIMELINE_FAILED),
+      );
+
+      await expect(
+        service.getIncidentsTimeline(new Date(), new Date()),
+      ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INCIDENTS_TIMELINE_FAILED);
     });
   });
 
@@ -347,19 +383,46 @@ describe('CasesService', () => {
     it('should retrieve element stats for case instances', async () => {
       mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS]);
 
-      const result = await service.getElementStats(
-        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
-        new Date('2026-04-01T00:00:00Z'),
-        new Date('2026-05-01T00:00:00Z'),
-        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-      );
+      const result = await service.getElementStats({
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        startTime: new Date('2026-04-01T00:00:00Z'),
+        endTime: new Date('2026-05-01T00:00:00Z'),
+      });
 
       expect(result).toHaveLength(2);
       expect(result[0].elementId).toBe('Event_start');
       expect(result[0].successCount).toBe(2);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
+      );
+    });
+  });
+
+  describe('getInstanceStats', () => {
+    it('should retrieve instance stats for case instances', async () => {
+      mockApiClient.post.mockResolvedValue(MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_STATS);
+
+      const result = await service.getInstanceStats({
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        startTime: new Date('2026-04-01T00:00:00Z'),
+        endTime: new Date('2026-05-01T00:00:00Z'),
+      });
+
+      expect(result.totalCount).toBe(276);
+      expect(result.completedCount).toBe(275);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
         expect.objectContaining({
           commonParams: expect.objectContaining({
             processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,

@@ -16,11 +16,20 @@ export type FieldMapping = {
 };
 
 /**
- * Transforms data by mapping fields according to the provided field mapping
+ * Transforms data by renaming each key in `data` exactly once, using the
+ * mapping (`sourceField → targetField`). Keys not present in the mapping
+ * pass through unchanged. The original (pre-rename) key is dropped — the
+ * result contains only the renamed key.
+ *
+ * Each rename is independent. If the mapping happens to contain chained
+ * entries (`a → b` and `b → c`), they do NOT compose: a field named `a`
+ * in `data` becomes `b` (not `c`), because the renames are applied based
+ * on the original data's keys, not the running result.
+ *
  * @param data The source data to transform
  * @param fieldMapping Object mapping source field names to target field names
  * @returns Transformed data with mapped field names
- * 
+ *
  * @example
  * ```typescript
  * // Single object transformation
@@ -28,7 +37,7 @@ export type FieldMapping = {
  * const mapping = { id: 'userId', userName: 'name' };
  * const result = transformData(data, mapping);
  * // result = { userId: '123', name: 'john' }
- * 
+ *
  * // Array transformation
  * const dataArray = [
  *   { id: '123', userName: 'john' },
@@ -39,29 +48,35 @@ export type FieldMapping = {
  * //   { userId: '123', name: 'john' },
  * //   { userId: '456', name: 'jane' }
  * // ]
+ *
+ * // No chaining — `a → b` does not become `a → c` even if the map has `b → c`.
+ * transformData({ a: 1 }, { a: 'b', b: 'c' });
+ * // result = { b: 1 }
  * ```
  */
 export function transformData<T extends object>(
   data: T | T[],
   fieldMapping: FieldMapping
 ): T {
+  // Pass null/undefined through unchanged — callers (e.g. AttachmentService.getById)
+  // may invoke this on optional fields that an OData `select` excluded.
+  if (data == null) {
+    return data as T;
+  }
+
   // Handle array of objects
   if (Array.isArray(data)) {
     return data.map(item => transformData(item, fieldMapping)) as unknown as T;
   }
 
-  // Handle single object
-  const result = { ...data };
-  
-  for (const [sourceField, targetField] of Object.entries(fieldMapping)) {
-    if (sourceField in result) {
-      const value = result[sourceField as keyof T];
-      delete result[sourceField as keyof T];
-      (result as any)[targetField] = value;
-    }
+  // Walk the ORIGINAL data's keys, look up each in the mapping. One rename
+  // per data key — no mutation of an in-progress result, so chains can't form.
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    const renamedKey = fieldMapping[key] ?? key;
+    result[renamedKey] = value;
   }
-
-  return result;
+  return result as T;
 }
 
 /**
@@ -374,6 +389,86 @@ export function transformRequest<T extends object>(
   }
 
   return result;
+}
+
+/**
+ * OData query-string keys whose values may contain field identifiers that
+ * need rewriting from SDK names → API names.
+ */
+const ODATA_FIELD_PARAM_KEYS = ['filter', 'orderby', 'select', 'expand'] as const;
+
+/**
+ * Matches one token at a time in an OData expression:
+ *   1. A single-quoted string literal, allowing the `''` escape sequence —
+ *      consumed atomically so identifiers inside the literal can't match.
+ *   2. An OData identifier (`[A-Za-z_][A-Za-z0-9_]*`).
+ * Anything else (whitespace, operators, parens, commas) is left alone by
+ * `String.prototype.replace`, which only substitutes matched substrings.
+ */
+const ODATA_TOKEN_RE = /'(?:[^']|'')*'|[A-Za-z_][A-Za-z0-9_]*/g;
+
+/**
+ * Rewrites SDK field identifiers to API field identifiers inside an OData
+ * expression string (`$filter`, `$orderby`, `$select`, `$expand`).
+ *
+ * Field maps (e.g. `JobMap`) rename API fields → SDK fields on responses, so
+ * SDK consumers see the renamed names. Without this rewrite, the same name
+ * in a `filter` string would be forwarded verbatim and the API (which still
+ * uses the original name) would reject it.
+ *
+ * Quoted string literals (with the OData `''` escape) are preserved exactly:
+ * the token regex consumes them whole, so identifiers inside literals never
+ * match. Identifier tokens are looked up in the reversed field map.
+ *
+ * @example
+ * ```typescript
+ * const requestMap = { processName: 'releaseName' };
+ * rewriteODataIdentifiers("processName eq 'processName'", requestMap);
+ * // "releaseName eq 'processName'"  — identifier rewritten, literal preserved
+ * ```
+ */
+export function rewriteODataIdentifiers(expression: string, requestMap: FieldMapping): string {
+  if (!expression) return expression;
+  return expression.replace(ODATA_TOKEN_RE, (match) =>
+    match.startsWith("'") ? match : (requestMap[match] ?? match),
+  );
+}
+
+/**
+ * Symmetric counterpart of {@link transformRequest} for OData query options:
+ * rewrites SDK field identifiers inside the recognized OData string params
+ * (`filter`, `orderby`, `select`, `expand`) to their API names using the
+ * reversed form of a response field map. Returns a shallow copy with the
+ * relevant values rewritten; other keys pass through unchanged.
+ *
+ * Use at the OData edge so SDK consumers can refer to renamed fields by
+ * their SDK name throughout — for reading the response and for filtering /
+ * sorting / projecting / expanding.
+ *
+ * @param options The OData query options as authored with SDK field names
+ * @param responseMap The response field map (API → SDK); reversed internally
+ *
+ * @example
+ * ```typescript
+ * // JobMap renames releaseName → processName on responses.
+ * transformOptions({ filter: "processName eq 'X'" }, JobMap);
+ * // { filter: "releaseName eq 'X'" }
+ * ```
+ */
+export function transformOptions<T extends object>(
+  options: T,
+  responseMap: FieldMapping,
+): T {
+  const requestMap = reverseMap(responseMap);
+  if (Object.keys(requestMap).length === 0) return options;
+  const result: Record<string, unknown> = { ...(options as Record<string, unknown>) };
+  for (const key of ODATA_FIELD_PARAM_KEYS) {
+    const value = result[key];
+    if (typeof value === 'string') {
+      result[key] = rewriteODataIdentifiers(value, requestMap);
+    }
+  }
+  return result as T;
 }
 
 /**

@@ -19,7 +19,7 @@ describe('FeedbackService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
     feedbackService = new FeedbackService(instance);
   });
 

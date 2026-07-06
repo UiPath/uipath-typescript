@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -149,6 +149,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getIncidentsTimeline', () => {
+    it('should retrieve incident counts bucketed by time', async () => {
+      const { maestroProcesses } = getServices();
+      await testGetIncidentsTimeline(maestroProcesses);
+    });
+  });
+
   describe.skip('getTopFaultedCount', () => {
     it('should retrieve top processes by failure count', async () => {
       const { maestroProcesses } = getServices();
@@ -261,6 +269,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     it('should retrieve element stats for a process', async () => {
       const { maestroProcesses } = getServices();
       await testGetElementStats(maestroProcesses, 'processes');
+    });
+  });
+
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceStats', () => {
+    it('should retrieve instance stats for a process', async () => {
+      const { maestroProcesses } = getServices();
+      await testGetInstanceStats(maestroProcesses, 'processes');
     });
   });
 });

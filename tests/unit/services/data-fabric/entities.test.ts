@@ -83,7 +83,7 @@ describe("EntityService Unit Tests", () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -2383,7 +2383,19 @@ describe("EntityService Unit Tests", () => {
         expect(f?.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
       });
 
-      it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
+      it("should emit isForeignKey but omit referenceEntity/referenceField/referenceType for FILE fields (server wires them)", async () => {
+        await entityService.create("my_entity", [{
+          fieldName: "file_field",
+          type: EntityFieldDataType.FILE,
+        }]);
+        const f = getCreatedFields().find((x) => x.name === "file_field");
+        expect(f?.isForeignKey).toBe(true);
+        expect(f?.referenceEntity).toBeUndefined();
+        expect(f?.referenceField).toBeUndefined();
+        expect(f?.referenceType).toBeUndefined();
+      });
+
+      it("should strip caller-provided referenceEntityId/referenceFieldId on FILE (server discards them anyway)", async () => {
         await entityService.create("my_entity", [{
           fieldName: "file_field",
           type: EntityFieldDataType.FILE,
@@ -2391,18 +2403,8 @@ describe("EntityService Unit Tests", () => {
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
         }]);
         const f = getCreatedFields().find((x) => x.name === "file_field");
-        expect(f?.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
-        expect(f?.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
-        expect(f?.isForeignKey).toBe(true);
-        expect(f?.referenceType).toBeUndefined();
-      });
-
-      it("should throw ValidationError when FILE field is missing reference IDs", async () => {
-        await expect(
-          entityService.create("my_entity", [
-            { fieldName: "file_field", type: EntityFieldDataType.FILE },
-          ]),
-        ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
+        expect(f?.referenceEntity).toBeUndefined();
+        expect(f?.referenceField).toBeUndefined();
       });
     });
   });
@@ -2640,7 +2642,7 @@ describe("EntityService Unit Tests", () => {
         mockApiClient.post.mockResolvedValue(undefined);
 
         const referenceIds =
-          type === EntityFieldDataType.RELATIONSHIP || type === EntityFieldDataType.FILE
+          type === EntityFieldDataType.RELATIONSHIP
             ? {
                 referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
                 referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -2825,8 +2827,6 @@ describe("EntityService Unit Tests", () => {
           addFields: [{
             fieldName: "file_field",
             type: EntityFieldDataType.FILE,
-            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
-            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
           }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
@@ -2834,7 +2834,22 @@ describe("EntityService Unit Tests", () => {
         expect(f.sqlType).toEqual({ name: "UNIQUEIDENTIFIER", lengthLimit: 300 });
       });
 
-      it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
+      it("should emit isForeignKey but omit referenceEntity/referenceField/referenceType for FILE fields (server wires them)", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          addFields: [{
+            fieldName: "file_field",
+            type: EntityFieldDataType.FILE,
+          }],
+        });
+        const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
+        const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
+        expect(f.isForeignKey).toBe(true);
+        expect(f.referenceEntity).toBeUndefined();
+        expect(f.referenceField).toBeUndefined();
+        expect(f.referenceType).toBeUndefined();
+      });
+
+      it("should strip caller-provided referenceEntityId/referenceFieldId on FILE (server discards them anyway)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
             fieldName: "file_field",
@@ -2845,18 +2860,8 @@ describe("EntityService Unit Tests", () => {
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
-        expect(f.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
-        expect(f.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
-        expect(f.isForeignKey).toBe(true);
-        expect(f.referenceType).toBeUndefined();
-      });
-
-      it("should throw ValidationError when FILE field is missing reference IDs", async () => {
-        await expect(
-          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "file_field", type: EntityFieldDataType.FILE }],
-          }),
-        ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
+        expect(f.referenceEntity).toBeUndefined();
+        expect(f.referenceField).toBeUndefined();
       });
 
       it("should set RELATIONSHIP lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
@@ -2981,8 +2986,6 @@ describe("EntityService Unit Tests", () => {
             addFields: [{
               fieldName: "file_field",
               type: EntityFieldDataType.FILE,
-              referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
-              referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
               lengthLimit: 500,
             }],
           }),

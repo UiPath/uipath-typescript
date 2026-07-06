@@ -17,6 +17,7 @@ export const mockTransformUtils = {
   transformData: vi.fn((data) => data),
   applyDataTransforms: vi.fn((data) => data),
   addPrefixToKeys: vi.fn((obj) => obj),
+  transformOptions: vi.fn((options) => options),
 };
 
 /**
@@ -45,7 +46,7 @@ export const mockPaginationHelpers = {
  * vi.mock('../../../src/core/context/execution', () => mockExecutionContext);
  */
 export const mockExecutionContext = {
-  ExecutionContext: vi.fn().mockImplementation(() => ({
+  ExecutionContext: vi.fn().mockImplementation(function () { return ({
     get: vi.fn().mockImplementation((key: string) => {
       if (key === 'tokenInfo') {
         return { type: TEST_CONSTANTS.SECRET_TOKEN_TYPE, token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN };
@@ -54,7 +55,7 @@ export const mockExecutionContext = {
     }),
     set: vi.fn(),
     clear: vi.fn()
-  }))
+  }); })
 };
 
 /**

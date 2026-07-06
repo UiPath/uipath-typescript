@@ -48,7 +48,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - `{Entity}ServiceModel` interfaces become the main API reference pages. **Only JSDoc on `{Entity}ServiceModel` is rendered in docs — JSDoc on `{Entity}Methods` does NOT appear.** Place all public-facing documentation on the ServiceModel interface.
 - Use `@example` with fenced TypeScript blocks, `@param`, `@returns`, `{@link TypeName}`.
 - Tag internal code with `@internal` or `@ignore`.
-- When adding methods, update `docs/oauth-scopes.md` with required OAuth scopes. **NEVER** skip this — missing scopes break the OAuth integration guide.
+- When adding methods, update `docs/oauth-scopes.md` with required OAuth scopes. **NEVER** skip this — missing scopes break the OAuth integration guide. **Exception: methods tagged `@internal` in their JSDoc do not get an OAuth scope entry** — they are not part of the public API surface and do not appear in the OAuth integration guide. Similarly, `mkdocs.yml` nav entries and docs site pages are not needed for services where every public-facing method is tagged `@internal` (i.e., the service has no user-visible API).
 - Run `npm run docs:api` to regenerate.
 
 **JSDoc quality rules:**
@@ -92,9 +92,9 @@ Manual checks:
 - [ ] Integration test written in `tests/integration/shared/{domain}/`
 
 Documentation (the most commonly missed step):
-- [ ] `docs/oauth-scopes.md` — new method's OAuth scope added
+- [ ] `docs/oauth-scopes.md` — new method's OAuth scope added (skip for `@internal` methods)
 - [ ] `docs/pagination.md` — quick reference table updated (if paginated method)
-- [ ] `mkdocs.yml` — nav entry added (if new service, not needed for methods on existing services)
+- [ ] `mkdocs.yml` — nav entry added (if new service, not needed for methods on existing services; skip if all methods on the new service are `@internal`)
 - [ ] `package.json` exports + `rollup.config.js` — subpath export added (if new service)
 
 ## Skills for SDK development

@@ -9,10 +9,26 @@ import {
   AgentFilterOptions,
   AgentGetLatencyTimelineOptions,
   AgentGetLatencyTimelineResponse,
+  AgentGetTopErrorCountOptions,
+  AgentGetTopErrorCountResponse,
+  AgentGetTopConsumptionOptions,
+  AgentGetTopConsumptionResponse,
+  AgentGetIncidentDistributionOptions,
+  AgentGetIncidentDistributionResponse,
+  AgentGetSummaryOptions,
+  AgentGetSummaryResponse,
+  AgentSummaryPeriod,
+  AgentGetUnitConsumptionSummaryOptions,
+  AgentGetUnitConsumptionSummaryResponse,
   AgentListItem,
   AgentGetAllOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
+import type {
+  RawAgentGetSummaryResponse,
+  RawAgentSummaryPeriod,
+} from '../../models/agents/agents.internal-types';
+import { JobState } from '../../models/common/types';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
@@ -28,6 +44,35 @@ import type {
   NonPaginatedResponse,
   PaginatedResponse,
 } from '../../utils/pagination/types';
+
+const JOB_STATUS_ALIASES: Record<string, JobState> = {
+  Success: JobState.Successful,
+};
+
+const VALID_JOB_STATES = new Set<string>(Object.values(JobState));
+
+/**
+ * Permissively maps a raw `lastJobStatus` string to a {@link JobState}. Known
+ * aliases are translated first, canonical values pass through, and anything
+ * unrecognized falls back to {@link JobState.Unknown} rather than throwing.
+ */
+function toJobState(raw: string): JobState {
+  if (Object.prototype.hasOwnProperty.call(JOB_STATUS_ALIASES, raw)) return JOB_STATUS_ALIASES[raw];
+  if (VALID_JOB_STATES.has(raw)) return raw as JobState;
+  return JobState.Unknown;
+}
+
+/**
+ * Transforms a raw summary period into the public shape, normalizing every
+ * agent's raw `lastJobStatus` string to a {@link JobState}. Tolerates a missing
+ * `agents` array (treated as empty).
+ */
+function normalizeSummaryPeriod(period: RawAgentSummaryPeriod): AgentSummaryPeriod {
+  return {
+    ...period,
+    agents: (period.agents ?? []).map((agent) => ({ ...agent, lastJobStatus: toJobState(agent.lastJobStatus) })),
+  };
+}
 
 /**
  * Service for interacting with the UiPath Agents API.
@@ -251,7 +296,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Retrieves a time-series of AGU (Agent Units) consumption over the requested window.
+   * Retrieves a time-series of Agent Units consumption over the requested window.
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
@@ -263,13 +308,13 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *
    * const agents = new Agents(sdk);
    *
-   * // AGU consumption timeline in May 2025
+   * // Agent Units consumption timeline in May 2025
    * const result = await agents.getConsumptionTimeline(
    *   new Date('2025-05-01T00:00:00Z'),
    *   new Date('2025-06-01T00:00:00Z'),
    * );
    * result.forEach((point) => {
-   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} Agent Units`);
    * });
    * ```
    * @example
@@ -347,6 +392,290 @@ export class AgentService extends BaseService implements AgentServiceModel {
 
     const response = await this.post<{ data: AgentGetLatencyTimelineResponse[] }>(
       AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Retrieves the top-N agents ranked by error count over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetTopErrorCountResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top agents by error count in May 2025
+   * const result = await agents.getTopErrorCount(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data.forEach((agent) => {
+   *   console.log(`${agent.name}: ${agent.count} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getTopErrorCount(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopErrorCount')
+  async getTopErrorCount(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetTopErrorCountOptions,
+  ): Promise<AgentGetTopErrorCountResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<AgentGetTopErrorCountResponse>(
+      AGENTS_ENDPOINTS.GET_TOP_ERROR_COUNT,
+      body,
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Retrieves the top-N agents ranked by unit consumption over the requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetTopConsumptionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top agents by consumption in May 2025
+   * const result = await agents.getTopConsumption(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Total consumed: ${result.totalConsumed}`);
+   * result.agents.forEach((agent) => {
+   *   console.log(`${agent.agentName}: ${agent.consumedQuantity}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top 5 healthy autonomous agents by consumption
+   * const result = await agents.getTopConsumption(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     limit: 5,
+   *     healthy: true,
+   *     agentTypes: [AgentType.Autonomous],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopConsumption')
+  async getTopConsumption(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetTopConsumptionOptions,
+  ): Promise<AgentGetTopConsumptionResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.healthy !== undefined) body.healthy = options.healthy;
+    if (options?.healthThreshold !== undefined) body.healthThreshold = options.healthThreshold;
+    if (options?.agentTypes?.length) body.agentTypes = options.agentTypes.join(',');
+
+    const response = await this.post<{ data: AgentGetTopConsumptionResponse }>(
+      AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Retrieves breakdown of agent incidents count — errors, escalations,
+   * and policy violations over a requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetIncidentDistributionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Incident distribution in May 2025
+   * const result = await agents.getIncidentDistribution(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Errors: ${result.errorCount}, Escalations: ${result.escalationCount}, Policy: ${result.policyCount}`);
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders
+   * const result = await agents.getIncidentDistribution(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetIncidentDistribution')
+  async getIncidentDistribution(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetIncidentDistributionOptions,
+  ): Promise<AgentGetIncidentDistributionResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<{ data: AgentGetIncidentDistributionResponse }>(
+      AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
+      body,
+    );
+
+    return response.data.data;
+  }
+
+  /**
+   * Retrieves a job-execution summary for the requested window: overall totals
+   * (total jobs, successful jobs, success rate, average duration) alongside a
+   * per-agent breakdown. When `lookbackPeriodAnalysis` is enabled, a comparable
+   * summary for the preceding window of equal length is included too.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Summary for May 2025
+   * const result = await agents.getSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Success rate: ${result.currentPeriodSummary.successRate}%`);
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Runtime-only summary with lookback comparison
+   * const result = await agents.getSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetSummary')
+  async getSummary(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetSummaryOptions,
+  ): Promise<AgentGetSummaryResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.lookbackPeriodAnalysis !== undefined) body.lookbackPeriodAnalysis = options.lookbackPeriodAnalysis;
+    if (options?.processKey !== undefined) body.processKey = options.processKey;
+    if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+
+    const response = await this.post<{ data: RawAgentGetSummaryResponse }>(
+      AGENTS_ENDPOINTS.GET_SUMMARY,
+      body,
+    );
+
+    const summary = response.data.data;
+    return {
+      currentPeriodSummary: normalizeSummaryPeriod(summary.currentPeriodSummary),
+      lookbackPeriodSummary: summary.lookbackPeriodSummary
+        ? normalizeSummaryPeriod(summary.lookbackPeriodSummary)
+        : undefined,
+    };
+  }
+
+  /**
+   * Retrieves an aggregate Agent Units and Platform Units consumption summary per agent over the
+   * requested window.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters
+   * @returns Promise resolving to {@link AgentGetUnitConsumptionSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Unit consumption summary for May 2025
+   * const result = await agents.getUnitConsumptionSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * console.log(`Agent Units complete jobs: ${result.currentPeriodSummary.totalAgentUnitConsumption.completeJobs}`);
+   * ```
+   * @example
+   * ```typescript
+   * import { Agents, AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Runtime-only summary with lookback comparison
+   * const result = await agents.getUnitConsumptionSummary(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetUnitConsumptionSummary')
+  async getUnitConsumptionSummary(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentGetUnitConsumptionSummaryOptions,
+  ): Promise<AgentGetUnitConsumptionSummaryResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.lookbackPeriodAnalysis !== undefined) body.lookbackPeriodAnalysis = options.lookbackPeriodAnalysis;
+    if (options?.processKey !== undefined) body.processKey = options.processKey;
+    if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+
+    const response = await this.post<{ data: AgentGetUnitConsumptionSummaryResponse }>(
+      AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
       body,
     );
 

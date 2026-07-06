@@ -1,7 +1,5 @@
-import { ApiResponse } from '../base';
-import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
-import type { TopQueryOptions } from '../../models/maestro';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
+import { TimeInterval, TimelineOptions } from '../../models/maestro';
+import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
 
 /**
  * Builds the request body for Insights RTM "top" endpoints.
@@ -27,59 +25,47 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
 }
 
 /**
- * Fetches instance status timeline from the Insights API.
- * Shared implementation used by both MaestroProcessesService and CasesService.
+ * Builds the request body for Insights RTM timeline endpoints
+ * (`InstanceStatusByDate`, `IncidentsByTimeWindow`).
  *
- * @param postFn - Bound post method from a BaseService subclass
  * @param startTime - Start of the time range to query
  * @param endTime - End of the time range to query
  * @param isCaseManagement - Whether to filter for case management processes
- * @param options - Optional settings for time bucketing granularity
- * @returns Promise resolving to an array of instance status timeline entries
+ * @param options - Optional time bucketing and filtering settings
+ * @returns Request body for the Insights RTM timeline endpoint
  * @internal
  */
-export async function fetchInstanceStatusTimeline(
-  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
-  startTime: Date,
-  endTime: Date,
-  isCaseManagement: boolean,
-  options?: TimelineOptions,
-): Promise<InstanceStatusTimelineResponse[]> {
-  const response = await postFn<InstanceStatusTimelineResponse[]>(
-    MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
-    {
-      commonParams: {
-        startTime: startTime.getTime(),
-        endTime: endTime.getTime(),
-        isCaseManagement,
-      },
-      timeSliceUnit: options?.groupBy,
-      timezoneOffset: new Date().getTimezoneOffset() * -1,
+export function buildInsightsTimelineBody(startTime: Date, endTime: Date, isCaseManagement: boolean, options?: TimelineOptions) {
+  return {
+    commonParams: {
+      startTime: startTime.getTime(),
+      endTime: endTime.getTime(),
+      isCaseManagement,
+      ...(options?.packageId ? { packageId: options.packageId } : {}),
+      ...(options?.version ? { version: options.version } : {}),
+      ...(options?.processKeys ? { processKeys: options.processKeys } : {}),
     },
-  );
-
-  return response.data ?? [];
+    timeSliceUnit: options?.groupBy ?? TimeInterval.Day,
+    timezoneOffset: new Date().getTimezoneOffset() * -1,
+  };
 }
 
 /**
- * Builds the request body for the ElementCountByStatus endpoint.
+ * Builds the commonParams request body for Insights RTM endpoints
+ * that filter by process key, package, time range, and version.
  *
- * @param processKey - Process key to filter by
- * @param packageId - Package identifier
- * @param startTime - Start of the time range to query
- * @param endTime - End of the time range to query
- * @param packageVersion - Package version to filter by
- * @returns Request body for the ElementCountByStatus endpoint
+ * @param request - Process scope + time range to aggregate over
+ * @returns Request body with commonParams
  * @internal
  */
-export function buildElementCountByStatusBody(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string) {
+export function buildInsightsCommonBody(request: MaestroProcessStatsRequest) {
   return {
     commonParams: {
-      processKey,
-      packageId,
-      startTime: startTime.getTime(),
-      endTime: endTime.getTime(),
-      version: packageVersion
+      processKey: request.processKey,
+      packageId: request.packageId,
+      startTime: request.startTime.getTime(),
+      endTime: request.endTime.getTime(),
+      version: request.packageVersion
     }
   };
 }

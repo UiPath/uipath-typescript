@@ -4,7 +4,8 @@ import { AgentService } from '../../../../src/services/agents/agents';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { AGENTS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { AgentErrorSortColumn, AgentListSortColumn } from '../../../../src/models/agents/agents.types';
+import { AgentErrorSortColumn, AgentListSortColumn, AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 // ===== MOCKING =====
@@ -33,7 +34,7 @@ describe('AgentService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as unknown as ApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
     agentService = new AgentService(instance);
   });
 
@@ -514,6 +515,453 @@ describe('AgentService Unit Tests', () => {
 
       await expect(
         agentService.getLatencyTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getTopErrorCount', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockJob = {
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+    };
+    const mockResponse = {
+      totalErrors: 68,
+      data: [
+        {
+          name: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+          count: 12,
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          firstSeenJob: mockJob,
+          lastSeenJob: mockJob,
+        },
+      ],
+    };
+
+    it('should return the object with only the window in the body when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await agentService.getTopErrorCount(startTime, endTime);
+
+      expect(result.totalErrors).toBe(68);
+      expect(result.data).toEqual(mockResponse.data);
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_ERROR_COUNT);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect('limit' in body).toBe(false);
+    });
+
+    it('should include all filters in the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      await agentService.getTopErrorCount(startTime, endTime, {
+        folderKeys,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        limit: 5,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+      expect(body.processVersion).toBe(AGENT_TEST_CONSTANTS.PROCESS_VERSION);
+      expect(body.limit).toBe(5);
+      expect(body['$folderKeys']).toBeUndefined();
+    });
+
+    it('should return totalErrors 0 and an empty data array when no agents matched', async () => {
+      // The endpoint always serializes the full shape, even when empty.
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
+
+      const result = await agentService.getTopErrorCount(startTime, endTime);
+
+      expect(result.totalErrors).toBe(0);
+      expect(result.data).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getTopErrorCount(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getTopConsumption', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockJob = {
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+    };
+    const mockPayload = {
+      startDate: AGENT_TEST_CONSTANTS.CONSUMPTION_START_DATE,
+      endDate: AGENT_TEST_CONSTANTS.CONSUMPTION_END_DATE,
+      totalConsumed: 42.5,
+      totalAGUConsumed: 30,
+      totalPLTUConsumed: 12.5,
+      limit: 10,
+      agents: [
+        {
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          agentName: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+          consumedQuantity: 5,
+          consumedAGUQuantity: 3,
+          consumedPLTUQuantity: 2,
+          firstSeenJob: mockJob,
+          lastSeenJob: mockJob,
+        },
+      ],
+    };
+
+    it('should unwrap the data envelope and return the flat payload', async () => {
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
+
+      const result = await agentService.getTopConsumption(startTime, endTime);
+
+      expect(result.totalConsumed).toBe(42.5);
+      expect(result.agents).toEqual(mockPayload.agents);
+      // envelope is unwrapped — no nested data field
+      expect((result as { data?: unknown }).data).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_TOP_CONSUMPTION);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      // healthy omitted → absent from the body (distinct from healthy:false)
+      expect('healthy' in body).toBe(false);
+    });
+
+    it('should send health filters and join agentTypes into a comma-separated string', async () => {
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
+
+      await agentService.getTopConsumption(startTime, endTime, {
+        limit: 5,
+        healthy: true,
+        healthThreshold: 80,
+        agentTypes: [AgentType.Autonomous, AgentType.Coded],
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.limit).toBe(5);
+      expect(body.healthy).toBe(true);
+      expect(body.healthThreshold).toBe(80);
+      expect(body.agentTypes).toBe('Autonomous,Coded');
+    });
+
+    it('should send healthy:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
+
+      await agentService.getTopConsumption(startTime, endTime, { healthy: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.healthy).toBe(false);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getTopConsumption(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getIncidentDistribution', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockPayload = {
+      errorCount: 10,
+      escalationCount: 3,
+      policyCount: 1,
+    };
+
+    it('should unwrap the data envelope and drop the vestigial pagination sibling', async () => {
+      mockApiClient.post.mockResolvedValue({ pagination: { totalCount: 14 }, data: mockPayload });
+
+      const result = await agentService.getIncidentDistribution(startTime, endTime);
+
+      expect(result.errorCount).toBe(10);
+      expect(result.escalationCount).toBe(3);
+      expect(result.policyCount).toBe(1);
+      expect((result as { pagination?: unknown }).pagination).toBeUndefined();
+      expect((result as { data?: unknown }).data).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+    });
+
+    it('should include filters in the body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: mockPayload });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      await agentService.getIncidentDistribution(startTime, endTime, {
+        folderKeys,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body.agentId).toBe(AGENT_TEST_CONSTANTS.AGENT_ID);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getIncidentDistribution(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockPeriod = {
+      totalJobs: 100,
+      successfulJobs: 95,
+      successRate: 95,
+      averageDurationSeconds: 12.3,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      agents: [
+        {
+          processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+          folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+          totalJobs: 100,
+          successfulJobs: 95,
+          successRate: 95,
+          averageDurationSeconds: 12.3,
+          firstJobFinished: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+          lastJobFinished: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+          lastJobStatus: AGENT_TEST_CONSTANTS.SUMMARY_LAST_JOB_STATUS,
+        },
+      ],
+    };
+    // Same period with lastJobStatus normalized from the raw 'Success' to JobState.Successful.
+    const expectedPeriod = {
+      ...mockPeriod,
+      agents: [{ ...mockPeriod.agents[0], lastJobStatus: JobState.Successful }],
+    };
+
+    it('should unwrap the data envelope; lookback is undefined when not requested', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      const result = await agentService.getSummary(startTime, endTime);
+
+      expect(result.currentPeriodSummary).toEqual(expectedPeriod);
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      expect((result as { data?: unknown }).data).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_SUMMARY);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+    });
+
+    it('should send lookbackPeriodAnalysis, processKey and folderKey (singular, distinct from folderKeys)', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getSummary(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        lookbackPeriodAnalysis: true,
+        processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+        folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_2,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(true);
+      expect(body.processKey).toBe(AGENT_TEST_CONSTANTS.PROCESS_KEY);
+      expect(body.folderKey).toBe(AGENT_TEST_CONSTANTS.FOLDER_KEY_2);
+      expect(body.folderKeys).toEqual([AGENT_TEST_CONSTANTS.FOLDER_KEY_1]);
+    });
+
+    it('should send lookbackPeriodAnalysis:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(false);
+    });
+
+    it('should send executionType as its string name', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getSummary(startTime, endTime, {
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.executionType).toBe('Runtime');
+    });
+
+    it('should return both periods when the API includes a lookback summary', async () => {
+      mockApiClient.post.mockResolvedValue({
+        data: { currentPeriodSummary: mockPeriod, lookbackPeriodSummary: mockPeriod },
+      });
+
+      const result = await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
+
+      expect(result.currentPeriodSummary).toEqual(expectedPeriod);
+      expect(result.lookbackPeriodSummary).toEqual(expectedPeriod);
+    });
+
+    it('should normalize lastJobStatus across both periods, mapping aliases and unknowns to JobState', async () => {
+      const makeAgent = (lastJobStatus: string) => ({
+        ...mockPeriod.agents[0],
+        lastJobStatus,
+      });
+      mockApiClient.post.mockResolvedValue({
+        data: {
+          currentPeriodSummary: {
+            ...mockPeriod,
+            // raw -> expected: Success->Successful (aliased); Cancelled,
+            // Running, Faulted pass through unchanged; garbage->Unknown
+            agents: [
+              makeAgent('Success'),
+              makeAgent('Cancelled'),
+              makeAgent('Running'),
+              makeAgent('Faulted'),
+              makeAgent('NotARealStatus'),
+            ],
+          },
+          lookbackPeriodSummary: { ...mockPeriod, agents: [makeAgent('Success')] },
+        },
+      });
+
+      const result = await agentService.getSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
+
+      expect(result.currentPeriodSummary.agents.map((a) => a.lastJobStatus)).toEqual([
+        JobState.Successful,
+        JobState.Cancelled,
+        JobState.Running,
+        JobState.Faulted,
+        JobState.Unknown,
+      ]);
+      // Normalization is applied to the lookback period too, not just the current one.
+      expect(result.lookbackPeriodSummary?.agents[0].lastJobStatus).toBe(JobState.Successful);
+      // The raw API label must not leak through.
+      expect(result.currentPeriodSummary.agents[0].lastJobStatus).not.toBe('Success');
+    });
+
+    it('should not throw when a period omits the agents array', async () => {
+      const { agents: _agents, ...periodWithoutAgents } = mockPeriod;
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: periodWithoutAgents } });
+
+      const result = await agentService.getSummary(startTime, endTime);
+
+      expect(result.currentPeriodSummary.agents).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getSummary(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getUnitConsumptionSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockConsumption = { completeJobs: 8, incompleteJobs: 2 };
+    const mockPeriod = {
+      totalAgentUnitConsumption: mockConsumption,
+      totalPlatformUnitConsumption: mockConsumption,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      agentConsumption: [
+        {
+          folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+          processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+          firstJobFinished: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+          lastJobFinished: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+          agentUnitConsumption: mockConsumption,
+          platformUnitConsumption: mockConsumption,
+        },
+      ],
+    };
+
+    it('should unwrap the data envelope; lookback is undefined when not requested', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      const result = await agentService.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result.currentPeriodSummary).toEqual(mockPeriod);
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      expect((result as { data?: unknown }).data).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+    });
+
+    it('should send lookbackPeriodAnalysis, processKey, folderKey and executionType', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+        folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(true);
+      expect(body.processKey).toBe(AGENT_TEST_CONSTANTS.PROCESS_KEY);
+      expect(body.folderKey).toBe(AGENT_TEST_CONSTANTS.FOLDER_KEY_1);
+      expect(body.executionType).toBe('Runtime');
+    });
+
+    it('should send lookbackPeriodAnalysis:false distinct from unset', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      await agentService.getUnitConsumptionSummary(startTime, endTime, { lookbackPeriodAnalysis: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.lookbackPeriodAnalysis).toBe(false);
+    });
+
+    it('should return both periods when the API includes a lookback summary', async () => {
+      mockApiClient.post.mockResolvedValue({
+        data: { currentPeriodSummary: mockPeriod, lookbackPeriodSummary: mockPeriod },
+      });
+
+      const result = await agentService.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+      });
+
+      expect(result.currentPeriodSummary).toEqual(mockPeriod);
+      expect(result.lookbackPeriodSummary).toEqual(mockPeriod);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+
+      await expect(
+        agentService.getUnitConsumptionSummary(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });

@@ -78,8 +78,10 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
 
@@ -94,6 +96,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
+| `retry()` | `PIMS` |
 
 ## Maestro Cases
 
@@ -104,8 +107,10 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Case Instances
 
@@ -248,6 +253,11 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getErrorsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getConsumptionTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getLatencyTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopErrorCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentDistribution()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Agent Traces
 
@@ -258,3 +268,5 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceDecisions()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |

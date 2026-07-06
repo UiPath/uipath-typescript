@@ -21,7 +21,7 @@ describe('AttachmentService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     attachmentService = new AttachmentService(instance);
   });
@@ -112,6 +112,45 @@ describe('AttachmentService Unit Tests', () => {
       await expect(
         attachmentService.getById(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID)
       ).rejects.toThrow(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
+    });
+
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAttachment());
+
+      await attachmentService.getById(
+        ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+        { select: 'name,createdTime,lastModifiedTime' },
+      );
+
+      // createdTime → creationTime, lastModifiedTime → lastModificationTime.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,lastModificationTime',
+          }),
+        }),
+      );
+    });
+
+    it('should rewrite both AttachmentsMap and BucketMap field names in OData strings', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAttachment());
+
+      await attachmentService.getById(
+        ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+        { select: 'name,createdTime,blobFileAccess/path,blobFileAccess/httpMethod' },
+      );
+
+      // AttachmentsMap: createdTime → creationTime.
+      // BucketMap (applied to nested blobFileAccess fields): path → fullPath, httpMethod → verb.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,blobFileAccess/fullPath,blobFileAccess/verb',
+          }),
+        }),
+      );
     });
   });
 });

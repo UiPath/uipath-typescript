@@ -7,6 +7,10 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
+  AgentGovernanceDecisionGetResponse,
+  AgentGovernanceDecisionsOptions,
+  AgentGovernanceGetSummaryResponse,
+  AgentGovernanceSummaryOptions,
 } from './agent.types';
 import type {
   HasPaginationOptions,
@@ -102,7 +106,7 @@ export interface AgentTracesServiceModel {
    * // Get per-agent unit consumption
    * const result = await trace.getUnitConsumption();
    * result.forEach((row) => {
-   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
+   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} Agent Units, ${row.platformUnitsConsumed} Platform Units`);
    * });
    * ```
    * @example
@@ -145,10 +149,6 @@ export interface AgentTracesServiceModel {
   /**
    * Retrieves spans whose reference hierarchy contains the given reference id.
    *
-   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
-   * `cursor`, or `jumpToPage`) are provided, otherwise a
-   * {@link NonPaginatedResponse}.
-   *
    * @param referenceId - Reference id matched against each span's reference hierarchy
    * @param options - Optional pagination and hierarchy/time filters
    * @returns Promise resolving to a paginated or non-paginated list of {@link AgentSpanGetResponse}
@@ -188,4 +188,114 @@ export interface AgentTracesServiceModel {
       ? PaginatedResponse<AgentSpanGetResponse>
       : NonPaginatedResponse<AgentSpanGetResponse>
   >;
+
+  /**
+   * Lists individual governance decisions from agent execution traces — each
+   * policy check's allow/deny outcome with its agent, policy, pack, hook, and
+   * mode, plus the trace it belongs to — over the requested window. Filterable
+   * and paginated.
+   *
+   * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, filters, and pagination
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentGovernanceDecisionGetResponse}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Decision rows since a start time
+   * const result = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'));
+   * result.items.forEach((row) => {
+   *   console.log(`${row.hook} ${row.policyId}: ${row.evaluatorResult}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Violations only, for one agent, paginated
+   * const page = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'), {
+   *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   violationsOnly: true,
+   *   agentId: '<agentProjectKey>',
+   *   pageSize: 25,
+   * });
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'), { cursor: page.nextCursor });
+   * }
+   * ```
+   * @example
+   * ```typescript
+   * import { isAuthorizationError } from '@uipath/uipath-typescript/core';
+   *
+   * // Non-admin callers get a 403
+   * try {
+   *   await trace.getGovernanceDecisions(new Date('2025-05-01T00:00:00Z'));
+   * } catch (error) {
+   *   if (isAuthorizationError(error)) {
+   *     console.error('Governance data requires an organization admin.');
+   *   }
+   * }
+   * ```
+   */
+  getGovernanceDecisions<T extends AgentGovernanceDecisionsOptions = AgentGovernanceDecisionsOptions>(
+    startTime: Date,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentGovernanceDecisionGetResponse>
+      : NonPaginatedResponse<AgentGovernanceDecisionGetResponse>
+  >;
+
+  /**
+   * Summarizes governance decisions across agent execution traces — total
+   * decisions and violations, plus top breakdowns by hook, agent, policy, and
+   * pack — over the requested window. Filterable.
+   *
+   * @remarks Requires the caller to be an organization admin. Non-admin callers get a `403` and the SDK throws an {@link AuthorizationError}.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param options - Optional window end, top-N, pack scope, and sections
+   * @returns Promise resolving to {@link AgentGovernanceGetSummaryResponse}
+   * @example
+   * ```typescript
+   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
+   *
+   * const trace = new AgentTraces(sdk);
+   *
+   * // Default posture since a start time
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'));
+   * console.log(`${summary.violations} / ${summary.total} violations`);
+   * summary.byPolicy.forEach((p) => console.log(`${p.key}: ${p.violationCount}`));
+   * ```
+   * @example
+   * ```typescript
+   * import { AgentGovernanceSection } from '@uipath/uipath-typescript/traces';
+   *
+   * // Top 5 per breakdown, scoped to a pack, including the opt-in action/mode sections
+   * const summary = await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'), {
+   *   topN: 5,
+   *   packName: 'ISO/IEC 42001:2023 Runtime',
+   *   sections: [AgentGovernanceSection.Action, AgentGovernanceSection.Mode],
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * import { isAuthorizationError } from '@uipath/uipath-typescript/core';
+   *
+   * // Non-admin callers get a 403
+   * try {
+   *   await trace.getGovernanceSummary(new Date('2025-05-01T00:00:00Z'));
+   * } catch (error) {
+   *   if (isAuthorizationError(error)) {
+   *     console.error('Governance data requires an organization admin.');
+   *   }
+   * }
+   * ```
+   */
+  getGovernanceSummary(
+    startTime: Date,
+    options?: AgentGovernanceSummaryOptions,
+  ): Promise<AgentGovernanceGetSummaryResponse>;
 }

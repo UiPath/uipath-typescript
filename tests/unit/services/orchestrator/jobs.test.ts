@@ -40,7 +40,7 @@ describe('JobService Unit Tests', () => {
     mockApiClient = createMockApiClient();
     mockApiClient.getValidToken = vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
@@ -158,6 +158,27 @@ describe('JobService Unit Tests', () => {
       await expect(jobService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
+    it('should translate SDK field names to API names in filter/orderby before delegating', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedJobCollection(),
+      );
+
+      await jobService.getAll({
+        filter: "processName eq 'InvoiceBot' and folderId eq 7",
+        orderby: 'createdTime desc',
+      });
+
+      // Options arriving at PaginationHelpers should already be in API field space:
+      // processName → releaseName, folderId → organizationUnitId, createdTime → creationTime.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: "releaseName eq 'InvoiceBot' and organizationUnitId eq 7",
+          orderby: 'creationTime desc',
+        }),
+      );
+    });
+
     it('should attach getOutput method to transformed job objects', async () => {
       const mockResponse = createMockTransformedJobCollection();
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -229,6 +250,25 @@ describe('JobService Unit Tests', () => {
       expect(typeof result.getOutput).toBe('function');
       expect(result.stop).toBeDefined();
       expect(typeof result.stop).toBe('function');
+    });
+
+    it('should rewrite SDK field names in select back to API names', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        select: 'processName,createdTime,folderId',
+      });
+
+      // processName → releaseName, createdTime → creationTime, folderId → organizationUnitId
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            $select: 'releaseName,creationTime,organizationUnitId',
+          }),
+        }),
+      );
     });
 
     it('should pass expand and select options with OData prefix', async () => {

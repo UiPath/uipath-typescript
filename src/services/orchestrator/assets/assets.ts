@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
@@ -62,8 +62,13 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       : NonPaginatedResponse<AssetGetResponse>
   > {
     // Transformation function for assets
-    const transformAssetResponse = (asset: any) => 
+    const transformAssetResponse = (asset: any) =>
       transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap);
+
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, AssetMap) : options;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -80,7 +85,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
         }
       }
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
@@ -104,10 +109,10 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   @track('Assets.GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
+    const apiFieldOptions = transformOptions(options, AssetMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
+
     const response = await this.get<AssetGetResponse>(
       ASSET_ENDPOINTS.GET_BY_ID(id),
       { 
@@ -155,6 +160,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       name,
       options,
       (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+      AssetMap,
     );
   }
 

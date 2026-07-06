@@ -8,10 +8,14 @@ export const AGENT_TRACES_ENDPOINTS = {
   GET_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/errorsTimeline`,
   /** Trace-level time-series of latency (decimal seconds per series). */
   GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/latencyTimeline`,
-  /** Trace-level per-agent AGU/PLTU consumption totals. */
+  /** Trace-level per-agent Agent Units and Platform Units consumption totals. */
   GET_UNIT_CONSUMPTION: `${INSIGHTS_RTM_BASE}/Traceview/unitConsumption`,
   /** All spans for a single trace (flat array, not paginated). */
   GET_SPANS_BY_TRACE_ID: (traceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/${traceId}`,
   /** Paginated spans whose reference hierarchy contains the given reference id. */
   GET_SPANS_BY_REFERENCE: (referenceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/reference/${referenceId}`,
+  /** Paginated raw governance decision rows. */
+  GET_GOVERNANCE_DECISIONS: `${INSIGHTS_RTM_BASE}/Governance/agentic/traces`,
+  /** Aggregated governance posture (totals + top-N breakdowns). */
+  GET_GOVERNANCE_SUMMARY: `${INSIGHTS_RTM_BASE}/Governance/agentic/summary`,
 } as const;

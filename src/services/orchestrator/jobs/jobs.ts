@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformOptions, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
@@ -55,8 +55,9 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
-   * const runningJobs = await jobs.getAll({
-   *   filter: "state eq 'Running'"
+   * const recentInvoiceJobs = await jobs.getAll({
+   *   filter: "processName eq 'InvoiceBot'",
+   *   orderby: 'createdTime desc',
    * });
    *
    * // First page with pagination
@@ -87,6 +88,11 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       return createJobWithMethods(rawJob, this);
     };
 
+    // Rewrite renamed SDK field names → API names inside OData strings
+    // before delegating, mirroring the transformRequest pattern used for
+    // request bodies.
+    const apiOptions = options ? transformOptions(options, JobMap) : options;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => JOB_ENDPOINTS.GET_ALL,
@@ -102,7 +108,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
         },
       },
-    }, options) as any;
+    }, apiOptions) as any;
   }
 
   /**
@@ -142,8 +148,8 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const keysToPrefix = Object.keys(options ?? {});
-    const apiOptions = options ? addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix) : {};
+    const apiFieldOptions = options ? transformOptions(options, JobMap) : {};
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.get<Record<string, unknown>>(
       JOB_ENDPOINTS.GET_BY_KEY(id),

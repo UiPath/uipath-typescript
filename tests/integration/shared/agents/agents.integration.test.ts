@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
+import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
+import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -181,7 +183,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
-    it('should retrieve the AGU consumption timeline', async () => {
+    it('should retrieve the Agent Units consumption timeline', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime);
 
       expect(Array.isArray(result)).toBe(true);
@@ -232,6 +234,171 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       });
 
       expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('getTopErrorCount', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve top-N agents ranked by error count', async () => {
+      const result = await agents.getTopErrorCount(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // totalErrors and data are always present — 0 / [] when nothing matched.
+      expect(typeof result.totalErrors).toBe('number');
+      expect(result.totalErrors).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(result.data)).toBe(true);
+      if (result.data.length === 0) {
+        throw new Error(
+          'No errored agents in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      const entry = result.data[0];
+      expect(typeof entry.name).toBe('string');
+      expect(typeof entry.count).toBe('number');
+      expect(typeof entry.agentId).toBe('string');
+      expect(typeof entry.firstSeenJob.jobKey).toBe('string');
+      expect(entry.lastSeenJob).toBeDefined();
+    });
+
+    it('should respect the limit option', async () => {
+      const result = await agents.getTopErrorCount(startTime, endTime, { limit: 3 });
+
+      if (result.data.length === 0) {
+        throw new Error(
+          'No errored agents in the test tenant for the configured window — ' +
+          'cannot verify limit option. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.data.length).toBeLessThanOrEqual(3);
+    });
+  });
+
+  describe('getTopConsumption', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve top-N consuming agents with aggregate totals', async () => {
+      const result = await agents.getTopConsumption(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // Totals and window dates are always present; agents is [] when none matched.
+      expect(typeof result.startDate).toBe('string');
+      expect(typeof result.endDate).toBe('string');
+      expect(typeof result.totalConsumed).toBe('number');
+      expect(result.totalConsumed).toBeGreaterThanOrEqual(0);
+      expect(Array.isArray(result.agents)).toBe(true);
+      if (result.agents.length === 0) {
+        throw new Error(
+          'No consuming agents in the test tenant for the configured window — ' +
+          'cannot verify response shape. Run agents in the tenant or widen the window.',
+        );
+      }
+      const agent = result.agents[0];
+      expect(typeof agent.agentId).toBe('string');
+      expect(typeof agent.agentName).toBe('string');
+      expect(agent.firstSeenJob).toBeDefined();
+      expect(agent.lastSeenJob).toBeDefined();
+    });
+
+    it('should accept a limit and an agentTypes filter', async () => {
+      const result = await agents.getTopConsumption(startTime, endTime, {
+        limit: 3,
+        agentTypes: [AgentType.Autonomous],
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.agents)).toBe(true);
+      expect(result.agents.length).toBeLessThanOrEqual(3);
+    });
+  });
+
+  describe('getIncidentDistribution', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve incident counts across categories without a pagination field', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect((result as { pagination?: unknown }).pagination).toBeUndefined();
+      // All three counts are always present (default 0).
+      expect(typeof result.errorCount).toBe('number');
+      expect(result.errorCount).toBeGreaterThanOrEqual(0);
+      expect(typeof result.escalationCount).toBe('number');
+      expect(result.escalationCount).toBeGreaterThanOrEqual(0);
+      expect(typeof result.policyCount).toBe('number');
+      expect(result.policyCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should scope to a single folder', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve an aggregate summary with a per-agent breakdown', async () => {
+      const result = await agents.getSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      // currentPeriodSummary is always present.
+      const period = result.currentPeriodSummary;
+      expect(typeof period.totalJobs).toBe('number');
+      expect(typeof period.successRate).toBe('number');
+      expect(Array.isArray(period.agents)).toBe(true);
+      // Every lastJobStatus must be normalized to a valid JobState — no raw
+      // labels (e.g. 'Success', 'Cancelled') leaking through the transform.
+      const validStates = new Set<string>(Object.values(JobState));
+      for (const agent of period.agents) {
+        expect(validStates.has(agent.lastJobStatus)).toBe(true);
+      }
+    });
+
+    it('should include a lookback summary when requested', async () => {
+      const result = await agents.getSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result.currentPeriodSummary).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeDefined();
+    });
+  });
+
+  describe('getUnitConsumptionSummary', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve an aggregate Agent Units and Platform Units summary with a per-agent breakdown', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      // currentPeriodSummary is always present.
+      const period = result.currentPeriodSummary;
+      expect(typeof period.totalAgentUnitConsumption.completeJobs).toBe('number');
+      expect(typeof period.totalPlatformUnitConsumption.completeJobs).toBe('number');
+      expect(Array.isArray(period.agentConsumption)).toBe(true);
+    });
+
+    it('should include a lookback summary when requested', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result.currentPeriodSummary).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeDefined();
     });
   });
 });

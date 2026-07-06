@@ -7,6 +7,8 @@ import {
   CaseInstancesService,
   EntityService,
   ChoiceSetService,
+  DataFabricDirectoryService,
+  DataFabricRoleService,
   TaskService,
   ProcessService,
   BucketService,
@@ -98,7 +100,19 @@ export class UiPath extends UiPathCore {
       /**
        * Access to ChoiceSet service for managing choice sets
        */
-      choicesets: this.getService(ChoiceSetService)
+      choicesets: this.getService(ChoiceSetService),
+      /**
+       * Access to Data Fabric roles for manage-access flows
+       *
+       * @internal
+       */
+      roles: this.getService(DataFabricRoleService),
+      /**
+       * Access to Data Fabric directory principals and role assignments
+       *
+       * @internal
+       */
+      directory: this.getService(DataFabricDirectoryService)
     });
   }
 
