@@ -180,6 +180,7 @@ nav:
   - API Reference:
       - Services:
           - Agents:
+            - agents/index.md
             - Conversational Agent:
               - conversational-agent/index.md
               - Conversations:
@@ -189,8 +190,7 @@ nav:
               - Messages: api/interfaces/MessageServiceModel.md
               - User Settings: api/interfaces/UserSettingsServiceModel.md
             - Feedback: api/interfaces/FeedbackServiceModel.md
-            - Agents: api/interfaces/AgentServiceModel.md
-            - Agent Memory: api/interfaces/AgentMemoryServiceModel.md
+            - Memory Spaces: api/interfaces/AgentMemoryServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
