@@ -477,6 +477,13 @@ export interface EntityServiceModel {
    *       relatedEntityName: "Customer",
    *       relatedFieldName: "Id",
    *     },
+   *     {
+   *       entityName: "Customer",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "regionId",
+   *       relatedEntityName: "Region",
+   *       relatedFieldName: "Id",
+   *     },
    *   ],
    * });
    * ```
@@ -943,6 +950,13 @@ export interface EntityMethods {
    *       joinType: JoinType.LeftJoin,
    *       joinFieldName: "customerId",
    *       relatedEntityName: "Customer",
+   *       relatedFieldName: "Id",
+   *     },
+   *     {
+   *       entityName: "Customer",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "regionId",
+   *       relatedEntityName: "Region",
    *       relatedFieldName: "Id",
    *     },
    *   ],
