@@ -59,6 +59,7 @@ import {
   ENTITY_FIELD_CONSTRAINT_DEFAULTS,
   ENTITY_FIELD_CONSTRAINT_SPEC,
   ENTITY_TYPE_IDS,
+  MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
@@ -565,13 +566,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Queries entity records with filters, sorting, aggregates, and pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination The `folderKey` property is **experimental**.
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -613,6 +614,27 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   ],
    * });
    *
+   * // Multi-join: pull fields from related entities into the query
+   * await entities.queryRecordsById("<entityId>", {
+   *   selectedFields: ["Id", "amount"],
+   *   joins: [
+   *     {
+   *       entityName: "Order",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "customerId",
+   *       relatedEntityName: "Customer",
+   *       relatedFieldName: "Id",
+   *     },
+   *     {
+   *       entityName: "Customer",
+   *       joinType: JoinType.LeftJoin,
+   *       joinFieldName: "regionId",
+   *       relatedEntityName: "Region",
+   *       relatedFieldName: "Id",
+   *     },
+   *   ],
+   * });
+   *
    * // Folder-scoped entity: pass the entity's folder key
    * await entities.queryRecordsById("<entityId>", {
    *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
@@ -625,6 +647,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    // The API accepts oversized join arrays without erroring, so enforce the limit here.
+    if (options?.joins && options.joins.length > MAX_QUERY_JOINS) {
+      throw new ValidationError({
+        message: `A maximum of ${MAX_QUERY_JOINS} joins is supported per query (received ${options.joins.length})`,
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
@@ -644,7 +672,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins']
     }, downstreamOptions);
   }
 

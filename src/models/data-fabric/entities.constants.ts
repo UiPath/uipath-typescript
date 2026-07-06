@@ -17,6 +17,13 @@ export const ENTITY_TYPE_IDS = {
 } as const;
 
 /**
+ * Maximum number of cross-entity joins per structured query. The API silently
+ * accepts larger arrays instead of rejecting them, so the SDK enforces the
+ * documented limit itself.
+ */
+export const MAX_QUERY_JOINS = 3;
+
+/**
  * Maps fields for Entities
  */
 export const EntityMap = {

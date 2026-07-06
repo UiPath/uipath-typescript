@@ -231,6 +231,42 @@ export interface EntityAggregate {
 }
 
 /**
+ * A single cross-entity JOIN clause for a structured query.
+ *
+ * A join pulls related records together by matching a field on the base (left)
+ * entity (`joinFieldName`) to a field on a related (right) entity
+ * (`relatedFieldName`). Pass one {@link EntityJoin} per related entity; supplying
+ * several composes a multi-entity (multi-join) query. Up to 3 joins are
+ * supported (the SDK throws a `ValidationError` for more), and all of them
+ * must share the same {@link JoinType}.
+ *
+ * @example
+ * ```typescript
+ * import { EntityJoin, JoinType } from '@uipath/uipath-typescript/entities';
+ *
+ * const join: EntityJoin = {
+ *   entityName: "Order",
+ *   joinType: JoinType.LeftJoin,
+ *   joinFieldName: "customerId",
+ *   relatedEntityName: "Customer",
+ *   relatedFieldName: "Id",
+ * };
+ * ```
+ */
+export interface EntityJoin {
+  /** Name of the base (left) entity that owns `joinFieldName`. Defaults to the queried entity; set it to anchor chained joins. */
+  entityName?: string;
+  /** Join type to apply (default: {@link JoinType.LeftJoin}). */
+  joinType?: JoinType;
+  /** Field on the base entity used as the join key. */
+  joinFieldName: string;
+  /** Name of the related (right) entity to join in. */
+  relatedEntityName: string;
+  /** Field on `relatedEntityName` matched against `joinFieldName`. */
+  relatedFieldName: string;
+}
+
+/**
  * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
@@ -249,6 +285,13 @@ export type EntityQueryRecordsOptions = {
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
   groupBy?: string[];
+  /**
+   * Cross-entity joins. Each entry joins one related entity into the query;
+   * supply several for a multi-join query. A maximum of 3 joins is supported
+   * (the SDK throws a `ValidationError` for more), and all joins must be of
+   * the same {@link JoinType}.
+   */
+  joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
 
 /**
@@ -528,9 +571,13 @@ export enum DataDirectionType {
 }
 
 /**
- * Join type for source join criteria
+ * Join type applied when matching records across entities.
+ *
+ * Used by {@link EntityJoin} for cross-entity query joins and by
+ * {@link SourceJoinCriteria} in entity metadata.
  */
 export enum JoinType {
+  /** LEFT JOIN — all base-entity records, with related fields empty when unmatched. */
   LeftJoin = "LeftJoin",
 }
 

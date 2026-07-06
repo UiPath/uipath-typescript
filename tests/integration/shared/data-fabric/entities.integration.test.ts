@@ -14,6 +14,7 @@ import {
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
+  JoinType,
   QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
@@ -957,6 +958,49 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         // L3 cannot shrink relative to L2.
         expect(Object.keys(l3.parent).length).toBeGreaterThanOrEqual(Object.keys(l2.parent).length);
       });
+    });
+
+    // Multi-join pass-through. Requires the join fixture (a second, related
+    // entity) provisioned in the test tenant and named via the
+    // DATA_FABRIC_TEST_JOIN_* env vars; throws when they are missing. It guards
+    // the `joins` body wiring against the endpoint silently rejecting (4xx) or
+    // ignoring the field — the gap the unit tests can't cover.
+    it('should query records with a single cross-entity join', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      if (
+        !config.dataFabricTestJoinFieldName ||
+        !config.dataFabricTestJoinRelatedEntityName ||
+        !config.dataFabricTestJoinRelatedFieldName
+      ) {
+        throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join test');
+      }
+
+      const result = await entities.queryRecordsById(entityId, {
+        joins: [
+          {
+            entityName: config.dataFabricTestJoinEntityName,
+            joinType: JoinType.LeftJoin,
+            joinFieldName: config.dataFabricTestJoinFieldName,
+            relatedEntityName: config.dataFabricTestJoinRelatedEntityName,
+            relatedFieldName: config.dataFabricTestJoinRelatedFieldName,
+          },
+        ],
+        pageSize: 5,
+      });
+
+      // Endpoint must accept the `joins` body (no 4xx) and return the normal
+      // record envelope: an array of records, each still carrying its `Id`.
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      result.items.forEach(item => {
+        expect(item).toHaveProperty('Id');
+      });
+      expect(hasValidPagination(result)).toBe(true);
     });
   });
 
