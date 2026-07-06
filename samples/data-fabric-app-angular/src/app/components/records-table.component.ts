@@ -42,7 +42,10 @@ const PAGE_SIZE = 25
       font-size: 12px;
       cursor: pointer;
       text-align: left;
-      word-break: break-all;
+      /* GUIDs must never wrap — without this the table can squeeze the Id
+         column to a sliver and break-word renders one character per line.
+         The wrapping .table-scroll provides horizontal scrolling instead. */
+      white-space: nowrap;
     }
     .id-link:hover { text-decoration: underline; }
     .checkbox-cell { width: 32px; }
