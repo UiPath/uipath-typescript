@@ -569,9 +569,13 @@ export enum DataDirectionType {
 }
 
 /**
- * Join type for source join criteria
+ * Join type applied when matching records across entities.
+ *
+ * Used by {@link EntityJoin} for cross-entity query joins and by
+ * {@link SourceJoinCriteria} in entity metadata.
  */
 export enum JoinType {
+  /** LEFT JOIN — all base-entity records, with related fields empty when unmatched. */
   LeftJoin = "LeftJoin",
 }
 
