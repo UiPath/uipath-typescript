@@ -21,8 +21,9 @@ export interface IntegrationConfig {
   dataFabricTestFolderEntityId?: string;
   dataFabricTestChoiceSetId?: string;
   dataFabricTestAttachmentField?: string;
-  // Cross-entity join fixture for the queryRecordsById join test. All four must
-  // be set together; when any is missing the join integration test is skipped.
+  // Cross-entity join fixture for the queryRecordsById join test. The three
+  // join-key fields are required (the test throws when any is missing);
+  // dataFabricTestJoinEntityName is optional and defaults to the queried entity.
   dataFabricTestJoinEntityName?: string;
   dataFabricTestJoinFieldName?: string;
   dataFabricTestJoinRelatedEntityName?: string;
