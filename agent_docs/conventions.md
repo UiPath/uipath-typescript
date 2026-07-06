@@ -106,6 +106,8 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Outbound requests** (SDK → API): use `transformRequest(data, {Entity}Map)` (auto-reverses field map) and `camelToPascalCaseKeys()`.
 
+**Multi-domain responses:** When a `getById` response includes fields from multiple entity domains (e.g., an attachment response that also contains bucket fields), merge multiple field maps in step 2: `transformData(data, { ...PrimaryEntityMap, ...SecondaryEntityMap })`. Using only the primary entity's map silently skips rename entries from the secondary domain.
+
 **Field maps vs case conversion:** `{Entity}Map` is for semantic renames only. Case conversion is handled by `pascalToCamelCaseKeys()`. **NEVER** add case-only entries to a field map — mixing them causes double-conversion bugs.
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
