@@ -253,16 +253,16 @@ export interface EntityAggregate {
  * ```
  */
 export interface EntityJoin {
-  /** Name of the base (left) entity that owns `joinFieldName`. */
+  /** Name of the base (left) entity that owns `joinFieldName`. Defaults to the queried entity; set it to anchor chained joins. */
   entityName?: string;
-  /** Join type to apply (see {@link JoinType}). */
+  /** Join type to apply (default: {@link JoinType.LeftJoin}). */
   joinType?: JoinType;
-  /** Field on `entityName` used as the join key. */
-  joinFieldName?: string;
+  /** Field on the base entity used as the join key. */
+  joinFieldName: string;
   /** Name of the related (right) entity to join in. */
-  relatedEntityName?: string;
+  relatedEntityName: string;
   /** Field on `relatedEntityName` matched against `joinFieldName`. */
-  relatedFieldName?: string;
+  relatedFieldName: string;
 }
 
 /**

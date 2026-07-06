@@ -979,6 +979,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
+      if (
+        !config.dataFabricTestJoinFieldName ||
+        !config.dataFabricTestJoinRelatedEntityName ||
+        !config.dataFabricTestJoinRelatedFieldName
+      ) {
+        throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join test');
+      }
 
       const result = await entities.queryRecordsById(entityId, {
         joins: [
