@@ -1,5 +1,6 @@
 import type { EntityRecord, FieldMetaData } from '@uipath/uipath-typescript/entities'
 import { downloadBlobAsFile } from './download'
+import { formatCell } from './format'
 
 /** Matches characters that require RFC 4180 quoting in a CSV cell. */
 const CSV_ESCAPE_REGEX = /[",\r\n]/
@@ -20,7 +21,9 @@ const CSV_QUOTE_REGEX = /"/g
  *  - Values containing comma, quote, or newline are wrapped in double quotes.
  *  - Embedded double quotes are doubled (`"` → `""`).
  *  - `null` and `undefined` render as empty cells.
- *  - Objects (e.g. reference fields) are JSON-stringified.
+ *  - Everything else renders exactly as the records grid displays it
+ *    (via `formatCell` — reference/choice-set objects export their
+ *    displayName/name, not raw JSON).
  */
 export function exportRecordsAsCsv(
   filename: string,
@@ -55,18 +58,10 @@ export function exportRecordsAsCsv(
 }
 
 function formatValue(value: unknown): string {
+  // Empty CSV cell for missing values (the grid shows "—" instead — the
+  // one intentional divergence); everything else matches the grid exactly.
   if (value == null) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean')
-    return String(value)
-  if (value instanceof Date) return value.toISOString()
-  // Reference fields and choice sets come through as objects; JSON-encode
-  // them so the cell is still human-readable.
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return String(value)
-  }
+  return formatCell(value)
 }
 
 function csvCell(input: string): string {

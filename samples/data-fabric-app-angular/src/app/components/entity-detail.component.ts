@@ -434,6 +434,14 @@ export class EntityDetailComponent {
       // Re-fetch so the export reflects the current server state, not a
       // stale grid.
       const list = await this.loadRecords()
+      // loadRecords swallows failures into recordsError (for the grid's
+      // alert) and returns [] — distinguish that from a genuinely empty
+      // table or the toast claims "empty" next to an error banner.
+      const recordsError = this.recordsError()
+      if (recordsError) {
+        this.toast.error('Export failed', recordsError)
+        return
+      }
       if (!list.length) {
         this.toast.info('Nothing to export — table is empty')
         return

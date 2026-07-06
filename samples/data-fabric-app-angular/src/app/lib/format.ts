@@ -17,9 +17,10 @@ export function recordFieldValue(
 }
 
 /**
- * Renders a single cell value for the records table. Mirrors the formatting
- * used by csv-export so the UI and the exported CSV agree on what each
- * value looks like.
+ * Renders a single cell value for display. The single source of truth for
+ * value formatting — the records grid, sort comparator, and CSV export all
+ * project values through this so they always agree (CSV differs only for
+ * null/undefined, which export as an empty cell rather than "—").
  */
 export function formatCell(value: unknown): string {
   if (value == null) return '—'
