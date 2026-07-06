@@ -1797,6 +1797,22 @@ describe("EntityService Unit Tests", () => {
         }),
       );
     });
+
+    it("should throw ValidationError when more than 3 joins are supplied", async () => {
+      const join = {
+        joinType: JoinType.LeftJoin,
+        joinFieldName: "customerId",
+        relatedEntityName: "Customer",
+        relatedFieldName: "Id",
+      };
+
+      await expect(
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          joins: [join, join, join, join],
+        }),
+      ).rejects.toThrow(/A maximum of 3 joins is supported per query \(received 4\)/);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
   });
 
   describe("importRecordsById", () => {

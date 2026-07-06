@@ -59,6 +59,7 @@ import {
   ENTITY_FIELD_CONSTRAINT_DEFAULTS,
   ENTITY_FIELD_CONSTRAINT_SPEC,
   ENTITY_TYPE_IDS,
+  MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
@@ -646,6 +647,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    // The API accepts oversized join arrays without erroring, so enforce the limit here.
+    if (options?.joins && options.joins.length > MAX_QUERY_JOINS) {
+      throw new ValidationError({
+        message: `A maximum of ${MAX_QUERY_JOINS} joins is supported per query (received ${options.joins.length})`,
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);

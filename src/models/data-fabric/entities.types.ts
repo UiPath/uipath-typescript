@@ -237,7 +237,8 @@ export interface EntityAggregate {
  * entity (`joinFieldName`) to a field on a related (right) entity
  * (`relatedFieldName`). Pass one {@link EntityJoin} per related entity; supplying
  * several composes a multi-entity (multi-join) query. Up to 3 joins are
- * supported, and all of them must share the same {@link JoinType}.
+ * supported (the SDK throws a `ValidationError` for more), and all of them
+ * must share the same {@link JoinType}.
  *
  * @example
  * ```typescript
@@ -286,8 +287,9 @@ export type EntityQueryRecordsOptions = {
   groupBy?: string[];
   /**
    * Cross-entity joins. Each entry joins one related entity into the query;
-   * supply several for a multi-join query. A maximum of 3 joins is supported,
-   * and all joins must be of the same {@link JoinType}.
+   * supply several for a multi-join query. A maximum of 3 joins is supported
+   * (the SDK throws a `ValidationError` for more), and all joins must be of
+   * the same {@link JoinType}.
    */
   joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
