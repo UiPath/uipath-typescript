@@ -198,7 +198,7 @@ export interface CaseInstancesServiceModel {
    *
    * @param instanceId - The ID of the case instance to send the message to
    * @param folderKey - Required folder key
-   * @param name - The message name (e.g. `CaseInstanceMessageName.UserSelectStage`)
+   * @param name - The message name — a well-known `CaseInstanceMessageName` or a custom message name defined in the case model
    * @param options - Optional message options with itemData payload and reference override
    * @returns Promise that resolves when the message is accepted
    * @example
@@ -446,7 +446,7 @@ export interface CaseInstanceMethods {
   /**
    * Sends a message to this case instance
    *
-   * @param name - The message name (e.g. `CaseInstanceMessageName.UserSelectStage`)
+   * @param name - The message name — a well-known `CaseInstanceMessageName` or a custom message name defined in the case model
    * @param options - Optional message options with itemData payload and reference override
    * @returns Promise that resolves when the message is accepted
    */

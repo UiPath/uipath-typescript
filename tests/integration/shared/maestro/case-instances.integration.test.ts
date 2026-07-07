@@ -7,7 +7,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
-import { CaseInstanceMessageName } from '../../../../src/models/maestro/case-instances.types';
+import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro/case-instances.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -216,9 +216,9 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     it('should send a message to a running case instance', async () => {
       const { caseInstances } = getServices();
 
-      const instances = await caseInstances.getAll({ limit: 50 });
+      const instances = await caseInstances.getAll({ pageSize: 50 });
       const runningInstance = instances.items.find(
-        (instance) => instance.latestRunStatus === 'Running' && instance.folderKey
+        (instance) => instance.latestRunStatus === InstanceStatus.RUNNING && instance.folderKey
       );
 
       if (!runningInstance) {
