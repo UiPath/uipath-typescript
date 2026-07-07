@@ -7,7 +7,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
-import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro/case-instances.types';
+import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
