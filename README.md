@@ -403,6 +403,7 @@ Check out the [`/samples`](./samples) folder to see sample applications built us
 
 - **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
 - **[conversational-agent-app](./samples/conversational-agent-app)**: A Conversational Agent chat application with real-time streaming, conversation management, file attachments, tool call visualization, and feedback
+- **[dashboards/runtime-compliance](./samples/dashboards/runtime-compliance)**: A runtime compliance dashboard for AI agent fleets — compliance check results, enforcement outcomes, and flagged agents via the agentic governance insights APIs (requires the Agentic Governance private preview)
 
 <div align="right">
 

@@ -1,0 +1,31 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Build outputs
+node_modules
+dist
+dist-ssr
+.uipath
+
+# The repo-root .gitignore has `lib/` to ignore build artifacts elsewhere
+# in the monorepo. Un-ignore our application source `src/lib/`.
+!src/lib/
+!src/lib/**
+
+# Local UiPath OAuth config (tenant-specific) — copy uipath.json.example
+# to uipath.json and fill in your values. The committed sample only ships
+# the .example template, not real tenant info.
+uipath.json
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
