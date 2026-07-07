@@ -5,38 +5,19 @@ import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WidgetBoundary } from '@/dashboard/chrome/WidgetBoundary'
 import { LoadingState, EmptyState, DeltaBadge, ViewAllLink } from '@/dashboard/chrome'
-import { RecordsTable, type ColumnDef } from '@/dashboard/chrome/RecordsTable'
-import { fmtNumber, fmtPercent, fmtDuration, fmtTimeAgo } from '@/lib/format'
-import { toneClass, kpiDelta, type DeltaPolarity } from '@/lib/widget'
+import { kpiDelta, type DeltaPolarity } from '@/lib/widget'
 import { ShieldAlert } from 'lucide-react'
 import { fetchData } from '@/metrics/agent-governance-violations'
 import { rangeWindow, RANGE_LABELS, type RangeKey } from '@/lib/time'
 
 type Row = Record<string, unknown>
 
-const DISPLAY_AS: string = 'kpi-card'
 const VALUE_FIELD = 'value'
 const VALUE_LABEL = 'failed checks'
 const PREVIOUS_FIELD = 'previous'
-const DELTA_POLARITY = 'up-bad'
-const ROW_LINK_KEY = ''
-const ROW_LINK_ROUTE = ''
-// Set only for a kpi-card with detail:true — makes the card clickable and adds a
-// "View all" link to its record-grain detail view. Empty for plain KPIs and tables.
-const KPI_DETAIL_ROUTE = '/agentgovernanceviolations'
-const COLUMNS: ColumnDef<Row>[] = []
-
-/** Auto-detect columns from the first row when explicit columns aren't given. */
-function autoColumns(rows: Row[]): ColumnDef<Row>[] {
-  if (rows.length === 0) return [{ key: 'value', label: 'Value' }]
-  return Object.entries(rows[0])
-    .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
-    .map(([k, v]) => ({
-      key: k,
-      label: k.replace(/([A-Z])/g, ' $1').replace(/^(.)/, (s: string) => s.toUpperCase()).trim(),
-      ...(typeof v === 'number' && { align: 'right' as const }),
-    }))
-}
+const DELTA_POLARITY: DeltaPolarity = 'up-bad'
+// The card is clickable and links to its record-grain detail view.
+const DETAIL_ROUTE = '/agentgovernanceviolations'
 
 function useAgentGovernanceViolationsData(range: RangeKey) {
   const { sdk, getToken } = useAuth()
@@ -65,29 +46,14 @@ export function AgentGovernanceViolations({ range = '30d' }: { range?: RangeKey 
     if (error)   return <EmptyState message={error.message} />
     if (data.length === 0) return <EmptyState message="No failed checks in this window — all checks are passing." />
 
-    if (DISPLAY_AS === 'ranked-table' || DISPLAY_AS === 'data-table') {
-      const cols = COLUMNS.length ? COLUMNS : autoColumns(data)
-      return (
-        <RecordsTable
-          rows={data}
-          columns={cols}
-          defaultSortKey={cols[0]?.key as string}
-          defaultSortAsc={false}
-          {...(ROW_LINK_KEY ? { onRowClick: (row: Row) => navigate(`${ROW_LINK_ROUTE}/${encodeURIComponent(String(row[ROW_LINK_KEY] ?? ''))}`) } : {})}
-        />
-      )
-    }
-
-    // kpi-card: show a specific field value or item count, with an optional
-    // vs-previous-period delta badge when the metric returns a `previous` field.
-    const headline = VALUE_FIELD
-      ? String((data[0] as Record<string, unknown>)?.[VALUE_FIELD] ?? '—')
-      : String(data.length)
-    const label = VALUE_LABEL || (VALUE_FIELD ? VALUE_FIELD : `${data.length === 1 ? 'item' : 'items'}`)
-    const cur = VALUE_FIELD ? Number((data[0] as Record<string, unknown>)?.[VALUE_FIELD]) : data.length
-    const prevRaw = PREVIOUS_FIELD ? (data[0] as Record<string, unknown>)?.[PREVIOUS_FIELD] : undefined
-    const kd = (PREVIOUS_FIELD && prevRaw !== undefined && prevRaw !== null)
-      ? kpiDelta(cur, Number(prevRaw), DELTA_POLARITY as DeltaPolarity)
+    // kpi-card: headline value with a vs-previous-period delta badge
+    // (rendered when the metric returns a `previous` field).
+    const first = data[0] as Record<string, unknown>
+    const headline = String(first?.[VALUE_FIELD] ?? '—')
+    const cur = Number(first?.[VALUE_FIELD])
+    const prevRaw = first?.[PREVIOUS_FIELD]
+    const kd = (prevRaw !== undefined && prevRaw !== null)
+      ? kpiDelta(cur, Number(prevRaw), DELTA_POLARITY)
       : null
 
     return (
@@ -96,7 +62,7 @@ export function AgentGovernanceViolations({ range = '30d' }: { range?: RangeKey 
           <span className="text-3xl font-bold tabular-nums text-foreground">{headline}</span>
           {kd && kd.text && <DeltaBadge direction={kd.direction} text={kd.text} />}
         </div>
-        {label && <span className="text-sm text-muted-foreground">{label}</span>}
+        <span className="text-sm text-muted-foreground">{VALUE_LABEL}</span>
       </div>
     )
   }
@@ -104,8 +70,8 @@ export function AgentGovernanceViolations({ range = '30d' }: { range?: RangeKey 
   return (
     <WidgetBoundary label="Failed Compliance Checks">
       <Card
-        className={KPI_DETAIL_ROUTE ? 'cursor-pointer hover:shadow-md transition-shadow' : undefined}
-        onClick={KPI_DETAIL_ROUTE ? () => navigate(KPI_DETAIL_ROUTE) : undefined}
+        className="cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => navigate(DETAIL_ROUTE)}
       >
         <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
           <div className="min-w-0">
@@ -115,7 +81,7 @@ export function AgentGovernanceViolations({ range = '30d' }: { range?: RangeKey 
             </CardTitle>
             <CardDescription>Deny verdicts from UiPath compliance checks — {RANGE_LABELS[range]}</CardDescription>
           </div>
-          {KPI_DETAIL_ROUTE ? <ViewAllLink to={KPI_DETAIL_ROUTE} /> : null}
+          <ViewAllLink to={DETAIL_ROUTE} />
         </CardHeader>
         <CardContent>
           {renderContent()}

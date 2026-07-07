@@ -1,25 +1,12 @@
 import React from 'react'
 import { DetailViewShell } from '@/dashboard/chrome/DetailViewShell'
-import { RecordsTable, type ColumnDef } from '@/dashboard/chrome/RecordsTable'
+import { RecordsTable } from '@/dashboard/chrome/RecordsTable'
 import { useWidgetData } from '@/hooks/useWidgetData'
 import { LoadingState, EmptyState } from '@/dashboard/chrome'
-import { fmtNumber, fmtPercent, fmtDuration, fmtTimeAgo } from '@/lib/format'
-import { toneClass } from '@/lib/widget'
+import { fmtTimeAgo } from '@/lib/format'
 import { fetchDetail } from '@/metrics/violation-reasons'
 
 type Row = Record<string, unknown>
-
-/** Auto-detect columns from the first row when explicit detailColumns aren't given. */
-function autoColumns(rows: Row[]): ColumnDef<Row>[] {
-  if (rows.length === 0) return [{ key: 'value', label: 'Value' }]
-  return Object.entries(rows[0])
-    .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
-    .map(([k, v]) => ({
-      key: k,
-      label: k.replace(/([A-Z])/g, ' $1').replace(/^(.)/, (s: string) => s.toUpperCase()).trim(),
-      ...(typeof v === 'number' && { align: 'right' as const }),
-    }))
-}
 
 export function ViolationReasonsView() {
   const { data, loading, error } = useWidgetData(fetchDetail, [])

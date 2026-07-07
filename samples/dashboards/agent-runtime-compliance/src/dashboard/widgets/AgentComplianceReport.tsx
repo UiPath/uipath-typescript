@@ -4,38 +4,17 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WidgetBoundary } from '@/dashboard/chrome/WidgetBoundary'
-import { LoadingState, EmptyState, DeltaBadge, ViewAllLink } from '@/dashboard/chrome'
+import { LoadingState, EmptyState } from '@/dashboard/chrome'
 import { RecordsTable, type ColumnDef } from '@/dashboard/chrome/RecordsTable'
-import { fmtNumber, fmtPercent, fmtDuration, fmtTimeAgo } from '@/lib/format'
-import { toneClass, kpiDelta, type DeltaPolarity } from '@/lib/widget'
+import { fmtNumber, fmtTimeAgo } from '@/lib/format'
 import { ShieldCheck } from 'lucide-react'
 import { fetchData } from '@/metrics/agent-compliance-report'
 
 type Row = Record<string, unknown>
 
-const DISPLAY_AS: string = 'data-table'
-const VALUE_FIELD = ''
-const VALUE_LABEL = ''
-const PREVIOUS_FIELD = ''
-const DELTA_POLARITY = 'neutral'
 const ROW_LINK_KEY = 'runKey'
 const ROW_LINK_ROUTE = '/agentcompliancereport'
-// Set only for a kpi-card with detail:true — makes the card clickable and adds a
-// "View all" link to its record-grain detail view. Empty for plain KPIs and tables.
-const KPI_DETAIL_ROUTE = ''
 const COLUMNS: ColumnDef<Row>[] = [{key:"agentName",label:"Agent"},{key:"startTime",label:"Started",render:(v:unknown)=>fmtTimeAgo(String(v))},{key:"evaluated",label:"Evaluated",align:"right" as const,render:(v:unknown)=>fmtNumber(Number(v))},{key:"matched",label:"Matched",align:"right" as const,render:(v:unknown)=>fmtNumber(Number(v))},{key:"finalAction",label:"Action"}]
-
-/** Auto-detect columns from the first row when explicit columns aren't given. */
-function autoColumns(rows: Row[]): ColumnDef<Row>[] {
-  if (rows.length === 0) return [{ key: 'value', label: 'Value' }]
-  return Object.entries(rows[0])
-    .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
-    .map(([k, v]) => ({
-      key: k,
-      label: k.replace(/([A-Z])/g, ' $1').replace(/^(.)/, (s: string) => s.toUpperCase()).trim(),
-      ...(typeof v === 'number' && { align: 'right' as const }),
-    }))
-}
 
 function useAgentComplianceReportData() {
   const { sdk, getToken } = useAuth()
@@ -63,48 +42,20 @@ export function AgentComplianceReport() {
     if (error)   return <EmptyState message={error.message} />
     if (data.length === 0) return <EmptyState message="No data" />
 
-    if (DISPLAY_AS === 'ranked-table' || DISPLAY_AS === 'data-table') {
-      const cols = COLUMNS.length ? COLUMNS : autoColumns(data)
-      return (
-        <RecordsTable
-          rows={data}
-          columns={cols}
-          defaultSortKey={cols[0]?.key as string}
-          defaultSortAsc={false}
-          {...(ROW_LINK_KEY ? { onRowClick: (row: Row) => navigate(`${ROW_LINK_ROUTE}/${encodeURIComponent(String(row[ROW_LINK_KEY] ?? ''))}`) } : {})}
-        />
-      )
-    }
-
-    // kpi-card: show a specific field value or item count, with an optional
-    // vs-previous-period delta badge when the metric returns a `previous` field.
-    const headline = VALUE_FIELD
-      ? String((data[0] as Record<string, unknown>)?.[VALUE_FIELD] ?? '—')
-      : String(data.length)
-    const label = VALUE_LABEL || (VALUE_FIELD ? VALUE_FIELD : `${data.length === 1 ? 'item' : 'items'}`)
-    const cur = VALUE_FIELD ? Number((data[0] as Record<string, unknown>)?.[VALUE_FIELD]) : data.length
-    const prevRaw = PREVIOUS_FIELD ? (data[0] as Record<string, unknown>)?.[PREVIOUS_FIELD] : undefined
-    const kd = (PREVIOUS_FIELD && prevRaw !== undefined && prevRaw !== null)
-      ? kpiDelta(cur, Number(prevRaw), DELTA_POLARITY as DeltaPolarity)
-      : null
-
     return (
-      <div className="flex flex-col gap-1 py-2">
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tabular-nums text-foreground">{headline}</span>
-          {kd && kd.text && <DeltaBadge direction={kd.direction} text={kd.text} />}
-        </div>
-        {label && <span className="text-sm text-muted-foreground">{label}</span>}
-      </div>
+      <RecordsTable
+        rows={data}
+        columns={COLUMNS}
+        defaultSortKey={COLUMNS[0]?.key as string}
+        defaultSortAsc={false}
+        onRowClick={(row: Row) => navigate(`${ROW_LINK_ROUTE}/${encodeURIComponent(String(row[ROW_LINK_KEY] ?? ''))}`)}
+      />
     )
   }
 
   return (
     <WidgetBoundary label="Agent Compliance by Run">
-      <Card
-        className={KPI_DETAIL_ROUTE ? 'cursor-pointer hover:shadow-md transition-shadow' : undefined}
-        onClick={KPI_DETAIL_ROUTE ? () => navigate(KPI_DETAIL_ROUTE) : undefined}
-      >
+      <Card>
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -113,7 +64,6 @@ export function AgentComplianceReport() {
             </CardTitle>
             <CardDescription>One row per agent run — click a run for its governance report</CardDescription>
           </div>
-          {KPI_DETAIL_ROUTE ? <ViewAllLink to={KPI_DETAIL_ROUTE} /> : null}
         </CardHeader>
         <CardContent>
           {renderContent()}

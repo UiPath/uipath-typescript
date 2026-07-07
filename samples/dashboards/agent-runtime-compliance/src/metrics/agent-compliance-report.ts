@@ -48,16 +48,6 @@ export const fetchDetailByKey: MetricDetailByKeyFn = async (sdk, key) => {
   )
   const rows = all.filter(d => d.traceId === key).map(x => ({ ...x }))
   const denies = rows.filter(d => d.evaluatorResult === AgentGovernanceVerdict.Deny)
-  const count = (list: typeof rows, pick: (d: (typeof rows)[number]) => string) => {
-    const acc: Record<string, number> = {}
-    for (const d of list) {
-      const k = pick(d)
-      acc[k] = (acc[k] ?? 0) + 1
-    }
-    return Object.entries(acc)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-  }
   const hooks = [...new Set(rows.map(d => String(d.hook ?? 'UNKNOWN')))]
   return {
     rows,
@@ -66,7 +56,19 @@ export const fetchDetailByKey: MetricDetailByKeyFn = async (sdk, key) => {
       Allow: rows.filter(d => String(d.hook ?? 'UNKNOWN') === h && d.evaluatorResult !== AgentGovernanceVerdict.Deny).length,
       Deny: rows.filter(d => String(d.hook ?? 'UNKNOWN') === h && d.evaluatorResult === AgentGovernanceVerdict.Deny).length,
     })),
-    byAction: count(denies, d => String(d.actionApplied ?? 'none')),
-    byPolicy: count(denies, d => String(d.policyName ?? d.policyId ?? 'Unknown')),
+    byAction: countBy(denies, d => String(d.actionApplied ?? 'none')),
+    byPolicy: countBy(denies, d => String(d.policyName ?? d.policyId ?? 'Unknown')),
   }
+}
+
+/** Group a list by a picked key and return { name, value } rows, highest count first. */
+function countBy<T>(list: T[], pick: (item: T) => string): { name: string; value: number }[] {
+  const acc: Record<string, number> = {}
+  for (const item of list) {
+    const k = pick(item)
+    acc[k] = (acc[k] ?? 0) + 1
+  }
+  return Object.entries(acc)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
 }
