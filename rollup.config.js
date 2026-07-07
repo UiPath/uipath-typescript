@@ -233,6 +233,11 @@ const serviceEntries = [
     name: 'notifications',
     input: 'src/services/notification/index.ts',
     output: 'notifications/index'
+  },
+  {
+    name: 'ontologies',
+    input: 'src/services/ontology/index.ts',
+    output: 'ontologies/index'
   }
 ];
 

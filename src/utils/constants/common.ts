@@ -264,6 +264,24 @@ export const PROCESS_INSTANCE_TOKEN_PARAMS = {
 };
 
 /**
+ * Ontology pagination response shape constants (page/limit/items/total style).
+ * Temporary wrapper — remove once backend migrates to OData format.
+ */
+export const ONTOLOGY_PAGINATION = {
+  ITEMS_FIELD: 'items',
+  TOTAL_COUNT_FIELD: 'total',
+};
+
+/**
+ * Ontology OFFSET pagination parameter names (1-based page-number style, no skip conversion).
+ */
+export const ONTOLOGY_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'limit',
+  OFFSET_PARAM: 'page',
+  COUNT_PARAM: undefined,
+};
+
+/**
  * Conversational Agent pagination constants for cursor-based pagination
  */
 export const CONVERSATIONAL_PAGINATION = {

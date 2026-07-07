@@ -22,6 +22,7 @@ import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
+import { OntologyService } from '../../../src/services/ontology/ontology';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -66,6 +67,7 @@ export interface TestServices {
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
+  ontologies?: OntologyService;
 }
 
 /**
@@ -157,6 +159,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
+    ontologies: new OntologyService(sdk),
   };
 }
 
