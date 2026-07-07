@@ -6,7 +6,8 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { hasValidPagination } from '../../utils/helpers';
+import { hasValidPagination, generateRandomString } from '../../utils/helpers';
+import { CaseInstanceMessageName } from '../../../../src/models/maestro/case-instances.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -208,6 +209,32 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         }
         console.log('Close case instance test failed:', error.message);
       }
+    });
+  });
+
+  describe('sendMessage', () => {
+    it('should send a message to a running case instance', async () => {
+      const { caseInstances } = getServices();
+
+      const instances = await caseInstances.getAll({ limit: 50 });
+      const runningInstance = instances.items.find(
+        (instance) => instance.latestRunStatus === 'Running' && instance.folderKey
+      );
+
+      if (!runningInstance) {
+        throw new Error('No running case instance available — cannot test sendMessage');
+      }
+
+      // Publishing an ad-hoc trigger with an unmatched task name exercises the endpoint,
+      // auth, folder-key header, and body format without altering the case state.
+      await expect(
+        caseInstances.sendMessage(
+          runningInstance.instanceId,
+          runningInstance.folderKey,
+          CaseInstanceMessageName.UserAdhocTrigger,
+          { itemData: { taskNames: [`sdk-integration-${generateRandomString(8)}`] } }
+        )
+      ).resolves.toBeUndefined();
     });
   });
 

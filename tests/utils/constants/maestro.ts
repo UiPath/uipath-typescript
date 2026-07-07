@@ -66,6 +66,9 @@ export const MAESTRO_TEST_CONSTANTS = {
   CASE_TASK_ID: 'task-1',
   CASE_TASK_NAME: 'Test Task',
   CASE_ELEMENT_ID: 'element-1',
+  CASE_MESSAGE_STAGE_NAME: 'Review',
+  CASE_MESSAGE_REFERENCE: 'case-case-instance-123-CaseWaitForUser_StageSelection_stage-1',
+  ERROR_SEND_MESSAGE_FAILED: 'Failed to send message',
   
   // Task-related constants
   TASK_TYPE_RPA: 'rpa',

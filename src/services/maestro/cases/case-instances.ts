@@ -7,6 +7,7 @@ import {
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
+  CaseInstanceSendMessageOptions,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -20,7 +21,8 @@ import {
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
-  CaseJsonResponse
+  CaseJsonResponse,
+  CaseInstanceSendMessageRequestBody
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -32,7 +34,8 @@ import {
   CASE_STAGE_CONSTANTS,
   TimeFieldTransformMap,
   CASE_INSTANCE_TASK_FILTER,
-  CASE_INSTANCE_TASK_EXPAND
+  CASE_INSTANCE_TASK_EXPAND,
+  CASE_INSTANCE_MESSAGE_REFERENCE
 } from '../../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -321,6 +324,60 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       success: true,
       data: response.data
     };
+  }
+
+  /**
+   * Send a message to a running case instance
+   *
+   * Messages resolve wait points in the case — selecting the next stage when the case
+   * is waiting for a user to choose one, or starting a manually-triggered (ad-hoc) case task.
+   *
+   * @param instanceId - The ID of the case instance to send the message to
+   * @param folderKey - Required folder key
+   * @param name - The message name (e.g. `CaseInstanceMessageName.UserSelectStage`)
+   * @param options - Optional message options with itemData payload and reference override
+   * @returns Promise that resolves when the message is accepted
+   * @example
+   * ```typescript
+   * import { CaseInstances, CaseInstanceMessageName } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
+   * // Select the next stage when the case is waiting for a user to choose one
+   * await caseInstances.sendMessage(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   CaseInstanceMessageName.UserSelectStage,
+   *   { itemData: { stageName: 'Review' } }
+   * );
+   *
+   * // Start a manually-triggered (ad-hoc) case task
+   * await caseInstances.sendMessage(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   CaseInstanceMessageName.UserAdhocTrigger,
+   *   { itemData: { taskNames: ['Approve Invoice'] } }
+   * );
+   *
+   * // Or using instance method
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * await instance.sendMessage(
+   *   CaseInstanceMessageName.UserAdhocTrigger,
+   *   { itemData: { taskNames: ['Approve Invoice'] } }
+   * );
+   * ```
+   */
+  @track('CaseInstances.SendMessage')
+  async sendMessage(instanceId: string, folderKey: string, name: string, options?: CaseInstanceSendMessageOptions): Promise<void> {
+    const requestBody: CaseInstanceSendMessageRequestBody = {
+      name,
+      reference: options?.reference ?? CASE_INSTANCE_MESSAGE_REFERENCE(instanceId),
+      ...(options?.itemData && { itemData: options.itemData })
+    };
+
+    await this.post<void>(MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE, requestBody, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
   }
 
   /**

@@ -82,6 +82,32 @@ export interface CaseInstanceReopenOptions extends CaseInstanceOperationOptions 
 }
 
 /**
+ * Well-known message names understood by running case instances.
+ */
+export enum CaseInstanceMessageName {
+  /** Selects the next stage when the case instance is waiting for a user to choose one */
+  UserSelectStage = 'UserSelectStage',
+  /** Starts a manually-triggered (ad-hoc) case task */
+  UserAdhocTrigger = 'UserAdhocTrigger'
+}
+
+/**
+ * Options for sending a message to a case instance.
+ */
+export interface CaseInstanceSendMessageOptions {
+  /**
+   * Data payload delivered with the message — e.g. `{ stageName: 'Review' }` for
+   * `UserSelectStage`, or `{ taskNames: ['Approve Invoice'] }` for `UserAdhocTrigger`.
+   */
+  itemData?: Record<string, string | string[]>;
+  /**
+   * Message reference identifying the target wait point. Defaults to the case
+   * instance itself, which is correct for most messages.
+   */
+  reference?: string;
+}
+
+/**
  * Case App Configuration Overview
  */
 export interface CaseAppOverview {
