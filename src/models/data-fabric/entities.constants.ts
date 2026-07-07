@@ -49,6 +49,7 @@ export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaF
   [EntityFieldDataType.BOOLEAN]:        { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.BIG_INTEGER]:    { sqlTypeName: SqlFieldType.BIGINT,           fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.MULTILINE_TEXT]:    { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic          },
+  [EntityFieldDataType.MULTILINE_MAX]:     { sqlTypeName: SqlFieldType.MULTILINE_MAX,    fieldDisplayType: FieldDisplayType.Basic          },
   [EntityFieldDataType.FILE]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
   [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
   [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
@@ -78,6 +79,8 @@ export const FieldDisplayTypeToDataType: Partial<Record<FieldDisplayType, Entity
 export const ENTITY_FIELD_CONSTRAINT_DEFAULTS = {
   STRING_LENGTH_LIMIT: 200,
   MULTILINE_TEXT_LENGTH_LIMIT: 200,
+  /** Byte budget (UTF-16) for MULTILINE_MAX values: 128 KB — the platform max, applied by default */
+  MULTILINE_MAX_LENGTH_LIMIT: 128 * 1024,
   /** Fixed (non-overridable) length limit on DECIMAL payloads*/
   DECIMAL_LENGTH_LIMIT: 1000,
   DECIMAL_PRECISION: 2,
@@ -109,6 +112,10 @@ export const ENTITY_FIELD_CONSTRAINT_SPEC: Partial<Record<EntityFieldDataType, P
   },
   [EntityFieldDataType.MULTILINE_TEXT]: {
     [EntityFieldConstraint.LengthLimit]: { min: 1, max: 10000 },
+  },
+  [EntityFieldDataType.MULTILINE_MAX]: {
+    // lengthLimit is a UTF-16 byte budget for MULTILINE_MAX (1 to 128 KB), not code units.
+    [EntityFieldConstraint.LengthLimit]: { min: 1, max: 128 * 1024 },
   },
   [EntityFieldDataType.INTEGER]: {
     [EntityFieldConstraint.MaxValue]: { min: -Number.MAX_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
@@ -151,4 +158,5 @@ export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
   [SqlFieldType.BIT]:              EntityFieldDataType.BOOLEAN,
   [SqlFieldType.DECIMAL]:          EntityFieldDataType.DECIMAL,
   [SqlFieldType.MULTILINE]:        EntityFieldDataType.MULTILINE_TEXT,
+  [SqlFieldType.MULTILINE_MAX]:    EntityFieldDataType.MULTILINE_MAX,
 };

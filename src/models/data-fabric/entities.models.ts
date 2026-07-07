@@ -145,6 +145,9 @@ export interface EntityServiceModel {
   /**
    * Gets entity records by entity ID
    *
+   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
+   * instead of the full content — use {@link getRecordById} to retrieve the full value.
+   *
    * @param entityId - UUID of the entity
    * @param options - Query options The `folderKey` property is **experimental**.
    * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
@@ -193,6 +196,8 @@ export interface EntityServiceModel {
 
   /**
    * Gets a single entity record by entity ID and record ID
+   *
+   * Returns the full record, including the complete content of `MULTILINE_MAX` fields.
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
@@ -416,6 +421,9 @@ export interface EntityServiceModel {
 
   /**
    * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+   *
+   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
+   * instead of the full content — use {@link getRecordById} to retrieve the full value.
    *
    * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.

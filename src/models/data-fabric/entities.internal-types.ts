@@ -93,4 +93,5 @@ export enum SqlFieldType {
   BIT = 'BIT',
   DECIMAL = 'DECIMAL',
   MULTILINE = 'MULTILINE',
+  MULTILINE_MAX = 'MULTILINE_MAX',
 }

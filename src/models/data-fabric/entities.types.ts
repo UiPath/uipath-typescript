@@ -20,6 +20,13 @@ export enum EntityFieldDataType {
   BOOLEAN = "BOOLEAN",
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
+  /**
+   * Large multi-line text (up to 128 KB). Unlike {@link MULTILINE_TEXT}, the full
+   * value is lazy-loaded: list/query operations return a size marker
+   * (e.g. `"HasValue=true Length=512"`) instead of the content; reading a single
+   * record by ID returns the full value.
+   */
+  MULTILINE_MAX = "MULTILINE_MAX",
   FILE = "FILE",
   CHOICE_SET_SINGLE = "CHOICE_SET_SINGLE",
   CHOICE_SET_MULTIPLE = "CHOICE_SET_MULTIPLE",

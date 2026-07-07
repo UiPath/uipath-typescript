@@ -55,6 +55,8 @@ function generateFieldValue(field: FieldMetaData): any {
       return `Test_${generateRandomString(8)}`;
     case EntityFieldDataType.MULTILINE_TEXT:
       return `Test multiline\n${generateRandomString(12)}`;
+    case EntityFieldDataType.MULTILINE_MAX:
+      return `Test multiline max\n${generateRandomString(64)}`;
     case EntityFieldDataType.INTEGER: {
       const max = fieldDataType.maxValue ?? 10000;
       const min = fieldDataType.minValue ?? 0;
@@ -1259,6 +1261,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(field?.fieldDataType.lengthLimit).toBe(200);
     });
 
+    it('should create MULTILINE_MAX field with default lengthLimit 128 KB', async () => {
+      const { entities } = getServices();
+      const name = `sdk_mlmax_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'mlmax_field', type: EntityFieldDataType.MULTILINE_MAX },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'mlmax_field');
+      expect(field?.fieldDataType.name).toBe(EntityFieldDataType.MULTILINE_MAX);
+      expect(field?.fieldDataType.lengthLimit).toBe(128 * 1024);
+    });
+
     it('should create DECIMAL field with correct default constraints', async () => {
       const { entities } = getServices();
       const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
@@ -1455,6 +1471,41 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const all = await entities.getAll();
       expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+  });
+
+  // Verifies the MULTILINE_MAX lazy-load contract end to end: list returns a size
+  // marker, getRecordById (v2 read) returns the full content. Creating the field
+  // needs DataFabric.Schema.Write scope, absent in the standard test env — so this is
+  // gated on SCHEMA_WRITE_SCOPE_AVAILABLE and skipped there (a hard throw would redden
+  // CI permanently). Runs in any environment whose PAT carries the scope.
+  describe.skipIf(!getTestConfig().schemaWriteScopeAvailable)('MULTILINE_MAX field lifecycle', () => {
+    it('should return a marker on list and the full value via getRecordById', async () => {
+      const { entities } = getServices();
+      const name = `sdk_mlmax_life_${generateRandomString(8).toLowerCase()}`;
+
+      // Create an entity with a MULTILINE_MAX field, then insert a large value.
+      const entityId = await entities.create(name, [
+        { fieldName: 'body', type: EntityFieldDataType.MULTILINE_MAX },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const bodyValue = `Large body content ${generateRandomString(256)}`;
+      const inserted = await entities.insertRecordById(entityId, { body: bodyValue });
+      expect(inserted.Id).toBeDefined();
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      // List returns a size marker (e.g. "HasValue=true Length=...") — not the content.
+      const listed = await entities.getAllRecords(entityId, { pageSize: 50 });
+      const listedRecord = listed.items.find((r: EntityRecord) => r.Id === inserted.Id);
+      expect(listedRecord).toBeDefined();
+      expect(typeof listedRecord!.body).toBe('string');
+      expect(listedRecord!.body).toMatch(/^HasValue=true/);
+      expect(listedRecord!.body).not.toBe(bodyValue);
+
+      // getRecordById (v2 read) returns the full content.
+      const full = await entities.getRecordById(entityId, inserted.Id);
+      expect(full.body).toBe(bodyValue);
     });
   });
 
