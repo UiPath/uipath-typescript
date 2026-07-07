@@ -155,7 +155,7 @@ const PAGE_SIZE = 25
                         </button>
                       } @else if (field.isAttachment) {
                         <span class="text-muted" style="font-style: italic">
-                          {{ cellValue(row, field) === '—' ? 'no attachment' : 'attachment' }}
+                          {{ hasAttachment(row, field) ? 'attachment' : 'no attachment' }}
                         </span>
                       } @else {
                         {{ cellValue(row, field) }}
@@ -351,6 +351,12 @@ export class RecordsTableComponent {
 
   cellValue(row: EntityRecord, field: FieldMetaData): string {
     return formatCell(this.rawValue(row, field))
+  }
+
+  /** Whether a File-type field has an attachment on this record. */
+  hasAttachment(row: EntityRecord, field: FieldMetaData): boolean {
+    const value = this.rawValue(row, field)
+    return value != null && value !== ''
   }
 
   /**
