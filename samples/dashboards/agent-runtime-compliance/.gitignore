@@ -1,0 +1,13 @@
+# Build outputs
+node_modules
+dist
+.uipath
+.dashboard
+
+# Local UiPath OAuth config (tenant-specific) — copy uipath.json.example
+# to uipath.json and fill in your values. The committed sample only ships
+# the .example template, not real tenant info.
+uipath.json
+
+# Logs
+*.log
