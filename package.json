@@ -229,7 +229,8 @@
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "docs/oauth-scopes.md"
     ],
     "scripts": {
         "prepack": "rimraf *.tgz",
