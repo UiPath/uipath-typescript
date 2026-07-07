@@ -1,0 +1,415 @@
+/*
+ * Global styles — design tokens + shared primitives.
+ *
+ * Mirrors the Apollo Vertex-inspired token setup of the React sample
+ * (shadcn-style semantic tokens, light + dark). Components consume the
+ * tokens and the shared primitives below (.btn, .badge, .alert, .card,
+ * .dialog, .skeleton, table styles) instead of hard-coded colours.
+ */
+
+:root {
+  /* Native form controls (date-picker icons/popups, selects, scrollbars)
+     follow this, not the CSS tokens — without it the calendar icon renders
+     dark-on-dark in dark mode. */
+  color-scheme: light;
+
+  --background: #ffffff;
+  --foreground: #1c2028;
+  --card: #ffffff;
+  --card-foreground: #1c2028;
+  --muted: #f4f5f7;
+  --muted-foreground: #64707d;
+  --accent: #eef1f4;
+  --accent-foreground: #1c2028;
+  --primary: #316bd6;
+  --primary-foreground: #ffffff;
+  --destructive: #c73f3f;
+  --destructive-foreground: #ffffff;
+  --border: #e2e6ea;
+  --input: #d5dae0;
+  --ring: #316bd6;
+
+  --radius: 8px;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #16181d;
+  --foreground: #e6e9ee;
+  --card: #1c1f26;
+  --card-foreground: #e6e9ee;
+  --muted: #23272f;
+  --muted-foreground: #97a1ad;
+  --accent: #262b34;
+  --accent-foreground: #e6e9ee;
+  --primary: #6d9bf0;
+  --primary-foreground: #10131a;
+  --destructive: #e06c6c;
+  --destructive-foreground: #10131a;
+  --border: #2c313a;
+  --input: #3a4049;
+  --ring: #6d9bf0;
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+code,
+pre,
+.mono {
+  font-family: var(--font-mono);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ───────────────────────── Buttons ───────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 6px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--foreground);
+  white-space: nowrap;
+  transition: background-color 120ms, color 120ms, border-color 120ms;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-outline {
+  border-color: var(--input);
+  background: var(--background);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+.btn-outline:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.btn-destructive {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+.btn-destructive:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12.5px;
+}
+
+.btn-icon {
+  padding: 5px;
+  border-radius: 6px;
+}
+.btn-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ───────────────────────── Badges ───────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-secondary {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.badge-outline {
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+/* ───────────────────────── Alerts ───────────────────────── */
+
+.alert {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13.5px;
+  background: var(--card);
+}
+
+.alert-destructive {
+  border-color: color-mix(in srgb, var(--destructive) 40%, transparent);
+  color: var(--destructive);
+}
+
+.alert-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.alert-description {
+  color: var(--muted-foreground);
+  /* API error messages contain unbroken tokens (URLs, GUIDs) — wrap them
+     rather than overflowing the alert box. */
+  overflow-wrap: anywhere;
+}
+
+.alert-destructive .alert-description {
+  color: color-mix(in srgb, var(--destructive) 85%, var(--foreground));
+}
+
+/* ───────────────────────── Cards ───────────────────────── */
+
+.card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ───────────────────────── Form inputs ───────────────────────── */
+
+.input,
+.select {
+  width: 100%;
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--background);
+  color: var(--foreground);
+  padding: 6px 10px;
+  font-size: 13.5px;
+  font-family: inherit;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.input:focus-visible,
+.select:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.input-error {
+  border-color: var(--destructive);
+}
+.input-error:focus-visible {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 1px var(--destructive);
+}
+
+/* ───────────────────────── Data tables ───────────────────────── */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.data-table thead {
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+  text-align: left;
+}
+
+.data-table th {
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+/* ───────────────────────── Dialogs ───────────────────────── */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+  /* A scroll container with contained overscroll swallows wheel events over
+     the backdrop — otherwise they chain up and scroll the records pane
+     behind the modal. */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.dialog {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+  width: 100%;
+  max-height: min(85vh, 720px);
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+}
+
+.dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dialog-description {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  margin-top: 3px;
+}
+
+/* The dialog receives focus on open (tabindex="-1") for keyboard/screen-
+   reader users — the container itself doesn't need a visible focus ring. */
+.dialog:focus {
+  outline: none;
+}
+
+.dialog-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 16px;
+  /* Don't hand the wheel to the page once this hits its scroll limit. */
+  overscroll-behavior: contain;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 16px;
+  flex-shrink: 0;
+}
+
+/* ───────────────────────── Skeletons ───────────────────────── */
+
+.skeleton {
+  display: block;
+  background: var(--muted);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ───────────────────────── Spinner ───────────────────────── */
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ───────────────────────── Helpers ───────────────────────── */
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
