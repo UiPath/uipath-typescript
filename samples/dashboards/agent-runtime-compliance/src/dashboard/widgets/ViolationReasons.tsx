@@ -7,8 +7,8 @@ import { useWidgetData } from '@/hooks/useWidgetData'
 import { fetchData } from '@/metrics/violation-reasons'
 
 
-import { ViewAllLink, LoadingState, EmptyState } from '@/dashboard/chrome'
-import { SegmentedToggle } from '@/dashboard/chrome/SegmentedToggle'
+import { ViewAllLink, LoadingState, EmptyState } from '@/dashboard/components'
+import { SegmentedToggle } from '@/dashboard/components/SegmentedToggle'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { fmtNumber } from '@/lib/format'
 import { headline } from '@/lib/widget'
@@ -27,7 +27,7 @@ export function ViolationReasons() {
     [range],
   )
   const chartData = data ?? []
-  // Card chrome (header + title) always renders; only the body swaps for
+  // The card frame (header + title) always renders; only the body swaps for
   // loading/error/empty. `ready` guards the headline so it isn't computed on
   // an empty array while data is still loading.
   const isEmpty = !chartData || (chartData as unknown[]).length === 0

@@ -1,12 +1,17 @@
 import React from 'react'
-import { DetailViewShell } from '@/dashboard/chrome/DetailViewShell'
-import { RecordsTable } from '@/dashboard/chrome/RecordsTable'
+import { DetailViewShell } from '@/dashboard/components/DetailViewShell'
+import { RecordsTable, type ColumnDef } from '@/dashboard/components/RecordsTable'
 import { useWidgetData } from '@/hooks/useWidgetData'
-import { LoadingState, EmptyState } from '@/dashboard/chrome'
+import { LoadingState, EmptyState } from '@/dashboard/components'
 import { fmtTimeAgo } from '@/lib/format'
 import { fetchDetail } from '@/metrics/agent-governance-violations'
+import type { AgentGovernanceDecisionGetResponse } from '@uipath/uipath-typescript/traces'
 
 type Row = Record<string, unknown>
+
+// Column keys are compile-checked against the SDK's decision type; the labels
+// and formatting are presentation choices the type can't provide.
+type DecisionKey = Extract<keyof AgentGovernanceDecisionGetResponse, string>
 
 export function AgentGovernanceViolationsView() {
   const { data, loading, error } = useWidgetData(fetchDetail, [])
@@ -25,7 +30,7 @@ export function AgentGovernanceViolationsView() {
   }
 
   const rows = toRows(data ?? [])
-  const columns = [{key:"agentName",label:"Agent"},{key:"policyId",label:"Guardrail"},{key:"policyName",label:"Clause"},{key:"packName",label:"Pack"},{key:"hook",label:"Hook"},{key:"mode",label:"Mode"},{key:"evaluatorResult",label:"Result"},{key:"actionApplied",label:"Action"},{key:"reason",label:"Reason"},{key:"traceId",label:"Run (Trace ID)"},{key:"jobKey",label:"Job Key"},{key:"folderKey",label:"Folder Key"},{key:"source",label:"Source"},{key:"startTime",label:"Started",render:(v:unknown)=>fmtTimeAgo(String(v))},{key:"endTime",label:"Ended",render:(v:unknown)=>fmtTimeAgo(String(v))}]
+  const columns: (ColumnDef<Row> & { key: DecisionKey })[] = [{key:"agentName",label:"Agent"},{key:"policyId",label:"Guardrail"},{key:"policyName",label:"Clause"},{key:"packName",label:"Pack"},{key:"hook",label:"Hook"},{key:"mode",label:"Mode"},{key:"evaluatorResult",label:"Result"},{key:"actionApplied",label:"Action"},{key:"reason",label:"Reason"},{key:"traceId",label:"Run (Trace ID)"},{key:"jobKey",label:"Job Key"},{key:"folderKey",label:"Folder Key"},{key:"source",label:"Source"},{key:"startTime",label:"Started",render:(v:unknown)=>fmtTimeAgo(String(v))},{key:"endTime",label:"Ended",render:(v:unknown)=>fmtTimeAgo(String(v))}]
 
   if (loading) return (
     <DetailViewShell title="Failed Compliance Checks" description="Deny verdicts from UiPath compliance checks">

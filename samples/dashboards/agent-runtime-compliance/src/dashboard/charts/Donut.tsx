@@ -1,7 +1,7 @@
 import React from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { EmptyState } from '@/dashboard/chrome'
+import { EmptyState } from '@/dashboard/components'
 import type { Row } from '@/lib/metric-contract'
 
 const CHART_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))']

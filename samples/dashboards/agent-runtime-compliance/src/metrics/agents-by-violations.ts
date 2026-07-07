@@ -1,5 +1,6 @@
 import type { Row } from '@/lib/metric-contract'
 import type { UiPath } from '@uipath/uipath-typescript/core'
+import { AgentTraces } from '@uipath/uipath-typescript/traces'
 import { THIRTY_DAYS_AGO, NOW } from '@/lib/time'
 import { fetchAll } from '@/lib/paginate'
 
@@ -13,26 +14,26 @@ export const fetchData = async (
   const start = opts?.start ?? THIRTY_DAYS_AGO
   const end = opts?.end ?? NOW
   const limit = opts?.limit ?? 20
-  const { AgentTraces } = await import('@uipath/uipath-typescript/traces')
-  const s = await new AgentTraces(sdk).getGovernanceSummary(start, { endTime: end })
-  return (s.byAgent ?? [])
-    .map(a => ({ name: a.name ?? a.key ?? 'Unknown', value: a.violationCount ?? 0 }))
-    .filter(a => a.value > 0)
+  const summary = await new AgentTraces(sdk).getGovernanceSummary(start, { endTime: end })
+  return (summary.byAgent ?? [])
+    .map(agent => ({ name: agent.name ?? agent.key ?? 'Unknown', value: agent.violationCount ?? 0 }))
+    .filter(agent => agent.value > 0)
     .sort((a, b) => b.value - a.value)
     .slice(0, limit)
 }
 
 // Return type narrowed to Row[] (vs MetricDetailByKeyFn's Row[] | NamedSourceMap)
-// so the generated detail view's Row[] callback type-checks; still assignable.
+// so the detail view's Row[] callback type-checks; still assignable.
 export const fetchDetailByKey = async (
   sdk: UiPath,
   key: string,
   _getToken: () => Promise<string>,
 ): Promise<Row[]> => {
-  const { AgentTraces } = await import('@uipath/uipath-typescript/traces')
-  const svc = new AgentTraces(sdk)
-  const rows = await fetchAll(cursor =>
-    svc.getGovernanceDecisions(THIRTY_DAYS_AGO, { endTime: NOW, violationsOnly: true, pageSize: 200, cursor }),
+  const agentTraces = new AgentTraces(sdk)
+  const decisions = await fetchAll(cursor =>
+    agentTraces.getGovernanceDecisions(THIRTY_DAYS_AGO, { endTime: NOW, violationsOnly: true, pageSize: 200, cursor }),
   )
-  return rows.filter(d => (d.agentName ?? d.agentId ?? 'Unknown') === key).map(x => ({ ...x }))
+  return decisions
+    .filter(decision => (decision.agentName ?? decision.agentId ?? 'Unknown') === key)
+    .map(decision => ({ ...decision }))
 }

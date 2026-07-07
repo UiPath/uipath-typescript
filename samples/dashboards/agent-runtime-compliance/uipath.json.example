@@ -1,6 +1,5 @@
 {
-  "name": "Agent Runtime Compliance",
-  "scope": "OR.Assets OR.Jobs OR.Folders OR.Buckets OR.Execution OR.Tasks OR.Queues OR.Users Insights Insights.RealTimeData Traces.Api PIMS",
+  "scope": "OR.Folders.Read Insights Insights.RealTimeData Traces.Api",
   "clientId": "<YOUR_EXTERNAL_APP_CLIENT_ID>",
   "orgName": "",
   "tenantName": "",

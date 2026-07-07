@@ -2,15 +2,20 @@ import React from 'react'
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { DetailViewShell } from '@/dashboard/chrome/DetailViewShell'
-import { RecordsTable, type ColumnDef } from '@/dashboard/chrome/RecordsTable'
+import { DetailViewShell } from '@/dashboard/components/DetailViewShell'
+import { RecordsTable, type ColumnDef } from '@/dashboard/components/RecordsTable'
 import { useAuth } from '@/hooks/useAuth'
-import { LoadingState, EmptyState } from '@/dashboard/chrome'
+import { LoadingState, EmptyState } from '@/dashboard/components'
 import { fmtTimeAgo } from '@/lib/format'
 import { fetchDetailByKey } from '@/metrics/agent-compliance-report'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import type { AgentGovernanceDecisionGetResponse } from '@uipath/uipath-typescript/traces'
 
 type Row = Record<string, unknown>
+
+// Column keys are compile-checked against the SDK's decision type; the labels
+// and formatting are presentation choices the type can't provide.
+type DecisionKey = Extract<keyof AgentGovernanceDecisionGetResponse, string>
 
 const ALLOW_COLOR = 'hsl(var(--chart-2))' // UiPath blue
 const DENY_COLOR = 'hsl(var(--chart-5))'  // error red
@@ -119,7 +124,7 @@ export function AgentComplianceReportDetailView() {
     </DetailViewShell>
   )
 
-  const decisionColumns: ColumnDef<Row>[] = [
+  const decisionColumns: (ColumnDef<Row> & { key: DecisionKey })[] = [
     { key: 'hook', label: 'Hook' },
     { key: 'policyId', label: 'Guardrail' },
     { key: 'policyName', label: 'Clause' },

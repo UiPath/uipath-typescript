@@ -89,15 +89,13 @@ npm install
 3. Configure:
    - **Name**: e.g., "Agent Runtime Compliance Dashboard"
    - **Redirect URI**: `http://localhost:25173` (for development)
-   - **Scopes** (user scopes): `OR.Assets`, `OR.Jobs`, `OR.Folders`, `OR.Buckets`,
-     `OR.Execution`, `OR.Tasks`, `OR.Queues`, `OR.Users`, `Insights`,
-     `Insights.RealTimeData`, `Traces.Api`, `PIMS`
+   - **Scopes** (user scopes): `OR.Folders.Read`, `Insights`, `Insights.RealTimeData`, `Traces.Api`
 4. Save and copy the **Client ID**
 
 Or via the CLI:
 
 ```bash
-uip admin external-apps create "Agent Runtime Compliance Dashboard" --non-confidential --redirect-uri "http://localhost:25173" --user-scope "OR.Assets,OR.Jobs,OR.Folders,OR.Buckets,OR.Execution,OR.Tasks,OR.Queues,OR.Users,Insights,Insights.RealTimeData,Traces.Api,PIMS" --output json
+uip admin external-apps create "Agent Runtime Compliance Dashboard" --non-confidential --redirect-uri "http://localhost:25173" --user-scope "OR.Folders.Read,Insights,Insights.RealTimeData,Traces.Api" --output json
 ```
 
 ### 3. Local Configuration
@@ -112,8 +110,7 @@ Edit `uipath.json`:
 
 ```json
 {
-  "name": "Agent Runtime Compliance",
-  "scope": "OR.Assets OR.Jobs OR.Folders OR.Buckets OR.Execution OR.Tasks OR.Queues OR.Users Insights Insights.RealTimeData Traces.Api PIMS",
+  "scope": "OR.Folders.Read Insights Insights.RealTimeData Traces.Api",
   "clientId": "<your-oauth-external-app-client-id>",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
@@ -144,7 +141,7 @@ src/
 │   ├── Dashboard.tsx       # Layout: KPI row (shared Overview range toggle), charts, tables
 │   ├── widgets/            # One component per widget — KPIs, donuts, ranked tables
 │   ├── views/              # Drill-down pages, incl. the per-run compliance report
-│   └── chrome/             # Header, cards, segmented toggles, records table, states
+│   └── components/         # Header, cards, segmented toggles, records table, states
 ├── metrics/                # Data modules — one per widget; ALL SDK calls live here
 ├── hooks/useAuth.ts        # SDK init + OAuth sign-in state
 └── lib/                    # Time windows, cursor pagination, number/date formatting

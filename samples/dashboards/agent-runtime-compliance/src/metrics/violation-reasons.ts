@@ -1,5 +1,6 @@
 import type { MetricFn, Row } from '@/lib/metric-contract'
 import type { UiPath } from '@uipath/uipath-typescript/core'
+import { AgentTraces } from '@uipath/uipath-typescript/traces'
 import { THIRTY_DAYS_AGO, NOW } from '@/lib/time'
 import { fetchAll } from '@/lib/paginate'
 
@@ -31,14 +32,13 @@ export const fetchData = async (
 ): Promise<Row[]> => {
   const start = opts?.start ?? THIRTY_DAYS_AGO
   const end = opts?.end ?? NOW
-  const { AgentTraces } = await import('@uipath/uipath-typescript/traces')
-  const svc = new AgentTraces(sdk)
-  const rows = await fetchAll(cursor =>
-    svc.getGovernanceDecisions(start, { endTime: end, violationsOnly: true, pageSize: 200, cursor }),
+  const agentTraces = new AgentTraces(sdk)
+  const decisions = await fetchAll(cursor =>
+    agentTraces.getGovernanceDecisions(start, { endTime: end, violationsOnly: true, pageSize: 200, cursor }),
   )
   const counts: Record<string, number> = {}
-  for (const d of rows) {
-    const category = normalizeReason(d.reason)
+  for (const decision of decisions) {
+    const category = normalizeReason(decision.reason)
     counts[category] = (counts[category] ?? 0) + 1
   }
   const ranked = Object.entries(counts)
@@ -46,15 +46,14 @@ export const fetchData = async (
     .sort((a, b) => b.value - a.value)
   if (ranked.length <= 5) return ranked
   const top = ranked.slice(0, 4)
-  const other = ranked.slice(4).reduce((sum, r) => sum + r.value, 0)
-  return [...top, { name: 'Other', value: other }]
+  const otherTotal = ranked.slice(4).reduce((sum, entry) => sum + entry.value, 0)
+  return [...top, { name: 'Other', value: otherTotal }]
 }
 
 export const fetchDetail: MetricFn = async (sdk) => {
-  const { AgentTraces } = await import('@uipath/uipath-typescript/traces')
-  const svc = new AgentTraces(sdk)
-  const rows = await fetchAll(cursor =>
-    svc.getGovernanceDecisions(THIRTY_DAYS_AGO, { endTime: NOW, violationsOnly: true, pageSize: 200, cursor }),
+  const agentTraces = new AgentTraces(sdk)
+  const decisions = await fetchAll(cursor =>
+    agentTraces.getGovernanceDecisions(THIRTY_DAYS_AGO, { endTime: NOW, violationsOnly: true, pageSize: 200, cursor }),
   )
-  return rows.map(x => ({ ...x }))
+  return decisions.map(decision => ({ ...decision }))
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { EmptyState } from '@/dashboard/chrome'
+import { EmptyState } from '@/dashboard/components'
 import type { Row, ChartSeriesDef } from '@/lib/metric-contract'
 
 interface MultiLineProps { data: Row[]; xKey: string; series: ChartSeriesDef[]; title?: string; height?: number; emptyMessage?: string }

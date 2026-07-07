@@ -1,8 +1,8 @@
 import React from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
-import { ErrorBoundary } from './dashboard/chrome/ErrorBoundary'
-import { LoadingState } from './dashboard/chrome/LoadingState'
+import { ErrorBoundary } from './dashboard/components/ErrorBoundary'
+import { LoadingState } from './dashboard/components/LoadingState'
 
 // Dashboard + views are generated per-build by the skill agent.
 // The agent will add imports and routes below when building.

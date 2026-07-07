@@ -1,10 +1,9 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { WidgetBoundary } from '@/dashboard/chrome/WidgetBoundary'
-import { LoadingState, EmptyState, DeltaBadge, ViewAllLink } from '@/dashboard/chrome'
+import { WidgetBoundary } from '@/dashboard/components/WidgetBoundary'
+import { LoadingState, EmptyState, DeltaBadge, ViewAllLink } from '@/dashboard/components'
+import { useWidgetData } from '@/hooks/useWidgetData'
 import { kpiDelta, type DeltaPolarity } from '@/lib/widget'
 import { Activity } from 'lucide-react'
 import { fetchData } from '@/metrics/flagged-agents'
@@ -19,48 +18,34 @@ const DELTA_POLARITY: DeltaPolarity = 'up-bad'
 // The card is clickable and links to its record-grain detail view.
 const DETAIL_ROUTE = '/flaggedagents'
 
-function useFlaggedAgentsData(range: RangeKey) {
-  const { sdk, getToken } = useAuth()
-  const [data, setData] = useState<Row[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    if (!sdk) return
-    setLoading(true)
-    setError(null)
-    fetchData(sdk, getToken, rangeWindow(range))
-      .then(rows => { setData(rows); setLoading(false) })
-      .catch(err => { setError(err instanceof Error ? err : new Error(String(err))); setLoading(false) })
-  }, [sdk, range])
-
-  return { data, loading, error }
-}
-
 export function FlaggedAgents({ range = '30d' }: { range?: RangeKey }) {
   const navigate = useNavigate()
-  const { data, loading, error } = useFlaggedAgentsData(range)
+  const { data, loading, error } = useWidgetData<Row[]>(
+    (sdk, getToken) => fetchData(sdk, getToken, rangeWindow(range)),
+    [range],
+  )
+  const rows = data ?? []
 
   const renderContent = () => {
     if (loading) return <LoadingState height="h-32" />
     if (error)   return <EmptyState message={error.message} />
-    if (data.length === 0) return <EmptyState message="No data" />
+    if (rows.length === 0) return <EmptyState message="No data" />
 
     // kpi-card: headline value with a vs-previous-period delta badge
     // (rendered when the metric returns a `previous` field).
-    const first = data[0] as Record<string, unknown>
+    const first = rows[0]
     const headline = String(first?.[VALUE_FIELD] ?? '—')
-    const cur = Number(first?.[VALUE_FIELD])
-    const prevRaw = first?.[PREVIOUS_FIELD]
-    const kd = (prevRaw !== undefined && prevRaw !== null)
-      ? kpiDelta(cur, Number(prevRaw), DELTA_POLARITY)
+    const current = Number(first?.[VALUE_FIELD])
+    const previousRaw = first?.[PREVIOUS_FIELD]
+    const delta = (previousRaw !== undefined && previousRaw !== null)
+      ? kpiDelta(current, Number(previousRaw), DELTA_POLARITY)
       : null
 
     return (
       <div className="flex flex-col gap-1 py-2">
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold tabular-nums text-foreground">{headline}</span>
-          {kd && kd.text && <DeltaBadge direction={kd.direction} text={kd.text} />}
+          {delta && delta.text && <DeltaBadge direction={delta.direction} text={delta.text} />}
         </div>
         <span className="text-sm text-muted-foreground">{VALUE_LABEL}</span>
       </div>

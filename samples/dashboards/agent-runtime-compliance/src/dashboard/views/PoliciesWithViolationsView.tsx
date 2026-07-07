@@ -1,8 +1,8 @@
 import React from 'react'
-import { DetailViewShell } from '@/dashboard/chrome/DetailViewShell'
-import { RecordsTable } from '@/dashboard/chrome/RecordsTable'
+import { DetailViewShell } from '@/dashboard/components/DetailViewShell'
+import { RecordsTable } from '@/dashboard/components/RecordsTable'
 import { useWidgetData } from '@/hooks/useWidgetData'
-import { LoadingState, EmptyState } from '@/dashboard/chrome'
+import { LoadingState, EmptyState } from '@/dashboard/components'
 import { fmtNumber } from '@/lib/format'
 import { fetchDetail } from '@/metrics/policies-with-violations'
 

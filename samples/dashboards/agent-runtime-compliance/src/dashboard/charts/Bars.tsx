@@ -1,7 +1,7 @@
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { EmptyState } from '@/dashboard/chrome'
+import { EmptyState } from '@/dashboard/components'
 import type { Row } from '@/lib/metric-contract'
 
 interface BarsProps { data: Row[]; nameKey: string; valueKey: string; title?: string; height?: number; emptyMessage?: string }

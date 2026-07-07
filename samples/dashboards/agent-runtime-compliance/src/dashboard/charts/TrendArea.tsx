@@ -1,7 +1,7 @@
 import React from 'react'
 import { AreaChart, Area, Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { EmptyState } from '@/dashboard/chrome'
+import { EmptyState } from '@/dashboard/components'
 import type { Row } from '@/lib/metric-contract'
 
 interface TrendProps { data: Row[]; xKey: string; yKey: string; title?: string; area?: boolean; height?: number; emptyMessage?: string }

@@ -1,15 +1,15 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { WidgetBoundary } from '@/dashboard/chrome/WidgetBoundary'
-import { LoadingState, EmptyState } from '@/dashboard/chrome'
-import { RecordsTable, type ColumnDef } from '@/dashboard/chrome/RecordsTable'
+import { WidgetBoundary } from '@/dashboard/components/WidgetBoundary'
+import { LoadingState, EmptyState } from '@/dashboard/components'
+import { RecordsTable, type ColumnDef } from '@/dashboard/components/RecordsTable'
+import { useWidgetData } from '@/hooks/useWidgetData'
 import { fmtNumber } from '@/lib/format'
 import { ShieldAlert } from 'lucide-react'
 import { fetchData } from '@/metrics/agents-by-violations'
-import { SegmentedToggle } from '@/dashboard/chrome/SegmentedToggle'
+import { SegmentedToggle } from '@/dashboard/components/SegmentedToggle'
 import { rangeWindow, RANGE_LABELS, type RangeKey } from '@/lib/time'
 
 type TopNKey = '5' | '10' | '20'
@@ -20,38 +20,24 @@ const ROW_LINK_KEY = 'name'
 const ROW_LINK_ROUTE = '/agentsbyviolations'
 const COLUMNS: ColumnDef<Row>[] = [{key:"name",label:"Agent"},{key:"value",label:"Failed Checks",align:"right" as const,render:(v:unknown)=>fmtNumber(Number(v))}]
 
-function useAgentsByViolationsData(range: RangeKey, topN: TopNKey) {
-  const { sdk, getToken } = useAuth()
-  const [data, setData] = useState<Row[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    if (!sdk) return
-    setLoading(true)
-    setError(null)
-    fetchData(sdk, getToken, { ...rangeWindow(range), limit: Number(topN) })
-      .then(rows => { setData(rows); setLoading(false) })
-      .catch(err => { setError(err instanceof Error ? err : new Error(String(err))); setLoading(false) })
-  }, [sdk, range, topN])
-
-  return { data, loading, error }
-}
-
 export function AgentsByViolations() {
   const navigate = useNavigate()
   const [range, setRange] = useState<RangeKey>('30d')
   const [topN, setTopN] = useState<TopNKey>('20')
-  const { data, loading, error } = useAgentsByViolationsData(range, topN)
+  const { data, loading, error } = useWidgetData<Row[]>(
+    (sdk, getToken) => fetchData(sdk, getToken, { ...rangeWindow(range), limit: Number(topN) }),
+    [range, topN],
+  )
+  const rows = data ?? []
 
   const renderContent = () => {
     if (loading) return <LoadingState height="h-32" />
     if (error)   return <EmptyState message={error.message} />
-    if (data.length === 0) return <EmptyState message="No failed checks in this window — all checks are passing." />
+    if (rows.length === 0) return <EmptyState message="No failed checks in this window — all checks are passing." />
 
     return (
       <RecordsTable
-        rows={data}
+        rows={rows}
         columns={COLUMNS}
         defaultSortKey={COLUMNS[0]?.key as string}
         defaultSortAsc={false}
