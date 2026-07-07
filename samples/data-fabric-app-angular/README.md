@@ -4,6 +4,10 @@ A sample Angular + TypeScript application for browsing and managing **UiPath Dat
 
 This is the Angular counterpart of the React sample in [`../data-fabric-app`](../data-fabric-app). The SDK usage is identical — only the UI framework differs. Because the `@uipath/ui-widgets-datatable` records grid is React-only, this app renders its own grid and calls the SDK's record CRUD methods (`insertRecordById`, `updateRecordById`, `deleteRecordsById`) directly, so it exercises a wider slice of the `Entities` service than the React sample does.
 
+## Preview
+
+![Browsing entities, viewing records, and creating a record](screenshots/preview.gif)
+
 ## SDK Usage
 
 ### Importing the SDK
