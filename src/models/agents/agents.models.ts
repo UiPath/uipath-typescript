@@ -29,8 +29,26 @@ import type {
 /**
  * Service for retrieving runtime data for UiPath Agents.
  *
+ * UiPath Agents are AI-driven automations powered by large language models
+ * and machine learning that plan, make decisions, and execute tasks in
+ * dynamic environments.
+ *
  * See [About Agents](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/about-agents)
  * for an overview of UiPath Agents.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Agents } from '@uipath/uipath-typescript/agents';
+ *
+ * const agents = new Agents(sdk);
+ * const list = await agents.getAll(
+ *   new Date('2025-01-01T00:00:00Z'),
+ *   new Date('2025-02-01T00:00:00Z'),
+ * );
+ * ```
  */
 export interface AgentServiceModel {
   /**
