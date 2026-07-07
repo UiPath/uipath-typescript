@@ -37,6 +37,11 @@ const sections = [
     removeSource: true,
   },
   {
+    source: 'api/interfaces/AgentServiceModel.md',
+    dest: 'agents/index.md',
+    header: '# Agents\n\n',
+  },
+  {
     source: 'api/interfaces/ConversationalAgentServiceModel.md',
     dest: 'conversational-agent/index.md',
     header: '# Conversational Agent\n\n',
