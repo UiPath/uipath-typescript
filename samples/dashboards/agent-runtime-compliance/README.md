@@ -13,6 +13,11 @@ Agent Traces governance APIs. Deploys as a UiPath Coded App.
 > from governance packs such as ISO/IEC 42001, evaluated at runtime on every agent run. These
 > are not admin-deployed UiPath policies (Automation Ops / Access).
 
+## Preview
+
+![Agent runtime compliance observability dashboard, with drill down view for compliance checks](screenshots/agent-runtime-compliance-dashboard.gif)
+
+
 ## SDK Usage
 
 ### Importing the SDK
