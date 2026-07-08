@@ -3,7 +3,6 @@
 This page lists the specific OAuth scopes required in external app for each SDK method.
 
 ## Assets
-<!-- track: Assets -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -13,7 +12,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `updateValueById()` | `OR.Assets` or `OR.Assets.Write` |
 
 ## Jobs
-<!-- track: Jobs -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -25,14 +23,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `restart()` | `OR.Jobs` |
 
 ## Attachments
-<!-- track: Attachments -->
 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Buckets
-<!-- track: Buckets -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -46,7 +42,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getFiles()` | `OR.Buckets` or `OR.Buckets.Read` |
 
 ## Entities
-<!-- track: Entities -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -67,7 +62,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
 
 ## ChoiceSets
-<!-- track: Choicesets -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -75,7 +69,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getById()` | `DataFabric.Data.Read` |
 
 ## Maestro Processes
-<!-- track: MaestroProcesses -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -91,7 +84,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
-<!-- track: ProcessInstances, ProcessIncidents -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -107,7 +99,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `retry()` | `PIMS` |
 
 ## Maestro Cases
-<!-- track: Cases -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -122,7 +113,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Case Instances
-<!-- track: CaseInstances -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -149,7 +139,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 ///
 
 ### Agents
-<!-- track: ConversationalAgent -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -157,7 +146,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
 
 ### Conversations
-<!-- track: ConversationalAgent.Conversations -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -170,7 +158,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `uploadAttachment()` | `OR.Execution`, `OR.Jobs` |
 
 ### Exchanges
-<!-- track: ConversationalAgent.Exchanges -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -179,7 +166,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
 
 ### Messages
-<!-- track: ConversationalAgent.Messages -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -187,7 +173,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 
 ### User Settings
-<!-- track: ConversationalAgent.UserSettings -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -195,7 +180,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `updateSettings()` | `OR.Users` |
 
 ### Feedback
-<!-- track: Feedback -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -209,7 +193,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `deleteCategory()` | `Traces.Api` |
 
 ### Agent Memory
-<!-- track: AgentMemory -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -218,7 +201,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getTopSpaces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Traces
-<!-- track: Traces -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -226,7 +208,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSpansByIds()` | `Traces.Api` |
 
 ## Governance
-<!-- track: Governance -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -234,7 +215,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Processes
-<!-- track: Processes -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -244,7 +224,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `start()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Queues
-<!-- track: Queues -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -252,7 +231,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `OR.Queues` or `OR.Queues.Read` |
 
 ## Tasks
-<!-- track: Tasks -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -267,7 +245,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
 
 ## Agents
-<!-- track: Agents -->
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -283,7 +260,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Agent Traces
-<!-- track: AgentTraces -->
 
 | Method | OAuth Scope |
 |--------|-------------|

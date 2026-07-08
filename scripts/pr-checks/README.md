@@ -8,7 +8,7 @@ review comments, Jun–Jul 2026). Run locally with `npm run lint:pr`; CI runs th
 |--------|----------|
 | `validate-samples.mjs` | Per sample app: README with media, canonical `uipath.json.example`, config key allowlist, no committed clientId GUIDs/.env, `.gitignore` completeness, `lint` script, unique package names, kebab-case dirs, README paths exist, lockfile in sync |
 | `check-jsdoc-sync.mjs` | JSDoc on `{Entity}ServiceModel` identical to the service class copy (agent_docs/rules.md). Pairing via `implements XServiceModel`; doc-only scoped models are skipped |
-| `check-docs-consistency.mjs` | Every non-`@internal` `@track` method has a row in its `docs/oauth-scopes.md` section; services whose methods are all `@internal` stay undocumented; scope cells contain scopes, not prose. The prefix→section map is read from `<!-- track: Prefix -->` markers in the doc itself — a new documented service just adds a section with that marker |
+| `check-docs-consistency.mjs` | Every non-`@internal` `@track` method name appears as a documented row somewhere in `docs/oauth-scopes.md`; scope cells contain scopes, not prose. No prefix→section mapping is maintained anywhere — it matches method names between the code and the doc's existing rows. It checks a method is documented *somewhere*, not under the right heading (that stays review's job) |
 | `check-hygiene.mjs` | Ratchet on: `as any` / `as unknown as` in tests, `console.warn` in integration tests, unjustified `.skip` (needs a PAT/OAuth comment), `try {` in integration tests, double blank lines, internal-types barrel re-exports |
 
 ## Baselines

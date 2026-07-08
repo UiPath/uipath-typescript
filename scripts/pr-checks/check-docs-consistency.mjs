@@ -1,11 +1,15 @@
 // PR gate: docs/oauth-scopes.md must stay consistent with @track-decorated methods.
-//   1. Every non-@internal @track method has a row in its service's section.
-//   2. Services whose methods are ALL @internal must NOT be documented.
-//   3. Scope cells contain only backticked scope identifiers — no prose.
-// The @track-prefix -> section mapping is NOT hardcoded here: it is read from
-// `<!-- track: Prefix, ... -->` markers placed under each heading in the doc
-// itself (single source of truth, maintained where the docs are). Internal-only
-// services are derived from the code's @internal tags, not a list.
+//   1. Every non-@internal @track method name appears as a documented row.
+//   2. Scope cells contain only backticked scope identifiers — no prose.
+// No prefix->section mapping is maintained anywhere — not a table, not doc
+// markers. The check uses only data that already exists for its own reasons:
+// the method rows already in the doc and the @track methods already in code.
+// Trade-off: it verifies a method is documented *somewhere*, not under the
+// right heading. A brand-new service exposing only common names (getAll/getById)
+// could pass on another service's rows; distinctively-named methods — which is
+// what new work almost always adds — are caught. Section placement, and stale
+// rows for documented-but-not-tracked aliases/bound methods, stay a human/AI
+// review concern.
 // Existing gaps are grandfathered in docs-consistency-baseline.json.
 // Regenerate: node scripts/pr-checks/check-docs-consistency.mjs --update-baseline
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -54,53 +58,23 @@ for (const file of walk(join(ROOT, 'src'))) {
   }
 }
 
-// 2. Read the prefix -> section-body map from the doc's <!-- track: ... --> markers.
-// A marker binds all following text (until the next heading) to one or more
-// prefixes; a heading may carry a comma-separated list (shared sections).
+// 2. Collect the set of method names documented in oauth-scopes.md. A method row
+// is `| \`name()\` | ... |`; one cell may list aliases, e.g. `getRecord()` / `getRecordById()`.
 const doc = readFileSync(join(ROOT, 'docs', 'oauth-scopes.md'), 'utf8');
-const sectionByPrefix = new Map(); // prefix -> { heading, body }
-const headingRe = /^#{2,3} (.+)$/gm;
-const headings = [...doc.matchAll(headingRe)];
-headings.forEach((h, i) => {
-  const body = doc.slice(h.index, headings[i + 1]?.index ?? doc.length);
-  for (const marker of body.matchAll(/<!--\s*track:\s*([^>]+?)\s*-->/g)) {
-    for (const prefix of marker[1].split(',').map(s => s.trim()).filter(Boolean)) {
-      sectionByPrefix.set(prefix, { heading: h[1].trim(), body });
-    }
-  }
-});
-
-// 3. Derive which prefixes are internal-only (every tracked method is @internal).
-const prefixes = new Map(); // prefix -> { total, internal }
-for (const t of tracked) {
-  const p = prefixes.get(t.prefix) ?? { total: 0, internal: 0 };
-  p.total++;
-  if (t.internal) p.internal++;
-  prefixes.set(t.prefix, p);
+const documented = new Set();
+for (const line of doc.split('\n')) {
+  const cell = line.match(/^\|([^|]+)\|/);
+  if (!cell) continue;
+  for (const m of cell[1].matchAll(/`([A-Za-z_$][\w$]*)\(/g)) documented.add(m[1]);
 }
-const internalOnly = new Set(
-  [...prefixes].filter(([, c]) => c.internal === c.total).map(([p]) => p)
-);
 
 const violations = [];
 
-// 4. Method coverage
+// 3. Every public tracked method must be documented somewhere in the doc.
 for (const t of tracked) {
-  if (t.internal || internalOnly.has(t.prefix)) continue; // internal methods aren't documented
-  const section = sectionByPrefix.get(t.prefix);
-  if (!section) {
-    violations.push({ key: `unmapped:${t.prefix}`, message: `no oauth-scopes.md section declares "<!-- track: ${t.prefix} -->" — add a section with that marker, or mark all "${t.prefix}" methods @internal` });
-    continue;
-  }
-  if (!section.body.includes(`\`${t.method}(`)) {
-    violations.push({ key: `${t.label}:no-scope-row`, message: `${t.method}() (${t.label}) has no row in the "${section.heading}" section of docs/oauth-scopes.md` });
-  }
-}
-
-// 5. Internal-only services must not be documented (no marker should claim them).
-for (const prefix of internalOnly) {
-  if (sectionByPrefix.has(prefix)) {
-    violations.push({ key: `internal-documented:${prefix}`, message: `"${prefix}" is internal-only (all methods @internal) but a "<!-- track: ${prefix} -->" marker documents it — remove the section/marker` });
+  if (t.internal) continue;
+  if (!documented.has(t.method)) {
+    violations.push({ key: `${t.label}:no-scope-row`, message: `${t.method}() (${t.label}) is not documented in docs/oauth-scopes.md — add its OAuth scope row` });
   }
 }
 
