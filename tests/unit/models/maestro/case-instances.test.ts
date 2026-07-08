@@ -14,7 +14,9 @@ import {
 import type {
   CaseInstanceOperationOptions,
   CaseInstanceReopenOptions,
+  CaseInstanceSendMessageOptions,
 } from '../../../../src/models/maestro/case-instances.types';
+import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 
 // ===== TEST SUITE =====
 describe('Case Instance Models', () => {
@@ -29,6 +31,7 @@ describe('Case Instance Models', () => {
       pause: vi.fn(),
       resume: vi.fn(),
       reopen: vi.fn(),
+      sendMessage: vi.fn(),
       getExecutionHistory: vi.fn(),
       getStages: vi.fn(),
       getActionTasks: vi.fn(),
@@ -285,6 +288,61 @@ describe('Case Instance Models', () => {
       });
     });
 
+    describe('caseInstance.sendMessage()', () => {
+      it('should call caseInstance.sendMessage with bound instanceId and folderKey', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        mockService.sendMessage = vi.fn().mockResolvedValue(undefined);
+
+        await instance.sendMessage(CaseInstanceMessageName.UserAdhocTrigger);
+
+        expect(mockService.sendMessage).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          CaseInstanceMessageName.UserAdhocTrigger,
+          undefined
+        );
+      });
+
+      it('should call caseInstance.sendMessage with bound parameters and options', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        const options: CaseInstanceSendMessageOptions = {
+          itemData: { stageName: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_STAGE_NAME }
+        };
+        mockService.sendMessage = vi.fn().mockResolvedValue(undefined);
+
+        await instance.sendMessage(CaseInstanceMessageName.UserSelectStage, options);
+
+        expect(mockService.sendMessage).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          CaseInstanceMessageName.UserSelectStage,
+          options
+        );
+      });
+
+      it('should throw error if instanceId is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.sendMessage(CaseInstanceMessageName.UserAdhocTrigger))
+          .rejects.toThrow('Case instance ID is undefined');
+      });
+
+      it('should throw error if folderKey is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.sendMessage(CaseInstanceMessageName.UserAdhocTrigger))
+          .rejects.toThrow('Case instance folder key is undefined');
+      });
+    });
+
     describe('caseInstance.getExecutionHistory()', () => {
       it('should call caseInstance.getExecutionHistory with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
@@ -461,6 +519,7 @@ describe('Case Instance Models', () => {
       expect(typeof instance.pause).toBe('function');
       expect(typeof instance.resume).toBe('function');
       expect(typeof instance.reopen).toBe('function');
+      expect(typeof instance.sendMessage).toBe('function');
       expect(typeof instance.getExecutionHistory).toBe('function');
       expect(typeof instance.getStages).toBe('function');
       expect(typeof instance.getActionTasks).toBe('function');
