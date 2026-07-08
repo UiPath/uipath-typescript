@@ -58,18 +58,28 @@ function walk(dir, out = []) {
   return out;
 }
 
-// 1. Collect tracked methods: { label, prefix, method, internal }
+// 1. Collect tracked methods: { label, prefix, method, internal }.
+// The governing JSDoc is the nearest /** */ block before @track, provided only
+// whitespace or overload signatures (no braces) separate them — overloaded
+// methods place their signature lines between the JSDoc and the decorator.
 const tracked = [];
-const trackRe = /\/\*\*([\s\S]*?)\*\/\s*\n\s*@track\('([^']+)'\)\s*\n\s*(?:(?:public|protected|private|async|static)\s+)*([A-Za-z_$][\w$]*)\s*[<(]/g;
+const trackRe = /@track\('([^']+)'\)\s*\n\s*(?:(?:public|protected|private|async|static)\s+)*([A-Za-z_$][\w$]*)\s*[<(]/g;
 for (const file of walk(join(ROOT, 'src'))) {
   const content = readFileSync(file, 'utf8');
   for (const m of content.matchAll(trackRe)) {
-    const label = m[2];
+    const label = m[1];
+    const before = content.slice(0, m.index);
+    const close = before.lastIndexOf('*/');
+    let internal = false;
+    if (close !== -1 && !/[{}]/.test(before.slice(close + 2))) {
+      const open = before.lastIndexOf('/**', close);
+      internal = /@internal\b|@ignore\b/.test(before.slice(open, close));
+    }
     tracked.push({
       label,
       prefix: label.split('.').slice(0, -1).join('.'),
-      method: m[3],
-      internal: /@internal\b|@ignore\b/.test(m[1]),
+      method: m[2],
+      internal,
     });
   }
 }

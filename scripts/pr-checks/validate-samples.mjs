@@ -3,13 +3,15 @@
 // Regenerate the baseline after intentional fixes: node scripts/pr-checks/validate-samples.mjs --update-baseline
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SAMPLES = join(ROOT, 'samples');
 const BASELINE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'samples-baseline.json');
 const UPDATE = process.argv.includes('--update-baseline');
+// posix-separated relative paths so baseline keys and git-path comparisons are OS-portable
+const rel = (from, p) => relative(from, p).split(sep).join('/');
 
 const CONFIG_KEYS = ['clientId', 'scope', 'orgName', 'tenantName', 'baseUrl', 'redirectUri'];
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,14 +36,14 @@ function findApps(dir) {
 
 const violations = []; // { key: 'app:check', message }
 function violate(app, check, message) {
-  violations.push({ key: `${relative(SAMPLES, app)}:${check}`, message });
+  violations.push({ key: `${rel(SAMPLES, app)}:${check}`, message });
 }
 
 const apps = findApps(SAMPLES);
 const packageNames = new Map();
 
 for (const app of apps) {
-  const name = relative(SAMPLES, app);
+  const name = rel(SAMPLES, app);
 
   // dir naming
   for (const seg of name.split('/')) {
@@ -68,7 +70,7 @@ for (const app of apps) {
   // example config: canonical name is uipath.json.example; a tracked uipath.json
   // with a placeholder clientId (action-app templates) also satisfies this
   const hasExample = existsSync(join(app, 'uipath.json.example'));
-  const trackedUipathJson = tracked.has(`${relative(ROOT, join(app, 'uipath.json'))}`);
+  const trackedUipathJson = tracked.has(`${rel(ROOT, join(app, 'uipath.json'))}`);
   if (!hasExample && !trackedUipathJson) {
     const wrongName = ['uipath.example.json', '.env.example'].find(f => existsSync(join(app, f)));
     violate(app, 'example-config-missing',
@@ -80,7 +82,7 @@ for (const app of apps) {
   // config content: allowed keys only, no real clientId committed
   for (const f of ['uipath.json', 'uipath.json.example', 'uipath.example.json']) {
     const p = join(app, f);
-    if (!existsSync(p) || (f === 'uipath.json' && !tracked.has(relative(ROOT, p)))) continue;
+    if (!existsSync(p) || (f === 'uipath.json' && !tracked.has(rel(ROOT, p)))) continue;
     let config;
     try {
       config = JSON.parse(readFileSync(p, 'utf8'));
@@ -96,7 +98,7 @@ for (const app of apps) {
   }
 
   // no tracked .env
-  if (tracked.has(relative(ROOT, join(app, '.env')))) {
+  if (tracked.has(rel(ROOT, join(app, '.env')))) {
     violate(app, 'env-tracked', '.env is committed — remove it and gitignore it');
   }
 

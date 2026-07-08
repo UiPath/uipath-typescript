@@ -31,7 +31,7 @@ jobs:
     # thin job preserves the exact required context name. `if: always()` ensures
     # it runs (and reports) even when coverage fails, then fails itself if the
     # coverage workflow did not succeed.
-    needs: coverage
+    needs: [coverage, deterministic-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +39,12 @@ jobs:
         if: needs.coverage.result != 'success'
         run: |
           echo "Coverage workflow concluded with: ${{ needs.coverage.result }}"
+          exit 1
+
+      - name: Check deterministic-lint result
+        if: needs.deterministic-lint.result != 'success'
+        run: |
+          echo "deterministic-lint concluded with: ${{ needs.deterministic-lint.result }}"
           exit 1
 
   deterministic-lint:

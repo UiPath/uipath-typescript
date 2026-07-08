@@ -3,12 +3,14 @@
 // any file exceeding its baselined count (or a new file with violations) fails.
 // Regenerate after fixes: node scripts/pr-checks/check-hygiene.mjs --update-baseline
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BASELINE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'hygiene-baseline.json');
 const UPDATE = process.argv.includes('--update-baseline');
+// baseline keys always use posix separators so they are portable across OSes
+const rel = p => relative(ROOT, p).split(sep).join('/');
 
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
@@ -25,7 +27,7 @@ function walk(dir, out = []) {
 
 const srcFiles = walk(join(ROOT, 'src'));
 const testFiles = walk(join(ROOT, 'tests'));
-const integrationFiles = testFiles.filter(f => relative(ROOT, f).startsWith(join('tests', 'integration')));
+const integrationFiles = testFiles.filter(f => rel(f).startsWith('tests/integration/'));
 
 function countMatches(content, re) {
   return [...content.matchAll(re)].length;
@@ -38,7 +40,7 @@ function countUnjustifiedSkips(content) {
   lines.forEach((line, i) => {
     if (!/\b(describe|it|test)\.skip\b/.test(line)) return;
     const context = lines.slice(Math.max(0, i - 3), i + 1).join('\n');
-    if (!/PAT|OAuth/i.test(context)) count++;
+    if (!/\bPAT\b/.test(context) && !/oauth/i.test(context)) count++;
   });
   return count;
 }
@@ -93,7 +95,7 @@ const current = {};
 for (const rule of RULES) {
   for (const file of rule.files) {
     const n = rule.count(readFileSync(file, 'utf8'));
-    if (n > 0) current[`${rule.id}>${relative(ROOT, file)}`] = n;
+    if (n > 0) current[`${rule.id}>${rel(file)}`] = n;
   }
 }
 

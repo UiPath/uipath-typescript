@@ -1,3 +1,4 @@
 [
-  "ConversationalAgent.Conversations.CreateAttachment:no-scope-row"
+  "ConversationalAgent.Conversations.CreateAttachment:no-scope-row",
+  "ConversationalAgent.Conversations.Disconnect:no-scope-row"
 ]
