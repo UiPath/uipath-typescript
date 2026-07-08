@@ -41,6 +41,25 @@ jobs:
           echo "Coverage workflow concluded with: ${{ needs.coverage.result }}"
           exit 1
 
+  deterministic-lint:
+    # Convention gates derived from recurring PR review feedback — samples
+    # structure, ServiceModel/service JSDoc sync, oauth-scopes.md consistency,
+    # and grep-level hygiene ratchets. See scripts/pr-checks/README.md.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run PR convention checks
+        run: node scripts/pr-checks/run-all.mjs
+
   test-packages:
     runs-on: ubuntu-latest
     permissions:

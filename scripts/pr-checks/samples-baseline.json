@@ -1,0 +1,22 @@
+[
+  "coded-action-apps/action-app-with-data-fabric-entity:gitignore-missing",
+  "coded-action-apps/action-app-with-document:example-config-missing",
+  "coded-action-apps/action-app-with-document:gitignore-missing",
+  "coded-action-apps/action-app-with-file-attachment-document:gitignore-missing",
+  "coded-action-apps/action-app-with-image:example-config-missing",
+  "coded-action-apps/action-app-with-image:gitignore-missing",
+  "coded-action-apps/action-app-with-storage-bucket-document:gitignore-missing",
+  "conversational-agent-app:example-config-missing",
+  "conversational-agent-app:gitignore-missing",
+  "conversational-agent-app:lockfile-drift",
+  "conversational-agent-app:readme-no-media",
+  "data-fabric-app:gitignore-incomplete",
+  "data-fabric-app:lint-script-missing",
+  "data-fabric-app:readme-no-media",
+  "document-validation-app:example-config-missing",
+  "document-validation-app:readme-no-media",
+  "process-app-v0:example-config-missing",
+  "process-app-v0:readme-no-media",
+  "process-app-v1:example-config-missing",
+  "process-app-v1:readme-no-media"
+]
