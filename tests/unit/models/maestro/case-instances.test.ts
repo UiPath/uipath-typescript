@@ -16,7 +16,7 @@ import type {
   CaseInstanceReopenOptions,
   CaseInstanceSendMessageOptions,
 } from '../../../../src/models/maestro/case-instances.types';
-import { CaseInstanceMessageName } from '../../../../src/models/maestro/case-instances.types';
+import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 
 // ===== TEST SUITE =====
 describe('Case Instance Models', () => {
@@ -519,6 +519,7 @@ describe('Case Instance Models', () => {
       expect(typeof instance.pause).toBe('function');
       expect(typeof instance.resume).toBe('function');
       expect(typeof instance.reopen).toBe('function');
+      expect(typeof instance.sendMessage).toBe('function');
       expect(typeof instance.getExecutionHistory).toBe('function');
       expect(typeof instance.getStages).toBe('function');
       expect(typeof instance.getActionTasks).toBe('function');
