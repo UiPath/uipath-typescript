@@ -46,6 +46,16 @@
                 "default": "./dist/entities/index.cjs"
             }
         },
+        "./entities-v3": {
+            "import": {
+                "types": "./dist/entities-v3/index.d.ts",
+                "default": "./dist/entities-v3/index.mjs"
+            },
+            "require": {
+                "types": "./dist/entities-v3/index.d.ts",
+                "default": "./dist/entities-v3/index.cjs"
+            }
+        },
         "./tasks": {
             "import": {
                 "types": "./dist/tasks/index.d.ts",

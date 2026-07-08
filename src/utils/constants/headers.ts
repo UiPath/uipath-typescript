@@ -26,7 +26,9 @@ export const RESPONSE_TYPES = {
   JSON: 'json',
   TEXT: 'text',
   BLOB: 'blob',
-  ARRAYBUFFER: 'arraybuffer'
+  ARRAYBUFFER: 'arraybuffer',
+  /** Returns the raw `ReadableStream<Uint8Array>` response body without buffering — used for server-sent-event / chunked endpoints. */
+  STREAM: 'stream'
 } as const;
 
 /**

@@ -115,6 +115,13 @@ export class ApiClient {
         return blob as T;
       }
 
+      // Handle stream response type: return the raw body without buffering
+      // (used for server-sent-event / chunked endpoints). `response.body` is
+      // null only for empty/204 responses, already handled above.
+      if (options.responseType === RESPONSE_TYPES.STREAM) {
+        return response.body as T;
+      }
+
       // Check if we're expecting XML
       const acceptHeader = headers['Accept'] || headers['accept'];
       if (acceptHeader === CONTENT_TYPES.XML) {

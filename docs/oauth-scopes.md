@@ -61,6 +61,34 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
 
+## Entities v3
+
+Composite-entity API (`@uipath/uipath-typescript/entities-v3`).
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `DataFabric.Schema.Read` |
+| `getAllWithChoiceSets()` | `DataFabric.Schema.Read` |
+| `getFolderEntities()` | `DataFabric.Schema.Read` |
+| `getById()` | `DataFabric.Schema.Read` |
+| `getMetadata()` | `DataFabric.Schema.Read` |
+| `create()` | `DataFabric.Schema.Write` |
+| `deleteById()` | `DataFabric.Schema.Write` |
+| `updateMetadata()` | `DataFabric.Schema.Write` |
+| `createField()` / `createMemberField()` | `DataFabric.Schema.Write` |
+| `updateField()` / `updateMemberField()` | `DataFabric.Schema.Write` |
+| `deleteField()` / `deleteMemberField()` / `deleteMemberFieldHard()` | `DataFabric.Schema.Write` |
+| `getRecords()` / `getRecord()` / `getRecordByKey()` | `DataFabric.Data.Read` |
+| `query()` / `queryWithExpansion()` | `DataFabric.Data.Read` |
+| `insert()` / `insertRecords()` / `insertBulk()` / `upsert()` | `DataFabric.Data.Write` |
+| `update()` / `updateByKey()` / `updateRecords()` / `updateWhere()` | `DataFabric.Data.Write` |
+| `deleteRecord()` / `deleteRecords()` / `deleteRecordsBatch()` | `DataFabric.Data.Write` |
+| `queryMember()` / `getMemberRecords()` / `getMemberRecord()` / `getMemberRecordByKey()` | `DataFabric.Data.Read` |
+| `deleteMemberRecord()` / `deleteMemberRecords()` | `DataFabric.Data.Write` |
+| `downloadAttachment()` | `DataFabric.Data.Read` |
+| `uploadAttachment()` / `deleteAttachment()` | `DataFabric.Data.Write` |
+| `manageWithAutopilot()` / `manageWithAutopilotStream()` | `DataFabric.Data.Write` |
+
 ## ChoiceSets
 
 | Method | OAuth Scope |

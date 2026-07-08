@@ -63,3 +63,91 @@ export const DATA_FABRIC_ENDPOINTS = {
     REVOKE_ROLES: `${DATAFABRIC_BASE}/api/Directory/RevokeRole`,
   },
 } as const;
+
+/** Base path for all v3 Entity API routes. */
+const V3_BASE = `${DATAFABRIC_BASE}/api/v3/entities`;
+
+/**
+ * Data Fabric Entity Service v3 Endpoints.
+ *
+ * The v3 API adds composite-entity support (entities backed by multiple related
+ * "member" tables) on top of the v1/v2 surface. Data operations are addressed by
+ * entity **name**; schema operations are addressed by entity **id** (GUID).
+ */
+export const DATA_FABRIC_V3_ENDPOINTS = {
+  ENTITY: {
+    // Schema / listing
+    LIST: V3_BASE,
+    LIST_ALL: `${V3_BASE}/all`,
+    FOLDER_ENTITIES: `${V3_BASE}/folder-entities`,
+    CREATE: V3_BASE,
+    GET_BY_ID: (entityId: string) => `${V3_BASE}/${entityId}`,
+    DELETE_BY_ID: (entityId: string) => `${V3_BASE}/${entityId}`,
+    GET_METADATA: (entityName: string) => `${V3_BASE}/${entityName}/metadata`,
+    UPDATE_METADATA: (entityId: string) => `${V3_BASE}/${entityId}/metadata`,
+
+    // Data (by entity name)
+    QUERY: (entityName: string) => `${V3_BASE}/${entityName}/query`,
+    QUERY_EXPANSION: (entityName: string) => `${V3_BASE}/${entityName}/query_expansion`,
+    READ: (entityName: string) => `${V3_BASE}/${entityName}/read`,
+    READ_RECORD: (entityName: string, recordId: string) => `${V3_BASE}/${entityName}/read/${recordId}`,
+    READ_BY_KEY: (entityName: string, key: string) => `${V3_BASE}/${entityName}/readByKey/${key}`,
+    INSERT: (entityName: string) => `${V3_BASE}/${entityName}/insert`,
+    INSERT_BATCH: (entityName: string) => `${V3_BASE}/${entityName}/insert-batch`,
+    INSERT_BULK: (entityName: string) => `${V3_BASE}/${entityName}/insert_bulk`,
+    UPSERT: (entityName: string) => `${V3_BASE}/${entityName}/upsert`,
+    UPDATE: (entityName: string, recordId: string) => `${V3_BASE}/${entityName}/update/${recordId}`,
+    UPDATE_BY_KEY: (entityName: string, key: string) => `${V3_BASE}/${entityName}/updateByKey/${key}`,
+    UPDATE_BATCH: (entityName: string) => `${V3_BASE}/${entityName}/update-batch`,
+    UPDATE_WHERE: (entityName: string) => `${V3_BASE}/${entityName}/update-where`,
+    DELETE_RECORD: (entityName: string, recordId: string) => `${V3_BASE}/${entityName}/delete/${recordId}`,
+    DELETE: (entityName: string) => `${V3_BASE}/${entityName}/delete`,
+    DELETE_BATCH: (entityName: string) => `${V3_BASE}/${entityName}/delete-batch`,
+
+    // Entity field schema (by entity id)
+    FIELD: {
+      CREATE: (entityId: string) => `${V3_BASE}/${entityId}/field`,
+      UPDATE: (entityId: string, fieldId: string) => `${V3_BASE}/${entityId}/field/${fieldId}`,
+      DELETE: (entityId: string, fieldId: string) => `${V3_BASE}/${entityId}/field/${fieldId}`,
+    },
+
+    // Attachments (by entity name)
+    ATTACHMENT: {
+      DOWNLOAD: (entityName: string, recordId: string, fieldName: string) =>
+        `${V3_BASE}/${entityName}/records/${recordId}/attachments/${fieldName}`,
+      UPLOAD: (entityName: string, recordId: string, fieldName: string) =>
+        `${V3_BASE}/${entityName}/records/${recordId}/attachments/${fieldName}`,
+      DELETE: (entityName: string, recordId: string, fieldName: string) =>
+        `${V3_BASE}/${entityName}/records/${recordId}/attachments/${fieldName}`,
+    },
+
+    // Autopilot
+    AUTOPILOT: {
+      MANAGE: `${V3_BASE}/autopilot/manage`,
+      MANAGE_STREAM: `${V3_BASE}/autopilot/manage/stream`,
+    },
+  },
+  MEMBER: {
+    // Data (sub-resource of a composite entity, by member instance name)
+    QUERY: (compositeName: string, memberName: string) => `${V3_BASE}/${compositeName}/members/${memberName}/query`,
+    READ: (compositeName: string, memberName: string) => `${V3_BASE}/${compositeName}/members/${memberName}/read`,
+    READ_RECORD: (compositeName: string, memberName: string, recordId: string) =>
+      `${V3_BASE}/${compositeName}/members/${memberName}/read/${recordId}`,
+    READ_BY_KEY: (compositeName: string, memberName: string, key: string) =>
+      `${V3_BASE}/${compositeName}/members/${memberName}/readByKey/${key}`,
+    DELETE_RECORD: (compositeName: string, memberName: string, recordId: string) =>
+      `${V3_BASE}/${compositeName}/members/${memberName}/delete/${recordId}`,
+    DELETE: (compositeName: string, memberName: string) => `${V3_BASE}/${compositeName}/members/${memberName}/delete`,
+
+    // Member field schema
+    FIELD: {
+      CREATE: (compositeName: string, memberName: string) => `${V3_BASE}/${compositeName}/members/${memberName}/field`,
+      UPDATE: (compositeName: string, memberName: string, fieldId: string) =>
+        `${V3_BASE}/${compositeName}/members/${memberName}/field/${fieldId}`,
+      DELETE_HARD: (compositeName: string, memberName: string, fieldId: string) =>
+        `${V3_BASE}/${compositeName}/members/${memberName}/field/${fieldId}/delete`,
+      DELETE: (compositeName: string, memberName: string, fieldId: string) =>
+        `${V3_BASE}/${compositeName}/members/${memberName}/field/${fieldId}`,
+    },
+  },
+} as const;
