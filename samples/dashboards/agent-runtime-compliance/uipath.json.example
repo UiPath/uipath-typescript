@@ -1,0 +1,8 @@
+{
+  "scope": "OR.Folders.Read Insights Insights.RealTimeData Traces.Api",
+  "clientId": "<YOUR_EXTERNAL_APP_CLIENT_ID>",
+  "orgName": "",
+  "tenantName": "",
+  "baseUrl": "https://api.uipath.com",
+  "redirectUri": "http://localhost:25173"
+}
