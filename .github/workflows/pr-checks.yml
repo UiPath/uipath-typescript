@@ -5,10 +5,10 @@ on:
     branches:
       - main
     types:
-      - opened           # When PR is first created
-      - synchronize      # When new commits are pushed to PR branch
-      - reopened         # When a closed PR is reopened
-  workflow_dispatch:     # Allows manual trigger from GitHub UI
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,21 +16,13 @@ permissions:
 
 jobs:
   coverage:
-    # Shared coverage pipeline (unit + integration + SonarCloud). The same
-    # workflow is reused by weekly-coverage.yml so the integration-test secret
-    # mapping is defined only once.
     uses: ./.github/workflows/coverage.yml
     secrets: inherit
     with:
       ref_label: ${{ github.base_ref }}
 
   test-and-build:
-    # Gate job that reports the flat `test-and-build` status check required by
-    # the main ruleset. A job using `uses:` reports its check as
-    # `test-and-build / coverage`, which the ruleset does not match — so this
-    # thin job preserves the exact required context name. `if: always()` ensures
-    # it runs (and reports) even when coverage fails, then fails itself if the
-    # coverage workflow did not succeed.
+    # Keeps the required flat status context while coverage runs in a reusable workflow.
     needs: [coverage, deterministic-lint]
     if: always()
     runs-on: ubuntu-latest
@@ -48,9 +40,6 @@ jobs:
           exit 1
 
   deterministic-lint:
-    # Convention gates derived from recurring PR review feedback — samples
-    # structure, ServiceModel/service JSDoc sync, oauth-scopes.md consistency,
-    # and grep-level hygiene ratchets. See scripts/pr-checks/README.md.
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,4 +87,3 @@ jobs:
 
       - name: Run tests
         run: npm test
-

@@ -1,28 +1,22 @@
-// PR gate: docs/oauth-scopes.md must stay consistent with @track-decorated methods.
-//   1. Every non-@internal @track method appears in the matching docs section.
-//   2. Scope cells contain only backticked scope identifiers, separators, and no prose.
-// Source parsing uses the TypeScript compiler API; Markdown parsing is section-aware.
-// Existing gaps are grandfathered in docs-consistency-baseline.json.
-// Regenerate: node scripts/pr-checks/check-docs-consistency.mjs --update-baseline
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { finishViolationBaseline } from './baseline.mjs';
 import {
-  findNodes,
-  getNodeName,
-  getStringDecoratorArgument,
+  findDescendants,
+  getDeclarationName,
+  getDecoratorStringArgument,
   hasJsdocTag,
-  parseSourceFile,
+  parseTypeScriptFile,
   ts,
   walkTsFiles,
-} from './ts-ast.mjs';
+} from './typescript-source.mjs';
+import { checkPath, repoPath } from './workspace.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const BASELINE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'docs-consistency-baseline.json');
-const UPDATE = process.argv.includes('--update-baseline');
+const BASELINE_PATH = checkPath('oauth-scopes-baseline.json');
 const SCOPE_CELL = /^(`[A-Za-z0-9._ ]+`)(\s*(,|or)?\s*`[A-Za-z0-9._ ]+`)*$/;
-
-const SECTION_ALIASES = new Map([
+const HEADING = /^(#{2,6})\s+(.+?)\s*#*\s*$/;
+const TABLE_SEPARATOR = /^-+$/;
+const METHOD_CALL = /`([A-Za-z_$][\w$]*)\(/g;
+const SERVICE_SECTION_ALIASES = new Map([
   ['caseinstances', ['maestrocaseinstances']],
   ['cases', ['maestrocases']],
   ['conversationalagent', ['conversationalagentagents']],
@@ -35,12 +29,12 @@ function normalizeKey(value) {
 
 function collectTrackedMethods() {
   const tracked = [];
-  for (const file of walkTsFiles(join(ROOT, 'src'))) {
-    const sourceFile = parseSourceFile(file);
-    for (const node of findNodes(sourceFile, ts.isMethodDeclaration)) {
-      const label = getStringDecoratorArgument(node, 'track');
+  for (const file of walkTsFiles(repoPath('src'))) {
+    const sourceFile = parseTypeScriptFile(file);
+    for (const node of findDescendants(sourceFile, ts.isMethodDeclaration)) {
+      const label = getDecoratorStringArgument(node, 'track');
       if (!label) continue;
-      const method = getNodeName(node);
+      const method = getDeclarationName(node);
       if (!method) continue;
       tracked.push({
         label,
@@ -58,20 +52,20 @@ function parseTableRow(line) {
   const rawCells = line.replace(/^\|/, '').replace(/\|\s*$/, '').split('|');
   if (rawCells.length < 2) return undefined;
   const [methodCell, scopeCell] = rawCells.map(cell => cell.trim());
-  if (!methodCell || methodCell === 'Method' || /^-+$/.test(methodCell)) return undefined;
-  const methods = [...methodCell.matchAll(/`([A-Za-z_$][\w$]*)\(/g)].map(match => match[1]);
+  if (!methodCell || methodCell === 'Method' || TABLE_SEPARATOR.test(methodCell)) return undefined;
+  const methods = [...methodCell.matchAll(METHOD_CALL)].map(match => match[1]);
   if (!methods.length) return undefined;
   return { methods, scopeCell };
 }
 
 function collectDocumentedSections() {
-  const doc = readFileSync(join(ROOT, 'docs', 'oauth-scopes.md'), 'utf8');
+  const doc = readFileSync(repoPath('docs', 'oauth-scopes.md'), 'utf8');
   const sections = [];
   const headings = [];
   const scopeViolations = [];
 
   for (const [index, line] of doc.split('\n').entries()) {
-    const heading = line.match(/^(#{2,6})\s+(.+?)\s*#*\s*$/);
+    const heading = line.match(HEADING);
     if (heading) {
       const level = heading[1].length;
       while (headings.length && headings[headings.length - 1].level >= level) headings.pop();
@@ -107,7 +101,7 @@ function collectDocumentedSections() {
 function findSection(prefix, sections) {
   const prefixKey = normalizeKey(prefix);
   const prefixPathKey = prefix.split('.').map(normalizeKey).join('');
-  const aliasKeys = SECTION_ALIASES.get(prefixKey) ?? [];
+  const aliasKeys = SERVICE_SECTION_ALIASES.get(prefixKey) ?? [];
   const candidateKeys = [prefixPathKey, ...aliasKeys];
 
   for (const key of candidateKeys) {
@@ -148,20 +142,11 @@ for (const method of tracked) {
   }
 }
 
-const unique = [...new Map(violations.map(v => [v.key, v])).values()];
-const baseline = existsSync(BASELINE_PATH) ? new Set(JSON.parse(readFileSync(BASELINE_PATH, 'utf8'))) : new Set();
-
-if (UPDATE) {
-  writeFileSync(BASELINE_PATH, JSON.stringify(unique.map(v => v.key).sort(), null, 2) + '\n');
-  console.log(`docs-consistency baseline updated: ${unique.length} grandfathered violation(s)`);
-  process.exit(0);
-}
-
-const fresh = unique.filter(v => !baseline.has(v.key));
-if (fresh.length) {
-  console.error(`check-docs-consistency: ${fresh.length} new violation(s):`);
-  for (const v of fresh) console.error(`  ${v.key}: ${v.message}`);
-  console.error('\nIf intentional, run: node scripts/pr-checks/check-docs-consistency.mjs --update-baseline');
-  process.exit(1);
-}
-console.log(`check-docs-consistency: OK (${tracked.length} tracked methods, ${sections.length} docs sections, ${unique.length} grandfathered)`);
+finishViolationBaseline({
+  checkName: 'check-oauth-scopes',
+  baselinePath: BASELINE_PATH,
+  violations,
+  updateSummary: count => `oauth-scopes baseline updated: ${count} grandfathered violation(s)`,
+  failureHint: 'Fix docs/oauth-scopes.md, or if intentional run: node scripts/pr-checks/check-oauth-scopes.mjs --update-baseline',
+  successSummary: ({ violationCount }) => `${tracked.length} tracked methods, ${sections.length} docs sections, ${violationCount} grandfathered`,
+});

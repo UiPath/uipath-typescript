@@ -1,29 +1,19 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import ts from 'typescript';
+import { walkTsFiles } from './workspace.mjs';
 
-export function walkTsFiles(dir, out = []) {
-  for (const entry of readdirSync(dir)) {
-    const p = join(dir, entry);
-    if (entry === 'node_modules' || entry === 'dist') continue;
-    let stat;
-    try {
-      stat = statSync(p);
-    } catch {
-      continue;
-    }
-    if (stat.isDirectory()) walkTsFiles(p, out);
-    else if (p.endsWith('.ts')) out.push(p);
-  }
-  return out;
-}
+const JSDOC_START = /^\s*\/\*\*\s?/;
+const JSDOC_END = /\s*\*\/\s*$/;
+const JSDOC_LINE_PREFIX = /^\s*\*?\s?/;
+const TRAILING_WHITESPACE = /\s+$/;
+const REPEATED_BLANK_LINES = /\n{2,}/g;
 
-export function parseSourceFile(file) {
+export function parseTypeScriptFile(file) {
   const content = readFileSync(file, 'utf8');
   return ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 }
 
-export function findNodes(sourceFile, predicate) {
+export function findDescendants(sourceFile, predicate) {
   const nodes = [];
   const visit = node => {
     if (predicate(node)) nodes.push(node);
@@ -33,7 +23,7 @@ export function findNodes(sourceFile, predicate) {
   return nodes;
 }
 
-export function getNodeName(node) {
+export function getDeclarationName(node) {
   if (!node.name) return undefined;
   if (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name) || ts.isNumericLiteral(node.name)) {
     return node.name.text;
@@ -41,22 +31,22 @@ export function getNodeName(node) {
   return undefined;
 }
 
-export function normalizeJsdoc(raw) {
+export function normalizeJsdocText(raw) {
   return raw
-    .replace(/^\s*\/\*\*\s?/, '')
-    .replace(/\s*\*\/\s*$/, '')
+    .replace(JSDOC_START, '')
+    .replace(JSDOC_END, '')
     .split('\n')
-    .map(line => line.replace(/^\s*\*?\s?/, '').replace(/\s+$/, ''))
+    .map(line => line.replace(JSDOC_LINE_PREFIX, '').replace(TRAILING_WHITESPACE, ''))
     .join('\n')
-    .replace(/\n{2,}/g, '\n')
+    .replace(REPEATED_BLANK_LINES, '\n')
     .trim();
 }
 
-export function getJsdoc(node, sourceFile) {
+export function getJsdocText(node, sourceFile) {
   const docs = node.jsDoc;
   if (!docs?.length) return undefined;
   const nearest = docs[docs.length - 1];
-  return normalizeJsdoc(sourceFile.text.slice(nearest.pos, nearest.end));
+  return normalizeJsdocText(sourceFile.text.slice(nearest.pos, nearest.end));
 }
 
 export function hasJsdocTag(node, tagNames) {
@@ -64,7 +54,7 @@ export function hasJsdocTag(node, tagNames) {
   return ts.getJSDocTags(node).some(tag => wanted.has(tag.tagName.text));
 }
 
-export function getStringDecoratorArgument(node, decoratorName) {
+export function getDecoratorStringArgument(node, decoratorName) {
   const decorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) ?? [] : [];
   for (const decorator of decorators) {
     const expression = decorator.expression;
@@ -76,7 +66,7 @@ export function getStringDecoratorArgument(node, decoratorName) {
   return undefined;
 }
 
-export function getImplementedInterfaceNames(classNode) {
+export function getImplementedInterfaces(classNode) {
   const names = [];
   for (const clause of classNode.heritageClauses ?? []) {
     if (clause.token !== ts.SyntaxKind.ImplementsKeyword) continue;
@@ -88,4 +78,5 @@ export function getImplementedInterfaceNames(classNode) {
   return names;
 }
 
+export { walkTsFiles };
 export { ts };

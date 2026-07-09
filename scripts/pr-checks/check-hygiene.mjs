@@ -1,46 +1,33 @@
-// PR gate: grep-level hygiene rules from recurring review feedback, enforced as a
-// per-file ratchet — existing counts are grandfathered in hygiene-baseline.json,
-// any file exceeding its baselined count (or a new file with violations) fails.
-// Regenerate after fixes: node scripts/pr-checks/check-hygiene.mjs --update-baseline
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname, relative, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { finishCountBaseline } from './baseline.mjs';
+import { checkPath, relativeToRoot, repoPath, walkTsFiles } from './workspace.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const BASELINE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'hygiene-baseline.json');
-const UPDATE = process.argv.includes('--update-baseline');
-// baseline keys always use posix separators so they are portable across OSes
-const rel = p => relative(ROOT, p).split(sep).join('/');
+const BASELINE_PATH = checkPath('hygiene-baseline.json');
+const AS_ANY = /\bas any\b/g;
+const AS_UNKNOWN_AS = /\bas unknown as\b/g;
+const CONSOLE_WARN = /console\.warn/g;
+const DOUBLE_BLANK_LINES = /\n[ \t]*\n[ \t]*\n/g;
+const INTERNAL_TYPES_BARREL_EXPORT = /export\s+(?:type\s+)?\*?\s*(?:\{[^}]*\})?\s*from\s+['"][^'"]*internal-types['"]/g;
+const SKIPPED_TEST = /\b(describe|it|test)\.skip\b/;
+const PAT = /\bPAT\b/;
+const OAUTH = /oauth/i;
+const TRY_BLOCK = /\btry\s*\{/g;
 
-function walk(dir, out = []) {
-  if (!existsSync(dir)) return out;
-  for (const entry of readdirSync(dir)) {
-    const p = join(dir, entry);
-    if (entry === 'node_modules' || entry === 'dist') continue;
-    let stat;
-    try { stat = statSync(p); } catch { continue; } // broken symlink
-    if (stat.isDirectory()) walk(p, out);
-    else if (p.endsWith('.ts')) out.push(p);
-  }
-  return out;
-}
-
-const srcFiles = walk(join(ROOT, 'src'));
-const testFiles = walk(join(ROOT, 'tests'));
-const integrationTestFiles = testFiles.filter(f => rel(f).startsWith('tests/integration/') && f.endsWith('.integration.test.ts'));
+const srcFiles = walkTsFiles(repoPath('src'));
+const testFiles = walkTsFiles(repoPath('tests'));
+const integrationTestFiles = testFiles.filter(file => relativeToRoot(file).startsWith('tests/integration/') && file.endsWith('.integration.test.ts'));
 
 function countMatches(content, re) {
   return [...content.matchAll(re)].length;
 }
 
-// skip without a PAT/OAuth justification within the 3 preceding lines or on the same line
 function countUnjustifiedSkips(content) {
   const lines = content.split('\n');
   let count = 0;
   lines.forEach((line, i) => {
-    if (!/\b(describe|it|test)\.skip\b/.test(line)) return;
+    if (!SKIPPED_TEST.test(line)) return;
     const context = lines.slice(Math.max(0, i - 3), i + 1).join('\n');
-    if (!/\bPAT\b/.test(context) && !/oauth/i.test(context)) count++;
+    if (!PAT.test(context) && !OAUTH.test(context)) count++;
   });
   return count;
 }
@@ -50,19 +37,19 @@ const RULES = [
     id: 'as-any-in-tests',
     describe: 'no `as any` in tests (agent_docs conventions)',
     files: testFiles,
-    count: c => countMatches(c, /\bas any\b/g),
+    count: content => countMatches(content, AS_ANY),
   },
   {
     id: 'as-unknown-as-in-tests',
     describe: 'no `as unknown as` double casts in tests',
     files: testFiles,
-    count: c => countMatches(c, /\bas unknown as\b/g),
+    count: content => countMatches(content, AS_UNKNOWN_AS),
   },
   {
     id: 'console-warn-in-integration',
-    describe: 'no console.warn in integration tests — throw instead of silently skipping',
+    describe: 'no console.warn in integration tests - throw instead of silently skipping',
     files: integrationTestFiles,
-    count: c => countMatches(c, /console\.warn/g),
+    count: content => countMatches(content, CONSOLE_WARN),
   },
   {
     id: 'unjustified-skip-in-integration',
@@ -72,54 +59,41 @@ const RULES = [
   },
   {
     id: 'try-catch-in-integration',
-    describe: 'no try/catch around integration test calls — let errors propagate',
+    describe: 'no try/catch around integration test calls - let errors propagate',
     files: integrationTestFiles,
-    count: c => countMatches(c, /\btry\s*\{/g),
+    count: content => countMatches(content, TRY_BLOCK),
   },
   {
     id: 'double-blank-lines',
     describe: 'no consecutive blank lines',
     files: [...srcFiles, ...testFiles],
-    count: c => countMatches(c, /\n[ \t]*\n[ \t]*\n/g),
+    count: content => countMatches(content, DOUBLE_BLANK_LINES),
   },
   {
     id: 'internal-types-barrel-export',
     describe: 'internal-types must not be re-exported from barrel files',
     files: srcFiles.filter(f => f.endsWith('index.ts')),
-    count: c => countMatches(c, /export\s+(?:type\s+)?\*?\s*(?:\{[^}]*\})?\s*from\s+['"][^'"]*internal-types['"]/g),
+    count: content => countMatches(content, INTERNAL_TYPES_BARREL_EXPORT),
   },
 ];
 
-// measure: { "ruleId>relPath": count }
 const current = {};
 for (const rule of RULES) {
   for (const file of rule.files) {
     const n = rule.count(readFileSync(file, 'utf8'));
-    if (n > 0) current[`${rule.id}>${rel(file)}`] = n;
+    if (n > 0) current[`${rule.id}>${relativeToRoot(file)}`] = n;
   }
 }
 
-if (UPDATE) {
-  const sorted = Object.fromEntries(Object.entries(current).sort(([a], [b]) => a.localeCompare(b)));
-  writeFileSync(BASELINE_PATH, JSON.stringify(sorted, null, 2) + '\n');
-  console.log(`hygiene baseline updated: ${Object.keys(sorted).length} file/rule entries grandfathered`);
-  process.exit(0);
-}
-
-const baseline = existsSync(BASELINE_PATH) ? JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) : {};
-const failures = [];
-for (const [key, count] of Object.entries(current)) {
-  const allowed = baseline[key] ?? 0;
-  if (count > allowed) {
-    const rule = RULES.find(r => key.startsWith(`${r.id}>`));
-    failures.push(`  ${key}: ${count} occurrence(s), baseline allows ${allowed} — ${rule.describe}`);
-  }
-}
-
-if (failures.length) {
-  console.error(`check-hygiene: ${failures.length} rule/file(s) exceed baseline:`);
-  for (const f of failures) console.error(f);
-  console.error('\nFix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-baseline');
-  process.exit(1);
-}
-console.log(`check-hygiene: OK (${RULES.length} rules, ${Object.keys(baseline).length} grandfathered file/rule entries)`);
+finishCountBaseline({
+  checkName: 'check-hygiene',
+  baselinePath: BASELINE_PATH,
+  current,
+  updateSummary: count => `hygiene baseline updated: ${count} file/rule entries grandfathered`,
+  formatFailure: ({ key, count, allowed }) => {
+    const rule = RULES.find(item => key.startsWith(`${item.id}>`));
+    return `${key}: ${count} occurrence(s), baseline allows ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
+  },
+  failureHint: 'Fix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-baseline',
+  successSummary: ({ baselineCount }) => `${RULES.length} rules, ${baselineCount} grandfathered file/rule entries`,
+});
