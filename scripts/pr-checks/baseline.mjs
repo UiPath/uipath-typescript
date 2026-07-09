@@ -23,7 +23,7 @@ export function finishViolationBaseline({
   formatViolation = violation => `${violation.key}: ${violation.message}`,
   failureHint,
   successSummary,
-  logGrandfathered = false,
+  logKnown = false,
 }) {
   const unique = uniqueViolations(violations);
   const baseline = new Set(readJson(baselinePath, []));
@@ -35,11 +35,11 @@ export function finishViolationBaseline({
   }
 
   const fresh = unique.filter(violation => !baseline.has(violation.key));
-  const grandfathered = unique.filter(violation => baseline.has(violation.key));
+  const known = unique.filter(violation => baseline.has(violation.key));
 
-  if (logGrandfathered) {
-    for (const violation of grandfathered) {
-      console.log(`  (baseline) ${formatViolation(violation)}`);
+  if (logKnown) {
+    for (const violation of known) {
+      console.log(`  (known) ${formatViolation(violation)}`);
     }
   }
 
@@ -54,7 +54,7 @@ export function finishViolationBaseline({
 
   console.log(`${checkName}: OK (${successSummary({
     baselineCount: baseline.size,
-    grandfatheredCount: grandfathered.length,
+    knownCount: known.length,
     violationCount: unique.length,
   })})`);
 }
@@ -87,7 +87,7 @@ export function finishCountBaseline({
   }
 
   if (failures.length) {
-    console.error(`${checkName}: ${failures.length} rule/file(s) exceed baseline:`);
+    console.error(`${checkName}: ${failures.length} rule/file(s) exceed known-issue baseline:`);
     for (const failure of failures) {
       console.error(`  ${formatFailure(failure)}`);
     }

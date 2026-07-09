@@ -146,7 +146,7 @@ finishViolationBaseline({
   checkName: 'check-oauth-scopes',
   baselinePath: BASELINE_PATH,
   violations,
-  updateSummary: count => `oauth-scopes baseline updated: ${count} grandfathered violation(s)`,
+  updateSummary: count => `oauth-scopes baseline updated: ${count} known existing violation(s)`,
   failureHint: 'Fix docs/oauth-scopes.md, or if intentional run: node scripts/pr-checks/check-oauth-scopes.mjs --update-baseline',
-  successSummary: ({ violationCount }) => `${tracked.length} tracked methods, ${sections.length} docs sections, ${violationCount} grandfathered`,
+  successSummary: ({ violationCount }) => `${tracked.length} tracked methods, ${sections.length} docs sections, ${violationCount} known existing`,
 });

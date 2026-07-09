@@ -89,11 +89,11 @@ finishCountBaseline({
   checkName: 'check-hygiene',
   baselinePath: BASELINE_PATH,
   current,
-  updateSummary: count => `hygiene baseline updated: ${count} file/rule entries grandfathered`,
+  updateSummary: count => `hygiene baseline updated: ${count} known existing file/rule entries`,
   formatFailure: ({ key, count, allowed }) => {
     const rule = RULES.find(item => key.startsWith(`${item.id}>`));
-    return `${key}: ${count} occurrence(s), baseline allows ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
+    return `${key}: ${count} occurrence(s), known baseline allows ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
   },
   failureHint: 'Fix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-baseline',
-  successSummary: ({ baselineCount }) => `${RULES.length} rules, ${baselineCount} grandfathered file/rule entries`,
+  successSummary: ({ baselineCount }) => `${RULES.length} rules, ${baselineCount} known existing file/rule entries`,
 });

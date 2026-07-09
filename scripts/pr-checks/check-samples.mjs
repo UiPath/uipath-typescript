@@ -155,8 +155,8 @@ finishViolationBaseline({
   checkName: 'check-samples',
   baselinePath: BASELINE_PATH,
   violations,
-  updateSummary: count => `samples baseline updated: ${count} grandfathered violation(s)`,
+  updateSummary: count => `samples baseline updated: ${count} known existing violation(s)`,
   failureHint: 'Fix these, or if intentional run: node scripts/pr-checks/check-samples.mjs --update-baseline',
-  successSummary: ({ grandfatheredCount }) => `${apps.length} apps, ${grandfatheredCount} grandfathered`,
-  logGrandfathered: true,
+  successSummary: ({ knownCount }) => `${apps.length} apps, ${knownCount} known existing`,
+  logKnown: true,
 });

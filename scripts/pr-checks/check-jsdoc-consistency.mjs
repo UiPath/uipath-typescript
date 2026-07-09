@@ -100,7 +100,7 @@ finishViolationBaseline({
   checkName: 'check-jsdoc-consistency',
   baselinePath: BASELINE_PATH,
   violations,
-  updateSummary: count => `jsdoc-consistency baseline updated: ${count} grandfathered violation(s)`,
+  updateSummary: count => `jsdoc-consistency baseline updated: ${count} known existing violation(s)`,
   failureHint: 'Keep ServiceModel and service class JSDoc identical. If intentional, run: node scripts/pr-checks/check-jsdoc-consistency.mjs --update-baseline',
-  successSummary: ({ violationCount }) => `${models.length} ServiceModels, ${skipped} doc-only skipped, ${violationCount} grandfathered`,
+  successSummary: ({ violationCount }) => `${models.length} ServiceModels, ${skipped} doc-only skipped, ${violationCount} known existing`,
 });
