@@ -27,7 +27,7 @@ function walk(dir, out = []) {
 
 const srcFiles = walk(join(ROOT, 'src'));
 const testFiles = walk(join(ROOT, 'tests'));
-const integrationFiles = testFiles.filter(f => rel(f).startsWith('tests/integration/'));
+const integrationTestFiles = testFiles.filter(f => rel(f).startsWith('tests/integration/') && f.endsWith('.integration.test.ts'));
 
 function countMatches(content, re) {
   return [...content.matchAll(re)].length;
@@ -61,19 +61,19 @@ const RULES = [
   {
     id: 'console-warn-in-integration',
     describe: 'no console.warn in integration tests — throw instead of silently skipping',
-    files: integrationFiles,
+    files: integrationTestFiles,
     count: c => countMatches(c, /console\.warn/g),
   },
   {
     id: 'unjustified-skip-in-integration',
     describe: 'describe/it.skip in integration tests requires a PAT/OAuth justification comment',
-    files: integrationFiles,
+    files: integrationTestFiles,
     count: countUnjustifiedSkips,
   },
   {
     id: 'try-catch-in-integration',
     describe: 'no try/catch around integration test calls — let errors propagate',
-    files: integrationFiles,
+    files: integrationTestFiles,
     count: c => countMatches(c, /\btry\s*\{/g),
   },
   {

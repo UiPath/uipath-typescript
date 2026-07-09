@@ -1,96 +1,153 @@
 // PR gate: docs/oauth-scopes.md must stay consistent with @track-decorated methods.
-//   1. Every non-@internal @track method name appears as a documented row.
-//   2. Scope cells contain only backticked scope identifiers — no prose.
-// No prefix->section mapping is maintained anywhere — not a table, not doc
-// markers. The check uses only data that already exists for its own reasons:
-// the method rows already in the doc and the @track methods already in code.
-// Trade-off: it verifies a method is documented *somewhere*, not under the
-// right heading. A brand-new service exposing only common names (getAll/getById)
-// could pass on another service's rows; distinctively-named methods — which is
-// what new work almost always adds — are caught. Section placement, and stale
-// rows for documented-but-not-tracked aliases/bound methods, stay a human/AI
-// review concern.
+//   1. Every non-@internal @track method appears in the matching docs section.
+//   2. Scope cells contain only backticked scope identifiers, separators, and no prose.
+// Source parsing uses the TypeScript compiler API; Markdown parsing is section-aware.
 // Existing gaps are grandfathered in docs-consistency-baseline.json.
 // Regenerate: node scripts/pr-checks/check-docs-consistency.mjs --update-baseline
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  findNodes,
+  getNodeName,
+  getStringDecoratorArgument,
+  hasJsdocTag,
+  parseSourceFile,
+  ts,
+  walkTsFiles,
+} from './ts-ast.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BASELINE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'docs-consistency-baseline.json');
 const UPDATE = process.argv.includes('--update-baseline');
+const SCOPE_CELL = /^(`[A-Za-z0-9._ ]+`)(\s*(,|or)?\s*`[A-Za-z0-9._ ]+`)*$/;
 
-function walk(dir, out = []) {
-  for (const entry of readdirSync(dir)) {
-    const p = join(dir, entry);
-    if (entry === 'node_modules' || entry === 'dist') continue;
-    let stat;
-    try { stat = statSync(p); } catch { continue; } // broken symlink
-    if (stat.isDirectory()) walk(p, out);
-    else if (p.endsWith('.ts')) out.push(p);
-  }
-  return out;
+const SECTION_ALIASES = new Map([
+  ['caseinstances', ['maestrocaseinstances']],
+  ['cases', ['maestrocases']],
+  ['conversationalagent', ['conversationalagentagents']],
+  ['processinstances', ['maestroprocessinstances']],
+]);
+
+function normalizeKey(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-// 1. Collect tracked methods: { label, prefix, method, internal }.
-// The governing JSDoc is the nearest /** */ block before @track, provided only
-// whitespace or overload signatures (no braces) separate them — overloaded
-// methods place their signature lines between the JSDoc and the decorator.
-const tracked = [];
-const trackRe = /@track\('([^']+)'\)\s*\n\s*(?:(?:public|protected|private|async|static)\s+)*([A-Za-z_$][\w$]*)\s*[<(]/g;
-for (const file of walk(join(ROOT, 'src'))) {
-  const content = readFileSync(file, 'utf8');
-  for (const m of content.matchAll(trackRe)) {
-    const label = m[1];
-    const before = content.slice(0, m.index);
-    const close = before.lastIndexOf('*/');
-    let internal = false;
-    if (close !== -1 && !/[{}]/.test(before.slice(close + 2))) {
-      const open = before.lastIndexOf('/**', close);
-      internal = /@internal\b|@ignore\b/.test(before.slice(open, close));
+function collectTrackedMethods() {
+  const tracked = [];
+  for (const file of walkTsFiles(join(ROOT, 'src'))) {
+    const sourceFile = parseSourceFile(file);
+    for (const node of findNodes(sourceFile, ts.isMethodDeclaration)) {
+      const label = getStringDecoratorArgument(node, 'track');
+      if (!label) continue;
+      const method = getNodeName(node);
+      if (!method) continue;
+      tracked.push({
+        label,
+        prefix: label.split('.').slice(0, -1).join('.'),
+        method,
+        internal: hasJsdocTag(node, ['internal', 'ignore']),
+      });
     }
-    tracked.push({
-      label,
-      prefix: label.split('.').slice(0, -1).join('.'),
-      method: m[2],
-      internal,
+  }
+  return tracked;
+}
+
+function parseTableRow(line) {
+  if (!line.startsWith('|')) return undefined;
+  const rawCells = line.replace(/^\|/, '').replace(/\|\s*$/, '').split('|');
+  if (rawCells.length < 2) return undefined;
+  const [methodCell, scopeCell] = rawCells.map(cell => cell.trim());
+  if (!methodCell || methodCell === 'Method' || /^-+$/.test(methodCell)) return undefined;
+  const methods = [...methodCell.matchAll(/`([A-Za-z_$][\w$]*)\(/g)].map(match => match[1]);
+  if (!methods.length) return undefined;
+  return { methods, scopeCell };
+}
+
+function collectDocumentedSections() {
+  const doc = readFileSync(join(ROOT, 'docs', 'oauth-scopes.md'), 'utf8');
+  const sections = [];
+  const headings = [];
+  const scopeViolations = [];
+
+  for (const [index, line] of doc.split('\n').entries()) {
+    const heading = line.match(/^(#{2,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) {
+      const level = heading[1].length;
+      while (headings.length && headings[headings.length - 1].level >= level) headings.pop();
+      headings.push({ level, title: heading[2].trim() });
+      continue;
+    }
+
+    const row = parseTableRow(line);
+    if (!row) continue;
+
+    const title = headings[headings.length - 1]?.title ?? '<root>';
+    const path = headings.map(item => item.title);
+    const pathKey = path.map(normalizeKey).join('');
+    const titleKey = normalizeKey(title);
+    let section = sections.find(item => item.pathKey === pathKey);
+    if (!section) {
+      section = { title, path, pathKey, titleKey, methods: new Set() };
+      sections.push(section);
+    }
+    for (const method of row.methods) section.methods.add(method);
+
+    if (!SCOPE_CELL.test(row.scopeCell)) {
+      scopeViolations.push({
+        key: `scope-cell:${index + 1}`,
+        message: `oauth-scopes.md:${index + 1} scope cell contains prose - keep only scope identifiers, move notes to method JSDoc: ${row.scopeCell}`,
+      });
+    }
+  }
+
+  return { sections, scopeViolations };
+}
+
+function findSection(prefix, sections) {
+  const prefixKey = normalizeKey(prefix);
+  const prefixPathKey = prefix.split('.').map(normalizeKey).join('');
+  const aliasKeys = SECTION_ALIASES.get(prefixKey) ?? [];
+  const candidateKeys = [prefixPathKey, ...aliasKeys];
+
+  for (const key of candidateKeys) {
+    const exactPath = sections.filter(section => section.pathKey === key);
+    if (exactPath.length === 1) return exactPath[0];
+  }
+
+  for (const key of candidateKeys) {
+    const exactTitle = sections.filter(section => section.titleKey === key);
+    if (exactTitle.length === 1) return exactTitle[0];
+  }
+
+  for (const key of candidateKeys) {
+    const suffix = sections.filter(section => section.pathKey.endsWith(key) || section.titleKey.endsWith(key));
+    if (suffix.length === 1) return suffix[0];
+  }
+
+  return undefined;
+}
+
+const tracked = collectTrackedMethods();
+const { sections, scopeViolations } = collectDocumentedSections();
+const violations = [...scopeViolations];
+
+for (const method of tracked) {
+  if (method.internal) continue;
+  const section = findSection(method.prefix, sections);
+  if (!section) {
+    violations.push({
+      key: `${method.label}:no-scope-section`,
+      message: `${method.label} has no matching section in docs/oauth-scopes.md`,
+    });
+  } else if (!section.methods.has(method.method)) {
+    violations.push({
+      key: `${method.label}:no-scope-row`,
+      message: `${method.method}() (${method.label}) is not documented under ${section.path.join(' > ')} in docs/oauth-scopes.md`,
     });
   }
 }
 
-// 2. Collect the set of method names documented in oauth-scopes.md. A method row
-// is `| \`name()\` | ... |`; one cell may list aliases, e.g. `getRecord()` / `getRecordById()`.
-const doc = readFileSync(join(ROOT, 'docs', 'oauth-scopes.md'), 'utf8');
-const documented = new Set();
-for (const line of doc.split('\n')) {
-  const cell = line.match(/^\|([^|]+)\|/);
-  if (!cell) continue;
-  for (const m of cell[1].matchAll(/`([A-Za-z_$][\w$]*)\(/g)) documented.add(m[1]);
-}
-
-const violations = [];
-
-// 3. Every public tracked method must be documented somewhere in the doc.
-for (const t of tracked) {
-  if (t.internal) continue;
-  if (!documented.has(t.method)) {
-    violations.push({ key: `${t.label}:no-scope-row`, message: `${t.method}() (${t.label}) is not documented in docs/oauth-scopes.md — add its OAuth scope row` });
-  }
-}
-
-// 4. Scope cell format: backticked scope identifiers only (space-separated scopes
-// inside one backtick group are fine), joined by "," / "or" / spaces — no prose.
-const SCOPE_CELL = /^(`[A-Za-z0-9._ ]+`)(\s*(,|or)?\s*`[A-Za-z0-9._ ]+`)*$/;
-for (const [i, line] of doc.split('\n').entries()) {
-  const m = line.match(/^\|\s*`[^`]+\(\)`\s*\|(.+)\|\s*$/);
-  if (!m) continue;
-  const cell = m[1].trim();
-  if (!SCOPE_CELL.test(cell)) {
-    violations.push({ key: `scope-cell:${i + 1}`, message: `oauth-scopes.md:${i + 1} scope cell contains prose — keep only scope identifiers, move notes to method JSDoc: ${cell}` });
-  }
-}
-
-// dedup by key (an unmapped prefix produces one violation per method)
 const unique = [...new Map(violations.map(v => [v.key, v])).values()];
 const baseline = existsSync(BASELINE_PATH) ? new Set(JSON.parse(readFileSync(BASELINE_PATH, 'utf8'))) : new Set();
 
@@ -107,4 +164,4 @@ if (fresh.length) {
   console.error('\nIf intentional, run: node scripts/pr-checks/check-docs-consistency.mjs --update-baseline');
   process.exit(1);
 }
-console.log(`check-docs-consistency: OK (${tracked.length} tracked methods, ${unique.length} grandfathered)`);
+console.log(`check-docs-consistency: OK (${tracked.length} tracked methods, ${sections.length} docs sections, ${unique.length} grandfathered)`);

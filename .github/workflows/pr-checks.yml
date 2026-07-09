@@ -62,6 +62,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run PR convention checks
         run: node scripts/pr-checks/run-all.mjs
