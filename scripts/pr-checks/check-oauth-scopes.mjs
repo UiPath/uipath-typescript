@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { finishViolationCheck } from './known-issues.mjs';
 import {
   findDescendants,
   getDeclarationName,
@@ -9,9 +8,8 @@ import {
   ts,
   walkTsFiles,
 } from './typescript-source.mjs';
-import { checkPath, repoPath } from './workspace.mjs';
+import { repoPath } from './workspace.mjs';
 
-const KNOWN_ISSUES_PATH = checkPath('oauth-scopes-known-issues.json');
 const SCOPE_CELL = /^(`[A-Za-z0-9._ ]+`)(\s*(,|or)?\s*`[A-Za-z0-9._ ]+`)*$/;
 const HEADING = /^(#{2,6})\s+(.+?)\s*#*\s*$/;
 const TABLE_SEPARATOR = /^-+$/;
@@ -142,11 +140,12 @@ for (const method of tracked) {
   }
 }
 
-finishViolationCheck({
-  checkName: 'check-oauth-scopes',
-  knownIssuesPath: KNOWN_ISSUES_PATH,
-  violations,
-  updateSummary: count => `oauth-scopes known issues updated: ${count} existing violation(s)`,
-  failureHint: 'Fix docs/oauth-scopes.md, or if intentional run: node scripts/pr-checks/check-oauth-scopes.mjs --update-known-issues',
-  successSummary: ({ violationCount }) => `${tracked.length} tracked methods, ${sections.length} docs sections, ${violationCount} known existing`,
-});
+if (violations.length) {
+  console.error(`check-oauth-scopes: ${violations.length} violation(s):`);
+  for (const violation of violations) {
+    console.error(`  ${violation.key}: ${violation.message}`);
+  }
+  process.exit(1);
+}
+
+console.log(`check-oauth-scopes: OK (${tracked.length} tracked methods, ${sections.length} docs sections)`);

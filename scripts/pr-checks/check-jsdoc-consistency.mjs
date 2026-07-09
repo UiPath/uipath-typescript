@@ -1,4 +1,3 @@
-import { finishViolationCheck } from './known-issues.mjs';
 import {
   findDescendants,
   getDeclarationName,
@@ -8,9 +7,8 @@ import {
   ts,
   walkTsFiles,
 } from './typescript-source.mjs';
-import { checkPath, repoPath } from './workspace.mjs';
+import { repoPath } from './workspace.mjs';
 
-const KNOWN_ISSUES_PATH = checkPath('jsdoc-consistency-known-issues.json');
 const SERVICE_MODEL_SUFFIX = 'ServiceModel';
 
 function collectDocumentedMethods(members, sourceFile, isMethodNode) {
@@ -96,11 +94,13 @@ for (const model of models) {
   }
 }
 
-finishViolationCheck({
-  checkName: 'check-jsdoc-consistency',
-  knownIssuesPath: KNOWN_ISSUES_PATH,
-  violations,
-  updateSummary: count => `jsdoc-consistency known issues updated: ${count} existing violation(s)`,
-  failureHint: 'Keep ServiceModel and service class JSDoc identical. If intentional, run: node scripts/pr-checks/check-jsdoc-consistency.mjs --update-known-issues',
-  successSummary: ({ violationCount }) => `${models.length} ServiceModels, ${skipped} doc-only skipped, ${violationCount} known existing`,
-});
+if (violations.length) {
+  console.error(`check-jsdoc-consistency: ${violations.length} violation(s):`);
+  for (const violation of violations) {
+    console.error(`  ${violation.key}: ${violation.message}`);
+  }
+  console.error('\nKeep ServiceModel and service class JSDoc identical.');
+  process.exit(1);
+}
+
+console.log(`check-jsdoc-consistency: OK (${models.length} ServiceModels, ${skipped} doc-only skipped)`);

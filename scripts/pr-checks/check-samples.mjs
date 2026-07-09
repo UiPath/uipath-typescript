@@ -1,11 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { finishViolationCheck } from './known-issues.mjs';
-import { checkPath, relativeTo, relativeToRoot, repoPath, ROOT } from './workspace.mjs';
+import { relativeTo, relativeToRoot, repoPath, ROOT } from './workspace.mjs';
 
 const SAMPLES = repoPath('samples');
-const KNOWN_ISSUES_PATH = checkPath('samples-known-issues.json');
 const CONFIG_KEYS = ['clientId', 'scope', 'orgName', 'tenantName', 'baseUrl', 'redirectUri'];
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MEDIA_REFERENCE = /!\[[^\]]*\]\(|<img\b|<video\b|\.(gif|mp4|webm)\b/i;
@@ -151,12 +149,12 @@ for (const app of apps) {
   }
 }
 
-finishViolationCheck({
-  checkName: 'check-samples',
-  knownIssuesPath: KNOWN_ISSUES_PATH,
-  violations,
-  updateSummary: count => `samples known issues updated: ${count} existing violation(s)`,
-  failureHint: 'Fix these, or if intentional run: node scripts/pr-checks/check-samples.mjs --update-known-issues',
-  successSummary: ({ knownCount }) => `${apps.length} apps, ${knownCount} known existing`,
-  logKnown: true,
-});
+if (violations.length) {
+  console.error(`check-samples: ${violations.length} violation(s):`);
+  for (const violation of violations) {
+    console.error(`  ${violation.key}: ${violation.message}`);
+  }
+  process.exit(1);
+}
+
+console.log(`check-samples: OK (${apps.length} apps)`);

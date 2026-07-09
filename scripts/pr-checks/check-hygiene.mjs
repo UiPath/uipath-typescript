@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { finishCountCheck } from './known-issues.mjs';
-import { checkPath, relativeToRoot, repoPath, walkTsFiles } from './workspace.mjs';
+import { relativeToRoot, repoPath, walkTsFiles } from './workspace.mjs';
 
-const KNOWN_ISSUES_PATH = checkPath('hygiene-known-issues.json');
 const AS_ANY = /\bas any\b/g;
 const AS_UNKNOWN_AS = /\bas unknown as\b/g;
 const CONSOLE_WARN = /console\.warn/g;
@@ -77,23 +75,26 @@ const RULES = [
   },
 ];
 
-const current = {};
+const failures = [];
 for (const rule of RULES) {
   for (const file of rule.files) {
-    const n = rule.count(readFileSync(file, 'utf8'));
-    if (n > 0) current[`${rule.id}>${relativeToRoot(file)}`] = n;
+    const count = rule.count(readFileSync(file, 'utf8'));
+    if (count > 0) {
+      failures.push({
+        key: `${rule.id}>${relativeToRoot(file)}`,
+        count,
+        describe: rule.describe,
+      });
+    }
   }
 }
 
-finishCountCheck({
-  checkName: 'check-hygiene',
-  knownIssuesPath: KNOWN_ISSUES_PATH,
-  current,
-  updateSummary: count => `hygiene known issues updated: ${count} existing file/rule entries`,
-  formatFailure: ({ key, count, allowed }) => {
-    const rule = RULES.find(item => key.startsWith(`${item.id}>`));
-    return `${key}: ${count} occurrence(s), known existing count is ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
-  },
-  failureHint: 'Fix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-known-issues',
-  successSummary: ({ knownIssueCount }) => `${RULES.length} rules, ${knownIssueCount} known existing file/rule entries`,
-});
+if (failures.length) {
+  console.error(`check-hygiene: ${failures.length} rule/file violation(s):`);
+  for (const failure of failures) {
+    console.error(`  ${failure.key}: ${failure.count} occurrence(s) - ${failure.describe}`);
+  }
+  process.exit(1);
+}
+
+console.log(`check-hygiene: OK (${RULES.length} rules)`);

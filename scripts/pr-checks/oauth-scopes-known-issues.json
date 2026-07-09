@@ -1,5 +1,0 @@
-[
-  "ConversationalAgent.Conversations.CreateAttachment:no-scope-row",
-  "ConversationalAgent.Conversations.Disconnect:no-scope-row",
-  "ProcessIncidents.getAll:no-scope-section"
-]
