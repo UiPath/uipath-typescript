@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { finishCountBaseline } from './baseline.mjs';
+import { finishCountCheck } from './known-issues.mjs';
 import { checkPath, relativeToRoot, repoPath, walkTsFiles } from './workspace.mjs';
 
-const BASELINE_PATH = checkPath('hygiene-baseline.json');
+const KNOWN_ISSUES_PATH = checkPath('hygiene-known-issues.json');
 const AS_ANY = /\bas any\b/g;
 const AS_UNKNOWN_AS = /\bas unknown as\b/g;
 const CONSOLE_WARN = /console\.warn/g;
@@ -85,15 +85,15 @@ for (const rule of RULES) {
   }
 }
 
-finishCountBaseline({
+finishCountCheck({
   checkName: 'check-hygiene',
-  baselinePath: BASELINE_PATH,
+  knownIssuesPath: KNOWN_ISSUES_PATH,
   current,
-  updateSummary: count => `hygiene baseline updated: ${count} known existing file/rule entries`,
+  updateSummary: count => `hygiene known issues updated: ${count} existing file/rule entries`,
   formatFailure: ({ key, count, allowed }) => {
     const rule = RULES.find(item => key.startsWith(`${item.id}>`));
-    return `${key}: ${count} occurrence(s), known baseline allows ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
+    return `${key}: ${count} occurrence(s), known existing count is ${allowed} - ${rule?.describe ?? 'unknown rule'}`;
   },
-  failureHint: 'Fix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-baseline',
-  successSummary: ({ baselineCount }) => `${RULES.length} rules, ${baselineCount} known existing file/rule entries`,
+  failureHint: 'Fix the new occurrences. If you reduced counts elsewhere, refresh with: node scripts/pr-checks/check-hygiene.mjs --update-known-issues',
+  successSummary: ({ knownIssueCount }) => `${RULES.length} rules, ${knownIssueCount} known existing file/rule entries`,
 });

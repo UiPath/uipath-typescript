@@ -20,19 +20,20 @@ Shared helpers:
 
 - `typescript-source.mjs`: TypeScript AST and JSDoc helpers.
 - `workspace.mjs`: repo paths and file walking.
-- `baseline.mjs`: temporary known-issue baseline reporting.
+- `known-issues.mjs`: temporary known-issue reporting.
 
 ## Known Existing Issues
 
 This PR adds the linter gates first. Existing violations are listed in the
-`*-baseline.json` files so they can be fixed in focused follow-up PRs while the
+`*-known-issues.json` files so they can be fixed in focused follow-up PRs while the
 new checks prevent more drift. After fixing known issues, refresh the matching file with:
 
 ```bash
-node scripts/pr-checks/<script>.mjs --update-baseline   # or run-all.mjs --update-baseline
+node scripts/pr-checks/<script>.mjs --update-known-issues   # or run-all.mjs --update-known-issues
 ```
 
 Shrinking these files is expected as cleanup PRs land; growing one needs a clear reason.
 
-Caveat: `check-jsdoc-consistency` baselines by method key, so a method already listed as drifted
-won't flag further drift until it is fixed and removed from the baseline.
+Caveat: `check-jsdoc-consistency` tracks known issues by method key, so a method already
+listed as drifted won't flag further drift until it is fixed and removed from the known
+issues file.

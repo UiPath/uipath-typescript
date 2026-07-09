@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-export const UPDATE_BASELINE = process.argv.includes('--update-baseline');
+export const UPDATE_KNOWN_ISSUES = process.argv.includes('--update-known-issues');
 
 function readJson(path, fallback) {
   if (!existsSync(path)) return fallback;
@@ -15,9 +15,9 @@ function uniqueViolations(violations) {
   return [...new Map(violations.map(violation => [violation.key, violation])).values()];
 }
 
-export function finishViolationBaseline({
+export function finishViolationCheck({
   checkName,
-  baselinePath,
+  knownIssuesPath,
   violations,
   updateSummary,
   formatViolation = violation => `${violation.key}: ${violation.message}`,
@@ -26,16 +26,16 @@ export function finishViolationBaseline({
   logKnown = false,
 }) {
   const unique = uniqueViolations(violations);
-  const baseline = new Set(readJson(baselinePath, []));
+  const knownIssues = new Set(readJson(knownIssuesPath, []));
 
-  if (UPDATE_BASELINE) {
-    writeJson(baselinePath, unique.map(violation => violation.key).sort());
+  if (UPDATE_KNOWN_ISSUES) {
+    writeJson(knownIssuesPath, unique.map(violation => violation.key).sort());
     console.log(updateSummary(unique.length));
     process.exit(0);
   }
 
-  const fresh = unique.filter(violation => !baseline.has(violation.key));
-  const known = unique.filter(violation => baseline.has(violation.key));
+  const fresh = unique.filter(violation => !knownIssues.has(violation.key));
+  const known = unique.filter(violation => knownIssues.has(violation.key));
 
   if (logKnown) {
     for (const violation of known) {
@@ -53,15 +53,15 @@ export function finishViolationBaseline({
   }
 
   console.log(`${checkName}: OK (${successSummary({
-    baselineCount: baseline.size,
+    knownIssueCount: knownIssues.size,
     knownCount: known.length,
     violationCount: unique.length,
   })})`);
 }
 
-export function finishCountBaseline({
+export function finishCountCheck({
   checkName,
-  baselinePath,
+  knownIssuesPath,
   current,
   updateSummary,
   formatFailure,
@@ -70,24 +70,24 @@ export function finishCountBaseline({
 }) {
   const sorted = Object.fromEntries(Object.entries(current).sort(([a], [b]) => a.localeCompare(b)));
 
-  if (UPDATE_BASELINE) {
-    writeJson(baselinePath, sorted);
+  if (UPDATE_KNOWN_ISSUES) {
+    writeJson(knownIssuesPath, sorted);
     console.log(updateSummary(Object.keys(sorted).length));
     process.exit(0);
   }
 
-  const baseline = readJson(baselinePath, {});
+  const knownIssues = readJson(knownIssuesPath, {});
   const failures = [];
 
   for (const [key, count] of Object.entries(sorted)) {
-    const allowed = baseline[key] ?? 0;
+    const allowed = knownIssues[key] ?? 0;
     if (count > allowed) {
       failures.push({ key, count, allowed });
     }
   }
 
   if (failures.length) {
-    console.error(`${checkName}: ${failures.length} rule/file(s) exceed known-issue baseline:`);
+    console.error(`${checkName}: ${failures.length} rule/file(s) exceed known existing issue count:`);
     for (const failure of failures) {
       console.error(`  ${formatFailure(failure)}`);
     }
@@ -96,7 +96,7 @@ export function finishCountBaseline({
   }
 
   console.log(`${checkName}: OK (${successSummary({
-    baselineCount: Object.keys(baseline).length,
+    knownIssueCount: Object.keys(knownIssues).length,
     currentCount: Object.keys(sorted).length,
   })})`);
 }

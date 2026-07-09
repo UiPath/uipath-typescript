@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { finishViolationBaseline } from './baseline.mjs';
+import { finishViolationCheck } from './known-issues.mjs';
 import { checkPath, relativeTo, relativeToRoot, repoPath, ROOT } from './workspace.mjs';
 
 const SAMPLES = repoPath('samples');
-const BASELINE_PATH = checkPath('samples-baseline.json');
+const KNOWN_ISSUES_PATH = checkPath('samples-known-issues.json');
 const CONFIG_KEYS = ['clientId', 'scope', 'orgName', 'tenantName', 'baseUrl', 'redirectUri'];
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MEDIA_REFERENCE = /!\[[^\]]*\]\(|<img\b|<video\b|\.(gif|mp4|webm)\b/i;
@@ -151,12 +151,12 @@ for (const app of apps) {
   }
 }
 
-finishViolationBaseline({
+finishViolationCheck({
   checkName: 'check-samples',
-  baselinePath: BASELINE_PATH,
+  knownIssuesPath: KNOWN_ISSUES_PATH,
   violations,
-  updateSummary: count => `samples baseline updated: ${count} known existing violation(s)`,
-  failureHint: 'Fix these, or if intentional run: node scripts/pr-checks/check-samples.mjs --update-baseline',
+  updateSummary: count => `samples known issues updated: ${count} existing violation(s)`,
+  failureHint: 'Fix these, or if intentional run: node scripts/pr-checks/check-samples.mjs --update-known-issues',
   successSummary: ({ knownCount }) => `${apps.length} apps, ${knownCount} known existing`,
   logKnown: true,
 });
