@@ -49,6 +49,7 @@ import {
   FieldDisplayTypeToDataType,
   ENTITY_TYPE_IDS,
 } from "../../../../src/models/data-fabric/entities.constants";
+import type { EntityGetResponse } from "../../../../src/models/data-fabric/entities.models";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
@@ -1484,6 +1485,10 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("queryRecordsById", () => {
+    // queryRecordsById only reads `.name` from the resolved entity metadata.
+    const mockGetByIdName = (name: string) =>
+      vi.spyOn(entityService, "getById").mockResolvedValue({ name } as EntityGetResponse);
+
     beforeEach(() => {
       vi.mocked(PaginationHelpers.getAll).mockReset();
     });
@@ -1712,9 +1717,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should translate joins to the wire contract and route to the name-based query endpoint", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      const getByIdSpy = vi
-        .spyOn(entityService, "getById")
-        .mockResolvedValue({ name: "Order" } as any);
+      const getByIdSpy = mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         selectedFields: ["Order.amount", "Customer.name", "Region.name"],
@@ -1752,7 +1755,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should default the base entity and join type when omitted", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      vi.spyOn(entityService, "getById").mockResolvedValue({ name: "Order" } as any);
+      mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         selectedFields: ["Customer.name"],
@@ -1777,7 +1780,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should map JoinType.InnerJoin to the INNER wire value", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      vi.spyOn(entityService, "getById").mockResolvedValue({ name: "Order" } as any);
+      mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         selectedFields: ["Customer.name"],
@@ -1801,7 +1804,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should not re-qualify join fields the caller already qualified", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      vi.spyOn(entityService, "getById").mockResolvedValue({ name: "Order" } as any);
+      mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         selectedFields: ["Customer.name"],
@@ -1826,9 +1829,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should pass folderKey through to the entity-name lookup", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      const getByIdSpy = vi
-        .spyOn(entityService, "getById")
-        .mockResolvedValue({ name: "Order" } as any);
+      const getByIdSpy = mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
@@ -1864,7 +1865,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should include joins in excludeFromPrefix so OData $ prefix is not added", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      vi.spyOn(entityService, "getById").mockResolvedValue({ name: "Order" } as any);
+      mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         selectedFields: ["Customer.name"],
@@ -1925,7 +1926,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should accept joins with aggregates and no selectedFields", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-      vi.spyOn(entityService, "getById").mockResolvedValue({ name: "Order" } as any);
+      mockGetByIdName("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         aggregates: [{ function: EntityAggregateFunction.Count, field: "Order.Id", alias: "total" }],
