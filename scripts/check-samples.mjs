@@ -7,12 +7,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse } from 'node-html-parser';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
+// Grep/presence checks (not parsers): does the text contain a media ref / this string?
 const MEDIA = /!\[[^\]]*\]\([^)]+\)|<img\b|<video\b|\bhttps?:\/\/[^\s)]+\.(?:gif|mp4|webm|png|jpe?g)\b|\.(?:gif|mp4|webm)\b/i;
-const ICON_LINK = /<link\b[^>]*\brel=["'][^"']*icon[^"']*["'][^>]*>/i;
-const HREF = /\bhref=["']([^"']+)["']/i;
 const VITE_BASE = /base\s*:\s*["']\.\/["']/;
 const CODED_APPS_DEV = /@uipath\/coded-apps-dev/;
 
@@ -60,6 +60,7 @@ const RULES = [
     id: 'vite-config',
     desc: "vite.config must set base: './' and import @uipath/coded-apps-dev",
     applies: c => c.viteConfig !== undefined,
+    // grep, not semantic validation — loading the vite config would need npm ci per app.
     check: c => {
       const src = c.read(c.viteConfig);
       const out = [];
@@ -71,13 +72,14 @@ const RULES = [
 ];
 
 // Validate that the favicon <link> points at a file that actually exists,
-// not just that the tag is present. `exists` resolves paths relative to the
-// app root. Absolute `/x` refs are tried under public/ and root (Vite's
-// conventions); data:/http refs are inline/external and assumed present.
+// not just that the tag is present. Parse the HTML (rel~=icon matches any
+// space-separated token, e.g. "shortcut icon"). `exists` resolves paths
+// relative to the app root. Absolute `/x` refs are tried under public/ and
+// root (Vite's conventions); data:/http refs are inline/external and assumed present.
 function faviconViolations(html, exists) {
-  const tag = html.match(ICON_LINK);
-  if (!tag) return ['index.html has no favicon <link rel="icon">'];
-  const href = tag[0].match(HREF)?.[1]?.split(/[?#]/)[0];
+  const link = parse(html).querySelector('link[rel~=icon]');
+  if (!link) return ['index.html has no favicon <link rel="icon">'];
+  const href = link.getAttribute('href')?.split(/[?#]/)[0];
   if (!href) return ['favicon <link rel="icon"> has no href'];
   if (/^(data:|https?:)/i.test(href)) return [];
   const candidates = href.startsWith('/') ? [`public${href}`, href.slice(1)] : [href.replace(/^\.\//, '')];
