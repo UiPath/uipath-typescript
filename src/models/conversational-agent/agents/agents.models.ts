@@ -91,6 +91,13 @@ function createAgentMethods(
   };
 }
 
+/**
+ * Combines raw agent data with bound methods.
+ *
+ * @param agentData - The raw agent data from API
+ * @param conversationService - The conversation service instance
+ * @returns An agent object with added methods
+ */
 export function createAgentWithMethods<T extends RawAgentGetResponse>(
   agentData: T,
   conversationService: ConversationServiceModel

@@ -64,6 +64,11 @@ export class UiPath implements IUiPath {
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
 
+  /**
+   * Creates a UiPath SDK instance.
+   *
+   * @param config - Optional SDK configuration; when omitted, configuration is loaded from meta tags
+   */
   constructor(config?: PartialUiPathConfig) {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
