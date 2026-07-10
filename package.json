@@ -241,6 +241,7 @@
         "docs:coded-action-app": "npm run docs --prefix packages/coded-action-app",
         "docs:post-process": "node scripts/docs-post-process.mjs",
         "lint": "oxlint",
+        "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest run",

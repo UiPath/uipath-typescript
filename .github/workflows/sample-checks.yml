@@ -1,0 +1,29 @@
+name: Sample App Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-samples:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Gate only the sample apps touched by this PR. Existing apps are a
+      # backlog; each becomes enforced the next time it is changed.
+      - name: Check changed sample apps
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/check-samples.mjs --changed "origin/$BASE_REF"
