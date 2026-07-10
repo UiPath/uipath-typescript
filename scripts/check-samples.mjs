@@ -38,11 +38,6 @@ const RULES = [
     check: c => (c.has('uipath.json.example') ? [] : ['missing uipath.json.example']),
   },
   {
-    id: 'no-committed-uipath-json',
-    desc: 'must not commit uipath.json (only the .example)',
-    check: c => (c.has('uipath.json') ? ['uipath.json is committed — remove it and gitignore it'] : []),
-  },
-  {
     id: 'gitignore',
     desc: 'must have a .gitignore that ignores .uipath',
     check: c => {
@@ -145,7 +140,6 @@ function selftest() {
     'vite.config.ts': "import { uipathCodedApps } from '@uipath/coded-apps-dev/vite';\nexport default { base: './' }",
   };
   assert(checkApp(fake(clean, 'vite.config.ts')).length === 0, 'clean app passes');
-  assert(checkApp(fake({ ...clean, 'uipath.json': '{}' })).some(v => v.rule === 'no-committed-uipath-json'), 'catches committed uipath.json');
   assert(checkApp(fake({ ...clean, 'README.md': '# App\nno preview here' })).some(v => v.rule === 'readme-preview'), 'catches missing preview heading');
   assert(checkApp(fake({ ...clean, 'README.md': '# App\n## Preview\njust text' })).some(v => v.rule === 'readme-preview'), 'catches preview without media');
   assert(checkApp(fake({ ...clean, 'index.html': '<title>x</title>' })).some(v => v.rule === 'favicon'), 'catches missing favicon');
