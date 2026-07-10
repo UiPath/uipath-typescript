@@ -1060,7 +1060,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
     });
 
-    it('should create entity with RELATIONSHIP field and verify FK metadata', async () => {
+    it('should create entity with RELATIONSHIP and FILE fields and verify metadata', async () => {
       const { entities } = getServices();
       const stamp = generateRandomString(8).toLowerCase();
 
@@ -1079,7 +1079,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error(`Target entity ${targetId} has no primary-key field — cannot bind a RELATIONSHIP to it`);
       }
 
-      // 3. Create the source entity with a RELATIONSHIP field bound to target.Id.
+      // 3. Create the source entity with a RELATIONSHIP field bound to target.Id
       const sourceName = `sdk_source_${stamp}`;
       const sourceId = await entities.create(sourceName, [
         { fieldName: 'name', type: EntityFieldDataType.STRING },
@@ -1089,18 +1089,24 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
           referenceEntityId: targetId,
           referenceFieldId: pkField.id,
         },
+        { fieldName: 'attachfile', type: EntityFieldDataType.FILE },
       ]);
       createdEntityIds.push(sourceId);
 
-      // 4. Read it back and verify the FK landed correctly. The server resolves
-      //    `referenceEntity { id }` → a full entity reference; if the SDK had
-      //    sent the old `referenceEntityName` shape this would be unbound.
+      // 4. Read it back and verify both fields landed correctly. The server
+      //    resolves `referenceEntity { id }` → a full entity reference
       const sourceMeta = await entities.getById(sourceId);
       const parentField = sourceMeta.fields.find(f => f.name === 'parent');
       expect(parentField).toBeDefined();
       expect(parentField?.isForeignKey).toBe(true);
       expect(parentField?.referenceEntity?.id).toBe(targetId);
       expect(parentField?.referenceField?.id).toBe(pkField.id);
+
+      const fileField = sourceMeta.fields.find(f => f.name === 'attachfile');
+      expect(fileField).toBeDefined();
+      expect(fileField?.fieldDisplayType).toBe(FieldDisplayType.File);
+      expect(fileField?.referenceEntity).toBeFalsy();
+      expect(fileField?.referenceField).toBeFalsy();
     });
   });
 
