@@ -11,7 +11,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const MEDIA = /!\[[^\]]*\]\([^)]+\)|<img\b|<video\b|\bhttps?:\/\/[^\s)]+\.(?:gif|mp4|webm|png|jpe?g)\b|\.(?:gif|mp4|webm)\b/i;
-const FAVICON = /rel=["'][^"']*icon/i;
+const ICON_LINK = /<link\b[^>]*\brel=["'][^"']*icon[^"']*["'][^>]*>/i;
+const HREF = /\bhref=["']([^"']+)["']/i;
 const VITE_BASE = /base\s*:\s*["']\.\/["']/;
 const CODED_APPS_DEV = /@uipath\/coded-apps-dev/;
 
@@ -42,9 +43,9 @@ const RULES = [
   },
   {
     id: 'favicon',
-    desc: 'index.html must reference a favicon',
+    desc: 'index.html must reference a favicon file that exists',
     applies: c => c.has('index.html'),
-    check: c => (FAVICON.test(c.read('index.html')) ? [] : ['index.html has no favicon <link rel="icon">']),
+    check: c => faviconViolations(c.read('index.html'), c.exists),
   },
   {
     id: 'coded-apps-dev',
@@ -68,6 +69,20 @@ const RULES = [
     },
   },
 ];
+
+// Validate that the favicon <link> points at a file that actually exists,
+// not just that the tag is present. `exists` resolves paths relative to the
+// app root. Absolute `/x` refs are tried under public/ and root (Vite's
+// conventions); data:/http refs are inline/external and assumed present.
+function faviconViolations(html, exists) {
+  const tag = html.match(ICON_LINK);
+  if (!tag) return ['index.html has no favicon <link rel="icon">'];
+  const href = tag[0].match(HREF)?.[1]?.split(/[?#]/)[0];
+  if (!href) return ['favicon <link rel="icon"> has no href'];
+  if (/^(data:|https?:)/i.test(href)) return [];
+  const candidates = href.startsWith('/') ? [`public${href}`, href.slice(1)] : [href.replace(/^\.\//, '')];
+  return candidates.some(exists) ? [] : [`favicon "${href}" referenced but the file does not exist`];
+}
 
 // Extract the markdown section under the first heading matching /preview/i,
 // up to the next heading of the same or higher level (or EOF).
@@ -108,6 +123,7 @@ function discoverApps() {
       viteConfig,
       has: file => tracked.has(`${dir}/${file}`),
       read: file => (existsSync(join(ROOT, dir, file)) ? readFileSync(join(ROOT, dir, file), 'utf8') : ''),
+      exists: file => existsSync(join(ROOT, dir, file)),
     };
   });
 }
@@ -128,7 +144,7 @@ function assert(cond, msg) {
 }
 
 function fake(files, viteConfig) {
-  return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '' };
+  return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '', exists: f => f in files };
 }
 
 function selftest() {
@@ -137,13 +153,15 @@ function selftest() {
     'uipath.json.example': '{}',
     '.gitignore': 'node_modules\n.uipath\n',
     'README.md': '# App\n## Preview\n![demo](./demo.gif)\n',
-    'index.html': '<link rel="icon" href="/favicon.png">',
+    'index.html': '<link rel="icon" href="./favicon.png">',
+    'favicon.png': '<binary>',
     'vite.config.ts': "import { uipathCodedApps } from '@uipath/coded-apps-dev/vite';\nexport default { base: './' }",
   };
   assert(checkApp(fake(clean, 'vite.config.ts')).length === 0, 'clean app passes');
   assert(checkApp(fake({ ...clean, 'README.md': '# App\nno preview here' })).some(v => v.rule === 'readme-preview'), 'catches missing preview heading');
   assert(checkApp(fake({ ...clean, 'README.md': '# App\n## Preview\njust text' })).some(v => v.rule === 'readme-preview'), 'catches preview without media');
-  assert(checkApp(fake({ ...clean, 'index.html': '<title>x</title>' })).some(v => v.rule === 'favicon'), 'catches missing favicon');
+  assert(checkApp(fake({ ...clean, 'index.html': '<title>x</title>' })).some(v => v.rule === 'favicon'), 'catches missing favicon link');
+  { const f = { ...clean }; delete f['favicon.png']; assert(checkApp(fake(f, 'vite.config.ts')).some(v => v.rule === 'favicon'), 'catches favicon link pointing at a missing file'); }
   assert(checkApp(fake({ ...clean, '.gitignore': 'node_modules' })).some(v => v.rule === 'gitignore'), 'catches .gitignore without .uipath');
   assert(checkApp(fake({ ...clean, 'vite.config.ts': "export default { base: '/' }" }, 'vite.config.ts')).filter(v => v.rule === 'vite-config').length === 2, 'catches vite base + import');
   const noHtml = { ...clean, 'package.json': '{}' };
