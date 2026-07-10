@@ -9,6 +9,13 @@ export interface FieldSchemaPayload {
   name: string;
   displayName?: string;
   description?: string;
+  /**
+   * Lowercase server-side type discriminator. Currently only emitted for FILE
+   * fields (as `'relationship'`) so the server's attachment auto-wire path
+   * triggers; other types leave this unset and are inferred from
+   * `sqlType.name` + `fieldDisplayType`.
+   */
+  type?: string;
   sqlType: SqlType;
   fieldDisplayType: FieldDisplayType;
   isRequired?: boolean;
