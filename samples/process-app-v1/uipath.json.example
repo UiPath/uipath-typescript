@@ -1,0 +1,8 @@
+{
+  "clientId": "<your-oauth-external-app-client-id>",
+  "scope": "PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write OR.Execution.Read",
+  "orgName": "<your-org-name>",
+  "tenantName": "<your-tenant-name>",
+  "baseUrl": "https://api.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}
