@@ -49,27 +49,35 @@ const RULES = [
   },
   {
     id: 'coded-apps-dev',
-    desc: '@uipath/coded-apps-dev must be a devDependency',
+    desc: 'a coded-apps harness dependency (@uipath/coded-apps-dev, or @uipath/coded-action-app for action apps)',
     applies: c => c.has('index.html'),
     check: c => {
-      const pkg = JSON.parse(c.read('package.json'));
-      return pkg.devDependencies?.['@uipath/coded-apps-dev'] ? [] : ['@uipath/coded-apps-dev missing from devDependencies'];
+      const deps = allDeps(c);
+      if (deps['@uipath/coded-apps-dev'] || deps['@uipath/coded-action-app']) return [];
+      return ['no coded-apps harness: add @uipath/coded-apps-dev (or @uipath/coded-action-app for action apps)'];
     },
   },
   {
     id: 'vite-config',
-    desc: "vite.config must set base: './' and import @uipath/coded-apps-dev",
+    desc: "vite.config must set base: './' (and import @uipath/coded-apps-dev, except action apps)",
     applies: c => c.viteConfig !== undefined,
     // grep, not semantic validation — loading the vite config would need npm ci per app.
     check: c => {
       const src = c.read(c.viteConfig);
       const out = [];
       if (!VITE_BASE.test(src)) out.push(`${c.viteConfig} missing base: './'`);
-      if (!CODED_APPS_DEV.test(src)) out.push(`${c.viteConfig} does not import from @uipath/coded-apps-dev`);
+      // Action apps inject base/config at runtime via @uipath/coded-action-app,
+      // so they don't import the coded-apps-dev vite plugin.
+      if (!isActionApp(c) && !CODED_APPS_DEV.test(src)) out.push(`${c.viteConfig} does not import from @uipath/coded-apps-dev`);
       return out;
     },
   },
 ];
+
+const allDeps = c => { const p = JSON.parse(c.read('package.json')); return { ...p.dependencies, ...p.devDependencies }; };
+// Action apps depend on the coded-action-app harness, which supplies base/config
+// at runtime — so @uipath/coded-apps-dev and its vite import are not required.
+const isActionApp = c => '@uipath/coded-action-app' in allDeps(c);
 
 // Validate that the favicon <link> points at a file that actually exists,
 // not just that the tag is present. Parse the HTML (rel~=icon matches any
@@ -169,6 +177,13 @@ function selftest() {
   const noHtml = { ...clean, 'package.json': '{}' };
   delete noHtml['index.html'];
   assert(!checkApp(fake(noHtml)).some(v => v.rule === 'favicon' || v.rule === 'coded-apps-dev'), 'html-only rules skipped without index.html');
+  // Action apps use the coded-action-app harness: coded-apps-dev and the vite import are not required.
+  const actionApp = {
+    ...clean,
+    'package.json': '{"dependencies":{"@uipath/coded-action-app":"^1"}}',
+    'vite.config.ts': "export default { base: './' }",
+  };
+  assert(checkApp(fake(actionApp, 'vite.config.ts')).length === 0, 'action app passes with coded-action-app and no coded-apps-dev import');
   console.log('selftest: OK');
 }
 
