@@ -1316,9 +1316,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      ...((isRelationship || isFile) && { isForeignKey: true }),
-      ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      // FILE: server auto-wires refs to the EntityAttachment system entity; caller-sent UUIDs would fail the server's relationship pre-check.
+      ...(isRelationship && { isForeignKey: true, referenceType: ReferenceType.ManyToOne }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
       ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
