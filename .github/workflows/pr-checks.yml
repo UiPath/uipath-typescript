@@ -70,3 +70,27 @@ jobs:
       - name: Run tests
         run: npm test
 
+  jsdoc-validation:
+    # Fails when public API methods/parameters lack JSDoc. Uses TypeDoc's
+    # built-in notDocumented validation (typedoc.validation.json) - no custom
+    # parsing. Expected to fail until existing gaps are documented or tagged
+    # @internal.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate JSDoc completeness
+        run: npm run docs:validate
+

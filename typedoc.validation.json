@@ -7,5 +7,6 @@
     "notExported": false,
     "invalidLink": false
   },
-  "requiredToBeDocumented": ["Method", "CallSignature", "Parameter"]
+  "requiredToBeDocumented": ["Method", "CallSignature", "Parameter"],
+  "treatValidationWarningsAsErrors": true
 }
