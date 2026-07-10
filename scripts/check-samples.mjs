@@ -15,22 +15,7 @@ const FAVICON = /rel=["'][^"']*icon/i;
 const VITE_BASE = /base\s*:\s*["']\.\/["']/;
 const CODED_APPS_DEV = /@uipath\/coded-apps-dev/;
 
-// Extract the markdown section under the first heading matching /preview/i,
-// up to the next heading of the same or higher level (or EOF).
-function previewSection(readme) {
-  const lines = readme.split('\n');
-  const start = lines.findIndex(l => /^#{1,6}\s+.*preview/i.test(l));
-  if (start === -1) return undefined;
-  const level = lines[start].match(/^#+/)[0].length;
-  let end = lines.length;
-  for (let i = start + 1; i < lines.length; i++) {
-    const m = lines[i].match(/^(#{1,6})\s+/);
-    if (m && m[1].length <= level) { end = i; break; }
-  }
-  return lines.slice(start + 1, end).join('\n');
-}
-
-// ctx: { name, has(file)->bool, read(file)->string|undefined }
+// ctx: { name, viteConfig, has(file)->bool, read(file)->string }
 const RULES = [
   {
     id: 'example-config',
@@ -84,6 +69,21 @@ const RULES = [
   },
 ];
 
+// Extract the markdown section under the first heading matching /preview/i,
+// up to the next heading of the same or higher level (or EOF).
+function previewSection(readme) {
+  const lines = readme.split('\n');
+  const start = lines.findIndex(l => /^#{1,6}\s+.*preview/i.test(l));
+  if (start === -1) return undefined;
+  const level = lines[start].match(/^#+/)[0].length;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    const m = lines[i].match(/^(#{1,6})\s+/);
+    if (m && m[1].length <= level) { end = i; break; }
+  }
+  return lines.slice(start + 1, end).join('\n');
+}
+
 export function checkApp(ctx) {
   return RULES.flatMap(r => (r.applies && !r.applies(ctx) ? [] : r.check(ctx).map(m => ({ rule: r.id, message: m }))));
 }
@@ -126,6 +126,7 @@ function run() {
 function assert(cond, msg) {
   if (!cond) throw new Error('selftest failed: ' + msg);
 }
+
 function fake(files, viteConfig) {
   return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '' };
 }
@@ -145,9 +146,8 @@ function selftest() {
   assert(checkApp(fake({ ...clean, 'index.html': '<title>x</title>' })).some(v => v.rule === 'favicon'), 'catches missing favicon');
   assert(checkApp(fake({ ...clean, '.gitignore': 'node_modules' })).some(v => v.rule === 'gitignore'), 'catches .gitignore without .uipath');
   assert(checkApp(fake({ ...clean, 'vite.config.ts': "export default { base: '/' }" }, 'vite.config.ts')).filter(v => v.rule === 'vite-config').length === 2, 'catches vite base + import');
-  // favicon/coded-apps-dev only apply when index.html exists
-  const noHtml = { ...clean }; delete noHtml['index.html']; delete noHtml['package.json'];
-  noHtml['package.json'] = '{}';
+  const noHtml = { ...clean, 'package.json': '{}' };
+  delete noHtml['index.html'];
   assert(!checkApp(fake(noHtml)).some(v => v.rule === 'favicon' || v.rule === 'coded-apps-dev'), 'html-only rules skipped without index.html');
   console.log('selftest: OK');
 }
