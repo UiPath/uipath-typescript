@@ -2424,13 +2424,13 @@ describe("EntityService Unit Tests", () => {
         expect(f?.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
       });
 
-      it("should emit type=relationship, omit isForeignKey/referenceEntity/referenceField/referenceType for FILE fields (server wires them)", async () => {
+      it("should emit only fieldDisplayType=File on FILE fields, omitting isForeignKey/referenceEntity/referenceField/referenceType (server auto-wires the attachment)", async () => {
         await entityService.create("my_entity", [{
           fieldName: "file_field",
           type: EntityFieldDataType.FILE,
         }]);
         const f = getCreatedFields().find((x) => x.name === "file_field");
-        expect(f?.type).toBe("relationship");
+        expect(f?.fieldDisplayType).toBe("File");
         expect(f?.isForeignKey).toBeUndefined();
         expect(f?.referenceEntity).toBeUndefined();
         expect(f?.referenceField).toBeUndefined();
@@ -2880,7 +2880,7 @@ describe("EntityService Unit Tests", () => {
         expect(f.sqlType).toEqual({ name: "UNIQUEIDENTIFIER", lengthLimit: 300 });
       });
 
-      it("should emit type=relationship, omit isForeignKey/referenceEntity/referenceField/referenceType for FILE fields (server wires them)", async () => {
+      it("should emit only fieldDisplayType=File on FILE fields, omitting isForeignKey/referenceEntity/referenceField/referenceType (server auto-wires the attachment)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
             fieldName: "file_field",
@@ -2889,7 +2889,7 @@ describe("EntityService Unit Tests", () => {
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
-        expect(f.type).toBe("relationship");
+        expect(f.fieldDisplayType).toBe("File");
         expect(f.isForeignKey).toBeUndefined();
         expect(f.referenceEntity).toBeUndefined();
         expect(f.referenceField).toBeUndefined();

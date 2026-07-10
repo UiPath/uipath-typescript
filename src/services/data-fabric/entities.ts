@@ -1316,18 +1316,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      ...(isRelationship && { isForeignKey: true }),
-      ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      // FILE routes through the server's relationship path with a "File" sub-flavor
-      // so the internal EntityAttachment reference is auto-wired. Two rules the
-      // wire payload must follow (the web UI does both):
-      //  - emit `type:"relationship"` — the server's fieldDisplayType:"File"
-      //    branch is only reachable via the relationship type; without it the
-      //    server errors with "Target entity is not provided in request".
-      //  - omit `isForeignKey` and `referenceEntity`/`referenceField` — with
-      //    `isForeignKey:true` set, the server enters its relationship pre-check
-      //    and demands a target, defeating the auto-wire.
-      ...(isFile && { type: 'relationship' as const }),
+      // Relationship fields are routed server-side by `isForeignKey: true`
+      // (fieldDisplayType is downstream-only). FILE goes through a separate
+      // guarded branch keyed on `fieldDisplayType: "File"` that auto-wires the
+      // internal EntityAttachment reference unconditionally — so FILE must
+      // NOT emit `isForeignKey` (that would divert it into the relationship
+      // branch and trigger the "Target entity is not provided" pre-check).
+      ...(isRelationship && { isForeignKey: true, referenceType: ReferenceType.ManyToOne }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
       ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
