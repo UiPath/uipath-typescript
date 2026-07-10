@@ -1316,12 +1316,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      // Relationship fields are routed server-side by `isForeignKey: true`
-      // (fieldDisplayType is downstream-only). FILE goes through a separate
-      // guarded branch keyed on `fieldDisplayType: "File"` that auto-wires the
-      // internal EntityAttachment reference unconditionally — so FILE must
-      // NOT emit `isForeignKey` (that would divert it into the relationship
-      // branch and trigger the "Target entity is not provided" pre-check).
+      // FILE routes via fieldDisplayType; isForeignKey would divert it to the relationship pre-check.
       ...(isRelationship && { isForeignKey: true, referenceType: ReferenceType.ManyToOne }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
