@@ -1316,7 +1316,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      // FILE routes via fieldDisplayType; isForeignKey would divert it to the relationship pre-check.
       ...(isRelationship && { isForeignKey: true, referenceType: ReferenceType.ManyToOne }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
