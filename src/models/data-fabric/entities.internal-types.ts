@@ -10,10 +10,16 @@ export interface FieldSchemaPayload {
   displayName?: string;
   description?: string;
   /**
-   * Lowercase server-side type discriminator. Currently only emitted for FILE
-   * fields (as `'relationship'`) so the server's attachment auto-wire path
-   * triggers; other types leave this unset and are inferred from
-   * `sqlType.name` + `fieldDisplayType`.
+   * Lowercase server-side type discriminator (e.g. `'text'`, `'relationship'`).
+   * The web UI sends this for every field, but the DF server can infer the type
+   * from `sqlType.name` + `fieldDisplayType` for STRING/INTEGER/DECIMAL/DATETIME/
+   * CHOICE_SET_*/AUTO_NUMBER/RELATIONSHIP, so the SDK omits it there.
+   *
+   * FILE is the exception: `fieldDisplayType:"File"` on its own doesn't reach the
+   * attachment auto-wire branch — the server needs `type:"relationship"` to route
+   * FILE into the relationship path, where `fieldDisplayType:"File"` then
+   * narrows it to the attachment sub-flavor. Without it the server errors with
+   * `Target entity is not provided in request`.
    */
   type?: string;
   sqlType: SqlType;

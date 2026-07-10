@@ -1318,10 +1318,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...(isRelationship && { isForeignKey: true }),
       ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      // FILE: sent as a relationship-typed field with fieldDisplayType=File so the
-      // server auto-wires refs to the EntityAttachment system entity. isForeignKey
-      // and referenceEntity/referenceField must be omitted — sending them fails the
-      // server's relationship pre-check ("Target entity is not provided in request").
+      // FILE routes through the server's relationship path with a "File" sub-flavor
+      // so the internal EntityAttachment reference is auto-wired. Two rules the
+      // wire payload must follow (the web UI does both):
+      //  - emit `type:"relationship"` — the server's fieldDisplayType:"File"
+      //    branch is only reachable via the relationship type; without it the
+      //    server errors with "Target entity is not provided in request".
+      //  - omit `isForeignKey` and `referenceEntity`/`referenceField` — with
+      //    `isForeignKey:true` set, the server enters its relationship pre-check
+      //    and demands a target, defeating the auto-wire.
       ...(isFile && { type: 'relationship' as const }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
