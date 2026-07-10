@@ -34,23 +34,6 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  /**
-   * Gets a bucket by ID
-   * @param bucketId - The ID of the bucket to retrieve
-   * @param folderId - Folder ID for organization unit context
-   * @param options - Optional query parameters (expand, select)
-   * @returns Promise resolving to the bucket
-   * 
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // Get bucket by ID
-   * const bucket = await buckets.getById(123, 456);
-   * ```
-   */
   @track('Buckets.GetById')
   async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
     if (!id) {
@@ -79,29 +62,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     return pascalToCamelCaseKeys(response.data) as BucketGetResponse;
   }
 
-  /**
-   * Retrieves a single orchestrator storage bucket by name.
-   *
-   * @param name - Bucket name to search for
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
-   * @returns Promise resolving to a single bucket
-   * {@link BucketGetResponse}
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // By folder ID
-   * await buckets.getByName('MyBucket', { folderId: <folderId> });
-   *
-   * // By folder key (GUID)
-   * await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
-   *
-   * // By folder path
-   * await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
-   * ```
-   */
   @track('Buckets.GetByName')
   async getByName(name: string, options: BucketGetByNameOptions = {}): Promise<BucketGetResponse> {
     return this.getByNameLookup<BucketGetResponse, BucketGetResponse>(
@@ -113,50 +73,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     );
   }
 
-  /**
-   * Gets all buckets across folders with optional filtering and folder scoping
-   * 
-   * The method returns either:
-   * - An array of buckets (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // Get all buckets across folders
-   * const allBuckets = await buckets.getAll();
-   *
-   * // Get buckets within a specific folder
-   * const folderBuckets = await buckets.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get buckets with filtering
-   * const filteredBuckets = await buckets.getAll({
-   *   filter: "name eq 'MyBucket'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await buckets.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await buckets.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Buckets.GetAll')
   async getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(
     options?: T
@@ -187,48 +103,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }, options) as any;
   }
 
-  /**
-   * Gets metadata for files in a bucket with optional filtering and pagination.
-   *
-   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
-   * inside the options.
-   *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   *
-   * @param bucketId - The ID of the bucket to get file metadata from
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination
-   * @returns Promise resolving to the list of file metadata in the bucket or paginated result
-   * {@link BlobItem}
-   *
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // By folder ID
-   * const fileMetadata = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId> });
-   *
-   * // By folder key (GUID)
-   * await buckets.getFileMetaData(<bucketId>, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await buckets.getFileMetaData(<bucketId>, { folderPath: 'Shared/Finance' });
-   *
-   * // Filter by prefix
-   * await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, prefix: '/folder1' });
-   *
-   * // First page with pagination
-   * const page1 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
-   * }
-   * ```
-   */
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
     bucketId: number,
     options?: T,
@@ -237,17 +111,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       ? PaginatedResponse<BlobItem>
       : NonPaginatedResponse<BlobItem>
   >;
-  /**
-   * Gets metadata for files in a bucket — positional `folderId` form.
-   *
-   * @deprecated Use the options-object form: `getFileMetaData(bucketId, { folderId })`. See {@link BucketGetFileMetaDataWithPaginationOptions} for the supported options.
-   *
-   * @param bucketId - The ID of the bucket to get file metadata from
-   * @param folderId - Required folder ID (numeric)
-   * @param options - Optional parameters for filtering and pagination
-   * @returns Promise resolving to the list of file metadata in the bucket or paginated result
-   * {@link BlobItem}
-   */
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
     bucketId: number,
     folderId: number,
@@ -321,55 +184,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }, apiRestOptions) as any;
   }
 
-  /**
-   * Uploads a file to a bucket.
-   *
-   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
-   * in the options.
-   *
-   * @param bucketId - The ID of the bucket to upload to
-   * @param path - Path where the file should be stored in the bucket
-   * @param content - File content to upload
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving to a response with success status and HTTP status code
-   * {@link BucketUploadResponse}
-   *
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // By folder ID
-   * const file = new File(['file content'], 'example.txt');
-   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderId: <folderId> });
-   *
-   * // By folder key (GUID)
-   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
-   *
-   * // In Node env with Buffer
-   * const buffer = Buffer.from('file content');
-   * await buckets.uploadFile(<bucketId>, '/folder/example.txt', buffer, { folderId: <folderId> });
-   * ```
-   */
   uploadFile(
     bucketId: number,
     path: string,
     content: Blob | Uint8Array<ArrayBuffer> | File,
     options?: BucketUploadFileRequestOptions,
   ): Promise<BucketUploadResponse>;
-  /**
-   * Uploads a file to a bucket — options-only form.
-   *
-   * @deprecated Use the positional form: `uploadFile(bucketId, path, content, options?)`. See {@link BucketUploadFileRequestOptions} for the supported options.
-   *
-   * @param options - Options for file upload including bucket ID, folder scoping (`folderId` / `folderKey` / `folderPath`), path, and content
-   * @returns Promise resolving to a response with success status and HTTP status code
-   * {@link BucketUploadResponse}
-   */
   uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
   @track('Buckets.UploadFile')
   async uploadFile(
@@ -433,48 +253,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     };
   }
 
-  /**
-   * Gets a direct download URL for a file in the bucket.
-   *
-   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
-   * inside the options.
-   *
-   * @param bucketId - The ID of the bucket
-   * @param path - The full path to the file
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes`
-   * @returns Promise resolving to blob file access information
-   * {@link BucketGetUriResponse}
-   *
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // By folder ID
-   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
-   *
-   * // By folder key (GUID)
-   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
-   * ```
-   */
   getReadUri(
     bucketId: number,
     path: string,
     options?: BucketGetReadUriRequestOptions,
   ): Promise<BucketGetUriResponse>;
-  /**
-   * Gets a direct download URL for a file in the bucket — options-only form.
-   *
-   * @deprecated Use the positional form: `getReadUri(bucketId, path, options?)`. See {@link BucketGetReadUriRequestOptions} for the supported options.
-   *
-   * @param options - Contains bucketId, folder scoping (`folderId` / `folderKey` / `folderPath`), file path and optional expiry time
-   * @returns Promise resolving to blob file access information
-   * {@link BucketGetUriResponse}
-   */
   getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse>;
   @track('Buckets.GetReadUri')
   async getReadUri(
@@ -615,52 +398,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     return transformedData;
   }
 
-  /**
-   * Lists all files in a bucket.
-   *
-   * Returns a flat, recursive listing of all files in the bucket. Supports regex filtering
-   * and filter / orderby / select / expand. {@link BucketFile} entries include
-   * `isDirectory` so callers can distinguish folders from files.
-   *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   *
-   * @param bucketId - The ID of the bucket
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination
-   * @returns Promise resolving to either an array of files NonPaginatedResponse<BucketFile> or a PaginatedResponse<BucketFile> when pagination options are used.
-   *
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // List all files in the bucket
-   * const files = await buckets.getFiles(<bucketId>, { folderId: <folderId> });
-   *
-   * // Filter by regex pattern
-   * const pdfs = await buckets.getFiles(<bucketId>, {
-   *   folderId: <folderId>,
-   *   fileNameRegex: '.*\\.pdf$'
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await buckets.getFiles(<bucketId>, {
-   *   folderId: <folderId>,
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Buckets.GetFiles')
   async getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
     bucketId: number,
@@ -710,24 +447,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }, { ...apiRestOptions, directory: '/', recursive: true }) as any;
   }
 
-  /**
-   * Deletes a file from a bucket
-   *
-   * @param bucketId - The ID of the bucket
-   * @param path - The full path to the file to delete
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving when the file is deleted
-   *
-   * @example
-   * ```typescript
-   * import { Buckets } from '@uipath/uipath-typescript/buckets';
-   *
-   * const buckets = new Buckets(sdk);
-   *
-   * // Delete a file from a bucket
-   * await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
-   * ```
-   */
   @track('Buckets.DeleteFile')
   async deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void> {
     if (!bucketId) {
