@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "extends": "./typedoc.json",
+  "emit": "none",
+  "validation": {
+    "notDocumented": true,
+    "notExported": false,
+    "invalidLink": false
+  },
+  "requiredToBeDocumented": ["Method", "CallSignature", "Parameter"]
+}
