@@ -11,7 +11,8 @@ import {
   TEST_CONSTANTS,
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
-import { AuthenticationError, NotFoundError, ValidationError } from '@/core/errors';
+import { AuthenticationError, NetworkError, NotFoundError, ValidationError } from '@/core/errors';
+import type { CitationSourceMedia } from '@/models/conversational-agent';
 import { AGENT_ENDPOINTS, FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
 import {
   CONVERSATIONAL_SURFACE_NAME,
@@ -361,7 +362,7 @@ describe('ConversationalAgentService Unit Tests', () => {
     // Same origin as the test harness baseUrl (TEST_CONSTANTS.BASE_URL) so the
     // credential origin check passes.
     const DOWNLOAD_URL = `${TEST_CONSTANTS.BASE_URL}/org/tenant/ecs_/v1.1/reference/abc`;
-    const mediaSource = (over: any = {}) => ({
+    const mediaSource = (over: Partial<CitationSourceMedia> = {}): CitationSourceMedia => ({
       title: 'doc.pdf',
       number: 1,
       downloadUrl: DOWNLOAD_URL,
@@ -438,6 +439,24 @@ describe('ConversationalAgentService Unit Tests', () => {
       await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
         NotFoundError,
       );
+    });
+
+    it('wraps a fetch/network failure in NetworkError', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        NetworkError,
+      );
+    });
+
+    it('throws a ValidationError for a malformed downloadUrl (no fetch)', async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(
+        conversationalAgent.downloadCitationSource(mediaSource({ downloadUrl: 'https://[' })),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 

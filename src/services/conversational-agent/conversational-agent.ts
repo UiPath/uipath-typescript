@@ -168,7 +168,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * }
    * ```
    */
-  @track('ConversationalAgent.downloadCitationSource')
+  @track('ConversationalAgent.DownloadCitationSource')
   async downloadCitationSource(source: CitationSourceMedia): Promise<Blob> {
     if (!source.downloadUrl) {
       throw new ValidationError({
@@ -188,7 +188,9 @@ export class ConversationalAgentService extends BaseService implements Conversat
         message: `Invalid citation downloadUrl`
       });
     }
-    if (base && target.origin !== base.origin) {
+    // Fail closed: if the base origin is unknown, or the target isn't on it,
+    // don't forward the token to an unverifiable host.
+    if (!base || target.origin !== base.origin) {
       throw new ValidationError({
         message: `Refusing to send credentials to a download URL outside the configured origin`
       });
