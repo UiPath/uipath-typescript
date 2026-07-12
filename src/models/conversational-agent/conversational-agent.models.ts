@@ -2,7 +2,7 @@ import type {
   AgentGetResponse,
   AgentGetByIdResponse
 } from './agents';
-import type { ConversationServiceModel } from './conversations';
+import type { CitationSourceMedia, ConversationServiceModel } from './conversations';
 import type { FeatureFlags } from './feature-flags.types';
 import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -140,6 +140,40 @@ export interface ConversationalAgentServiceModel {
    * ```
    */
   getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
+
+  /**
+   * Downloads the document behind a media citation as an authenticated `Blob`.
+   *
+   * Media citation sources expose a `downloadUrl` pointing at an auth-gated
+   * UiPath endpoint; opening it directly sends no token and fails with `401`.
+   * This performs the request with the SDK's access token and returns the bytes,
+   * with the `Blob` type resolved from the source `mimeType` (falling back to the
+   * response Content-Type, then the title's file extension). Use `source.title`
+   * as the file name.
+   *
+   * HTML content is intentionally returned as `application/octet-stream` (a
+   * download) rather than `text/html`, so previewing the blob inline can't
+   * execute citation markup in your app's origin.
+   *
+   * @param source - A media citation source ({@link CitationSourceMedia}) with a `downloadUrl`
+   * @returns Promise resolving to the document as a `Blob`
+   * @throws ValidationError if the source has no `downloadUrl`
+   * @throws A typed HTTP error for error responses — e.g. `AuthenticationError`
+   *         (401), `AuthorizationError` (403), `NotFoundError` (404) — or
+   *         `NetworkError` on a connection failure, matching other SDK calls
+   *
+   * @example
+   * ```typescript
+   * import { isCitationSourceMedia } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * if (isCitationSourceMedia(source)) {
+   *   const blob = await conversationalAgent.downloadCitationSource(source);
+   *   const url = URL.createObjectURL(blob);
+   *   window.open(url, '_blank');
+   * }
+   * ```
+   */
+  downloadCitationSource(source: CitationSourceMedia): Promise<Blob>;
 
   /**
    * Registers a handler that is called whenever the WebSocket connection status changes.
