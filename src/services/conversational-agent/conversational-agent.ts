@@ -146,8 +146,15 @@ export class ConversationalAgentService extends BaseService implements Conversat
   /**
    * Downloads the document behind a media citation as an authenticated `Blob`.
    *
+   * Media citation sources expose a `downloadUrl` pointing at an auth-gated
+   * UiPath endpoint; opening it directly sends no token and fails with `401`.
+   * This performs the request with the SDK's access token and returns the bytes,
+   * with the `Blob` type resolved from the source `mimeType` (falling back to the
+   * response Content-Type, then the title's file extension). Use `source.title`
+   * as the file name.
+   *
    * HTML content is intentionally returned as `application/octet-stream` (a
-   * download) rather than `text/html`, so that previewing the blob inline can't
+   * download) rather than `text/html`, so previewing the blob inline can't
    * execute citation markup in your app's origin.
    *
    * @param source - A media citation source (`CitationSourceMedia`) with a `downloadUrl`
@@ -157,14 +164,14 @@ export class ConversationalAgentService extends BaseService implements Conversat
    *         (401), `AuthorizationError` (403), `NotFoundError` (404) — or
    *         `NetworkError` on a connection failure, matching other SDK calls
    *
-   * @example Preview a PDF citation in a new tab
+   * @example
    * ```typescript
    * import { isCitationSourceMedia } from '@uipath/uipath-typescript/conversational-agent';
    *
    * if (isCitationSourceMedia(source)) {
    *   const blob = await conversationalAgent.downloadCitationSource(source);
    *   const url = URL.createObjectURL(blob);
-   *   window.open(url, '_blank'); // remember to URL.revokeObjectURL(url) when done
+   *   window.open(url, '_blank');
    * }
    * ```
    */

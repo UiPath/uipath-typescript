@@ -155,7 +155,7 @@ export interface ConversationalAgentServiceModel {
    * download) rather than `text/html`, so previewing the blob inline can't
    * execute citation markup in your app's origin.
    *
-   * @param source - A media citation source ({@link CitationSourceMedia}) with a `downloadUrl`
+   * @param source - A media citation source (`CitationSourceMedia`) with a `downloadUrl`
    * @returns Promise resolving to the document as a `Blob`
    * @throws ValidationError if the source has no `downloadUrl`
    * @throws A typed HTTP error for error responses — e.g. `AuthenticationError`
