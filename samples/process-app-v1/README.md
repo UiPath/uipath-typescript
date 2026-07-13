@@ -4,6 +4,10 @@ A sample React TypeScript application for managing UiPath Maestro processes with
 
 > This app uses the recommended modular import pattern for better performance and smaller bundle sizes. For the single-package import pattern, see [process-app-v0](../process-app-v0).
 
+## Preview
+
+![Browsing Maestro processes and drilling into a process instance's execution detail](./screenshots/preview.gif)
+
 ## SDK Usage
 
 ### Importing the SDK

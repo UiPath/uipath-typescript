@@ -2,6 +2,10 @@
 
 A sample React + TypeScript + Vite application that demonstrates building a human-in-the-loop document validation inbox on top of UiPath Action Center. It lists Document Validation tasks from Orchestrator, grouped into **Pending**, **Unassigned**, and **Completed** tabs, renders the document and extracted fields in UiPath's validation station web component, and lets a reviewer save, submit, or report an exception on a task back to Action Center.
 
+## Preview
+
+![Reviewing a document validation task: task list, extracted fields, and the document text view](./screenshots/preview.gif)
+
 ## What this sample demonstrates
 
 - OAuth 2.0 authorization code + PKCE login against UiPath Cloud using the `@uipath/uipath-typescript` SDK

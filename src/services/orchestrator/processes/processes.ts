@@ -26,50 +26,6 @@ import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends FolderScopedService implements ProcessServiceModel {
-  /**
-   * Gets all processes across folders with optional filtering and folder scoping
-   * 
-   * The method returns either:
-   * - An array of processes (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of processes or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // Standard array return
-   * const allProcesses = await processes.getAll();
-   *
-   * // Get processes within a specific folder
-   * const folderProcesses = await processes.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get processes with filtering
-   * const filteredProcesses = await processes.getAll({
-   *   filter: "name eq 'MyProcess'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await processes.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await processes.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await processes.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Processes.GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
     options?: T
@@ -105,51 +61,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     }, apiOptions) as any;
   }
 
-  /**
-   * Starts a process with the specified configuration.
-   *
-   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
-   * inside the options.
-   *
-   * @param request - Process start configuration
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`)
-   * @returns Promise resolving to array of started process instances
-   * {@link ProcessStartResponse}
-   *
-   * @example
-   * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // By folder ID
-   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
-   *
-   * // By folder key (GUID)
-   * await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
-   *
-   * // Start by process name (instead of processKey)
-   * await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
-   *
-   * // With additional options
-   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
-   * ```
-   */
   start(request: ProcessStartRequest, options?: ProcessStartOptions): Promise<ProcessStartResponse[]>;
-  /**
-   * Starts a process — positional `folderId` form.
-   *
-   * @deprecated Use the options-object form: `start(request, { folderId })`. See {@link ProcessStartOptions} for the supported options.
-   *
-   * @param request - Process start configuration
-   * @param folderId - Required folder ID (numeric)
-   * @param options - Optional request options
-   * @returns Promise resolving to array of started process instances
-   * {@link ProcessStartResponse}
-   */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
   @track('Processes.Start')
   async start(
@@ -213,24 +125,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformedProcess;
   }
 
-  /**
-   * Gets a single process by ID
-   * 
-   * @param id - Process ID
-   * @param folderId - Required folder ID
-   * @param options - Optional query parameters 
-   * @returns Promise resolving to a single process
-   * 
-   * @example
-   * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // Get process by ID
-   * const process = await processes.getById(123, 456);
-   * ```
-   */
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -251,32 +145,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformedProcess;
   }
 
-  /**
-   * Retrieves a single process by name.
-   *
-   * @param name - Process name to search for
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
-   * @returns Promise resolving to a single process
-   * {@link ProcessGetResponse}
-   * @example
-   * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // By folder ID
-   * await processes.getByName('MyProcess', { folderId: 123 });
-   *
-   * // By folder key (GUID)
-   * await processes.getByName('MyProcess', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
-   *
-   * // With expand
-   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
-   * ```
-   */
   @track('Processes.GetByName')
   async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
     return this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(

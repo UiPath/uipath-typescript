@@ -65,50 +65,11 @@ export class ConversationalAgentService extends BaseService implements Conversat
     this.user = new UserSettingsService(instance, options);
   }
 
-  /**
-   * Registers a handler that is called whenever the WebSocket connection status changes.
-   *
-   * @param handler - Callback receiving a {@link ConnectionStatus} (`'Disconnected'` | `'Connecting'` | `'Connected'`) and an optional `Error`
-   * @returns Cleanup function to remove the handler
-   *
-   * @example
-   * ```typescript
-   * const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) => {
-   *   console.log('Connection status:', status);
-   *   if (error) {
-   *     console.error('Connection error:', error.message);
-   *   }
-   * });
-   *
-   * // Later, remove the handler
-   * cleanup();
-   * ```
-   */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
     return this.conversations.onConnectionStatusChanged(handler);
   }
 
 
-  /**
-   * Gets all available conversational agents
-   *
-   * @param folderId - Optional folder ID to filter agents
-   * @returns Promise resolving to an array of agents
-   *
-   * @example Basic usage
-   * ```typescript
-   * const agents = await conversationalAgent.getAll();
-   * const agent = agents[0];
-   *
-   * // Create conversation directly from agent (agentId and folderId are auto-filled)
-   * const conversation = await agent.conversations.create({ label: 'My Chat' });
-   * ```
-   *
-   * @example Filter agents by folder
-   * ```typescript
-   * const agents = await conversationalAgent.getAll(folderId);
-   * ```
-   */
   @track('ConversationalAgent.GetAll')
   async getAll(folderId?: number): Promise<AgentGetResponse[]> {
     const response = await this.get<RawAgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
@@ -119,21 +80,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
     );
   }
 
-  /**
-   * Gets a specific agent by ID
-   *
-   * @param id - ID of the agent release
-   * @param folderId - ID of the folder containing the agent
-   * @returns Promise resolving to the agent
-   *
-   * @example Basic usage
-   * ```typescript
-   * const agent = await conversationalAgent.getById(agentId, folderId);
-   *
-   * // Create conversation directly from agent (agentId and folderId are auto-filled)
-   * const conversation = await agent.conversations.create({ label: 'My Chat' });
-   * ```
-   */
   @track('ConversationalAgent.GetById')
   async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
     const response = await this.get<RawAgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
@@ -143,38 +89,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
     );
   }
 
-  /**
-   * Downloads the document behind a media citation as an authenticated `Blob`.
-   *
-   * Media citation sources expose a `downloadUrl` pointing at an auth-gated
-   * UiPath endpoint; opening it directly sends no token and fails with `401`.
-   * This performs the request with the SDK's access token and returns the bytes,
-   * with the `Blob` type resolved from the source `mimeType` (falling back to the
-   * response Content-Type, then the title's file extension). Use `source.title`
-   * as the file name.
-   *
-   * HTML content is intentionally returned as `application/octet-stream` (a
-   * download) rather than `text/html`, so previewing the blob inline can't
-   * execute citation markup in your app's origin.
-   *
-   * @param source - A media citation source (`CitationSourceMedia`) with a `downloadUrl`
-   * @returns Promise resolving to the document as a `Blob`
-   * @throws ValidationError if the source has no `downloadUrl`
-   * @throws A typed HTTP error for error responses — e.g. `AuthenticationError`
-   *         (401), `AuthorizationError` (403), `NotFoundError` (404) — or
-   *         `NetworkError` on a connection failure, matching other SDK calls
-   *
-   * @example
-   * ```typescript
-   * import { isCitationSourceMedia } from '@uipath/uipath-typescript/conversational-agent';
-   *
-   * if (isCitationSourceMedia(source)) {
-   *   const blob = await conversationalAgent.downloadCitationSource(source);
-   *   const url = URL.createObjectURL(blob);
-   *   window.open(url, '_blank');
-   * }
-   * ```
-   */
   @track('ConversationalAgent.DownloadCitationSource')
   async downloadCitationSource(source: CitationSourceMedia): Promise<Blob> {
     if (!source.downloadUrl) {
@@ -228,11 +142,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
       : blob;
   }
 
-  /**
-   * Gets feature flags for the current tenant
-   *
-   * @internal
-   */
   async getFeatureFlags(): Promise<FeatureFlags> {
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;

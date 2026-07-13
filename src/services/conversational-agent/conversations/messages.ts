@@ -68,23 +68,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
     super(instance, buildConversationalAgentHeaders(options));
   }
 
-  /**
-   * Gets a message by ID
-   *
-   * @param conversationId - The conversation containing the message
-   * @param exchangeId - The exchange containing the message
-   * @param messageId - The message ID to retrieve
-   * @returns Promise resolving to {@link MessageGetResponse}
-   *
-   * @example
-   * ```typescript
-   * const message = await messages.getById(conversationId, exchangeId, messageId);
-   *
-   * console.log(message.role);
-   * console.log(message.contentParts);
-   * console.log(message.toolCalls);
-   * ```
-   */
   @track('ConversationalAgent.Messages.GetById')
   async getById(
     conversationId: string,
@@ -98,32 +81,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
     return transformMessage(result.data);
   }
 
-  /**
-   * Gets a content part by ID
-   *
-   * Retrieves external content part data. This is used when content is stored
-   * externally (e.g., large files or attachments) rather than inline in the message.
-   *
-   * Note: This API returns 404 for inline content parts (text). Use the message's
-   * contentParts directly for inline content.
-   *
-   * @param conversationId - The conversation containing the content
-   * @param exchangeId - The exchange containing the content
-   * @param messageId - The message containing the content part
-   * @param contentPartId - The content part ID to retrieve
-   * @returns Promise resolving to a ContentPartGetResponse for accessing the data
-   *
-   * @example
-   * ```typescript
-   * // Get an external content part (file/attachment)
-   * const contentPartDetails = await messages.getContentPartById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId,
-   *   contentPartId
-   * );
-   * ```
-   */
   @track('ConversationalAgent.Messages.GetContentPartById')
   async getContentPartById(
     conversationId: string,

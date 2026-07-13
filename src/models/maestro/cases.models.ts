@@ -24,6 +24,8 @@ import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineRespon
  */
 export interface CasesServiceModel {
   /**
+   * Get all case management processes with their instance statistics
+   *
    * @returns Promise resolving to an array of {@link CaseGetAllWithMethodsResponse}
    * @example
    * ```typescript
