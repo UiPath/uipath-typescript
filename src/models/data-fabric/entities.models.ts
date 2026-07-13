@@ -1172,7 +1172,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
 /**
  * Creates an actionable entity by combining entity metadata with data and management methods
  *
- * @param entityMetadata - Entity metadata
+ * @param entityData - The raw entity data from API
  * @param service - The entity service instance
  * @returns Entity metadata with added methods
  */

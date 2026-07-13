@@ -10,6 +10,7 @@ import { ErrorParams } from './types';
  * - Invalid scope
  */
 export class AuthorizationError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.AUTHORIZATION, {
       message: params.message || ErrorMessages.ACCESS_DENIED,

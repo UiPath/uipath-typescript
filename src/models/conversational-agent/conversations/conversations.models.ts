@@ -31,16 +31,23 @@ import type { SessionStream } from './types/events/session.types';
 export interface ConversationSessionMethods {
   /**
    * Starts a real-time chat session for a conversation
+   *
+   * @param conversationId - The conversation ID
+   * @param options - Optional session options
    */
   startSession(conversationId: string, options?: ConversationSessionOptions): SessionStream;
 
   /**
    * Gets an active session for a conversation
+   *
+   * @param conversationId - The conversation ID
    */
   getSession(conversationId: string): SessionStream | undefined;
 
   /**
    * Ends an active session for a conversation
+   *
+   * @param conversationId - The conversation ID
    */
   endSession(conversationId: string): void;
 }
