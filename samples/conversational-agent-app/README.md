@@ -2,6 +2,10 @@
 
 A sample React TypeScript application for interacting with UiPath Conversational Agents. Features real-time streaming responses over WebSocket, conversation management, file attachments, tool call visualization, and feedback.
 
+## Preview
+
+![Picking a conversational agent and viewing a chat thread](./screenshots/preview.gif)
+
 ## Installation
 
 ```bash
