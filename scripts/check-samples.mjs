@@ -4,7 +4,7 @@
 // Rules are pure functions of an app context so they can be unit-tested
 // without git/fs — run `node scripts/check-samples.mjs --selftest`.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'node-html-parser';
@@ -45,7 +45,7 @@ const RULES = [
     id: 'favicon',
     desc: 'index.html must reference a favicon file that exists',
     applies: c => c.has('index.html'),
-    check: c => faviconViolations(c.read('index.html'), c.exists),
+    check: c => faviconViolations(c.read('index.html'), c.has),
   },
   {
     id: 'coded-apps-dev',
@@ -79,23 +79,26 @@ const allDeps = c => { const p = JSON.parse(c.read('package.json')); return { ..
 // at runtime — so @uipath/coded-apps-dev and its vite import are not required.
 const isActionApp = c => '@uipath/coded-action-app' in allDeps(c);
 
-// Validate that the favicon <link> points at a file that actually exists,
-// not just that the tag is present. Parse the HTML (rel~=icon matches any
-// space-separated token, e.g. "shortcut icon"). `exists` resolves paths
-// relative to the app root. Absolute `/x` refs are tried under public/ and
+// Validate that the favicon <link> points at a git-tracked file, not just
+// that the tag is present. Parse the HTML (rel~=icon matches any space-separated
+// token, e.g. "shortcut icon"). `has` checks the tracked set (same source as
+// every other rule) so results match CI's clean checkout — a file on disk but
+// not committed does not count. Absolute `/x` refs are tried under public/ and
 // root (Vite's conventions); data:/http refs are inline/external and assumed present.
-function faviconViolations(html, exists) {
+function faviconViolations(html, has) {
   const link = parse(html).querySelector('link[rel~=icon]');
   if (!link) return ['index.html has no favicon <link rel="icon">'];
   const href = link.getAttribute('href')?.split(/[?#]/)[0];
   if (!href) return ['favicon <link rel="icon"> has no href'];
   if (/^(data:|https?:)/i.test(href)) return [];
   const candidates = href.startsWith('/') ? [`public${href}`, href.slice(1)] : [href.replace(/^\.\//, '')];
-  return candidates.some(exists) ? [] : [`favicon "${href}" referenced but the file does not exist`];
+  return candidates.some(has) ? [] : [`favicon "${href}" referenced but the file is not tracked`];
 }
 
-// Extract the markdown section under the first heading matching /preview/i,
-// up to the next heading of the same or higher level (or EOF).
+// Extract the markdown section for the first heading matching /preview/i,
+// up to the next heading of the same or higher level (or EOF). The heading
+// line itself is included so media placed on the heading line
+// (`## Preview ![](x.png)`) still counts.
 function previewSection(readme) {
   const lines = readme.split('\n');
   const start = lines.findIndex(l => /^#{1,6}\s+.*preview/i.test(l));
@@ -106,7 +109,7 @@ function previewSection(readme) {
     const m = lines[i].match(/^(#{1,6})\s+/);
     if (m && m[1].length <= level) { end = i; break; }
   }
-  return lines.slice(start + 1, end).join('\n');
+  return lines.slice(start, end).join('\n');
 }
 
 export function checkApp(ctx) {
@@ -133,7 +136,6 @@ function discoverApps() {
       viteConfig,
       has: file => tracked.has(`${dir}/${file}`),
       read: file => (existsSync(join(ROOT, dir, file)) ? readFileSync(join(ROOT, dir, file), 'utf8') : ''),
-      exists: file => existsSync(join(ROOT, dir, file)),
     };
   });
 }
@@ -154,7 +156,7 @@ function assert(cond, msg) {
 }
 
 function fake(files, viteConfig) {
-  return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '', exists: f => f in files };
+  return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '' };
 }
 
 function selftest() {
@@ -184,8 +186,14 @@ function selftest() {
     'vite.config.ts': "export default { base: './' }",
   };
   assert(checkApp(fake(actionApp, 'vite.config.ts')).length === 0, 'action app passes with coded-action-app and no coded-apps-dev import');
+  { const f = { ...clean }; delete f['uipath.json.example']; assert(checkApp(fake(f, 'vite.config.ts')).some(v => v.rule === 'example-config'), 'catches missing uipath.json.example'); }
+  assert(checkApp(fake({ ...clean, 'package.json': '{}' }, 'vite.config.ts')).some(v => v.rule === 'coded-apps-dev'), 'catches missing coded-apps harness when index.html present');
   console.log('selftest: OK');
 }
 
-if (process.argv.includes('--selftest')) selftest();
-else run();
+// Only execute when run directly (node scripts/check-samples.mjs), not when
+// imported — so `import { checkApp }` in a test never triggers run()/git.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv.includes('--selftest')) selftest();
+  else run();
+}
