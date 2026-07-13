@@ -28,9 +28,12 @@ import {
 // across every subpath bundle (`assets`, `feedback`, `tasks`, …).
 const sdkClient = getOrCreateClient(CLOUD_ROLE_NAME);
 
+/** @internal */
 export const track = createTrack(sdkClient);
+/** @internal */
 export const trackEvent = createTrackEvent(sdkClient);
 
+/** @internal */
 export const telemetryClient = {
     initialize(context?: TelemetryContext): void {
         sdkClient.initialize({

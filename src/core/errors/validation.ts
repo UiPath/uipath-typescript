@@ -10,6 +10,7 @@ import { ErrorParams } from './types';
  * - Invalid data format
  */
 export class ValidationError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.VALIDATION, {
       message: params.message || ErrorMessages.VALIDATION_FAILED,

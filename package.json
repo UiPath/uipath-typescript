@@ -240,6 +240,7 @@
         "docs:api": "typedoc && npm run docs:post-process && npm run docs:coded-action-app",
         "docs:coded-action-app": "npm run docs --prefix packages/coded-action-app",
         "docs:post-process": "node scripts/docs-post-process.mjs",
+        "docs:validate": "typedoc --options typedoc.validation.json",
         "lint": "oxlint",
         "typecheck": "tsc --noEmit",
         "test": "vitest",

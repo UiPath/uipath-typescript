@@ -20,8 +20,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface QueueServiceModel {
   /**
    * Gets all queues across folders with optional filtering and folder scoping
-   * 
-   * @signature getAll(options?) → Promise&lt;QueueGetResponse[]&gt;
+   *
    * @param options Query options including optional folderId and pagination options
    * @returns Promise resolving to either an array of queues NonPaginatedResponse<QueueGetResponse> or a PaginatedResponse<QueueGetResponse> when pagination options are used.
    * {@link QueueGetResponse}
@@ -66,6 +65,7 @@ export interface QueueServiceModel {
    * 
    * @param id - Queue ID
    * @param folderId - Required folder ID
+   * @param options - Optional query options
    * @returns Promise resolving to a queue definition
    * @example
    * ```typescript

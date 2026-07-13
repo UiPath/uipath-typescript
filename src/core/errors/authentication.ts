@@ -10,6 +10,7 @@ import { ErrorParams } from './types';
  * - Missing authentication
  */
 export class AuthenticationError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.AUTHENTICATION, {
       message: params.message || ErrorMessages.AUTHENTICATION_FAILED,

@@ -104,8 +104,9 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * 
    * @param id - Queue ID
    * @param folderId - Required folder ID
+   * @param options - Optional query options
    * @returns Promise resolving to a queue definition
-   * 
+   *
    * @example
    * ```typescript
    * import { Queues } from '@uipath/uipath-typescript/queues';

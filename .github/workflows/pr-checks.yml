@@ -55,10 +55,10 @@ jobs:
         working-directory: packages/${{ matrix.package }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -69,4 +69,28 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  jsdoc-validation:
+    # Fails when public API methods/parameters lack JSDoc. Uses TypeDoc's
+    # built-in notDocumented validation (typedoc.validation.json) - no custom
+    # parsing. Expected to fail until existing gaps are documented or tagged
+    # @internal.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate JSDoc completeness
+        run: npm run docs:validate
 
