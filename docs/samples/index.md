@@ -159,9 +159,25 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   function poster(app) { var c = catById(app.category) || { accent: ["#888", "#555"] }; return "linear-gradient(135deg," + c.accent[0] + "," + c.accent[1] + ")"; }
   function monogram(app) { var c = catById(app.category); return (c ? c.label : app.title).split(/[\s/]+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase(); }
   function slug() { return (DATA.repo || "").replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, ""); }
+  // Resolves to true if the text was copied. Falls back to execCommand when the
+  // Clipboard API is missing OR rejects (e.g. document not focused / denied), so
+  // it never leaves an unhandled rejection.
   function copyText(t) {
-    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
-    return new Promise(function (res) { var ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} document.body.removeChild(ta); res(); });
+    var fallback = function () {
+      var ok = false;
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (e) { ok = false; }
+      return Promise.resolve(ok);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(t).then(function () { return true; }, fallback);
+    }
+    return fallback();
   }
   var toastT;
   function toast(cmd) { var t = $("tg-toast"); t.innerHTML = "Copied <span class=\"mono\">" + esc(cmd) + "</span>"; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, 2600); }
@@ -241,7 +257,8 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     }
     el.querySelectorAll(".tg-copybtn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        copyText(btn.getAttribute("data-copy")).then(function () {
+        copyText(btn.getAttribute("data-copy")).then(function (ok) {
+          if (!ok) { toast("Copy failed — select and copy manually: " + btn.getAttribute("data-copy")); return; }
           btn.classList.add("copied");
           var l = btn.querySelector(".lbl"); var prev = l.textContent; l.textContent = "Copied!";
           toast(btn.getAttribute("data-copy"));
