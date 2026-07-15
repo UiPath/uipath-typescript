@@ -11,7 +11,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 <div class="tg" id="tg">
   <div class="tg-controls">
     <div class="tg-toprow">
-      <div class="tg-row" id="tg-tabs" role="tablist" aria-label="Categories"></div>
+      <div class="tg-row" id="tg-tabs" role="group" aria-label="Filter by category"></div>
       <label class="tg-search">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4" stroke-linecap="round"/></svg>
         <input id="tg-search" type="search" placeholder="Search apps…" aria-label="Search apps" />
@@ -61,7 +61,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   display: inline-flex; align-items: center; gap: 0.35rem;
 }
 .md-typeset .tg-pill:hover { border-color: var(--tg-accent); }
-.md-typeset .tg-pill[aria-pressed="true"], .md-typeset .tg-pill[aria-selected="true"] { background: var(--tg-accent); border-color: var(--tg-accent); color: var(--tg-on-accent); }
+.md-typeset .tg-pill[aria-pressed="true"] { background: var(--tg-accent); border-color: var(--tg-accent); color: var(--tg-on-accent); }
 .md-typeset .tg-pill .tg-cnt { font-family: var(--tg-mono); font-size: 0.7rem; opacity: 0.7; }
 .md-typeset .tg-pill-sm { font-size: 0.74rem; padding: 0.32rem 0.65rem; }
 .md-typeset .tg-search { display: flex; align-items: center; gap: 0.45rem; flex: 0 0 auto; background: var(--tg-surface); border: 1px solid var(--tg-hair); border-radius: 999px; padding: 0.38rem 0.85rem; min-width: 240px; }
@@ -179,7 +179,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     var cats = [{ id: "all", label: "All" }].concat(DATA.categories);
     $("tg-tabs").innerHTML = cats.map(function (c) {
       var on = state.cat === c.id;
-      return '<button type="button" class="tg-pill" role="tab" aria-selected="' + on + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
+      return '<button type="button" class="tg-pill" aria-pressed="' + on + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
     }).join("");
     $("tg-tabs").querySelectorAll("[data-cat]").forEach(function (b) { b.addEventListener("click", function () { state.cat = b.dataset.cat; render(); }); });
   }
