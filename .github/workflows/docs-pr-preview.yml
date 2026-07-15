@@ -81,7 +81,7 @@ jobs:
       - name: Deploy / update / remove PR preview
         # Same-repo PRs only — fork PRs get a read-only token and can't publish.
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.6.1
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
         with:
           source-dir: site
           preview-branch: gh-pages
