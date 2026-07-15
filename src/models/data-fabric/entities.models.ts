@@ -474,11 +474,8 @@ export interface EntityServiceModel {
    *   ],
    * });
    *
-   * // Multi-join: pull fields from related entities into the query.
-   * // Reference fields as "EntityName.Field" wherever the name is ambiguous
-   * // across the joined entities; result rows use entity-qualified keys
-   * // (e.g. { "Order.amount": 100, "Customer.name": "Acme" }), and a LEFT join
-   * // with no match omits the related entity's keys from the row.
+   * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys — see EntityJoin).
    * await entities.queryRecordsById(<id>, {
    *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [
@@ -953,11 +950,8 @@ export interface EntityMethods {
    *   ],
    * });
    *
-   * // Multi-join: pull fields from related entities into the query.
-   * // Reference fields as "EntityName.Field" wherever the name is ambiguous
-   * // across the joined entities; result rows use entity-qualified keys
-   * // (e.g. { "Order.amount": 100, "Customer.name": "Acme" }), and a LEFT join
-   * // with no match omits the related entity's keys from the row.
+   * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys — see EntityJoin).
    * await entity.queryRecords({
    *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [

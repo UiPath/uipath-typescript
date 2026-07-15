@@ -245,19 +245,16 @@ export interface EntityAggregate {
  * (`relatedFieldName`). Pass one {@link EntityJoin} per related entity; supplying
  * several composes a multi-entity (multi-join) query. Up to 3 joins are
  * supported (the SDK throws a `ValidationError` for more), and all of them
- * must share the same {@link JoinType} (the API rejects mixed join types).
+ * must share the same {@link JoinType}.
  *
- * Join queries require `selectedFields` or `aggregates`. Multi-entity result
- * rows use entity-qualified keys (`"Customer.Name"`), and a LEFT join with no
- * match omits the related entity's keys from the row rather than returning
- * them as `null`. Reference fields from related entities in `selectedFields` /
- * `filterGroup` / `sortOptions` as `"EntityName.Field"`; unqualified names
- * resolve only while unambiguous across the joined entities.
+ * A join query must also set `selectedFields` or `aggregates` on
+ * {@link EntityQueryRecordsOptions}, referencing fields as `"EntityName.Field"`
+ * (unqualified names work only while unambiguous). Result rows use the same
+ * qualified keys (`"Customer.Name"`); a LEFT join with no match omits the
+ * related entity's keys from the row.
  *
  * Joins are not supported on choice-set, relationship, file, encrypted, or
- * system fields. Folder-scoped entities are not yet supported by the
- * multi-entity query API — join queries against them fail with a 403 even
- * when the caller can read the entity through non-join queries.
+ * system fields, nor on folder-scoped entities.
  *
  * @example
  * ```typescript
@@ -306,11 +303,9 @@ export type EntityQueryRecordsOptions = {
   groupBy?: string[];
   /**
    * Cross-entity joins. Each entry joins one related entity into the query;
-   * supply several for a multi-join query. A maximum of 3 joins is supported
-   * (the SDK throws a `ValidationError` for more), and all joins must be of
-   * the same {@link JoinType}. Join queries require `selectedFields` or
-   * `aggregates` (the SDK throws a `ValidationError` when both are missing);
-   * result rows use entity-qualified keys (`"Customer.Name"`).
+   * supply several for a multi-join query. Requires `selectedFields` or
+   * `aggregates` to be set. See {@link EntityJoin} for constraints and the
+   * result-row key format.
    */
   joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
