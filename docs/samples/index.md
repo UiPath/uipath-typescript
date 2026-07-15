@@ -78,7 +78,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
 .md-typeset .tg-card { display: flex; flex-direction: column; background: var(--tg-surface); border: 1px solid var(--tg-hair); border-radius: 12px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .md-typeset .tg-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.12); border-color: color-mix(in srgb, var(--md-default-fg-color) 18%, transparent); }
-.md-typeset .tg-thumblink { display: block; position: relative; }
+.md-typeset .tg-thumblink { position: absolute; inset: 0; z-index: 1; }
 .md-typeset .tg-thumb { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--tg-poster, linear-gradient(135deg,#888,#555)); display: grid; place-items: center; }
 .md-typeset .tg-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .4s ease; margin: 0; max-width: none; }
 .md-typeset .tg-thumb img.tg-loaded { opacity: 1; }
@@ -86,7 +86,8 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-glyph .g { font-size: 1.8rem; display: block; letter-spacing: -0.02em; }
 .md-typeset .tg-glyph .s { font-size: 0.66rem; letter-spacing: 0.14em; opacity: 0.85; text-transform: uppercase; margin-top: 0.35rem; }
 .md-typeset .tg-badge-fw { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; font-family: var(--tg-mono); font-size: 0.62rem; font-weight: 600; padding: 0.24rem 0.5rem; border-radius: 999px; color: #fff; background: rgba(20,20,22,.55); border: 1px solid rgba(255,255,255,.18); }
-.md-typeset .tg-badge-live { position: absolute; top: 0.6rem; left: 0.6rem; z-index: 2; font-family: var(--tg-mono); font-size: 0.58rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.22rem 0.45rem; border-radius: 999px; color: #fff; background: rgba(20,20,22,.5); display: flex; align-items: center; gap: 0.3rem; }
+.md-typeset .tg-badge-live { position: absolute; top: 0.6rem; left: 0.6rem; z-index: 2; font-family: var(--tg-mono); font-size: 0.58rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.22rem 0.45rem; border-radius: 999px; color: #fff; background: rgba(20,20,22,.5); display: flex; align-items: center; gap: 0.3rem; text-decoration: none; cursor: pointer; }
+.md-typeset .tg-badge-live:hover { background: rgba(20,20,22,.75); }
 .md-typeset .tg-badge-live .blip { width: 6px; height: 6px; border-radius: 50%; background: #57e08a; }
 .md-typeset .tg-body { padding: 0.9rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 .md-typeset .tg-catline { font-family: var(--tg-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--tg-muted); }
@@ -226,12 +227,13 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     var el = document.createElement("article");
     el.className = "tg-card";
     el.style.setProperty("--tg-poster", poster(app));
-    var h = '<a class="tg-thumblink" href="' + esc(folder) + '" target="_blank" rel="noopener" aria-label="Open ' + esc(app.title) + ' on GitHub"><div class="tg-thumb">';
+    var h = '<div class="tg-thumb">';
     h += '<span class="tg-badge-fw">' + esc(app.framework) + "</span>";
-    if (app.preview) h += '<span class="tg-badge-live"><span class="blip"></span>Live preview</span>';
+    if (app.preview) h += '<a class="tg-badge-live" href="' + esc(DATA.repo + "/blob/main/" + app.preview) + '" target="_blank" rel="noopener" title="View the preview GIF"><span class="blip"></span>Live preview</a>';
     h += '<div class="tg-glyph"><span class="g">' + esc(monogram(app)) + '</span><span class="s">' + esc(c.label) + "</span></div>";
     if (app.preview) h += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc((DATA.assetsBaseUrl || "") + app.preview) + '" />';
-    h += "</div></a>";
+    h += '<a class="tg-thumblink" href="' + esc(folder) + '" target="_blank" rel="noopener" aria-label="Open ' + esc(app.title) + ' on GitHub"></a>';
+    h += "</div>";
     h += '<div class="tg-body">';
     h += '<span class="tg-catline"><span class="sw" style="background:' + esc(c.accent[0]) + '"></span>' + esc(c.label) + "</span>";
     h += '<h3 class="tg-title"><a class="tg-titlelink" href="' + esc(folder) + '" target="_blank" rel="noopener">' + esc(app.title) + "</a></h3>";
