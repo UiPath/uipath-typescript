@@ -71,6 +71,20 @@ the `gallery/` folder — the multi-MB sample sources and GIFs are **not** dupli
 into the deploy. If you'd rather self-host the assets, set `assetsBaseUrl` to `"../"`
 and switch the Pages source to serve the repo root.
 
+## Use a template
+
+Every card has a **Clone** button that copies a scoped [`degit`](https://github.com/Rich-Harris/degit)
+command — it pulls just that one sample out of the monorepo (no git history, no other samples):
+
+```bash
+npx degit UiPath/uipath-typescript/samples/data-fabric-app data-fabric-app
+```
+
+Each card also links to **GitHub** (the folder), **github.dev** (the in-browser VS Code editor,
+scoped to that sample), and **Codespaces**. The `degit` command works the same when pasted into
+Claude Code or a terminal. All three deep links are derived from `repo` in the config, so they
+follow automatically if the gallery is pointed at a fork.
+
 ## Notes
 
 - Light/dark aware, with a manual toggle (persisted to `localStorage`).

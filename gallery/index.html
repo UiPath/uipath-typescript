@@ -197,14 +197,49 @@
     cursor: pointer; transition: all .12s;
   }
   .tag:hover { color: var(--accent-ink); border-color: var(--accent); }
+  .thumb-link { display: block; position: relative; }
+  .title-link { text-decoration: none; color: inherit; }
+  .title-link:hover h3 { color: var(--accent-ink); }
+
   .card-foot {
-    display: flex; align-items: center; justify-content: space-between; margin-top: 0.35rem;
-    padding-top: 0.75rem; border-top: 1px solid var(--hair);
+    display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.4rem;
+    padding-top: 0.8rem; border-top: 1px solid var(--hair);
   }
-  .card-foot .open { font-size: 0.82rem; font-weight: 650; color: var(--accent-ink); display: inline-flex; align-items: center; gap: 0.3rem; }
-  .card:hover .open .arw { transform: translateX(3px); }
-  .arw { transition: transform .15s; }
-  .path { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+  .clone-btn {
+    font: inherit; cursor: pointer; text-align: left; width: 100%;
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.7rem; border-radius: 9px;
+    border: 1px solid var(--hair-strong); background: var(--surface-2); color: var(--ink);
+    transition: border-color .14s, background .14s;
+  }
+  .clone-btn:hover { border-color: var(--accent); }
+  .clone-btn .ico { flex: none; width: 15px; height: 15px; color: var(--accent-ink); }
+  .clone-btn .lbl { font-size: 0.78rem; font-weight: 600; flex: none; }
+  .clone-btn .cmd {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
+  }
+  .clone-btn.copied { border-color: var(--accent); background: var(--accent-soft); }
+  .foot-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.15rem 0.9rem; font-size: 0.78rem; }
+  .foot-links a {
+    color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;
+    transition: color .12s;
+  }
+  .foot-links a:hover { color: var(--accent-ink); }
+  .foot-links a svg { width: 13px; height: 13px; }
+  .foot-links .path { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); margin-left: auto; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 1.3rem; z-index: 60;
+    transform: translateX(-50%) translateY(18px);
+    background: var(--ink); color: var(--bg); font-size: 0.85rem; font-weight: 550;
+    padding: 0.6rem 1rem; border-radius: 999px; box-shadow: var(--shadow-hover);
+    opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .22s ease;
+    max-width: 90vw; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .toast .mono { font-family: var(--mono); font-size: 0.78rem; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: opacity .01s; } }
 
   .empty { text-align: center; padding: 4rem 1rem; color: var(--muted); }
   .empty b { color: var(--ink); }
@@ -266,6 +301,7 @@
   </footer>
 
   <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <!-- Default config; overridden by ./gallery.config.json when served over HTTP -->
   <script type="application/json" id="gallery-data">
@@ -327,6 +363,27 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
     });
   }
+  function repoSlug() {
+    return (state.data.repo || "").replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, "");
+  }
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+    return new Promise(function (res) {
+      var ta = document.createElement("textarea");
+      ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta); res();
+    });
+  }
+  var _toastTimer;
+  function showToast(cmd) {
+    var t = document.getElementById("toast");
+    t.innerHTML = "Copied <span class=\"mono\">" + esc(cmd) + "</span>";
+    t.classList.add("show");
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
+  }
 
   function matches(app) {
     if (state.cat !== "all" && app.category !== state.cat) return false;
@@ -387,15 +444,22 @@
     });
   }
 
+  var COPY_ICO = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+
   function card(app) {
     var c = catById(app.category) || { label: app.category, accent: ["#888", "#555"] };
-    var href = app.path ? (state.data.repo + "/tree/main/" + app.path) : state.data.repo;
-    var el = document.createElement("a");
+    var slug = repoSlug();
+    var folder = app.path ? (state.data.repo + "/tree/main/" + app.path) : state.data.repo;
+    var cloneCmd = "npx degit " + slug + "/" + app.path + " " + app.id;
+    var devUrl = "https://github.dev/" + slug + "/tree/main/" + app.path;
+    var csUrl = "https://codespaces.new/" + slug;
+
+    var el = document.createElement("article");
     el.className = "card";
-    el.href = href; el.target = "_blank"; el.rel = "noopener";
     el.style.setProperty("--poster", poster(app));
 
-    var thumb = '<div class="thumb">';
+    var thumb = '<a class="thumb-link" href="' + esc(folder) + '" target="_blank" rel="noopener" aria-label="Open ' + esc(app.title) + ' on GitHub">';
+    thumb += '<div class="thumb">';
     thumb += '<span class="badge-fw">' + esc(app.framework) + "</span>";
     if (app.preview) thumb += '<span class="badge-live"><span class="blip"></span>Live preview</span>';
     thumb += '<div class="poster-glyph"><span class="g">' + esc(monogram(app)) + '</span><span class="s">' + esc(c.label) + "</span></div>";
@@ -403,23 +467,39 @@
       var src = (state.data.assetsBaseUrl || "") + app.preview;
       thumb += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc(src) + '" />';
     }
-    thumb += "</div>";
+    thumb += "</div></a>";
 
     var body = '<div class="body">';
     body += '<span class="cat-line"><span class="swatch" style="background:' + c.accent[0] + '"></span>' + esc(c.label) + "</span>";
-    body += "<h3>" + esc(app.title) + "</h3>";
+    body += '<a class="title-link" href="' + esc(folder) + '" target="_blank" rel="noopener"><h3>' + esc(app.title) + "</h3></a>";
     body += "<p>" + esc(app.description) + "</p>";
     body += '<div class="tags">' + (app.tags || []).map(function (t) {
       return '<button type="button" class="tag" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
     }).join("") + "</div>";
-    body += '<div class="card-foot"><span class="open">Open sample <span class="arw">→</span></span>' +
+    body += '<div class="card-foot">';
+    body += '<button type="button" class="clone-btn" data-clone="' + esc(cloneCmd) + '" title="Copy: ' + esc(cloneCmd) + '">' +
+      COPY_ICO + '<span class="lbl">Clone</span><span class="cmd">' + esc(cloneCmd) + "</span></button>";
+    body += '<div class="foot-links">' +
+      '<a href="' + esc(folder) + '" target="_blank" rel="noopener">GitHub &#8599;</a>' +
+      '<a href="' + esc(devUrl) + '" target="_blank" rel="noopener">github.dev &#8599;</a>' +
+      '<a href="' + esc(csUrl) + '" target="_blank" rel="noopener">Codespace &#8599;</a>' +
       '<span class="path">' + esc((app.path || "").replace(/^samples\//, "")) + "</span></div>";
-    body += "</div>";
+    body += "</div></div>";
 
     el.innerHTML = thumb + body;
 
     var img = el.querySelector("img");
     if (img) img.addEventListener("load", function () { img.classList.add("loaded"); });
+
+    var clone = el.querySelector(".clone-btn");
+    clone.addEventListener("click", function () {
+      copyText(clone.getAttribute("data-clone")).then(function () {
+        clone.classList.add("copied");
+        var lbl = clone.querySelector(".lbl"); var prev = lbl.textContent; lbl.textContent = "Copied!";
+        showToast(clone.getAttribute("data-clone"));
+        setTimeout(function () { clone.classList.remove("copied"); lbl.textContent = prev; }, 1600);
+      });
+    });
 
     el.querySelectorAll(".tag").forEach(function (t) {
       t.addEventListener("click", function (ev) {
