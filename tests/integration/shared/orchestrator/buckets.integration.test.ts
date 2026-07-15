@@ -91,6 +91,28 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.items)).toBe(true);
       expect(result.items.length).toBeLessThanOrEqual(10);
     });
+
+    it('should accept folderKey to scope by folder', async () => {
+      const { buckets } = getServices();
+      const config = getTestConfig();
+      if (!config.folderKey) throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for folderKey getAll test');
+
+      const result = await buckets.getAll({ folderKey: config.folderKey });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should accept folderPath to scope by folder', async () => {
+      const { buckets } = getServices();
+      const config = getTestConfig();
+      if (!config.folderPath) throw new Error('INTEGRATION_TEST_FOLDER_PATH must be configured for folderPath getAll test');
+
+      const result = await buckets.getAll({ folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
   });
 
   describe('getById', () => {
@@ -314,6 +336,65 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
+    });
+  });
+
+  describe('File operations - by bucket name', () => {
+    let bucketName!: string;
+    let bucketId!: number;
+    let folderId!: number;
+
+    beforeAll(async () => {
+      const { buckets } = getServices();
+      folderId = getFolderId()!;
+      if (!folderId) throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured for by-name tests');
+
+      const all = await buckets.getAll({ folderId, pageSize: 1 });
+      if (!all.items.length) throw new Error('No buckets available for by-name tests');
+
+      bucketId = all.items[0].id;
+      bucketName = all.items[0].name;
+    });
+
+    it('uploadFile → getFileMetaData → getReadUri → deleteFile all accept a bucket name', async () => {
+      const { buckets } = getServices();
+      const fileName = `/integration-byname-${mode}-${Date.now()}.txt`;
+      const buffer = Buffer.from(createTestFileContent(fileName), 'utf-8');
+
+      const uploadResult = await buckets.uploadFile(bucketName, fileName, buffer, { folderId });
+      trackUploadedFile(bucketId, fileName, folderId);
+      expect(uploadResult.success).toBe(true);
+
+      const metadata = await buckets.getFileMetaData(bucketName, { folderId, prefix: fileName });
+      expect(metadata.items.some((f: any) => f.path === fileName)).toBe(true);
+
+      const readUri = await buckets.getReadUri(bucketName, fileName, { folderId });
+      expect(readUri.uri).toMatch(/^https?:\/\/.+/);
+
+      await buckets.deleteFile(bucketName, fileName, { folderId });
+      untrackUploadedFile(fileName);
+    });
+
+    it('getFiles accepts a bucket name', async () => {
+      const { buckets } = getServices();
+      const result = await buckets.getFiles(bucketName, { folderId });
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should resolve the bucket name using folderKey scoping', async () => {
+      const { buckets } = getServices();
+      const config = getTestConfig();
+      if (!config.folderKey) throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for the by-name folderKey test');
+
+      const result = await buckets.getFiles(bucketName, { folderKey: config.folderKey });
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should throw NotFoundError when a bucket name does not exist', async () => {
+      const { buckets } = getServices();
+      const missing = `__missing-bucket-${mode}-${Date.now()}__`;
+      await expect(buckets.getFiles(missing, { folderId }))
+        .rejects.toSatisfy(isNotFoundError);
     });
   });
 

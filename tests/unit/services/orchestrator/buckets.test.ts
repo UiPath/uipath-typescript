@@ -337,11 +337,56 @@ describe('BucketService Unit Tests', () => {
             totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
           })
         }),
-        undefined
+        expect.anything(),
       );
+
+      // With no folder in options, use the cross-folder endpoint and send no folder headers.
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls.at(-1)!;
+      expect((config as any).getEndpoint()).toBe(BUCKET_ENDPOINTS.GET_ALL);
+      expect((config as any).headers).toBeUndefined();
 
       expect(result).toEqual(mockResponse);
       expect(result.items).toHaveLength(3);
+    });
+
+    it('should route folderKey to the FolderKey header and use the folder-scoped endpoint', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await bucketService.getAll({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
+
+      const [config, restOptions] = vi.mocked(PaginationHelpers.getAll).mock.calls.at(-1)!;
+      expect((config as any).headers).toMatchObject({
+        [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect((config as any).getEndpoint()).toBe(BUCKET_ENDPOINTS.GET_BY_FOLDER);
+      // Stripped from the OData pass-through options before delegation.
+      expect(restOptions).not.toHaveProperty('folderKey');
+    });
+
+    it('should route folderPath to the encoded FolderPath header', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await bucketService.getAll({ folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE });
+
+      const [config, restOptions] = vi.mocked(PaginationHelpers.getAll).mock.calls.at(-1)!;
+      expect((config as any).headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+      expect((config as any).getEndpoint()).toBe(BUCKET_ENDPOINTS.GET_BY_FOLDER);
+      expect(restOptions).not.toHaveProperty('folderPath');
+    });
+
+    it('should NOT fall back to SDK init-time folderKey when no folder is in options (cross-folder preserved)', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+      const scopedService = new BucketService(instance);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await scopedService.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls.at(-1)!;
+      expect((config as any).headers).toBeUndefined();
+      expect((config as any).getEndpoint()).toBe(BUCKET_ENDPOINTS.GET_ALL);
     });
 
     it('should return paginated buckets when pagination options provided', async () => {
@@ -592,9 +637,9 @@ describe('BucketService Unit Tests', () => {
       );
     });
 
-    it('should throw ValidationError when bucketId is missing', async () => {
+    it('should throw ValidationError when bucket is missing', async () => {
       await expect(bucketService.getFileMetaData(null as any, TEST_CONSTANTS.FOLDER_ID))
-        .rejects.toThrow('bucketId is required for getFileMetaData');
+        .rejects.toThrow('bucket is required for Buckets.getFileMetaData');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -850,13 +895,13 @@ describe('BucketService Unit Tests', () => {
 
     });
 
-    it('should throw ValidationError when bucketId is missing', async () => {
+    it('should throw ValidationError when bucket is missing', async () => {
       await expect(bucketService.uploadFile({
         bucketId: null as any,
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH,
         content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT])
-      })).rejects.toThrow('bucketId is required for uploadFile');
+      })).rejects.toThrow('bucket is required for Buckets.uploadFile');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -1062,7 +1107,7 @@ describe('BucketService Unit Tests', () => {
       }
     });
 
-    it('should throw ValidationError when positional bucketId is missing', async () => {
+    it('should throw ValidationError when positional bucket is missing', async () => {
       await expect(
         bucketService.uploadFile(
           null as any,
@@ -1070,7 +1115,7 @@ describe('BucketService Unit Tests', () => {
           new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         ),
-      ).rejects.toThrow('bucketId is required for uploadFile');
+      ).rejects.toThrow('bucket is required for Buckets.uploadFile');
     });
 
     it('should throw ValidationError when positional path is missing', async () => {
@@ -1129,12 +1174,12 @@ describe('BucketService Unit Tests', () => {
         expect(result.headers).toEqual(BUCKET_TEST_CONSTANTS.BLOB_HEADERS);
     });
 
-    it('should throw ValidationError when bucketId is missing', async () => {
+    it('should throw ValidationError when bucket is missing', async () => {
       await expect(bucketService.getReadUri({
         bucketId: null as any,
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH
-      })).rejects.toThrow('bucketId is required for getUri');
+      })).rejects.toThrow('bucket is required for Buckets.getReadUri');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -1310,14 +1355,14 @@ describe('BucketService Unit Tests', () => {
       );
     });
 
-    it('should throw ValidationError when positional bucketId is missing', async () => {
+    it('should throw ValidationError when positional bucket is missing', async () => {
       await expect(
         bucketService.getReadUri(
           null as any,
           BUCKET_TEST_CONSTANTS.FILE_PATH,
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         ),
-      ).rejects.toThrow('bucketId is required for getUri');
+      ).rejects.toThrow('bucket is required for Buckets.getReadUri');
     });
 
     it('should throw ValidationError when positional path is missing', async () => {
@@ -1371,12 +1416,12 @@ describe('BucketService Unit Tests', () => {
       );
     });
 
-    it('should throw ValidationError when bucketId is missing', async () => {
+    it('should throw ValidationError when bucket is missing', async () => {
       await expect(bucketService.deleteFile(
         null as any,
         BUCKET_TEST_CONSTANTS.FILE_PATH,
         { folderId: TEST_CONSTANTS.FOLDER_ID },
-      )).rejects.toThrow('bucketId is required for deleteFile');
+      )).rejects.toThrow('bucket is required for Buckets.deleteFile');
       expect(mockApiClient.delete).not.toHaveBeenCalled();
     });
 
@@ -1553,9 +1598,9 @@ describe('BucketService Unit Tests', () => {
       expect((file as any).fullPath).toBeUndefined();
     });
 
-    it('should throw ValidationError when bucketId is missing', async () => {
+    it('should throw ValidationError when bucket is missing', async () => {
       await expect(bucketService.getFiles(null as any, { folderId: TEST_CONSTANTS.FOLDER_ID }))
-        .rejects.toThrow('bucketId is required for getFiles');
+        .rejects.toThrow('bucket is required for Buckets.getFiles');
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
@@ -1590,6 +1635,198 @@ describe('BucketService Unit Tests', () => {
           filter: "fullPath eq '/folder/file.pdf' and verb eq 'GET'",
         }),
       );
+    });
+  });
+
+  describe('bucket name resolution', () => {
+    const nameLookupResponse = { value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID }] };
+    const emptyLookupResponse = { value: [] };
+
+    it('deleteFile should resolve a bucket name to its Id before deleting', async () => {
+      mockApiClient.get.mockResolvedValueOnce(nameLookupResponse);
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_NAME,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // Resolver hit /odata/Buckets with $filter/$select/$top
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${BUCKET_TEST_CONSTANTS.BUCKET_NAME}'`,
+            '$select': 'Id',
+            '$top': '1',
+          }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+      );
+
+      // Downstream DELETE used the resolved numeric Id
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.DELETE_FILE(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: { path: BUCKET_TEST_CONSTANTS.FILE_PATH },
+        }),
+      );
+    });
+
+    it('deleteFile should throw NotFoundError when the bucket name is missing', async () => {
+      mockApiClient.get.mockResolvedValueOnce(emptyLookupResponse);
+
+      await expect(bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.MISSING_BUCKET_NAME,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toBeInstanceOf(NotFoundError);
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('getFiles should resolve a bucket name to its Id before listing files', async () => {
+      mockApiClient.get.mockResolvedValueOnce(nameLookupResponse);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        hasNextPage: false,
+      } as any);
+
+      await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_NAME,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${BUCKET_TEST_CONSTANTS.BUCKET_NAME}'`,
+            '$select': 'Id',
+          }),
+        }),
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as any).getEndpoint()).toBe(
+        BUCKET_ENDPOINTS.GET_FILES(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+      );
+    });
+
+    it('getFileMetaData should resolve a bucket name to its Id before listing metadata', async () => {
+      mockApiClient.get.mockResolvedValueOnce(nameLookupResponse);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        hasNextPage: false,
+      } as any);
+
+      await bucketService.getFileMetaData(
+        BUCKET_TEST_CONSTANTS.BUCKET_NAME,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as any).getEndpoint()).toBe(
+        BUCKET_ENDPOINTS.GET_FILE_META_DATA(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+      );
+    });
+
+    it('getReadUri should resolve a bucket name to its Id before fetching URI', async () => {
+      // First get is the name lookup, second is _getUri
+      mockApiClient.get
+        .mockResolvedValueOnce(nameLookupResponse)
+        .mockResolvedValueOnce(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_NAME,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({ path: BUCKET_TEST_CONSTANTS.FILE_PATH }),
+        }),
+      );
+    });
+
+    it('uploadFile should resolve a bucket name to its Id before uploading', async () => {
+      // First get is the name lookup, second is _getWriteUri
+      mockApiClient.get
+        .mockResolvedValueOnce(nameLookupResponse)
+        .mockResolvedValueOnce(createMockWriteUriApiResponse());
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+      try {
+        await bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_NAME,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({ path: BUCKET_TEST_CONSTANTS.FILE_PATH }),
+        }),
+      );
+    });
+
+    it('should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // No resolver call: numeric ids bypass the OData lookup.
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.DELETE_FILE(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.any(Object),
+      );
+    });
+
+    it('should reject non-positive numeric bucket ids with a specific message', async () => {
+      await expect(bucketService.deleteFile(
+        0,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('bucket must be a positive numeric Id for Buckets.deleteFile');
+
+      await expect(bucketService.deleteFile(
+        -5,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('bucket must be a positive numeric Id for Buckets.deleteFile');
+    });
+
+    it('should propagate the resolver NotFoundError from uploadFile', async () => {
+      mockApiClient.get.mockResolvedValueOnce(emptyLookupResponse);
+
+      await expect(bucketService.uploadFile(
+        BUCKET_TEST_CONSTANTS.MISSING_BUCKET_NAME,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toBeInstanceOf(NotFoundError);
+      // _getWriteUri was never reached
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
     });
   });
 });

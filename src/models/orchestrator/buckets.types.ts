@@ -24,7 +24,12 @@ export interface BucketGetResponse {
 }
 
 export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
+  /** Numeric folder Id. Sent as `X-UIPATH-OrganizationUnitId`. */
   folderId?: number;
+  /** Folder key (GUID). Sent as `X-UIPATH-FolderKey`. */
+  folderKey?: string;
+  /** Slash-delimited folder path (e.g. `'Shared/Finance'`). Sent as `X-UIPATH-FolderPath-Encoded`. */
+  folderPath?: string;
 }
 
 export interface BucketGetByIdOptions extends BaseOptions {}

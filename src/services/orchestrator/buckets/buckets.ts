@@ -82,29 +82,50 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       : NonPaginatedResponse<BucketGetResponse>
   > {
     // Transformation function for buckets
-    const transformBucketResponse = (bucket: any) => 
+    const transformBucketResponse = (bucket: any) =>
       pascalToCamelCaseKeys(bucket) as BucketGetResponse;
+
+    // Pull folderKey/folderPath out of options — the pagination helper only
+    // recognizes folderId, so we resolve string-based folder scoping here and
+    // pass pre-built headers through. Passing them through as query options
+    // would leak them into the URL as OData params.
+    const { folderKey, folderPath, ...restOptions } = (options ?? {}) as
+      T & { folderKey?: string; folderPath?: string };
+    const folderId = (restOptions as { folderId?: number }).folderId;
+
+    const wantsFolder = folderId !== undefined || folderKey !== undefined || folderPath !== undefined;
+
+    // No meta-tag folderKey fallback: `getAll()` with no folder options
+    // deliberately remains a cross-folder query, matching the pre-existing
+    // public contract.
+    const headers = wantsFolder
+      ? resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Buckets.getAll' })
+      : undefined;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
+      // Endpoint choice is driven by `wantsFolder`, not the folderId the helper
+      // hands us — folderKey/folderPath don't surface as a numeric folderId,
+      // so we can't rely on the helper's default (folderId ? by-folder : all).
+      getEndpoint: () => wantsFolder ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformBucketResponse,
+      headers,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM             
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, options) as any;
+    }, restOptions as T) as any;
   }
 
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketId: number,
+    bucket: number | string,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -112,7 +133,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       : NonPaginatedResponse<BlobItem>
   >;
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketId: number,
+    bucket: number | string,
     folderId: number,
     options?: T,
   ): Promise<
@@ -122,7 +143,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   >;
   @track('Buckets.GetFileMetaData')
   async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketId: number,
+    bucket: number | string,
     optionsOrFolderId?: T | number,
     legacyOptions?: T,
   ): Promise<
@@ -130,10 +151,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       ? PaginatedResponse<BlobItem>
       : NonPaginatedResponse<BlobItem>
   > {
-    if (!bucketId) {
-      throw new ValidationError({ message: 'bucketId is required for getFileMetaData' });
-    }
-
     // Normalize the two overload forms into a single internal shape.
     let folderId: number | undefined;
     let folderKey: string | undefined;
@@ -141,14 +158,20 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     let restOptions: Omit<T, 'folderId' | 'folderKey' | 'folderPath'>;
 
     if (typeof optionsOrFolderId === 'number') {
-      // Deprecated positional form: getFileMetaData(bucketId, folderId, options?)
+      // Deprecated positional form: getFileMetaData(bucket, folderId, options?)
       folderId = optionsOrFolderId;
       restOptions = (legacyOptions ?? {}) as Omit<T, 'folderId' | 'folderKey' | 'folderPath'>;
     } else {
-      // Preferred form: getFileMetaData(bucketId, options?)
+      // Preferred form: getFileMetaData(bucket, options?)
       const opts = optionsOrFolderId ?? ({} as T);
       ({ folderId, folderKey, folderPath, ...restOptions } = opts);
     }
+
+    const bucketId = await this.coerceBucketId(
+      bucket,
+      { folderId, folderKey, folderPath },
+      'Buckets.getFileMetaData',
+    );
 
     const headers = resolveFolderHeaders({
       folderId,
@@ -185,7 +208,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   uploadFile(
-    bucketId: number,
+    bucket: number | string,
     path: string,
     content: Blob | Uint8Array<ArrayBuffer> | File,
     options?: BucketUploadFileRequestOptions,
@@ -193,33 +216,30 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
   @track('Buckets.UploadFile')
   async uploadFile(
-    bucketIdOrOptions: number | BucketUploadFileOptions,
+    bucketOrOptions: number | string | BucketUploadFileOptions,
     path?: string,
     content?: Blob | Uint8Array<ArrayBuffer> | File,
     options?: BucketUploadFileRequestOptions,
   ): Promise<BucketUploadResponse> {
     // Normalize the two overload forms into a single internal shape.
-    let bucketId: number;
+    let bucket: number | string;
     let resolvedPath: string;
     let resolvedContent: Blob | Uint8Array<ArrayBuffer> | File;
     let folderId: number | undefined;
     let folderKey: string | undefined;
     let folderPath: string | undefined;
 
-    if (bucketIdOrOptions !== null && typeof bucketIdOrOptions === 'object') {
+    if (bucketOrOptions !== null && typeof bucketOrOptions === 'object') {
       // Deprecated options-only form: uploadFile({ bucketId, path, content, ... })
-      ({ bucketId, path: resolvedPath, content: resolvedContent, folderId, folderKey, folderPath } = bucketIdOrOptions);
+      // Deprecated form remains numeric-only for bucketId.
+      ({ bucketId: bucket, path: resolvedPath, content: resolvedContent, folderId, folderKey, folderPath } = bucketOrOptions);
     } else {
-      // Preferred positional form: uploadFile(bucketId, path, content, options?)
-      bucketId = bucketIdOrOptions;
+      // Preferred positional form: uploadFile(bucket, path, content, options?)
+      bucket = bucketOrOptions;
       resolvedPath = path as string;
       resolvedContent = content as Blob | Uint8Array<ArrayBuffer> | File;
       const opts = options ?? ({} as BucketUploadFileRequestOptions);
       ({ folderId, folderKey, folderPath } = opts);
-    }
-
-    if (!bucketId) {
-      throw new ValidationError({ message: 'bucketId is required for uploadFile' });
     }
 
     if (!resolvedPath) {
@@ -229,6 +249,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     if (!resolvedContent) {
       throw new ValidationError({ message: 'content is required for uploadFile' });
     }
+
+    const bucketId = await this.coerceBucketId(
+      bucket,
+      { folderId, folderKey, folderPath },
+      'Buckets.uploadFile',
+    );
 
     const headers = resolveFolderHeaders({
       folderId,
@@ -254,19 +280,19 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   getReadUri(
-    bucketId: number,
+    bucket: number | string,
     path: string,
     options?: BucketGetReadUriRequestOptions,
   ): Promise<BucketGetUriResponse>;
   getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse>;
   @track('Buckets.GetReadUri')
   async getReadUri(
-    bucketIdOrOptions: number | BucketGetReadUriOptions,
+    bucketOrOptions: number | string | BucketGetReadUriOptions,
     path?: string,
     options?: BucketGetReadUriRequestOptions,
   ): Promise<BucketGetUriResponse> {
     // Normalize the two overload forms into a single internal shape.
-    let bucketId: number;
+    let bucket: number | string;
     let resolvedPath: string;
     let folderId: number | undefined;
     let folderKey: string | undefined;
@@ -274,10 +300,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     let expiryInMinutes: number | undefined;
     let restOptions: Record<string, unknown>;
 
-    if (bucketIdOrOptions !== null && typeof bucketIdOrOptions === 'object') {
+    if (bucketOrOptions !== null && typeof bucketOrOptions === 'object') {
       // Deprecated options-only form: getReadUri({ bucketId, path, ... })
-      const { bucketId: bid, path: p, expiryInMinutes: e, folderId: fid, folderKey: fkey, folderPath: fpath, ...rest } = bucketIdOrOptions;
-      bucketId = bid;
+      // Deprecated form remains numeric-only for bucketId.
+      const { bucketId: bid, path: p, expiryInMinutes: e, folderId: fid, folderKey: fkey, folderPath: fpath, ...rest } = bucketOrOptions;
+      bucket = bid;
       resolvedPath = p;
       expiryInMinutes = e;
       folderId = fid;
@@ -285,12 +312,18 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       folderPath = fpath;
       restOptions = rest;
     } else {
-      // Preferred positional form: getReadUri(bucketId, path, options?)
-      bucketId = bucketIdOrOptions;
+      // Preferred positional form: getReadUri(bucket, path, options?)
+      bucket = bucketOrOptions;
       resolvedPath = path as string;
       const opts = options ?? ({} as BucketGetReadUriRequestOptions);
       ({ expiryInMinutes, folderId, folderKey, folderPath, ...restOptions } = opts);
     }
+
+    const bucketId = await this.coerceBucketId(
+      bucket,
+      { folderId, folderKey, folderPath },
+      'Buckets.getReadUri',
+    );
 
     const headers = resolveFolderHeaders({
       folderId,
@@ -400,18 +433,20 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
   @track('Buckets.GetFiles')
   async getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
-    bucketId: number,
+    bucket: number | string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<BucketFile>
       : NonPaginatedResponse<BucketFile>
   > {
-    if (!bucketId) {
-      throw new ValidationError({ message: 'bucketId is required for getFiles' });
-    }
-
     const { folderId, folderKey, folderPath, ...restOptions } = options ?? {} as BucketGetFilesOptions;
+
+    const bucketId = await this.coerceBucketId(
+      bucket,
+      { folderId, folderKey, folderPath },
+      'Buckets.getFiles',
+    );
 
     const headers = resolveFolderHeaders({
       folderId,
@@ -448,19 +483,23 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   @track('Buckets.DeleteFile')
-  async deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void> {
-    if (!bucketId) {
-      throw new ValidationError({ message: 'bucketId is required for deleteFile' });
-    }
-
+  async deleteFile(bucket: number | string, path: string, options?: BucketDeleteFileOptions): Promise<void> {
     if (!path) {
       throw new ValidationError({ message: 'path is required for deleteFile' });
     }
 
+    const { folderId, folderKey, folderPath } = options ?? {};
+
+    const bucketId = await this.coerceBucketId(
+      bucket,
+      { folderId, folderKey, folderPath },
+      'Buckets.deleteFile',
+    );
+
     const headers = resolveFolderHeaders({
-      folderId: options?.folderId,
-      folderKey: options?.folderKey,
-      folderPath: options?.folderPath,
+      folderId,
+      folderKey,
+      folderPath,
       resourceType: 'Buckets.deleteFile',
       fallbackFolderKey: this.config.folderKey,
     });
@@ -497,6 +536,37 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       path,
       headers,
       queryOptions
+    );
+  }
+
+  /**
+   * Coerces a numeric bucket ID or a bucket name into a numeric ID. When a
+   * name is supplied, resolves it via an OData lookup on the folder-scoped
+   * Buckets collection. Callers pass the folder scope so name lookups run in
+   * the same folder used for the subsequent file operation.
+   */
+  private async coerceBucketId(
+    bucket: number | string,
+    folder: { folderId?: number; folderKey?: string; folderPath?: string },
+    callerLabel: string,
+  ): Promise<number> {
+    if (bucket === null || bucket === undefined) {
+      throw new ValidationError({ message: `bucket is required for ${callerLabel}` });
+    }
+    if (typeof bucket === 'number') {
+      if (bucket <= 0) {
+        throw new ValidationError({
+          message: `bucket must be a positive numeric Id for ${callerLabel} (got ${bucket})`,
+        });
+      }
+      return bucket;
+    }
+    return this.resolveIdByName(
+      'Bucket',
+      BUCKET_ENDPOINTS.GET_BY_FOLDER,
+      bucket,
+      folder,
+      callerLabel,
     );
   }
 }
