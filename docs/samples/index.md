@@ -101,11 +101,6 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-clone svg { flex: none; width: 15px; height: 15px; color: var(--tg-accent); }
 .md-typeset .tg-clone .lbl { font-size: 0.76rem; font-weight: 700; }
 .md-typeset .tg-clone.copied { border-color: var(--tg-accent); background: var(--tg-accent-soft); }
-.md-typeset .tg-vscode { font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.6rem; border: 0; background: none; color: var(--tg-muted); border-radius: 8px; }
-.md-typeset .tg-vscode:hover { color: var(--tg-accent); background: var(--tg-surface-2); }
-.md-typeset .tg-vscode svg { width: 15px; height: 15px; flex: none; }
-.md-typeset .tg-vscode .lbl { font-size: 0.76rem; font-weight: 600; }
-.md-typeset .tg-vscode.copied { color: var(--tg-accent); }
 /* suppress Material's auto external-link icon inside the gallery (we style our own) */
 .md-typeset .tg a::after { display: none !important; }
 .md-typeset .tg-empty { text-align: center; padding: 3rem 1rem; color: var(--tg-muted); }
@@ -225,7 +220,6 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     }
   }
   var COPY = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
-  var CODEICON = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/></svg>';
   function card(app) {
     var c = catById(app.category) || { label: app.category, accent: ["#888", "#555"] };
     var folder = app.path ? (DATA.repo + "/tree/main/" + app.path) : DATA.repo;
@@ -244,10 +238,8 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     h += '<p class="tg-desc">' + esc(app.description) + "</p>";
     if (app.path) {
       var cloneCmd = "npx degit " + slug() + "/" + app.path + " " + app.id;
-      var vscodeCmd = cloneCmd + " && code " + app.id;
       h += '<div class="tg-foot">';
       h += '<button type="button" class="tg-clone tg-copybtn" data-copy="' + esc(cloneCmd) + '" title="Copy clone command: ' + esc(cloneCmd) + '">' + COPY + '<span class="lbl">Clone</span></button>';
-      h += '<button type="button" class="tg-vscode tg-copybtn" data-copy="' + esc(vscodeCmd) + '" title="Copy: ' + esc(vscodeCmd) + '">' + CODEICON + '<span class="lbl">Open in VS Code</span></button>';
       h += "</div>"; // .tg-foot
     }
     h += "</div>"; // .tg-body
