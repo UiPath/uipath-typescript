@@ -24,7 +24,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     </div>
   </div>
   <div class="tg-meta">
-    <span class="tg-count"><b id="tg-count-n">0</b> <span id="tg-count-w">apps</span></span>
+    <span class="tg-count" aria-live="polite"><b id="tg-count-n">0</b> <span id="tg-count-w">apps</span></span>
     <button type="button" class="tg-clear" id="tg-clear" hidden>Clear filters</button>
   </div>
   <div class="tg-grid" id="tg-grid"></div>
@@ -175,22 +175,38 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   }
   function countIn(cat) { return DATA.apps.filter(function (a) { return cat === "all" || a.category === cat; }).length; }
 
+  // Controls are built once and then only their aria-pressed state is updated on
+  // re-render, so activating a pill via keyboard doesn't rebuild the DOM and lose focus.
   function renderTabs() {
-    var cats = [{ id: "all", label: "All" }].concat(DATA.categories);
-    $("tg-tabs").innerHTML = cats.map(function (c) {
-      var on = state.cat === c.id;
-      return '<button type="button" class="tg-pill" aria-pressed="' + on + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
-    }).join("");
-    $("tg-tabs").querySelectorAll("[data-cat]").forEach(function (b) { b.addEventListener("click", function () { state.cat = b.dataset.cat; render(); }); });
+    var wrap = $("tg-tabs");
+    if (!wrap.children.length) {
+      var cats = [{ id: "all", label: "All" }].concat(DATA.categories);
+      wrap.innerHTML = cats.map(function (c) {
+        return '<button type="button" class="tg-pill" aria-pressed="' + (state.cat === c.id) + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
+      }).join("");
+      wrap.querySelectorAll("[data-cat]").forEach(function (b) { b.addEventListener("click", function () { state.cat = b.dataset.cat; render(); }); });
+    } else {
+      wrap.querySelectorAll("[data-cat]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.cat === b.dataset.cat)); });
+    }
   }
   function renderFilters() {
-    var fws = Array.from(new Set(DATA.apps.map(function (a) { return a.framework; }))).sort();
-    $("tg-fw").innerHTML = fws.map(function (f) { return '<button type="button" class="tg-pill tg-pill-sm" aria-pressed="' + state.fws.has(f) + '" data-fw="' + esc(f) + '">' + esc(f) + "</button>"; }).join("");
-    $("tg-fw").querySelectorAll("[data-fw]").forEach(function (b) { b.addEventListener("click", function () { var f = b.dataset.fw; state.fws.has(f) ? state.fws.delete(f) : state.fws.add(f); render(); }); });
-    var counts = {}; DATA.apps.forEach(function (a) { (a.tags || []).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; }); });
-    var tags = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); });
-    $("tg-tags").innerHTML = tags.map(function (t) { return '<button type="button" class="tg-pill tg-pill-sm" aria-pressed="' + state.tags.has(t) + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>"; }).join("");
-    $("tg-tags").querySelectorAll("[data-tag]").forEach(function (b) { b.addEventListener("click", function () { var t = b.dataset.tag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); render(); }); });
+    var fwWrap = $("tg-fw");
+    if (!fwWrap.children.length) {
+      var fws = Array.from(new Set(DATA.apps.map(function (a) { return a.framework; }))).sort();
+      fwWrap.innerHTML = fws.map(function (f) { return '<button type="button" class="tg-pill tg-pill-sm" aria-pressed="' + state.fws.has(f) + '" data-fw="' + esc(f) + '">' + esc(f) + "</button>"; }).join("");
+      fwWrap.querySelectorAll("[data-fw]").forEach(function (b) { b.addEventListener("click", function () { var f = b.dataset.fw; state.fws.has(f) ? state.fws.delete(f) : state.fws.add(f); render(); }); });
+    } else {
+      fwWrap.querySelectorAll("[data-fw]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.fws.has(b.dataset.fw))); });
+    }
+    var tagWrap = $("tg-tags");
+    if (!tagWrap.children.length) {
+      var counts = {}; DATA.apps.forEach(function (a) { (a.tags || []).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; }); });
+      var tags = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); });
+      tagWrap.innerHTML = tags.map(function (t) { return '<button type="button" class="tg-pill tg-pill-sm" aria-pressed="' + state.tags.has(t) + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>"; }).join("");
+      tagWrap.querySelectorAll("[data-tag]").forEach(function (b) { b.addEventListener("click", function () { var t = b.dataset.tag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); render(); }); });
+    } else {
+      tagWrap.querySelectorAll("[data-tag]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.tags.has(b.dataset.tag))); });
+    }
   }
   var COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
   var CODEICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/></svg>';
@@ -209,7 +225,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     if (app.preview) h += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc((DATA.assetsBaseUrl || "") + app.preview) + '" />';
     h += "</div></a>";
     h += '<div class="tg-body">';
-    h += '<span class="tg-catline"><span class="sw" style="background:' + c.accent[0] + '"></span>' + esc(c.label) + "</span>";
+    h += '<span class="tg-catline"><span class="sw" style="background:' + esc(c.accent[0]) + '"></span>' + esc(c.label) + "</span>";
     h += '<a class="tg-titlelink" href="' + esc(folder) + '" target="_blank" rel="noopener"><span class="tg-title">' + esc(app.title) + "</span></a>";
     h += '<p class="tg-desc">' + esc(app.description) + "</p>";
     h += '<div class="tg-foot">';
