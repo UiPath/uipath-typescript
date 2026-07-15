@@ -30,7 +30,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   <div class="tg-grid" id="tg-grid"></div>
   <div class="tg-empty" id="tg-empty" hidden>No apps match these filters.</div>
 </div>
-<div class="tg-toast" id="tg-toast" role="status" aria-live="polite"></div>
+<div class="tg-toast" id="tg-toast" role="status"></div>
 
 <style>
 .tg, .tg *, .tg *::before, .tg *::after { box-sizing: border-box; }
@@ -91,9 +91,9 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-body { padding: 0.9rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 .md-typeset .tg-catline { font-family: var(--tg-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--tg-muted); }
 .md-typeset .tg-catline .sw { width: 9px; height: 9px; border-radius: 2px; }
-.md-typeset .tg-titlelink { text-decoration: none; }
+.md-typeset .tg-titlelink { text-decoration: none; color: inherit; }
 .md-typeset .tg-title { font-size: 1.02rem; font-weight: 700; margin: 0; line-height: 1.25; color: var(--tg-ink); letter-spacing: -0.01em; }
-.md-typeset .tg-titlelink:hover .tg-title { color: var(--tg-accent); }
+.md-typeset .tg-titlelink:hover { color: var(--tg-accent); }
 .md-typeset .tg-desc { font-size: 0.8rem; color: var(--tg-muted); margin: 0; flex: 1; line-height: 1.5; }
 .md-typeset .tg-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.3rem; padding-top: 0.7rem; border-top: 1px solid var(--tg-hair); }
 .md-typeset .tg-clone { font: inherit; cursor: pointer; text-align: left; flex: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 9px; border: 1px solid var(--tg-hair); background: var(--tg-surface-2); color: var(--tg-ink); }
@@ -224,13 +224,11 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
       tagWrap.querySelectorAll("[data-tag]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.tags.has(b.dataset.tag))); });
     }
   }
-  var COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
-  var CODEICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/></svg>';
+  var COPY = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  var CODEICON = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/></svg>';
   function card(app) {
     var c = catById(app.category) || { label: app.category, accent: ["#888", "#555"] };
     var folder = app.path ? (DATA.repo + "/tree/main/" + app.path) : DATA.repo;
-    var cloneCmd = "npx degit " + slug() + "/" + app.path + " " + app.id;
-    var vscodeCmd = cloneCmd + " && code " + app.id;
     var el = document.createElement("article");
     el.className = "tg-card";
     el.style.setProperty("--tg-poster", poster(app));
@@ -242,12 +240,16 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     h += "</div></a>";
     h += '<div class="tg-body">';
     h += '<span class="tg-catline"><span class="sw" style="background:' + esc(c.accent[0]) + '"></span>' + esc(c.label) + "</span>";
-    h += '<a class="tg-titlelink" href="' + esc(folder) + '" target="_blank" rel="noopener"><span class="tg-title">' + esc(app.title) + "</span></a>";
+    h += '<h3 class="tg-title"><a class="tg-titlelink" href="' + esc(folder) + '" target="_blank" rel="noopener">' + esc(app.title) + "</a></h3>";
     h += '<p class="tg-desc">' + esc(app.description) + "</p>";
-    h += '<div class="tg-foot">';
-    h += '<button type="button" class="tg-clone tg-copybtn" data-copy="' + esc(cloneCmd) + '" title="Copy clone command: ' + esc(cloneCmd) + '">' + COPY + '<span class="lbl">Clone</span></button>';
-    h += '<button type="button" class="tg-vscode tg-copybtn" data-copy="' + esc(vscodeCmd) + '" title="Copy: ' + esc(vscodeCmd) + '">' + CODEICON + '<span class="lbl">Open in VS Code</span></button>';
-    h += "</div>"; // .tg-foot
+    if (app.path) {
+      var cloneCmd = "npx degit " + slug() + "/" + app.path + " " + app.id;
+      var vscodeCmd = cloneCmd + " && code " + app.id;
+      h += '<div class="tg-foot">';
+      h += '<button type="button" class="tg-clone tg-copybtn" data-copy="' + esc(cloneCmd) + '" title="Copy clone command: ' + esc(cloneCmd) + '">' + COPY + '<span class="lbl">Clone</span></button>';
+      h += '<button type="button" class="tg-vscode tg-copybtn" data-copy="' + esc(vscodeCmd) + '" title="Copy: ' + esc(vscodeCmd) + '">' + CODEICON + '<span class="lbl">Open in VS Code</span></button>';
+      h += "</div>"; // .tg-foot
+    }
     h += "</div>"; // .tg-body
     el.innerHTML = h;
     var img = el.querySelector("img");
@@ -257,6 +259,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     }
     el.querySelectorAll(".tg-copybtn").forEach(function (btn) {
       btn.addEventListener("click", function () {
+        if (btn.classList.contains("copied")) return; // ignore repeat clicks during the "Copied!" window
         copyText(btn.getAttribute("data-copy")).then(function (ok) {
           if (!ok) { toast("Copy failed — copy manually:", btn.getAttribute("data-copy")); return; }
           btn.classList.add("copied");
@@ -279,7 +282,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   }
   function render() { renderTabs(); renderFilters(); renderGrid(); }
   $("tg-search").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); renderGrid(); });
-  $("tg-clear").addEventListener("click", function () { state.cat = "all"; state.fws.clear(); state.tags.clear(); state.q = ""; $("tg-search").value = ""; render(); });
+  $("tg-clear").addEventListener("click", function () { state.cat = "all"; state.fws.clear(); state.tags.clear(); state.q = ""; $("tg-search").value = ""; render(); $("tg-search").focus(); });
   render();
 })();
 </script>
