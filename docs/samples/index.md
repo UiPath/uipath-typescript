@@ -219,7 +219,10 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     h += "</div>"; // .tg-body
     el.innerHTML = h;
     var img = el.querySelector("img");
-    if (img) img.addEventListener("load", function () { img.classList.add("tg-loaded"); });
+    if (img) {
+      img.addEventListener("load", function () { img.classList.add("tg-loaded"); });
+      if (img.complete) img.classList.add("tg-loaded"); // already-cached images fire load before this listener attaches
+    }
     el.querySelectorAll(".tg-copybtn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         copyText(btn.getAttribute("data-copy")).then(function () {
