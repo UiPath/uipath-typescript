@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UiPath TypeScript SDK — Sample Gallery</title>
+<style>
+  :root {
+    --bg: #FBFAF8;
+    --surface: #FFFFFF;
+    --surface-2: #F4F2EE;
+    --ink: #1A1B1E;
+    --muted: #6C6862;
+    --hair: #E4E0D8;
+    --hair-strong: #D3CEC4;
+    --accent: #F5551F;
+    --accent-ink: #C63D0F;
+    --accent-soft: rgba(245, 85, 31, 0.10);
+    --focus: #F5551F;
+    --shadow: 0 1px 2px rgba(26,27,30,0.04), 0 6px 20px rgba(26,27,30,0.06);
+    --shadow-hover: 0 2px 6px rgba(26,27,30,0.08), 0 18px 44px rgba(26,27,30,0.14);
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131417; --surface: #1B1D21; --surface-2: #23252A;
+      --ink: #ECEAE5; --muted: #9A958C; --hair: #2C2E34; --hair-strong: #3A3D44;
+      --accent: #FF7043; --accent-ink: #FF8A5C; --accent-soft: rgba(255,112,67,0.14);
+      --focus: #FF7043;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.5);
+      --shadow-hover: 0 2px 6px rgba(0,0,0,0.5), 0 18px 44px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #FBFAF8; --surface: #FFFFFF; --surface-2: #F4F2EE;
+    --ink: #1A1B1E; --muted: #6C6862; --hair: #E4E0D8; --hair-strong: #D3CEC4;
+    --accent: #F5551F; --accent-ink: #C63D0F; --accent-soft: rgba(245,85,31,0.10); --focus: #F5551F;
+    --shadow: 0 1px 2px rgba(26,27,30,0.04), 0 6px 20px rgba(26,27,30,0.06);
+    --shadow-hover: 0 2px 6px rgba(26,27,30,0.08), 0 18px 44px rgba(26,27,30,0.14);
+  }
+  :root[data-theme="dark"] {
+    --bg: #131417; --surface: #1B1D21; --surface-2: #23252A;
+    --ink: #ECEAE5; --muted: #9A958C; --hair: #2C2E34; --hair-strong: #3A3D44;
+    --accent: #FF7043; --accent-ink: #FF8A5C; --accent-soft: rgba(255,112,67,0.14); --focus: #FF7043;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 6px 20px rgba(0,0,0,0.5);
+    --shadow-hover: 0 2px 6px rgba(0,0,0,0.5), 0 18px 44px rgba(0,0,0,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ---- header ---- */
+  header {
+    padding: clamp(2.2rem, 1rem + 6vw, 4.5rem) clamp(1.1rem, 0.5rem + 3vw, 3rem) 1.5rem;
+    max-width: 1220px; margin: 0 auto;
+  }
+  .kicker {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 0.9rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  h1 {
+    font-size: clamp(1.9rem, 1.3rem + 2.6vw, 3.1rem); line-height: 1.04;
+    letter-spacing: -0.03em; font-weight: 750; margin: 0 0 0.7rem; text-wrap: balance;
+    max-width: 18ch;
+  }
+  .tagline { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem); color: var(--muted); margin: 0; max-width: 60ch; }
+  .repolink {
+    display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 1.1rem;
+    font-size: 0.9rem; font-weight: 600; color: var(--ink); text-decoration: none;
+    padding: 0.5rem 0.85rem; border: 1px solid var(--hair-strong); border-radius: 999px;
+    background: var(--surface); transition: border-color .15s, transform .15s;
+  }
+  .repolink:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+  /* ---- controls ---- */
+  .controls {
+    position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--hair);
+  }
+  .controls-inner {
+    max-width: 1220px; margin: 0 auto; padding: 0.9rem clamp(1.1rem, 0.5rem + 3vw, 3rem);
+    display: flex; flex-direction: column; gap: 0.8rem;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .tabs { gap: 0.4rem; }
+  .search {
+    margin-left: auto; display: flex; align-items: center; gap: 0.5rem;
+    background: var(--surface); border: 1px solid var(--hair-strong); border-radius: 999px;
+    padding: 0.42rem 0.9rem; min-width: 210px; transition: border-color .15s;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
+  .search input {
+    border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 0.9rem;
+    width: 100%; outline: none;
+  }
+  .pill {
+    font: inherit; font-size: 0.85rem; font-weight: 550; cursor: pointer;
+    padding: 0.44rem 0.85rem; border-radius: 999px; border: 1px solid var(--hair-strong);
+    background: var(--surface); color: var(--ink); transition: all .14s ease; line-height: 1;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .pill[aria-pressed="true"], .pill.active {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .pill .cnt {
+    font-family: var(--mono); font-size: 0.72rem; opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill[aria-pressed="true"] .cnt, .pill.active .cnt { opacity: 0.85; }
+  .filters-label {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin-right: 0.15rem;
+  }
+  .tag-pill { font-size: 0.78rem; padding: 0.34rem 0.7rem; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* ---- grid ---- */
+  main { max-width: 1220px; margin: 0 auto; padding: 1.6rem clamp(1.1rem, 0.5rem + 3vw, 3rem) 5rem; }
+  .meta-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    margin: 0.4rem 0 1.3rem; color: var(--muted); font-size: 0.85rem;
+  }
+  .meta-row .count b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .btn-clear {
+    font: inherit; font-size: 0.82rem; background: none; border: 0; color: var(--accent-ink);
+    cursor: pointer; font-weight: 600; padding: 0;
+  }
+  .btn-clear:hover { text-decoration: underline; }
+
+  .grid {
+    display: grid; gap: 1.15rem;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  }
+  .card {
+    display: flex; flex-direction: column; background: var(--surface);
+    border: 1px solid var(--hair); border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow); text-decoration: none; color: inherit;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--hair-strong); }
+  .thumb {
+    position: relative; aspect-ratio: 16 / 10; overflow: hidden;
+    background: var(--poster, linear-gradient(135deg,#888,#555));
+    display: grid; place-items: center;
+  }
+  .thumb img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    display: block; opacity: 0; transition: opacity .4s ease;
+  }
+  .thumb img.loaded { opacity: 1; }
+  .poster-glyph {
+    font-family: var(--mono); font-weight: 700; color: #fff; text-align: center;
+    letter-spacing: -0.02em; text-shadow: 0 2px 12px rgba(0,0,0,0.25); padding: 1rem;
+  }
+  .poster-glyph .g { font-size: clamp(1.5rem, 1rem + 2vw, 2.2rem); display: block; }
+  .poster-glyph .s { font-size: 0.72rem; letter-spacing: 0.14em; opacity: 0.85; text-transform: uppercase; margin-top: 0.4rem; }
+  .badge-fw {
+    position: absolute; top: 0.7rem; right: 0.7rem; z-index: 2;
+    font-family: var(--mono); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em;
+    padding: 0.26rem 0.55rem; border-radius: 999px; color: #fff;
+    background: rgba(20,20,22,0.55); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.18);
+  }
+  .badge-live {
+    position: absolute; top: 0.7rem; left: 0.7rem; z-index: 2;
+    font-family: var(--mono); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.24rem 0.5rem; border-radius: 999px; color: #fff;
+    background: rgba(20,20,22,0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .badge-live .blip { width: 6px; height: 6px; border-radius: 50%; background: #57e08a; box-shadow: 0 0 0 0 rgba(87,224,138,0.6); animation: blip 1.8s infinite; }
+  @keyframes blip { 0%{box-shadow:0 0 0 0 rgba(87,224,138,0.6);} 70%{box-shadow:0 0 0 6px rgba(87,224,138,0);} 100%{box-shadow:0 0 0 0 rgba(87,224,138,0);} }
+  @media (prefers-reduced-motion: reduce) { .badge-live .blip { animation: none; } .card, .card:hover { transition: none; } }
+
+  .body { padding: 1rem 1.1rem 1.15rem; display: flex; flex-direction: column; gap: 0.55rem; flex: 1; }
+  .cat-line {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600;
+  }
+  .cat-line .swatch { width: 9px; height: 9px; border-radius: 2px; }
+  .card h3 { font-size: 1.06rem; letter-spacing: -0.015em; font-weight: 680; margin: 0; line-height: 1.25; }
+  .card p { font-size: 0.87rem; color: var(--muted); margin: 0; flex: 1; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.2rem; }
+  .tag {
+    font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px;
+    background: var(--surface-2); color: var(--muted); border: 1px solid var(--hair);
+    cursor: pointer; transition: all .12s;
+  }
+  .tag:hover { color: var(--accent-ink); border-color: var(--accent); }
+  .card-foot {
+    display: flex; align-items: center; justify-content: space-between; margin-top: 0.35rem;
+    padding-top: 0.75rem; border-top: 1px solid var(--hair);
+  }
+  .card-foot .open { font-size: 0.82rem; font-weight: 650; color: var(--accent-ink); display: inline-flex; align-items: center; gap: 0.3rem; }
+  .card:hover .open .arw { transform: translateX(3px); }
+  .arw { transition: transform .15s; }
+  .path { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+
+  .empty { text-align: center; padding: 4rem 1rem; color: var(--muted); }
+  .empty b { color: var(--ink); }
+
+  footer {
+    max-width: 1220px; margin: 0 auto; padding: 2rem clamp(1.1rem, 0.5rem + 3vw, 3rem) 3rem;
+    border-top: 1px solid var(--hair); color: var(--muted); font-size: 0.82rem;
+    display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; justify-content: space-between;
+  }
+  footer code { font-family: var(--mono); background: var(--surface-2); padding: 0.1rem 0.4rem; border-radius: 5px; }
+
+  .theme-toggle {
+    position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 40;
+    width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--hair-strong);
+    background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: var(--shadow);
+    display: grid; place-items: center; font-size: 1.05rem;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+</style>
+</head>
+<body>
+  <header>
+    <p class="kicker"><span class="dot"></span> UiPath · TypeScript SDK</p>
+    <h1 id="gTitle">Sample Gallery</h1>
+    <p class="tagline" id="gTagline"></p>
+    <a class="repolink" id="gRepo" href="#" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View repository
+    </a>
+  </header>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="row tabs" id="tabs" role="tablist" aria-label="Categories"></div>
+      <div class="row" id="filters">
+        <span class="filters-label">Filter</span>
+        <span id="fwFilters"></span>
+        <span id="tagFilters"></span>
+        <label class="search">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4" stroke-linecap="round"/></svg>
+          <input id="search" type="search" placeholder="Search apps…" aria-label="Search apps" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="meta-row">
+      <span class="count"><b id="count">0</b> <span id="countWord">apps</span></span>
+      <button class="btn-clear" id="clear" hidden>Clear filters</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden>No apps match these filters. <button class="btn-clear" onclick="window.__clear()">Reset</button></div>
+  </main>
+
+  <footer>
+    <span>Config-driven &middot; edit <code>gallery.config.json</code> to add or reorder apps.</span>
+    <span>Hostable on GitHub Pages &middot; no build step.</span>
+  </footer>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle theme">◐</button>
+
+  <!-- Default config; overridden by ./gallery.config.json when served over HTTP -->
+  <script type="application/json" id="gallery-data">
+  {
+    "title": "UiPath TypeScript SDK — Sample Gallery",
+    "tagline": "Browse, preview, and clone the official @uipath/uipath-typescript sample apps.",
+    "repo": "https://github.com/UiPath/uipath-typescript",
+    "assetsBaseUrl": "https://raw.githubusercontent.com/UiPath/uipath-typescript/main/",
+    "categories": [
+      { "id": "action-apps", "label": "Action Apps", "accent": ["#FA4616", "#FF8A4C"] },
+      { "id": "agents", "label": "Agents", "accent": ["#7C5CFC", "#A78BFA"] },
+      { "id": "dashboards", "label": "Dashboards", "accent": ["#0EA5A4", "#2DD4C4"] },
+      { "id": "data-fabric", "label": "Data Fabric", "accent": ["#2563EB", "#5B8DEF"] },
+      { "id": "document", "label": "Document / HITL", "accent": ["#0F9D6B", "#34D399"] },
+      { "id": "process", "label": "Process Orchestration", "accent": ["#DB2777", "#F472B6"] }
+    ],
+    "apps": [
+      { "id": "conversational-agent-app", "title": "Conversational Agent App", "description": "Interact with UiPath Conversational Agents — real-time streaming responses over WebSocket, conversation management, file attachments, tool-call visualization, and feedback.", "category": "agents", "framework": "React", "tags": ["Agents","Conversational","WebSocket","Streaming"], "path": "samples/conversational-agent-app", "preview": "samples/conversational-agent-app/screenshots/preview.gif" },
+      { "id": "agent-runtime-compliance", "title": "Agent Runtime Compliance Dashboard", "description": "Dashboard showing how AI agents perform against UiPath runtime compliance checks — enforcement outcomes, failure reasons, agents ranked by failed checks, and per-run decision logs via the Agent Traces governance APIs.", "category": "dashboards", "framework": "React", "tags": ["Governance","Agent Traces","Analytics","Preview"], "path": "samples/dashboards/agent-runtime-compliance", "preview": "samples/dashboards/agent-runtime-compliance/screenshots/agent-runtime-compliance-dashboard.gif" },
+      { "id": "data-fabric-app", "title": "Data Fabric Explorer", "description": "Browse and manage UiPath Data Fabric entities, records, and choice sets via the SDK. Deploys as a UiPath Coded App.", "category": "data-fabric", "framework": "React", "tags": ["Data Fabric","CRUD","Coded App"], "path": "samples/data-fabric-app", "preview": "samples/data-fabric-app/screenshots/preview.gif" },
+      { "id": "data-fabric-app-angular", "title": "Data Fabric Explorer (Angular)", "description": "The Angular counterpart of the React Data Fabric sample. Renders its own records grid and calls the SDK's record CRUD methods directly, exercising a wider slice of the Entities service.", "category": "data-fabric", "framework": "Angular", "tags": ["Data Fabric","CRUD","Angular","Coded App"], "path": "samples/data-fabric-app-angular", "preview": "samples/data-fabric-app-angular/screenshots/preview.gif" },
+      { "id": "document-validation-app", "title": "Document Validation Inbox", "description": "A human-in-the-loop document validation inbox on top of UiPath Action Center. Lists validation tasks grouped into Pending / Unassigned / Completed, renders the validation station, and lets a reviewer save, submit, or report an exception.", "category": "document", "framework": "React", "tags": ["Document Understanding","Action Center","HITL","OAuth / PKCE"], "path": "samples/document-validation-app", "preview": "samples/document-validation-app/screenshots/preview.gif" },
+      { "id": "process-app-v0", "title": "Maestro Process Management", "description": "Manage UiPath Maestro processes and process instances with OAuth authentication. Uses the single-package import pattern.", "category": "process", "framework": "React", "tags": ["Maestro","Process Orchestration","OAuth"], "path": "samples/process-app-v0", "preview": "samples/process-app-v0/screenshots/preview.gif" },
+      { "id": "process-app-v1", "title": "Maestro Process Management (Modular)", "description": "Manage Maestro processes and drill into a process instance's execution detail. Uses the recommended modular import pattern for smaller bundles and better performance.", "category": "process", "framework": "React", "tags": ["Maestro","Process Orchestration","Modular Import"], "path": "samples/process-app-v1", "preview": "samples/process-app-v1/screenshots/preview.gif" },
+      { "id": "action-app-with-data-fabric-entity", "title": "Action App — Data Fabric Entity", "description": "Coded Action App for loan-application review backed by a Data Fabric entity. Fetch an applicant record by name, review details, view the bundled document, and write the decision back to the entity.", "category": "action-apps", "framework": "React", "tags": ["Action Center","Coded Action App","Data Fabric","File Attachments"], "path": "samples/coded-action-apps/action-app-with-data-fabric-entity", "preview": null },
+      { "id": "action-app-with-document", "title": "Action App — Bundled Document", "description": "Coded Action App for loan-application review. Reviewers assess applicant details, view a bundled sample PDF, and complete the task with an Approve or Reject decision.", "category": "action-apps", "framework": "React", "tags": ["Action Center","Coded Action App","Documents"], "path": "samples/coded-action-apps/action-app-with-document", "preview": null },
+      { "id": "action-app-with-file-attachment-document", "title": "Action App — File Attachment", "description": "Coded Action App for loan-application review with direct file attachments. Preview and download a directly attached PDF, as opposed to referencing files from Storage Buckets.", "category": "action-apps", "framework": "React", "tags": ["Action Center","Coded Action App","File Attachments","Documents"], "path": "samples/coded-action-apps/action-app-with-file-attachment-document", "preview": null },
+      { "id": "action-app-with-image", "title": "Action App — Image", "description": "Coded Action App for loan-application review. Reviewers assess applicant details, view a bundled loan-application image, and complete the task with an Approve or Reject decision.", "category": "action-apps", "framework": "React", "tags": ["Action Center","Coded Action App","Images"], "path": "samples/coded-action-apps/action-app-with-image", "preview": null },
+      { "id": "action-app-with-storage-bucket-document", "title": "Action App — Storage Bucket Document", "description": "Coded Action App for loan-application review that loads its document from a Storage Bucket by bucket name and file path, as opposed to receiving a direct file attachment.", "category": "action-apps", "framework": "React", "tags": ["Action Center","Coded Action App","Storage Buckets","Documents"], "path": "samples/coded-action-apps/action-app-with-storage-bucket-document", "preview": null }
+    ]
+  }
+  </script>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = { data: null, cat: "all", fws: new Set(), tags: new Set(), q: "" };
+
+  function embedded() {
+    try { return JSON.parse(document.getElementById("gallery-data").textContent); }
+    catch (e) { return null; }
+  }
+
+  function catById(id) {
+    return (state.data.categories || []).find(function (c) { return c.id === id; });
+  }
+  function poster(app) {
+    var c = catById(app.category) || { accent: ["#888", "#555"] };
+    return "linear-gradient(135deg," + c.accent[0] + "," + c.accent[1] + ")";
+  }
+  function monogram(app) {
+    var c = catById(app.category);
+    return (c ? c.label : app.title).split(/[\s/]+/).filter(Boolean).slice(0, 2)
+      .map(function (w) { return w[0]; }).join("").toUpperCase();
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  }
+
+  function matches(app) {
+    if (state.cat !== "all" && app.category !== state.cat) return false;
+    if (state.fws.size && !state.fws.has(app.framework)) return false;
+    if (state.tags.size) {
+      for (var t of state.tags) if ((app.tags || []).indexOf(t) === -1) return false;
+    }
+    if (state.q) {
+      var hay = (app.title + " " + app.description + " " + (app.tags || []).join(" ") + " " + app.framework).toLowerCase();
+      if (hay.indexOf(state.q) === -1) return false;
+    }
+    return true;
+  }
+
+  function countIn(cat) {
+    return state.data.apps.filter(function (a) { return cat === "all" || a.category === cat; }).length;
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById("tabs");
+    var cats = [{ id: "all", label: "All" }].concat(state.data.categories);
+    tabs.innerHTML = cats.map(function (c) {
+      var active = state.cat === c.id;
+      return '<button class="pill' + (active ? " active" : "") + '" role="tab" aria-pressed="' + active +
+        '" data-cat="' + c.id + '">' + esc(c.label) +
+        ' <span class="cnt">' + countIn(c.id) + "</span></button>";
+    }).join("");
+    tabs.querySelectorAll("[data-cat]").forEach(function (b) {
+      b.addEventListener("click", function () { state.cat = b.dataset.cat; renderAll(); });
+    });
+  }
+
+  function renderFilters() {
+    var fws = Array.from(new Set(state.data.apps.map(function (a) { return a.framework; }))).sort();
+    var fwWrap = document.getElementById("fwFilters");
+    fwWrap.innerHTML = fws.map(function (f) {
+      var on = state.fws.has(f);
+      return '<button class="pill tag-pill' + (on ? " active" : "") + '" aria-pressed="' + on + '" data-fw="' + esc(f) + '">' + esc(f) + "</button>";
+    }).join("");
+    fwWrap.querySelectorAll("[data-fw]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var f = b.dataset.fw; state.fws.has(f) ? state.fws.delete(f) : state.fws.add(f); renderAll();
+      });
+    });
+
+    var allTags = {};
+    state.data.apps.forEach(function (a) { (a.tags || []).forEach(function (t) { allTags[t] = (allTags[t] || 0) + 1; }); });
+    var tags = Object.keys(allTags).sort(function (a, b) { return allTags[b] - allTags[a] || a.localeCompare(b); });
+    var tagWrap = document.getElementById("tagFilters");
+    tagWrap.innerHTML = tags.map(function (t) {
+      var on = state.tags.has(t);
+      return '<button class="pill tag-pill' + (on ? " active" : "") + '" aria-pressed="' + on + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+    }).join("");
+    tagWrap.querySelectorAll("[data-tag]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = b.dataset.tag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); renderAll();
+      });
+    });
+  }
+
+  function card(app) {
+    var c = catById(app.category) || { label: app.category, accent: ["#888", "#555"] };
+    var href = app.path ? (state.data.repo + "/tree/main/" + app.path) : state.data.repo;
+    var el = document.createElement("a");
+    el.className = "card";
+    el.href = href; el.target = "_blank"; el.rel = "noopener";
+    el.style.setProperty("--poster", poster(app));
+
+    var thumb = '<div class="thumb">';
+    thumb += '<span class="badge-fw">' + esc(app.framework) + "</span>";
+    if (app.preview) thumb += '<span class="badge-live"><span class="blip"></span>Live preview</span>';
+    thumb += '<div class="poster-glyph"><span class="g">' + esc(monogram(app)) + '</span><span class="s">' + esc(c.label) + "</span></div>";
+    if (app.preview) {
+      var src = (state.data.assetsBaseUrl || "") + app.preview;
+      thumb += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc(src) + '" />';
+    }
+    thumb += "</div>";
+
+    var body = '<div class="body">';
+    body += '<span class="cat-line"><span class="swatch" style="background:' + c.accent[0] + '"></span>' + esc(c.label) + "</span>";
+    body += "<h3>" + esc(app.title) + "</h3>";
+    body += "<p>" + esc(app.description) + "</p>";
+    body += '<div class="tags">' + (app.tags || []).map(function (t) {
+      return '<button type="button" class="tag" data-tag="' + esc(t) + '">' + esc(t) + "</button>";
+    }).join("") + "</div>";
+    body += '<div class="card-foot"><span class="open">Open sample <span class="arw">→</span></span>' +
+      '<span class="path">' + esc((app.path || "").replace(/^samples\//, "")) + "</span></div>";
+    body += "</div>";
+
+    el.innerHTML = thumb + body;
+
+    var img = el.querySelector("img");
+    if (img) img.addEventListener("load", function () { img.classList.add("loaded"); });
+
+    el.querySelectorAll(".tag").forEach(function (t) {
+      t.addEventListener("click", function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        var tag = t.dataset.tag; state.tags.has(tag) ? state.tags.delete(tag) : state.tags.add(tag); renderAll();
+      });
+    });
+    return el;
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById("grid");
+    var list = state.data.apps.filter(matches);
+    grid.innerHTML = "";
+    list.forEach(function (a) { grid.appendChild(card(a)); });
+    document.getElementById("count").textContent = list.length;
+    document.getElementById("countWord").textContent = list.length === 1 ? "app" : "apps";
+    document.getElementById("empty").hidden = list.length !== 0;
+    var active = state.cat !== "all" || state.fws.size || state.tags.size || state.q;
+    document.getElementById("clear").hidden = !active;
+  }
+
+  function renderAll() { renderTabs(); renderFilters(); renderGrid(); }
+
+  window.__clear = function () {
+    state.cat = "all"; state.fws.clear(); state.tags.clear(); state.q = "";
+    document.getElementById("search").value = ""; renderAll();
+  };
+
+  function boot(data) {
+    state.data = data;
+    document.getElementById("gTitle").textContent = data.title || "Sample Gallery";
+    document.getElementById("gTagline").textContent = data.tagline || "";
+    document.getElementById("gRepo").href = data.repo || "#";
+    document.title = data.title || document.title;
+    document.getElementById("search").addEventListener("input", function (e) {
+      state.q = e.target.value.trim().toLowerCase(); renderGrid();
+    });
+    document.getElementById("clear").addEventListener("click", window.__clear);
+    renderAll();
+  }
+
+  // Theme toggle
+  (function () {
+    var btn = document.getElementById("themeToggle");
+    var saved = null;
+    try { saved = localStorage.getItem("gallery-theme"); } catch (e) {}
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+    btn.addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme");
+      if (!cur) cur = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      var next = cur === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("gallery-theme", next); } catch (e) {}
+    });
+  })();
+
+  // Prefer external config (configurable); fall back to embedded (single-file / offline)
+  fetch("gallery.config.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(boot)
+    .catch(function () { boot(embedded()); });
+})();
+</script>
+</body>
+</html>
