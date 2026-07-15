@@ -1,0 +1,89 @@
+# Builds the docs site for every PR that touches docs, and (for same-repo PRs)
+# publishes a live preview at:  https://<org>.github.io/<repo>/pr-preview/pr-<N>/
+#
+# The build step doubles as a CI gate: if `mkdocs build` fails, the check fails,
+# so a broken docs change can't merge. The preview is torn down when the PR closes.
+#
+# Security notes:
+#   - Uses `pull_request` (NOT `pull_request_target`): fork PRs run with a
+#     read-only GITHUB_TOKEN and no secrets, so building untrusted PR code is safe.
+#   - The write-scoped preview deploy is gated to same-repo PRs only (fork PRs
+#     still get the build gate, just no preview — GitHub gives them a read-only
+#     token regardless).
+#   - No untrusted event data (PR title/body/branch) is interpolated into any
+#     `run:` step, so there's no command-injection surface.
+#   - The one third-party action (rossjrw, an individual account) is pinned to a
+#     full commit SHA.
+name: Docs PR Preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "docs/requirements.txt"
+      - ".github/workflows/docs-pr-preview.yml"
+
+permissions:
+  contents: write        # publish the preview to the gh-pages branch
+  pull-requests: write   # post/update the preview link comment
+
+concurrency:
+  group: docs-preview-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Setup Python
+        if: github.event.action != 'closed'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        if: github.event.action != 'closed'
+        run: npm ci
+
+      - name: Install Coded Action Apps dependencies
+        if: github.event.action != 'closed'
+        working-directory: packages/coded-action-app
+        run: npm ci
+
+      - name: Install docs requirements
+        if: github.event.action != 'closed'
+        run: |
+          python3 -m venv docs-env
+          source docs-env/bin/activate
+          pip install -r docs/requirements.txt
+
+      - name: Generate API documentation
+        if: github.event.action != 'closed'
+        run: npm run docs:api
+
+      - name: Build MkDocs site (CI gate)
+        if: github.event.action != 'closed'
+        run: |
+          source docs-env/bin/activate
+          mkdocs build
+
+      - name: Deploy / update / remove PR preview
+        # Same-repo PRs only — fork PRs get a read-only token and can't publish.
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.6.1
+        with:
+          source-dir: site
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
