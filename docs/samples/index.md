@@ -43,7 +43,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   --tg-surface: color-mix(in srgb, var(--md-default-fg-color) 3%, var(--md-default-bg-color));
   --tg-surface-2: color-mix(in srgb, var(--md-default-fg-color) 6%, var(--md-default-bg-color));
   --tg-accent-soft: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
-  --tg-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --tg-mono: var(--md-code-font-family, ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace);
   margin-top: 1.2rem;
 }
 
@@ -94,7 +94,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-titlelink { text-decoration: none; }
 .md-typeset .tg-title { font-size: 1.02rem; font-weight: 700; margin: 0; line-height: 1.25; color: var(--tg-ink); letter-spacing: -0.01em; }
 .md-typeset .tg-titlelink:hover .tg-title { color: var(--tg-accent); }
-.md-typeset .tg-desc { font-size: 0.83rem; color: var(--tg-muted); margin: 0; flex: 1; line-height: 1.5; }
+.md-typeset .tg-desc { font-size: 0.8rem; color: var(--tg-muted); margin: 0; flex: 1; line-height: 1.5; }
 .md-typeset .tg-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.3rem; padding-top: 0.7rem; border-top: 1px solid var(--tg-hair); }
 .md-typeset .tg-clone { font: inherit; cursor: pointer; text-align: left; flex: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 9px; border: 1px solid var(--tg-hair); background: var(--tg-surface-2); color: var(--tg-ink); }
 .md-typeset .tg-clone:hover { border-color: var(--tg-accent); }
