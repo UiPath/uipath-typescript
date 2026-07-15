@@ -48,7 +48,6 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
-  #multiLogin: boolean = false;
   // Folder key sourced only from `<meta name="uipath:folder-key">` (coded-app
   // deployments). Not accepted via the public constructor; lives here so the
   // SDK can flow it through to BaseService.config without polluting BaseConfig.
@@ -101,9 +100,6 @@ export class UiPath implements IUiPath {
 
     const executionContext = new ExecutionContext();
     this.#authService = new AuthService(internalConfig, executionContext);
-    if (this.#multiLogin) {
-      this.#authService.setMultiLogin();
-    }
     this.#config = internalConfig;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
@@ -210,16 +206,6 @@ export class UiPath implements IUiPath {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
     }
-  }
-
-  /**
-   * Enables the UiPath login picker during OAuth sign-in.
-   *
-   * @internal
-   */
-  public setMultiLogin(): void {
-    this.#multiLogin = true;
-    this.#authService?.setMultiLogin();
   }
 
   /**
