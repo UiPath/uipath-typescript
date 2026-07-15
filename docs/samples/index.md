@@ -180,7 +180,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     return fallback();
   }
   var toastT;
-  function toast(cmd) { var t = $("tg-toast"); t.innerHTML = "Copied <span class=\"mono\">" + esc(cmd) + "</span>"; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, 2600); }
+  function toast(label, mono) { var t = $("tg-toast"); t.innerHTML = esc(label) + (mono ? ' <span class="mono">' + esc(mono) + "</span>" : ""); t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); }, 2600); }
 
   function matches(app) {
     if (state.cat !== "all" && app.category !== state.cat) return false;
@@ -258,10 +258,10 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     el.querySelectorAll(".tg-copybtn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         copyText(btn.getAttribute("data-copy")).then(function (ok) {
-          if (!ok) { toast("Copy failed — select and copy manually: " + btn.getAttribute("data-copy")); return; }
+          if (!ok) { toast("Copy failed — copy manually:", btn.getAttribute("data-copy")); return; }
           btn.classList.add("copied");
           var l = btn.querySelector(".lbl"); var prev = l.textContent; l.textContent = "Copied!";
-          toast(btn.getAttribute("data-copy"));
+          toast("Copied", btn.getAttribute("data-copy"));
           setTimeout(function () { btn.classList.remove("copied"); l.textContent = prev; }, 1600);
         });
       });
