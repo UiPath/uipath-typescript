@@ -1,7 +1,7 @@
 ---
 hide:
   - toc
-title: Sample Gallery
+title: Template Gallery
 ---
 
 <style>
@@ -17,7 +17,7 @@ title: Sample Gallery
 }
 </style>
 
-# Sample Gallery
+# Template Gallery
 
 Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. Each card links to the source and copies a ready-to-run `degit` command.
 

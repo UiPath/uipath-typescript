@@ -3,7 +3,7 @@ hide:
   - navigation
   - toc
   - path
-title: Sample Gallery
+title: Template Gallery
 ---
 
 <style>
