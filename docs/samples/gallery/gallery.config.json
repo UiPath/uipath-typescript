@@ -1,0 +1,136 @@
+{
+  "title": "UiPath TypeScript SDK — Sample Gallery",
+  "tagline": "Browse, preview, and clone the official @uipath/uipath-typescript sample apps.",
+  "repo": "https://github.com/UiPath/uipath-typescript",
+  "assetsBaseUrl": "https://raw.githubusercontent.com/UiPath/uipath-typescript/main/",
+  "categories": [
+    { "id": "action-apps", "label": "Action Apps", "accent": ["#FA4616", "#FF8A4C"] },
+    { "id": "agents", "label": "Agents", "accent": ["#7C5CFC", "#A78BFA"] },
+    { "id": "dashboards", "label": "Dashboards", "accent": ["#0EA5A4", "#2DD4C4"] },
+    { "id": "data-fabric", "label": "Data Fabric", "accent": ["#2563EB", "#5B8DEF"] },
+    { "id": "document", "label": "Document / HITL", "accent": ["#0F9D6B", "#34D399"] },
+    { "id": "process", "label": "Process Orchestration", "accent": ["#DB2777", "#F472B6"] }
+  ],
+  "apps": [
+    {
+      "id": "conversational-agent-app",
+      "title": "Conversational Agent App",
+      "description": "Interact with UiPath Conversational Agents — real-time streaming responses over WebSocket, conversation management, file attachments, tool-call visualization, and feedback.",
+      "category": "agents",
+      "framework": "React",
+      "tags": ["Agents", "Conversational", "WebSocket", "Streaming"],
+      "path": "samples/conversational-agent-app",
+      "preview": "samples/conversational-agent-app/screenshots/preview.gif"
+    },
+    {
+      "id": "agent-runtime-compliance",
+      "title": "Agent Runtime Compliance Dashboard",
+      "description": "Dashboard showing how AI agents perform against UiPath runtime compliance checks — enforcement outcomes, failure reasons, agents ranked by failed checks, and per-run decision logs via the Agent Traces governance APIs.",
+      "category": "dashboards",
+      "framework": "React",
+      "tags": ["Governance", "Agent Traces", "Analytics", "Preview"],
+      "path": "samples/dashboards/agent-runtime-compliance",
+      "preview": "samples/dashboards/agent-runtime-compliance/screenshots/agent-runtime-compliance-dashboard.gif"
+    },
+    {
+      "id": "data-fabric-app",
+      "title": "Data Fabric Explorer",
+      "description": "Browse and manage UiPath Data Fabric entities, records, and choice sets via the SDK. Deploys as a UiPath Coded App.",
+      "category": "data-fabric",
+      "framework": "React",
+      "tags": ["Data Fabric", "CRUD", "Coded App"],
+      "path": "samples/data-fabric-app",
+      "preview": "samples/data-fabric-app/screenshots/preview.gif"
+    },
+    {
+      "id": "data-fabric-app-angular",
+      "title": "Data Fabric Explorer (Angular)",
+      "description": "The Angular counterpart of the React Data Fabric sample. Renders its own records grid and calls the SDK's record CRUD methods directly, exercising a wider slice of the Entities service.",
+      "category": "data-fabric",
+      "framework": "Angular",
+      "tags": ["Data Fabric", "CRUD", "Angular", "Coded App"],
+      "path": "samples/data-fabric-app-angular",
+      "preview": "samples/data-fabric-app-angular/screenshots/preview.gif"
+    },
+    {
+      "id": "document-validation-app",
+      "title": "Document Validation Inbox",
+      "description": "A human-in-the-loop document validation inbox on top of UiPath Action Center. Lists validation tasks grouped into Pending / Unassigned / Completed, renders the validation station, and lets a reviewer save, submit, or report an exception.",
+      "category": "document",
+      "framework": "React",
+      "tags": ["Document Understanding", "Action Center", "HITL", "OAuth / PKCE"],
+      "path": "samples/document-validation-app",
+      "preview": "samples/document-validation-app/screenshots/preview.gif"
+    },
+    {
+      "id": "process-app-v0",
+      "title": "Maestro Process Management",
+      "description": "Manage UiPath Maestro processes and process instances with OAuth authentication. Uses the single-package import pattern.",
+      "category": "process",
+      "framework": "React",
+      "tags": ["Maestro", "Process Orchestration", "OAuth"],
+      "path": "samples/process-app-v0",
+      "preview": "samples/process-app-v0/screenshots/preview.gif"
+    },
+    {
+      "id": "process-app-v1",
+      "title": "Maestro Process Management (Modular)",
+      "description": "Manage Maestro processes and drill into a process instance's execution detail. Uses the recommended modular import pattern for smaller bundles and better performance.",
+      "category": "process",
+      "framework": "React",
+      "tags": ["Maestro", "Process Orchestration", "Modular Import"],
+      "path": "samples/process-app-v1",
+      "preview": "samples/process-app-v1/screenshots/preview.gif"
+    },
+    {
+      "id": "action-app-with-data-fabric-entity",
+      "title": "Action App — Data Fabric Entity",
+      "description": "Coded Action App for loan-application review backed by a Data Fabric entity. Fetch an applicant record by name, review details, view the bundled document, and write the decision back to the entity.",
+      "category": "action-apps",
+      "framework": "React",
+      "tags": ["Action Center", "Coded Action App", "Data Fabric", "File Attachments"],
+      "path": "samples/coded-action-apps/action-app-with-data-fabric-entity",
+      "preview": null
+    },
+    {
+      "id": "action-app-with-document",
+      "title": "Action App — Bundled Document",
+      "description": "Coded Action App for loan-application review. Reviewers assess applicant details, view a bundled sample PDF, and complete the task with an Approve or Reject decision.",
+      "category": "action-apps",
+      "framework": "React",
+      "tags": ["Action Center", "Coded Action App", "Documents"],
+      "path": "samples/coded-action-apps/action-app-with-document",
+      "preview": null
+    },
+    {
+      "id": "action-app-with-file-attachment-document",
+      "title": "Action App — File Attachment",
+      "description": "Coded Action App for loan-application review with direct file attachments. Preview and download a directly attached PDF, as opposed to referencing files from Storage Buckets.",
+      "category": "action-apps",
+      "framework": "React",
+      "tags": ["Action Center", "Coded Action App", "File Attachments", "Documents"],
+      "path": "samples/coded-action-apps/action-app-with-file-attachment-document",
+      "preview": null
+    },
+    {
+      "id": "action-app-with-image",
+      "title": "Action App — Image",
+      "description": "Coded Action App for loan-application review. Reviewers assess applicant details, view a bundled loan-application image, and complete the task with an Approve or Reject decision.",
+      "category": "action-apps",
+      "framework": "React",
+      "tags": ["Action Center", "Coded Action App", "Images"],
+      "path": "samples/coded-action-apps/action-app-with-image",
+      "preview": null
+    },
+    {
+      "id": "action-app-with-storage-bucket-document",
+      "title": "Action App — Storage Bucket Document",
+      "description": "Coded Action App for loan-application review that loads its document from a Storage Bucket by bucket name and file path, as opposed to receiving a direct file attachment.",
+      "category": "action-apps",
+      "framework": "React",
+      "tags": ["Action Center", "Coded Action App", "Storage Buckets", "Documents"],
+      "path": "samples/coded-action-apps/action-app-with-storage-bucket-document",
+      "preview": null
+    }
+  ]
+}
