@@ -225,6 +225,7 @@ nav:
   - Plugins:
       - Codex: plugins/codex.md
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
+  - Template Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
   - Integration Testing: integration-testing.md
