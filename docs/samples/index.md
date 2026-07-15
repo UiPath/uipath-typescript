@@ -61,7 +61,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   display: inline-flex; align-items: center; gap: 0.35rem;
 }
 .md-typeset .tg-pill:hover { border-color: var(--tg-accent); }
-.md-typeset .tg-pill[aria-pressed="true"] { background: var(--tg-accent); border-color: var(--tg-accent); color: var(--tg-on-accent); }
+.md-typeset .tg-pill[aria-pressed="true"], .md-typeset .tg-pill[aria-selected="true"] { background: var(--tg-accent); border-color: var(--tg-accent); color: var(--tg-on-accent); }
 .md-typeset .tg-pill .tg-cnt { font-family: var(--tg-mono); font-size: 0.7rem; opacity: 0.7; }
 .md-typeset .tg-pill-sm { font-size: 0.74rem; padding: 0.32rem 0.65rem; }
 .md-typeset .tg-search { display: flex; align-items: center; gap: 0.45rem; flex: 0 0 auto; background: var(--tg-surface); border: 1px solid var(--tg-hair); border-radius: 999px; padding: 0.38rem 0.85rem; min-width: 240px; }
@@ -179,7 +179,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     var cats = [{ id: "all", label: "All" }].concat(DATA.categories);
     $("tg-tabs").innerHTML = cats.map(function (c) {
       var on = state.cat === c.id;
-      return '<button type="button" class="tg-pill" role="tab" aria-pressed="' + on + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
+      return '<button type="button" class="tg-pill" role="tab" aria-selected="' + on + '" data-cat="' + c.id + '">' + esc(c.label) + ' <span class="tg-cnt">' + countIn(c.id) + "</span></button>";
     }).join("");
     $("tg-tabs").querySelectorAll("[data-cat]").forEach(function (b) { b.addEventListener("click", function () { state.cat = b.dataset.cat; render(); }); });
   }
