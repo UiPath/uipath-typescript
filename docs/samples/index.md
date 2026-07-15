@@ -10,15 +10,17 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 
 <div class="tg" id="tg">
   <div class="tg-controls">
-    <div class="tg-row" id="tg-tabs" role="tablist" aria-label="Categories"></div>
-    <div class="tg-row" id="tg-filters">
-      <span class="tg-flabel">Filter</span>
-      <span id="tg-fw"></span>
-      <span id="tg-tags"></span>
+    <div class="tg-toprow">
+      <div class="tg-row" id="tg-tabs" role="tablist" aria-label="Categories"></div>
       <label class="tg-search">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4" stroke-linecap="round"/></svg>
         <input id="tg-search" type="search" placeholder="Search apps…" aria-label="Search apps" />
       </label>
+    </div>
+    <div class="tg-row" id="tg-filters">
+      <span class="tg-flabel">Filter</span>
+      <span id="tg-fw"></span>
+      <span id="tg-tags"></span>
     </div>
   </div>
   <div class="tg-meta">
@@ -47,6 +49,9 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 
 /* controls */
 .md-typeset .tg-controls { display: flex; flex-direction: column; gap: 0.7rem; padding-bottom: 1rem; border-bottom: 1px solid var(--tg-hair); }
+.md-typeset .tg-toprow { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0.7rem 1rem; }
+.md-typeset #tg-tabs { min-width: 0; }
+@media (max-width: 640px) { .md-typeset .tg-toprow { grid-template-columns: 1fr; } .md-typeset .tg-search { min-width: 0; } }
 .md-typeset .tg-row { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
 .md-typeset .tg-flabel { font-family: var(--tg-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tg-muted); margin-right: 0.1rem; }
 .md-typeset .tg-pill {
@@ -59,7 +64,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-pill[aria-pressed="true"] { background: var(--tg-accent); border-color: var(--tg-accent); color: var(--tg-on-accent); }
 .md-typeset .tg-pill .tg-cnt { font-family: var(--tg-mono); font-size: 0.7rem; opacity: 0.7; }
 .md-typeset .tg-pill-sm { font-size: 0.74rem; padding: 0.32rem 0.65rem; }
-.md-typeset .tg-search { display: flex; align-items: center; gap: 0.45rem; margin-left: auto; background: var(--tg-surface); border: 1px solid var(--tg-hair); border-radius: 999px; padding: 0.38rem 0.85rem; min-width: 200px; }
+.md-typeset .tg-search { display: flex; align-items: center; gap: 0.45rem; flex: 0 0 auto; background: var(--tg-surface); border: 1px solid var(--tg-hair); border-radius: 999px; padding: 0.38rem 0.85rem; min-width: 240px; }
 .md-typeset .tg-search:focus-within { border-color: var(--tg-accent); }
 .md-typeset .tg-search svg { width: 15px; height: 15px; color: var(--tg-muted); flex: none; }
 .md-typeset .tg-search input { border: 0; background: transparent; color: var(--tg-ink); font: inherit; font-size: 0.85rem; width: 100%; outline: none; }
@@ -90,19 +95,16 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-title { font-size: 1.02rem; font-weight: 700; margin: 0; line-height: 1.25; color: var(--tg-ink); letter-spacing: -0.01em; }
 .md-typeset .tg-titlelink:hover .tg-title { color: var(--tg-accent); }
 .md-typeset .tg-desc { font-size: 0.83rem; color: var(--tg-muted); margin: 0; flex: 1; line-height: 1.5; }
-.md-typeset .tg-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.md-typeset .tg-tag { font-size: 0.7rem; padding: 0.18rem 0.48rem; border-radius: 6px; background: var(--tg-surface-2); color: var(--tg-muted); border: 1px solid var(--tg-hair); cursor: pointer; }
-.md-typeset .tg-tag:hover { color: var(--tg-accent); border-color: var(--tg-accent); }
-.md-typeset .tg-foot { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.3rem; padding-top: 0.7rem; border-top: 1px solid var(--tg-hair); }
-.md-typeset .tg-clone { font: inherit; cursor: pointer; text-align: left; width: 100%; display: flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.65rem; border-radius: 9px; border: 1px solid var(--tg-hair); background: var(--tg-surface-2); color: var(--tg-ink); }
+.md-typeset .tg-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.3rem; padding-top: 0.7rem; border-top: 1px solid var(--tg-hair); }
+.md-typeset .tg-clone { font: inherit; cursor: pointer; text-align: left; flex: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.7rem; border-radius: 9px; border: 1px solid var(--tg-hair); background: var(--tg-surface-2); color: var(--tg-ink); }
 .md-typeset .tg-clone:hover { border-color: var(--tg-accent); }
 .md-typeset .tg-clone svg { flex: none; width: 15px; height: 15px; color: var(--tg-accent); }
-.md-typeset .tg-clone .lbl { font-size: 0.76rem; font-weight: 700; flex: none; }
-.md-typeset .tg-clone .cmd { font-family: var(--tg-mono); font-size: 0.7rem; color: var(--tg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.md-typeset .tg-clone .lbl { font-size: 0.76rem; font-weight: 700; }
 .md-typeset .tg-clone.copied { border-color: var(--tg-accent); background: var(--tg-accent-soft); }
-.md-typeset .tg-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.1rem 0.85rem; font-size: 0.76rem; }
+.md-typeset .tg-links { display: flex; align-items: center; gap: 0.5rem; font-size: 0.76rem; }
 .md-typeset .tg-links a { color: var(--tg-muted); text-decoration: none; }
 .md-typeset .tg-links a:hover { color: var(--tg-accent); }
+.md-typeset .tg-links .tg-dot { color: var(--tg-muted); opacity: 0.6; }
 /* suppress Material's auto external-link icon inside the gallery (we style our own) */
 .md-typeset .tg a::after { display: none !important; }
 .md-typeset .tg-links .path { font-family: var(--tg-mono); font-size: 0.66rem; margin-left: auto; }
@@ -210,16 +212,15 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     h += '<span class="tg-catline"><span class="sw" style="background:' + c.accent[0] + '"></span>' + esc(c.label) + "</span>";
     h += '<a class="tg-titlelink" href="' + esc(folder) + '" target="_blank" rel="noopener"><span class="tg-title">' + esc(app.title) + "</span></a>";
     h += '<p class="tg-desc">' + esc(app.description) + "</p>";
-    h += '<div class="tg-tags">' + (app.tags || []).map(function (t) { return '<button type="button" class="tg-tag" data-tag="' + esc(t) + '">' + esc(t) + "</button>"; }).join("") + "</div>";
-    h += '<div class="tg-foot"><button type="button" class="tg-clone" data-clone="' + esc(cloneCmd) + '" title="Copy: ' + esc(cloneCmd) + '">' + COPY + '<span class="lbl">Clone</span><span class="cmd">' + esc(cloneCmd) + "</span></button>";
-    h += '<div class="tg-links"><a href="' + esc(folder) + '" target="_blank" rel="noopener">GitHub &#8599;</a><a href="' + esc(devUrl) + '" target="_blank" rel="noopener">github.dev &#8599;</a><a href="' + esc(csUrl) + '" target="_blank" rel="noopener">Codespace &#8599;</a><span class="path">' + esc((app.path || "").replace(/^samples\//, "")) + "</span></div>";
+    h += '<div class="tg-foot">';
+    h += '<button type="button" class="tg-clone" data-clone="' + esc(cloneCmd) + '" title="Copy: ' + esc(cloneCmd) + '">' + COPY + '<span class="lbl">Clone</span></button>';
+    h += '<div class="tg-links"><a href="' + esc(devUrl) + '" target="_blank" rel="noopener">github.dev</a><span class="tg-dot">·</span><a href="' + esc(csUrl) + '" target="_blank" rel="noopener">Codespace</a></div>';
     h += "</div>";
     el.innerHTML = h;
     var img = el.querySelector("img");
     if (img) img.addEventListener("load", function () { img.classList.add("tg-loaded"); });
     var clone = el.querySelector(".tg-clone");
     clone.addEventListener("click", function () { copyText(clone.getAttribute("data-clone")).then(function () { clone.classList.add("copied"); var l = clone.querySelector(".lbl"); var p = l.textContent; l.textContent = "Copied!"; toast(clone.getAttribute("data-clone")); setTimeout(function () { clone.classList.remove("copied"); l.textContent = p; }, 1600); }); });
-    el.querySelectorAll(".tg-tag").forEach(function (t) { t.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); var tag = t.dataset.tag; state.tags.has(tag) ? state.tags.delete(tag) : state.tags.add(tag); render(); }); });
     return el;
   }
   function renderGrid() {
