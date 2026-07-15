@@ -554,7 +554,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       throw new ValidationError({ message: `bucket is required for ${callerLabel}` });
     }
     if (typeof bucket === 'number') {
-      if (bucket <= 0) {
+      if (!Number.isFinite(bucket) || bucket <= 0) {
         throw new ValidationError({
           message: `bucket must be a positive numeric Id for ${callerLabel} (got ${bucket})`,
         });

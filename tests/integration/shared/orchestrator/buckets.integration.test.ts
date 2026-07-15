@@ -9,6 +9,7 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { createTestFileContent } from '../../utils/helpers';
 import { isNotFoundError } from '../../../../src/core/errors';
+import type { BlobItem } from '../../../../src/models/orchestrator/buckets.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -232,7 +233,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
         expect(uploadResult.success).toBe(true);
 
         const metadata = await buckets.getFileMetaData(bucket.bucketId, bucket.folderId);
-        const uploadedFile = metadata.items.find((f: any) => f.path === fileName);
+        const uploadedFile = metadata.items.find((f: BlobItem) => f.path === fileName);
 
         if (uploadedFile) {
           expect(uploadedFile.path).toBe(fileName);
@@ -366,7 +367,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       expect(uploadResult.success).toBe(true);
 
       const metadata = await buckets.getFileMetaData(bucketName, { folderId, prefix: fileName });
-      expect(metadata.items.some((f: any) => f.path === fileName)).toBe(true);
+      expect(metadata.items.some((f: BlobItem) => f.path === fileName)).toBe(true);
 
       const readUri = await buckets.getReadUri(bucketName, fileName, { folderId });
       expect(readUri.uri).toMatch(/^https?:\/\/.+/);

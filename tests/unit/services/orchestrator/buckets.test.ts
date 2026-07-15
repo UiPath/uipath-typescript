@@ -1785,7 +1785,7 @@ describe('BucketService Unit Tests', () => {
       );
     });
 
-    it('should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+    it('deleteFile should skip the name-lookup GET when a numeric bucket id is passed', async () => {
       mockApiClient.delete.mockResolvedValue(undefined);
 
       await bucketService.deleteFile(
@@ -1802,7 +1802,81 @@ describe('BucketService Unit Tests', () => {
       );
     });
 
-    it('should reject non-positive numeric bucket ids with a specific message', async () => {
+    it('getFiles should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        hasNextPage: false,
+      } as any);
+
+      await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
+    });
+
+    it('getFileMetaData should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        hasNextPage: false,
+      } as any);
+
+      await bucketService.getFileMetaData(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
+    });
+
+    it('getReadUri should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+      // Only _getUri hits mockApiClient.get; the resolver would be an extra call.
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // Exactly one GET (the URI fetch), no resolver call ahead of it.
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.any(Object),
+      );
+    });
+
+    it('uploadFile should skip the name-lookup GET when a numeric bucket id is passed', async () => {
+      // Only _getWriteUri hits mockApiClient.get; the resolver would be extra.
+      mockApiClient.get.mockResolvedValue(createMockWriteUriApiResponse());
+
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+      try {
+        await bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.any(Object),
+      );
+    });
+
+    it('should reject non-positive or non-finite numeric bucket ids with a specific message', async () => {
       await expect(bucketService.deleteFile(
         0,
         BUCKET_TEST_CONSTANTS.FILE_PATH,
@@ -1811,6 +1885,18 @@ describe('BucketService Unit Tests', () => {
 
       await expect(bucketService.deleteFile(
         -5,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('bucket must be a positive numeric Id for Buckets.deleteFile');
+
+      await expect(bucketService.deleteFile(
+        Number.NaN,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('bucket must be a positive numeric Id for Buckets.deleteFile');
+
+      await expect(bucketService.deleteFile(
+        Number.POSITIVE_INFINITY,
         BUCKET_TEST_CONSTANTS.FILE_PATH,
         { folderId: TEST_CONSTANTS.FOLDER_ID },
       )).rejects.toThrow('bucket must be a positive numeric Id for Buckets.deleteFile');
