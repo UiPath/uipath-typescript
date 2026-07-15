@@ -1,4 +1,4 @@
-import { INSIGHTS_RTM_BASE } from './base';
+import { INSIGHTS_RTM_BASE, LLMOPS_BASE } from './base';
 
 /**
  * Agent Traces Service Endpoints
@@ -15,7 +15,7 @@ export const AGENT_TRACES_ENDPOINTS = {
   /** Paginated spans whose reference hierarchy contains the given reference id. */
   GET_SPANS_BY_REFERENCE: (referenceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/reference/${referenceId}`,
   /** Paginated raw governance decision rows. */
-  GET_GOVERNANCE_DECISIONS: `${INSIGHTS_RTM_BASE}/Governance/agentic/traces`,
+  GET_GOVERNANCE_DECISIONS: `${LLMOPS_BASE}/api/Governance/agentic/traces`,
   /** Aggregated governance posture (totals + top-N breakdowns). */
-  GET_GOVERNANCE_SUMMARY: `${INSIGHTS_RTM_BASE}/Governance/agentic/summary`,
+  GET_GOVERNANCE_SUMMARY: `${LLMOPS_BASE}/api/Governance/agentic/summary`,
 } as const;
