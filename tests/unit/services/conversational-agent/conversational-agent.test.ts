@@ -11,7 +11,7 @@ import {
   TEST_CONSTANTS,
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
-import { AuthenticationError, NetworkError, NotFoundError, ValidationError } from '@/core/errors';
+import { AuthenticationError, NetworkError, NotFoundError, ServerError } from '@/core/errors';
 import type { CitationSourceMedia } from '@/models/conversational-agent';
 import { AGENT_ENDPOINTS, FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
 import {
@@ -42,8 +42,6 @@ const errorResponse = (status: number, statusText: string) => ({
   status,
   statusText,
   json: async () => ({ message: statusText }),
-  text: async () => statusText,
-  headers: { get: () => null },
 });
 
 // ===== TEST SUITE =====
@@ -407,10 +405,10 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(blob.type).toBe('image/png');
     });
 
-    it('throws a ValidationError when the source has no downloadUrl', async () => {
+    it('throws a ServerError when the source has no downloadUrl', async () => {
       await expect(
         conversationalAgent.downloadCitationSource(mediaSource({ downloadUrl: undefined })),
-      ).rejects.toThrow(/downloadUrl/);
+      ).rejects.toBeInstanceOf(ServerError);
     });
 
     it('refuses to send credentials to a non-UiPath origin (no fetch, no token)', async () => {
@@ -421,7 +419,7 @@ describe('ConversationalAgentService Unit Tests', () => {
         conversationalAgent.downloadCitationSource(
           mediaSource({ downloadUrl: 'https://evil.example.com/steal' }),
         ),
-      ).rejects.toBeInstanceOf(ValidationError);
+      ).rejects.toBeInstanceOf(ServerError);
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -449,13 +447,31 @@ describe('ConversationalAgentService Unit Tests', () => {
       );
     });
 
-    it('throws a ValidationError for a malformed downloadUrl (no fetch)', async () => {
+    it('wraps a body-read failure in NetworkError', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          blob: async () => {
+            throw new TypeError('network error while reading body');
+          },
+        }),
+      );
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        NetworkError,
+      );
+    });
+
+    it('throws a ServerError for a malformed downloadUrl (no fetch)', async () => {
       const fetchMock = vi.fn();
       vi.stubGlobal('fetch', fetchMock);
 
       await expect(
         conversationalAgent.downloadCitationSource(mediaSource({ downloadUrl: 'https://[' })),
-      ).rejects.toBeInstanceOf(ValidationError);
+      ).rejects.toBeInstanceOf(ServerError);
       expect(fetchMock).not.toHaveBeenCalled();
     });
   });

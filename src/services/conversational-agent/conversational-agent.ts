@@ -6,7 +6,7 @@
 import type { IUiPath } from '@/core/types';
 import type { ConnectionStatusChangedHandler } from '@/core/websocket';
 import { track } from '@/core/telemetry';
-import { ValidationError } from '@/core/errors';
+import { ServerError } from '@/core/errors';
 import { ErrorFactory } from '@/core/errors/error-factory';
 import { errorResponseParser } from '@/core/errors/parser';
 import { BaseService } from '@/services/base';
@@ -48,7 +48,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
   public readonly user: UserSettingsService;
 
   /** Configured SDK origin, used to keep citation downloads on the tenant's host. */
-  private readonly baseUrl?: string;
+  private readonly baseUrl: string;
 
   /**
    * Creates an instance of the ConversationalAgent service.
@@ -92,7 +92,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
   @track('ConversationalAgent.DownloadCitationSource')
   async downloadCitationSource(source: CitationSourceMedia): Promise<Blob> {
     if (!source.downloadUrl) {
-      throw new ValidationError({
+      throw new ServerError({
         message: 'Citation source has no downloadUrl to download'
       });
     }
@@ -100,20 +100,20 @@ export class ConversationalAgentService extends BaseService implements Conversat
     // Only attach the token to the tenant's own origin. downloadUrl is
     // server-provided; if one were ever malformed or injected to point at
     // another host, do not send the user's token to that host.
-    const base = this.baseUrl ? new URL(this.baseUrl) : undefined;
+    const base = new URL(this.baseUrl);
     let target: URL;
     try {
       target = new URL(source.downloadUrl, base);
     } catch {
-      throw new ValidationError({
-        message: `Invalid citation downloadUrl`
+      throw new ServerError({
+        message: 'Invalid citation downloadUrl'
       });
     }
-    // Fail closed: if the base origin is unknown, or the target isn't on it,
+    // Fail closed: if the target isn't on the configured origin,
     // don't forward the token to an unverifiable host.
-    if (!base || target.origin !== base.origin) {
-      throw new ValidationError({
-        message: `Refusing to send credentials to a download URL outside the configured origin`
+    if (target.origin !== base.origin) {
+      throw new ServerError({
+        message: 'Refusing to send credentials to a download URL outside the configured origin'
       });
     }
 
@@ -135,7 +135,12 @@ export class ConversationalAgentService extends BaseService implements Conversat
       throw ErrorFactory.createFromHttpStatus(response.status, errorInfo);
     }
 
-    const blob = await response.blob();
+    let blob: Blob;
+    try {
+      blob = await response.blob();
+    } catch (error) {
+      throw ErrorFactory.createNetworkError(error);
+    }
     const mimeType = resolveCitationMimeType(source, blob.type);
     return mimeType && mimeType !== blob.type
       ? blob.slice(0, blob.size, mimeType)

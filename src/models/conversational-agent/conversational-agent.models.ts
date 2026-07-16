@@ -142,25 +142,19 @@ export interface ConversationalAgentServiceModel {
   getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
 
   /**
-   * Downloads the document behind a media citation as an authenticated `Blob`.
+   * Downloads the document behind a media citation as an authenticated `Blob`,
+   * fetching the source's `downloadUrl` with the SDK's access token. Use
+   * `source.title` as the file name.
    *
-   * Media citation sources expose a `downloadUrl` pointing at an auth-gated
-   * UiPath endpoint; opening it directly sends no token and fails with `401`.
-   * This performs the request with the SDK's access token and returns the bytes,
-   * with the `Blob` type resolved from the source `mimeType` (falling back to the
-   * response Content-Type, then the title's file extension). Use `source.title`
-   * as the file name.
-   *
-   * HTML content is intentionally returned as `application/octet-stream` (a
-   * download) rather than `text/html`, so previewing the blob inline can't
-   * execute citation markup in your app's origin.
+   * The `Blob` type is resolved from the source `mimeType`, falling back to the
+   * response Content-Type then the title's file extension. HTML is returned as
+   * `application/octet-stream` so previewing it inline can't execute citation
+   * markup in your app's origin. The token is only sent to the tenant's
+   * configured origin; a missing, unparseable, or off-origin `downloadUrl` is
+   * rejected before any request is made.
    *
    * @param source - A media citation source (`CitationSourceMedia`) with a `downloadUrl`
    * @returns Promise resolving to the document as a `Blob`
-   * @throws ValidationError if the source has no `downloadUrl`
-   * @throws A typed HTTP error for error responses — e.g. `AuthenticationError`
-   *         (401), `AuthorizationError` (403), `NotFoundError` (404) — or
-   *         `NetworkError` on a connection failure, matching other SDK calls
    *
    * @example
    * ```typescript
