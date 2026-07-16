@@ -13,20 +13,6 @@ import { BaseService } from '../../..//services/base';
 import { BucketMap } from '../../../models/orchestrator/buckets.constants';
 
 export class AttachmentService extends BaseService implements AttachmentServiceModel {
-  /**
-   * Gets an attachment by ID
-   * @param id - The UUID of the attachment to retrieve
-   * @param options - Optional query parameters (expand, select)
-   * @returns Promise resolving to the attachment
-   *
-   * @example
-   * ```typescript
-   * import { Attachments } from '@uipath/uipath-typescript/attachments';
-   *
-   * const attachments = new Attachments(sdk);
-   * const attachment = await attachments.getById('12345678-1234-1234-1234-123456789abc');
-   * ```
-   */
   @track('Attachments.GetById')
   async getById(id: string, options: AttachmentGetByIdOptions = {}): Promise<AttachmentResponse> {
     if (!id) {

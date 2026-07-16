@@ -109,14 +109,6 @@ export class ConversationService extends BaseService implements ConversationServ
 
   // ==================== Conversation CRUD Operations ====================
 
-  /**
-   * Creates a new conversation
-   *
-   * @param agentId - The agent ID to create the conversation for
-   * @param folderId - The folder ID containing the agent
-   * @param options - Optional settings for the conversation
-   * @returns Promise resolving to the created conversation
-   */
   @track('ConversationalAgent.Conversations.Create')
   async create(agentId: number, folderId: number, options?: ConversationCreateOptions): Promise<ConversationCreateResponse> {
     // Transform SDK field names to API field names (e.g., agentId → agentReleaseId)
@@ -127,18 +119,6 @@ export class ConversationService extends BaseService implements ConversationServ
     return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
-  /**
-   * Gets a conversation by ID
-   *
-   * @param id - The conversation ID to retrieve
-   * @returns Promise resolving to the conversation details
-   *
-   * @example
-   * ```typescript
-   * const conversation = await conversationalAgent.conversations.getById(conversationId);
-   * console.log(conversation.label, conversation.createdTime);
-   * ```
-   */
   @track('ConversationalAgent.Conversations.GetById')
   async getById(id: string): Promise<ConversationGetResponse> {
     const response = await this.get<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(id));
@@ -146,70 +126,6 @@ export class ConversationService extends BaseService implements ConversationServ
     return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
-  /**
-   * Gets conversations with pagination and optional sort/filter parameters
-   *
-   * Returns a paginated response. When called without `pageSize`/`cursor`, a
-   * default page size is applied - inspect `hasNextPage`/`nextCursor`
-   * to navigate further pages.
-   *
-   * @param options - Options for querying conversations
-   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ConversationGetResponse}>
-   *
-   * @example Basic usage - default sort, pagination, and without filtering
-   * ```typescript
-   * // First page
-   * const firstPage = await conversationalAgent.conversations.getAll();
-   *
-   * for (const conversation of firstPage.items) {
-   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
-   * }
-   *
-   * // Navigate using cursor
-   * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversationalAgent.conversations.getAll({
-   *     cursor: firstPage.nextCursor
-   *   });
-   * }
-   * ```
-   *
-   * @example With explicit page size and sort order (by last-activity timestamp)
-   * ```typescript
-   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
-   *
-   * // First page
-   * const firstPage = await conversationalAgent.conversations.getAll({
-   *   pageSize: 10,
-   *   sort: SortOrder.Descending
-   * });
-   *
-   * // Navigate using cursor and same parameters
-   * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversationalAgent.conversations.getAll({
-   *     pageSize: 10,
-   *     sort: SortOrder.Descending,
-   *     cursor: firstPage.nextCursor
-   *   });
-   * }
-   * ```
-   *
-   * @example With agent-filter and label-search
-   * ```typescript
-   * const firstPage = await conversationalAgent.conversations.getAll({
-   *   agentId: <agentId>,
-   *   label: 'budget'
-   * });
-   *
-   * // Navigate using cursor and same parameters
-   * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversationalAgent.conversations.getAll({
-   *     agentId: <agentId>,
-   *     label: 'budget',
-   *     cursor: firstPage.nextCursor
-   *   });
-   * }
-   * ```
-   */
   @track('ConversationalAgent.Conversations.GetAll')
   async getAll(options?: ConversationGetAllOptions): Promise<PaginatedResponse<ConversationGetResponse>> {
     const transformFn = (conversation: RawConversationGetResponse) => {
@@ -240,20 +156,6 @@ export class ConversationService extends BaseService implements ConversationServ
     });
   }
 
-  /**
-   * Updates a conversation by ID
-   *
-   * @param id - The conversation ID to update
-   * @param options - Update fields (label)
-   * @returns Promise resolving to the updated conversation
-   *
-   * @example
-   * ```typescript
-   * const updatedConversation = await conversationalAgent.conversations.updateById(conversationId, {
-   *   label: 'New conversation title'
-   * });
-   * ```
-   */
   @track('ConversationalAgent.Conversations.UpdateById')
   async updateById(
     id: string,
@@ -267,17 +169,6 @@ export class ConversationService extends BaseService implements ConversationServ
     return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
-  /**
-   * Deletes a conversation by ID
-   *
-   * @param id - The conversation ID to delete
-   * @returns Promise resolving to the delete response
-   *
-   * @example
-   * ```typescript
-   * await conversationalAgent.conversations.deleteById(conversationId);
-   * ```
-   */
   @track('ConversationalAgent.Conversations.DeleteById')
   async deleteById(id: string): Promise<ConversationDeleteResponse> {
     const response = await this.delete<RawConversationGetResponse>(
@@ -288,20 +179,6 @@ export class ConversationService extends BaseService implements ConversationServ
 
   // ==================== Attachments ====================
 
-  /**
-   * Uploads a file attachment to a conversation
-   * @param id - The ID of the conversation to attach the file to
-   * @param file - The file to upload
-   * @returns Promise resolving to the attachment metadata with URI
-   *
-   * @example
-   * ```typescript
-   * const attachment = await conversationalAgent.conversations.uploadAttachment(
-   *   conversationId, file
-   * );
-   * console.log(`Uploaded: ${attachment.uri}`);
-   * ```
-   */
   @track('ConversationalAgent.Conversations.UploadAttachment')
   async uploadAttachment(
     id: string,
@@ -343,36 +220,6 @@ export class ConversationService extends BaseService implements ConversationServ
     };
   }
 
-  /**
-   * Registers a file attachment for a conversation and returns a URI along with
-   * pre-signed upload access details. Use the returned `fileUploadAccess` to upload
-   * the file content to blob storage, then reference `uri` in subsequent messages.
-   *
-   * @param conversationId - The ID of the conversation to attach the file to
-   * @param fileName - The name of the file to attach
-   * @returns Promise resolving to {@link ConversationAttachmentCreateResponse} containing
-   * the attachment `uri` and `fileUploadAccess` details needed to upload the file content
-   *
-   * @example <caption>Step 1 — Get the attachment URI and upload access</caption>
-   * ```typescript
-   * const { uri, fileUploadAccess } = await conversationalAgent.conversations.getAttachmentUploadUri(conversationId, 'report.pdf');
-   * console.log(`Attachment URI: ${uri}`);
-   * ```
-   *
-   * @example <caption>Step 2 — Upload the file content to the returned URL</caption>
-   * ```typescript
-   * const { uri, fileUploadAccess } = await conversationalAgent.conversations.getAttachmentUploadUri(conversationId, file.name);
-   *
-   * await fetch(fileUploadAccess.url, {
-   *   method: fileUploadAccess.verb,
-   *   body: file,
-   *   headers: { 'Content-Type': file.type },
-   * });
-   *
-   * // Reference the URI in a message after upload
-   * console.log(`File ready at: ${uri}`);
-   * ```
-   */
   @track('ConversationalAgent.Conversations.CreateAttachment')
   public async getAttachmentUploadUri(
     conversationId: string,
@@ -387,38 +234,6 @@ export class ConversationService extends BaseService implements ConversationServ
 
   // ==================== Real-time Event Handling ====================
 
-  /**
-   * Starts a real-time chat session for a conversation
-   *
-   * @param conversationId - The conversation ID to start the session for
-   * @param options - Optional session configuration
-   * @returns {@link SessionStream} for managing the session
-   *
-   * @example
-   * ```typescript
-   * const session = conversationalAgent.conversations.startSession(conversation.id);
-   *
-   * // Listen for responses
-   * session.onExchangeStart((exchange) => {
-   *   exchange.onMessageStart((message) => {
-   *     if (message.isAssistant) {
-   *       message.onContentPartStart((part) => {
-   *         if (part.isMarkdown) {
-   *           part.onChunk((chunk) => console.log(chunk.data));
-   *         }
-   *       });
-   *     }
-   *   });
-   * });
-   *
-   * // Send a message
-   * const exchange = session.startExchange();
-   * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
-   *
-   * // End the session when done
-   * conversationalAgent.conversations.endSession(conversation.id);
-   * ```
-   */
   startSession(conversationId: string, options?: ConversationSessionOptions): SessionStream {
     if (options?.logLevel) {
       this._sessionManager.setLogLevel(options.logLevel);
@@ -427,30 +242,10 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._getEvents().startSession({ conversationId, ...sessionOptions });
   }
 
-  /**
-   * Retrieves an active session by conversation ID
-   *
-   * @param conversationId - The conversation ID to get the session for
-   * @returns The {@link SessionStream} if active, undefined otherwise
-   */
   getSession(conversationId: string): SessionStream | undefined {
     return this._getEvents().getSession(conversationId);
   }
 
-  /**
-   * Ends an active session for a conversation
-   *
-   * Sends a session end event and releases the socket for the conversation.
-   * If no active session exists for the given conversation, this is a no-op.
-   *
-   * @param conversationId - The conversation ID to end the session for
-   *
-   * @example
-   * ```typescript
-   * // End session for a specific conversation
-   * conversationalAgent.conversations.endSession(conversationId);
-   * ```
-   */
   endSession(conversationId: string): void {
     const session = this._getEvents().getSession(conversationId);
     if (session) {
@@ -495,28 +290,10 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._sessionManager.connectionError;
   }
 
-  /**
-   * Registers a handler for connection status changes
-   *
-   * @param handler - Callback function to handle status changes
-   * @returns Cleanup function to remove handler
-   */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
     return this._sessionManager.onConnectionStatusChanged(handler);
   }
 
-  /**
-   * Closes the WebSocket connection and releases all session resources.
-   *
-   * In Node.js the WebSocket keeps the event loop alive until disconnected,
-   * so call this to allow the process to exit cleanly. In the browser the
-   * runtime handles socket cleanup on page unload, so this is effectively a no-op.
-   *
-   * @example
-   * ```typescript
-   * conversationalAgent.conversations.disconnect();
-   * ```
-   */
   @track('ConversationalAgent.Conversations.Disconnect')
   disconnect(): void {
     this._sessionManager.disconnect();

@@ -2,6 +2,10 @@
 
 A sample React + TypeScript application for browsing and managing **UiPath Data Fabric** entities, records, and choice sets via the UiPath TypeScript SDK. Deploys as a UiPath Coded App.
 
+## Preview
+
+![Data Fabric Explorer browsing entities, records, and choice sets](./screenshots/preview.gif)
+
 ## SDK Usage
 
 ### Importing the SDK

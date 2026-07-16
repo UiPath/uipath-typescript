@@ -2,7 +2,7 @@ import type {
   AgentGetResponse,
   AgentGetByIdResponse
 } from './agents';
-import type { ConversationServiceModel } from './conversations';
+import type { CitationSourceMedia, ConversationServiceModel } from './conversations';
 import type { FeatureFlags } from './feature-flags.types';
 import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -140,6 +140,34 @@ export interface ConversationalAgentServiceModel {
    * ```
    */
   getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
+
+  /**
+   * Downloads the document behind a media citation as an authenticated `Blob`,
+   * fetching the source's `downloadUrl` with the SDK's access token. Use
+   * `source.title` as the file name.
+   *
+   * The `Blob` type is resolved from the source `mimeType`, falling back to the
+   * response Content-Type then the title's file extension. HTML is returned as
+   * `application/octet-stream` so previewing it inline can't execute citation
+   * markup in your app's origin. The token is only sent to the tenant's
+   * configured origin; a missing, unparseable, or off-origin `downloadUrl` is
+   * rejected before any request is made.
+   *
+   * @param source - A media citation source (`CitationSourceMedia`) with a `downloadUrl`
+   * @returns Promise resolving to the document as a `Blob`
+   *
+   * @example
+   * ```typescript
+   * import { isCitationSourceMedia } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * if (isCitationSourceMedia(source)) {
+   *   const blob = await conversationalAgent.downloadCitationSource(source);
+   *   const url = URL.createObjectURL(blob);
+   *   window.open(url, '_blank');
+   * }
+   * ```
+   */
+  downloadCitationSource(source: CitationSourceMedia): Promise<Blob>;
 
   /**
    * Registers a handler that is called whenever the WebSocket connection status changes.

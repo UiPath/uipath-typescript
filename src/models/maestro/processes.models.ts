@@ -25,6 +25,8 @@ import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineRespon
  */
 export interface MaestroProcessesServiceModel {
   /**
+   * Get all processes with their instance statistics
+   *
    * @returns Promise resolving to array of MaestroProcess objects with methods
    * {@link MaestroProcessGetAllResponse}
    * @example

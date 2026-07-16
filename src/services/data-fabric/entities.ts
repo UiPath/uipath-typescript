@@ -96,36 +96,6 @@ function toWireJoin(join: EntityJoin, baseEntityName: string) {
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  /**
-   * Gets entity metadata by entity ID with attached operation methods
-   *
-   * @param id - UUID of the entity
-   * @param options - Optional {@link EntityGetByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to entity metadata with schema information and operation methods
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   * const entity = await entities.getById("<entityId>");
-   *
-   * // Folder-scoped: pass the entity's folder key
-   * const folderEntity = await entities.getById("<entityId>", { folderKey: "<folderKey>" });
-   *
-   * // Call operations directly on the entity
-   * const records = await entity.getAllRecords();
-   *
-   * // Insert a single record
-   * const insertResult = await entity.insertRecord({ name: "John", age: 30 });
-   *
-   * // Or batch insert multiple records
-   * const batchResult = await entity.insertRecords([
-   *     { name: "Jane", age: 25 },
-   *     { name: "Bob", age: 35 }
-   * ]);
-   * ```
-   */
   @track('Entities.GetById')
   async getById(id: string, options?: EntityGetByIdOptions): Promise<EntityGetResponse> {
     // Get entity metadata
@@ -144,46 +114,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return createEntityWithMethods(metadata, this);
   }
 
-  /**
-   * Gets entity records by entity ID
-   *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordById} to retrieve the full value.
-   *
-   * @param entityId - UUID of the entity
-   * @param options - Query options including expansionLevel and pagination options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to an array of entity records or paginated response
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage (non-paginated)
-   * const records = await entities.getAllRecords("<entityId>");
-   *
-   * // With expansion level
-   * const records = await entities.getAllRecords("<entityId>", {
-   *   expansionLevel: 1
-   * });
-   *
-   * // With pagination
-   * const paginatedResponse = await entities.getAllRecords("<entityId>", {
-   *   pageSize: 50,
-   *   expansionLevel: 1
-   * });
-   *
-   * // Navigate to next page
-   * const nextPage = await entities.getAllRecords("<entityId>", {
-   *   cursor: paginatedResponse.nextCursor,
-   *   expansionLevel: 1
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * const records = await entities.getAllRecords("<entityId>", { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.GetAllRecords')
   async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
     entityId: string,
@@ -215,32 +145,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  /**
-   * Gets a single entity record by entity ID and record ID
-   *
-   * Returns the full record, including the complete content of `MULTILINE_MAX` fields.
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record
-   * @param options - Query options including `expansionLevel` and `folderKey` The `folderKey` property is **experimental**.
-   * @returns Promise resolving to the entity record
-   *
-   * @example
-   * ```typescript
-   * // Basic usage
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>);
-   *
-   * // With expansion level
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
-   *   expansionLevel: 1
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
-   *   folderKey: "<folderKey>"
-   * });
-   * ```
-   */
   @track('Entities.GetRecordById')
   async getRecordById(
     entityId: string,
@@ -259,34 +163,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Inserts a single record into an entity by entity ID
-   *
-   * @param entityId - UUID of the entity
-   * @param data - Record to insert
-   * @param options - Insert options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to the inserted record with generated record ID
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage
-   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 });
-   *
-   * // With options
-   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
-   *   expansionLevel: 1
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
-   *   folderKey: "<folderKey>"
-   * });
-   * ```
-   */
   @track('Entities.InsertRecordById')
   async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
@@ -305,42 +181,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Inserts data into an entity by entity ID using batch insert
-   *
-   * @param entityId - UUID of the entity
-   * @param data - Array of records to insert
-   * @param options - Insert options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to insert response
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage
-   * const result = await entities.insertRecordsById("<entityId>", [
-   *   { name: "John", age: 30 },
-   *   { name: "Jane", age: 25 }
-   * ]);
-   *
-   * // With options
-   * const result = await entities.insertRecordsById("<entityId>", [
-   *   { name: "John", age: 30 },
-   *   { name: "Jane", age: 25 }
-   * ], {
-   *   expansionLevel: 1,
-   *   failOnFirst: true
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.insertRecordsById("<entityId>", [
-   *   { name: "John", age: 30 },
-   *   { name: "Jane", age: 25 }
-   * ], { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.InsertRecordsById')
   async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
@@ -360,35 +200,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Updates a single record in an entity by entity ID
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record to update
-   * @param data - Key-value pairs of fields to update
-   * @param options - Update options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to the updated record
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage
-   * const result = await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated", age: 31 });
-   *
-   * // With options
-   * const result = await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated", age: 31 }, {
-   *   expansionLevel: 1
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated" }, {
-   *   folderKey: "<folderKey>"
-   * });
-   * ```
-   */
   @track('Entities.UpdateRecordById')
   async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
     const params = createParams({
@@ -407,42 +218,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Updates data in an entity by entity ID
-   *
-   * @param entityId - UUID of the entity
-   * @param data - Array of records to update. Each record MUST contain the record Id,
-   *               otherwise the update will fail.
-   * @param options - Update options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to update response
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage
-   * const result = await entities.updateRecordsById("<entityId>", [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
-   * ]);
-   *
-   * // With options
-   * const result = await entities.updateRecordsById("<entityId>", [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
-   * ], {
-   *   expansionLevel: 1,
-   *   failOnFirst: true
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.updateRecordsById("<entityId>", [
-   *   { Id: "123", name: "John Updated" }
-   * ], { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.UpdateRecordsById')
   async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
     const params = createParams({
@@ -462,33 +237,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Deletes data from an entity by entity ID
-   *
-   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
-   *
-   * @param entityId - UUID of the entity
-   * @param recordIds - Array of record UUIDs to delete
-   * @param options - Delete options The `folderKey` property is **experimental**.
-   * @returns Promise resolving to delete response
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Basic usage
-   * const result = await entities.deleteRecordsById("<entityId>", [
-   *   "<recordId-1>", "<recordId-2>"
-   * ]);
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.deleteRecordsById("<entityId>", [
-   *   "<recordId-1>", "<recordId-2>"
-   * ], { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.DeleteRecordsById')
   async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
     const params = createParams({
@@ -507,28 +255,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Deletes a single record from an entity by entity ID and record ID
-   *
-   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
-   * Use this method if you need trigger events to fire for the deleted record.
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record to delete
-   * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to void on success
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * await entities.deleteRecordById("<entityId>", "<recordId>");
-   *
-   * // Folder-scoped: pass the entity's folder key
-   * await entities.deleteRecordById("<entityId>", "<recordId>", { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.DeleteRecordById')
   async deleteRecordById(entityId: string, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
     await this.delete(
@@ -537,36 +263,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
   }
 
-  /**
-   * Gets entities in the tenant.
-   *
-   * Three call modes:
-   * - `getAll()` — default. Returns only tenant-level entities.
-   * - `getAll({ folderKey: "<uuid>" })` — preferred for folder-scoped data. Returns only entities in that folder.
-   * - `getAll({ includeFolderEntities: true })` — returns tenant-level **and** folder-level entities together. `folderKey` is preferred over `includeFolderEntities` when both are set.
-   *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities — preferred when scoping to a folder; `includeFolderEntities: true` to list tenant + folder entities together) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to an array of entity metadata
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Tenant-only (default)
-   * const tenantEntities = await entities.getAll();
-   *
-   * // A single folder's entities (preferred when targeting a specific folder)
-   * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
-   *
-   * // Tenant + folder entities together
-   * const allEntities = await entities.getAll({ includeFolderEntities: true });
-   *
-   * // Call operations on an entity
-   * const records = await tenantEntities[0].getAllRecords();
-   * ```
-   */
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
     // folderKey is preferred over includeFolderEntities: when present, scope to that folder
@@ -595,90 +291,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return entities;
   }
 
-  /**
-   * Queries entity records with filters, sorting, aggregates, and pagination
-   *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordById} to retrieve the full value.
-   *
-   * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
-   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
-   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
-   *
-   * @example
-   * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Non-paginated query with a filter
-   * const result = await entities.queryRecordsById("<entityId>", {
-   *   filterGroup: {
-   *     logicalOperator: LogicalOperator.And,
-   *     queryFilters: [
-   *       { fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }
-   *     ]
-   *   },
-   *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
-   * });
-   * console.log(`Found ${result.totalCount} records`);
-   *
-   * // With pagination
-   * const page1 = await entities.queryRecordsById("<entityId>", {
-   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
-   *   pageSize: 25,
-   * });
-   * if (page1.hasNextPage) {
-   *   const page2 = await entities.queryRecordsById("<entityId>", { cursor: page1.nextCursor });
-   * }
-   *
-   * // Aggregate: count of records per status
-   * await entities.queryRecordsById("<entityId>", {
-   *   selectedFields: ["status"],
-   *   groupBy: ["status"],
-   *   aggregates: [
-   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
-   *   ],
-   * });
-   *
-   * // Aggregate: total sum and average across all records (no grouping)
-   * await entities.queryRecordsById("<entityId>", {
-   *   aggregates: [
-   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
-   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
-   *   ],
-   * });
-   *
-   * // Multi-join: pull fields from related entities into the query
-   * // (result rows use entity-qualified keys — see EntityJoin).
-   * await entities.queryRecordsById("<entityId>", {
-   *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
-   *   joins: [
-   *     {
-   *       entityName: "Order",
-   *       joinType: JoinType.LeftJoin,
-   *       joinFieldName: "customerId",
-   *       relatedEntityName: "Customer",
-   *       relatedFieldName: "Id",
-   *     },
-   *     {
-   *       entityName: "Customer",
-   *       joinType: JoinType.LeftJoin,
-   *       joinFieldName: "regionId",
-   *       relatedEntityName: "Region",
-   *       relatedFieldName: "Id",
-   *     },
-   *   ],
-   * });
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.queryRecordsById("<entityId>", {
-   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
-   *   folderKey: "<folderKey>",
-   * });
-   * ```
-   */
   @track('Entities.QueryRecordsById')
   async queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
     id: string,
@@ -728,37 +340,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  /**
-   * Imports records from a CSV file into an entity
-   *
-   * @param id - UUID of the entity
-   * @param file - CSV file to import (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to import result with record counts
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Browser: upload from file input
-   * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
-   * const result = await entities.importRecordsById("<entityId>", fileInput.files[0]);
-   *
-   * // Node.js: read from disk
-   * const fileBuffer = fs.readFileSync('records.csv');
-   * const result = await entities.importRecordsById("<entityId>", new Blob([fileBuffer], { type: 'text/csv' }));
-   *
-   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
-   * if (result.errorFileLink) {
-   *   console.log(`Error file link: ${result.errorFileLink}`);
-   * }
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.importRecordsById("<entityId>", fileInput.files[0], { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.ImportRecordsById')
   async importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
     const formData = new FormData();
@@ -777,36 +358,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Downloads an attachment from an entity record field
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record containing the attachment
-   * @param fieldName - Name of the File-type field containing the attachment
-   * @param options - Optional {@link EntityDownloadAttachmentOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to Blob containing the file content
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Get the entityId from getAll()
-   * const allEntities = await entities.getAll();
-   * const entityId = allEntities[0].id;
-   *
-   * // Get the recordId from getAllRecords()
-   * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].Id;
-   *
-   * // Download attachment for a specific record and field
-   * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
-   *
-   * // Folder-scoped: pass the entity's folder key
-   * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents', { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.DownloadAttachment')
   async downloadAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
     const response = await this.get<Blob>(
@@ -820,37 +371,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Uploads an attachment to a File-type field of an entity record
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record to upload the attachment to
-   * @param fieldName - Name of the File-type field
-   * @param file - File to upload (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. `expansionLevel`, `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Get the entityId from getAll()
-   * const allEntities = await entities.getAll();
-   * const entityId = allEntities[0].id;
-   *
-   * // Get the recordId from getAllRecords()
-   * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].Id;
-   *
-   * // Upload a file attachment
-   * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
-   *
-   * // Folder-scoped entity: pass the entity's folder key
-   * await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.UploadAttachment')
   async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
     const formData = new FormData();
@@ -874,36 +394,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Removes an attachment from a File-type field of an entity record
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record containing the attachment
-   * @param fieldName - Name of the File-type field containing the attachment
-   * @param options - Optional {@link EntityDeleteAttachmentOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
-   *
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Get the entityId from getAll()
-   * const allEntities = await entities.getAll();
-   * const entityId = allEntities[0].id;
-   *
-   * // Get the recordId from getAllRecords()
-   * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].Id;
-   *
-   * // Delete attachment for a specific record and field
-   * await entities.deleteAttachment(entityId, recordId, 'Documents');
-   *
-   * // Folder-scoped: pass the entity's folder key
-   * await entities.deleteAttachment(entityId, recordId, 'Documents', { folderKey: "<folderKey>" });
-   * ```
-   */
   @track('Entities.DeleteAttachment')
   async deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
     const response = await this.delete<EntityDeleteAttachmentResponse>(
@@ -914,10 +404,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-    /**
-   * @hidden
-   * @deprecated Use {@link getAllRecords} instead.
-   */
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
     entityId: string,
     options?: T
@@ -929,65 +415,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return this.getAllRecords(entityId, options);
   }
 
-  /**
-   * @hidden
-   * @deprecated Use {@link insertRecordById} instead.
-   */
   async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     return this.insertRecordById(id, data, options);
   }
 
-  /**
-   * @hidden
-   * @deprecated Use {@link insertRecordsById} instead.
-   */
   async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     return this.insertRecordsById(id, data, options);
   }
 
-  /**
-   * Creates a new Data Fabric entity with the given schema
-   *
-   * @param name - Entity name — must start with a letter and contain
-   *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
-   * @param fields - Array of field definitions
-   * @param options - Optional entity-level settings ({@link EntityCreateOptions}) The `folderKey` property is **experimental**.
-   * @returns Promise resolving to the ID of the created entity
-   *
-   * @example
-   * ```typescript
-   * const entityId = await entities.create("product_catalog", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
-   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
-   *
-   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
-   * const ordersId = await entities.create("orders", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
-   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
-   * ]);
-   *
-   * // Cross-folder references — link a folder-scoped entity to entities and
-   * // system choice sets that live in another folder or at the tenant level.
-   * await entities.create("orderLine", [
-   *   {
-   *     fieldName: "order",
-   *     type: EntityFieldDataType.RELATIONSHIP,
-   *     referenceEntityId: "<orderEntityId>",
-   *     referenceFieldId: "<orderEntityPkId>",
-   *     referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
-   *   },
-   *   {
-   *     fieldName: "userType",
-   *     type: EntityFieldDataType.CHOICE_SET_SINGLE,
-   *     choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
-   *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
-   *   },
-   * ], { folderKey: "<sourceFolderKey>" });
-   * ```
-   * @internal
-   */
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
@@ -1012,22 +447,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  /**
-   * Deletes a Data Fabric entity and all its records
-   *
-   * @param id - UUID of the entity to delete
-   * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
-   * @returns Promise resolving when the entity is deleted
-   *
-   * @example
-   * ```typescript
-   * await entities.deleteById("<entityId>");
-   *
-   * // Folder-scoped: pass the entity's folder key
-   * await entities.deleteById("<entityId>", { folderKey: "<folderKey>" });
-   * ```
-   * @internal
-   */
   @track('Entities.DeleteById')
   async deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void> {
     await this.delete(
@@ -1036,60 +455,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
   }
 
-  /**
-   * Updates an existing Data Fabric entity — schema and/or metadata.
-   *
-   * Provide any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
-   * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
-   * only when the corresponding fields are present.
-   *
-   * **Warning:** Schema changes (`addFields`, `removeFields`, `updateFields`) use a
-   * read-modify-write pattern — concurrent calls on the same entity may silently
-   * overwrite each other's changes.
-   *
-   * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}) The `folderKey` property is **experimental**.
-   * @returns Promise resolving when the update is complete
-   *
-   * @example
-   * ```typescript
-   * // Schema-only
-   * await entities.updateById("<entityId>", {
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: [{ fieldName: "old_field" }],
-   * });
-   *
-   * // Metadata-only
-   * await entities.updateById("<entityId>", {
-   *   displayName: "My Updated Entity",
-   *   description: "Updated description",
-   * });
-   *
-   * // Combined
-   * await entities.updateById("<entityId>", {
-   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
-   *   displayName: "Price Catalog",
-   * });
-   *
-   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
-   * await entities.updateById("<entityId>", {
-   *   addFields: [
-   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
-   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   ],
-   *   updateFields: [
-   *     { id: "<fieldId>", lengthLimit: 1000 },
-   *   ],
-   * });
-   *
-   * // Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
-   * await entities.updateById("<entityId>", {
-   *   folderKey: "<folderKey>",
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   * });
-   * ```
-   * @internal
-   */
   @track('Entities.UpdateById')
   async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
     const opts = options ?? {};
@@ -1360,9 +725,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      ...((isRelationship || isFile) && { isForeignKey: true }),
-      ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      // FILE: server auto-wires refs to the EntityAttachment system entity; caller-sent UUIDs would fail the server's relationship pre-check.
+      ...(isRelationship && { isForeignKey: true, referenceType: ReferenceType.ManyToOne }),
       ...(!isFile && referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
       ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
       ...(!isFile && field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),

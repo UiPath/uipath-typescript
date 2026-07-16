@@ -2,6 +2,10 @@
 
 A sample React TypeScript application for managing UiPath Maestro processes with OAuth authentication.
 
+## Preview
+
+![Browsing Maestro processes and process instances](./screenshots/preview.gif)
+
 ## Installation
 
 To install the sdk do
