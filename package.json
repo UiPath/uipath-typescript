@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.5.4",
+    "version": "1.5.5",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
