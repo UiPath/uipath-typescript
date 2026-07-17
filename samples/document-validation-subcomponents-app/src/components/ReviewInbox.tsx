@@ -34,6 +34,7 @@ function buildFilter(): string {
 function ReviewInbox() {
   const { sdk } = useAuth();
   const tasks = useMemo(() => new Tasks(sdk), [sdk]);
+  const duModule = useMemo(() => new OrchestratorDuModule(sdk), [sdk]);
 
   const [taskList, setTaskList] = useState<TaskGetResponse[]>([]);
   const [reloadToken, setReloadToken] = useState(0);
@@ -172,7 +173,7 @@ function ReviewInbox() {
     async (documentId: string, reason: string) => {
       if (!selectedTask) return;
       try {
-        const response = await new OrchestratorDuModule(sdk).submitExceptionReport(
+        const response = await duModule.submitExceptionReport(
           selectedTask.id,
           documentId,
           reason || 'Reported via Document Review Workspace',
@@ -191,7 +192,7 @@ function ReviewInbox() {
         notify('Failed to report exception', 'error');
       }
     },
-    [sdk, selectedTask, clearSelection, refresh, notify],
+    [duModule, selectedTask, clearSelection, refresh, notify],
   );
 
   return (
