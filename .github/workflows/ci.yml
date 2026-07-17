@@ -26,7 +26,31 @@ jobs:
 
       - name: Lint
         run: npm run lint
-  
+
+  release-metadata:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Build first — the check reads the freshly-built dist, never a stale local dist.
+      - name: Build
+        run: npm run build
+
+      - name: Check release-metadata.json is in sync with the public API
+        run: npm run release-metadata:check
+
   lint-packages:
     runs-on: ubuntu-latest
     permissions:
