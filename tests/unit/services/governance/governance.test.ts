@@ -26,7 +26,7 @@ describe('GovernanceService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
     governanceService = new GovernanceService(instance);
   });
 

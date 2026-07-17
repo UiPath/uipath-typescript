@@ -29,7 +29,7 @@ vi.mock('@/utils/pagination/helpers', async () => (await mocks).mockPaginationHe
 
 // Mock SessionManager to avoid WebSocket side effects
 vi.mock('@/services/conversational-agent/conversations/session/session-manager', () => ({
-  SessionManager: vi.fn().mockImplementation(() => ({
+  SessionManager: vi.fn().mockImplementation(function () { return ({
     connectionStatus: 'Disconnected',
     isConnected: false,
     connectionError: null,
@@ -38,7 +38,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
     disconnect: vi.fn(),
-  }))
+  }); })
 }));
 
 // ===== TEST SUITE =====
@@ -50,7 +50,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAllPaginated).mockReset();
@@ -65,7 +65,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationService(instance, { externalUserId: 'user-123' });
 
@@ -79,7 +79,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
     it('should not pass external user id header when externalUserId is not set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationService(instance);
 

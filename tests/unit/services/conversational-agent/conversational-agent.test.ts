@@ -11,6 +11,8 @@ import {
   TEST_CONSTANTS,
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
+import { AuthenticationError, NetworkError, NotFoundError, ServerError } from '@/core/errors';
+import type { CitationSourceMedia } from '@/models/conversational-agent';
 import { AGENT_ENDPOINTS, FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
 import {
   CONVERSATIONAL_SURFACE_NAME,
@@ -23,7 +25,7 @@ vi.mock('@/core/http/api-client');
 
 // Mock SessionManager to avoid WebSocket side effects
 vi.mock('@/services/conversational-agent/conversations/session/session-manager', () => ({
-  SessionManager: vi.fn().mockImplementation(() => ({
+  SessionManager: vi.fn().mockImplementation(function () { return ({
     connectionStatus: 'Disconnected',
     isConnected: false,
     connectionError: null,
@@ -31,8 +33,16 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
-  }))
+  }); })
 }));
+
+// Minimal non-OK Response stub for the error-mapping tests.
+const errorResponse = (status: number, statusText: string) => ({
+  ok: false,
+  status,
+  statusText,
+  json: async () => ({ message: statusText }),
+});
 
 // ===== TEST SUITE =====
 describe('ConversationalAgentService Unit Tests', () => {
@@ -43,7 +53,7 @@ describe('ConversationalAgentService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     conversationalAgent = new ConversationalAgentService(instance);
   });
@@ -55,7 +65,7 @@ describe('ConversationalAgentService Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { externalUserId: 'user-123' });
 
@@ -69,7 +79,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should not pass any optional headers when no options are provided', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance);
 
@@ -83,7 +93,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass surfaceName as x-uipath-conversational-surfacename header when set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { surfaceName: 'agent_builder_frontend' });
 
@@ -97,7 +107,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass surfaceVersion as x-uipath-conversational-surfaceversion header when set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, { surfaceVersion: '1.2.3' });
 
@@ -111,7 +121,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
     it('should pass all optional headers together when externalUserId, surfaceName, and surfaceVersion are set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new ConversationalAgentService(instance, {
         externalUserId: 'user-123',
@@ -343,6 +353,126 @@ describe('ConversationalAgentService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(conversationalAgent.getFeatureFlags()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('downloadCitationSource', () => {
+    // Same origin as the test harness baseUrl (TEST_CONSTANTS.BASE_URL) so the
+    // credential origin check passes.
+    const DOWNLOAD_URL = `${TEST_CONSTANTS.BASE_URL}/org/tenant/ecs_/v1.1/reference/abc`;
+    const mediaSource = (over: Partial<CitationSourceMedia> = {}): CitationSourceMedia => ({
+      title: 'doc.pdf',
+      number: 1,
+      downloadUrl: DOWNLOAD_URL,
+      ...over,
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('fetches the downloadUrl with a bearer token and returns a typed Blob', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        blob: async () => new Blob(['pdf-bytes'], { type: 'application/octet-stream' }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const blob = await conversationalAgent.downloadCitationSource(mediaSource());
+
+      expect(fetchMock).toHaveBeenCalledWith(DOWNLOAD_URL, {
+        headers: { Authorization: `Bearer ${TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN}` },
+      });
+      // octet-stream from the server is corrected to the extension-derived type
+      expect(blob.type).toBe('application/pdf');
+    });
+
+    it('prefers the source mimeType over the response Content-Type', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        blob: async () => new Blob(['x'], { type: 'application/octet-stream' }),
+      });
+      vi.stubGlobal('fetch', fetchMock);
+
+      const blob = await conversationalAgent.downloadCitationSource(
+        mediaSource({ mimeType: 'image/png', title: 'chart' }),
+      );
+
+      expect(blob.type).toBe('image/png');
+    });
+
+    it('throws a ServerError when the source has no downloadUrl', async () => {
+      await expect(
+        conversationalAgent.downloadCitationSource(mediaSource({ downloadUrl: undefined })),
+      ).rejects.toBeInstanceOf(ServerError);
+    });
+
+    it('refuses to send credentials to a non-UiPath origin (no fetch, no token)', async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(
+        conversationalAgent.downloadCitationSource(
+          mediaSource({ downloadUrl: 'https://evil.example.com/steal' }),
+        ),
+      ).rejects.toBeInstanceOf(ServerError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('maps a 401 response to AuthenticationError (not a generic NetworkError)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(errorResponse(401, 'Unauthorized')));
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        AuthenticationError,
+      );
+    });
+
+    it('maps a 404 response to NotFoundError', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(errorResponse(404, 'Not Found')));
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        NotFoundError,
+      );
+    });
+
+    it('wraps a fetch/network failure in NetworkError', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        NetworkError,
+      );
+    });
+
+    it('wraps a body-read failure in NetworkError', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          blob: async () => {
+            throw new TypeError('network error while reading body');
+          },
+        }),
+      );
+
+      await expect(conversationalAgent.downloadCitationSource(mediaSource())).rejects.toBeInstanceOf(
+        NetworkError,
+      );
+    });
+
+    it('throws a ServerError for a malformed downloadUrl (no fetch)', async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(
+        conversationalAgent.downloadCitationSource(mediaSource({ downloadUrl: 'https://[' })),
+      ).rejects.toBeInstanceOf(ServerError);
+      expect(fetchMock).not.toHaveBeenCalled();
     });
   });
 

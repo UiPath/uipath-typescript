@@ -25,7 +25,7 @@ describe('MessageService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     messages = new MessageService(instance);
   });
@@ -37,7 +37,7 @@ describe('MessageService Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new MessageService(instance, { externalUserId: 'user-123' });
 
@@ -51,7 +51,7 @@ describe('MessageService Unit Tests', () => {
 
     it('should not pass external user id header when externalUserId is not set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
       const _service = new MessageService(instance);
 

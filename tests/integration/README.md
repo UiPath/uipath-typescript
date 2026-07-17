@@ -51,7 +51,8 @@ tests/integration/
 │   │   └── tasks.integration.test.ts
 │   └── data-fabric/          # Data Fabric service tests
 │       ├── entities.integration.test.ts
-│       └── choicesets.integration.test.ts
+│       ├── choicesets.integration.test.ts
+│       └── access.integration.test.ts
 └── auth-errors.integration.test.ts  # Authentication & authorization error tests
 ```
 
@@ -196,6 +197,7 @@ These services do not support create/update/delete via SDK:
 #### Data Fabric Services (Full CRUD)
 - **Entities**: Complete CRUD operations for entity records
 - **ChoiceSets**: Read operations for choice sets
+- **Access**: Skipped tests for Data Fabric role listing, directory principals, and assignment validation until the CI app has the required DataFabric scopes
 
 #### Action Center Services
 - **Tasks**: Create, list, get by ID, assign, unassign, complete
@@ -234,6 +236,10 @@ Tests skip gracefully when:
 | `MAESTRO_TEST_PROCESS_KEY` | Pre-existing Maestro process for read-only tests | (optional) |
 | `ORCHESTRATOR_TEST_PROCESS_KEY` | Pre-existing Orchestrator process for start tests | (optional) |
 | `DATA_FABRIC_TEST_ENTITY_ID` | Pre-existing Data Fabric entity for record tests | (optional) |
+| `DATA_FABRIC_TEST_JOIN_ENTITY_NAME` | Base entity name for the `queryRecordsById` join test | (optional — defaults to the queried entity) |
+| `DATA_FABRIC_TEST_JOIN_FIELD_NAME` | Join key field on the base entity | (required for the join test) |
+| `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
+| `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
 
 ## Test Data Management
 

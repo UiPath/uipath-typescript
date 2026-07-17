@@ -1,5 +1,10 @@
 import { UiPath } from '../../../src/core';
-import { Entities, ChoiceSets } from '../../../src/services/data-fabric';
+import {
+  ChoiceSets,
+  DataFabricDirectoryService,
+  DataFabricRoleService,
+  Entities,
+} from '../../../src/services/data-fabric';
 import { Tasks } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
@@ -16,6 +21,7 @@ import { AgentMemory } from '../../../src/services/agents/memory';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
+import { Notifications } from '../../../src/services/notification';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -38,6 +44,8 @@ export interface TestServices {
   sdk: UiPath;
   entities: Entities;
   choiceSets: ChoiceSets;
+  dataFabricRoles: DataFabricRoleService;
+  dataFabricDirectory: DataFabricDirectoryService;
   tasks: Tasks;
   assets: Assets;
   buckets: Buckets;
@@ -56,6 +64,7 @@ export interface TestServices {
   traces?: Traces;
   agents?: Agents;
   governance?: Governance;
+  notifications?: Notifications;
 }
 
 /**
@@ -90,6 +99,8 @@ function createV0Services(config: IntegrationConfig): TestServices {
     sdk: sdk as unknown as UiPath,
     entities: sdk.entities as unknown as Entities,
     choiceSets: sdk.entities.choicesets as unknown as ChoiceSets,
+    dataFabricRoles: sdk.entities.roles as unknown as DataFabricRoleService,
+    dataFabricDirectory: sdk.entities.directory as unknown as DataFabricDirectoryService,
     tasks: sdk.tasks as unknown as Tasks,
     assets: sdk.assets as unknown as Assets,
     buckets: sdk.buckets as unknown as Buckets,
@@ -123,6 +134,8 @@ function createV1Services(config: IntegrationConfig): TestServices {
     sdk,
     entities: new Entities(sdk),
     choiceSets: new ChoiceSets(sdk),
+    dataFabricRoles: new DataFabricRoleService(sdk),
+    dataFabricDirectory: new DataFabricDirectoryService(sdk),
     tasks: new Tasks(sdk),
     assets: new Assets(sdk),
     buckets: new Buckets(sdk),
@@ -141,6 +154,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     traces: new Traces(sdk),
     agents: new Agents(sdk),
     governance: new Governance(sdk),
+    notifications: new Notifications(sdk),
   };
 }
 

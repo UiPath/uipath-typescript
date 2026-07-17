@@ -14,6 +14,7 @@ import {
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
+  JoinType,
   QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
@@ -54,6 +55,8 @@ function generateFieldValue(field: FieldMetaData): any {
       return `Test_${generateRandomString(8)}`;
     case EntityFieldDataType.MULTILINE_TEXT:
       return `Test multiline\n${generateRandomString(12)}`;
+    case EntityFieldDataType.MULTILINE_MAX:
+      return `Test multiline max\n${generateRandomString(64)}`;
     case EntityFieldDataType.INTEGER: {
       const max = fieldDataType.maxValue ?? 10000;
       const min = fieldDataType.minValue ?? 0;
@@ -958,6 +961,49 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         expect(Object.keys(l3.parent).length).toBeGreaterThanOrEqual(Object.keys(l2.parent).length);
       });
     });
+
+    // Multi-join pass-through. Requires the join fixture (a second, related
+    // entity) provisioned in the test tenant and named via the
+    // DATA_FABRIC_TEST_JOIN_* env vars; throws when they are missing. It guards
+    // the `joins` body wiring against the endpoint silently rejecting (4xx) or
+    // ignoring the field — the gap the unit tests can't cover.
+    it('should query records with a single cross-entity join', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      if (
+        !config.dataFabricTestJoinFieldName ||
+        !config.dataFabricTestJoinRelatedEntityName ||
+        !config.dataFabricTestJoinRelatedFieldName
+      ) {
+        throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join test');
+      }
+
+      const result = await entities.queryRecordsById(entityId, {
+        joins: [
+          {
+            entityName: config.dataFabricTestJoinEntityName,
+            joinType: JoinType.LeftJoin,
+            joinFieldName: config.dataFabricTestJoinFieldName,
+            relatedEntityName: config.dataFabricTestJoinRelatedEntityName,
+            relatedFieldName: config.dataFabricTestJoinRelatedFieldName,
+          },
+        ],
+        pageSize: 5,
+      });
+
+      // Endpoint must accept the `joins` body (no 4xx) and return the normal
+      // record envelope: an array of records, each still carrying its `Id`.
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      result.items.forEach(item => {
+        expect(item).toHaveProperty('Id');
+      });
+      expect(hasValidPagination(result)).toBe(true);
+    });
   });
 
   describe('importRecordsById', () => {
@@ -1014,7 +1060,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
     });
 
-    it('should create entity with RELATIONSHIP field and verify FK metadata', async () => {
+    it('should create entity with RELATIONSHIP and FILE fields and verify metadata', async () => {
       const { entities } = getServices();
       const stamp = generateRandomString(8).toLowerCase();
 
@@ -1033,7 +1079,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error(`Target entity ${targetId} has no primary-key field — cannot bind a RELATIONSHIP to it`);
       }
 
-      // 3. Create the source entity with a RELATIONSHIP field bound to target.Id.
+      // 3. Create the source entity with a RELATIONSHIP field bound to target.Id
       const sourceName = `sdk_source_${stamp}`;
       const sourceId = await entities.create(sourceName, [
         { fieldName: 'name', type: EntityFieldDataType.STRING },
@@ -1043,18 +1089,24 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
           referenceEntityId: targetId,
           referenceFieldId: pkField.id,
         },
+        { fieldName: 'attachfile', type: EntityFieldDataType.FILE },
       ]);
       createdEntityIds.push(sourceId);
 
-      // 4. Read it back and verify the FK landed correctly. The server resolves
-      //    `referenceEntity { id }` → a full entity reference; if the SDK had
-      //    sent the old `referenceEntityName` shape this would be unbound.
+      // 4. Read it back and verify both fields landed correctly. The server
+      //    resolves `referenceEntity { id }` → a full entity reference
       const sourceMeta = await entities.getById(sourceId);
       const parentField = sourceMeta.fields.find(f => f.name === 'parent');
       expect(parentField).toBeDefined();
       expect(parentField?.isForeignKey).toBe(true);
       expect(parentField?.referenceEntity?.id).toBe(targetId);
       expect(parentField?.referenceField?.id).toBe(pkField.id);
+
+      const fileField = sourceMeta.fields.find(f => f.name === 'attachfile');
+      expect(fileField).toBeDefined();
+      expect(fileField?.fieldDisplayType).toBe(FieldDisplayType.File);
+      expect(fileField?.referenceEntity).toBeFalsy();
+      expect(fileField?.referenceField).toBeFalsy();
     });
   });
 
@@ -1213,6 +1265,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'ml_field');
       expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create MULTILINE_MAX field with default lengthLimit 128 KB', async () => {
+      const { entities } = getServices();
+      const name = `sdk_mlmax_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'mlmax_field', type: EntityFieldDataType.MULTILINE_MAX },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'mlmax_field');
+      expect(field?.fieldDataType.name).toBe(EntityFieldDataType.MULTILINE_MAX);
+      expect(field?.fieldDataType.lengthLimit).toBe(128 * 1024);
     });
 
     it('should create DECIMAL field with correct default constraints', async () => {
@@ -1411,6 +1477,41 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const all = await entities.getAll();
       expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+  });
+
+  // Verifies the MULTILINE_MAX lazy-load contract end to end: list returns a size
+  // marker, getRecordById (v2 read) returns the full content. Creating the field
+  // needs DataFabric.Schema.Write scope, absent in the standard test env — so this is
+  // gated on SCHEMA_WRITE_SCOPE_AVAILABLE and skipped there (a hard throw would redden
+  // CI permanently). Runs in any environment whose PAT carries the scope.
+  describe.skipIf(!getTestConfig().schemaWriteScopeAvailable)('MULTILINE_MAX field lifecycle', () => {
+    it('should return a marker on list and the full value via getRecordById', async () => {
+      const { entities } = getServices();
+      const name = `sdk_mlmax_life_${generateRandomString(8).toLowerCase()}`;
+
+      // Create an entity with a MULTILINE_MAX field, then insert a large value.
+      const entityId = await entities.create(name, [
+        { fieldName: 'body', type: EntityFieldDataType.MULTILINE_MAX },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const bodyValue = `Large body content ${generateRandomString(256)}`;
+      const inserted = await entities.insertRecordById(entityId, { body: bodyValue });
+      expect(inserted.Id).toBeDefined();
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      // List returns a size marker (e.g. "HasValue=true Length=...") — not the content.
+      const listed = await entities.getAllRecords(entityId, { pageSize: 50 });
+      const listedRecord = listed.items.find((r: EntityRecord) => r.Id === inserted.Id);
+      expect(listedRecord).toBeDefined();
+      expect(typeof listedRecord!.body).toBe('string');
+      expect(listedRecord!.body).toMatch(/^HasValue=true/);
+      expect(listedRecord!.body).not.toBe(bodyValue);
+
+      // getRecordById (v2 read) returns the full content.
+      const full = await entities.getRecordById(entityId, inserted.Id);
+      expect(full.body).toBe(bodyValue);
     });
   });
 

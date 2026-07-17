@@ -22,6 +22,15 @@ export interface RawCaseAppConfig {
 }
 
 /**
+ * Request body for sending a message to a running instance
+ */
+export interface CaseInstanceSendMessageRequestBody {
+  name: string;
+  reference: string;
+  itemData?: Record<string, string | string[]>;
+}
+
+/**
  * Case JSON Response structure
  * Internal type for the response from the case JSON API endpoint
  */

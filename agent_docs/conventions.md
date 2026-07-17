@@ -7,10 +7,11 @@
 - **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
+- **Keep inline code comments concise** — say what is non-obvious in a single phrase. Avoid restating what the code already expresses or adding multi-sentence commentary where a short comment suffices.
 - No `any` type — use `unknown` if truly unknown, then validate.
 - **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
 - **Generic constraints on utility functions: use `T extends object`, not `T extends Record<string, unknown>`** — interface types (e.g., `JobGetAllOptions`) do not structurally satisfy `Record<string, unknown>` because they lack an index signature, causing TS2345 at call sites. Use `T extends object` (matching the `transformRequest` pattern) and cast internally: `const result: Record<string, unknown> = { ...options as Record<string, unknown> }`. **NEVER** add a redundant `as T` cast when the function signature already declares the return type as `T` — the compiler infers it and the extra cast is noise.
-- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers force callers to add unnecessary `undefined` checks for fields that are always present, and mask real type errors when the field is guaranteed.
+- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers force callers to add unnecessary `undefined` checks for fields that are always present, and mask real type errors when the field is guaranteed. **This rule applies to input types too**: for structured input types (join specifications, nested filter objects, inline configurations), fields that are structurally required for the server to execute the operation must be typed as required. Only use `?` when the server provides a meaningful default for that field. Example: in a join spec, the join key fields (`joinFieldName`, `relatedEntityName`, `relatedFieldName`) must be required because the server cannot execute any join without them; the entity alias field may be optional because the server defaults it to the queried entity.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
 
@@ -101,7 +102,11 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 - Time: `creationTime`/`createdAt` → `createdTime`, `lastModificationTime` → `lastModifiedTime`, `startedTimeUtc` → `startedTime`, `completedTimeUtc` → `completedTime`, `expiryTimeUtc` → `expiredTime`
 - Folder: `organizationUnitId` → `folderId`, `organizationUnitFullyQualifiedName` → `folderName`
 
+**Timestamp field naming**: All timestamp fields exposed in SDK response types must use the `*Time` suffix (e.g., `endedTime`, `createdTime`). **NEVER** introduce `*At` suffixes (e.g., `endedAt`) — this breaks consistency with every other timestamp across the SDK and makes the API surface feel unpolished.
+
 **Outbound requests** (SDK → API): use `transformRequest(data, {Entity}Map)` (auto-reverses field map) and `camelToPascalCaseKeys()`.
+
+**Multi-domain responses:** When a `getById` response includes fields from multiple entity domains (e.g., an attachment response that also contains bucket fields), merge multiple field maps in step 2: `transformData(data, { ...PrimaryEntityMap, ...SecondaryEntityMap })`. Using only the primary entity's map silently skips rename entries from the secondary domain.
 
 **Field maps vs case conversion:** `{Entity}Map` is for semantic renames only. Case conversion is handled by `pascalToCamelCaseKeys()`. **NEVER** add case-only entries to a field map — mixing them causes double-conversion bugs.
 

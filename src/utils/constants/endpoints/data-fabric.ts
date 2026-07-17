@@ -22,8 +22,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     GET_ALL_V2: `${DATAFABRIC_BASE}/api/v2/Entity`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
+    // v2 single-record read. Returns the full record including complete MULTILINE_MAX
+    // content, unlike list/query endpoints which project a size marker for those fields.
     GET_RECORD_BY_ID: (entityId: string, recordId: string) =>
-      `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read/${recordId}`,
+      `${DATAFABRIC_BASE}/api/v2/EntityService/entity/${entityId}/read/${recordId}`,
     INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert`,
     BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert-batch`,
     UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update/${recordId}`,
@@ -51,5 +53,13 @@ export const DATA_FABRIC_ENDPOINTS = {
     INSERT_BY_NAME: (choiceSetName: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/insert`,
     UPDATE_BY_NAME: (choiceSetName: string, valueId: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/${valueId}/update`,
     DELETE_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/choiceset/delete`,
+  },
+  ROLES: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/v2/Role`,
+  },
+  DIRECTORY: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/Directory`,
+    ASSIGN_ROLES: `${DATAFABRIC_BASE}/api/Directory/Role`,
+    REVOKE_ROLES: `${DATAFABRIC_BASE}/api/Directory/RevokeRole`,
   },
 } as const;

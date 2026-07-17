@@ -27,8 +27,10 @@ import type {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceReopenOptions,
+  CaseInstanceSendMessageOptions,
   CaseInstanceGetResponse
 } from '../../../../src/models/maestro';
+import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 import { SlaSummaryStatus } from '../../../../src/models/maestro/case-instances.types';
@@ -56,7 +58,7 @@ describe('CaseInstancesService', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -233,6 +235,8 @@ describe('CaseInstancesService', () => {
       expect(typeof result.pause).toBe('function');
       expect(typeof result.resume).toBe('function');
       expect(typeof result.reopen).toBe('function');
+      expect(result).toHaveProperty('sendMessage');
+      expect(typeof result.sendMessage).toBe('function');
       expect(result).toHaveProperty('getExecutionHistory');
       expect(result).toHaveProperty('getStages');
       expect(result).toHaveProperty('getActionTasks');
@@ -605,6 +609,107 @@ describe('CaseInstancesService', () => {
         MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
         options
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('sendMessage', () => {
+    const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+    const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+
+    beforeEach(() => {
+      mockApiClient.post.mockResolvedValue(undefined);
+    });
+
+    it('should send a select-stage message with the default instance reference', async () => {
+      const options: CaseInstanceSendMessageOptions = {
+        itemData: { stageName: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_STAGE_NAME }
+      };
+
+      await service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserSelectStage, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
+        {
+          name: CaseInstanceMessageName.UserSelectStage,
+          reference: `case-${instanceId}`,
+          itemData: { stageName: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_STAGE_NAME }
+        },
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+    });
+
+    it('should send an ad-hoc trigger message with a task name list payload', async () => {
+      const options: CaseInstanceSendMessageOptions = {
+        itemData: { taskNames: [MAESTRO_TEST_CONSTANTS.CASE_TASK_NAME] }
+      };
+
+      await service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserAdhocTrigger, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
+        {
+          name: CaseInstanceMessageName.UserAdhocTrigger,
+          reference: `case-${instanceId}`,
+          itemData: { taskNames: [MAESTRO_TEST_CONSTANTS.CASE_TASK_NAME] }
+        },
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+    });
+
+    it('should use the reference override when provided in options', async () => {
+      const options: CaseInstanceSendMessageOptions = {
+        reference: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_REFERENCE,
+        itemData: { stageName: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_STAGE_NAME }
+      };
+
+      await service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserSelectStage, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
+        {
+          name: CaseInstanceMessageName.UserSelectStage,
+          reference: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_REFERENCE,
+          itemData: { stageName: MAESTRO_TEST_CONSTANTS.CASE_MESSAGE_STAGE_NAME }
+        },
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+    });
+
+    it('should omit itemData from the request body when no options are provided', async () => {
+      await service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserAdhocTrigger);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
+        {
+          name: CaseInstanceMessageName.UserAdhocTrigger,
+          reference: `case-${instanceId}`
+        },
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_SEND_MESSAGE_FAILED);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(service.sendMessage(instanceId, folderKey, CaseInstanceMessageName.UserSelectStage))
+        .rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_SEND_MESSAGE_FAILED);
     });
   });
 

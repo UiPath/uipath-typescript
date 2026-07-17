@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.5.0",
+    "version": "1.5.4",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -215,11 +215,22 @@
                 "types": "./dist/governance/index.d.ts",
                 "default": "./dist/governance/index.cjs"
             }
+        },
+        "./notifications": {
+            "import": {
+                "types": "./dist/notifications/index.d.ts",
+                "default": "./dist/notifications/index.mjs"
+            },
+            "require": {
+                "types": "./dist/notifications/index.d.ts",
+                "default": "./dist/notifications/index.cjs"
+            }
         }
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "docs/oauth-scopes.md"
     ],
     "scripts": {
         "prepack": "rimraf *.tgz",
@@ -260,8 +271,8 @@
         "@rollup/plugin-typescript": "^11.1.0",
         "@types/node": "^20.11.19",
         "@types/uuid": "^9.0.8",
-        "@vitest/coverage-v8": "^3.2.4",
-        "@vitest/ui": "^3.2.4",
+        "@vitest/coverage-v8": "^4.1.9",
+        "@vitest/ui": "^4.1.9",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
         "oxlint": "^1.43.0",
@@ -272,7 +283,7 @@
         "typedoc": "^0.28.13",
         "typedoc-plugin-markdown": "^4.8.1",
         "typescript": "^5.3.3",
-        "vitest": "^3.2.4"
+        "vitest": "^4.1.9"
     },
     "repository": {
         "type": "git",

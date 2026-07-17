@@ -11,6 +11,13 @@ import type {
 } from '../../utils/pagination';
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for inspecting governance policy enforcement on the UiPath platform.
  *
  * See [Define governance policies](https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/define-governance-policies)
@@ -32,6 +39,12 @@ import type {
 export interface GovernanceServiceModel {
   /**
    * Gets per-policy enforcement decisions across the requested time range.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Each result row represents one policy's verdict within a single governance enforcement event.
    * A single user action can produce multiple rows when multiple policies were consulted.
@@ -83,6 +96,12 @@ export interface GovernanceServiceModel {
 
   /**
    * Gets aggregate governance enforcement counts across the requested time range.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Returns the total number of evaluations along with how many resolved to
    * `Allow`, `Deny`, or `NoOp`.

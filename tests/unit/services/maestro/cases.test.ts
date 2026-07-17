@@ -34,7 +34,7 @@ describe('CasesService', () => {
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     service = new CasesService(instance);
   });

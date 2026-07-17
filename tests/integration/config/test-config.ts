@@ -8,9 +8,17 @@ export interface IntegrationConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  tenantId?: string;
   secret: string;
   timeout: number;
   skipCleanup: boolean;
+  /**
+   * Whether the configured PAT carries the `DataFabric.Schema.Write` scope.
+   * Defaults to false (the standard test environment lacks it). Set
+   * `SCHEMA_WRITE_SCOPE_AVAILABLE=true` to enable schema-write-dependent tests
+   * (entity create/update, MULTILINE_MAX lifecycle).
+   */
+  schemaWriteScopeAvailable: boolean;
   folderId?: string;
   folderKey?: string;
   folderPath?: string;
@@ -20,6 +28,13 @@ export interface IntegrationConfig {
   dataFabricTestFolderEntityId?: string;
   dataFabricTestChoiceSetId?: string;
   dataFabricTestAttachmentField?: string;
+  // Cross-entity join fixture for the queryRecordsById join test. The three
+  // join-key fields are required (the test throws when any is missing);
+  // dataFabricTestJoinEntityName is optional and defaults to the queried entity.
+  dataFabricTestJoinEntityName?: string;
+  dataFabricTestJoinFieldName?: string;
+  dataFabricTestJoinRelatedEntityName?: string;
+  dataFabricTestJoinRelatedFieldName?: string;
   orchestratorAttachmentId?: string;
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
@@ -63,9 +78,11 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     baseUrl: rawConfig.baseUrl as string,
     orgName: rawConfig.orgName as string,
     tenantName: rawConfig.tenantName as string,
+    tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     secret: rawConfig.secret as string,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
+    schemaWriteScopeAvailable: rawConfig.schemaWriteScopeAvailable === true,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
     folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
     folderPath: typeof rawConfig.folderPath === 'string' ? rawConfig.folderPath : undefined,
@@ -75,6 +92,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestFolderEntityId: typeof rawConfig.dataFabricTestFolderEntityId === 'string' ? rawConfig.dataFabricTestFolderEntityId : undefined,
     dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
+    dataFabricTestJoinEntityName: typeof rawConfig.dataFabricTestJoinEntityName === 'string' ? rawConfig.dataFabricTestJoinEntityName : undefined,
+    dataFabricTestJoinFieldName: typeof rawConfig.dataFabricTestJoinFieldName === 'string' ? rawConfig.dataFabricTestJoinFieldName : undefined,
+    dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
+    dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
@@ -100,11 +121,13 @@ export function loadIntegrationConfig(): IntegrationConfig {
     baseUrl: process.env.UIPATH_BASE_URL,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
+    tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
     secret: process.env.UIPATH_SECRET,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
       : 30000,
     skipCleanup: process.env.INTEGRATION_TEST_SKIP_CLEANUP === 'true',
+    schemaWriteScopeAvailable: process.env.SCHEMA_WRITE_SCOPE_AVAILABLE === 'true',
     folderId: process.env.INTEGRATION_TEST_FOLDER_ID || undefined,
     folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
     folderPath: process.env.INTEGRATION_TEST_FOLDER_PATH || undefined,
@@ -114,6 +137,10 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestFolderEntityId: process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || undefined,
     dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
+    dataFabricTestJoinEntityName: process.env.DATA_FABRIC_TEST_JOIN_ENTITY_NAME || undefined,
+    dataFabricTestJoinFieldName: process.env.DATA_FABRIC_TEST_JOIN_FIELD_NAME || undefined,
+    dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
+    dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,

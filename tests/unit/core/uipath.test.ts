@@ -20,7 +20,7 @@ const mockLogout = vi.fn();
 const mockSetMultiLogin = vi.fn();
 
 vi.mock('../../../src/core/auth/service', () => {
-  const AuthService: any = vi.fn().mockImplementation(() => ({
+  const AuthService: any = vi.fn().mockImplementation(function () { return ({
     getTokenManager: () => mockTokenManager,
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
@@ -28,7 +28,7 @@ vi.mock('../../../src/core/auth/service', () => {
     authenticate: vi.fn().mockResolvedValue(true),
     setMultiLogin: mockSetMultiLogin,
     logout: mockLogout
-  }));
+  }); });
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
   AuthService.getStoredOAuthContext = vi.fn(() => null);

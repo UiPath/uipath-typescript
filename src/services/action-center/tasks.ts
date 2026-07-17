@@ -36,24 +36,6 @@ import { BaseService } from '../base';
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends BaseService implements TaskServiceModel {
-  /**
-   * Creates a new task
-   * @param task - The task to be created
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to the created task
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   * const task = await tasks.create({
-   *   title: "My Task",
-   *   priority: TaskPriority.Medium,
-   *   data: { key: "value" }
-   * }, 123); // folderId is required
-   * ```
-   */
   @track('Tasks.Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -74,46 +56,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
   }
 
-  /**
-   * Gets task users (users, robots, groups etc) in the given folder who have Tasks.View and Tasks.Edit permissions
-   * 
-   * The method returns either:
-   * - An array of task users (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param folderId - The folder ID to get task users from
-   * @param options - Optional query and pagination parameters
-   * @returns Promise resolving to an array of task users or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Standard array return
-   * const users = await tasks.getUsers(123);
-   *
-   * // Get task users with filtering
-   * const users = await tasks.getUsers(123, {
-   *   filter: "name eq 'abc'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await tasks.getUsers(123, { pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await tasks.getUsers(123, { cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await tasks.getUsers(123, {
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Tasks.GetUsers')
   async getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
     folderId: number,
@@ -148,50 +90,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     }, optionsWithFolder) as any;
   }
   
-  /**
-   * Gets tasks across folders with optional filtering and folder scoping
-   * 
-   * The method returns either:
-   * - An array of tasks (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param options - Query options including optional folderId, asTaskAdmin flag and pagination options
-   * @returns Promise resolving to an array of tasks or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Standard array return
-   * const allTasks = await tasks.getAll();
-   *
-   * // Get tasks within a specific folder
-   * const folderTasks = await tasks.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get tasks with admin permissions
-   * const adminTasks = await tasks.getAll({
-   *   asTaskAdmin: true
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await tasks.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await tasks.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await tasks.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Tasks.GetAll')
   async getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
     options?: T
@@ -238,28 +136,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     }, apiOptions) as any;
   }
 
-  /**
-   * Gets a task by ID
-   * @param id - The ID of the task to retrieve
-   * @param options - Optional query parameters including taskType for faster retrieval {@link TaskGetByIdOptions}
-   * @param folderId - Optional folder ID (REQUIRED when options.taskType is provided)
-   * @returns Promise resolving to the task
-   * {@link TaskGetResponse}
-   * @example
-   * ```typescript
-   * // Get a task by ID
-   * const task = await tasks.getById(<taskId>);
-   *
-   * // Get a form task by ID
-   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
-   *
-   * // Access form task properties
-   * console.log(formTask.formLayout);
-   *
-   * // Get a document validation task by ID (faster with taskType provided in the options)
-   * const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
-   * ```
-   */
   @track('Tasks.GetById')
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
     const { taskType, ...restOptions } = options;
@@ -304,63 +180,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     ) as TaskGetResponse;
   }
 
-  /**
-   * Assigns tasks to users
-   * 
-   * @param taskAssignments - Single task assignment or array of task assignments
-   * @returns Promise resolving to array of task assignment results
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Assign a single task to a user by ID
-   * const result = await tasks.assign({
-   *   taskId: 123,
-   *   userId: 456
-   * });
-   *
-   * // Assign a single task to a user by email
-   * const result = await tasks.assign({
-   *   taskId: 123,
-   *   userNameOrEmail: "user@example.com"
-   * });
-   *
-   * // Assign multiple tasks
-   * const result = await tasks.assign([
-   *   {
-   *     taskId: 123,
-   *     userId: 456
-   *   },
-   *   {
-   *     taskId: 789,
-   *     userNameOrEmail: "user@example.com"
-   *   }
-   * ]);
-   * ```
-   *
-   * @example Group assignment
-   * ```typescript
-   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
-   *
-   * // Assign to a directory group by userId + criteria — Action Center
-   * // distributes the task across the group's members based on the criteria
-   * const result = await tasks.assign({
-   *   taskId: 123,
-   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
-   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
-   * });
-   *
-   * // ...or identify the group by name instead of id
-   * const result2 = await tasks.assign({
-   *   taskId: 123,
-   *   userNameOrEmail: "My Group",
-   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
-   * });
-   * ```
-   */
   @track('Tasks.Assign')
   async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
@@ -385,62 +204,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     return processODataArrayResponse(transformedResponse, assignmentArray);
   }
 
-  /**
-   * Reassigns tasks to new users
-   * 
-   * @param taskAssignments - Single task assignment or array of task assignments
-   * @returns Promise resolving to array of task assignment results
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Reassign a single task to a user by ID
-   * const result = await tasks.reassign({
-   *   taskId: 123,
-   *   userId: 456
-   * });
-   *
-   * // Reassign a single task to a user by email
-   * const result = await tasks.reassign({
-   *   taskId: 123,
-   *   userNameOrEmail: "user@example.com"
-   * });
-   *
-   * // Reassign multiple tasks
-   * const result = await tasks.reassign([
-   *   {
-   *     taskId: 123,
-   *     userId: 456
-   *   },
-   *   {
-   *     taskId: 789,
-   *     userNameOrEmail: "user@example.com"
-   *   }
-   * ]);
-   * ```
-   *
-   * @example Group reassignment
-   * ```typescript
-   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
-   *
-   * // Reassign to a directory group by userId + criteria
-   * const result = await tasks.reassign({
-   *   taskId: 123,
-   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
-   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
-   * });
-   *
-   * // ...or identify the group by name instead of id
-   * const result2 = await tasks.reassign({
-   *   taskId: 123,
-   *   userNameOrEmail: "My Group",
-   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
-   * });
-   * ```
-   */
   @track('Tasks.Reassign')
   async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
@@ -465,25 +228,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     return processODataArrayResponse(transformedResponse, assignmentArray);
   }
 
-  /**
-   * Unassigns tasks (removes current assignees)
-   * 
-   * @param taskIds - Single task ID or array of task IDs to unassign
-   * @returns Promise resolving to array of task assignment results
-   * 
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Unassign a single task
-   * const result = await tasks.unassign(123);
-   *
-   * // Unassign multiple tasks
-   * const result = await tasks.unassign([123, 456, 789]);
-   * ```
-   */
   @track('Tasks.Unassign')
   async unassign(taskIds: number | number[]): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
@@ -506,34 +250,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
     return processODataArrayResponse(transformedResponse, taskIdArray.map(id => ({ taskId: id })));
   }
 
-  /**
-   * Completes a task with the specified type and data
-   *
-   * @param options - The completion options including task type, taskId, data, and action
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to completion result
-   *
-   * @example
-   * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
-   *
-   * const tasks = new Tasks(sdk);
-   *
-   * // Complete an app task
-   * await tasks.complete({
-   *   type: TaskType.App,
-   *   taskId: 456,
-   *   data: {},
-   *   action: "submit"
-   * }, 123); // folderId is required
-   *
-   * // Complete an external task
-   * await tasks.complete({
-   *   type: TaskType.External,
-   *   taskId: 789
-   * }, 123); // folderId is required
-   * ```
-   */
   @track('Tasks.Complete')
   async complete(options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });

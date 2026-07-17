@@ -35,7 +35,7 @@ const mockSession = {
 vi.mock(
   '@/services/conversational-agent/conversations/session/websocket-session',
   () => ({
-    WebSocketSession: vi.fn().mockImplementation(() => mockSession)
+    WebSocketSession: vi.fn().mockImplementation(function () { return mockSession; })
   })
 );
 

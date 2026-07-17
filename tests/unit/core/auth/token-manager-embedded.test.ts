@@ -23,10 +23,10 @@ const mockEmbeddedRefresh = vi.fn();
 const mockEmbeddedDestroy = vi.fn();
 
 vi.mock('@/core/auth/embedded-token-manager', () => ({
-  EmbeddedTokenManager: vi.fn().mockImplementation(() => ({
+  EmbeddedTokenManager: vi.fn().mockImplementation(function () { return ({
     refreshAccessToken: mockEmbeddedRefresh,
     destroy: mockEmbeddedDestroy,
-  })),
+  }); }),
 }));
 
 import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
@@ -53,9 +53,9 @@ vi.mock('@/core/auth/host-token-request', async () => {
 // Mock ActionCenterTokenManager
 // ---------------------------------------------------------------------------
 vi.mock('@/core/auth/action-center-token-manager', () => ({
-  ActionCenterTokenManager: vi.fn().mockImplementation(() => ({
+  ActionCenterTokenManager: vi.fn().mockImplementation(function () { return ({
     refreshAccessToken: vi.fn().mockResolvedValue('ac-token'),
-  })),
+  }); }),
 }));
 
 import { ActionCenterTokenManager } from '@/core/auth/action-center-token-manager';

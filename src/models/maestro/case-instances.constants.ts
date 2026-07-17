@@ -53,3 +53,8 @@ export const CASE_INSTANCE_TASK_FILTER = (caseInstanceId: string) =>
  * Default expand parameters for case instance tasks
  */
 export const CASE_INSTANCE_TASK_EXPAND = 'AssignedToUser,Activities';
+
+/**
+ * Function to generate the default message reference for a case instance
+ */
+export const CASE_INSTANCE_MESSAGE_REFERENCE = (instanceId: string) => `case-${instanceId}`;

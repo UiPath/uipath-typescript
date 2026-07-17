@@ -96,6 +96,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
+| `retry()` | `PIMS` |
 
 ## Maestro Cases
 
@@ -121,6 +122,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
 | `reopen()` | `PIMS` |
+| `sendMessage()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
 | `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
@@ -143,6 +145,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
+| `downloadCitationSource()` | NA |
 
 ### Conversations
 
@@ -267,3 +270,5 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceDecisions()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |

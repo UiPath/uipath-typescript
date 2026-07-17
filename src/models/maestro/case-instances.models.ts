@@ -4,6 +4,7 @@ import {
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
+  CaseInstanceSendMessageOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
@@ -190,9 +191,52 @@ export interface CaseInstancesServiceModel {
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Send a message to a running case instance
+   *
+   * Messages resolve wait points in the case — selecting the next stage when the case
+   * is waiting for a user to choose one, or starting a manually-triggered (ad-hoc) case task.
+   *
+   * @param instanceId - The ID of the case instance to send the message to
+   * @param folderKey - Required folder key
+   * @param name - The message name — a well-known `CaseInstanceMessageName` or a custom message name defined in the case model
+   * @param options - Optional message options with itemData payload and reference override
+   * @returns Promise that resolves when the message is accepted
+   * @example
+   * ```typescript
+   * import { CaseInstances, CaseInstanceMessageName } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
+   * // Select the next stage when the case is waiting for a user to choose one
+   * await caseInstances.sendMessage(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   CaseInstanceMessageName.UserSelectStage,
+   *   { itemData: { stageName: 'Review' } }
+   * );
+   *
+   * // Start a manually-triggered (ad-hoc) case task
+   * await caseInstances.sendMessage(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   CaseInstanceMessageName.UserAdhocTrigger,
+   *   { itemData: { taskNames: ['Approve Invoice'] } }
+   * );
+   *
+   * // Or using instance method
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * await instance.sendMessage(
+   *   CaseInstanceMessageName.UserAdhocTrigger,
+   *   { itemData: { taskNames: ['Approve Invoice'] } }
+   * );
+   * ```
+   */
+  sendMessage(instanceId: string, folderKey: string, name: string, options?: CaseInstanceSendMessageOptions): Promise<void>;
+
+  /**
    * Get execution history for a case instance
    * @param instanceId - The ID of the case instance
-   * @param folderKey - Required folder key 
+   * @param folderKey - Required folder key
    * @returns Promise resolving to instance execution history
    * {@link CaseInstanceExecutionHistoryResponse}
    * @example
@@ -400,6 +444,15 @@ export interface CaseInstanceMethods {
   resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Sends a message to this case instance
+   *
+   * @param name - The message name — a well-known `CaseInstanceMessageName` or a custom message name defined in the case model
+   * @param options - Optional message options with itemData payload and reference override
+   * @returns Promise that resolves when the message is accepted
+   */
+  sendMessage(name: string, options?: CaseInstanceSendMessageOptions): Promise<void>;
+
+  /**
    * Gets execution history for this case instance
    *
    * @returns Promise resolving to instance execution history
@@ -488,6 +541,13 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async sendMessage(name: string, options?: CaseInstanceSendMessageOptions): Promise<void> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.sendMessage(instanceData.instanceId, instanceData.folderKey, name, options);
     },
 
     async getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse> {

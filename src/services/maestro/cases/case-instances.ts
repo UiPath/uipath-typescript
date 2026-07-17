@@ -7,6 +7,7 @@ import {
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
+  CaseInstanceSendMessageOptions,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -20,7 +21,8 @@ import {
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
-  CaseJsonResponse
+  CaseJsonResponse,
+  CaseInstanceSendMessageRequestBody
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -32,7 +34,8 @@ import {
   CASE_STAGE_CONSTANTS,
   TimeFieldTransformMap,
   CASE_INSTANCE_TASK_FILTER,
-  CASE_INSTANCE_TASK_EXPAND
+  CASE_INSTANCE_TASK_EXPAND,
+  CASE_INSTANCE_MESSAGE_REFERENCE
 } from '../../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -58,46 +61,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     this.taskService = new TaskService(instance);
   }
 
-  /**
-   * Get all case instances with optional filtering and pagination
-   *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   *
-   * @param options -Query parameters for filtering instances and pagination
-   * @returns Promise resolving to case instances or paginated result
-   *
-   * @example
-   * ```typescript
-   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
-   *
-   * const caseInstances = new CaseInstances(sdk);
-   *
-   * // Get all case instances (non-paginated)
-   * const instances = await caseInstances.getAll();
-   *
-   * // Close faulted instances using methods directly on instances
-   * for (const instance of instances.items) {
-   *   if (instance.latestRunStatus === 'Faulted') {
-   *     await instance.close({ comment: 'Closing faulted case instance' });
-   *   }
-   * }
-   *
-   * // With filtering
-   * const filtered = await caseInstances.getAll({
-   *   processKey: 'MyCaseProcess'
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await caseInstances.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });
-   * }
-   * ```
-   */
   @track('CaseInstances.GetAll')
   async getAll<T extends CaseInstanceGetAllWithPaginationOptions = CaseInstanceGetAllWithPaginationOptions>(
     options?: T
@@ -147,12 +110,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     return result as any;
   }
 
-  /**
-   * Get a case instance by ID with operation methods (close, pause, resume, reopen)
-   * @param instanceId - The ID of the instance to retrieve
-   * @param folderKey - Required folder key
-   * @returns Promise<CaseInstanceGetResponse>
-   */
   @track('CaseInstances.GetById')
   async getById(instanceId: string, folderKey: string): Promise<CaseInstanceGetResponse> {
     const response = await this.get<RawCaseInstanceGetResponse>(
@@ -241,13 +198,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     }
   }
 
-  /**
-   * Close a case instance
-   * @param instanceId - The ID of the instance to cancel
-   * @param folderKey - Required folder key
-   * @param options - Optional cancellation options with comment
-   * @returns Promise resolving to operation result with updated instance data
-   */
   @track('CaseInstances.Close')
   async close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), options || {}, {
@@ -260,13 +210,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
   }
 
-  /**
-   * Pause a case instance
-   * @param instanceId - The ID of the instance to pause
-   * @param folderKey - Required folder key
-   * @param options - Optional pause options with comment
-   * @returns Promise resolving to operation result with updated instance data
-   */
   @track('CaseInstances.Pause')
   async pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
@@ -279,13 +222,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
   }
 
-  /**
-   * Reopen a case instance from a specified element
-   * @param instanceId - The ID of the case instance to reopen
-   * @param folderKey - Required folder key
-   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
-   * @returns Promise resolving to operation result with updated instance data
-   */
   @track('CaseInstances.Reopen')
   async reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
     // Transform SDK options to API request format
@@ -304,13 +240,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
   }
 
-  /**
-   * Resume a case instance
-   * @param instanceId - The ID of the instance to resume
-   * @param folderKey - Required folder key
-   * @param options - Optional resume options with comment
-   * @returns Promise resolving to operation result with updated instance data
-   */
   @track('CaseInstances.Resume')
   async resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
@@ -323,22 +252,19 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
   }
 
-  /**
-   * Get execution history for a case instance
-   * @param instanceId - The ID of the case instance
-   * @param folderKey - Required folder key
-   * @returns Promise resolving to instance execution history
-   * @example
-   * ```typescript
-   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
-   *
-   * const caseInstances = new CaseInstances(sdk);
-   * const history = await caseInstances.getExecutionHistory(
-   *   'instance-id',
-   *   'folder-key'
-   * );
-   * ```
-   */
+  @track('CaseInstances.SendMessage')
+  async sendMessage(instanceId: string, folderKey: string, name: string, options?: CaseInstanceSendMessageOptions): Promise<void> {
+    const requestBody: CaseInstanceSendMessageRequestBody = {
+      name,
+      reference: options?.reference ?? CASE_INSTANCE_MESSAGE_REFERENCE(instanceId),
+      ...(options?.itemData && { itemData: options.itemData })
+    };
+
+    await this.post<void>(MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE, requestBody, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+  }
+
   @track('CaseInstances.GetExecutionHistory')
   async getExecutionHistory(
     instanceId: string, 
@@ -374,12 +300,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     return transformedResponse as CaseInstanceExecutionHistoryResponse;
   }
 
-  /**
-   * Get case stages with their associated tasks and execution status
-   * @param caseInstanceId - The ID of the case instance
-   * @param folderKey - Required folder key
-   * @returns Promise resolving to an array of case stages, each containing their tasks with execution details
-   */
   @track('CaseInstances.GetStages')
   async getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]> {
     // Fetch both execution history and case JSON in parallel, but handle execution failures gracefully
@@ -537,12 +457,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     return stage;
   }
 
-  /**
-   * Get human in the loop tasks associated with a case instance
-   * @param caseInstanceId - The ID of the case instance
-   * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to human in the loop tasks associated with the case instance
-   */
   @track('CaseInstances.GetActionTasks')
   async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
     caseInstanceId: string,
@@ -573,41 +487,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     return await this.taskService.getAll(enhancedOptions) as any;
   }
 
-  /**
-   * Get SLA summary for all case instances across folders.
-   *
-   * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
-   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
-   *
-   * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
-   * @example
-   * ```typescript
-   * // Non-paginated (returns top 50 items by default)
-   * const summary = await caseInstances.getSlaSummary();
-   * console.log(`Found ${summary.totalCount} cases`);
-   *
-   * // Filter by case instance ID
-   * const filtered = await caseInstances.getSlaSummary({
-   *   caseInstanceId: '<caseInstanceId>'
-   * });
-   *
-   * // Filter by time range
-   * const timeFiltered = await caseInstances.getSlaSummary({
-   *   startTimeUtc: new Date('2026-01-01'),
-   *   endTimeUtc: new Date('2026-01-31')
-   * });
-   *
-   * // With pagination
-   * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
-   * if (page1.hasNextPage) {
-   *   const page2 = await caseInstances.getSlaSummary({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
-   * ```
-   */
   @track('CaseInstances.GetSlaSummary')
   async getSlaSummary<T extends CaseInstanceSlaSummaryOptions = CaseInstanceSlaSummaryOptions>(
     options?: T
@@ -646,34 +525,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     }, apiOptions) as any;
   }
 
-  /**
-   * Get stages SLA summary for case instances across folders.
-   *
-   * Returns stage-level SLA status and escalation information for each case instance, aggregated from Insights Real-Time Monitoring.
-   *
-   * @param options - Optional filtering options
-   * @returns Promise resolving to an array of {@link CaseInstanceStageSLAResponse}
-   * @example
-   * ```typescript
-   * // Get stages SLA summary for all case instances
-   * const stagesSla = await caseInstances.getStagesSlaSummary();
-   * for (const item of stagesSla) {
-   *   console.log(`Instance: ${item.caseInstanceId}`);
-   *   for (const stage of item.stages) {
-   *     console.log(`  Stage: ${stage.name} - SLA Status: ${stage.slaStatus}, Due: ${stage.slaDueTime}`);
-   *   }
-   * }
-   *
-   * // Filter by case instance ID
-   * const filtered = await caseInstances.getStagesSlaSummary({
-   *   caseInstanceId: '<caseInstanceId>'
-   * });
-   *
-   * // Using bound method on a case instance
-   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
-   * const stagesSla = await instance.getStagesSlaSummary();
-   * ```
-   */
   @track('CaseInstances.GetStagesSlaSummary')
   async getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]> {
     const response = await this.post<CaseInstanceStageSLAResponse[]>(

@@ -9,14 +9,24 @@ import {
   AgentTraceGetUnitConsumptionResponse,
   AgentSpanGetResponse,
   AgentTraceGetSpansByReferenceOptions,
+  AgentGovernanceDecisionGetResponse,
+  AgentGovernanceDecisionsOptions,
+  AgentGovernanceGetSummaryResponse,
+  AgentGovernanceSummaryOptions,
+  AgentGovernanceMode,
+  AgentGovernanceVerdict,
 } from '../../../../models/observability/traces/agent/agent.types';
 import { AgentTracesServiceModel } from '../../../../models/observability/traces/agent/agent.models';
-import { RawAgentSpanGetResponse } from '../../../../models/observability/traces/agent/agent.internal-types';
+import {
+  RawAgentSpanGetResponse,
+  RawAgentGovernanceDecisionGetResponse,
+} from '../../../../models/observability/traces/agent/agent.internal-types';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../utils/constants/endpoints';
 import {
   HTTP_METHODS,
   AGENTS_OFFSET_PARAMS,
   TRACEVIEW_SPANS_PAGINATION,
+  GOVERNANCE_DECISIONS_PAGINATION,
 } from '../../../../utils/constants/common';
 import { track } from '../../../../core/telemetry';
 import { ValidationError } from '../../../../core/errors';
@@ -36,41 +46,36 @@ const transformSpan = (span: RawAgentSpanGetResponse): AgentSpanGetResponse => {
   return { ...rest, expiredTime: expiryTimeUtc };
 };
 
+// Case-insensitive lookups from a raw API value → enum member (keys upper-cased).
+const GOVERNANCE_MODE_BY_VALUE = new Map<string, AgentGovernanceMode>(
+  Object.values(AgentGovernanceMode).map((mode) => [mode.toUpperCase(), mode]),
+);
+const GOVERNANCE_VERDICT_BY_VALUE = new Map<string, AgentGovernanceVerdict>(
+  Object.values(AgentGovernanceVerdict).map((verdict) => [verdict.toUpperCase(), verdict]),
+);
+
+/** Maps a raw mode string to {@link AgentGovernanceMode}, case-insensitively; missing/unrecognized → `Unknown`. */
+const toGovernanceMode = (raw: string | null): AgentGovernanceMode =>
+  (raw != null ? GOVERNANCE_MODE_BY_VALUE.get(raw.toUpperCase()) : undefined) ?? AgentGovernanceMode.Unknown;
+
+/** Maps a raw verdict string to {@link AgentGovernanceVerdict}, case-insensitively; missing/unrecognized → `Unknown`. */
+const toGovernanceVerdict = (raw: string | null): AgentGovernanceVerdict =>
+  (raw != null ? GOVERNANCE_VERDICT_BY_VALUE.get(raw.toUpperCase()) : undefined) ?? AgentGovernanceVerdict.Unknown;
+
+/**
+ * Normalizes a raw governance row, mapping the mode and verdict strings to
+ * their enums while leaving the other fields untouched.
+ */
+const transformGovernanceDecision = (row: RawAgentGovernanceDecisionGetResponse): AgentGovernanceDecisionGetResponse => ({
+  ...row,
+  mode: toGovernanceMode(row.mode),
+  evaluatorResult: toGovernanceVerdict(row.evaluatorResult),
+});
+
 /**
  * Service for retrieving UiPath Agent trace metrics.
  */
 export class AgentTracesService extends BaseService implements AgentTracesServiceModel {
-  /**
-   * Retrieves a trace-level time-series of error counts grouped by error name.
-   *
-   * @param options - Optional window and filters
-   * @returns Promise resolving to an array of {@link AgentTraceGetErrorsTimelineResponse}
-   * @example
-   * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
-   *
-   * // Get the errors timeline
-   * const result = await trace.getErrorsTimeline();
-   * result.forEach((point) => {
-   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
-   * });
-   * ```
-   * @example
-   * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * // Get the errors timeline for an agent version within a time window
-   * const filtered = await trace.getErrorsTimeline({
-   *   startTime: new Date('2025-05-01T00:00:00Z'),
-   *   endTime: new Date('2025-06-01T00:00:00Z'),
-   *   agentId: '<agentId>',
-   *   agentVersion: '1.0.0',
-   *   executionType: AgentTraceExecutionType.Runtime,
-   * });
-   * ```
-   */
   @track('AgentTraces.GetErrorsTimeline')
   async getErrorsTimeline(
     options?: AgentTraceGetErrorsTimelineOptions,
@@ -82,37 +87,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     return response.data.data;
   }
 
-  /**
-   * Retrieves a trace-level time-series of latency.
-   *
-   * @param options - Optional window and filters
-   * @returns Promise resolving to an array of {@link AgentTraceGetLatencyTimelineResponse}
-   * @example
-   * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
-   *
-   * // Get the latency timeline
-   * const result = await trace.getLatencyTimeline();
-   * result.forEach((point) => {
-   *   console.log(`${point.date} ${point.name}: ${point.value}s`);
-   * });
-   * ```
-   * @example
-   * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * // Get the latency timeline for an agent version within a time window
-   * const filtered = await trace.getLatencyTimeline({
-   *   startTime: new Date('2025-05-01T00:00:00Z'),
-   *   endTime: new Date('2025-06-01T00:00:00Z'),
-   *   agentId: '<agentId>',
-   *   agentVersion: '1.0.0',
-   *   executionType: AgentTraceExecutionType.Runtime,
-   * });
-   * ```
-   */
   @track('AgentTraces.GetLatencyTimeline')
   async getLatencyTimeline(
     options?: AgentTraceGetLatencyTimelineOptions,
@@ -124,37 +98,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     return response.data.data;
   }
 
-  /**
-   * Retrieves trace-level per-agent unit consumption totals.
-   *
-   * @param options - Optional window and filters
-   * @returns Promise resolving to an array of {@link AgentTraceGetUnitConsumptionResponse}
-   * @example
-   * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
-   *
-   * // Get per-agent unit consumption
-   * const result = await trace.getUnitConsumption();
-   * result.forEach((row) => {
-   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} Agent Units, ${row.platformUnitsConsumed} Platform Units`);
-   * });
-   * ```
-   * @example
-   * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * // Get per-agent unit consumption for an agent version within a time window
-   * const filtered = await trace.getUnitConsumption({
-   *   startTime: new Date('2025-05-01T00:00:00Z'),
-   *   endTime: new Date('2025-06-01T00:00:00Z'),
-   *   agentId: '<agentId>',
-   *   agentVersion: '1.0.0',
-   *   executionType: AgentTraceExecutionType.Runtime,
-   * });
-   * ```
-   */
   @track('AgentTraces.GetUnitConsumption')
   async getUnitConsumption(
     options?: AgentTraceGetUnitConsumptionOptions,
@@ -166,23 +109,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     return response.data.data;
   }
 
-  /**
-   * Retrieves every span belonging to a single trace.
-   *
-   * @param traceId - Identifier of the trace whose spans should be returned
-   * @returns Promise resolving to an array of {@link AgentSpanGetResponse}
-   * @example
-   * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
-   *
-   * const spans = await trace.getSpansByTraceId('<traceId>');
-   * spans.forEach((span) => {
-   *   console.log(`${span.name} (${span.startTime} → ${span.endTime ?? 'in progress'})`);
-   * });
-   * ```
-   */
   @track('AgentTraces.GetSpansByTraceId')
   async getSpansByTraceId(traceId: string): Promise<AgentSpanGetResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByTraceId' });
@@ -190,44 +116,6 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
     return (response.data ?? []).map(transformSpan);
   }
 
-  /**
-   * Retrieves spans whose reference hierarchy contains the given reference id.
-   *
-   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
-   * `cursor`, or `jumpToPage`) are provided, otherwise a
-   * {@link NonPaginatedResponse}.
-   *
-   * @param referenceId - Reference id matched against each span's reference hierarchy
-   * @param options - Optional pagination and hierarchy/time filters
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentSpanGetResponse}
-   * @example
-   * ```typescript
-   * import { AgentTraces } from '@uipath/uipath-typescript/traces';
-   *
-   * const trace = new AgentTraces(sdk);
-   *
-   * // Get spans by referenceId
-   * const result = await trace.getSpansByReference('<referenceId>');
-   * result.items.forEach((span) => console.log(span.name));
-   * ```
-   * @example
-   * ```typescript
-   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/traces';
-   *
-   * // Get spans by referenceId within a trace and time window
-   * const page = await trace.getSpansByReference('<referenceId>', {
-   *   traceId: '<traceId>',
-   *   executionType: AgentTraceExecutionType.Runtime,
-   *   startTime: new Date('2025-05-01T00:00:00Z'),
-   *   endTime: new Date('2025-06-01T00:00:00Z'),
-   *   pageSize: 25,
-   * });
-   *
-   * if (page.hasNextPage && page.nextCursor) {
-   *   const next = await trace.getSpansByReference('<referenceId>', { cursor: page.nextCursor });
-   * }
-   * ```
-   */
   @track('AgentTraces.GetSpansByReference')
   async getSpansByReference<T extends AgentTraceGetSpansByReferenceOptions = AgentTraceGetSpansByReferenceOptions>(
     referenceId: string,
@@ -268,6 +156,64 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
         ? PaginatedResponse<AgentSpanGetResponse>
         : NonPaginatedResponse<AgentSpanGetResponse>
     >;
+  }
+
+  @track('AgentTraces.GetGovernanceDecisions')
+  async getGovernanceDecisions<T extends AgentGovernanceDecisionsOptions = AgentGovernanceDecisionsOptions>(
+    startTime: Date,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentGovernanceDecisionGetResponse>
+      : NonPaginatedResponse<AgentGovernanceDecisionGetResponse>
+  > {
+    const { endTime, ...rest } = options ?? {};
+    const apiOptions = {
+      ...rest,
+      startTime: startTime.toISOString(),
+      ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
+    };
+
+    return PaginationHelpers.getAll<typeof apiOptions, RawAgentGovernanceDecisionGetResponse, AgentGovernanceDecisionGetResponse>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_DECISIONS,
+      method: HTTP_METHODS.POST,
+      transformFn: transformGovernanceDecision,
+      excludeFromPrefix: Object.keys(apiOptions),
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: GOVERNANCE_DECISIONS_PAGINATION.ITEMS_FIELD,
+        paginationParams: {
+          pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: AGENTS_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false,
+          zeroBased: true,
+        },
+      },
+    }, apiOptions) as Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<AgentGovernanceDecisionGetResponse>
+        : NonPaginatedResponse<AgentGovernanceDecisionGetResponse>
+    >;
+  }
+
+  @track('AgentTraces.GetGovernanceSummary')
+  async getGovernanceSummary(
+    startTime: Date,
+    options?: AgentGovernanceSummaryOptions,
+  ): Promise<AgentGovernanceGetSummaryResponse> {
+    const body: Record<string, unknown> = { startTime: startTime.toISOString() };
+    if (options?.endTime !== undefined) body.endTime = options.endTime.toISOString();
+    if (options?.topN !== undefined) body.topN = options.topN;
+    if (options?.packName !== undefined) body.packName = options.packName;
+    if (options?.sections !== undefined) body.sections = options.sections;
+
+    const response = await this.post<AgentGovernanceGetSummaryResponse>(
+      AGENT_TRACES_ENDPOINTS.GET_GOVERNANCE_SUMMARY,
+      body,
+    );
+    return response.data;
   }
 
   private buildTraceFilterBody(

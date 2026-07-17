@@ -8,9 +8,16 @@ import {
 } from './memory.types';
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for managing UiPath Agent Memory.
  *
- * Agent Memory is a persistent store of information an agent 
+ * Agent Memory is a persistent store of information an agent
  * retains across runs to improve runtime reliability.
  *
  * @example
@@ -28,6 +35,12 @@ import {
 export interface AgentMemoryServiceModel {
   /**
    * Gets agent memory state over time, with optional filters.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param options - Optional time window and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetTimelineResponse}, one per time bucket.
@@ -60,6 +73,12 @@ export interface AgentMemoryServiceModel {
   /**
    * Gets the number of agent memory calls (accesses to the memory store) over time, with optional filters.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param options - Optional time window and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetCallsTimelineResponse}, one per time bucket.
    * @example
@@ -90,6 +109,12 @@ export interface AgentMemoryServiceModel {
 
   /**
    * Gets the top memory spaces by memory count, with optional filters
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param options - Optional limit, time window, and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetTopSpacesResponse}, ranked by memory count.

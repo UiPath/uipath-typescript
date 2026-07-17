@@ -20,50 +20,6 @@ import { track } from '../../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
-  /**
-   * Gets all queues across folders with optional filtering and folder scoping
-   * 
-   * The method returns either:
-   * - An array of queues (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of queues or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Queues } from '@uipath/uipath-typescript/queues';
-   *
-   * const queues = new Queues(sdk);
-   *
-   * // Standard array return
-   * const allQueues = await queues.getAll();
-   *
-   * // Get queues within a specific folder
-   * const folderQueues = await queues.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get queues with filtering
-   * const filteredQueues = await queues.getAll({
-   *   filter: "name eq 'MyQueue'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await queues.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await queues.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await queues.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
-   */
   @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
@@ -99,23 +55,6 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     }, apiOptions) as any;
   }
 
-  /**
-   * Gets a single queue by ID
-   * 
-   * @param id - Queue ID
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to a queue definition
-   * 
-   * @example
-   * ```typescript
-   * import { Queues } from '@uipath/uipath-typescript/queues';
-   *
-   * const queues = new Queues(sdk);
-   *
-   * // Get queue by ID
-   * const queue = await queues.getById(123, 456);
-   * ```
-   */
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });

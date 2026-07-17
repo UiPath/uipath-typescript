@@ -9,6 +9,9 @@ import {
   CasesService,
   CaseInstancesService,
   EntityService,
+  ChoiceSetService,
+  DataFabricDirectoryService,
+  DataFabricRoleService,
   TaskService,
   ProcessService,
   BucketService,
@@ -28,13 +31,13 @@ const mockTokenManager = {
 };
 
 vi.mock('../../../src/core/auth/service', () => {
-  const AuthService: any = vi.fn().mockImplementation(() => ({
+  const AuthService: any = vi.fn().mockImplementation(function () { return ({
     getTokenManager: () => mockTokenManager,
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
     authenticate: vi.fn().mockResolvedValue(true)
-  }));
+  }); });
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
   AuthService.getStoredOAuthContext = vi.fn(() => null);
@@ -51,7 +54,7 @@ describe('UiPath Legacy Pattern', () => {
 
   beforeEach(() => {
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     uiPath = new UiPath({
       baseUrl: TEST_CONSTANTS.BASE_URL,
@@ -133,6 +136,9 @@ describe('UiPath Legacy Pattern', () => {
       expect(entities).toBeDefined();
       expect(entities).toBeInstanceOf(EntityService);
       expect(entities.getAll).toBeDefined();
+      expect(entities.choicesets).toBeInstanceOf(ChoiceSetService);
+      expect(entities.roles).toBeInstanceOf(DataFabricRoleService);
+      expect(entities.directory).toBeInstanceOf(DataFabricDirectoryService);
     });
   });
 
