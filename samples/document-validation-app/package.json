@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/ui-widgets-validation-station": "1.0.1",
+    "@uipath/ui-widgets-validation-station": "1.0.0",
     "@uipath/uipath-typescript": "^1.4.2",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
