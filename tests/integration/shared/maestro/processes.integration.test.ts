@@ -79,6 +79,37 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getAll filtering', () => {
+    it('should filter processes by packageId', async () => {
+      const { maestroProcesses } = getServices();
+
+      const all = await maestroProcesses.getAll();
+      if (all.length === 0) {
+        throw new Error('No Maestro processes available to test packageId filtering');
+      }
+
+      const { packageId } = all[0];
+      const filtered = await maestroProcesses.getAll({ packageId });
+
+      expect(Array.isArray(filtered)).toBe(true);
+      expect(filtered.length).toBeGreaterThan(0);
+      for (const process of filtered) {
+        expect(process.packageId).toBe(packageId);
+      }
+    });
+
+    it('should accept a started-time range filter', async () => {
+      const { maestroProcesses } = getServices();
+
+      const result = await maestroProcesses.getAll({
+        startTime: new Date(0),
+        endTime: new Date(),
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
   describe('getIncidents', () => {
     it('should retrieve incidents for a process', async () => {
       const { maestroProcesses } = getServices();

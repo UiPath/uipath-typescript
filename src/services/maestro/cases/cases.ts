@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetAllOptions, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
@@ -17,9 +17,13 @@ import { createParams } from '../../../utils/http/params';
  */
 export class CasesService extends BaseService implements CasesServiceModel {
   @track('Cases.GetAll')
-  async getAll(): Promise<CaseGetAllWithMethodsResponse[]> {
+  async getAll(options?: CaseGetAllOptions): Promise<CaseGetAllWithMethodsResponse[]> {
     const params = createParams({
-      processType: ProcessType.CaseManagement
+      processType: ProcessType.CaseManagement,
+      processKey: options?.processKey,
+      packageId: options?.packageId,
+      startedTimeUtcStart: options?.startTime?.toISOString(),
+      startedTimeUtcEnd: options?.endTime?.toISOString(),
     });
 
     const response = await this.get<{ processes: Omit<CaseGetAllResponse, 'name'>[] }>(
