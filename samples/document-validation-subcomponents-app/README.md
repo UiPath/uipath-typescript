@@ -6,6 +6,10 @@ It lists pending Document Validation tasks from UiPath Action Center and, for th
 
 > **Monolithic vs. compose-your-own.** The sibling [`document-validation-app`](../document-validation-app) renders the same task with the single `ValidationStation` component — the fastest path when you want the standard layout. **This** sample shows the other path: drop the subcomponents into your own layout when you need to rearrange, hide, or embed individual panels. Both talk to the same tasks and the same bucket artifacts.
 
+## Preview
+
+![Document review workspace walkthrough](./demo/screen-recording.gif)
+
 ## What this sample demonstrates
 
 - OAuth 2.0 authorization code + PKCE login against UiPath Cloud using the `@uipath/uipath-typescript` SDK
