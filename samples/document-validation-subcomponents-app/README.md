@@ -46,7 +46,7 @@ It lists pending Document Validation tasks from UiPath Action Center and, for th
 Copy the template and fill in the values:
 
 ```bash
-cp uipath.example.json uipath.json
+cp uipath.json.example uipath.json
 ```
 
 | Field | Where to find it | Example |
