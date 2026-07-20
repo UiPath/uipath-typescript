@@ -22,6 +22,15 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
 | `restart()` | `OR.Jobs` |
 
+## Functions
+
+Coded functions are invoked through their HTTP endpoint, which requires the `OR.Default` scope (auto-granted to any registered external app, but it must appear explicitly in the app's scope string).
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Default` |
+| `invoke()` | `OR.Default`, `OR.Folders` or `OR.Folders.Read` |
+
 ## Attachments
 
 | Method | OAuth Scope |
