@@ -74,6 +74,17 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **Do not duplicate backend validation SDK-side** — when an API parameter has backend-enforced constraints (e.g., character limits, allowed formats), document the constraint in JSDoc (`@param search - Search string (1–100 chars)`) rather than adding matching SDK-side validation. SDK-side checks risk drifting out of sync with backend rules as the API evolves, producing confusing double-error scenarios.
 - **NEVER** expose internal implementation details in user-facing JSDoc — remove references to `OData`, internal API protocols, or internal endpoint names (e.g., "via the OData GetFiles endpoint", "with OData query options"). End users don't need to know which protocol or internal API mechanism the SDK uses; such details belong in code comments or internal docs, not in generated API documentation.
 
+### Samples & Template Gallery
+
+- Every app under `samples/` must ship a **preview GIF** at `samples/<app>/screenshots/` (e.g. `preview.gif`) showing the app in use. The app README and the docs Template Gallery both render it — a missing GIF leaves an empty poster tile in the gallery.
+- The **Template Gallery** (`docs/samples/index.md`) is the browsable, searchable index of `samples/` published on the docs site. When you **add, rename, remove, or re-scope a sample, update the gallery in the same PR** so the site stays in sync. Edit the inline app list (the `#tg-data` JSON block) — add or adjust an entry:
+
+  ```json
+  { "id": "<folder>", "title": "...", "description": "...", "category": "<existing category id>", "framework": "React | Angular", "tags": ["..."], "path": "samples/<...>", "preview": "samples/<...>/screenshots/preview.gif" }
+  ```
+
+  `path` is the repo-relative sample folder; `preview` is the repo-relative GIF path (or `null` to show a generated poster). Reuse an existing `category` id — it drives the category tabs; `framework` drives the framework filter; `tags` are matched by the search box.
+
 ## Post-implementation verification checklist
 
 Run after every implementation, before committing.

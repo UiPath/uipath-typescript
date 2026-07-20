@@ -15,15 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '18'
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.11'
 
@@ -50,6 +50,15 @@ jobs:
           mkdocs build
 
       - name: Deploy to GitHub Pages
-        run: |
-          source docs-env/bin/activate
-          mkdocs gh-deploy --force
+        # Deploy the pre-built site/ (from the "Build MkDocs Documentation" step)
+        # instead of `mkdocs gh-deploy --force`, which force-replaces the whole
+        # gh-pages branch and would delete the PR-preview umbrella dir.
+        # clean-exclude keeps `pr-preview/` intact while still removing stale
+        # docs pages; force: false rebases instead of clobbering concurrent
+        # preview deployments.
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          branch: gh-pages
+          folder: site
+          clean-exclude: pr-preview/
+          force: false
