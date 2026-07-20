@@ -4,5 +4,5 @@
   "tenantName": "<your-tenant>",
   "baseUrl": "https://api.uipath.com",
   "redirectUri": "http://localhost:5173/",
-  "scope": "OR.Tasks OR.Buckets OR.Folders"
+  "scope": "OR.Tasks OR.Buckets OR.Folders.Read"
 }
