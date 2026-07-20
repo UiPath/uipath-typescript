@@ -19,7 +19,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     </div>
     <div class="tg-row" id="tg-filters">
       <span class="tg-flabel">Filter</span>
-      <span id="tg-fw"></span>
+      <span id="tg-fw" role="group" aria-label="Filter by framework"></span>
     </div>
   </div>
   <div class="tg-meta">
