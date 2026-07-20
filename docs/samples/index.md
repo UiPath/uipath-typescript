@@ -25,6 +25,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   <div class="tg-meta">
     <span class="tg-count" aria-live="polite"><b id="tg-count-n">0</b> <span id="tg-count-w">apps</span></span>
     <button type="button" class="tg-clear" id="tg-clear" hidden>Clear filters</button>
+    <a class="tg-ghlink" id="tg-browse" target="_blank" rel="noopener">Browse all on GitHub ↗</a>
   </div>
   <div class="tg-grid" id="tg-grid"></div>
   <div class="tg-empty" id="tg-empty" hidden>No apps match these filters.</div>
@@ -72,6 +73,8 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 .md-typeset .tg-count b { color: var(--tg-ink); }
 .md-typeset .tg-clear { background: none; border: 0; color: var(--tg-accent); cursor: pointer; font: inherit; font-size: 0.8rem; font-weight: 600; padding: 0; }
 .md-typeset .tg-clear:hover { text-decoration: underline; }
+.md-typeset .tg-ghlink { margin-left: auto; color: var(--tg-accent); font-size: 0.8rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.md-typeset .tg-ghlink:hover { text-decoration: underline; }
 
 /* grid + cards */
 .md-typeset .tg-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
@@ -273,6 +276,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   function render() { renderTabs(); renderFilters(); renderGrid(); }
   $("tg-search").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); renderGrid(); });
   $("tg-clear").addEventListener("click", function () { state.cat = "all"; state.fws.clear(); state.q = ""; $("tg-search").value = ""; render(); $("tg-search").focus(); });
+  $("tg-browse").href = TREE_BASE + "samples";
   render();
 })();
 </script>
