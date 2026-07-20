@@ -77,6 +77,23 @@ jobs:
           source docs-env/bin/activate
           mkdocs build
 
+      - name: Point Template Gallery assets at the PR commit
+        # An open PR's new samples aren't on `main` yet, so the gallery's default
+        # `"ref": "main"` would 404 their GIFs and source links in the preview.
+        # Rewrite that single ref in the built page to this PR's head commit, where
+        # the assets exist. Same-repo PRs only (forks get no published preview, and
+        # their head SHA isn't served from this repo's raw host). HEAD_SHA is passed
+        # via env (never interpolated into the script body) and is a 40-char hex SHA.
+        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          page="site/samples/index.html"
+          if [ -f "$page" ]; then
+            sed -i "s/\"ref\": \"main\"/\"ref\": \"${HEAD_SHA}\"/" "$page"
+            echo "Rewrote Template Gallery ref -> ${HEAD_SHA}"
+          fi
+
       - name: Deploy / update / remove PR preview
         # Same-repo PRs only — fork PRs get a read-only token and can't publish.
         if: github.event.pull_request.head.repo.full_name == github.repository

@@ -20,7 +20,6 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     <div class="tg-row" id="tg-filters">
       <span class="tg-flabel">Filter</span>
       <span id="tg-fw"></span>
-      <span id="tg-tags"></span>
     </div>
   </div>
   <div class="tg-meta">
@@ -115,7 +114,7 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
 <script type="application/json" id="tg-data">
 {
   "repo": "https://github.com/UiPath/uipath-typescript",
-  "assetsBaseUrl": "https://raw.githubusercontent.com/UiPath/uipath-typescript/main/",
+  "ref": "main",
   "categories": [
     { "id": "action-apps", "label": "Action Apps", "accent": ["#FA4616", "#FF8A4C"] },
     { "id": "agents", "label": "Agents", "accent": ["#7C5CFC", "#A78BFA"] },
@@ -148,7 +147,14 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   if (!root || root.dataset.mounted) return;
   root.dataset.mounted = "1";
   var DATA = JSON.parse(document.getElementById("tg-data").textContent);
-  var state = { cat: "all", fws: new Set(), tags: new Set(), q: "" };
+  // All sample assets/links resolve against a single git ref. Defaults to "main";
+  // the docs PR-preview build rewrites it to the PR's head commit so a new sample's
+  // assets (not yet on main) resolve in the preview. See .github/workflows/docs-pr-preview.yml.
+  var REF = DATA.ref || "main";
+  var RAW_BASE = DATA.repo.replace("https://github.com/", "https://raw.githubusercontent.com/") + "/" + REF + "/";
+  var TREE_BASE = DATA.repo + "/tree/" + REF + "/";
+  var BLOB_BASE = DATA.repo + "/blob/" + REF + "/";
+  var state = { cat: "all", fws: new Set(), q: "" };
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
   function catById(id) { return (DATA.categories || []).find(function (c) { return c.id === id; }); }
@@ -181,7 +187,6 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
   function matches(app) {
     if (state.cat !== "all" && app.category !== state.cat) return false;
     if (state.fws.size && !state.fws.has(app.framework)) return false;
-    if (state.tags.size) { for (var t of state.tags) if ((app.tags || []).indexOf(t) === -1) return false; }
     if (state.q) { var hay = (app.title + " " + app.description + " " + (app.tags || []).join(" ") + " " + app.framework).toLowerCase(); if (hay.indexOf(state.q) === -1) return false; }
     return true;
   }
@@ -210,28 +215,19 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     } else {
       fwWrap.querySelectorAll("[data-fw]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.fws.has(b.dataset.fw))); });
     }
-    var tagWrap = $("tg-tags");
-    if (!tagWrap.children.length) {
-      var counts = {}; DATA.apps.forEach(function (a) { (a.tags || []).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; }); });
-      var tags = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); });
-      tagWrap.innerHTML = tags.map(function (t) { return '<button type="button" class="tg-pill tg-pill-sm" aria-pressed="' + state.tags.has(t) + '" data-tag="' + esc(t) + '">' + esc(t) + "</button>"; }).join("");
-      tagWrap.querySelectorAll("[data-tag]").forEach(function (b) { b.addEventListener("click", function () { var t = b.dataset.tag; state.tags.has(t) ? state.tags.delete(t) : state.tags.add(t); render(); }); });
-    } else {
-      tagWrap.querySelectorAll("[data-tag]").forEach(function (b) { b.setAttribute("aria-pressed", String(state.tags.has(b.dataset.tag))); });
-    }
   }
   var COPY = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
   function card(app) {
     var c = catById(app.category) || { label: app.category, accent: ["#888", "#555"] };
-    var folder = app.path ? (DATA.repo + "/tree/main/" + app.path) : DATA.repo;
+    var folder = app.path ? (TREE_BASE + app.path) : DATA.repo;
     var el = document.createElement("article");
     el.className = "tg-card";
     el.style.setProperty("--tg-poster", poster(app));
     var h = '<div class="tg-thumb">';
     h += '<span class="tg-badge-fw">' + esc(app.framework) + "</span>";
-    if (app.preview) h += '<a class="tg-badge-live" href="' + esc(DATA.repo + "/blob/main/" + app.preview) + '" target="_blank" rel="noopener" title="View the preview GIF"><span class="blip"></span>Live preview</a>';
+    if (app.preview) h += '<a class="tg-badge-live" href="' + esc(BLOB_BASE + app.preview) + '" target="_blank" rel="noopener" title="View the preview GIF"><span class="blip"></span>Live preview</a>';
     h += '<div class="tg-glyph"><span class="g">' + esc(monogram(app)) + '</span><span class="s">' + esc(c.label) + "</span></div>";
-    if (app.preview) h += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc((DATA.assetsBaseUrl || "") + app.preview) + '" />';
+    if (app.preview) h += '<img alt="' + esc(app.title) + ' preview" loading="lazy" src="' + esc(RAW_BASE + app.preview) + '" />';
     h += '<a class="tg-thumblink" href="' + esc(folder) + '" target="_blank" rel="noopener" aria-label="Open ' + esc(app.title) + ' on GitHub"></a>';
     h += "</div>";
     h += '<div class="tg-body">';
@@ -272,11 +268,11 @@ Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. 
     $("tg-count-n").textContent = list.length;
     $("tg-count-w").textContent = list.length === 1 ? "app" : "apps";
     $("tg-empty").hidden = list.length !== 0;
-    $("tg-clear").hidden = !(state.cat !== "all" || state.fws.size || state.tags.size || state.q);
+    $("tg-clear").hidden = !(state.cat !== "all" || state.fws.size || state.q);
   }
   function render() { renderTabs(); renderFilters(); renderGrid(); }
   $("tg-search").addEventListener("input", function (e) { state.q = e.target.value.trim().toLowerCase(); renderGrid(); });
-  $("tg-clear").addEventListener("click", function () { state.cat = "all"; state.fws.clear(); state.tags.clear(); state.q = ""; $("tg-search").value = ""; render(); $("tg-search").focus(); });
+  $("tg-clear").addEventListener("click", function () { state.cat = "all"; state.fws.clear(); state.q = ""; $("tg-search").value = ""; render(); $("tg-search").focus(); });
   render();
 })();
 </script>
