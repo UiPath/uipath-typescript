@@ -25,7 +25,7 @@
     },
     "Governance": { "subpath": "@uipath/uipath-typescript/governance", "since": "1.4.1" },
 
-    "Notifications": { "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.5" },
+    "Notifications": { "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.1" },
     "Subscriptions": { "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.5" },
 
     "Entities": { "subpath": "@uipath/uipath-typescript/entities", "since": null },
@@ -33,7 +33,20 @@
     "Assets": { "subpath": "@uipath/uipath-typescript/assets", "since": null },
     "Attachments": { "subpath": "@uipath/uipath-typescript/attachments", "since": null },
     "Buckets": { "subpath": "@uipath/uipath-typescript/buckets", "since": null },
-    "Cases": { "subpath": "@uipath/uipath-typescript/cases", "since": null },
+    "Cases": {
+      "subpath": "@uipath/uipath-typescript/cases",
+      "since": null,
+      "methods": {
+        "getInstanceStatusTimeline": "1.3.9",
+        "getTopExecutionDuration": "1.3.9",
+        "getTopFaultedCount": "1.3.9",
+        "getTopRunCount": "1.3.9",
+        "getTopElementFailedCount": "1.3.11",
+        "getElementStats": "1.3.12",
+        "getInstanceStats": "1.5.0",
+        "getIncidentsTimeline": "1.5.1"
+      }
+    },
     "CaseInstances": { "subpath": "@uipath/uipath-typescript/cases", "since": null },
     "ConversationalAgent": {
       "subpath": "@uipath/uipath-typescript/conversational-agent",
@@ -45,7 +58,20 @@
     "UserSettings": { "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
     "Feedback": { "subpath": "@uipath/uipath-typescript/feedback", "since": null },
     "Jobs": { "subpath": "@uipath/uipath-typescript/jobs", "since": null },
-    "MaestroProcesses": { "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
+    "MaestroProcesses": {
+      "subpath": "@uipath/uipath-typescript/maestro-processes",
+      "since": null,
+      "methods": {
+        "getInstanceStatusTimeline": "1.3.9",
+        "getTopExecutionDuration": "1.3.9",
+        "getTopFaultedCount": "1.3.9",
+        "getTopRunCount": "1.3.9",
+        "getTopElementFailedCount": "1.3.11",
+        "getElementStats": "1.3.12",
+        "getInstanceStats": "1.5.0",
+        "getIncidentsTimeline": "1.5.1"
+      }
+    },
     "ProcessInstances": { "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
     "ProcessIncidents": { "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
     "OrchestratorDuModule": { "subpath": "@uipath/uipath-typescript/orchestrator-du-module", "since": null },
