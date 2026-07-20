@@ -7,13 +7,14 @@
  *
  *   node scripts/check-release-metadata.mjs
  *
- * v1 scope: service-class + subpath + snapshotVersion. Method-level and non-class
+ * v1 scope: service-class + subpath + sdkVersion. Method-level and non-class
  * exports (e.g. the document-understanding DuFramework namespace) are follow-ups.
  *
  * Contract (see release-metadata.md):
- *   - keys are PUBLIC export names (e.g. `Agents`, not `AgentService`)
- *   - `since` value = version introduced; `null` = baseline (pre-tracking, not backfilled)
- *   - method / enum-member value = bare version string; unlisted methods inherit the service `since`
+ *   - `services` / `enums` are ARRAYS of objects, each with a `name` (public export
+ *     name, e.g. `Agents`, not `AgentService`)
+ *   - `since` = version introduced; `null` = baseline (pre-tracking, not backfilled)
+ *   - `methods` is an array of { name, since }; unlisted methods inherit the service `since`
  */
 
 import { readFileSync, existsSync } from 'fs';
@@ -34,7 +35,7 @@ if (!existsSync(metaPath)) {
   process.exit(1);
 }
 const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
-const listed = new Set(Object.keys(meta.services ?? {}));
+const listed = new Set((meta.services ?? []).map((s) => s.name));
 
 if (!existsSync(DIST)) {
   console.error('FAIL: dist/ not found. Run `npm run build` before the check (CI builds first).');
@@ -69,7 +70,8 @@ for (const [name, subpath] of surface) {
   if (!listed.has(name)) {
     fail.push(
       `MISSING: public service "${name}" (${subpath}) is not in release-metadata.json.\n` +
-        `         Add it — new service → { "subpath": "${subpath}", "since": "${pkg.version}" }; ` +
+        `         Add it to "services" — new service → ` +
+        `{ "name": "${name}", "subpath": "${subpath}", "since": "${pkg.version}" }; ` +
         `pre-existing → "since": null.`
     );
   }
@@ -86,18 +88,18 @@ for (const name of listed) {
   }
 }
 
-// ── 3. snapshotVersion must match the package version ───────────────────────────
-if (meta.snapshotVersion !== pkg.version) {
+// ── 3. sdkVersion must match the package version ────────────────────────────────
+if (meta.sdkVersion !== pkg.version) {
   fail.push(
-    `SNAPSHOT: snapshotVersion "${meta.snapshotVersion}" != package.json version "${pkg.version}". ` +
-      `Update snapshotVersion (and stamp any new capabilities with "${pkg.version}").`
+    `SDK VERSION: sdkVersion "${meta.sdkVersion}" != package.json version "${pkg.version}". ` +
+      `Update sdkVersion (and stamp any new capabilities with "${pkg.version}").`
   );
 }
 
 // ── report ──────────────────────────────────────────────────────────────────────
 console.log(
   `release-metadata check — ${surface.size} public services on surface, ` +
-    `${listed.size} listed, snapshot ${meta.snapshotVersion} (pkg ${pkg.version})`
+    `${listed.size} listed, sdkVersion ${meta.sdkVersion} (pkg ${pkg.version})`
 );
 for (const w of warn) console.warn('WARN  ' + w);
 if (fail.length) {

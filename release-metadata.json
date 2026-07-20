@@ -1,88 +1,98 @@
 {
   "schema": 1,
-  "snapshotVersion": "1.5.5",
-  "services": {
-    "Agents": {
+  "sdkVersion": "1.5.5",
+  "services": [
+    {
+      "name": "Agents",
       "subpath": "@uipath/uipath-typescript/agents",
       "since": "1.4.1",
-      "methods": {
-        "getSummary": "1.5.0",
-        "getTopErrorCount": "1.5.0",
-        "getTopConsumption": "1.5.0",
-        "getIncidentDistribution": "1.5.0",
-        "getUnitConsumptionSummary": "1.5.0"
-      }
+      "methods": [
+        { "name": "getSummary", "since": "1.5.0" },
+        { "name": "getTopErrorCount", "since": "1.5.0" },
+        { "name": "getTopConsumption", "since": "1.5.0" },
+        { "name": "getIncidentDistribution", "since": "1.5.0" },
+        { "name": "getUnitConsumptionSummary", "since": "1.5.0" }
+      ]
     },
-    "AgentMemory": { "subpath": "@uipath/uipath-typescript/agent-memory", "since": "1.4.1" },
-    "Traces": { "subpath": "@uipath/uipath-typescript/traces", "since": "1.4.1" },
-    "AgentTraces": {
+    { "name": "AgentMemory", "subpath": "@uipath/uipath-typescript/agent-memory", "since": "1.4.1" },
+    { "name": "Traces", "subpath": "@uipath/uipath-typescript/traces", "since": "1.4.1" },
+    {
+      "name": "AgentTraces",
       "subpath": "@uipath/uipath-typescript/traces",
       "since": "1.4.1",
-      "methods": {
-        "getGovernanceDecisions": "1.5.1",
-        "getGovernanceSummary": "1.5.1"
-      }
+      "methods": [
+        { "name": "getGovernanceDecisions", "since": "1.5.1" },
+        { "name": "getGovernanceSummary", "since": "1.5.1" }
+      ]
     },
-    "Governance": { "subpath": "@uipath/uipath-typescript/governance", "since": "1.4.1" },
+    { "name": "Governance", "subpath": "@uipath/uipath-typescript/governance", "since": "1.4.1" },
 
-    "Notifications": { "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.1" },
-    "Subscriptions": { "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.5" },
+    { "name": "Notifications", "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.1" },
+    { "name": "Subscriptions", "subpath": "@uipath/uipath-typescript/notifications", "since": "1.5.5" },
 
-    "Entities": { "subpath": "@uipath/uipath-typescript/entities", "since": null },
-    "ChoiceSets": { "subpath": "@uipath/uipath-typescript/entities", "since": null },
-    "Assets": { "subpath": "@uipath/uipath-typescript/assets", "since": null },
-    "Attachments": { "subpath": "@uipath/uipath-typescript/attachments", "since": null },
-    "Buckets": { "subpath": "@uipath/uipath-typescript/buckets", "since": null },
-    "Cases": {
+    { "name": "Entities", "subpath": "@uipath/uipath-typescript/entities", "since": null },
+    { "name": "ChoiceSets", "subpath": "@uipath/uipath-typescript/entities", "since": null },
+    { "name": "Assets", "subpath": "@uipath/uipath-typescript/assets", "since": null },
+    { "name": "Attachments", "subpath": "@uipath/uipath-typescript/attachments", "since": null },
+    { "name": "Buckets", "subpath": "@uipath/uipath-typescript/buckets", "since": null },
+    {
+      "name": "Cases",
       "subpath": "@uipath/uipath-typescript/cases",
       "since": null,
-      "methods": {
-        "getInstanceStatusTimeline": "1.3.9",
-        "getTopExecutionDuration": "1.3.9",
-        "getTopFaultedCount": "1.3.9",
-        "getTopRunCount": "1.3.9",
-        "getTopElementFailedCount": "1.3.11",
-        "getElementStats": "1.3.12",
-        "getInstanceStats": "1.5.0",
-        "getIncidentsTimeline": "1.5.1"
-      }
+      "methods": [
+        { "name": "getInstanceStatusTimeline", "since": "1.3.9" },
+        { "name": "getTopExecutionDuration", "since": "1.3.9" },
+        { "name": "getTopFaultedCount", "since": "1.3.9" },
+        { "name": "getTopRunCount", "since": "1.3.9" },
+        { "name": "getTopElementFailedCount", "since": "1.3.11" },
+        { "name": "getElementStats", "since": "1.3.12" },
+        { "name": "getInstanceStats", "since": "1.5.0" },
+        { "name": "getIncidentsTimeline", "since": "1.5.1" }
+      ]
     },
-    "CaseInstances": { "subpath": "@uipath/uipath-typescript/cases", "since": null },
-    "ConversationalAgent": {
+    { "name": "CaseInstances", "subpath": "@uipath/uipath-typescript/cases", "since": null },
+    {
+      "name": "ConversationalAgent",
       "subpath": "@uipath/uipath-typescript/conversational-agent",
       "since": null,
-      "methods": { "downloadCitationSource": "1.5.5" }
+      "methods": [
+        { "name": "downloadCitationSource", "since": "1.5.5" }
+      ]
     },
-    "Exchanges": { "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
-    "Messages": { "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
-    "UserSettings": { "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
-    "Feedback": { "subpath": "@uipath/uipath-typescript/feedback", "since": null },
-    "Jobs": { "subpath": "@uipath/uipath-typescript/jobs", "since": null },
-    "MaestroProcesses": {
+    { "name": "Exchanges", "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
+    { "name": "Messages", "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
+    { "name": "UserSettings", "subpath": "@uipath/uipath-typescript/conversational-agent", "since": null },
+    { "name": "Feedback", "subpath": "@uipath/uipath-typescript/feedback", "since": null },
+    { "name": "Jobs", "subpath": "@uipath/uipath-typescript/jobs", "since": null },
+    {
+      "name": "MaestroProcesses",
       "subpath": "@uipath/uipath-typescript/maestro-processes",
       "since": null,
-      "methods": {
-        "getInstanceStatusTimeline": "1.3.9",
-        "getTopExecutionDuration": "1.3.9",
-        "getTopFaultedCount": "1.3.9",
-        "getTopRunCount": "1.3.9",
-        "getTopElementFailedCount": "1.3.11",
-        "getElementStats": "1.3.12",
-        "getInstanceStats": "1.5.0",
-        "getIncidentsTimeline": "1.5.1"
-      }
+      "methods": [
+        { "name": "getInstanceStatusTimeline", "since": "1.3.9" },
+        { "name": "getTopExecutionDuration", "since": "1.3.9" },
+        { "name": "getTopFaultedCount", "since": "1.3.9" },
+        { "name": "getTopRunCount", "since": "1.3.9" },
+        { "name": "getTopElementFailedCount", "since": "1.3.11" },
+        { "name": "getElementStats", "since": "1.3.12" },
+        { "name": "getInstanceStats", "since": "1.5.0" },
+        { "name": "getIncidentsTimeline", "since": "1.5.1" }
+      ]
     },
-    "ProcessInstances": { "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
-    "ProcessIncidents": { "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
-    "OrchestratorDuModule": { "subpath": "@uipath/uipath-typescript/orchestrator-du-module", "since": null },
-    "Processes": { "subpath": "@uipath/uipath-typescript/processes", "since": null },
-    "Queues": { "subpath": "@uipath/uipath-typescript/queues", "since": null },
-    "Tasks": { "subpath": "@uipath/uipath-typescript/tasks", "since": null }
-  },
-  "enums": {
-    "EntityFieldDataType": {
+    { "name": "ProcessInstances", "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
+    { "name": "ProcessIncidents", "subpath": "@uipath/uipath-typescript/maestro-processes", "since": null },
+    { "name": "OrchestratorDuModule", "subpath": "@uipath/uipath-typescript/orchestrator-du-module", "since": null },
+    { "name": "Processes", "subpath": "@uipath/uipath-typescript/processes", "since": null },
+    { "name": "Queues", "subpath": "@uipath/uipath-typescript/queues", "since": null },
+    { "name": "Tasks", "subpath": "@uipath/uipath-typescript/tasks", "since": null }
+  ],
+  "enums": [
+    {
+      "name": "EntityFieldDataType",
       "subpath": "@uipath/uipath-typescript/entities",
-      "values": { "MULTILINE_MAX": "1.5.2" }
+      "values": [
+        { "name": "MULTILINE_MAX", "since": "1.5.2" }
+      ]
     }
-  }
+  ]
 }
