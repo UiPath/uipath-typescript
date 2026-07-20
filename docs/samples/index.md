@@ -1,10 +1,10 @@
 ---
-title: Template Gallery
+title: Sample Apps Gallery
 hide:
   - toc
 ---
 
-# Template Gallery
+# Sample Apps Gallery
 
 Browse, filter, and clone the official `@uipath/uipath-typescript` sample apps. Each card links to the source and copies a ready-to-run `degit` command.
 
