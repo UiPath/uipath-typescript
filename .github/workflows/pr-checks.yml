@@ -94,11 +94,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Always run the rules' own self-test, so a rule-logic regression is
-      # caught even on a PR that changes no sample apps.
-      - name: Self-test the sample rules
-        run: node scripts/check-samples.mjs --selftest
-
+      # The rule logic is unit-tested in tests/unit/scripts/check-samples.test.ts
+      # (runs with the normal test suite); this job only gates changed apps.
       - name: Check changed sample apps
         # base_ref is empty on workflow_dispatch; fall back to main so the ref
         # is always valid (origin/main) instead of an invalid "origin/".

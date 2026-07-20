@@ -2,7 +2,7 @@
 // PR gate for sample apps under samples/. Discovers every tracked app
 // (any directory with a committed package.json) and runs the rules below.
 // Rules are pure functions of an app context so they can be unit-tested
-// without git/fs — run `node scripts/check-samples.mjs --selftest`.
+// without git/fs — see tests/unit/scripts/check-samples.test.ts.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -151,49 +151,8 @@ function run() {
   console.log(`check-samples: OK (${apps.length} apps)`);
 }
 
-function assert(cond, msg) {
-  if (!cond) throw new Error('selftest failed: ' + msg);
-}
-
-function fake(files, viteConfig) {
-  return { name: 'fake', viteConfig, has: f => f in files, read: f => files[f] ?? '' };
-}
-
-function selftest() {
-  const clean = {
-    'package.json': '{"devDependencies":{"@uipath/coded-apps-dev":"^1"}}',
-    'uipath.json.example': '{}',
-    '.gitignore': 'node_modules\n.uipath\n',
-    'README.md': '# App\n## Preview\n![demo](./demo.gif)\n',
-    'index.html': '<link rel="icon" href="./favicon.png">',
-    'favicon.png': '<binary>',
-    'vite.config.ts': "import { uipathCodedApps } from '@uipath/coded-apps-dev/vite';\nexport default { base: './' }",
-  };
-  assert(checkApp(fake(clean, 'vite.config.ts')).length === 0, 'clean app passes');
-  assert(checkApp(fake({ ...clean, 'README.md': '# App\nno preview here' })).some(v => v.rule === 'readme-preview'), 'catches missing preview heading');
-  assert(checkApp(fake({ ...clean, 'README.md': '# App\n## Preview\njust text' })).some(v => v.rule === 'readme-preview'), 'catches preview without media');
-  assert(checkApp(fake({ ...clean, 'index.html': '<title>x</title>' })).some(v => v.rule === 'favicon'), 'catches missing favicon link');
-  { const f = { ...clean }; delete f['favicon.png']; assert(checkApp(fake(f, 'vite.config.ts')).some(v => v.rule === 'favicon'), 'catches favicon link pointing at a missing file'); }
-  assert(checkApp(fake({ ...clean, '.gitignore': 'node_modules' })).some(v => v.rule === 'gitignore'), 'catches .gitignore without .uipath');
-  assert(checkApp(fake({ ...clean, 'vite.config.ts': "export default { base: '/' }" }, 'vite.config.ts')).filter(v => v.rule === 'vite-config').length === 2, 'catches vite base + import');
-  const noHtml = { ...clean, 'package.json': '{}' };
-  delete noHtml['index.html'];
-  assert(!checkApp(fake(noHtml)).some(v => v.rule === 'favicon' || v.rule === 'coded-apps-dev'), 'html-only rules skipped without index.html');
-  // Action apps use the coded-action-app harness: coded-apps-dev and the vite import are not required.
-  const actionApp = {
-    ...clean,
-    'package.json': '{"dependencies":{"@uipath/coded-action-app":"^1"}}',
-    'vite.config.ts': "export default { base: './' }",
-  };
-  assert(checkApp(fake(actionApp, 'vite.config.ts')).length === 0, 'action app passes with coded-action-app and no coded-apps-dev import');
-  { const f = { ...clean }; delete f['uipath.json.example']; assert(checkApp(fake(f, 'vite.config.ts')).some(v => v.rule === 'example-config'), 'catches missing uipath.json.example'); }
-  assert(checkApp(fake({ ...clean, 'package.json': '{}' }, 'vite.config.ts')).some(v => v.rule === 'coded-apps-dev'), 'catches missing coded-apps harness when index.html present');
-  console.log('selftest: OK');
-}
-
 // Only execute when run directly (node scripts/check-samples.mjs), not when
 // imported — so `import { checkApp }` in a test never triggers run()/git.
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.includes('--selftest')) selftest();
-  else run();
+  run();
 }
