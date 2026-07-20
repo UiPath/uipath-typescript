@@ -233,6 +233,11 @@ const serviceEntries = [
     name: 'notifications',
     input: 'src/services/notification/index.ts',
     output: 'notifications/index'
+  },
+  {
+    name: 'functions',
+    input: 'src/services/orchestrator/functions/index.ts',
+    output: 'functions/index'
   }
 ];
 

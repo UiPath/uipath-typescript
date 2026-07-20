@@ -9,6 +9,8 @@ export * from './jobs.types';
 export * from './jobs.models';
 export * from './processes.types';
 export * from './processes.models';
+export * from './functions.types';
+export * from './functions.models';
 export * from './queues.types';
 export * from './queues.models';
 export * from './attachments.types';
