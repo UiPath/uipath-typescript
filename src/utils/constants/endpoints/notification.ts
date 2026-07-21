@@ -32,4 +32,8 @@ export const SUBSCRIPTION_ENDPOINTS = {
   // Intentional duplicate URL of GET_ALL: same path, POST vs GET differentiates the operation.
   UPDATE_TOPIC: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription`,
   UPDATE_CATEGORY: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/CategorySubscription`,
+  // Publisher-level opt-in / opt-out updates.
+  UPDATE_PUBLISHER: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/PublisherSubscription`,
+  // Topic-group-level subscription updates (entity-scoped).
+  UPDATE_TOPIC_GROUP: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/TopicGroupSubscription`,
 } as const;
