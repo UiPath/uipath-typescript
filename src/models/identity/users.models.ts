@@ -34,8 +34,7 @@ export interface UserServiceModel {
    * activity flags and invitation state.
    *
    * @param userId - User GUID
-   * @returns Promise resolving to the user
-   * {@link UserGetResponse}
+   * @returns Promise resolving to a {@link UserGetResponse} with the user's profile fields, group membership, activity flags and invitation state
    *
    * @example
    * ```typescript
