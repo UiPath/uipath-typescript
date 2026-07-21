@@ -1,5 +1,5 @@
 /**
- * Identity user management types — response shapes and enums.
+ * Identity user management types — response shapes, request payloads and enums.
  */
 
 /**
@@ -72,3 +72,83 @@ export interface RawUserGetResponse {
   /** Whether the user has accepted their invitation. */
   invitationAccepted: boolean;
 }
+
+/**
+ * Error entry from a failed user operation.
+ */
+export interface UserOperationError {
+  /** Machine-readable error code (e.g. `InvalidUserName`). */
+  code: string;
+  /** Human-readable error description. */
+  description: string;
+}
+
+/**
+ * Overall outcome of a user operation.
+ */
+export interface UserOperationResult {
+  /** Whether the operation succeeded. */
+  succeeded: boolean;
+  /** Errors that caused the operation to fail. Empty on success. */
+  errors: UserOperationError[];
+}
+
+/**
+ * Response from `updateById()`.
+ */
+export interface UserUpdateResponse extends UserOperationResult {}
+
+/**
+ * Payload for `updateById()`. Only the provided fields are changed.
+ */
+export interface UserUpdateOptions {
+  /** New first name. */
+  name?: string;
+  /** New last name. */
+  surname?: string;
+  /** New display name. */
+  displayName?: string;
+  /** New email address. */
+  email?: string;
+  /** Activate (`true`) or deactivate (`false`) the user. */
+  isActive?: boolean;
+  /** New password. */
+  password?: string;
+  /** GUIDs of groups to add the user to. */
+  groupIdsToAdd?: string[];
+  /** GUIDs of groups to remove the user from. */
+  groupIdsToRemove?: string[];
+  /** Whether this user bypasses the basic authentication restriction. */
+  bypassBasicAuthRestriction?: boolean;
+  /** Whether the user should be marked as having accepted their invitation. */
+  invitationAccepted?: boolean;
+}
+
+/**
+ * A user to create with `create()`.
+ */
+export interface UserCreateData {
+  /** Username — can only contain letters or digits. */
+  userName: string;
+  /** Email address. */
+  email?: string;
+  /** First name. */
+  name?: string;
+  /** Last name. */
+  surname?: string;
+  /** Display name. */
+  displayName?: string;
+  /** Whether the user should be marked as having accepted their invitation. */
+  invitationAccepted?: boolean;
+  /** Whether this user bypasses the basic authentication restriction. */
+  bypassBasicAuthRestriction?: boolean;
+}
+
+/**
+ * Options for `create()`.
+ */
+export interface UserCreateOptions {
+  /** GUIDs of groups every created user is added to. */
+  groupIds?: string[];
+}
+

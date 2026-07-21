@@ -4,12 +4,15 @@ import { UserType, UserCategory } from './users.types';
  * User field mappings (API field name → SDK field name).
  *
  * Semantic renames only — the API already returns camelCase, so no case
- * conversion is involved.
+ * conversion is involved. `groupIDsToAdd`/`groupIDsToRemove` appear only in
+ * update requests; `transformRequest()` reverses the map for outbound payloads.
  */
 export const UserMap: { [key: string]: string } = {
   creationTime: 'createdTime',
   lastModificationTime: 'lastModifiedTime',
   groupIDs: 'groupIds',
+  groupIDsToAdd: 'groupIdsToAdd',
+  groupIDsToRemove: 'groupIdsToRemove',
 };
 
 /**

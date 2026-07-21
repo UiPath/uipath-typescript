@@ -5,16 +5,32 @@
 import { track } from '../../core/telemetry';
 import { BaseService } from '../base';
 
-import type { RawUserGetResponse } from '../../models/identity/users.types';
-import type { UserGetResponse, UserServiceModel } from '../../models/identity/users.models';
+import type {
+  RawUserGetResponse,
+  UserCreateData,
+  UserCreateOptions,
+  UserUpdateOptions,
+  UserUpdateResponse,
+} from '../../models/identity/users.types';
+import {
+  createUserWithMethods,
+  type UserCreateResponse,
+  type UserGetResponse,
+  type UserServiceModel,
+} from '../../models/identity/users.models';
 import {
   INTERNAL_USER_FIELDS,
+  type RawUserCreateResponse,
   type RawUserEntry,
 } from '../../models/identity/users.internal-types';
-import { UserCategoryMap, UserMap, UserTypeMap } from '../../models/identity/users.constants';
+import {
+  UserCategoryMap,
+  UserMap,
+  UserTypeMap,
+} from '../../models/identity/users.constants';
 
 import { IDENTITY_USER_ENDPOINTS } from '../../utils/constants/endpoints';
-import { applyDataTransforms, transformData } from '../../utils/transform';
+import { applyDataTransforms, transformData, transformRequest } from '../../utils/transform';
 
 /**
  * Service for managing users in a UiPath organization.
@@ -26,7 +42,40 @@ export class UserService extends BaseService implements UserServiceModel {
   @track('Users.GetById')
   async getById(userId: string): Promise<UserGetResponse> {
     const response = await this.get<RawUserEntry>(IDENTITY_USER_ENDPOINTS.BY_ID(userId));
-    return this.transformUser(response.data);
+    return createUserWithMethods(this.transformUser(response.data), this);
+  }
+
+  @track('Users.UpdateById')
+  async updateById(userId: string, options: UserUpdateOptions): Promise<UserUpdateResponse> {
+    const response = await this.put<UserUpdateResponse>(
+      IDENTITY_USER_ENDPOINTS.BY_ID(userId),
+      transformRequest(options, UserMap)
+    );
+    return response.data;
+  }
+
+  @track('Users.DeleteById')
+  async deleteById(userId: string): Promise<void> {
+    await this.delete<void>(IDENTITY_USER_ENDPOINTS.BY_ID(userId));
+  }
+
+  @track('Users.Create')
+  async create(
+    users: UserCreateData[],
+    organizationId: string,
+    options?: UserCreateOptions
+  ): Promise<UserCreateResponse> {
+    const response = await this.post<RawUserCreateResponse>(IDENTITY_USER_ENDPOINTS.BULK_CREATE, {
+      users,
+      partitionGlobalId: organizationId,
+      groupIDs: options?.groupIds,
+    });
+    return {
+      result: response.data.result,
+      users: response.data.users.map((user) =>
+        createUserWithMethods(this.transformUser(user), this)
+      ),
+    };
   }
 
   /**

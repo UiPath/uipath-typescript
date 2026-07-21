@@ -2,7 +2,7 @@
  * Identity Users Service Module
  *
  * Provides organization-level user administration via the UiPath Identity API:
- * - `Users` — retrieve users in the organization
+ * - `Users` — retrieve, update and delete users, and create users in bulk
  *
  * @example
  * ```typescript

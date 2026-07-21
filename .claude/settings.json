@@ -6,12 +6,17 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(gh pr create:*)",
             "command": "jq -r '.tool_input.command' | grep -q 'gh pr create' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"STOP: You must run /sdk-review before creating a PR. If sdk-review has NOT been run in this session, abort this PR creation and run /sdk-review first. Only proceed with gh pr create after the review passes.\"}}'",
+            "if": "Bash(gh pr create:*)",
             "statusMessage": "Checking pre-PR review requirement..."
           }
         ]
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git -c core.editor=true rebase --continue)"
     ]
   }
 }

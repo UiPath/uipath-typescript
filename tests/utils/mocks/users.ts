@@ -7,7 +7,34 @@
  */
 
 import type { RawUserEntry } from '../../../src/models/identity/users.internal-types';
+import type { RawUserGetResponse } from '../../../src/models/identity';
+import { UserCategory, UserType } from '../../../src/models/identity';
 import { USER_TEST_CONSTANTS } from '../constants/users';
+
+/**
+ * Builds a user in the SDK response shape (transformed, without bound methods).
+ */
+export const createBasicUser = (
+  overrides?: Partial<RawUserGetResponse>
+): RawUserGetResponse => ({
+  id: USER_TEST_CONSTANTS.USER_ID,
+  userName: USER_TEST_CONSTANTS.USER_NAME,
+  email: USER_TEST_CONSTANTS.EMAIL,
+  emailConfirmed: true,
+  name: USER_TEST_CONSTANTS.FIRST_NAME,
+  surname: USER_TEST_CONSTANTS.LAST_NAME,
+  displayName: USER_TEST_CONSTANTS.DISPLAY_NAME,
+  createdTime: USER_TEST_CONSTANTS.CREATION_TIME,
+  lastModifiedTime: USER_TEST_CONSTANTS.LAST_MODIFICATION_TIME,
+  lastLoginTime: USER_TEST_CONSTANTS.LAST_LOGIN_TIME,
+  groupIds: [USER_TEST_CONSTANTS.GROUP_ID],
+  isActive: true,
+  bypassBasicAuthRestriction: false,
+  type: UserType.User,
+  category: UserCategory.Local,
+  invitationAccepted: true,
+  ...overrides,
+});
 
 /**
  * Builds a raw user entry mirroring a live API response.
