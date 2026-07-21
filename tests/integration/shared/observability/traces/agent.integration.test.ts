@@ -10,7 +10,8 @@ import {
 import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 /**
- * Integration tests for Agent Traces (`/insightsrtm_/Traceview/*`).
+ * Integration tests for Agent Traces — Traceview on `/insightsrtm_/Traceview/*`
+ * and governance on `/llmopstenant_/api/Governance/agentic/*`.
  *
  * Run with:
  *   npx vitest run tests/integration/shared/observability/traces/agent.integration.test.ts --config vitest.integration.config.ts
@@ -18,8 +19,11 @@ import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: insightsrtm_ endpoints reject PAT tokens entirely (401 regardless of scopes) and require OAuth.
-// Skipped at the outer level so the live-auth setup (setupUnifiedTests + beforeAll) does not run.
+// skip: every method here requires OAuth and rejects PAT (401 regardless of scopes).
+// The Traceview methods reject PAT directly; the governance methods sit on the
+// llmopstenant_ facade which forwards to InsightsRTM (also PAT-rejecting), so PAT
+// still can't reach them. Skipped at the outer level so the live-auth setup
+// (setupUnifiedTests + beforeAll) does not run.
 describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
