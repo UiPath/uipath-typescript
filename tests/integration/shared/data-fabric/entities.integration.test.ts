@@ -20,6 +20,12 @@ import {
 } from '../../../../src/models/data-fabric/entities.types';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 
+// Record Ids are GUIDs (case-insensitive). Data Fabric endpoints return them in
+// different casing (v3 single-record read upper-cases; list/write and v1 lower-case),
+// so compare Ids case-insensitively rather than with exact string equality.
+const idsEqual = (a?: string | null, b?: string | null): boolean =>
+  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
 
@@ -242,7 +248,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
     });
 
-    // includeFolderEntities switches to the v2 endpoint, which returns tenant-level and
+    // includeFolderEntities switches to the v3 endpoint, which returns tenant-level and
     // folder-level entities together — a superset of the default tenant-only result.
     // Requires the OR.Users OAuth scope on the integration token.
     it('should return tenant and folder entities together when includeFolderEntities is true', async () => {
@@ -428,7 +434,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
   });
 
@@ -479,7 +485,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should batch insert multiple records using insertRecordsById', async () => {
@@ -669,7 +675,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entity.getRecord(recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should update records via entity.updateRecords', async () => {
@@ -764,7 +770,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(updateTestRecordId);
+      expect(idsEqual(result.Id, updateTestRecordId)).toBe(true);
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -1129,6 +1135,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(updated.description).toBe('Updated description');
     });
 
+    it('should enable analytics via isAnalyticsEnabled', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+      createdEntityIds.push(entityId);
+
+      // Exercises the isAnalyticsEnabled option end to end — the SDK sends it as the
+      // isInsightsEnabled wire field, which the API validates and round-trips back on read.
+      await entities.updateById(entityId, { isAnalyticsEnabled: true });
+
+      const updated = await entities.getById(entityId);
+      expect(updated.isInsightsEnabled).toBe(true);
+    });
+
     it('should add a new field to an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
@@ -1481,7 +1501,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   // Verifies the MULTILINE_MAX lazy-load contract end to end: list returns a size
-  // marker, getRecordById (v2 read) returns the full content. Creating the field
+  // marker, getRecordById (v3 read) returns the full content. Creating the field
   // needs DataFabric.Schema.Write scope, absent in the standard test env — so this is
   // gated on SCHEMA_WRITE_SCOPE_AVAILABLE and skipped there (a hard throw would redden
   // CI permanently). Runs in any environment whose PAT carries the scope.
@@ -1509,7 +1529,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(listedRecord!.body).toMatch(/^HasValue=true/);
       expect(listedRecord!.body).not.toBe(bodyValue);
 
-      // getRecordById (v2 read) returns the full content.
+      // getRecordById (v3 read) returns the full content.
       const full = await entities.getRecordById(entityId, inserted.Id);
       expect(full.body).toBe(bodyValue);
     });
@@ -1686,7 +1706,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(record.Id, folderRecordIds[0])).toBe(true);
     });
 
     it('should list paginated records with folderKey via getAllRecords', async () => {
@@ -1712,7 +1732,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.items)).toBe(true);
       // The folder header must reach the server for the row to be retrievable; the
       // filter narrows to the record we just inserted in this run.
-      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
+      expect(result.items.some((r) => idsEqual(r.Id, folderRecordIds[0]))).toBe(true);
     });
 
     it('should update a record with folderKey via updateRecordById', async () => {
@@ -1721,7 +1741,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(result.Id, folderRecordIds[0])).toBe(true);
     });
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
@@ -1757,7 +1777,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
           ],
         },
       });
-      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
+      expect(result.items.some((r) => idsEqual(r.Id, idToDelete))).toBe(false);
     });
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {

@@ -237,13 +237,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // folderKey is preferred over includeFolderEntities: when present, scope to that folder
-    // via the v1 endpoint + header. Only when no folderKey is given AND includeFolderEntities
-    // is explicitly true does the SDK switch to the v2 endpoint (returns tenant + folder
-    // entities together). Default (no options or includeFolderEntities omitted) stays on
-    // the v1 endpoint = tenant only.
-    const endpoint = !options?.folderKey && options?.includeFolderEntities
-      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
+    // Use the v3 endpoint whenever a folder scope is requested: a folderKey scopes to that
+    // folder via the header, and includeFolderEntities returns tenant + folder entities
+    // together. Only the default (no folderKey and includeFolderEntities omitted) stays on
+    // the v1 endpoint = tenant only, since v3 has no tenant-only listing.
+    const endpoint = options?.folderKey || options?.includeFolderEntities
+      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
 
     const response = await this.get<RawEntityGetResponse[]>(
@@ -416,7 +415,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
     const opts = options ?? {};
     const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
-    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
+    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined || opts.isAnalyticsEnabled !== undefined;
 
     if (hasSchemaChanges) {
       await this.applySchemaUpdate(id, opts);
@@ -428,6 +427,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(opts.displayName !== undefined && { displayName: opts.displayName }),
           ...(opts.description !== undefined && { description: opts.description }),
           ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
+          ...(opts.isAnalyticsEnabled !== undefined && { isInsightsEnabled: opts.isAnalyticsEnabled }),
         },
         { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
       );
