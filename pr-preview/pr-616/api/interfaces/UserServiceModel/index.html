@@ -2368,8 +2368,7 @@ activity flags and invitation state.</p>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../UserGetResponse/"><code>UserGetResponse</code></a>&gt;</p>
-<p>Promise resolving to the user
-<a href="../UserGetResponse/">UserGetResponse</a></p>
+<p>Promise resolving to a <a href="../UserGetResponse/">UserGetResponse</a> with the user's profile fields, group membership, activity flags and invitation state</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">);</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">displayName</span><span class="si">}</span><span class="sb"> (</span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="si">}</span><span class="sb">) — active: </span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">isActive</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
