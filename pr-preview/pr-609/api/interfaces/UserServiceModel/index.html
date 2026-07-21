@@ -2081,12 +2081,12 @@
   
   
     <li class="md-nav__item">
-      <a href="https://github.com/UiPath/uipath-typescript/tree/main/samples" class="md-nav__link">
+      <a href="../../../samples/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Sample Application
+    Sample Apps Gallery
     
   </span>
   
@@ -2452,8 +2452,7 @@ the reason.</p>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../UserCreateResponse/"><code>UserCreateResponse</code></a>&gt;</p>
-<p>Promise resolving to the overall outcome and the created users
-<a href="../UserCreateResponse/">UserCreateResponse</a></p>
+<p>Promise resolving to a <a href="../UserCreateResponse/">UserCreateResponse</a> with the overall outcome and the created users</p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p">[{</span><span class="w"> </span><span class="nx">userName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;jdoe&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;jdoe@acme.com&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">surname</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Doe&#39;</span><span class="w"> </span><span class="p">}],</span>
@@ -2526,8 +2525,7 @@ activity flags and invitation state, with entity methods attached
 </table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/UserGetResponse/"><code>UserGetResponse</code></a>&gt;</p>
-<p>Promise resolving to the user with methods
-<a href="../../type-aliases/UserGetResponse/">UserGetResponse</a></p>
+<p>Promise resolving to a <a href="../../type-aliases/UserGetResponse/">UserGetResponse</a> with the user's profile fields, group membership, activity flags and invitation state, plus bound entity methods</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">);</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">displayName</span><span class="si">}</span><span class="sb"> (</span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="si">}</span><span class="sb">) — active: </span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">isActive</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
@@ -2563,8 +2561,7 @@ request as a whole succeeds — check <code>success</code> on each entry in <cod
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../UserInviteResponse/"><code>UserInviteResponse</code></a>&gt;</p>
-<p>Promise resolving to the overall outcome and per-user results
-<a href="../UserInviteResponse/">UserInviteResponse</a></p>
+<p>Promise resolving to a <a href="../UserInviteResponse/">UserInviteResponse</a> with the overall outcome and per-user invitation results</p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">invite</span><span class="p">([</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="p">{</span>
@@ -2616,8 +2613,7 @@ request as a whole succeeds — check <code>success</code> on each entry in <cod
 </table>
 <h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../UserUpdateResponse/"><code>UserUpdateResponse</code></a>&gt;</p>
-<p>Promise resolving to the operation outcome
-<a href="../UserUpdateResponse/">UserUpdateResponse</a></p>
+<p>Promise resolving to a <a href="../UserUpdateResponse/">UserUpdateResponse</a> indicating whether the update succeeded and any errors</p>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// First, get the user with users.getById() or from users.create()</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;New Name&#39;</span><span class="w"> </span><span class="p">});</span>
