@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import type { Subscriptions } from '../../../../src/services/notification';
-import { NotificationMode, type SubscriptionPublisher } from '../../../../src/models/notification';
+import { NotificationCategory, NotificationMode, type SubscriptionPublisher } from '../../../../src/models/notification';
 
 const modes: InitMode[] = ['v1'];
 
@@ -105,6 +105,65 @@ describe.skip.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
         expect(channel.name).toBeDefined();
         expect(typeof channel.isEnabled).toBe('boolean');
       }
+    });
+  });
+
+  describe('updateTopics', () => {
+    it('should round-trip a topic subscription change', async () => {
+      // Find a non-mandatory topic with at least one mode we can toggle
+      const topic = firstPublisher.topics.find((t) => t.isMandatory === false && (t.modes?.length ?? 0) > 0);
+      if (!topic) {
+        throw new Error('No non-mandatory topics with toggleable modes — cannot run updateTopics round-trip.');
+      }
+      const mode = topic.modes![0];
+      const originalState = mode.isSubscribed;
+
+      // Flip the state
+      const flip = await subscriptions.updateTopics(tenantId, [
+        { topicId: topic.id, isSubscribed: !originalState, notificationMode: mode.name },
+      ]);
+      expect(flip.success).toBe(true);
+
+      // Restore — leave the tenant in its original state
+      const restore = await subscriptions.updateTopics(tenantId, [
+        { topicId: topic.id, isSubscribed: originalState, notificationMode: mode.name },
+      ]);
+      expect(restore.success).toBe(true);
+    });
+  });
+
+  describe('updateCategories', () => {
+    it('should round-trip a category subscription change', async () => {
+      // Snapshot the current Email state of an Error-category topic so we restore to it verbatim
+      const errorTopic = firstPublisher.topics.find(
+        (t) => t.category === NotificationCategory.Error && (t.modes?.some((m) => m.name === NotificationMode.Email) ?? false),
+      );
+      if (!errorTopic) {
+        throw new Error('No Error-category topic with an Email mode — cannot run updateCategories round-trip.');
+      }
+      const originalEmailState = errorTopic.modes.find((m) => m.name === NotificationMode.Email)!.isSubscribed;
+
+      // Flip the category subscription
+      const flip = await subscriptions.updateCategories(tenantId, [
+        {
+          publisherId: firstPublisher.id,
+          category: NotificationCategory.Error,
+          isSubscribed: !originalEmailState,
+          notificationMode: NotificationMode.Email,
+        },
+      ]);
+      expect(flip.success).toBe(true);
+
+      // Restore — leave the tenant in its original state
+      const restore = await subscriptions.updateCategories(tenantId, [
+        {
+          publisherId: firstPublisher.id,
+          category: NotificationCategory.Error,
+          isSubscribed: originalEmailState,
+          notificationMode: NotificationMode.Email,
+        },
+      ]);
+      expect(restore.success).toBe(true);
     });
   });
 });

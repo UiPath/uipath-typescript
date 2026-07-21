@@ -2,6 +2,8 @@
  * Subscription service types — request/response shapes for user subscription preferences.
  */
 
+import type { OperationResponse } from '../common/types';
+
 import { NotificationCategory, NotificationMode } from './notifications.types';
 
 /**
@@ -198,6 +200,32 @@ export interface SupportedChannel {
 }
 
 /**
+ * Update payload for a topic-level subscription change.
+ */
+export interface TopicSubscriptionUpdate {
+  /** Topic GUID. */
+  topicId: string;
+  /** Whether the user should be subscribed to this topic via the chosen mode. */
+  isSubscribed: boolean;
+  /** Notification channel this update applies to. */
+  notificationMode: NotificationMode;
+}
+
+/**
+ * Update payload for a category-level subscription change.
+ */
+export interface CategorySubscriptionUpdate {
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Category to update. */
+  category: NotificationCategory;
+  /** Whether the user should be subscribed to topics of this category via the chosen mode. */
+  isSubscribed: boolean;
+  /** Notification channel this update applies to. */
+  notificationMode: NotificationMode;
+}
+
+/**
  * Options for `Subscriptions.getAll()`.
  */
 export interface SubscriptionGetAllOptions {
@@ -239,3 +267,13 @@ export interface SubscriptionGetSupportedChannelsResponse {
   /** Notification channels supported in the current tenant. `InApp` is not listed — it is always available. */
   channels: SupportedChannel[];
 }
+
+/** Response from `updateTopics()`. */
+export type SubscriptionUpdateTopicsResponse = OperationResponse<{
+  subscriptions: TopicSubscriptionUpdate[];
+}>;
+
+/** Response from `updateCategories()`. */
+export type SubscriptionUpdateCategoriesResponse = OperationResponse<{
+  subscriptions: CategorySubscriptionUpdate[];
+}>;
