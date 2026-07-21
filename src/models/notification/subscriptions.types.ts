@@ -226,6 +226,44 @@ export interface CategorySubscriptionUpdate {
 }
 
 /**
+ * Entity reference supplied when scoping a subscription update to specific entities
+ * (e.g. folders). Only the identity and desired subscription state are provided;
+ * discovery fields (`name`, `parentName`) are resolved server-side.
+ */
+export interface SubscriptionEntityUpdate {
+  /** Entity GUID. */
+  id: string;
+  /** Entity type (e.g. `Folder`). */
+  type?: string;
+  /** Whether the user should be subscribed to notifications for this entity. */
+  isSubscribed: boolean;
+}
+
+/**
+ * Update payload for a publisher-level opt-in / opt-out.
+ */
+export interface PublisherSubscriptionUpdate {
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Whether the user opts in to receive notifications from this publisher. */
+  isUserOptIn: boolean;
+  /** Optional entity scoping. */
+  entities?: SubscriptionEntityUpdate[];
+}
+
+/**
+ * Update payload for a topic-group-level subscription change.
+ */
+export interface TopicGroupSubscriptionUpdate {
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Topic group name. */
+  topicGroupName: string;
+  /** Optional entity scoping. */
+  entities?: SubscriptionEntityUpdate[];
+}
+
+/**
  * Options for `Subscriptions.getAll()`.
  */
 export interface SubscriptionGetAllOptions {
@@ -276,4 +314,14 @@ export type SubscriptionUpdateTopicsResponse = OperationResponse<{
 /** Response from `updateCategories()`. */
 export type SubscriptionUpdateCategoriesResponse = OperationResponse<{
   subscriptions: CategorySubscriptionUpdate[];
+}>;
+
+/** Response from `updatePublishers()`. */
+export type SubscriptionUpdatePublishersResponse = OperationResponse<{
+  subscriptions: PublisherSubscriptionUpdate[];
+}>;
+
+/** Response from `updateTopicGroups()`. */
+export type SubscriptionUpdateTopicGroupsResponse = OperationResponse<{
+  subscriptions: TopicGroupSubscriptionUpdate[];
 }>;

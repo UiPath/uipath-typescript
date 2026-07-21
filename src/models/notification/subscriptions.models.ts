@@ -5,13 +5,17 @@
 
 import type {
   CategorySubscriptionUpdate,
+  PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionGetPublishersResponse,
   SubscriptionGetResponse,
   SubscriptionGetSupportedChannelsResponse,
   SubscriptionUpdateCategoriesResponse,
+  SubscriptionUpdatePublishersResponse,
+  SubscriptionUpdateTopicGroupsResponse,
   SubscriptionUpdateTopicsResponse,
+  TopicGroupSubscriptionUpdate,
   TopicSubscriptionUpdate,
 } from './subscriptions.types';
 
@@ -152,4 +156,49 @@ export interface SubscriptionServiceModel {
    * @internal
    */
   updateCategories(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoriesResponse>;
+
+  /**
+   * Updates publisher-level opt-in / opt-out. Each entry toggles the user's overall
+   * opt-in for a publisher and optionally scopes the change to specific entities.
+   *
+   * @param tenantId - Tenant GUID
+   * @param subscriptions - Publisher subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdatePublishersResponse}
+   *
+   * @example Opt out of a publisher entirely
+   * ```typescript
+   * await subscriptions.updatePublishers('<tenantId>', [
+   *   { publisherId: '<publisherId>', isUserOptIn: false },
+   * ]);
+   * ```
+   * @internal
+   */
+  updatePublishers(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublishersResponse>;
+
+  /**
+   * Updates topic-group subscription preferences. Each entry scopes a topic group to
+   * a specific set of entities.
+   *
+   * @param tenantId - Tenant GUID
+   * @param subscriptions - Topic-group subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicGroupsResponse}
+   *
+   * @example Subscribe a topic group to two folders
+   * ```typescript
+   * await subscriptions.updateTopicGroups('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     topicGroupName: 'JobNotifications',
+   *     entities: [
+   *       { id: '<folderId1>', type: 'Folder', isSubscribed: true },
+   *       { id: '<folderId2>', type: 'Folder', isSubscribed: true },
+   *     ],
+   *   },
+   * ]);
+   * ```
+   * @internal
+   */
+  updateTopicGroups(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupsResponse>;
 }
