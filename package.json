@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.5.4",
+    "version": "1.5.5",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -239,7 +239,8 @@
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "docs/oauth-scopes.md"
     ],
     "scripts": {
         "prepack": "rimraf *.tgz",
@@ -251,6 +252,7 @@
         "docs:coded-action-app": "npm run docs --prefix packages/coded-action-app",
         "docs:post-process": "node scripts/docs-post-process.mjs",
         "lint": "oxlint",
+        "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest run",
@@ -284,6 +286,7 @@
         "@vitest/ui": "^4.1.9",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
+        "node-html-parser": "^9.0.0",
         "oxlint": "^1.43.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.60.4",
