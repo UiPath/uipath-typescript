@@ -4,6 +4,8 @@
  * NOT exported from the public barrel (`src/models/identity/index.ts`).
  */
 
+import type { UserOperationResult } from './users.types';
+
 /**
  * Raw user shape as returned by the Identity user management API.
  *
@@ -46,3 +48,14 @@ export interface RawUserEntry {
 export const INTERNAL_USER_FIELDS = [
   'legacyId',
 ] as const satisfies ReadonlyArray<keyof RawUserEntry>;
+
+/**
+ * Raw response of `POST /api/User/BulkCreate`.
+ *
+ * The Swagger spec declares a bare `IdentityResult`, but the live API also
+ * returns the created users.
+ */
+export interface RawUserCreateResponse {
+  result: UserOperationResult;
+  users: RawUserEntry[];
+}

@@ -280,3 +280,6 @@ User management is authorized by the caller's **organization role** (organizatio
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | None — requires organization administrator role |
+| `updateById()` | None — requires organization administrator role |
+| `deleteById()` | None — requires organization administrator role |
+| `create()` | None — requires organization administrator role |

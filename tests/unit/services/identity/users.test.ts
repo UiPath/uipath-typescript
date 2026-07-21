@@ -70,6 +70,15 @@ describe('UserService Unit Tests', () => {
       expect((result as any).legacyId).toBeUndefined();
     });
 
+    it('should attach bound methods to the returned user', async () => {
+      mockApiClient.get.mockResolvedValue(createBasicRawUserEntry());
+
+      const result = await userService.getById(USER_TEST_CONSTANTS.USER_ID);
+
+      expect(typeof result.update).toBe('function');
+      expect(typeof result.delete).toBe('function');
+    });
+
     it('should propagate errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND));
 
@@ -78,4 +87,139 @@ describe('UserService Unit Tests', () => {
       );
     });
   });
+
+  describe('updateById', () => {
+    it('should PUT the update payload with group id fields renamed to API names', async () => {
+      mockApiClient.put.mockResolvedValue({ succeeded: true, errors: [] });
+
+      const result = await userService.updateById(USER_TEST_CONSTANTS.USER_ID, {
+        displayName: USER_TEST_CONSTANTS.DISPLAY_NAME,
+        groupIdsToAdd: [USER_TEST_CONSTANTS.GROUP_ID],
+        groupIdsToRemove: [USER_TEST_CONSTANTS.GROUP_ID_2],
+      });
+
+      expect(mockApiClient.put).toHaveBeenCalledWith(
+        IDENTITY_USER_ENDPOINTS.BY_ID(USER_TEST_CONSTANTS.USER_ID),
+        {
+          displayName: USER_TEST_CONSTANTS.DISPLAY_NAME,
+          groupIDsToAdd: [USER_TEST_CONSTANTS.GROUP_ID],
+          groupIDsToRemove: [USER_TEST_CONSTANTS.GROUP_ID_2],
+        },
+        expect.anything()
+      );
+      expect(result).toEqual({ succeeded: true, errors: [] });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.put.mockRejectedValue(createMockError(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND));
+
+      await expect(
+        userService.updateById(USER_TEST_CONSTANTS.USER_ID, { isActive: false })
+      ).rejects.toThrow(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND);
+    });
+  });
+
+  describe('deleteById', () => {
+    it('should DELETE the user', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await expect(userService.deleteById(USER_TEST_CONSTANTS.USER_ID)).resolves.toBeUndefined();
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        IDENTITY_USER_ENDPOINTS.BY_ID(USER_TEST_CONSTANTS.USER_ID),
+        expect.anything()
+      );
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.delete.mockRejectedValue(createMockError(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND));
+
+      await expect(userService.deleteById(USER_TEST_CONSTANTS.USER_ID)).rejects.toThrow(
+        USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND
+      );
+    });
+  });
+
+  describe('create', () => {
+    it('should POST users with the organization id as partitionGlobalId and groupIds renamed', async () => {
+      mockApiClient.post.mockResolvedValue({
+        result: { succeeded: true, errors: [] },
+        users: [createBasicRawUserEntry()],
+      });
+
+      const result = await userService.create(
+        [{ userName: USER_TEST_CONSTANTS.USER_NAME, email: USER_TEST_CONSTANTS.EMAIL }],
+        USER_TEST_CONSTANTS.ORGANIZATION_ID,
+        { groupIds: [USER_TEST_CONSTANTS.GROUP_ID] }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        IDENTITY_USER_ENDPOINTS.BULK_CREATE,
+        {
+          users: [{ userName: USER_TEST_CONSTANTS.USER_NAME, email: USER_TEST_CONSTANTS.EMAIL }],
+          partitionGlobalId: USER_TEST_CONSTANTS.ORGANIZATION_ID,
+          groupIDs: [USER_TEST_CONSTANTS.GROUP_ID],
+        },
+        expect.anything()
+      );
+      expect(result.result.succeeded).toBe(true);
+      expect(result.users.length).toBe(1);
+    });
+
+    it('should transform created users and attach bound methods', async () => {
+      mockApiClient.post.mockResolvedValue({
+        result: { succeeded: true, errors: [] },
+        users: [createBasicRawUserEntry()],
+      });
+
+      const result = await userService.create(
+        [{ userName: USER_TEST_CONSTANTS.USER_NAME }],
+        USER_TEST_CONSTANTS.ORGANIZATION_ID
+      );
+
+      const user = result.users[0];
+      expect(user.createdTime).toBe(USER_TEST_CONSTANTS.CREATION_TIME);
+      expect(user.groupIds).toEqual([USER_TEST_CONSTANTS.GROUP_ID]);
+      expect(user.type).toBe(UserType.User);
+      expect((user as any).creationTime).toBeUndefined();
+      expect((user as any).groupIDs).toBeUndefined();
+      expect((user as any).legacyId).toBeUndefined();
+      expect(typeof user.update).toBe('function');
+      expect(typeof user.delete).toBe('function');
+    });
+
+    it('should omit groupIDs from the payload when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue({
+        result: { succeeded: true, errors: [] },
+        users: [createBasicRawUserEntry()],
+      });
+
+      await userService.create(
+        [{ userName: USER_TEST_CONSTANTS.USER_NAME }],
+        USER_TEST_CONSTANTS.ORGANIZATION_ID
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        IDENTITY_USER_ENDPOINTS.BULK_CREATE,
+        {
+          users: [{ userName: USER_TEST_CONSTANTS.USER_NAME }],
+          partitionGlobalId: USER_TEST_CONSTANTS.ORGANIZATION_ID,
+          groupIDs: undefined,
+        },
+        expect.anything()
+      );
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND));
+
+      await expect(
+        userService.create(
+          [{ userName: USER_TEST_CONSTANTS.USER_NAME }],
+          USER_TEST_CONSTANTS.ORGANIZATION_ID
+        )
+      ).rejects.toThrow(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND);
+    });
+  });
+
 });
