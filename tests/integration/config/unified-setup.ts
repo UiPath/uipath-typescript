@@ -21,7 +21,8 @@ import { AgentMemory } from '../../../src/services/agents/memory';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
-import { Notifications, Subscriptions } from '../../../src/services/notification';
+import { Notifications } from '../../../src/services/notification';
+import { Users } from '../../../src/services/identity';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -65,7 +66,7 @@ export interface TestServices {
   agents?: Agents;
   governance?: Governance;
   notifications?: Notifications;
-  subscriptions?: Subscriptions;
+  users?: Users;
 }
 
 /**
@@ -156,7 +157,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     agents: new Agents(sdk),
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
-    subscriptions: new Subscriptions(sdk),
+    users: new Users(sdk),
   };
 }
 

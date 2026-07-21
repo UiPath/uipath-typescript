@@ -19,6 +19,7 @@ export * from './models/conversational-agent';
 export * from './models/agents';
 export * as DuFramework from './models/document-understanding/framework';
 export * from './models/governance';
+export * from './models/identity';
 export * from './models/observability';
 
 // Export error handling functionality (public API only)

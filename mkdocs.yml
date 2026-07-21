@@ -208,6 +208,7 @@ nav:
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
+          - Users: api/interfaces/UserServiceModel.md
           - Traces:
             - api/interfaces/traces/index.md
             - Agent: api/interfaces/AgentTracesServiceModel.md
@@ -224,7 +225,7 @@ nav:
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
   - Plugins:
       - Codex: plugins/codex.md
-  - Sample Apps Gallery: samples/index.md
+  - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
   - Integration Testing: integration-testing.md

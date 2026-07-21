@@ -145,7 +145,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
-| `downloadCitationSource()` | NA |
 
 ### Conversations
 
@@ -272,3 +271,9 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceDecisions()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+
+## Users
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `PM.Users` or `PM.Users.Read` |

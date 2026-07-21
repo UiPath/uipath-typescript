@@ -233,6 +233,11 @@ const serviceEntries = [
     name: 'notifications',
     input: 'src/services/notification/index.ts',
     output: 'notifications/index'
+  },
+  {
+    name: 'users',
+    input: 'src/services/identity/index.ts',
+    output: 'users/index'
   }
 ];
 
