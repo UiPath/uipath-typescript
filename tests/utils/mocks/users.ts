@@ -6,7 +6,10 @@
  * Swagger spec wrongly declares string enums for the latter).
  */
 
-import type { RawUserEntry } from '../../../src/models/identity/users.internal-types';
+import type {
+  RawUserEntry,
+  RawUserInviteResult,
+} from '../../../src/models/identity/users.internal-types';
 import type { RawUserGetResponse } from '../../../src/models/identity';
 import { UserCategory, UserType } from '../../../src/models/identity';
 import { USER_TEST_CONSTANTS } from '../constants/users';
@@ -60,5 +63,18 @@ export const createBasicRawUserEntry = (
   invitationAccepted: true,
   // Internal field the API includes but the SDK drops:
   legacyId: USER_TEST_CONSTANTS.LEGACY_ID,
+  ...overrides,
+});
+
+/**
+ * Builds a raw per-user invite result mirroring a live API response.
+ */
+export const createBasicRawUserInviteResult = (
+  overrides?: Partial<RawUserInviteResult>
+): RawUserInviteResult => ({
+  email: USER_TEST_CONSTANTS.EMAIL,
+  id: USER_TEST_CONSTANTS.USER_ID,
+  errorMsg: null,
+  success: true,
   ...overrides,
 });

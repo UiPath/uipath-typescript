@@ -17,6 +17,22 @@ describe.each(modes)('Identity Users - Integration Tests [%s]', (mode) => {
   let sharedUserName!: string;
   const createdUserIds: string[] = [];
 
+  /**
+   * Invite redirect URLs must be an allowed portal URL for the organization —
+   * anything else (including the API gateway host) fails per-user with
+   * `Redirect URL is not valid`.
+   */
+  const buildRedirectUrl = (email: string): string => {
+    const config = getTestConfig();
+    const params = new URLSearchParams({
+      organizationId,
+      emailForUserinvite: email,
+      organizationName: config.orgName,
+      language: 'en',
+    });
+    return `${config.portalUrl ?? config.baseUrl}/portal_/acceptInvite?${params.toString()}`;
+  };
+
   beforeAll(async () => {
     const service = getServices().users;
     if (!service) {
@@ -131,6 +147,54 @@ describe.each(modes)('Identity Users - Integration Tests [%s]', (mode) => {
 
       const refreshed = await users.getById(sharedUserId);
       expect(refreshed.displayName).toBe(displayName);
+    });
+  });
+
+  describe('invite', () => {
+    it('should invite a user by email and report the per-user outcome', async () => {
+      // example.com is reserved (RFC 2606) — the invitation email goes nowhere.
+      const email = `sdk-invite-${generateRandomString(10)}@example.com`;
+
+      const response = await users.invite([
+        {
+          email,
+          redirectUrl: buildRedirectUrl(email),
+          name: 'Sdk',
+          surname: 'Invited',
+          language: 'en',
+        },
+      ]);
+
+      expect(response.result.succeeded).toBe(true);
+      expect(response.users.length).toBe(1);
+
+      const invited = response.users[0];
+      expect(invited.email).toBe(email);
+      expect(invited.success).toBe(true);
+      expect(invited.errorMessage).toBeNull();
+      expect(invited.id.length).toBeGreaterThan(0);
+
+      createdUserIds.push(invited.id);
+
+      // The invited user is a real user retrievable by ID with the invite pending.
+      const user = await users.getById(invited.id);
+      expect(user.email).toBe(email);
+      expect(user.invitationAccepted).toBe(false);
+    });
+
+    it('should report a per-user failure for a disallowed redirect URL', async () => {
+      const email = `sdk-invite-${generateRandomString(10)}@example.com`;
+
+      const response = await users.invite([
+        { email, redirectUrl: 'https://not-a-uipath-portal.example.com/accept' },
+      ]);
+
+      // The request as a whole succeeds; the individual invitation fails.
+      expect(response.result.succeeded).toBe(true);
+      const invited = response.users[0];
+      expect(invited.success).toBe(false);
+      expect(typeof invited.errorMessage).toBe('string');
+      expect(invited).not.toHaveProperty('errorMsg');
     });
   });
 

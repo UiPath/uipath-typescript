@@ -7,6 +7,8 @@ import type {
   RawUserGetResponse,
   UserCreateData,
   UserCreateOptions,
+  UserInviteData,
+  UserInviteResponse,
   UserOperationResult,
   UserUpdateOptions,
   UserUpdateResponse,
@@ -144,6 +146,44 @@ export interface UserServiceModel {
     organizationId: string,
     options?: UserCreateOptions
   ): Promise<UserCreateResponse>;
+
+  /**
+   * Invites users to the organization by email.
+   *
+   * Each invited user receives an invitation email with an accept link that
+   * redirects to `redirectUrl`. Individual invitations can fail while the
+   * request as a whole succeeds — check `success` on each entry in `users`.
+   *
+   * @param users - Users to invite
+   * @returns Promise resolving to a {@link UserInviteResponse} with the overall outcome and per-user invitation results
+   *
+   * @example
+   * ```typescript
+   * const response = await users.invite([
+   *   {
+   *     email: 'jdoe@acme.com',
+   *     redirectUrl: 'https://cloud.uipath.com/portal_/acceptInvite?organizationId=<organizationId>',
+   *   },
+   * ]);
+   * for (const user of response.users) {
+   *   console.log(`${user.email}: ${user.success ? 'invited' : user.errorMessage}`);
+   * }
+   * ```
+   *
+   * @example Invite into groups
+   * ```typescript
+   * await users.invite([
+   *   {
+   *     email: 'jdoe@acme.com',
+   *     redirectUrl: 'https://cloud.uipath.com/portal_/acceptInvite?organizationId=<organizationId>',
+   *     name: 'Jane',
+   *     surname: 'Doe',
+   *     groupIds: ['<groupId>'],
+   *   },
+   * ]);
+   * ```
+   */
+  invite(users: UserInviteData[]): Promise<UserInviteResponse>;
 }
 
 /**

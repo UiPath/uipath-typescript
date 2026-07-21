@@ -9,6 +9,9 @@ import type {
   RawUserGetResponse,
   UserCreateData,
   UserCreateOptions,
+  UserInviteData,
+  UserInviteResponse,
+  UserInviteResult,
   UserUpdateOptions,
   UserUpdateResponse,
 } from '../../models/identity/users.types';
@@ -22,9 +25,11 @@ import {
   INTERNAL_USER_FIELDS,
   type RawUserCreateResponse,
   type RawUserEntry,
+  type RawUserInviteResponse,
 } from '../../models/identity/users.internal-types';
 import {
   UserCategoryMap,
+  UserInviteResultMap,
   UserMap,
   UserTypeMap,
 } from '../../models/identity/users.constants';
@@ -75,6 +80,18 @@ export class UserService extends BaseService implements UserServiceModel {
       users: response.data.users.map((user) =>
         createUserWithMethods(this.transformUser(user), this)
       ),
+    };
+  }
+
+  @track('Users.Invite')
+  async invite(users: UserInviteData[]): Promise<UserInviteResponse> {
+    const response = await this.post<RawUserInviteResponse>(
+      IDENTITY_USER_ENDPOINTS.INVITE,
+      users.map((user) => transformRequest(user, UserMap))
+    );
+    return {
+      result: response.data.result,
+      users: transformData(response.data.users, UserInviteResultMap) as unknown as UserInviteResult[],
     };
   }
 

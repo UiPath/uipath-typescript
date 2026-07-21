@@ -24,4 +24,5 @@ export const IDENTITY_USER_ENDPOINTS = {
   /** GET (retrieve), PUT (update) and DELETE share this URL — the HTTP method is chosen at the call site. */
   BY_ID: (userId: string) => `${USER_API_BASE}/${userId}`,
   BULK_CREATE: `${USER_API_BASE}/BulkCreate`,
+  INVITE: `${USER_API_BASE}/InviteUsers`,
 } as const;

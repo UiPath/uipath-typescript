@@ -283,3 +283,4 @@ User management is authorized by the caller's **organization role** (organizatio
 | `updateById()` | None — requires organization administrator role |
 | `deleteById()` | None — requires organization administrator role |
 | `create()` | None — requires organization administrator role |
+| `invite()` | None — requires organization administrator role |

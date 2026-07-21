@@ -16,6 +16,13 @@ export const UserMap: { [key: string]: string } = {
 };
 
 /**
+ * Invite result field mappings (API field name → SDK field name).
+ */
+export const UserInviteResultMap: { [key: string]: string } = {
+  errorMsg: 'errorMessage',
+};
+
+/**
  * Maps numeric user type codes (from API) to {@link UserType} enum values.
  */
 export const UserTypeMap: { [key: number]: UserType } = {
