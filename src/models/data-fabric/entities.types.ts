@@ -410,7 +410,7 @@ export interface EntityCreateOptions extends EntityFolderScopedOptions {
    */
   isAnalyticsEnabled?: boolean;
   /** External field source definitions (default: empty) */
-  externalFields?: ExternalField[];
+  externalFields?: ExternalSourceFields[];
 }
 
 /**
@@ -449,6 +449,8 @@ export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
   description?: string;
   /** Whether role-based access control is enabled for this entity */
   isRbacEnabled?: boolean;
+  /** Whether Analytics integration is enabled for this entity */
+  isAnalyticsEnabled?: boolean;
 }
 
 /**
@@ -551,6 +553,18 @@ export enum EntityType {
   ChoiceSet = "ChoiceSet",
   InternalEntity = "InternalEntity",
   SystemEntity = "SystemEntity",
+}
+
+/**
+ * Product classification surfaced on v3 entity metadata.
+ */
+export enum EntityClass {
+  /** Native entity — data fully stored and managed within UiPath */
+  Native = "Native",
+  /** Federated entity — unified read-only view across UiPath and external sources */
+  Federated = "Federated",
+  /** Case-family entity */
+  Case = "Case",
 }
 
 /**
@@ -671,6 +685,8 @@ export interface ExternalObject {
   externalConnectionId: string;
   entityId?: string;
   isPrimarySource: boolean;
+  /** External access method for the object */
+  method?: string;
 }
 
 /**
@@ -687,6 +703,29 @@ export interface ExternalConnection {
 }
 
 /**
+ * Operator-level searchability metadata
+ */
+export interface SearchabilityOperator {
+  searchableOperators?: string[];
+}
+
+/**
+ * Named-search searchability metadata
+ */
+export interface SearchabilityNamedSearch {
+  searchableNames?: string[];
+}
+
+/**
+ * Field searchability metadata
+ */
+export interface Searchability {
+  searchable: boolean;
+  supportsOperators?: SearchabilityOperator;
+  supportsNamedSearch?: SearchabilityNamedSearch;
+}
+
+/**
  * External field mapping
  */
 export interface ExternalFieldMapping {
@@ -697,6 +736,12 @@ export interface ExternalFieldMapping {
   externalFieldType?: string;
   internalFieldId: string;
   directionType: DataDirectionType;
+  /** Field searchability metadata */
+  searchability?: Searchability;
+  /** Whether this external field is required for read operations */
+  isRequiredForRead?: boolean;
+  /** Whether this external field can be used for sorting */
+  sortable?: boolean;
 }
 
 /**
@@ -708,12 +753,25 @@ export interface ExternalField {
 }
 
 /**
+ * Native connection detail — set for a Native source referencing another UiPath entity
+ * (Federated entities with Native sources). When present, `externalConnectionDetail` may be empty.
+ */
+export interface NativeConnectionDetail {
+  /** Id of the referenced native UiPath entity (the source to read from) */
+  entityId: string;
+  /** Folder that owns the referenced native entity */
+  folderKey: string;
+}
+
+/**
  * External source fields
  */
 export interface ExternalSourceFields {
   fields?: ExternalField[];
   externalObjectDetail?: ExternalObject;
   externalConnectionDetail?: ExternalConnection;
+  /** Set for a Native source (referencing another UiPath entity); see {@link NativeConnectionDetail} */
+  nativeConnectionDetail?: NativeConnectionDetail;
 }
 
 /**
@@ -722,6 +780,8 @@ export interface ExternalSourceFields {
 export interface SourceJoinCriteria {
   id: string;
   entityId: string;
+  /** Id of the source object on the owning side of the join */
+  sourceObjectId?: string;
   joinFieldName?: string;
   joinType: JoinType;
   relatedSourceObjectId?: string;
@@ -735,6 +795,12 @@ export interface RawEntityGetResponse {
   name: string;
   displayName: string;
   entityType: EntityType;
+  /** Numeric entity type identifier (v3 metadata) */
+  entityTypeId?: number;
+  /** Template discriminator — null for non-templated entities, set for templated ones (v3 metadata) */
+  templateName?: string;
+  /** Product classification (v3 metadata): Native, Federated, or Case */
+  entityClass?: EntityClass;
   description?: string;
   fields: FieldMetaData[];
   folderId?: string;
