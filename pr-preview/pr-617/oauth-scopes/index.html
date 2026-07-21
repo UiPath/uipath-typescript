@@ -3588,6 +3588,7 @@
 </tbody>
 </table>
 <h2 id="users">Users<a class="headerlink" href="#users" title="Permanent link">&para;</a></h2>
+<p>User management is authorized by the caller's <strong>organization role</strong> (organization administrator), not by OAuth scopes — these endpoints enforce no scope requirement. Any token belonging to an org administrator can call them.</p>
 <table>
 <thead>
 <tr>
@@ -3598,19 +3599,19 @@
 <tbody>
 <tr>
 <td><code>getById()</code></td>
-<td><code>PM.Users</code> or <code>PM.Users.Read</code></td>
+<td>None — requires organization administrator role</td>
 </tr>
 <tr>
 <td><code>updateById()</code></td>
-<td><code>PM.Users</code> or <code>PM.Users.Write</code></td>
+<td>None — requires organization administrator role</td>
 </tr>
 <tr>
 <td><code>deleteById()</code></td>
-<td><code>PM.Users</code> or <code>PM.Users.Write</code></td>
+<td>None — requires organization administrator role</td>
 </tr>
 <tr>
 <td><code>create()</code></td>
-<td><code>PM.Users</code> or <code>PM.Users.Write</code></td>
+<td>None — requires organization administrator role</td>
 </tr>
 </tbody>
 </table>
