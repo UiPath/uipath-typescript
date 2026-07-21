@@ -275,6 +275,8 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 ## Users
 
+User management is authorized by the caller's **organization role** (organization administrator), not by OAuth scopes — these endpoints enforce no scope requirement. Any token belonging to an org administrator can call them.
+
 | Method | OAuth Scope |
 |--------|-------------|
-| `getById()` | `PM.Users` or `PM.Users.Read` |
+| `getById()` | None — requires organization administrator role |
