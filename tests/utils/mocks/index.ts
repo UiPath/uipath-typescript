@@ -23,6 +23,8 @@ export * from './memory';
 export * from './traces';
 export * from './governance';
 export * from './notification';
+export * from './users';
 
 // Re-export constants for convenience
 export * from '../constants';
+

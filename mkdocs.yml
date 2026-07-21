@@ -208,6 +208,7 @@ nav:
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
+          - Users: api/interfaces/UserServiceModel.md
           - Traces:
             - api/interfaces/traces/index.md
             - Agent: api/interfaces/AgentTracesServiceModel.md

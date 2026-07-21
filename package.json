@@ -225,6 +225,16 @@
                 "types": "./dist/notifications/index.d.ts",
                 "default": "./dist/notifications/index.cjs"
             }
+        },
+        "./users": {
+            "import": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.cjs"
+            }
         }
     },
     "files": [

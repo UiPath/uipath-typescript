@@ -3,6 +3,17 @@
  */
 
 export const ORCHESTRATOR_BASE = 'orchestrator_';
+/**
+ * Identity server base for **organization**-level API routes (e.g. user management).
+ * Identity URLs do not include a tenant segment, so — like {@link NOTIFICATION_BASE} —
+ * the `../` prefix relies on `URL` path normalization to collapse the tenant segment
+ * that {@link ApiClient} unconditionally inserts (`{orgName}/{tenantName}/{path}`):
+ * `{orgName}/{tenantName}/../identity_/...` resolves to `{orgName}/identity_/...`.
+ *
+ * Do NOT remove the leading `../`. OAuth/token endpoints use {@link IDENTITY_BASE}
+ * instead because they are resolved outside {@link ApiClient}.
+ */
+export const IDENTITY_ORG_BASE = '../identity_';
 export const PIMS_BASE = 'pims_';
 export const DATAFABRIC_BASE = 'datafabric_';
 export const IDENTITY_BASE = 'identity_';
