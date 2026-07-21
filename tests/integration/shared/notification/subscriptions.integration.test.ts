@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import type { Subscriptions } from '../../../../src/services/notification';
-import { NotificationCategory, NotificationMode, type SubscriptionPublisher } from '../../../../src/models/notification';
+import { NotificationCategory, NotificationMode, type SubscriptionEntity, type SubscriptionPublisher } from '../../../../src/models/notification';
 
 const modes: InitMode[] = ['v1'];
 
@@ -161,6 +161,62 @@ describe.skip.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
           category: NotificationCategory.Error,
           isSubscribed: originalEmailState,
           notificationMode: NotificationMode.Email,
+        },
+      ]);
+      expect(restore.success).toBe(true);
+    });
+  });
+
+  describe('updatePublishers', () => {
+    it('should round-trip a publisher opt-in/out', async () => {
+      const original = firstPublisher.isUserOptin === true;
+
+      const flip = await subscriptions.updatePublishers(tenantId, [
+        { publisherId: firstPublisher.id, isUserOptIn: !original },
+      ]);
+      expect(flip.success).toBe(true);
+
+      const restore = await subscriptions.updatePublishers(tenantId, [
+        { publisherId: firstPublisher.id, isUserOptIn: original },
+      ]);
+      expect(restore.success).toBe(true);
+    });
+  });
+
+  describe('updateTopicGroups', () => {
+    it('should round-trip a topic-group entity subscription change', async () => {
+      // Find any publisher with a named topic group that has at least one entity to toggle
+      let match: { publisherId: string; topicGroupName: string; entity: SubscriptionEntity } | undefined;
+      for (const publisher of allPublishers) {
+        const group = publisher.topicGroupEntities?.find(
+          (g) => g.name !== null && (g.entities?.length ?? 0) > 0,
+        );
+        if (group?.name && group.entities?.length) {
+          match = { publisherId: publisher.id, topicGroupName: group.name, entity: group.entities[0] };
+          break;
+        }
+      }
+      if (!match) {
+        throw new Error('No publisher with a configured topic-group entity — cannot run updateTopicGroups round-trip.');
+      }
+      const originalState = match.entity.isSubscribed;
+
+      // Flip the entity's subscription within the topic group
+      const flip = await subscriptions.updateTopicGroups(tenantId, [
+        {
+          publisherId: match.publisherId,
+          topicGroupName: match.topicGroupName,
+          entities: [{ id: match.entity.id, type: match.entity.type ?? undefined, isSubscribed: !originalState }],
+        },
+      ]);
+      expect(flip.success).toBe(true);
+
+      // Restore — leave the tenant in its original state
+      const restore = await subscriptions.updateTopicGroups(tenantId, [
+        {
+          publisherId: match.publisherId,
+          topicGroupName: match.topicGroupName,
+          entities: [{ id: match.entity.id, type: match.entity.type ?? undefined, isSubscribed: originalState }],
         },
       ]);
       expect(restore.success).toBe(true);

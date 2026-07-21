@@ -17,6 +17,8 @@ import {
   NotificationCategory,
   NotificationMode,
   type CategorySubscriptionUpdate,
+  type PublisherSubscriptionUpdate,
+  type TopicGroupSubscriptionUpdate,
   type TopicSubscriptionUpdate,
 } from '../../../../src/models/notification';
 
@@ -218,6 +220,104 @@ describe('SubscriptionService Unit Tests', () => {
             category: NotificationCategory.Info,
             isSubscribed: true,
             notificationMode: NotificationMode.InApp,
+          },
+        ])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID);
+    });
+  });
+
+  describe('updatePublishers', () => {
+    it('should POST publisherSubscriptions with API-spelling publisherID + tenant header, echoing clean input', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const subscriptions: PublisherSubscriptionUpdate[] = [
+        { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, isUserOptIn: false },
+      ];
+
+      const result = await subscriptionService.updatePublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER,
+        {
+          publisherSubscriptions: [
+            {
+              publisherID: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+              isUserOptIn: false,
+              entities: undefined,
+            },
+          ],
+        },
+        { headers: TENANT_HEADER }
+      );
+      // Result echoes the SDK-shape input (publisherId, not publisherID)
+      expect(result).toEqual({ success: true, data: { subscriptions } });
+    });
+
+    it('should preserve entities scoping in the request body', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const subscriptions: PublisherSubscriptionUpdate[] = [
+        {
+          publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+          isUserOptIn: true,
+          entities: [{ id: 'folder-1', type: 'Folder', isSubscribed: true }],
+        },
+      ];
+
+      await subscriptionService.updatePublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER,
+        {
+          publisherSubscriptions: [
+            {
+              publisherID: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+              isUserOptIn: true,
+              entities: [{ id: 'folder-1', type: 'Folder', isSubscribed: true }],
+            },
+          ],
+        },
+        { headers: TENANT_HEADER }
+      );
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID));
+
+      await expect(
+        subscriptionService.updatePublishers(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
+          { publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID, isUserOptIn: true },
+        ])
+      ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID);
+    });
+  });
+
+  describe('updateTopicGroups', () => {
+    it('should POST topicGroupSubscriptions with tenant header and echo input', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+      const subscriptions: TopicGroupSubscriptionUpdate[] = [
+        {
+          publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+          topicGroupName: 'JobNotifications',
+        },
+      ];
+
+      const result = await subscriptionService.updateTopicGroups(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, subscriptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC_GROUP,
+        { topicGroupSubscriptions: subscriptions },
+        { headers: TENANT_HEADER }
+      );
+      expect(result).toEqual({ success: true, data: { subscriptions } });
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID));
+
+      await expect(
+        subscriptionService.updateTopicGroups(NOTIFICATION_TEST_CONSTANTS.TENANT_ID, [
+          {
+            publisherId: NOTIFICATION_TEST_CONSTANTS.PUBLISHER_ID,
+            topicGroupName: 'JobNotifications',
           },
         ])
       ).rejects.toThrow(NOTIFICATION_TEST_CONSTANTS.ERROR_SUBSCRIPTION_INVALID);
