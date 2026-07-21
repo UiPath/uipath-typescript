@@ -28,6 +28,11 @@ export const USER_TEST_CONSTANTS = {
   // Internal API field dropped by the SDK
   LEGACY_ID: 1141202,
 
+  // Invite fields (mirrors real-API behaviour captured during onboarding)
+  REDIRECT_URL: 'https://alpha.uipath.com/portal_/acceptInvite?organizationId=<organizationId>',
+  INVITE_ERROR_MESSAGE: 'Redirect URL is not valid',
+  EMPTY_GUID: '00000000-0000-0000-0000-000000000000',
+
   // Error messages
   ERROR_USER_NOT_FOUND: 'User not found',
 } as const;

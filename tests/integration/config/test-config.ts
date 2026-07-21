@@ -14,6 +14,12 @@ export interface IntegrationConfig {
    * as the partition the users belong to, and invite redirect URLs embed it).
    */
   organizationId?: string;
+  /**
+   * Portal host for invite accept-links (e.g. `https://alpha.uipath.com`). Invite
+   * redirect URLs must point at the portal host — the API gateway host is rejected
+   * with `Redirect URL is not valid`. Defaults to `baseUrl` when they coincide.
+   */
+  portalUrl?: string;
   secret: string;
   timeout: number;
   skipCleanup: boolean;
@@ -85,6 +91,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
+    portalUrl: typeof rawConfig.portalUrl === 'string' ? rawConfig.portalUrl : undefined,
     secret: rawConfig.secret as string,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
@@ -129,6 +136,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tenantName: process.env.UIPATH_TENANT_NAME,
     tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
     organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
+    portalUrl: process.env.UIPATH_PORTAL_URL || undefined,
     secret: process.env.UIPATH_SECRET,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)

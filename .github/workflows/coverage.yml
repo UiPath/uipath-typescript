@@ -77,6 +77,7 @@ jobs:
           echo "tasks_test_user_group_id=${{ secrets.UIPATH_TASKS_TEST_USER_GROUP_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_GROUP_ID }}" >> $GITHUB_OUTPUT
           echo "tasks_test_user_id=${{ secrets.UIPATH_TASKS_TEST_USER_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_ID }}" >> $GITHUB_OUTPUT
           echo "organization_id=${{ secrets.UIPATH_ORGANIZATION_ID_DEV || secrets.UIPATH_ORGANIZATION_ID }}" >> $GITHUB_OUTPUT
+          echo "portal_url=${{ secrets.UIPATH_PORTAL_URL_DEV || secrets.UIPATH_PORTAL_URL }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         run: |
@@ -107,6 +108,7 @@ jobs:
           TASKS_TEST_USER_GROUP_ID=${{ steps.config.outputs.tasks_test_user_group_id }}
           TASKS_TEST_USER_ID=${{ steps.config.outputs.tasks_test_user_id }}
           UIPATH_ORGANIZATION_ID=${{ steps.config.outputs.organization_id }}
+          UIPATH_PORTAL_URL=${{ steps.config.outputs.portal_url }}
           EOF
 
       - name: Run Integration Tests

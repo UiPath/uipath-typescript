@@ -152,3 +152,51 @@ export interface UserCreateOptions {
   groupIds?: string[];
 }
 
+/**
+ * A user to invite with `invite()`.
+ */
+export interface UserInviteData {
+  /** Email address the invitation is sent to. */
+  email: string;
+  /**
+   * URL the accept-invite link redirects to. Must be an allowed UiPath portal URL for
+   * the organization, e.g. `https://cloud.uipath.com/portal_/acceptInvite?organizationId=...`
+   * — other URLs are rejected per user with `Redirect URL is not valid`.
+   */
+  redirectUrl: string;
+  /** First name. */
+  name?: string;
+  /** Last name. */
+  surname?: string;
+  /** Language code for the invitation email (e.g. `en`). */
+  language?: string;
+  /** GUIDs of groups the invited user is added to. */
+  groupIds?: string[];
+}
+
+/**
+ * Per-user outcome of `invite()`.
+ */
+export interface UserInviteResult {
+  /** Email address the invitation was sent to. */
+  email: string;
+  /** GUID of the newly invited user. All-zeros GUID when the invitation failed. */
+  id: string;
+  /** Why the invitation failed. `null` on success. */
+  errorMessage: string | null;
+  /** Whether this user was successfully invited. */
+  success: boolean;
+}
+
+/**
+ * Response from `invite()`.
+ *
+ * `result` reflects the request as a whole; individual invitations can still fail —
+ * check `success` on each entry in `users`.
+ */
+export interface UserInviteResponse {
+  /** Overall outcome of the invite request. */
+  result: UserOperationResult;
+  /** Per-user invitation outcomes. */
+  users: UserInviteResult[];
+}

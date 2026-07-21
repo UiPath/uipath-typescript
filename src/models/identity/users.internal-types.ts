@@ -59,3 +59,22 @@ export interface RawUserCreateResponse {
   result: UserOperationResult;
   users: RawUserEntry[];
 }
+
+/**
+ * Raw per-user result entry of `POST /api/User/InviteUsers`.
+ */
+export interface RawUserInviteResult {
+  email: string;
+  id: string;
+  /** Renamed to `errorMessage` in the SDK response. */
+  errorMsg: string | null;
+  success: boolean;
+}
+
+/**
+ * Raw response of `POST /api/User/InviteUsers`.
+ */
+export interface RawUserInviteResponse {
+  result: UserOperationResult;
+  users: RawUserInviteResult[];
+}

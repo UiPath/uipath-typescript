@@ -4,6 +4,7 @@ import { UserService } from '../../../../src/services/identity/users';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import {
   createBasicRawUserEntry,
+  createBasicRawUserInviteResult,
   USER_TEST_CONSTANTS,
   createMockError,
 } from '../../../utils/mocks';
@@ -222,4 +223,67 @@ describe('UserService Unit Tests', () => {
     });
   });
 
+  describe('invite', () => {
+    it('should POST invited users with groupIds renamed to API names', async () => {
+      mockApiClient.post.mockResolvedValue({
+        result: { succeeded: true, errors: [] },
+        users: [createBasicRawUserInviteResult()],
+      });
+
+      const result = await userService.invite([
+        {
+          email: USER_TEST_CONSTANTS.EMAIL,
+          redirectUrl: USER_TEST_CONSTANTS.REDIRECT_URL,
+          groupIds: [USER_TEST_CONSTANTS.GROUP_ID],
+        },
+      ]);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        IDENTITY_USER_ENDPOINTS.INVITE,
+        [
+          {
+            email: USER_TEST_CONSTANTS.EMAIL,
+            redirectUrl: USER_TEST_CONSTANTS.REDIRECT_URL,
+            groupIDs: [USER_TEST_CONSTANTS.GROUP_ID],
+          },
+        ],
+        expect.anything()
+      );
+      expect(result.result.succeeded).toBe(true);
+      expect(result.users[0].success).toBe(true);
+      expect(result.users[0].id).toBe(USER_TEST_CONSTANTS.USER_ID);
+    });
+
+    it('should rename errorMsg to errorMessage on per-user results', async () => {
+      mockApiClient.post.mockResolvedValue({
+        result: { succeeded: true, errors: [] },
+        users: [
+          createBasicRawUserInviteResult({
+            id: USER_TEST_CONSTANTS.EMPTY_GUID,
+            errorMsg: USER_TEST_CONSTANTS.INVITE_ERROR_MESSAGE,
+            success: false,
+          }),
+        ],
+      });
+
+      const result = await userService.invite([
+        { email: USER_TEST_CONSTANTS.EMAIL, redirectUrl: USER_TEST_CONSTANTS.REDIRECT_URL },
+      ]);
+
+      // Per-user failure surfaces via the renamed field
+      expect(result.users[0].success).toBe(false);
+      expect(result.users[0].errorMessage).toBe(USER_TEST_CONSTANTS.INVITE_ERROR_MESSAGE);
+      expect((result.users[0] as any).errorMsg).toBeUndefined();
+    });
+
+    it('should propagate errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND));
+
+      await expect(
+        userService.invite([
+          { email: USER_TEST_CONSTANTS.EMAIL, redirectUrl: USER_TEST_CONSTANTS.REDIRECT_URL },
+        ])
+      ).rejects.toThrow(USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND);
+    });
+  });
 });
