@@ -7,13 +7,17 @@ import { BaseService } from '../base';
 
 import type {
   CategorySubscriptionUpdate,
+  PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionGetPublishersResponse,
   SubscriptionGetResponse,
   SubscriptionGetSupportedChannelsResponse,
   SubscriptionUpdateCategoriesResponse,
+  SubscriptionUpdatePublishersResponse,
+  SubscriptionUpdateTopicGroupsResponse,
   SubscriptionUpdateTopicsResponse,
+  TopicGroupSubscriptionUpdate,
   TopicSubscriptionUpdate,
 } from '../../models/notification/subscriptions.types';
 import type { SubscriptionServiceModel } from '../../models/notification/subscriptions.models';
@@ -78,6 +82,27 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
   async updateCategories(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoriesResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY, {
       categorySubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  @track('Subscriptions.UpdatePublishers')
+  async updatePublishers(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublishersResponse> {
+    // API field is misspelled `publisherID` — map at send time.
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER, {
+      publisherSubscriptions: subscriptions.map(({ publisherId, isUserOptIn, entities }) => ({
+        publisherID: publisherId,
+        isUserOptIn,
+        entities,
+      })),
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  @track('Subscriptions.UpdateTopicGroups')
+  async updateTopicGroups(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupsResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC_GROUP, {
+      topicGroupSubscriptions: subscriptions,
     }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
