@@ -10,7 +10,8 @@ import { resolveFolderHeaders } from '../utils/folder/folder-headers';
 
 /**
  * Matches single-quote characters in OData string literals — escaped to `''`
- * inside the `$filter=Name eq '…'` clause built by `getByNameLookup`.
+ * inside the `$filter=Name eq '…'` clause built by the shared name-lookup
+ * helper.
  */
 const SINGLE_QUOTE_RE = /'/g;
 
@@ -93,41 +94,112 @@ export class FolderScopedService extends BaseService {
     transform: (raw: TRaw) => T,
     responseFieldMap?: FieldMapping,
   ): Promise<T> {
-    const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
-
-    const headers = resolveFolderHeaders({
-      folderId,
-      folderKey,
-      folderPath,
-      resourceType: `${resourceType}.getByName`,
-      fallbackFolderKey: this.config.folderKey,
-    });
 
     const apiFieldOptions = responseFieldMap
       ? transformOptions(queryOptions, responseFieldMap)
       : queryOptions;
+    const extraParams = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
-    const apiOptions = {
-      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
+    return this.findByNameInFolder<TRaw, T>({
+      resourceType,
+      endpoint,
+      name,
+      folder: { folderId, folderKey, folderPath },
+      callerLabel: `${resourceType}.getByName`,
+      fallbackFolderKey: this.config.folderKey,
+      extraParams,
+      mapItem: transform,
+    });
+  }
+
+  /**
+   * Resolves a resource's numeric `Id` from its `Name` within a folder scope.
+   *
+   * Used by service methods that accept `<resource>: number | string` as their
+   * first argument. When the caller passes a string, the method calls this
+   * helper to obtain the numeric ID before continuing with the existing
+   * ID-based flow.
+   *
+   * Issues a lean OData request that projects only `Id` (`$select=Id&$top=1`),
+   * so the response is small and no field-rename transform is required.
+   *
+   * @param resourceType - Resource label used in validation + error messages (e.g. 'Bucket', 'Asset')
+   * @param endpoint - Folder-scoped OData collection endpoint
+   * @param name - Resource name to resolve
+   * @param folder - Folder scoping (`folderId` / `folderKey` / `folderPath`); at least one required unless SDK init-time `folderKey` is set
+   * @param callerLabel - Label used in header resolution (e.g. 'Buckets.deleteFile') for error context
+   * @throws ValidationError when the name is empty or the folder scope is unresolvable
+   * @throws NotFoundError when the OData response contains no matching resource
+   */
+  protected async resolveIdByName(
+    resourceType: string,
+    endpoint: string,
+    name: string,
+    folder: { folderId?: number; folderKey?: string; folderPath?: string },
+    callerLabel: string,
+  ): Promise<number> {
+    return this.findByNameInFolder<{ Id: number }, number>({
+      resourceType,
+      endpoint,
+      name,
+      folder,
+      callerLabel,
+      fallbackFolderKey: this.config.folderKey,
+      extraParams: { '$select': 'Id' },
+      mapItem: (raw) => raw.Id,
+    });
+  }
+
+  /**
+   * Core name-lookup building block: validates the name, resolves folder
+   * headers, issues the `$filter=Name eq '…'&$top=1` OData query, maps the
+   * single result, and throws `NotFoundError` when the response is empty.
+   *
+   * Not exposed to services directly — callers go through `getByNameLookup`
+   * (full-resource fetch) or `resolveIdByName` (Id-only projection). Both
+   * differ only in `extraParams` (`$select`) and `mapItem`.
+   */
+  private async findByNameInFolder<TRaw extends object, TOut>(args: {
+    resourceType: string;
+    endpoint: string;
+    name: string;
+    folder: { folderId?: number; folderKey?: string; folderPath?: string };
+    callerLabel: string;
+    fallbackFolderKey?: string;
+    extraParams?: Record<string, string>;
+    mapItem: (raw: TRaw) => TOut;
+  }): Promise<TOut> {
+    const validatedName = validateName(args.resourceType, args.name);
+
+    const headers = resolveFolderHeaders({
+      folderId: args.folder.folderId,
+      folderKey: args.folder.folderKey,
+      folderPath: args.folder.folderPath,
+      resourceType: args.callerLabel,
+      fallbackFolderKey: args.fallbackFolderKey,
+    });
+
+    const params = {
+      ...args.extraParams,
       '$filter': `Name eq '${validatedName.replace(SINGLE_QUOTE_RE, "''")}'`,
       '$top': '1',
     };
 
-    const response = await this.get<CollectionResponse<TRaw>>(endpoint, {
+    const response = await this.get<CollectionResponse<TRaw>>(args.endpoint, {
       headers,
-      params: apiOptions,
+      params,
     });
 
     const items = response.data?.value;
     if (!items?.length) {
-      const folderHint = describeFolderForError(folderId, folderKey, folderPath);
+      const folderHint = describeFolderForError(args.folder.folderId, args.folder.folderKey, args.folder.folderPath);
       throw new NotFoundError({
-        message: `${resourceType} '${validatedName}' not found${folderHint}.`,
+        message: `${args.resourceType} '${validatedName}' not found${folderHint}.`,
       });
     }
 
-    return transform(items[0]);
+    return args.mapItem(items[0]);
   }
 }
 
