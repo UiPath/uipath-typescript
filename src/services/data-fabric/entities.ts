@@ -315,7 +315,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // and translate each join to the wire shape ({ type, entity, on: { left, right } }).
     let getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id);
     if (options?.joins && options.joins.length > 0) {
-      const { name: baseEntityName } = await this.getById(id, folderKey !== undefined ? { folderKey } : undefined);
+      const baseEntityName = await this.resolveEntityName(id, folderKey);
       (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));
       getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(baseEntityName);
     }
@@ -560,6 +560,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
       },
       { headers: folderHeaders },
     );
+  }
+
+  /**
+   * Resolves an entity's name from its ID. Untracked internal helper — calling
+   * the public `getById` from another `@track`-decorated method would emit
+   * double telemetry (see conventions.md, delegation anti-pattern).
+   *
+   * @param id - Entity ID to resolve
+   * @param folderKey - Optional folder key sent as the X-UIPATH-FolderKey header
+   * @private
+   */
+  private async resolveEntityName(id: string, folderKey?: string): Promise<string> {
+    const response = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data as RawEntityGetResponse, EntityMap).name;
   }
 
   /**
