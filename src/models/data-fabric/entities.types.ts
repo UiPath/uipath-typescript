@@ -248,16 +248,12 @@ export interface EntityAggregate {
  * must share the same {@link JoinType}.
  *
  * A join query must also set `selectedFields` or `aggregates` on
- * {@link EntityQueryRecordsOptions}. In a join query, a field reference is
- * **qualified** when prefixed with the owning entity's name and a dot
- * (`"Customer.Name"`), and **unqualified** when it is the bare field name
- * (`"Name"`). Prefer qualified references — unqualified ones resolve only
- * while the field name is unique across all joined entities. Result rows key
- * their values by the same qualified form (`"Customer.Name"`); a LEFT join
- * with no match omits the related entity's keys from the row.
- *
- * Joins are not supported on choice-set, relationship, file, encrypted, or
- * system fields, nor on folder-scoped entities.
+ * {@link EntityQueryRecordsOptions}, referencing fields as
+ * `"<EntityName>.<FieldName>"` (e.g. `"Customer.Name"`) — bare field names
+ * resolve only while unique across the joined entities. Result rows use the
+ * same qualified keys; a LEFT join with no match omits the related entity's
+ * keys. Joins are not supported on choice-set, relationship, file, encrypted,
+ * or system fields, nor on folder-scoped entities.
  *
  * @example
  * ```typescript

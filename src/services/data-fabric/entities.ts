@@ -63,11 +63,11 @@ import {
   ENTITY_TYPE_IDS,
   MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /** Wire values for join types on the name-based multi-entity query route. */
-const JOIN_TYPE_WIRE: Record<JoinType, string> = {
+const JOIN_TYPE_WIRE: Record<JoinType, EntityJoinPayload['type']> = {
   [JoinType.LeftJoin]: 'LEFT',
   [JoinType.InnerJoin]: 'INNER',
 };
@@ -78,10 +78,9 @@ const qualifyJoinField = (entityName: string, field: string): string =>
 
 /**
  * Translate the public {@link EntityJoin} shape to the multi-entity query wire
- * contract: `{ type: "LEFT" | "INNER", entity, on: { left, right } }` with
- * entity-qualified join keys.
+ * contract ({@link EntityJoinPayload}) with entity-qualified join keys.
  */
-function toWireJoin(join: EntityJoin, baseEntityName: string) {
+function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload {
   return {
     type: JOIN_TYPE_WIRE[join.joinType ?? JoinType.LeftJoin],
     entity: join.relatedEntityName,
@@ -305,7 +304,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // surface that requirement client-side with an actionable message.
     if (options?.joins && options.joins.length > 0 && !options.selectedFields?.length && !options.aggregates?.length) {
       throw new ValidationError({
-        message: 'Join queries require selectedFields or aggregates — reference fields as "EntityName.Field" (e.g. "Customer.name")',
+        message: 'Join queries require selectedFields or aggregates — reference fields as "<EntityName>.<FieldName>" (e.g. "Customer.name")',
       });
     }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.

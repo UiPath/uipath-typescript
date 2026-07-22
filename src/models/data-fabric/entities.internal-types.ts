@@ -56,6 +56,16 @@ export interface EntityQueryRawResponse {
 }
 
 /**
+ * Wire shape for one join clause on the multi-entity (name-based) query route.
+ * The entity service translates the public EntityJoin into this payload.
+ */
+export interface EntityJoinPayload {
+  type: 'LEFT' | 'INNER';
+  entity: string;
+  on: { left: string; right: string };
+}
+
+/**
  * Names of the per-field SQL constraint properties (i.e. the contents of `sqlType`
  * excluding its `name`). Used internally to validate user-supplied constraints
  * against the set of constraints that each `EntityFieldDataType` accepts.
