@@ -72,9 +72,12 @@ export interface FunctionServiceModel {
   /**
    * Invokes a function by name and returns its output.
    *
-   * The call is synchronous from the caller's perspective — the platform runs
-   * the function and returns its result in the same HTTP response. Functions
-   * should complete within ~25 seconds; longer executions time out.
+   * The call is synchronous from the caller's perspective — it resolves with the
+   * function's output. Long-running functions are awaited by following the
+   * platform's status polling until the output is available, bounded by
+   * `maxWaitSeconds` (default 300); the function keeps running on the platform
+   * if the wait is exceeded. In browsers, results are limited to functions that
+   * complete within the platform's ~25 second response window.
    *
    * Type the input and output by supplying the generics — they should match the
    * input/output schema the function declares. Folder context is required — pass
@@ -84,7 +87,8 @@ export interface FunctionServiceModel {
    * @param name - Name of the function to invoke (unique within a folder)
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), the
+   *   maximum wait time (`maxWaitSeconds`), and parent job attribution (`jobKey`)
    * @returns Promise resolving to the function's output
    *
    * @example
@@ -95,16 +99,17 @@ export interface FunctionServiceModel {
    *
    * @example
    * ```typescript
-   * // Typed input and output, folder by path
-   * interface HelloInput { name: string }
-   * interface HelloOutput { message: string }
+   * // Typed input and output; a long-running function with a raised wait limit,
+   * // attributed to a parent job's licensing transaction
+   * interface SyncInput { since: string }
+   * interface SyncOutput { processed: number }
    *
-   * const result = await fns.invoke<HelloInput, HelloOutput>(
-   *   'hello',
-   *   { name: 'Alice' },
-   *   { folderPath: 'Shared/Finance' }
+   * const result = await fns.invoke<SyncInput, SyncOutput>(
+   *   'sync-invoices',
+   *   { since: '2026-01-01' },
+   *   { folderPath: 'Shared/Finance', maxWaitSeconds: 600, jobKey: '<parentJobKey>' }
    * );
-   * console.log(result.message);
+   * console.log(result.processed);
    * ```
    */
   invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(

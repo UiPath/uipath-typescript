@@ -15,8 +15,14 @@ import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
 import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID, FOLDER_KEY } from '../../../../src/utils/constants/headers';
-import { ValidationError, NotFoundError } from '../../../../src/core/errors';
+import { FOLDER_ID, FOLDER_KEY, JOB_KEY } from '../../../../src/utils/constants/headers';
+import { ValidationError, NotFoundError, ServerError } from '../../../../src/core/errors';
+
+// The invoke leg requests a raw Response (redirect: 'manual'); these helpers build
+// the terminal 200 and the gateway's 303 "still running" legs.
+const jsonResponse = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
+const redirectResponse = (statusUrl: string) =>
+  new Response(null, { status: 303, headers: { location: statusUrl } });
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -45,6 +51,7 @@ describe('FunctionService Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('getAll', () => {
@@ -181,7 +188,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.get
         .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
         .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
 
       const result = await functionService.invoke(
         FUNCTION_TEST_CONSTANTS.NAME,
@@ -224,7 +231,7 @@ describe('FunctionService Unit Tests', () => {
 
     it('should skip the folder key lookup when folderKey is provided', async () => {
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
 
       const result = await functionService.invoke(
         FUNCTION_TEST_CONSTANTS.NAME,
@@ -245,12 +252,62 @@ describe('FunctionService Unit Tests', () => {
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
     });
 
+    it('should send the X-UIPATH-JobKey header on the invocation when jobKey is provided', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
+
+      await functionService.invoke(
+        FUNCTION_TEST_CONSTANTS.NAME,
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, jobKey: FUNCTION_TEST_CONSTANTS.JOB_KEY }
+      );
+
+      // The header rides only the invocation — not the name lookup, in any form
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          headers: expect.not.objectContaining({ [JOB_KEY]: expect.anything() }),
+          params: expect.not.objectContaining({ '$jobKey': expect.anything() }),
+        })
+      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.INVOKE(
+          FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
+          FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
+          FUNCTION_TEST_CONSTANTS.SLUG
+        ),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.objectContaining({
+          headers: expect.objectContaining({ [JOB_KEY]: FUNCTION_TEST_CONSTANTS.JOB_KEY }),
+        })
+      );
+    });
+
+    it('should not send the X-UIPATH-JobKey header when jobKey is omitted', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
+
+      await functionService.invoke(
+        FUNCTION_TEST_CONSTANTS.NAME,
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        expect.objectContaining({
+          headers: expect.not.objectContaining({ [JOB_KEY]: expect.anything() }),
+        })
+      );
+    });
+
     it('should fall back to the SDK folder context when no folder options are given', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
       const service = new FunctionService(instance);
 
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
 
       const result = await service.invoke(
         FUNCTION_TEST_CONSTANTS.NAME,
@@ -272,7 +329,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.get
         .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
         .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      mockApiClient.post.mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
 
       await functionService.invoke(
         FUNCTION_TEST_CONSTANTS.NAME,
@@ -291,12 +348,12 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.get
         .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger({ Method: 'Get' })] })
         .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY })
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+        .mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
 
       const result = await functionService.invoke(
         FUNCTION_TEST_CONSTANTS.NAME,
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
-        { folderId: TEST_CONSTANTS.FOLDER_ID }
+        { folderId: TEST_CONSTANTS.FOLDER_ID, jobKey: FUNCTION_TEST_CONSTANTS.JOB_KEY }
       );
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -309,6 +366,7 @@ describe('FunctionService Unit Tests', () => {
         ),
         expect.objectContaining({
           params: FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          headers: expect.objectContaining({ [JOB_KEY]: FUNCTION_TEST_CONSTANTS.JOB_KEY }),
         })
       );
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
@@ -334,6 +392,53 @@ describe('FunctionService Unit Tests', () => {
       ).rejects.toThrow(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should follow the 303 status long-poll chain until the output is ready', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      // Invoke leg answers 303 (still running); status polls answer 303 then 200 + output.
+      mockApiClient.post.mockResolvedValueOnce(redirectResponse(FUNCTION_TEST_CONSTANTS.STATUS_URL));
+      const mockFetch = vi.fn()
+        .mockResolvedValueOnce(redirectResponse(FUNCTION_TEST_CONSTANTS.STATUS_URL))
+        .mockResolvedValueOnce(jsonResponse(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT));
+      vi.stubGlobal('fetch', mockFetch);
+
+      const result = await functionService.invoke(
+        FUNCTION_TEST_CONSTANTS.NAME,
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      // Status polls carry the bearer token and never auto-follow redirects
+      expect(mockFetch).toHaveBeenCalledWith(
+        FUNCTION_TEST_CONSTANTS.STATUS_URL,
+        expect.objectContaining({
+          redirect: 'manual',
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN}`,
+          }),
+        })
+      );
+    });
+
+    it('should throw ServerError when the function does not finish within maxWaitSeconds', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(redirectResponse(FUNCTION_TEST_CONSTANTS.STATUS_URL));
+      const mockFetch = vi.fn();
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(
+        functionService.invoke(
+          FUNCTION_TEST_CONSTANTS.NAME,
+          FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+          { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, maxWaitSeconds: 0 }
+        )
+      ).rejects.toThrow(ServerError);
+
+      // Deadline already passed — no status poll is issued
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it('should propagate errors from the function invocation', async () => {

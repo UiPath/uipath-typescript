@@ -97,8 +97,15 @@ export class ApiClient {
         method,
         headers,
         body,
-        signal: options.signal
+        signal: options.signal,
+        redirect: options.redirect
       });
+
+      // Raw response type: hand the Response back untouched (no ok-check, no body
+      // parsing) for callers that drive the protocol themselves (e.g. 303 long-poll chains).
+      if (options.responseType === RESPONSE_TYPES.RAW) {
+        return response as T;
+      }
 
       if (!response.ok) {
         const errorInfo = await errorResponseParser.parse(response);
