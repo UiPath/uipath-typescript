@@ -27,6 +27,8 @@ import {
   EntityDeleteAttachmentOptions,
   EntityDeleteAttachmentResponse,
   EntityQueryRecordsOptions,
+  EntityJoin,
+  JoinType,
   EntityImportRecordsResponse,
   EntityImportRecordsByIdOptions,
   EntityCreateOptions,
@@ -61,8 +63,33 @@ import {
   ENTITY_TYPE_IDS,
   MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
+
+/** Wire values for join types on the name-based multi-entity query route. */
+const JOIN_TYPE_WIRE: Record<JoinType, EntityJoinPayload['type']> = {
+  [JoinType.LeftJoin]: 'LEFT',
+  [JoinType.InnerJoin]: 'INNER',
+};
+
+/** Qualify `field` with `entityName` unless the caller already qualified it. */
+const qualifyJoinField = (entityName: string, field: string): string =>
+  field.includes('.') ? field : `${entityName}.${field}`;
+
+/**
+ * Translate the public {@link EntityJoin} shape to the multi-entity query wire
+ * contract ({@link EntityJoinPayload}) with entity-qualified join keys.
+ */
+function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload {
+  return {
+    type: JOIN_TYPE_WIRE[join.joinType ?? JoinType.LeftJoin],
+    entity: join.relatedEntityName,
+    on: {
+      left: qualifyJoinField(join.entityName ?? baseEntityName, join.joinFieldName),
+      right: qualifyJoinField(join.relatedEntityName, join.relatedFieldName),
+    },
+  };
+}
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -268,18 +295,33 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
-    // The API accepts oversized join arrays without erroring, so enforce the limit here.
     if (options?.joins && options.joins.length > MAX_QUERY_JOINS) {
       throw new ValidationError({
         message: `A maximum of ${MAX_QUERY_JOINS} joins is supported per query (received ${options.joins.length})`,
       });
     }
+    // The multi-entity query API rejects join queries without a projection;
+    // surface that requirement client-side with an actionable message.
+    if (options?.joins && options.joins.length > 0 && !options.selectedFields?.length && !options.aggregates?.length) {
+      throw new ValidationError({
+        message: 'Join queries require selectedFields or aggregates — reference fields as "<EntityName>.<FieldName>" (e.g. "Customer.name")',
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
+    // The multi-entity (joins) contract only exists on the name-based query route —
+    // the ID-based route silently drops the `joins` body key. Resolve the entity name
+    // and translate each join to the wire shape ({ type, entity, on: { left, right } }).
+    let getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id);
+    if (options?.joins && options.joins.length > 0) {
+      const baseEntityName = await this.resolveEntityName(id, folderKey);
+      (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));
+      getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(baseEntityName);
+    }
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
+      getEndpoint,
       method: HTTP_METHODS.POST,
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       queryParams: createParams({ expansionLevel }),
@@ -517,6 +559,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
       },
       { headers: folderHeaders },
     );
+  }
+
+  /**
+   * Resolves an entity's name from its ID. Untracked internal helper — calling
+   * the public `getById` from another `@track`-decorated method would emit
+   * double telemetry (see conventions.md, delegation anti-pattern).
+   *
+   * @param id - Entity ID to resolve
+   * @param folderKey - Optional folder key sent as the X-UIPATH-FolderKey header
+   * @private
+   */
+  private async resolveEntityName(id: string, folderKey?: string): Promise<string> {
+    const response = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data, EntityMap).name;
   }
 
   /**

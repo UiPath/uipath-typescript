@@ -1484,6 +1484,11 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("queryRecordsById", () => {
+    // The join path resolves the base entity name via an untracked raw GET
+    // (no public getById delegation — that would double-fire @track).
+    const mockEntityNameLookup = (name: string) =>
+      mockApiClient.get.mockResolvedValue({ name });
+
     beforeEach(() => {
       vi.mocked(PaginationHelpers.getAll).mockReset();
     });
@@ -1710,11 +1715,12 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should pass joins through to PaginationHelpers.getAll", async () => {
+    it("should translate joins to the wire contract and route to the name-based query endpoint", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
 
-      const options = {
-        selectedFields: ["Id", "amount"],
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Order.amount", "Customer.name", "Region.name"],
         joins: [
           {
             entityName: "Order",
@@ -1731,23 +1737,141 @@ describe("EntityService Unit Tests", () => {
             relatedFieldName: "Id",
           },
         ],
-      };
+      });
 
-      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { headers: {} },
+      );
+      const [config, downstream] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      // Multi-entity joins only exist on the name-based route — the ID-based
+      // route silently drops the `joins` body key.
+      expect(config.getEndpoint()).toBe(DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME("Order"));
+      expect(downstream).toMatchObject({
+        selectedFields: ["Order.amount", "Customer.name", "Region.name"],
+        joins: [
+          { type: "LEFT", entity: "Customer", on: { left: "Order.customerId", right: "Customer.Id" } },
+          { type: "LEFT", entity: "Region", on: { left: "Customer.regionId", right: "Region.Id" } },
+        ],
+      });
+    });
+
+    it("should default the base entity and join type when omitted", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Customer.name"],
+        joins: [
+          {
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
+        expect.anything(),
         expect.objectContaining({
-          selectedFields: options.selectedFields,
-          joins: options.joins,
+          joins: [
+            { type: "LEFT", entity: "Customer", on: { left: "Order.customerId", right: "Customer.Id" } },
+          ],
         }),
+      );
+    });
+
+    it("should map JoinType.InnerJoin to the INNER wire value", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Customer.name"],
+        joins: [
+          {
+            joinType: JoinType.InnerJoin,
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          joins: [expect.objectContaining({ type: "INNER" })],
+        }),
+      );
+    });
+
+    it("should not re-qualify join fields the caller already qualified", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Customer.name"],
+        joins: [
+          {
+            joinFieldName: "Order.customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Customer.Id",
+          },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          joins: [
+            expect.objectContaining({ on: { left: "Order.customerId", right: "Customer.Id" } }),
+          ],
+        }),
+      );
+    });
+
+    it("should pass folderKey through to the entity-name lookup", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        selectedFields: ["Customer.name"],
+        joins: [
+          {
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should keep the ID-based endpoint and skip the metadata lookup when no joins are supplied", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Id"],
+      });
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(config.getEndpoint()).toBe(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       );
     });
 
     it("should include joins in excludeFromPrefix so OData $ prefix is not added", async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        selectedFields: ["Customer.name"],
         joins: [
           {
             entityName: "Order",
@@ -1767,37 +1891,6 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should send joinType as the JoinType enum string value", async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
-
-      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        joins: [
-          {
-            entityName: "Order",
-            joinType: JoinType.LeftJoin,
-            joinFieldName: "customerId",
-            relatedEntityName: "Customer",
-            relatedFieldName: "Id",
-          },
-        ],
-      });
-
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          joins: [
-            {
-              entityName: "Order",
-              joinType: "LeftJoin",
-              joinFieldName: "customerId",
-              relatedEntityName: "Customer",
-              relatedFieldName: "Id",
-            },
-          ],
-        }),
-      );
-    });
-
     it("should throw ValidationError when more than 3 joins are supplied", async () => {
       const join = {
         joinType: JoinType.LeftJoin,
@@ -1812,6 +1905,41 @@ describe("EntityService Unit Tests", () => {
         }),
       ).rejects.toThrow(/A maximum of 3 joins is supported per query \(received 4\)/);
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when joins are supplied without selectedFields or aggregates", async () => {
+      await expect(
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          joins: [
+            {
+              joinFieldName: "customerId",
+              relatedEntityName: "Customer",
+              relatedFieldName: "Id",
+            },
+          ],
+        }),
+      ).rejects.toThrow(/Join queries require selectedFields or aggregates/);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("should accept joins with aggregates and no selectedFields", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+      mockEntityNameLookup("Order");
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        aggregates: [{ function: EntityAggregateFunction.Count, field: "Order.Id", alias: "total" }],
+        joins: [
+          {
+            joinFieldName: "customerId",
+            relatedEntityName: "Customer",
+            relatedFieldName: "Id",
+          },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
     });
   });
 

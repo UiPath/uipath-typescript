@@ -36,6 +36,9 @@ export const DATA_FABRIC_ENDPOINTS = {
     DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
     UPDATE_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/metadata`,
     QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
+    // Name-based structured query. The multi-entity (joins) contract is only
+    // implemented on this route — QUERY_BY_ID silently drops the `joins` body key.
+    QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,

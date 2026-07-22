@@ -247,6 +247,14 @@ export interface EntityAggregate {
  * supported (the SDK throws a `ValidationError` for more), and all of them
  * must share the same {@link JoinType}.
  *
+ * A join query must also set `selectedFields` or `aggregates` on
+ * {@link EntityQueryRecordsOptions}, referencing fields as
+ * `"<EntityName>.<FieldName>"` (e.g. `"Customer.Name"`) — bare field names
+ * resolve only while unique across the joined entities. Result rows use the
+ * same qualified keys; a LEFT join with no match omits the related entity's
+ * keys. Joins are not supported on choice-set, relationship, file, encrypted,
+ * or system fields, nor on folder-scoped entities.
+ *
  * @example
  * ```typescript
  * import { EntityJoin, JoinType } from '@uipath/uipath-typescript/entities';
@@ -294,9 +302,9 @@ export type EntityQueryRecordsOptions = {
   groupBy?: string[];
   /**
    * Cross-entity joins. Each entry joins one related entity into the query;
-   * supply several for a multi-join query. A maximum of 3 joins is supported
-   * (the SDK throws a `ValidationError` for more), and all joins must be of
-   * the same {@link JoinType}.
+   * supply several for a multi-join query. Requires `selectedFields` or
+   * `aggregates` to be set. See {@link EntityJoin} for constraints and the
+   * result-row key format.
    */
   joins?: EntityJoin[];
 } & PaginationOptions & EntityFolderScopedOptions;
@@ -586,6 +594,8 @@ export enum DataDirectionType {
 export enum JoinType {
   /** LEFT JOIN — all base-entity records, with related fields empty when unmatched. */
   LeftJoin = "LeftJoin",
+  /** INNER JOIN — only base-entity records with a matching related record. */
+  InnerJoin = "InnerJoin",
 }
 
 /**

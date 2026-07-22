@@ -425,6 +425,9 @@ export interface EntityServiceModel {
    * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
    * instead of the full content — use {@link getRecordById} to retrieve the full value.
    *
+   * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
+   * for constraints and the result-row key format.
+   *
    * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
@@ -475,8 +478,9 @@ export interface EntityServiceModel {
    * });
    *
    * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys).
    * await entities.queryRecordsById(<id>, {
-   *   selectedFields: ["Id", "amount"],
+   *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [
    *     {
    *       entityName: "Order",
@@ -913,6 +917,9 @@ export interface EntityMethods {
   /**
    * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
    *
+   * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
+   * for constraints and the result-row key format.
+   *
    * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
@@ -950,8 +957,9 @@ export interface EntityMethods {
    * });
    *
    * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys).
    * await entity.queryRecords({
-   *   selectedFields: ["Id", "amount"],
+   *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [
    *     {
    *       entityName: "Order",
