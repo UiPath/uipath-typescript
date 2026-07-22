@@ -5,6 +5,7 @@ import {
   DataFabricRoleService,
   Entities,
 } from '../../../src/services/data-fabric';
+import { EntityV3Service } from '../../../src/services/data-fabric/entities-v3';
 import { Tasks } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
@@ -43,6 +44,7 @@ export {
 export interface TestServices {
   sdk: UiPath;
   entities: Entities;
+  entitiesV3?: EntityV3Service;
   choiceSets: ChoiceSets;
   dataFabricRoles: DataFabricRoleService;
   dataFabricDirectory: DataFabricDirectoryService;
@@ -134,6 +136,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
   return {
     sdk,
     entities: new Entities(sdk),
+    entitiesV3: new EntityV3Service(sdk),
     choiceSets: new ChoiceSets(sdk),
     dataFabricRoles: new DataFabricRoleService(sdk),
     dataFabricDirectory: new DataFabricDirectoryService(sdk),
