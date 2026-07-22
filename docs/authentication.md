@@ -63,6 +63,26 @@ To Generate a PAT Token:
 4. Give it a name and expiration date
 5. Provide relevant scopes
 
+Conversational Agents support anonymous, sign-in-free chat via tokens issued to confidential, app-scoped External Apps. In this SDK, this token type is only guaranteed to work with Conversational Agents.
+
+To create a confidential External App:
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+2. Click **Add Application** → **Confidential Application**
+3. Configure:
+    - **Name**: Your app name
+    - **Redirect URI**: For example, `http://localhost:3000` (for development)
+    - **Scopes**: Select the permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes)). All scopes must be added as **Application** scopes, not **User** scopes.
+4. Save and copy the **Client ID** and the **Client Secret** — you will not be shown the Client Secret again
+5. Follow the [official UiPath documentation](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) on how to request client-credentials tokens for a confidential app with application scopes
+6. Pass this token as your `secret`, as shown in the Secret-based Authentication example above
+
+!!! warning "Keep the Client Secret confidential"
+    The Client Secret must never be exposed to public or client-side consumers. If it is exposed, revoke it immediately and generate a new one.
+
+!!! note "No refresh tokens"
+    The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
+
 
 ## SDK Initialization - The initialize() Method
 
