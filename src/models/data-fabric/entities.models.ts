@@ -665,29 +665,29 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const id = await entities.create("product_catalog", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    *
    * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
    * const ordersId = await entities.create("orders", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
-   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { name: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
    *
    * // Cross-folder references — link a folder-scoped entity to entities and
    * // system choice sets that live in another folder or at the tenant level.
    * await entities.create("orderLine", [
    *   {
-   *     fieldName: "order",
+   *     name: "order",
    *     type: EntityFieldDataType.RELATIONSHIP,
    *     referenceEntityId: "<orderEntityId>",
    *     referenceFieldId: "<orderEntityPkId>",
    *     referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
    *   },
    *   {
-   *     fieldName: "userType",
+   *     name: "userType",
    *     type: EntityFieldDataType.CHOICE_SET_SINGLE,
    *     choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
    *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
@@ -730,8 +730,8 @@ export interface EntityServiceModel {
    * ```typescript
    * // Schema-only: add a field and remove another
    * await entities.updateById(<id>, {
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: [{ fieldName: "old_field" }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ name: "old_field" }],
    * });
    *
    * // Metadata-only: rename the entity
@@ -749,8 +749,8 @@ export interface EntityServiceModel {
    * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
    * await entities.updateById(<id>, {
    *   addFields: [
-   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
-   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *     { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   ],
    *   updateFields: [
    *     { id: <fieldId>, lengthLimit: 1000 },
@@ -760,7 +760,7 @@ export interface EntityServiceModel {
    * // Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
    * await entities.updateById(<id>, {
    *   folderKey: "<folderKey>",
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal
@@ -1033,14 +1033,14 @@ export interface EntityMethods {
    * const entity = await entities.getById(<id>);
    * await entity.update({
    *   displayName: "Updated Name",
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    *
    * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints 
    * await entity.update({
    *   addFields: [
-   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
-   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *     { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
+   *     { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   ],
    * });
    * ```

@@ -348,8 +348,9 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   /**
    * Field name — must start with a letter and contain only
    * letters, numbers, and underscores (e.g., `"productName"`).
+   * Matches the `name` field returned by `getById`.
    */
-  fieldName: string;
+  name: string;
   /** Field data type — one of the {@link EntityFieldDataType} values (default: STRING) */
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
@@ -393,7 +394,7 @@ export interface EntityCreateOptions extends EntityFolderScopedOptions {
   description?: string;
   /** Whether role-based access control is enabled for this entity (default: false) */
   isRbacEnabled?: boolean;
-  /** Whether Analytics integration is enabled for this entity (default: false) */
+  /** Whether Analytics integration is enabled for this entity (default: false). Surfaced by `getById` as `isAnalyticsEnabled`. */
   isAnalyticsEnabled?: boolean;
   /** External field source definitions (default: empty) */
   externalFields?: ExternalField[];
@@ -412,7 +413,7 @@ export interface EntityFieldUpdateOptions extends EntityFieldBase {
  */
 export interface EntityRemoveFieldOptions {
   /** Name of the field to remove */
-  fieldName: string;
+  name: string;
 }
 
 /**
@@ -729,7 +730,7 @@ export interface RawEntityGetResponse {
   usedStorageSizeInMB?: number;
   attachmentSizeInByte?: number;
   isRbacEnabled: boolean;
-  isInsightsEnabled?: boolean;
+  isAnalyticsEnabled?: boolean;
   id: string;
   createdBy: string;
   createdTime: string;
