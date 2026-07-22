@@ -415,24 +415,24 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+    it("should call the v3 endpoint and pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
-    it("should call the v2 endpoint when includeFolderEntities is true (cross-scope)", async () => {
+    it("should call the v3 endpoint when includeFolderEntities is true (cross-scope)", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ includeFolderEntities: true });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
         { headers: {} },
       );
     });
@@ -448,7 +448,7 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should let folderKey win and call v1 with the header when both folderKey and includeFolderEntities are provided", async () => {
+    it("should call the v3 endpoint with the header when both folderKey and includeFolderEntities are provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({
@@ -457,7 +457,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
@@ -3367,6 +3367,40 @@ describe("EntityService Unit Tests", () => {
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
         { headers: {} },
       );
+    });
+
+    it("should emit isInsightsEnabled in the metadata PATCH when isAnalyticsEnabled is provided", async () => {
+      mockApiClient.patch.mockResolvedValue(undefined);
+
+      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        isAnalyticsEnabled: true,
+      });
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
+        expect.objectContaining({ isInsightsEnabled: true }),
+        { headers: {} },
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("should emit isInsightsEnabled: false in the metadata PATCH when isAnalyticsEnabled is false", async () => {
+      mockApiClient.patch.mockResolvedValue(undefined);
+
+      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        isAnalyticsEnabled: false,
+      });
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
+        expect.objectContaining({ isInsightsEnabled: false }),
+        { headers: {} },
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
     it("should pass folderKey via X-UIPATH-FolderKey header on both schema GET/POST and metadata PATCH", async () => {
