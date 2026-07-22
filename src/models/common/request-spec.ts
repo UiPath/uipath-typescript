@@ -8,7 +8,7 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 
 /**
  * Supported response types for API requests
  */
-export type ResponseType = 'json' | 'text' | 'blob' | 'arraybuffer' | 'stream';
+export type ResponseType = 'json' | 'text' | 'blob' | 'arraybuffer' | 'stream' | 'raw';
 
 /**
  * Query parameters type with support for arrays and nested objects
@@ -101,6 +101,9 @@ export interface RequestSpec {
   
   /** AbortSignal for cancelling the request */
   signal?: AbortSignal;
+
+  /** Redirect handling passed to fetch; 'manual' surfaces 3xx responses to the caller (requires responseType 'raw') */
+  redirect?: RequestRedirect;
 
   /** Pagination metadata for the request */
   pagination?: PaginationMetadata;

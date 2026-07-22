@@ -16,5 +16,7 @@ export const FUNCTION_TEST_CONSTANTS = {
   FOLDER_NAME: 'Shared/Solution',
   INVOKE_INPUT: { name: 'Alice' },
   INVOKE_OUTPUT: { message: 'Hello, Alice!' },
+  JOB_KEY: '7f3f4bd6-6f2e-4c5a-9d38-6f3f0a1b2c3d',
+  STATUS_URL: 'https://alpha.uipath.com/org/tenant/orchestrator_/t/status/status-token?sig=abc',
   ERROR_FUNCTION_NOT_FOUND: 'Function not found',
 } as const;
