@@ -243,6 +243,11 @@ const serviceEntries = [
     name: 'is-connections',
     input: 'src/services/integration-service/connections/index.ts',
     output: 'is-connections/index'
+  },
+  {
+    name: 'is-execution',
+    input: 'src/services/integration-service/execution/index.ts',
+    output: 'is-execution/index'
   }
 ];
 
