@@ -21,3 +21,4 @@ export const INSIGHTS_RTM_BASE = 'insightsrtm_';
  */
 export const NOTIFICATION_BASE = '../notificationservice_';
 export const CONNECTIONS_BASE = 'connections_';
+export const ELEMENTS_BASE = 'elements_/v3/element';
