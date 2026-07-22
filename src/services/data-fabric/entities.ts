@@ -575,7 +575,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
-    return transformData(response.data as RawEntityGetResponse, EntityMap).name;
+    return transformData(response.data, EntityMap).name;
   }
 
   /**
