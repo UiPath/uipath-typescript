@@ -1,0 +1,8 @@
+{
+  "scope": "PIMS OR.Execution.Read OR.Tasks Insights.RealTimeData Insights OR.Folders.Read",
+  "clientId": "<your-oauth-client-id>",
+  "orgName": "<your-org>",
+  "tenantName": "<your-tenant>",
+  "baseUrl": "https://cloud.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}
