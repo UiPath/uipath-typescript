@@ -98,6 +98,44 @@ import type { ConnectionStatus } from '@/core/websocket';
  * // 7. Retrieve conversation history (offline)
  * const exchanges = await conversation.exchanges.getAll();
  * ```
+ *
+ * ## App-scoped authentication (anonymous, sign-in-free chat)
+ *
+ * Conversational Agents can be driven with an **app-scoped token** — one issued to an
+ * External App via the client-credentials grant, which carries no end-user identity.
+ * This lets an application offer chat without requiring each of its users to sign in to UiPath.
+ * For more information on creating External Apps, see the official UiPath documentation on
+ * [managing external OAuth applications](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications);
+ * for details on how to request client-credentials tokens, see the official UiPath documentation on
+ * [the OAuth bearer token types](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications)
+ * issued to an External App.
+ *
+ * To use it, pass an `externalUserId` — your application's own identifier for the end user —
+ * when constructing the service:
+ *
+ * ```typescript
+ * const conversationalAgent = new ConversationalAgent(sdk, {
+ *   externalUserId: 'app-user-42'
+ * });
+ * ```
+ *
+ * The SDK forwards this identifier on every HTTP request and real-time WebSocket session. Each distinct
+ * `externalUserId` — scoped to the client ID of the External App the token was issued for — gets its own
+ * conversation history and user settings, and the same value always maps back to the same user.
+ *
+ * ### Limitations
+ *
+ * - **App-scoped tokens only.** `externalUserId` takes effect only when the SDK is authenticated
+ *   with an app-scoped External App token. With a standard UiPath user token the server ignores it
+ *   and uses the token's own user identity — so omit it in that case.
+ * - **Required with an app-scoped token.** When the token is app-scoped, `externalUserId` is
+ *   mandatory; requests without it are rejected with a `401`. It is set once at construction and
+ *   applies to all calls made through that service instance (including `conversations`, `exchanges`,
+ *   `messages`, `user`, and WebSocket sessions).
+ * - **Value constraints.** May contain only letters, digits, dot (`.`), underscore (`_`), and
+ *   hyphen (`-`), and must be at most 255 characters. Other characters are rejected with a `400`.
+ * - **Identity scope.** The derived identity is scoped per application: the same `externalUserId`
+ *   under a different app is a different user.
  */
 export interface ConversationalAgentServiceModel {
   /**
