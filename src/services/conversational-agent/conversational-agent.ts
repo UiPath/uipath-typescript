@@ -13,6 +13,9 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  AvailableConnectionsResponse,
+  ConnectionAuthRequest,
+  ConnectionAuthResponse,
   ConversationalAgentOptions,
   ConversationalAgentServiceModel,
   CitationSourceMedia,
@@ -20,7 +23,8 @@ import type {
   RawAgentGetResponse,
   RawAgentGetByIdResponse,
   AgentGetResponse,
-  AgentGetByIdResponse
+  AgentGetByIdResponse,
+  UpdateConnectionSelectionsRequest
 } from '@/models/conversational-agent';
 import {
   AgentMap,
@@ -147,6 +151,106 @@ export class ConversationalAgentService extends BaseService implements Conversat
       : blob;
   }
 
+  /**
+   * Gets available connections for each configurable connector binding of an agent.
+   * Only returns bindings that are "configurable by users" (not admin-fixed).
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to an array of connector items with their available connections
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * for (const item of connections) {
+   *   console.log(`${item.connectorName}: ${item.connections.length} available`);
+   * }
+   * ```
+   */
+  @track('ConversationalAgent.GetAvailableConnections')
+  async getAvailableConnections(agentId: number, folderId: number): Promise<AvailableConnectionsResponse> {
+    const response = await this.get<AvailableConnectionsResponse>(AGENT_ENDPOINTS.CONNECTIONS(folderId, agentId));
+    return response.data;
+  }
+
+  /**
+   * Updates the current user's connection selections for an agent.
+   * Only configurable bindings (not admin-fixed) can be updated.
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @param request - The connection selections to apply
+   * @returns Promise resolving to the updated available connections
+   *
+   * @example
+   * ```typescript
+   * const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
+   *   selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
+   * });
+   * ```
+   */
+  @track('ConversationalAgent.UpdateConnectionSelections')
+  async updateConnectionSelections(
+    agentId: number,
+    folderId: number,
+    request: UpdateConnectionSelectionsRequest
+  ): Promise<AvailableConnectionsResponse> {
+    const response = await this.put<AvailableConnectionsResponse>(
+      AGENT_ENDPOINTS.CONNECTIONS(folderId, agentId),
+      request
+    );
+    return response.data;
+  }
+
+  /**
+   * Returns the best URL for adding a new connection for a given connector.
+   *
+   * Tries to generate a connector-specific auth URL (works when running inside
+   * the UiPath platform). If that fails, falls back to the Orchestrator
+   * connections page or the connector configuration page.
+   *
+   * @param item - The connector item from {@link getAvailableConnections}
+   * @returns The URL to open, or `null` if no URL is available
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
+   * if (url) window.open(url, '_blank');
+   * ```
+   */
+  async getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null> {
+    try {
+      const { authUrl } = await this.getConnectionAuthUrl(item.connectorKey);
+      return authUrl;
+    } catch {
+      return item.connectionsUrl ?? item.configurationUrl ?? null;
+    }
+  }
+
+  /**
+   * Generates a connector-specific auth URL for adding a new connection.
+   * Only works when running inside the UiPath platform (Studio Web / portal shell).
+   * For a method that handles fallbacks automatically, use {@link getAddConnectionUrl}.
+   *
+   * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
+   * @returns Promise resolving to the auth URL and its expiration
+   * @internal
+   */
+  @track('ConversationalAgent.GetConnectionAuthUrl')
+  async getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse> {
+    const response = await this.post<ConnectionAuthResponse>(
+      AGENT_ENDPOINTS.CONNECTION_AUTH,
+      { connectorKey } as ConnectionAuthRequest
+    );
+    return response.data;
+  }
+
+  /**
+   * Gets feature flags for the current tenant
+   *
+   * @internal
+   */
   async getFeatureFlags(): Promise<FeatureFlags> {
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
