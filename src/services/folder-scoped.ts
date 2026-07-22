@@ -7,6 +7,7 @@ import { addPrefixToKeys, transformOptions, FieldMapping } from '../utils/transf
 import { NotFoundError } from '../core/errors';
 import { validateName } from '../utils/validation/name-validator';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
+import { resolveOverride, type ResourceOverride } from '../utils/overrides/resolve-override';
 
 /**
  * Matches single-quote characters in OData string literals — escaped to `''`
@@ -96,10 +97,21 @@ export class FolderScopedService extends BaseService {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
+    // The compiled code passes the DEFAULT name (e.g. "CustomerConfig").
+    // At runtime, check if an admin override exists for this resource.
+    // If so, use the overridden name and folderPath for the API call.
+    const override: ResourceOverride | null = resolveOverride(
+      resourceType.toLowerCase(),
+      validatedName,
+      folderPath ?? '.'
+    );
+    const resolvedName = override?.name ?? validatedName;
+    const resolvedFolderPath = override?.folderPath ?? folderPath;
+
     const headers = resolveFolderHeaders({
       folderId,
       folderKey,
-      folderPath,
+      folderPath: resolvedFolderPath,
       resourceType: `${resourceType}.getByName`,
       fallbackFolderKey: this.config.folderKey,
     });
@@ -110,7 +122,7 @@ export class FolderScopedService extends BaseService {
 
     const apiOptions = {
       ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
-      '$filter': `Name eq '${validatedName.replace(SINGLE_QUOTE_RE, "''")}'`,
+      '$filter': `Name eq '${resolvedName.replace(SINGLE_QUOTE_RE, "''")}'`,
       '$top': '1',
     };
 
@@ -121,9 +133,9 @@ export class FolderScopedService extends BaseService {
 
     const items = response.data?.value;
     if (!items?.length) {
-      const folderHint = describeFolderForError(folderId, folderKey, folderPath);
+      const folderHint = describeFolderForError(folderId, folderKey, resolvedFolderPath);
       throw new NotFoundError({
-        message: `${resourceType} '${validatedName}' not found${folderHint}.`,
+        message: `${resourceType} '${resolvedName}' not found${folderHint}.`,
       });
     }
 
