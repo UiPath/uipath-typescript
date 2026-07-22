@@ -131,6 +131,30 @@ describe('execute', () => {
     expect(result.body).toBe('plain text');
   });
 
+  it('preserves "/" separators in a multi-segment objectName', async () => {
+    const { instance } = buildDeps();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '{}' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, 'curated_get_issue/APPS-34728');
+
+    const [url] = fetchSpy.mock.calls[0];
+    expect(url).toContain(
+      `/elements_/v3/element/instances/${IS_TEST_CONSTANTS.CONNECTION_ID}/curated_get_issue/APPS-34728`,
+    );
+    expect(url).not.toContain('%2F');
+  });
+
+  it('encodes reserved characters within each path segment', async () => {
+    const { instance } = buildDeps();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '{}' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, 'curated_get_issue/APPS 347#28');
+
+    const [url] = fetchSpy.mock.calls[0];
+    // separator stays literal, but the space and "#" inside the segment are escaped
+    expect(url).toContain('/curated_get_issue/APPS%20347%2328');
+  });
+
   it('throws ValidationError when connectionId is missing', async () => {
     const { instance } = buildDeps();
     await expect(

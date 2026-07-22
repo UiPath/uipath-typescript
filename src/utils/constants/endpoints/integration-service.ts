@@ -59,8 +59,17 @@ export const ELEMENT_ENDPOINTS = {
       METADATA: (connectionId: string, elementKey: string, operationName: string, objectName: string) =>
         `${ELEMENTS_BASE}/instances/${encodeURIComponent(connectionId)}/elements/${encodeURIComponent(elementKey)}/events/operations/${encodeURIComponent(operationName)}/objects/${encodeURIComponent(objectName)}/metadata`,
     },
-    /** Generic HTTP passthrough endpoint for executing a request against a connection instance. */
+    /**
+     * Generic HTTP passthrough endpoint for executing a request against a connection instance.
+     *
+     * `objectName` may be a multi-segment path (e.g. `curated_get_issue/APPS-34728`).
+     * Each segment is encoded independently so reserved characters within a segment are
+     * escaped while the `/` separators that make up the path are preserved.
+     */
     EXECUTE: (connectionId: string, objectName: string) =>
-      `${ELEMENTS_BASE}/instances/${encodeURIComponent(connectionId)}/${encodeURIComponent(objectName)}`,
+      `${ELEMENTS_BASE}/instances/${encodeURIComponent(connectionId)}/${objectName
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}`,
   },
 } as const;
