@@ -81,7 +81,13 @@ export class ApiClient {
     const searchParams = new URLSearchParams();
     if (options.params) {
       Object.entries(options.params).forEach(([key, value]: [string, any]) => {
-        searchParams.append(key, value.toString());
+        // Array values are serialized as repeated params (key=a&key=b) rather than a
+        // single comma-joined value, which APIs expecting a collection reject.
+        if (Array.isArray(value)) {
+          value.forEach((item) => searchParams.append(key, String(item)));
+        } else {
+          searchParams.append(key, String(value));
+        }
       });
     }
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;

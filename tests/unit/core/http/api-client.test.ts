@@ -18,10 +18,13 @@ const mockConfig = {
 const mockExecutionContext = {};
 
 let capturedHeaders: Record<string, string> = {};
+let capturedUrl = '';
 
 beforeEach(() => {
   capturedHeaders = {};
-  global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+  capturedUrl = '';
+  global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
+    capturedUrl = url;
     capturedHeaders = { ...options.headers };
     return Promise.resolve({
       ok: true,
@@ -88,6 +91,34 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient query param serialization', () => {
+  it('serializes an array param as repeated keys, not a comma-joined value', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { Publishers: ['Apps', 'Orchestrator'] } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    const publishers = new URLSearchParams(query).getAll('Publishers');
+    expect(publishers).toEqual(['Apps', 'Orchestrator']);
+    expect(capturedUrl).not.toContain('Apps%2COrchestrator');
+  });
+
+  it('serializes a single-element array param as one key', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { Publishers: ['Apps'] } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    expect(new URLSearchParams(query).getAll('Publishers')).toEqual(['Apps']);
+  });
+
+  it('serializes a scalar param as a single key', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { PublisherName: 'Apps' } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    expect(new URLSearchParams(query).getAll('PublisherName')).toEqual(['Apps']);
   });
 });
 

@@ -3,7 +3,7 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
+import { RawMaestroProcessGetAllResponse, MaestroProcessGetAllOptions, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
 import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
@@ -25,8 +25,12 @@ import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineRespon
  */
 export interface MaestroProcessesServiceModel {
   /**
-   * Get all processes with their instance statistics
+   * Get all processes with their instance statistics.
    *
+   * Returns every Maestro process with aggregated instance counts by status. Pass `options`
+   * to narrow the results by process key, package, or the time range their instances started in.
+   *
+   * @param options - Optional filters (processKey, packageId, startTime, endTime)
    * @returns Promise resolving to array of MaestroProcess objects with methods
    * {@link MaestroProcessGetAllResponse}
    * @example
@@ -45,8 +49,18 @@ export interface MaestroProcessesServiceModel {
    *   console.log(`Incidents: ${incidents.length}`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter by package and the time range instances started in
+   * const filtered = await maestroProcesses.getAll({
+   *   packageId: '<packageId>',
+   *   startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   endTime: new Date(),
+   * });
+   * ```
    */
-  getAll(): Promise<MaestroProcessGetAllResponse[]>;
+  getAll(options?: MaestroProcessGetAllOptions): Promise<MaestroProcessGetAllResponse[]>;
 
   /**
    * Get incidents for a specific process

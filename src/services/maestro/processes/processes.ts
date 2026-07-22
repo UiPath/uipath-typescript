@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, MaestroProcessGetAllOptions, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
@@ -11,6 +11,7 @@ import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBod
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
+import { createParams } from '../../../utils/http/params';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
 import { BaseService } from '../../base';
 import { ProcessInstancesService } from './process-instances';
@@ -32,9 +33,17 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   }
 
   @track('MaestroProcesses.GetAll')
-  async getAll(): Promise<MaestroProcessGetAllResponse[]> {
+  async getAll(options?: MaestroProcessGetAllOptions): Promise<MaestroProcessGetAllResponse[]> {
+    const params = createParams({
+      processKey: options?.processKey,
+      packageId: options?.packageId,
+      startedTimeUtcStart: options?.startTime?.toISOString(),
+      startedTimeUtcEnd: options?.endTime?.toISOString(),
+    });
+
     const response = await this.get<{ processes: Omit<MaestroProcessGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+      { params }
     );
 
     // Extract processes array from response data and add name field

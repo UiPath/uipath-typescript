@@ -224,7 +224,7 @@ nav:
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
   - Plugins:
       - Codex: plugins/codex.md
-  - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
+  - Sample Apps Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
   - Integration Testing: integration-testing.md
