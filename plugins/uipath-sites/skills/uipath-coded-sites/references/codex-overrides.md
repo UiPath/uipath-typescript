@@ -5,6 +5,11 @@ Use these rules only to adapt the upstream `uipath-coded-apps` skill to Codex. O
 ## Mandatory initial input gate
 
 - The initial setup gate is mandatory for every matched UiPath Sites request, including both `@UiPath Sites` and `@Sites` with UiPath coded-app intent.
+- Prefer the bundled `uipath-sites-inputs` MCP tool `collect_uipath_coded_app_inputs` for this gate when it is available.
+- When using the MCP input tool, pass any values already provided by the user as `knownInputs`, pass the app request as `promptSummary`, and pass the exact `redirectUri` and `oauthScopes` required by `uipath-coded-apps` when those are known.
+- If the MCP tool returns `status: complete`, treat `structuredContent.inputs` as the answered initial setup gate and do not ask those same setup questions again.
+- If the MCP tool returns `status: fallback_required`, ask the returned `fallbackPrompt` in normal Codex chat and wait for the user's reply before continuing.
+- If the MCP tool is not available in the current runtime, fall back to `request_user_input` when exposed, otherwise normal Codex chat.
 - The first assistant response after activating this flow must ask for missing setup inputs, or state which setup inputs were already provided and ask only for the missing ones.
 - Collect all required setup inputs at the start of the coded-app workflow, before writing files, building, or launching the local app.
 - Do not defer required setup questions until just before local verification or deployment.
@@ -20,7 +25,7 @@ Use these rules only to adapt the upstream `uipath-coded-apps` skill to Codex. O
 - If the user already supplied any of these values in the prompt, do not ask again for those values; ask only for the missing ones.
 - When asking for the client ID, include the redirect URI and OAuth scope requirements from `uipath-coded-apps` in the same prompt.
 - If the upstream skill says to use `AskUserQuestion` or any Claude-specific question tool, ask the user directly in normal Codex chat instead.
-- If Codex exposes a structured input tool such as `request_user_input`, prefer that for the initial setup questions.
+- If Codex exposes a structured input tool such as `request_user_input`, prefer that after the bundled MCP input tool path is unavailable.
 - If a structured input tool is not available in the current runtime, ask the same questions directly in normal Codex chat and wait for the user's reply before proceeding.
 - Do not skip required questions for app type, environment, app name, client ID, org, tenant, folder, or any other input the upstream skill requires.
 

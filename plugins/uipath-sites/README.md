@@ -4,9 +4,12 @@ UiPath Sites is a Codex companion plugin for building UiPath coded apps from `@U
 
 It keeps the app-building experience, but for matched UiPath requests it produces a UiPath coded app instead of a Sites-hosted app. Build, package, publish, and deploy are handled through the standard `uipath-coded-apps` workflow and `uip codedapp`.
 
+This branch includes an experimental bundled MCP server for the setup input gate. When the Codex runtime supports MCP form elicitation, the plugin can collect app type, environment, app name, client ID, organization, tenant, and folder in a structured form before generation starts. If the runtime does not support the form, the skill falls back to normal Codex chat input.
+
 ## What It Does
 
 - Routes `@UiPath Sites` and matched `@Sites` prompts into UiPath coded-app generation.
+- Provides an optional MCP form input gate for required UiPath setup values.
 - Keeps the final deployment target as UiPath, not Sites hosting.
 - Applies frontend-design guidance for visual polish only.
 - Ensures the UiPath CLI and UiPath Codex skills are available at session start.
@@ -24,16 +27,18 @@ Build an Action Center task inbox for filtering work, reviewing task details, an
 
 1. User starts with `@UiPath Sites`, or an `@Sites` prompt that mentions UiPath or coded-app intent.
 2. The plugin routes the request to the UiPath coded-app path.
-3. Codex builds a static Vite + React coded app.
-4. The app uses `@uipath/uipath-typescript` and `uipath.json`.
-5. Functional app behavior follows `uipath-coded-apps` and its relevant references.
-6. Frontend overrides apply only visual presentation and must not replace coded-app functional patterns.
-7. Normal Sites hosting, Cloudflare Worker output, D1, R2, and SIWC are skipped.
-8. The `uipath-coded-apps` skill handles local validation and `uip codedapp` pack, publish, and deploy.
+3. The bundled MCP input tool collects required setup values when MCP form elicitation is available; otherwise Codex asks in chat.
+4. Codex builds a static Vite + React coded app.
+5. The app uses `@uipath/uipath-typescript` and `uipath.json`.
+6. Functional app behavior follows `uipath-coded-apps` and its relevant references.
+7. Frontend overrides apply only visual presentation and must not replace coded-app functional patterns.
+8. Normal Sites hosting, Cloudflare Worker output, D1, R2, and SIWC are skipped.
+9. The `uipath-coded-apps` skill handles local validation and `uip codedapp` pack, publish, and deploy.
 
 ## Ownership
 
 - UiPath Sites owns routing, Sites-hosting suppression, and the visual companion layer.
+- The bundled MCP server owns optional structured setup input collection only.
 - `uipath-coded-apps` owns coded-app structure, SDK usage, auth/config, scopes, service-specific references, runtime data handling, functional UI behavior, build, pack, publish, and deploy.
 - `frontend-design-overrides.md` owns visual presentation only and must not redefine functional UI mechanics.
 
@@ -62,5 +67,5 @@ uip skills install --agent codex
 
 - `0.1.0`: preview release for internal/public testing.
 - `0.1.x`: metadata, docs, prompt, hook, and bug fixes.
-- `0.2.0`: routing, bootstrap, or supported-app behavior changes.
+- `0.2.0`: experimental bundled MCP setup input form.
 - `1.0.0`: stable release after marketplace validation and repeated successful demos.
