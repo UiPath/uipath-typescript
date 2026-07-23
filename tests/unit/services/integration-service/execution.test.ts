@@ -3,21 +3,9 @@ import { execute } from '../../../../src/services/integration-service/execution/
 import { ValidationError } from '../../../../src/core/errors';
 import { createServiceTestDependencies } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS } from '../../../utils/mocks';
-import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { FOLDER_KEY, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../../src/utils/constants/headers';
 
 const OBJECT_NAME = 'tickets';
-
-interface MockableTokenManager {
-  getValidToken?: () => Promise<string>;
-}
-
-function buildDeps() {
-  const deps = createServiceTestDependencies();
-  (deps.tokenManager as unknown as MockableTokenManager).getValidToken = vi
-    .fn()
-    .mockResolvedValue('mock-access-token');
-  return deps;
-}
 
 const buildResponse = (init: {
   status?: number;
@@ -47,7 +35,7 @@ describe('execute', () => {
   });
 
   it('executes a GET against the connection passthrough endpoint', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: JSON.stringify([{ id: 1 }]) }));
 
     const result = await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
@@ -64,7 +52,7 @@ describe('execute', () => {
   });
 
   it('serializes JSON body for POST', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: JSON.stringify({ id: 42 }) }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'POST', {
@@ -78,7 +66,7 @@ describe('execute', () => {
   });
 
   it('appends query params to the URL', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
@@ -91,7 +79,7 @@ describe('execute', () => {
   });
 
   it('sends folder header when folderKey is provided', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
@@ -102,8 +90,20 @@ describe('execute', () => {
     expect(init.headers[FOLDER_KEY]).toBe(IS_TEST_CONSTANTS.FOLDER_KEY);
   });
 
+  it('sends distributed-tracing headers on every request', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
+
+    const [, init] = fetchSpy.mock.calls[0];
+    // W3C traceparent: 00-<32 hex>-<16 hex>-01, mirrored on the UiPath header
+    expect(init.headers[TRACEPARENT]).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
+    expect(init.headers[UIPATH_TRACEPARENT_ID]).toBe(init.headers[TRACEPARENT]);
+  });
+
   it('returns full envelope on non-2xx without throwing', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(
       buildResponse({
         status: 400,
@@ -121,7 +121,7 @@ describe('execute', () => {
   });
 
   it('returns raw text when response body is not JSON', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(
       buildResponse({ body: 'plain text', headers: { 'content-type': 'text/plain' } }),
     );
@@ -132,7 +132,7 @@ describe('execute', () => {
   });
 
   it('preserves "/" separators in a multi-segment objectName', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: '{}' }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, 'curated_get_issue/APPS-34728');
@@ -145,7 +145,7 @@ describe('execute', () => {
   });
 
   it('encodes reserved characters within each path segment', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     fetchSpy.mockResolvedValue(buildResponse({ body: '{}' }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, 'curated_get_issue/APPS 347#28');
@@ -156,7 +156,7 @@ describe('execute', () => {
   });
 
   it('throws ValidationError when connectionId is missing', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     await expect(
       execute(instance, '', OBJECT_NAME),
     ).rejects.toThrow(ValidationError);
@@ -164,7 +164,7 @@ describe('execute', () => {
   });
 
   it('throws ValidationError when objectName is missing', async () => {
-    const { instance } = buildDeps();
+    const { instance } = createServiceTestDependencies();
     await expect(
       execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, ''),
     ).rejects.toThrow(ValidationError);

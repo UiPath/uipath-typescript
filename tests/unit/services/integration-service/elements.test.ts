@@ -179,11 +179,75 @@ describe('ElementsService', () => {
   });
 
   describe('error propagation', () => {
-    it('propagates API errors from getObjects', async () => {
+    beforeEach(() => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    });
+
+    it('propagates API errors from getObjects', async () => {
       await expect(service.getObjects(IS_TEST_CONSTANTS.CONNECTOR_KEY)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE,
       );
+    });
+
+    it('propagates API errors from getActivities', async () => {
+      await expect(service.getActivities(IS_TEST_CONSTANTS.CONNECTOR_KEY)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
+    });
+
+    it('propagates API errors from getObjectMetadata', async () => {
+      await expect(
+        service.getObjectMetadata(IS_TEST_CONSTANTS.CONNECTOR_KEY, OBJECT_NAME),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getEventObjects', async () => {
+      await expect(
+        service.getEventObjects(IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getEventObjectMetadata', async () => {
+      await expect(
+        service.getEventObjectMetadata(IS_TEST_CONSTANTS.CONNECTOR_KEY, EVENT_OPERATION, OBJECT_NAME),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getInstanceObjects', async () => {
+      await expect(
+        service.getInstanceObjects(IS_TEST_CONSTANTS.CONNECTION_ID, IS_TEST_CONSTANTS.CONNECTOR_KEY),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getInstanceObjectMetadata', async () => {
+      await expect(
+        service.getInstanceObjectMetadata(
+          IS_TEST_CONSTANTS.CONNECTION_ID,
+          IS_TEST_CONSTANTS.CONNECTOR_KEY,
+          OBJECT_NAME,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getInstanceEventObjects', async () => {
+      await expect(
+        service.getInstanceEventObjects(
+          IS_TEST_CONSTANTS.CONNECTION_ID,
+          IS_TEST_CONSTANTS.CONNECTOR_KEY,
+          EVENT_OPERATION,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('propagates API errors from getInstanceEventObjectMetadata', async () => {
+      await expect(
+        service.getInstanceEventObjectMetadata(
+          IS_TEST_CONSTANTS.CONNECTION_ID,
+          IS_TEST_CONSTANTS.CONNECTOR_KEY,
+          EVENT_OPERATION,
+          OBJECT_NAME,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
