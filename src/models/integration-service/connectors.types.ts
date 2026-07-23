@@ -5,6 +5,16 @@
  */
 
 /**
+ * Lifecycle stage of a connector.
+ */
+export enum LifeCycleStage {
+  PREVIEW = 'PREVIEW',
+  GA = 'GA',
+  DEPRECATED = 'DEPRECATED',
+  CUSTOM = 'CUSTOM',
+}
+
+/**
  * Authentication scheme descriptor on a connector (`oauth2`, `basic`, `apiKey`, ...).
  * Shape is connector-dependent; exposed as a record so the SDK doesn't impose
  * a closed schema on third-party connectors.
@@ -44,8 +54,8 @@ export interface RawConnectorGetResponse {
   hasEvents?: boolean;
   /** Event types the connector emits. */
   eventTypes?: string[];
-  /** Lifecycle stage (e.g. `GA`, `BETA`, `CUSTOM`). */
-  lifeCycleStage?: string;
+  /** Lifecycle stage. */
+  lifeCycleStage?: LifeCycleStage;
   /** Tag string (comma-separated). */
   tags?: string;
   /** Connector classification (e.g. `application`, `database`). */

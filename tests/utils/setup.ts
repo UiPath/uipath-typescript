@@ -22,6 +22,7 @@ interface MockableUiPath {
 interface MockableTokenManager {
   getToken: () => string | undefined;
   hasValidToken: () => boolean;
+  getValidToken: () => Promise<string>;
 }
 
 // Mock console methods to avoid test output noise
@@ -67,6 +68,7 @@ const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): Toke
   const mock: MockableTokenManager = {
     getToken: vi.fn().mockReturnValue('mock-access-token'),
     hasValidToken: vi.fn().mockReturnValue(true),
+    getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
     ...overrides,
   };
   return mock as TokenManager;
