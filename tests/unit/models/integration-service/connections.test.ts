@@ -53,7 +53,7 @@ describe('Connection bound methods', () => {
 
     it('should throw when the underlying connection has no id', async () => {
       const connection = createConnectionWithMethods(
-        createMockConnection({ id: '' as unknown as string }),
+        createMockConnection({ id: '' }),
         mockService,
       );
       await expect(connection.ping()).rejects.toThrow('Connection id is undefined');

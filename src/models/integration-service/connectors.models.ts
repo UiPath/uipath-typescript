@@ -16,7 +16,7 @@ import { ConnectionGetResponse } from './connections.models';
 /**
  * A connector catalog entry from the Integration Service.
  */
-export type ConnectorGetResponse = RawConnectorGetResponse;
+export interface ConnectorGetResponse extends RawConnectorGetResponse {}
 
 /**
  * Service for inspecting UiPath Integration Service connectors.

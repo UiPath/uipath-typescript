@@ -2,12 +2,14 @@
  * Integration Service test constants.
  */
 
+import { LifeCycleStage } from '../../../src/models/integration-service/connectors.types';
+
 export const IS_TEST_CONSTANTS = {
   CONNECTOR_KEY: 'uipath-uipath-airdk',
   CONNECTOR_ID: 7074,
   CONNECTOR_NAME: 'UiPath GenAI Activities',
   CONNECTOR_TIER: '2',
-  CONNECTOR_LIFECYCLE_GA: 'GA',
+  CONNECTOR_LIFECYCLE_GA: LifeCycleStage.GA,
   CONNECTION_ID: '29d931e5-00a5-45e9-b5e9-b9bd80844396',
   CONNECTION_ID_2: 'b4022e19-3007-4383-b664-30444b156286',
   CONNECTION_NAME: 'UiPath GenAI Activities',

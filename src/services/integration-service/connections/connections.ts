@@ -136,12 +136,12 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    * @example
    * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/is-connections';
+   * import { Connections, ConnectionState } from '@uipath/uipath-typescript/is-connections';
    *
    * const connections = new Connections(sdk);
    *
    * const status = await connections.ping('<connectionId>');
-   * if (status.status !== 'Enabled') {
+   * if (status.status !== ConnectionState.Enabled) {
    *   console.warn(`Connection unhealthy: ${status.status} — ${status.error ?? 'no detail'}`);
    * }
    * ```

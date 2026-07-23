@@ -141,6 +141,13 @@ describe('ConnectorsService', () => {
     it('should throw ValidationError when keyOrId is empty', async () => {
       await expect(service.getDefaultConnection('')).rejects.toThrow(ValidationError);
     });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND));
+      await expect(service.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY)).rejects.toThrow(
+        IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND,
+      );
+    });
   });
 
   describe('getConnections', () => {
@@ -178,6 +185,13 @@ describe('ConnectorsService', () => {
 
     it('should throw ValidationError when keyOrId is empty', async () => {
       await expect(service.getConnections('')).rejects.toThrow(ValidationError);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getConnections(IS_TEST_CONSTANTS.CONNECTOR_KEY)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 });
