@@ -7,6 +7,8 @@
  * when a connector ships a new metadata field.
  */
 
+import { LifeCycleStage } from './connectors.types';
+
 /**
  * A parameter declared on a connector method (path, query, body, header, value).
  */
@@ -121,8 +123,8 @@ export interface ElementActivity {
   operation?: string;
   /** Event delivery mode (e.g. `polling`, `webhooks`). */
   eventMode?: string;
-  /** Lifecycle stage (`GA`, `BETA`, ...). */
-  lifecycleStage?: string;
+  /** Lifecycle stage. */
+  lifecycleStage?: LifeCycleStage;
   /** Project types this activity is compatible with. */
   compatibleProjectTypes?: string[];
   /** Tag list. */

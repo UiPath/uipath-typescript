@@ -6,39 +6,39 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getById()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getDefaultConnection()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getConnections()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getAll()` | `IS.Connectors.Read` |
+| `getById()` | `IS.Connectors.Read` |
+| `getDefaultConnection()` | `IS.Connectors.Read` |
+| `getConnections()` | `IS.Connectors.Read` |
 
 ## Integration Service — Connections
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getById()` | `ConnectionService` or `ConnectionServiceUser` |
-| `ping()` | `ConnectionService` or `ConnectionServiceUser` |
-| `reauthenticate()` | `ConnectionService` |
+| `getAll()` | `IS.Connections.Read` |
+| `getById()` | `IS.Connections.Read` |
+| `ping()` | `IS.Connections.Read` |
+| `reauthenticate()` | `IS.Connections.Read` |
 
 ## Integration Service — Elements
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getObjects()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getActivities()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getEventObjects()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getEventObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getInstanceObjects()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getInstanceObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getInstanceEventObjects()` | `ConnectionService` or `ConnectionServiceUser` |
-| `getInstanceEventObjectMetadata()` | `ConnectionService` or `ConnectionServiceUser` |
+| `getObjects()` | `IS.Connector.Export` |
+| `getActivities()` | `IS.Connector.Export` |
+| `getObjectMetadata()` | `IS.Connector.Export` |
+| `getEventObjects()` | `IS.Connector.Export` |
+| `getEventObjectMetadata()` | `IS.Connector.Export` |
+| `getInstanceObjects()` | `IS.Connector.Export` |
+| `getInstanceObjectMetadata()` | `IS.Connector.Export` |
+| `getInstanceEventObjects()` | `IS.Connector.Export` |
+| `getInstanceEventObjectMetadata()` | `IS.Connector.Export` |
 
 ## Integration Service — Execution
 
 | Function | OAuth Scope |
 |----------|-------------|
-| `execute()` | `ConnectionService` or `ConnectionServiceUser` (plus any third-party scopes required by the underlying connection) |
+| `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
 
 ## Assets
 

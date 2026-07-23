@@ -1,14 +1,19 @@
+import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
 import { SDKInternalsRegistry } from '../../../core/internals';
 import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { FOLDER_KEY, CONTENT_TYPES } from '../../../utils/constants/headers';
+import { FOLDER_KEY, CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
 import type { IUiPath } from '../../../core/types';
+import type { UiPathConfig } from '../../../core/config/config';
 import {
   ExecuteMethod,
   ExecuteOptions,
   ExecuteResult,
 } from '../../../models/integration-service/execution.types';
+
+/** HTTP methods that carry a request body. */
+const BODY_METHODS = new Set<ExecuteMethod>(['POST', 'PUT', 'PATCH']);
 
 /**
  * Internal class so we can decorate `execute` with `@track`. Method decorators
@@ -16,8 +21,19 @@ import {
  *
  * @internal
  */
-class Execution {
-  constructor(private readonly instance: IUiPath) {}
+class Execution extends BaseService {
+  private readonly execConfig: Pick<UiPathConfig, 'baseUrl' | 'orgName' | 'tenantName'>;
+
+  /**
+   * Creates an instance of the Execution service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    const { config } = SDKInternalsRegistry.get(instance);
+    this.execConfig = config;
+  }
 
   @track('Execution.Execute')
   async execute(
@@ -33,12 +49,11 @@ class Execution {
       throw new ValidationError({ message: 'objectName is required for execute' });
     }
 
-    const { config, tokenManager } = SDKInternalsRegistry.get(this.instance);
-    const token = await tokenManager.getValidToken();
+    const token = await this.getValidAuthToken();
 
     const relativePath = ELEMENT_ENDPOINTS.INSTANCE.EXECUTE(connectionId, objectName);
-    const baseSegment = `${config.orgName}/${config.tenantName}/`;
-    const url = new URL(baseSegment + relativePath, config.baseUrl).toString();
+    const baseSegment = `${this.execConfig.orgName}/${this.execConfig.tenantName}/`;
+    const url = new URL(baseSegment + relativePath, this.execConfig.baseUrl).toString();
 
     let fullUrl = url;
     if (options.queryParams && Object.keys(options.queryParams).length > 0) {
@@ -47,14 +62,20 @@ class Execution {
       fullUrl = `${url}${sep}${qs}`;
     }
 
+    const traceId = crypto.randomUUID().replace(/-/g, '');
+    const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    const traceparentValue = `00-${traceId}-${spanId}-01`;
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
+      [TRACEPARENT]: traceparentValue,
+      [UIPATH_TRACEPARENT_ID]: traceparentValue,
     };
     if (options.folderKey) {
       headers[FOLDER_KEY] = options.folderKey;
     }
 
-    const hasBody = options.body !== undefined && ['POST', 'PUT', 'PATCH'].includes(method);
+    const hasBody = options.body !== undefined && BODY_METHODS.has(method);
     if (hasBody) {
       headers['Content-Type'] = CONTENT_TYPES.JSON;
     }
