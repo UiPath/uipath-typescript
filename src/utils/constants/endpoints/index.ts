@@ -41,3 +41,6 @@ export * from './governance';
 
 // Notification endpoints
 export * from './notification';
+
+// Ontology endpoints
+export * from './ontology';

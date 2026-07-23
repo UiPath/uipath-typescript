@@ -272,3 +272,20 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+
+## Ontologies
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `DataFabric` or `DataFabric.Write` |
+| `getAll()` | `DataFabric` or `DataFabric.Read` |
+| `getById()` | `DataFabric` or `DataFabric.Read` |
+| `update()` | `DataFabric` or `DataFabric.Write` |
+| `deleteById()` | `DataFabric` or `DataFabric.Write` |
+| `listArtifacts()` | `DataFabric` or `DataFabric.Read` |
+| `getArtifact()` | `DataFabric` or `DataFabric.Read` |
+| `upsertArtifact()` | `DataFabric` or `DataFabric.Write` |
+| `uploadArtifacts()` | `DataFabric` or `DataFabric.Write` |
+| `deleteArtifact()` | `DataFabric` or `DataFabric.Write` |
+| `validateArtifact()` | `DataFabric` or `DataFabric.Read` |
+| `exportOntology()` | `DataFabric` or `DataFabric.Read` |
