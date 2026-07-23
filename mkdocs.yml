@@ -224,6 +224,12 @@ nav:
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
   - Plugins:
       - Codex: plugins/codex.md
+  - AI App Builders:
+      - Overview: ai-app-builders/index.md
+      - Vercel (v0): ai-app-builders/vercel.md
+      - Replit: ai-app-builders/replit.md
+      - Bolt: ai-app-builders/bolt.md
+      - Lovable: ai-app-builders/lovable.md
   - Sample Apps Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
