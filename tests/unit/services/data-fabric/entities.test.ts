@@ -144,6 +144,16 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
+    it("should expose the wire isInsightsEnabled as isAnalyticsEnabled and drop the raw key", async () => {
+      const mockResponse = createMockEntityResponse({ isInsightsEnabled: true });
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(result.isAnalyticsEnabled).toBe(true);
+      expect(result).not.toHaveProperty("isInsightsEnabled");
+    });
+
     it("should get entity with external fields successfully and transform field metadata", async () => {
       const mockResponse = createMockEntityWithExternalFields();
       mockApiClient.get.mockResolvedValue(mockResponse);
@@ -2059,7 +2069,7 @@ describe("EntityService Unit Tests", () => {
 
       const result = await entityService.create(
         "my_entity",
-        [{ fieldName: "title", type: EntityFieldDataType.STRING }],
+        [{ name: "title", type: EntityFieldDataType.STRING }],
         { displayName: "My Entity", description: "A test entity", isRbacEnabled: true },
       );
 
@@ -2113,7 +2123,7 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should pass isAnalyticsEnabled: true when provided", async () => {
+    it("should map isAnalyticsEnabled to the wire isInsightsEnabled when provided", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       await entityService.create("my_entity", [], {
@@ -2170,7 +2180,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default STRING lengthLimit to 200", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "str_field", type: EntityFieldDataType.STRING },
+          { name: "str_field", type: EntityFieldDataType.STRING },
         ]);
         const f = getCreatedFields().find((x) => x.name === "str_field");
         expect(f?.sqlType).toEqual({ name: "NVARCHAR", lengthLimit: 200 });
@@ -2178,7 +2188,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should use user-provided lengthLimit for STRING fields", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 500 },
+          { name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 500 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "str_field");
         expect(f?.sqlType).toEqual({ name: "NVARCHAR", lengthLimit: 500 });
@@ -2186,7 +2196,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default MULTILINE_TEXT lengthLimit to 200", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT },
+          { name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT },
         ]);
         const f = getCreatedFields().find((x) => x.name === "ml_field");
         expect(f?.sqlType).toEqual({ name: "MULTILINE", lengthLimit: 200 });
@@ -2194,7 +2204,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default MULTILINE_MAX lengthLimit to 128 KB", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX },
+          { name: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX },
         ]);
         const f = getCreatedFields().find((x) => x.name === "mlmax_field");
         expect(f?.sqlType).toEqual({ name: "MULTILINE_MAX", lengthLimit: 128 * 1024 });
@@ -2202,7 +2212,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should use user-provided lengthLimit for MULTILINE_MAX fields", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 5000 },
+          { name: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 5000 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "mlmax_field");
         expect(f?.sqlType).toEqual({ name: "MULTILINE_MAX", lengthLimit: 5000 });
@@ -2210,7 +2220,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default DECIMAL constraints to default values", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL },
+          { name: "dec_field", type: EntityFieldDataType.DECIMAL },
         ]);
         const f = getCreatedFields().find((x) => x.name === "dec_field");
         expect(f?.sqlType).toEqual({
@@ -2225,7 +2235,7 @@ describe("EntityService Unit Tests", () => {
       it("should allow user to override DECIMAL decimalPrecision, maxValue and minValue", async () => {
         await entityService.create("my_entity", [
           {
-            fieldName: "dec_field",
+            name: "dec_field",
             type: EntityFieldDataType.DECIMAL,
             decimalPrecision: 4,
             maxValue: 9999,
@@ -2240,7 +2250,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default INTEGER min/max to default values", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "int_field", type: EntityFieldDataType.INTEGER },
+          { name: "int_field", type: EntityFieldDataType.INTEGER },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
         expect(f?.sqlType).toEqual({ name: "INT", maxValue: 1000000000000, minValue: -1000000000000 });
@@ -2248,7 +2258,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should allow user to override INTEGER min/max", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 },
+          { name: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
         expect(f?.sqlType).toEqual({ name: "INT", maxValue: 500, minValue: -500 });
@@ -2256,7 +2266,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default BIG_INTEGER min/max to default values", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "bigint_field", type: EntityFieldDataType.BIG_INTEGER },
+          { name: "bigint_field", type: EntityFieldDataType.BIG_INTEGER },
         ]);
         const f = getCreatedFields().find((x) => x.name === "bigint_field");
         expect(f?.sqlType).toEqual({ name: "BIGINT", maxValue: 1000000000000, minValue: -1000000000000 });
@@ -2265,7 +2275,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when STRING lengthLimit exceeds 4000", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4001 },
+            { name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4001 },
           ]),
         ).rejects.toThrow(/lengthLimit 4001 out of range \[1, 4000\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2274,7 +2284,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when STRING lengthLimit is less than 1", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 0 },
+            { name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 0 },
           ]),
         ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2283,7 +2293,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when MULTILINE_TEXT lengthLimit exceeds 10000", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10001 },
+            { name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10001 },
           ]),
         ).rejects.toThrow(/lengthLimit 10001 out of range \[1, 10000\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2292,7 +2302,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when MULTILINE_MAX lengthLimit exceeds 128 KB", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 131073 },
+            { name: "mlmax_field", type: EntityFieldDataType.MULTILINE_MAX, lengthLimit: 131073 },
           ]),
         ).rejects.toThrow(/lengthLimit 131073 out of range \[1, 131072\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2301,7 +2311,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL decimalPrecision exceeds 10", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 11 },
+            { name: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 11 },
           ]),
         ).rejects.toThrow(/decimalPrecision 11 out of range \[0, 10\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2310,7 +2320,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL decimalPrecision is negative", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: -1 },
+            { name: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: -1 },
           ]),
         ).rejects.toThrow(/decimalPrecision -1 out of range \[0, 10\]/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2319,7 +2329,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when INTEGER maxValue exceeds Number.MAX_SAFE_INTEGER", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: Number.MAX_SAFE_INTEGER + 1 },
+            { name: "int_field", type: EntityFieldDataType.INTEGER, maxValue: Number.MAX_SAFE_INTEGER + 1 },
           ]),
         ).rejects.toThrow(/maxValue .* out of range/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2328,7 +2338,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for BOOLEAN", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "bool_field", type: EntityFieldDataType.BOOLEAN, lengthLimit: 50 },
+            { name: "bool_field", type: EntityFieldDataType.BOOLEAN, lengthLimit: 50 },
           ]),
         ).rejects.toThrow(/does not accept lengthLimit/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2337,7 +2347,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for INTEGER", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "int_field", type: EntityFieldDataType.INTEGER, lengthLimit: 50 },
+            { name: "int_field", type: EntityFieldDataType.INTEGER, lengthLimit: 50 },
           ]),
         ).rejects.toThrow(/does not accept lengthLimit/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2346,7 +2356,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes maxValue for STRING", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "str_field", type: EntityFieldDataType.STRING, maxValue: 100 },
+            { name: "str_field", type: EntityFieldDataType.STRING, maxValue: 100 },
           ]),
         ).rejects.toThrow(/does not accept maxValue/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2355,7 +2365,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes decimalPrecision for INTEGER", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "int_field", type: EntityFieldDataType.INTEGER, decimalPrecision: 2 },
+            { name: "int_field", type: EntityFieldDataType.INTEGER, decimalPrecision: 2 },
           ]),
         ).rejects.toThrow(/does not accept decimalPrecision/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2364,7 +2374,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for DECIMAL (not user-configurable)", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, lengthLimit: 500 },
+            { name: "dec_field", type: EntityFieldDataType.DECIMAL, lengthLimit: 500 },
           ]),
         ).rejects.toThrow(/does not accept lengthLimit/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2372,7 +2382,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept STRING lengthLimit at the boundary value 4000", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4000 },
+          { name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4000 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "str_field");
         expect(f?.sqlType).toEqual({ name: "NVARCHAR", lengthLimit: 4000 });
@@ -2380,7 +2390,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept MULTILINE_TEXT lengthLimit at the boundary value 10000", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10000 },
+          { name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10000 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "ml_field");
         expect(f?.sqlType).toEqual({ name: "MULTILINE", lengthLimit: 10000 });
@@ -2388,7 +2398,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept FLOAT with user-supplied decimalPrecision in range", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "float_field", type: EntityFieldDataType.FLOAT, decimalPrecision: 5 },
+          { name: "float_field", type: EntityFieldDataType.FLOAT, decimalPrecision: 5 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "float_field");
         expect(f?.sqlType.decimalPrecision).toBe(5);
@@ -2397,7 +2407,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when INTEGER minValue is greater than maxValue", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "int_field", type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
+            { name: "int_field", type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
           ]),
         ).rejects.toThrow(/minValue 100 >= maxValue 50.*minValue must be strictly less than maxValue/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2406,7 +2416,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL minValue equals maxValue", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, minValue: 10, maxValue: 10 },
+            { name: "dec_field", type: EntityFieldDataType.DECIMAL, minValue: 10, maxValue: 10 },
           ]),
         ).rejects.toThrow(/minValue 10 >= maxValue 10/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2415,7 +2425,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when FLOAT minValue is greater than maxValue", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "float_field", type: EntityFieldDataType.FLOAT, minValue: 5, maxValue: -5 },
+            { name: "float_field", type: EntityFieldDataType.FLOAT, minValue: 5, maxValue: -5 },
           ]),
         ).rejects.toThrow(/minValue 5 >= maxValue -5/);
         expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -2423,7 +2433,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept INTEGER when minValue is strictly less than maxValue", async () => {
         await entityService.create("my_entity", [
-          { fieldName: "int_field", type: EntityFieldDataType.INTEGER, minValue: -100, maxValue: 100 },
+          { name: "int_field", type: EntityFieldDataType.INTEGER, minValue: -100, maxValue: 100 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
         expect(f?.sqlType.minValue).toBe(-100);
@@ -2433,7 +2443,7 @@ describe("EntityService Unit Tests", () => {
       it("should not enforce minValue < maxValue when only one is user-supplied (other comes from defaults)", async () => {
         // Only minValue is provided; maxValue is filled from defaults — no cross-field check triggers.
         await entityService.create("my_entity", [
-          { fieldName: "int_field", type: EntityFieldDataType.INTEGER, minValue: -50 },
+          { name: "int_field", type: EntityFieldDataType.INTEGER, minValue: -50 },
         ]);
         const f = getCreatedFields().find((x) => x.name === "int_field");
         expect(f?.sqlType.minValue).toBe(-50);
@@ -2441,7 +2451,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should emit nested referenceEntity / referenceField objects and isForeignKey/referenceType on RELATIONSHIP fields", async () => {
         await entityService.create("my_entity", [{
-          fieldName: "rel_field",
+          name: "rel_field",
           type: EntityFieldDataType.RELATIONSHIP,
           referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -2456,14 +2466,14 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when RELATIONSHIP field is missing reference IDs", async () => {
         await expect(
           entityService.create("my_entity", [
-            { fieldName: "rel_field", type: EntityFieldDataType.RELATIONSHIP },
+            { name: "rel_field", type: EntityFieldDataType.RELATIONSHIP },
           ]),
         ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
       it("should embed { id, folderId } in referenceEntity for cross-folder RELATIONSHIP when referenceFolderKey is set", async () => {
         await entityService.create("my_entity", [{
-          fieldName: "rel_field",
+          name: "rel_field",
           type: EntityFieldDataType.RELATIONSHIP,
           referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -2492,7 +2502,7 @@ describe("EntityService Unit Tests", () => {
         });
 
         await entityService.create("my_entity", [{
-          fieldName: "userType",
+          name: "userType",
           type: EntityFieldDataType.CHOICE_SET_SINGLE,
           choiceSetId: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
           referenceFolderKey: DATA_FABRIC_TENANT_FOLDER_ID,
@@ -2523,7 +2533,7 @@ describe("EntityService Unit Tests", () => {
         });
 
         await entityService.create("my_entity", [{
-          fieldName: "cat",
+          name: "cat",
           type: EntityFieldDataType.CHOICE_SET_SINGLE,
           choiceSetId: ENTITY_TEST_CONSTANTS.CHOICE_SET_TARGET_ID,
           referenceFolderKey: ENTITY_TEST_CONSTANTS.REFERENCE_TARGET_FOLDER_KEY,
@@ -2540,7 +2550,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should emit a bare { id } reference when referenceFolderKey is omitted (same-scope default)", async () => {
         await entityService.create("my_entity", [{
-          fieldName: "rel_field",
+          name: "rel_field",
           type: EntityFieldDataType.RELATIONSHIP,
           referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -2554,7 +2564,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should emit only fieldDisplayType=File on FILE fields, omitting isForeignKey/referenceEntity/referenceField/referenceType (server auto-wires the attachment)", async () => {
         await entityService.create("my_entity", [{
-          fieldName: "file_field",
+          name: "file_field",
           type: EntityFieldDataType.FILE,
         }]);
         const f = getCreatedFields().find((x) => x.name === "file_field");
@@ -2567,7 +2577,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should strip caller-provided referenceEntityId/referenceFieldId on FILE (server discards them anyway)", async () => {
         await entityService.create("my_entity", [{
-          fieldName: "file_field",
+          name: "file_field",
           type: EntityFieldDataType.FILE,
           referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -2643,7 +2653,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ fieldName: "count", type: EntityFieldDataType.INTEGER }],
+        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -2669,12 +2679,29 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
+    it("should carry forward the entity's Insights setting from the wire GET response", async () => {
+      mockApiClient.get.mockResolvedValue({ ...mockRawEntity, isInsightsEnabled: true });
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
+        expect.objectContaining({
+          entityDefinition: expect.objectContaining({ isInsightsEnabled: true }),
+        }),
+        { headers: {} },
+      );
+    });
+
     it("should remove specified fields from the schema", async () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        removeFields: [{ fieldName: "title" }],
+        removeFields: [{ name: "title" }],
       });
 
       const call = mockApiClient.post.mock.calls[0][1];
@@ -2721,7 +2748,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ fieldName: "status", type: EntityFieldDataType.STRING }],
+        addFields: [{ name: "status", type: EntityFieldDataType.STRING }],
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -2740,9 +2767,9 @@ describe("EntityService Unit Tests", () => {
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         addFields: [
-          { fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT },
+          { name: "notes", type: EntityFieldDataType.MULTILINE_TEXT },
         ],
-        removeFields: [{ fieldName: "title" }],
+        removeFields: [{ name: "title" }],
         updateFields: [],
       });
 
@@ -2823,7 +2850,7 @@ describe("EntityService Unit Tests", () => {
               }
             : {};
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "new_field", type, ...referenceIds }],
+          addFields: [{ name: "new_field", type, ...referenceIds }],
         });
 
         const call = mockApiClient.post.mock.calls[0][1];
@@ -2842,7 +2869,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         addFields: [
           {
-            fieldName: "secret_field",
+            name: "secret_field",
             type: EntityFieldDataType.STRING,
             isEncrypted: true,
           },
@@ -2864,7 +2891,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default STRING lengthLimit to 200", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING }],
+          addFields: [{ name: "str_field", type: EntityFieldDataType.STRING }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "str_field");
@@ -2873,7 +2900,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should use user-provided lengthLimit for STRING fields", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 500 }],
+          addFields: [{ name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 500 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "str_field");
@@ -2882,7 +2909,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default MULTILINE_TEXT lengthLimit to 200", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT }],
+          addFields: [{ name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "ml_field");
@@ -2891,7 +2918,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default DECIMAL constraints to default values", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "dec_field", type: EntityFieldDataType.DECIMAL }],
+          addFields: [{ name: "dec_field", type: EntityFieldDataType.DECIMAL }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "dec_field");
@@ -2906,7 +2933,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should allow user to override DECIMAL constraints", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 9999, minValue: -9999 }],
+          addFields: [{ name: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 9999, minValue: -9999 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "dec_field");
@@ -2917,7 +2944,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should set BOOLEAN lengthLimit to fixed value 100", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "bool_field", type: EntityFieldDataType.BOOLEAN }],
+          addFields: [{ name: "bool_field", type: EntityFieldDataType.BOOLEAN }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "bool_field");
@@ -2926,7 +2953,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should set DATE lengthLimit to fixed value 1000", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "date_field", type: EntityFieldDataType.DATE }],
+          addFields: [{ name: "date_field", type: EntityFieldDataType.DATE }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "date_field");
@@ -2935,7 +2962,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should set DATETIME_WITH_TZ lengthLimit to fixed value 1000", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "dtz_field", type: EntityFieldDataType.DATETIME_WITH_TZ }],
+          addFields: [{ name: "dtz_field", type: EntityFieldDataType.DATETIME_WITH_TZ }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "dtz_field");
@@ -2944,7 +2971,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default INTEGER min/max to default values", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER }],
+          addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "int_field");
@@ -2953,7 +2980,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should allow user to override INTEGER min/max", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 }],
+          addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER, maxValue: 500, minValue: -500 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "int_field");
@@ -2962,7 +2989,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default BIG_INTEGER min/max to default values", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "bigint_field", type: EntityFieldDataType.BIG_INTEGER }],
+          addFields: [{ name: "bigint_field", type: EntityFieldDataType.BIG_INTEGER }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "bigint_field");
@@ -2971,7 +2998,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default FLOAT to defaults including decimalPrecision", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "float_field", type: EntityFieldDataType.FLOAT }],
+          addFields: [{ name: "float_field", type: EntityFieldDataType.FLOAT }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "float_field");
@@ -2980,7 +3007,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should default DOUBLE to defaults including decimalPrecision", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "double_field", type: EntityFieldDataType.DOUBLE }],
+          addFields: [{ name: "double_field", type: EntityFieldDataType.DOUBLE }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "double_field");
@@ -2989,7 +3016,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should set CHOICE_SET_SINGLE sqlType to plain INT (no constraints)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "css_field", type: EntityFieldDataType.CHOICE_SET_SINGLE }],
+          addFields: [{ name: "css_field", type: EntityFieldDataType.CHOICE_SET_SINGLE }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "css_field");
@@ -2999,7 +3026,7 @@ describe("EntityService Unit Tests", () => {
       it("should set FILE lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
-            fieldName: "file_field",
+            name: "file_field",
             type: EntityFieldDataType.FILE,
           }],
         });
@@ -3011,7 +3038,7 @@ describe("EntityService Unit Tests", () => {
       it("should emit only fieldDisplayType=File on FILE fields, omitting isForeignKey/referenceEntity/referenceField/referenceType (server auto-wires the attachment)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
-            fieldName: "file_field",
+            name: "file_field",
             type: EntityFieldDataType.FILE,
           }],
         });
@@ -3027,7 +3054,7 @@ describe("EntityService Unit Tests", () => {
       it("should strip caller-provided referenceEntityId/referenceFieldId on FILE (server discards them anyway)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
-            fieldName: "file_field",
+            name: "file_field",
             type: EntityFieldDataType.FILE,
             referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
             referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -3042,7 +3069,7 @@ describe("EntityService Unit Tests", () => {
       it("should set RELATIONSHIP lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
-            fieldName: "rel_field",
+            name: "rel_field",
             type: EntityFieldDataType.RELATIONSHIP,
             referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
             referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -3056,7 +3083,7 @@ describe("EntityService Unit Tests", () => {
       it("should emit nested referenceEntity / referenceField objects and isForeignKey/referenceType on RELATIONSHIP fields", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
-            fieldName: "rel_field",
+            name: "rel_field",
             type: EntityFieldDataType.RELATIONSHIP,
             referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
             referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -3073,14 +3100,14 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when RELATIONSHIP field is missing reference IDs", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "rel_field", type: EntityFieldDataType.RELATIONSHIP }],
+            addFields: [{ name: "rel_field", type: EntityFieldDataType.RELATIONSHIP }],
           }),
         ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
       it("should set CHOICE_SET_MULTIPLE lengthLimit to fixed value 4000 (NVARCHAR)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "csm_field", type: EntityFieldDataType.CHOICE_SET_MULTIPLE }],
+          addFields: [{ name: "csm_field", type: EntityFieldDataType.CHOICE_SET_MULTIPLE }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "csm_field");
@@ -3089,7 +3116,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should set AUTO_NUMBER sqlType to plain DECIMAL (no constraints)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "an_field", type: EntityFieldDataType.AUTO_NUMBER }],
+          addFields: [{ name: "an_field", type: EntityFieldDataType.AUTO_NUMBER }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "an_field");
@@ -3107,7 +3134,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for BOOLEAN", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "bool_field", type: EntityFieldDataType.BOOLEAN, lengthLimit: 50 }],
+            addFields: [{ name: "bool_field", type: EntityFieldDataType.BOOLEAN, lengthLimit: 50 }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });
@@ -3115,7 +3142,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for INTEGER", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, lengthLimit: 50 }],
+            addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER, lengthLimit: 50 }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });
@@ -3123,7 +3150,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes maxValue for STRING", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING, maxValue: 100 }],
+            addFields: [{ name: "str_field", type: EntityFieldDataType.STRING, maxValue: 100 }],
           }),
         ).rejects.toThrow(/does not accept maxValue/);
       });
@@ -3131,7 +3158,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes decimalPrecision for INTEGER", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, decimalPrecision: 2 }],
+            addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER, decimalPrecision: 2 }],
           }),
         ).rejects.toThrow(/does not accept decimalPrecision/);
       });
@@ -3159,7 +3186,7 @@ describe("EntityService Unit Tests", () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
             addFields: [{
-              fieldName: "file_field",
+              name: "file_field",
               type: EntityFieldDataType.FILE,
               lengthLimit: 500,
             }],
@@ -3171,7 +3198,7 @@ describe("EntityService Unit Tests", () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
             addFields: [{
-              fieldName: "rel_field",
+              name: "rel_field",
               type: EntityFieldDataType.RELATIONSHIP,
               referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
               referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
@@ -3184,7 +3211,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes maxValue for CHOICE_SET_SINGLE", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "css_field", type: EntityFieldDataType.CHOICE_SET_SINGLE, maxValue: 100 }],
+            addFields: [{ name: "css_field", type: EntityFieldDataType.CHOICE_SET_SINGLE, maxValue: 100 }],
           }),
         ).rejects.toThrow(/does not accept maxValue/);
       });
@@ -3192,7 +3219,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for DATE", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "date_field", type: EntityFieldDataType.DATE, lengthLimit: 500 }],
+            addFields: [{ name: "date_field", type: EntityFieldDataType.DATE, lengthLimit: 500 }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });
@@ -3200,7 +3227,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when STRING lengthLimit exceeds 4000", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4001 }],
+            addFields: [{ name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4001 }],
           }),
         ).rejects.toThrow(/lengthLimit 4001 out of range \[1, 4000\]/);
       });
@@ -3208,7 +3235,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when STRING lengthLimit is less than 1", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 0 }],
+            addFields: [{ name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 0 }],
           }),
         ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
       });
@@ -3216,7 +3243,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when MULTILINE_TEXT lengthLimit exceeds 10000", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10001 }],
+            addFields: [{ name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10001 }],
           }),
         ).rejects.toThrow(/lengthLimit 10001 out of range \[1, 10000\]/);
       });
@@ -3224,7 +3251,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL is given lengthLimit by user (not user-configurable)", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, lengthLimit: 500 }],
+            addFields: [{ name: "dec_field", type: EntityFieldDataType.DECIMAL, lengthLimit: 500 }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });
@@ -3232,7 +3259,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL decimalPrecision exceeds 10", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 11 }],
+            addFields: [{ name: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: 11 }],
           }),
         ).rejects.toThrow(/decimalPrecision 11 out of range \[0, 10\]/);
       });
@@ -3240,7 +3267,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when DECIMAL decimalPrecision is negative", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: -1 }],
+            addFields: [{ name: "dec_field", type: EntityFieldDataType.DECIMAL, decimalPrecision: -1 }],
           }),
         ).rejects.toThrow(/decimalPrecision -1 out of range \[0, 10\]/);
       });
@@ -3248,7 +3275,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when INTEGER maxValue exceeds Number.MAX_SAFE_INTEGER", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, maxValue: Number.MAX_SAFE_INTEGER + 1 }],
+            addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER, maxValue: Number.MAX_SAFE_INTEGER + 1 }],
           }),
         ).rejects.toThrow(/maxValue .* out of range/);
       });
@@ -3256,7 +3283,7 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when addFields INTEGER minValue >= maxValue", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "int_field", type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 }],
+            addFields: [{ name: "int_field", type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 }],
           }),
         ).rejects.toThrow(/minValue 100 >= maxValue 50.*minValue must be strictly less than maxValue/);
       });
@@ -3283,7 +3310,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept FLOAT with user-supplied decimalPrecision in range", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "float_field", type: EntityFieldDataType.FLOAT, decimalPrecision: 5 }],
+          addFields: [{ name: "float_field", type: EntityFieldDataType.FLOAT, decimalPrecision: 5 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "float_field");
@@ -3292,7 +3319,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept STRING lengthLimit at the boundary value 4000", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4000 }],
+          addFields: [{ name: "str_field", type: EntityFieldDataType.STRING, lengthLimit: 4000 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "str_field");
@@ -3301,7 +3328,7 @@ describe("EntityService Unit Tests", () => {
 
       it("should accept MULTILINE_TEXT lengthLimit at the boundary value 10000", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10000 }],
+          addFields: [{ name: "ml_field", type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 10000 }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "ml_field");
@@ -3388,7 +3415,7 @@ describe("EntityService Unit Tests", () => {
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
-        addFields: [{ fieldName: "newcol", type: EntityFieldDataType.STRING }],
+        addFields: [{ name: "newcol", type: EntityFieldDataType.STRING }],
         displayName: "renamed",
       });
 
@@ -3431,7 +3458,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.patch.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ fieldName: "count", type: EntityFieldDataType.INTEGER }],
+        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
         displayName: "New Display Name",
       });
 
@@ -3461,7 +3488,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "new_field", type: EntityFieldDataType.STRING }],
+          addFields: [{ name: "new_field", type: EntityFieldDataType.STRING }],
         }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });

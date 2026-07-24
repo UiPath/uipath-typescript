@@ -30,7 +30,9 @@ export const EntityMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
   sqlType: 'fieldDataType',
-  fieldDefinition: 'fieldMetaData'
+  fieldDefinition: 'fieldMetaData',
+  // API returns `isInsightsEnabled`; expose it under the SDK name `isAnalyticsEnabled`.
+  isInsightsEnabled: 'isAnalyticsEnabled'
 };
 
 /**
