@@ -2600,7 +2600,7 @@
 <hr />
 <h2 id="step-4-deploy">Step 4 — Deploy<a class="headerlink" href="#step-4-deploy" title="Permanent link">&para;</a></h2>
 <p>Prompt Lovable to deploy. It runs the CLI in the sandbox, reading the stored secrets (if the CLI is not preinstalled it is invoked via <code>npx @uipath/cli</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span>&lt;UIPATH_CLIENT_ID&gt;<span class="w"> </span>--client-secret<span class="w"> </span>&lt;UIPATH_CLIENT_SECRET&gt;<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span><span class="nv">$UIPATH_CLIENT_ID</span><span class="w"> </span>--client-secret<span class="w"> </span><span class="nv">$UIPATH_CLIENT_SECRET</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;Apps OR.Folders.Read OR.Execution&quot;</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
