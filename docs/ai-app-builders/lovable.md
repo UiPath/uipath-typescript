@@ -65,7 +65,7 @@ Add your **confidential** app's credentials in **Lovable Cloud → Secrets**: `U
 Prompt Lovable to deploy. It runs the CLI in the sandbox, reading the stored secrets (if the CLI is not preinstalled it is invoked via `npx @uipath/cli`):
 
 ```bash
-uip login --client-id <UIPATH_CLIENT_ID> --client-secret <UIPATH_CLIENT_SECRET> \
+uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
   --scope "Apps OR.Folders.Read OR.Execution"
 npm run build
