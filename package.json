@@ -245,7 +245,7 @@
         "lint": "oxlint",
         "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
-        "release-metadata:check": "node scripts/check-release-metadata.mjs",
+        "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",
