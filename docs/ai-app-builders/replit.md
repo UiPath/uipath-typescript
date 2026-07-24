@@ -67,7 +67,7 @@ Add your **confidential** app's credentials in Replit's built-in **Secrets** (To
 In the Replit **Shell**, run the deploy; `uip login` reads the Secrets you set in Step 3:
 
 ```bash
-uip login --client-id <UIPATH_CLIENT_ID> --client-secret <UIPATH_CLIENT_SECRET> \
+uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
   --scope "Apps OR.Folders.Read OR.Execution"
 npm run build

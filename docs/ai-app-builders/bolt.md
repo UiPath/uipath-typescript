@@ -67,7 +67,7 @@ Bolt runs in an in-browser WebContainer. Provide your **confidential** app's sec
 In the Bolt terminal, supply the confidential secret (Step 3) and run the deploy. Bolt's WebContainer can reach npm and `*.uipath.com` (note: GitHub access is blocked in WebContainer):
 
 ```bash
-uip login --client-id <UIPATH_CLIENT_ID> --client-secret <UIPATH_CLIENT_SECRET> \
+uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
   --scope "Apps OR.Folders.Read OR.Execution"
 npm run build

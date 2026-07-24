@@ -59,7 +59,7 @@ Add your **confidential** app's credentials as **Environment Variables** in your
 v0 has a usable terminal. Run the deploy there; `uip login` reads the encrypted env vars you set in Step 3:
 
 ```bash
-uip login --client-id <UIPATH_CLIENT_ID> --client-secret <UIPATH_CLIENT_SECRET> \
+uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
   --scope "Apps OR.Folders.Read OR.Execution"
 npm run build
