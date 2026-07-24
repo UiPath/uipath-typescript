@@ -9,55 +9,54 @@ Consumers (e.g. the `uipath-coded-apps` agent skill) use it to answer: *a capabi
 ```jsonc
 {
   "schema": 1,                    // file-format version
-  "sdkVersion": "1.5.5",          // SDK version this file DESCRIBES (captured-from). NOT an intro version.
+  "sdkVersion": "1.5.5",          // SDK version this file DESCRIBES (generated from). NOT an intro version.
   "services": [
     {
       "name": "Agents",           // public export name (not the internal `AgentService`)
       "subpath": "@uipath/uipath-typescript/agents",
       "since": "1.4.1",           // version the service was introduced; null = baseline
-      "methods": [                // only methods whose version DIFFERS from the service
-        { "name": "getSummary", "since": "1.5.0" }   // unlisted methods INHERIT the service `since`
+      "methods": [
+        { "name": "getAll", "since": null },          // baseline (shipped before tracking)
+        { "name": "getSummary", "since": "1.5.0" }    // introduced later
       ]
-    },
-    { "name": "Entities", "subpath": "@uipath/uipath-typescript/entities", "since": null }
-  ],
-  "enums": [
-    {
-      "name": "EntityFieldDataType",
-      "subpath": "@uipath/uipath-typescript/entities",
-      "values": [ { "name": "MULTILINE_MAX", "since": "1.5.2" } ]
     }
   ]
 }
 ```
 
-- **`services` / `enums` are arrays of objects**, each with a `name` = public export name (`Agents`, not the internal `AgentService`).
-- **`since`** = the version a capability was introduced. **`null` = baseline** (shipped before this file existed; not backfilled).
-- **`methods`** = array of `{ name, since }`. **Inheritance:** a method with no entry inherits its service's `since`, so only list methods introduced *later* than their service.
-- **Scope = presence + `since` only.** No signatures, no renames, no removals. Signature/behavior changes are visible in the installed `.d.ts`; renames are covered by the SDK's `@deprecated` + replacement pointers (deprecate-don't-remove policy).
-- **`@internal` is excluded.** Anything a consumer shouldn't rely on must carry an `@internal` JSDoc tag.
+- **`services` is an array of objects**, each with a `name` = public export name (`Agents`, not the internal `AgentService`).
+- **Every public service and method is listed** (full enumeration). `methods` is an array of `{ name, since }`.
+- **`since`** = the version a capability was introduced. **`null` = baseline** (shipped before this file existed; exact version not backfilled).
+- **Absent from the file = does not exist.** There is no inheritance rule; every method is explicit.
+- **`@internal` is excluded.** Signature changes (a new option on an existing method) are not tracked — the installed types already carry the shape.
 
-## Adding a capability (every release)
+### Reserved fields for deletions (unused today)
 
-1. New **service** → append `{ name, subpath, since: "<this version>" }` to `services`.
-2. New **method** on an existing service → append `{ name, since: "<this version>" }` to that service's `methods` **only if** its version differs from the service `since` (else it inherits).
-3. New **enum member** → append `{ name, since }` to that enum's `values`.
-4. Bump `sdkVersion` to the release version.
+Two optional fields are reserved for when a method is eventually deleted. No entry sets them yet.
 
-Signature-only changes (new options on an existing method) → **no entry** (the installed types carry the shape).
+```jsonc
+{ "name": "getGovernanceChecks", "since": "1.4.1", "deleted": "1.6.0", "replacedBy": "getGovernanceDecisions" }
+```
 
-## CI enforcement
+- `deleted`: the version a capability was removed in. When set, the generator keeps the entry (a tombstone) rather than dropping it.
+- `replacedBy` (optional): the migration target. Deterministic to fill only from a structured `@deprecated {@link X}` note; otherwise leave it out.
 
-`npm run release-metadata:check` (`scripts/check-release-metadata.mjs`, run in `.github/workflows/ci.yml` after a fresh `npm run build`) fails the build if:
+A rename is modeled the same way: the old name gets `deleted` + `replacedBy`, the new name gets its own `since`.
 
-- a public service (exported as `*Service as *` from a public subpath) has **no entry** → prints the JSON to add;
-- an entry has **no matching public service** → warns (possible removal — confirm before dropping; removals are rare);
-- `sdkVersion` ≠ `package.json` version.
+## Generated, not hand-written
 
-The check reads the **freshly-built `dist/`**, never a local one (a stale local `dist/` can omit shipped symbols).
+`release-metadata.json` is produced by `npm run release-metadata:gen` (`scripts/gen-release-metadata.mjs`) from the freshly-built public surface. It is a **deterministic** pass — pure static analysis (the TypeScript compiler API) plus a JSON diff, no LLM — so the same inputs always produce byte-identical output. On each run it:
 
-### v1 limitations (follow-ups)
+1. Enumerates every public service (`*Service as PublicName` exports from the subpath barrels; subpaths from `package.json` `exports`) and its public methods, **including inherited ones**, excluding `@internal`.
+2. Loads the previous `release-metadata.json` as the history source and **carries existing `since` values forward unchanged** (immutable history).
+3. Stamps any newly-added capability with the package version; **tombstones** anything in the previous file but gone from the surface (`deleted` = this version).
+4. Sets `sdkVersion` to the package version and writes with a stable sort.
 
-- Enforcement is **service-level**; per-method and per-enum-member entries are authored/curated, not yet machine-verified.
-- Non-class public exports (e.g. the `document-understanding` `DuFramework` namespace) are not enumerated.
-- Author-assisted generation (auto-diff the surface and stamp new entries) is manual today, guided by the check's output.
+Run it after `npm run build` (never a stale local dist). Pass `--bootstrap` for the one-time seed, where methods not in the previous (curated) file default to `since: null` rather than the current version.
+
+## Where it runs
+
+The file is a **release artifact**: regenerate it when cutting a release so it describes the released version. Two options (see the design doc):
+
+- **Version-bump PR (committed):** run `release-metadata:gen` in the "bump version to X" PR (manually, or via a workflow that commits onto the PR branch). Publish ships the committed file.
+- **Publish-only (not committed):** the Publish workflow runs `release-metadata:gen` after build and includes the file in the tarball; `since` history is carried forward from the previous published file (unpkg `@latest`).
