@@ -1,0 +1,65 @@
+name: Regenerate release-metadata
+
+# On a version-bump PR (one that changes package.json's version), regenerate
+# release-metadata.json from the built public surface and commit it onto the PR
+# branch. This is the caller of `release-metadata:gen` for Approach A — the file
+# lands in main through the normal PR merge, never a direct push to main.
+
+on:
+  pull_request:
+    paths:
+      - 'package.json'
+
+jobs:
+  regen:
+    # Only same-repo PRs get a writable token; fork PRs cannot push back.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Detect version change
+        id: ver
+        run: |
+          git fetch origin "$BASE_REF" --depth=1
+          BASE_VER=$(git show "origin/$BASE_REF:package.json" | jq -r .version)
+          HEAD_VER=$(jq -r .version package.json)
+          echo "base=$BASE_VER head=$HEAD_VER"
+          if [ "$BASE_VER" = "$HEAD_VER" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Regenerate off a FRESH build (never a stale dist), then commit any change
+      # to release-metadata.json onto the PR branch.
+      - name: Regenerate and commit
+        if: steps.ver.outputs.changed == 'true'
+        run: |
+          npm ci
+          npm run build
+          npm run release-metadata:gen
+          if git diff --quiet -- release-metadata.json; then
+            echo "release-metadata.json already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add release-metadata.json
+          git commit -m "chore(release-metadata): regenerate for $(jq -r .version package.json)"
+          git push origin "HEAD:$HEAD_REF"
