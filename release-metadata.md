@@ -52,7 +52,7 @@ A rename is modeled the same way: the old name gets `deleted` + `replacedBy`, th
 3. Stamps any newly-added capability with the package version; **tombstones** anything in the previous file but gone from the surface (`deleted` = this version).
 4. Sets `sdkVersion` to the package version and writes with a stable sort.
 
-Run it after `npm run build` (never a stale local dist). Pass `--bootstrap` for the one-time seed, where methods not in the previous (curated) file default to `since: null` rather than the current version.
+Run it after `npm run build` (never a stale local dist).
 
 ## Where it runs
 

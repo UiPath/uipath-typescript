@@ -8,7 +8,6 @@
  * same inputs always produce byte-identical output.
  *
  *   npm run build && node scripts/gen-release-metadata.mjs
- *   node scripts/gen-release-metadata.mjs --bootstrap   # one-time seed: unknown methods -> since: null
  *
  * Contract (see release-metadata.md): `services` is an array of
  * { name, subpath, since, methods[] }; `methods` is an array of { name, since };
@@ -23,7 +22,6 @@ import { fileURLToPath } from 'url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
 const OUT = join(ROOT, 'release-metadata.json');
-const BOOTSTRAP = process.argv.includes('--bootstrap');
 
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 const VERSION = pkg.version;
@@ -104,11 +102,10 @@ for (const sub of subpaths) {
 // ── build entries (carry-forward + stamp new) ───────────────────────────────────
 const services = surface.map((s) => {
   const prevS = prevSvc.get(s.name);
-  const since = prevS ? (prevS.since ?? null) : BOOTSTRAP ? null : VERSION;
+  const since = prevS ? (prevS.since ?? null) : VERSION; // in prev → carry forward; new → this version
   const methods = [...new Set(s.methods)].sort().map((name) => {
     const carried = prevMethodSince(s.name, name);
-    const val = carried !== undefined ? carried : BOOTSTRAP ? null : VERSION;
-    return { name, since: val };
+    return { name, since: carried !== undefined ? carried : VERSION };
   });
   const entry = { name: s.name, subpath: s.subpath, since };
   if (methods.length) entry.methods = methods;
@@ -138,6 +135,4 @@ for (const s of services) if (s.methods) s.methods.sort((a, b) => a.name.localeC
 
 writeFileSync(OUT, JSON.stringify({ schema: 1, sdkVersion: VERSION, services }, null, 2) + '\n');
 const nMethods = services.reduce((n, s) => n + (s.methods?.length || 0), 0);
-console.log(
-  `release-metadata:gen — ${services.length} services, ${nMethods} methods, sdkVersion ${VERSION}${BOOTSTRAP ? ' (bootstrap)' : ''}`
-);
+console.log(`release-metadata:gen — ${services.length} services, ${nMethods} methods, sdkVersion ${VERSION}`);
