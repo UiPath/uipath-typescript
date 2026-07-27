@@ -425,6 +425,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Secret-based Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidential-app-scoped-external-app-client-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Confidential App-scoped External App (client-credentials)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2371,6 +2386,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Secret-based Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidential-app-scoped-external-app-client-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Confidential App-scoped External App (client-credentials)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2540,14 +2570,14 @@
 <li>Give it a name and expiration date</li>
 <li>Provide relevant scopes</li>
 </ol>
-<p>Conversational Agents support anonymous, sign-in-free chat via tokens issued to confidential, app-scoped External Apps. In this SDK, this token type is only guaranteed to work with Conversational Agents.</p>
-<p>To create a confidential External App:</p>
+<h3 id="confidential-app-scoped-external-app-client-credentials">Confidential App-scoped External App (client-credentials)<a class="headerlink" href="#confidential-app-scoped-external-app-client-credentials" title="Permanent link">&para;</a></h3>
+<p>You can also authenticate the SDK with a token issued to a confidential, app-scoped <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications">External App</a> via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the <code>secret</code> parameter — like any other bearer token above.</p>
+<p>To create a confidential app-scoped External App:</p>
 <ol type="1">
 <li>In UiPath Cloud: <strong>Admin</strong> → <strong>External Applications</strong></li>
 <li>Click <strong>Add Application</strong> → <strong>Confidential Application</strong></li>
 <li>Configure:<ul>
 <li><strong>Name</strong>: Your app name</li>
-<li><strong>Redirect URI</strong>: For example, <code>http://localhost:3000</code> (for development)</li>
 <li><strong>Scopes</strong>: Select the permissions you need (<a href="/uipath-typescript/oauth-scopes">see scopes guide</a>). All scopes must be added as <strong>Application</strong> scopes, not <strong>User</strong> scopes.</li>
 </ul>
 </li>

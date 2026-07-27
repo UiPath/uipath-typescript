@@ -92,6 +92,8 @@ Conversational Agents can be driven with an **app-scoped token** — one issued 
 To use it, pass an `externalUserId` — your application's own identifier for the end user — when constructing the service:
 
 ```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
 const conversationalAgent = new ConversationalAgent(sdk, {
   externalUserId: 'app-user-42'
 });

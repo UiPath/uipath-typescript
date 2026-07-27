@@ -193,15 +193,16 @@ To Generate a PAT Token:
 1. Give it a name and expiration date
 1. Provide relevant scopes
 
-Conversational Agents support anonymous, sign-in-free chat via tokens issued to confidential, app-scoped External Apps. In this SDK, this token type is only guaranteed to work with Conversational Agents.
+### Confidential App-scoped External App (client-credentials)
 
-To create a confidential External App:
+You can also authenticate the SDK with a token issued to a confidential, app-scoped [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the `secret` parameter — like any other bearer token above.
+
+To create a confidential app-scoped External App:
 
 1. In UiPath Cloud: **Admin** → **External Applications**
 1. Click **Add Application** → **Confidential Application**
 1. Configure:
    - **Name**: Your app name
-   - **Redirect URI**: For example, `http://localhost:3000` (for development)
    - **Scopes**: Select the permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes)). All scopes must be added as **Application** scopes, not **User** scopes.
 1. Save and copy the **Client ID** and the **Client Secret** — you will not be shown the Client Secret again
 1. Follow the [official UiPath documentation](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) on how to request client-credentials tokens for a confidential app with application scopes
@@ -4719,6 +4720,8 @@ Conversational Agents can be driven with an **app-scoped token** — one issued 
 To use it, pass an `externalUserId` — your application's own identifier for the end user — when constructing the service:
 
 ```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
 const conversationalAgent = new ConversationalAgent(sdk, {
   externalUserId: 'app-user-42'
 });

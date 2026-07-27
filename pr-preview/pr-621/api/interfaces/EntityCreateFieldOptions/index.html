@@ -2256,11 +2256,6 @@
 <td>Human-readable display name shown in the UI (defaults to <code>name</code> if omitted)</td>
 </tr>
 <tr>
-<td><a id="fieldname"></a> <code>fieldName</code></td>
-<td><code>string</code></td>
-<td>Field name — must start with a letter and contain only letters, numbers, and underscores (e.g., <code>"productName"</code>).</td>
-</tr>
-<tr>
 <td><a id="isencrypted"></a> <code>isEncrypted?</code></td>
 <td><code>boolean</code></td>
 <td>Whether the field value is encrypted at rest (default: false)</td>
@@ -2299,6 +2294,11 @@
 <td><a id="minvalue"></a> <code>minValue?</code></td>
 <td><code>number</code></td>
 <td>Minimum allowed value for numeric fields (INTEGER, BIG_INTEGER, FLOAT, DOUBLE, DECIMAL — default: -1,000,000,000,000; range: ±9,007,199,254,740,991)</td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name</code></td>
+<td><code>string</code></td>
+<td>Field name — must start with a letter and contain only letters, numbers, and underscores (e.g., <code>"productName"</code>). Matches the <code>name</code> field returned by <code>getById</code>.</td>
 </tr>
 <tr>
 <td><a id="referenceentityid"></a> <code>referenceEntityId?</code></td>
