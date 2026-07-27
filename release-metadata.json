@@ -9,15 +9,15 @@
       "methods": [
         {
           "name": "getCallsTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getTopSpaces",
-          "since": null
+          "since": "1.4.1"
         }
       ]
     },
@@ -28,19 +28,19 @@
       "methods": [
         {
           "name": "getAll",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getConsumptionTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getErrors",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getErrorsTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getIncidentDistribution",
@@ -48,7 +48,7 @@
         },
         {
           "name": "getLatencyTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getSummary",
@@ -75,7 +75,7 @@
       "methods": [
         {
           "name": "getErrorsTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getGovernanceDecisions",
@@ -87,19 +87,19 @@
         },
         {
           "name": "getLatencyTimeline",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getSpansByReference",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getSpansByTraceId",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getUnitConsumption",
-          "since": null
+          "since": "1.4.1"
         }
       ]
     },
@@ -496,11 +496,11 @@
       "methods": [
         {
           "name": "getOperationSummary",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getPolicyTraces",
-          "since": null
+          "since": "1.4.1"
         }
       ]
     },
@@ -604,27 +604,27 @@
       "methods": [
         {
           "name": "deleteAll",
-          "since": null
+          "since": "1.5.1"
         },
         {
           "name": "deleteByIds",
-          "since": null
+          "since": "1.5.1"
         },
         {
           "name": "getAll",
-          "since": null
+          "since": "1.5.1"
         },
         {
           "name": "markAllAsRead",
-          "since": null
+          "since": "1.5.1"
         },
         {
           "name": "markAsRead",
-          "since": null
+          "since": "1.5.1"
         },
         {
           "name": "markAsUnread",
-          "since": null
+          "since": "1.5.1"
         }
       ]
     },
@@ -746,15 +746,15 @@
       "methods": [
         {
           "name": "getAll",
-          "since": null
+          "since": "1.5.5"
         },
         {
           "name": "getPublishers",
-          "since": null
+          "since": "1.5.5"
         },
         {
           "name": "getSupportedChannels",
-          "since": null
+          "since": "1.5.5"
         }
       ]
     },
@@ -804,11 +804,11 @@
       "methods": [
         {
           "name": "getById",
-          "since": null
+          "since": "1.4.1"
         },
         {
           "name": "getSpansByIds",
-          "since": null
+          "since": "1.4.1"
         }
       ]
     },

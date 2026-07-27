@@ -105,7 +105,11 @@ const services = surface.map((s) => {
   const since = prevS ? (prevS.since ?? null) : VERSION; // in prev → carry forward; new → this version
   const methods = [...new Set(s.methods)].sort().map((name) => {
     const carried = prevMethodSince(s.name, name);
-    return { name, since: carried !== undefined ? carried : VERSION };
+    let ms = carried !== undefined ? carried : VERSION;
+    // A method cannot predate its service: a null (baseline) method under a service
+    // that has a real `since` inherits the service version. Self-heals stale nulls.
+    if (ms === null && since !== null) ms = since;
+    return { name, since: ms };
   });
   const entry = { name: s.name, subpath: s.subpath, since };
   if (methods.length) entry.methods = methods;
