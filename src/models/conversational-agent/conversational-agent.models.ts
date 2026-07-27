@@ -114,6 +114,8 @@ import type { ConnectionStatus } from '@/core/websocket';
  * when constructing the service:
  *
  * ```typescript
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ *
  * const conversationalAgent = new ConversationalAgent(sdk, {
  *   externalUserId: 'app-user-42'
  * });
