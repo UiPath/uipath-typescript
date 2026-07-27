@@ -10,6 +10,12 @@ on:
     paths:
       - 'package.json'
 
+# Two quick pushes to a bump PR would otherwise race on `git push` (non-fast-forward).
+# Cancel the stale run so only the latest regenerates and commits.
+concurrency:
+  group: release-metadata-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   regen:
     # Only same-repo PRs get a writable token; fork PRs cannot push back.

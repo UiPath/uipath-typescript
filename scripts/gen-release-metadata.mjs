@@ -88,7 +88,7 @@ for (const sub of subpaths) {
         // a bare `export { XService }` re-exports the internal class name — skip it.
         if (!el.propertyName) continue;
         const local = el.propertyName.text;
-        if (/Service$/.test(local)) alias.set(local, el.name.text);
+        if (local.endsWith('Service')) alias.set(local, el.name.text);
       }
     }
   });
