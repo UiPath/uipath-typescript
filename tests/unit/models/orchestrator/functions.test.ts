@@ -1,5 +1,5 @@
 // ===== IMPORTS =====
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createFunctionWithMethods, FunctionServiceModel } from '../../../../src/models/orchestrator/functions.models';
 import { createBasicFunction } from '../../../utils/mocks/functions';
 import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
@@ -14,6 +14,10 @@ describe('Function Models Unit Tests', () => {
       getAll: vi.fn(),
       invoke: vi.fn(),
     };
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe('createFunctionWithMethods', () => {

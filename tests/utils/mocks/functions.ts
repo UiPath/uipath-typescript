@@ -7,7 +7,9 @@ import { createMockBaseResponse, createMockCollection } from './core';
  * Creates a raw HttpTriggers row as the API returns it (PascalCase wire format,
  * including job-runner fields the SDK drops).
  */
-export const createMockRawFunctionTrigger = (overrides: Partial<any> = {}): any => {
+export const createMockRawFunctionTrigger = (
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> => {
   return {
     Type: 'Http',
     OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,

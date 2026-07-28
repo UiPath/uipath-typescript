@@ -45,7 +45,6 @@ describe('FunctionService Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.unstubAllGlobals();
   });
 
   describe('getAll', () => {

@@ -39,7 +39,6 @@ export interface FunctionServiceModel {
    *
    * @param options - Query options including folder scoping (`folderId` / `folderKey` / `folderPath`), filtering, and pagination options
    * @returns Promise resolving to either an array of functions {@link NonPaginatedResponse}<{@link FunctionGetResponse}> or a {@link PaginatedResponse}<{@link FunctionGetResponse}> when pagination options are used.
-   * {@link FunctionGetResponse}
    * @example
    * ```typescript
    * // Get all functions in a folder
