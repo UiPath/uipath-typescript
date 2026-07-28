@@ -1,0 +1,3897 @@
+{
+  "version": "1.1.3",
+  "services": [
+    {
+      "name": "Assets",
+      "className": "AssetService",
+      "subpath": "assets",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all assets across folders with optional filtering",
+          "example": "```typescript\n// Standard array return\n// With folder\nconst folderAssets = await assets.getAll({ folderId: <folderId> });\n\n// First page with pagination\nconst page1 = await assets.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await assets.getAll({ cursor: page1.nextCursor });\n}\n\n// Jump to specific page\nconst page5 = await assets.getAll({\n  jumpToPage: 5,\n  pageSize: 10\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<AssetGetResponse> : NonPaginatedResponse<AssetGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a single asset by ID",
+          "example": "```typescript\n// Get asset by ID\nconst asset = await assets.getById(<assetId>, <folderId>);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "AssetGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<AssetGetResponse>"
+        }
+      ]
+    },
+    {
+      "name": "Buckets",
+      "className": "BucketService",
+      "subpath": "buckets",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all buckets across folders with optional filtering\n\nThe method returns either:\n- A NonPaginatedResponse with data and totalCount (when no pagination parameters are provided)\n- A paginated result with navigation cursors (when any pagination parameter is provided)",
+          "example": "```typescript\n// Get all buckets across folders\nconst allBuckets = await buckets.getAll();\n\n// Get buckets within a specific folder\nconst folderBuckets = await buckets.getAll({\n  folderId: <folderId>\n});\n\n// Get buckets with filtering\nconst filteredBuckets = await buckets.getAll({\n  filter: \"name eq 'MyBucket'\"\n});\n\n// First page with pagination\nconst page1 = await buckets.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await buckets.getAll({ cursor: page1.nextCursor });\n}\n\n// Jump to specific page\nconst page5 = await buckets.getAll({\n  jumpToPage: 5,\n  pageSize: 10\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<BucketGetResponse> : NonPaginatedResponse<BucketGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a single bucket by ID",
+          "example": "```typescript\n// Get bucket by ID\nconst bucket = await buckets.getById(<bucketId>, <folderId>);\n```",
+          "params": [
+            {
+              "name": "bucketId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "BucketGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<BucketGetResponse>"
+        },
+        {
+          "name": "getFileMetaData",
+          "description": "Gets metadata for files in a bucket with optional filtering and pagination\n\nThe method returns either:\n- A NonPaginatedResponse with items array (when no pagination parameters are provided)\n- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)",
+          "example": "```typescript\n// Get metadata for all files in a bucket\nconst fileMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>);\n\n// Get file metadata with a specific prefix\nconst prefixMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>, {\n  prefix: '/folder1'\n});\n\n// First page with pagination\nconst page1 = await buckets.getFileMetaData(<bucketId>, <folderId>, { pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await buckets.getFileMetaData(<bucketId>, <folderId>, { cursor: page1.nextCursor });\n}\n```",
+          "params": [
+            {
+              "name": "bucketId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "prefix",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<BlobItem> : NonPaginatedResponse<BlobItem>>"
+        },
+        {
+          "name": "getReadUri",
+          "description": "Gets a direct download URL for a file in the bucket",
+          "example": "```typescript\n// Get download URL for a file\nconst fileAccess = await buckets.getReadUri({\n  bucketId: <bucketId>,\n  folderId: <folderId>,\n  path: '/folder/file.pdf'\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "BucketGetReadUriOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "bucketId",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "folderId",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "path",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expiryInMinutes",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<BucketGetUriResponse>"
+        },
+        {
+          "name": "uploadFile",
+          "description": "Uploads a file to a bucket",
+          "example": "```typescript\n// Upload a file from browser\nconst file = new File(['file content'], 'example.txt');\nconst result = await buckets.uploadFile({\n  bucketId: <bucketId>,\n  folderId: <folderId>,\n  path: '/folder/example.txt',\n  content: file\n});\n\n// In Node env with Uint8Array or Buffer\nconst content = new TextEncoder().encode('file content');\nconst result = await buckets.uploadFile({\n  bucketId: <bucketId>,\n  folderId: <folderId>,\n  path: '/folder/example.txt',\n  content,\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "BucketUploadFileOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "bucketId",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "folderId",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "path",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "content",
+                  "optional": false,
+                  "typeText": "Blob | Uint8Array<ArrayBuffer> | File"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<BucketUploadResponse>"
+        }
+      ]
+    },
+    {
+      "name": "CaseInstances",
+      "className": "CaseInstancesService",
+      "subpath": "cases",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Get all case instances with optional filtering and pagination",
+          "example": "```typescript\n// Get all case instances (non-paginated)\nconst instances = await caseInstances.getAll();\n\n// Cancel/Close faulted instances using methods directly on instances\nfor (const instance of instances.items) {\n  if (instance.latestRunStatus === 'Faulted') {\n    await instance.close({ comment: 'Closing faulted case instance' });\n  }\n}\n\n// With filtering\nconst filteredInstances = await caseInstances.getAll({\n  processKey: 'MyCaseProcess'\n});\n\n// First page with pagination\nconst page1 = await caseInstances.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });\n}\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "packageId",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "packageVersion",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "processKey",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "errorCode",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<CaseInstanceGetResponse> : NonPaginatedResponse<CaseInstanceGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Get a specific case instance by ID",
+          "example": "```typescript\n// Get a specific case instance\nconst instance = await caseInstances.getById(\n  <instanceId>,\n  <folderKey>\n);\n\n// Access instance properties\nconsole.log(`Status: ${instance.latestRunStatus}`);\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<CaseInstanceGetResponse>"
+        },
+        {
+          "name": "close",
+          "description": "Close/Cancel a case instance",
+          "example": "```typescript\n// Close a case instance\nconst result = await caseInstances.close(\n  <instanceId>,\n  <folderKey>\n);\n\n// Or using instance method\nconst instance = await caseInstances.getById(\n  <instanceId>,\n  <folderKey>\n);\nconst result = await instance.close();\n\nconsole.log(`Closed: ${result.success}`);\n\n// Close with a comment\nconst resultWithComment = await instance.close({\n  comment: 'Closing due to invalid input data'\n});\n\nif (resultWithComment.success) {\n  console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);\n}\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "CaseInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<CaseInstanceOperationResponse>>"
+        },
+        {
+          "name": "pause",
+          "description": "Pause a case instance",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "CaseInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<CaseInstanceOperationResponse>>"
+        },
+        {
+          "name": "reopen",
+          "description": "Reopen a case instance from a specified element",
+          "example": "```typescript\nimport { CaseInstances } from '@uipath/uipath-typescript/cases';\n\nconst caseInstances = new CaseInstances(sdk);\n\n// First, get the available stages for the case instance\nconst stages = await caseInstances.getStages('<instanceId>', '<folderKey>');\nconst stageId = stages[0].id; // Select the stage to reopen from\n\n// Reopen a case instance from a specific stage\nconst result = await caseInstances.reopen(\n  '<instanceId>',\n  '<folderKey>',\n  { stageId }\n);\n\n// Reopen with a comment\nconst result = await caseInstances.reopen(\n  '<instanceId>',\n  '<folderKey>',\n  { stageId, comment: 'Reopening to retry failed stage' }\n);\n\n// Or using instance method\nconst instance = await caseInstances.getById('<instanceId>', '<folderKey>');\nconst stages = await instance.getStages();\nconst result = await instance.reopen({ stageId: stages[0].id });\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "CaseInstanceReopenOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "stageId",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<CaseInstanceOperationResponse>>"
+        },
+        {
+          "name": "resume",
+          "description": "Resume a case instance",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "CaseInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<CaseInstanceOperationResponse>>"
+        },
+        {
+          "name": "getExecutionHistory",
+          "description": "Get execution history for a case instance",
+          "example": "```typescript\n// Get execution history for a case instance\nconst history = await caseInstances.getExecutionHistory(\n  <instanceId>,\n  <folderKey>\n);\n\n// Access element executions\nif (history.elementExecutions) {\n  for (const execution of history.elementExecutions) {\n    console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);\n  }\n}\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<CaseInstanceExecutionHistoryResponse>"
+        },
+        {
+          "name": "getStages",
+          "description": "Get stages and its associated tasks information for a case instance",
+          "example": "```typescript\n// Get stages for a case instance\nconst stages = await caseInstances.getStages(\n  <caseInstanceId>,\n  <folderKey>\n);\n\n// Iterate through stages\nfor (const stage of stages) {\n  console.log(`Stage: ${stage.name} - Status: ${stage.status}`);\n\n  // Check tasks in the stage\n  for (const taskGroup of stage.tasks) {\n    for (const task of taskGroup) {\n      console.log(`  Task: ${task.name} - Status: ${task.status}`);\n    }\n  }\n}\n```",
+          "params": [
+            {
+              "name": "caseInstanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<CaseGetStageResponse[]>"
+        },
+        {
+          "name": "getActionTasks",
+          "description": "Get human in the loop tasks associated with a case instance\n\nThe method returns either:\n- An array of tasks (when no pagination parameters are provided)\n- A paginated result with navigation cursors (when any pagination parameter is provided)",
+          "example": "```typescript\n// Get all tasks for a case instance (non-paginated)\nconst actionTasks = await caseInstances.getActionTasks(\n  <caseInstanceId>,\n);\n\n// First page with pagination\nconst page1 = await caseInstances.getActionTasks(\n  <caseInstanceId>,\n  { pageSize: 10 }\n);\n// Iterate through tasks\nfor (const task of page1.items) {\n  console.log(`Task: ${task.title}`);\n  console.log(`Task: ${task.status}`);\n}\n\n// Jump to specific page\nconst page5 = await caseInstances.getActionTasks(\n  <caseInstanceId>,\n  {\n    jumpToPage: 5,\n    pageSize: 10\n  }\n);\n```",
+          "params": [
+            {
+              "name": "caseInstanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "asTaskAdmin",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>>"
+        }
+      ]
+    },
+    {
+      "name": "Cases",
+      "className": "CasesService",
+      "subpath": "cases",
+      "methods": [
+        {
+          "name": "getAll",
+          "example": "```typescript\n// Get all case management processes\nconst allCases = await cases.getAll();\n\n// Access case information\nfor (const caseProcess of allCases) {\n  console.log(`Case Process: ${caseProcess.processKey}`);\n  console.log(`Running instances: ${caseProcess.runningCount}`);\n  console.log(`Completed instances: ${caseProcess.completedCount}`);\n}\n```",
+          "params": [],
+          "returnType": "Promise<CaseGetAllResponse[]>"
+        }
+      ]
+    },
+    {
+      "name": "ChoiceSets",
+      "className": "ChoiceSetService",
+      "subpath": "entities",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all choice sets in the org",
+          "example": "```typescript\n// Get all choice sets\nconst allChoiceSets = await choicesets.getAll();\n\n// Iterate through choice sets\nallChoiceSets.forEach(choiceSet => {\n  console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);\n  console.log(`Description: ${choiceSet.description}`);\n  console.log(`Created by: ${choiceSet.createdBy}`);\n});\n\n// Find a specific choice set by name\nconst expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');\n\n// Check choice set details\nif (expenseTypes) {\n  console.log(`Last updated: ${expenseTypes.updatedTime}`);\n  console.log(`Updated by: ${expenseTypes.updatedBy}`);\n}\n```",
+          "params": [],
+          "returnType": "Promise<ChoiceSetGetAllResponse[]>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets choice set values by choice set ID with optional pagination\n\nThe method returns either:\n- A NonPaginatedResponse with items array (when no pagination parameters are provided)\n- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)",
+          "example": "```typescript\n// First, get the choice set ID using getAll()\nconst allChoiceSets = await choicesets.getAll();\nconst expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');\nconst choiceSetId = expenseTypes.id;\n\n// Get all values (non-paginated)\nconst values = await choicesets.getById(choiceSetId);\n\n// Iterate through choice set values\nfor (const value of values.items) {\n  console.log(`Value: ${value.displayName}`);\n}\n\n// First page with pagination\nconst page1 = await choicesets.getById(choiceSetId, { pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });\n}\n```",
+          "params": [
+            {
+              "name": "choiceSetId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ChoiceSetGetResponse> : NonPaginatedResponse<ChoiceSetGetResponse>>"
+        }
+      ]
+    },
+    {
+      "name": "ConversationalAgent",
+      "className": "ConversationalAgentService",
+      "subpath": "conversational-agent",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all available conversational agents",
+          "example": "Basic usage\n```typescript\nconst agents = await conversationalAgent.getAll();\nconst agent = agents[0];\n\n// Create conversation directly from agent (agentId and folderId are auto-filled)\nconst conversation = await agent.conversations.create({ label: 'My Chat' });\n```",
+          "params": [
+            {
+              "name": "folderId",
+              "optional": true,
+              "typeText": "number",
+              "kind": "number"
+            }
+          ],
+          "returnType": "Promise<AgentGetResponse[]>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a specific agent by ID",
+          "example": "Basic usage\n```typescript\nconst agent = await conversationalAgent.getById(agentId, folderId);\n\n// Create conversation directly from agent (agentId and folderId are auto-filled)\nconst conversation = await agent.conversations.create({ label: 'My Chat' });\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            }
+          ],
+          "returnType": "Promise<AgentGetByIdResponse>"
+        },
+        {
+          "name": "onConnectionStatusChanged",
+          "description": "Registers a handler that is called whenever the WebSocket connection status changes.",
+          "example": "```typescript\nconst cleanup = conversationalAgent.onConnectionStatusChanged((status, error) => {\n  console.log('Connection status:', status);\n  if (error) {\n    console.error('Connection error:', error.message);\n  }\n});\n\n// Later, remove the handler\ncleanup();\n```",
+          "params": [
+            {
+              "name": "handler",
+              "optional": false,
+              "typeText": "(status: ConnectionStatus, error: Error | null) => void",
+              "kind": "json"
+            }
+          ],
+          "returnType": "() => void"
+        },
+        {
+          "name": "getFeatureFlags",
+          "description": "Gets feature flags for the current tenant",
+          "params": [],
+          "returnType": "Promise<FeatureFlags>"
+        }
+      ]
+    },
+    {
+      "name": "ConversationService",
+      "className": "ConversationService",
+      "subpath": "conversational-agent",
+      "methods": [
+        {
+          "name": "create",
+          "description": "Creates a new conversation\n\nThe returned conversation has bound methods for lifecycle management:\n`update()`, `delete()`, and `startSession()`.",
+          "example": "```typescript\nconst conversation = await conversationalAgent.conversations.create(\n  agentId,\n  folderId,\n  { label: 'Customer Support Session' }\n);\n\n// Update the conversation\nawait conversation.update({ label: 'Renamed Chat' });\n\n// Start a real-time session\nconst session = conversation.startSession();\n\n// Delete the conversation\nawait conversation.delete();\n```",
+          "params": [
+            {
+              "name": "agentId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ConversationCreateOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "label",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "autogenerateLabel",
+                  "optional": true,
+                  "typeText": "boolean"
+                },
+                {
+                  "name": "traceId",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "jobStartOverrides",
+                  "optional": true,
+                  "typeText": "ConversationJobStartOverrides"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ConversationCreateResponse>"
+        },
+        {
+          "name": "getAll",
+          "description": "Gets all conversations with optional filtering and pagination",
+          "example": "Basic usage - get all conversations\n```typescript\nconst allConversations = await conversationalAgent.conversations.getAll();\n\nfor (const conversation of allConversations.items) {\nconsole.log(`${conversation.label} - created: ${conversation.createdTime}`);\n}\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "sort",
+                  "optional": true,
+                  "typeText": "SortOrder"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ConversationGetResponse> : NonPaginatedResponse<ConversationGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a conversation by ID\n\nThe returned conversation has bound methods for lifecycle management:\n`update()`, `delete()`, and `startSession()`.",
+          "example": "Resume with a real-time session\n```typescript\nconst conversation = await conversationalAgent.conversations.getById(conversationId);\nconst session = conversation.startSession();\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ConversationGetResponse>"
+        },
+        {
+          "name": "updateById",
+          "description": "Updates a conversation by ID",
+          "example": "```typescript\nconst updatedConversation = await conversationalAgent.conversations.updateById(conversationId, {\n  label: 'Updated Name'\n});\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "ConversationUpdateOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "label",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "autogenerateLabel",
+                  "optional": true,
+                  "typeText": "boolean"
+                },
+                {
+                  "name": "jobKey",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "isLocalJobExecution",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ConversationUpdateResponse>"
+        },
+        {
+          "name": "deleteById",
+          "description": "Deletes a conversation by ID",
+          "example": "```typescript\nawait conversationalAgent.conversations.deleteById(conversationId);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ConversationDeleteResponse>"
+        },
+        {
+          "name": "uploadAttachment",
+          "description": "Uploads a file attachment to a conversation",
+          "example": "```typescript\nconst attachment = await conversationalAgent.conversations.uploadAttachment(conversationId, file);\nconsole.log(`Uploaded: ${attachment.uri}`);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "file",
+              "optional": false,
+              "typeText": "File",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "lastModified",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "name",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "webkitRelativePath",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "size",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "type",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "arrayBuffer",
+                  "optional": false,
+                  "typeText": "Promise<ArrayBuffer>"
+                },
+                {
+                  "name": "bytes",
+                  "optional": false,
+                  "typeText": "Promise<Uint8Array<ArrayBuffer>>"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number,contentType?:string):Blob"
+                },
+                {
+                  "name": "stream",
+                  "optional": false,
+                  "typeText": "ReadableStream<Uint8Array<ArrayBuffer>>"
+                },
+                {
+                  "name": "text",
+                  "optional": false,
+                  "typeText": "Promise<string>"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ConversationAttachmentUploadResponse>"
+        },
+        {
+          "name": "startSession",
+          "description": "Starts a real-time chat session for a conversation\n\nCreates a WebSocket session and returns a SessionStream for sending\nand receiving messages in real-time.",
+          "example": "```typescript\nconst session = conversationalAgent.conversations.startSession(conversation.id);\n\n// Listen for responses using helper methods\nsession.onExchangeStart((exchange) => {\n  exchange.onMessageStart((message) => {\n    // Use message.isAssistant to filter AI responses\n    if (message.isAssistant) {\n      message.onContentPartStart((part) => {\n        // Use part.isMarkdown to handle text content\n        if (part.isMarkdown) {\n          part.onChunk((chunk) => console.log(chunk.data));\n        }\n      });\n    }\n  });\n});\n\n// Wait for session to be ready, then send a message\nsession.onSessionStarted(() => {\n  const exchange = session.startExchange();\n  exchange.sendMessageWithContentPart({ data: 'Hello!' });\n});\n\n// End the session when done\nconversationalAgent.conversations.endSession(conversation.id);\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ConversationSessionOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "echo",
+                  "optional": true,
+                  "typeText": "boolean"
+                },
+                {
+                  "name": "logLevel",
+                  "optional": true,
+                  "typeText": "LogLevel"
+                }
+              ]
+            }
+          ],
+          "returnType": "SessionStream"
+        },
+        {
+          "name": "getSession",
+          "description": "Retrieves an active session by conversation ID",
+          "example": "```typescript\nconst session = conversationalAgent.conversations.getSession(conversationId);\nif (session) {\n  // Session already started — safe to send exchanges directly\n  const exchange = session.startExchange();\n  exchange.sendMessageWithContentPart({ data: 'Hello!' });\n}\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "SessionStream | undefined"
+        },
+        {
+          "name": "endSession",
+          "description": "Ends an active session for a conversation\n\nSends a session end event and releases the socket for the conversation.\nIf no active session exists for the given conversation, this is a no-op.",
+          "example": "```typescript\n// End session for a specific conversation\nconversationalAgent.conversations.endSession(conversationId);\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "void"
+        },
+        {
+          "name": "onConnectionStatusChanged",
+          "description": "Registers a handler for connection status changes",
+          "params": [
+            {
+              "name": "handler",
+              "optional": false,
+              "typeText": "ConnectionStatusChangedHandler",
+              "kind": "json"
+            }
+          ],
+          "returnType": "() => void"
+        }
+      ]
+    },
+    {
+      "name": "Entities",
+      "className": "EntityService",
+      "subpath": "entities",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all entities in the system",
+          "example": "```typescript\n// Get all entities\nconst allEntities = await entities.getAll();\n\n// Iterate through entities\nallEntities.forEach(entity => {\n  console.log(`Entity: ${entity.displayName} (${entity.name})`);\n  console.log(`Type: ${entity.entityType}`);\n});\n\n// Find a specific entity by name\nconst customerEntity = allEntities.find(e => e.name === 'Customer');\n\n// Use entity methods directly\nif (customerEntity) {\n  const records = await customerEntity.getAllRecords();\n  console.log(`Customer records: ${records.items.length}`);\n\n  // Insert a single record\n  const insertResult = await customerEntity.insertRecord({ name: \"John\", age: 30 });\n\n  // Or batch insert multiple records\n  const batchResult = await customerEntity.insertRecords([\n    { name: \"Jane\", age: 25 },\n    { name: \"Bob\", age: 35 }\n  ]);\n}\n```",
+          "params": [],
+          "returnType": "Promise<EntityGetResponse[]>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets entity metadata by entity ID with attached operation methods",
+          "example": "```typescript\nimport { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';\n\nconst entities = new Entities(sdk);\nconst choicesets = new ChoiceSets(sdk);\n\n// Get entity metadata with methods\nconst entity = await entities.getById(<entityId>);\n\n// Call operations directly on the entity\nconst records = await entity.getAllRecords();\n\n// If a field references a ChoiceSet, get the choiceSetId from records.fields\nconst choiceSetId = records.fields[0].referenceChoiceSet?.id;\nif (choiceSetId) {\n  const choiceSetValues = await choicesets.getById(choiceSetId);\n}\n\n// Insert a single record\nconst insertResult = await entity.insertRecord({ name: \"John\", age: 30 });\n\n// Or batch insert multiple records\nconst batchResult = await entity.insertRecords([\n    { name: \"Jane\", age: 25 },\n    { name: \"Bob\", age: 35 }\n]);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<EntityGetResponse>"
+        },
+        {
+          "name": "getAllRecords",
+          "description": "Gets entity records by entity ID",
+          "example": "```typescript\n// Basic usage (non-paginated)\nconst records = await entities.getAllRecords(<entityId>);\n\n// With expansion level\nconst records = await entities.getAllRecords(<entityId>, {\n  expansionLevel: 1\n});\n\n// With pagination\nconst paginatedResponse = await entities.getAllRecords(<entityId>, {\n  pageSize: 50,\n  expansionLevel: 1\n});\n\n// Navigate to next page\nconst nextPage = await entities.getAllRecords(<entityId>, {\n  cursor: paginatedResponse.nextCursor,\n  expansionLevel: 1\n});\n```",
+          "params": [
+            {
+              "name": "entityId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>"
+        },
+        {
+          "name": "getRecordsById",
+          "params": [
+            {
+              "name": "entityId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>"
+        },
+        {
+          "name": "getRecordById",
+          "description": "Gets a single entity record by entity ID and record ID",
+          "example": "```typescript\n// First, get records to obtain the record ID\nconst records = await entities.getAllRecords(<entityId>);\n// Get the recordId for the record\nconst recordId = records.items[0].id;\n// Get the record\nconst record = await entities.getRecordById(<entityId>, recordId);\n\n// With expansion level\nconst record = await entities.getRecordById(<entityId>, recordId, {\n  expansionLevel: 1\n});\n```",
+          "params": [
+            {
+              "name": "entityId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "recordId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityGetRecordByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityRecord>"
+        },
+        {
+          "name": "insertRecordById",
+          "description": "Inserts a single record into an entity by entity ID\n\nNote: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.\nUse this method if you need trigger events to fire for the inserted record.",
+          "example": "```typescript\n// Basic usage\nconst result = await entities.insertRecordById(<entityId>, { name: \"John\", age: 30 });\n\n// With options\nconst result = await entities.insertRecordById(<entityId>, { name: \"John\", age: 30 }, {\n  expansionLevel: 1\n});\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "Record<string, any>",
+              "kind": "json"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityInsertRecordOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityInsertResponse>"
+        },
+        {
+          "name": "insertById",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "Record<string, any>",
+              "kind": "json"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityInsertOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityInsertResponse>"
+        },
+        {
+          "name": "insertRecordsById",
+          "description": "Inserts one or more records into an entity by entity ID\n\nNote: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use {@link insertRecordById} if you need\ntrigger events to fire for each inserted record.",
+          "example": "```typescript\n// Basic usage\nconst result = await entities.insertRecordsById(<entityId>, [\n  { name: \"John\", age: 30 },\n  { name: \"Jane\", age: 25 }\n]);\n\n// With options\nconst result = await entities.insertRecordsById(<entityId>, [\n  { name: \"John\", age: 30 },\n  { name: \"Jane\", age: 25 }\n], {\n  expansionLevel: 1,\n  failOnFirst: true\n});\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "Record<string, any>[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityInsertRecordsOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityBatchInsertResponse>"
+        },
+        {
+          "name": "batchInsertById",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "Record<string, any>[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityBatchInsertOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityBatchInsertResponse>"
+        },
+        {
+          "name": "updateRecordsById",
+          "description": "Updates data in an entity by entity ID",
+          "example": "```typescript\n// Basic usage\nconst result = await entities.updateRecordsById(<entityId>, [\n  { Id: \"123\", name: \"John Updated\", age: 31 },\n  { Id: \"456\", name: \"Jane Updated\", age: 26 }\n]);\n\n// With options\nconst result = await entities.updateRecordsById(<entityId>, [\n  { Id: \"123\", name: \"John Updated\", age: 31 },\n  { Id: \"456\", name: \"Jane Updated\", age: 26 }\n], {\n  expansionLevel: 1,\n  failOnFirst: true\n});\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "EntityRecord[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityUpdateRecordsOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityUpdateResponse>"
+        },
+        {
+          "name": "updateById",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "data",
+              "optional": false,
+              "typeText": "EntityRecord[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityUpdateOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityUpdateResponse>"
+        },
+        {
+          "name": "deleteRecordsById",
+          "description": "Deletes data from an entity by entity ID",
+          "example": "```typescript\n// Basic usage\nconst result = await entities.deleteRecordsById(<entityId>, [\n  <recordId-1>, <recordId-2>\n]);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "recordIds",
+              "optional": false,
+              "typeText": "string[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityDeleteRecordsOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityDeleteResponse>"
+        },
+        {
+          "name": "deleteById",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "recordIds",
+              "optional": false,
+              "typeText": "string[]",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "length",
+                  "optional": false,
+                  "typeText": "number"
+                },
+                {
+                  "name": "toString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "toLocaleString",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pop",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "push",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "concat",
+                  "optional": false,
+                  "typeText": "ConcatArray<T>[]):T[]"
+                },
+                {
+                  "name": "join",
+                  "optional": false,
+                  "typeText": "string):string"
+                },
+                {
+                  "name": "reverse",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "shift",
+                  "optional": false,
+                  "typeText": "T|undefined"
+                },
+                {
+                  "name": "slice",
+                  "optional": false,
+                  "typeText": "number,end?:number):T[]"
+                },
+                {
+                  "name": "sort",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):this"
+                },
+                {
+                  "name": "splice",
+                  "optional": false,
+                  "typeText": "number,deleteCount?:number):T[]"
+                },
+                {
+                  "name": "unshift",
+                  "optional": false,
+                  "typeText": "T[]):number"
+                },
+                {
+                  "name": "indexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "lastIndexOf",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):number"
+                },
+                {
+                  "name": "every",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):this is S[]"
+                },
+                {
+                  "name": "some",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):boolean"
+                },
+                {
+                  "name": "forEach",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>void,thisArg?:any):void"
+                },
+                {
+                  "name": "map",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>U,thisArg?:any):U[]"
+                },
+                {
+                  "name": "filter",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S[]"
+                },
+                {
+                  "name": "reduce",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "reduceRight",
+                  "optional": false,
+                  "typeText": "(previousValue:T,currentValue:T,currentIndex:number,array:T[])=>T):T"
+                },
+                {
+                  "name": "find",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,obj:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "fill",
+                  "optional": false,
+                  "typeText": "T,start?:number,end?:number):this"
+                },
+                {
+                  "name": "copyWithin",
+                  "optional": false,
+                  "typeText": "number,start:number,end?:number):this"
+                },
+                {
+                  "name": "entries",
+                  "optional": false,
+                  "typeText": "ArrayIterator<[number,T]>"
+                },
+                {
+                  "name": "keys",
+                  "optional": false,
+                  "typeText": "ArrayIterator<number>"
+                },
+                {
+                  "name": "values",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "includes",
+                  "optional": false,
+                  "typeText": "T,fromIndex?:number):boolean"
+                },
+                {
+                  "name": "flatMap",
+                  "optional": false,
+                  "typeText": "(this:This,value:T,index:number,array:T[])=>U|ReadonlyArray<U>,thisArg?:This,):U[]"
+                },
+                {
+                  "name": "flat",
+                  "optional": false,
+                  "typeText": "A,depth?:D,):FlatArray<A,D>[]"
+                },
+                {
+                  "name": "at",
+                  "optional": false,
+                  "typeText": "number):T|undefined"
+                },
+                {
+                  "name": "findLast",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>value is S,thisArg?:any):S|undefined"
+                },
+                {
+                  "name": "findLastIndex",
+                  "optional": false,
+                  "typeText": "(value:T,index:number,array:T[])=>unknown,thisArg?:any):number"
+                },
+                {
+                  "name": "toReversed",
+                  "optional": false,
+                  "typeText": "T[]"
+                },
+                {
+                  "name": "toSorted",
+                  "optional": false,
+                  "typeText": "(a:T,b:T)=>number):T[]"
+                },
+                {
+                  "name": "toSpliced",
+                  "optional": false,
+                  "typeText": "number,deleteCount:number,...items:T[]):T[]"
+                },
+                {
+                  "name": "with",
+                  "optional": false,
+                  "typeText": "number,value:T):T[]"
+                },
+                {
+                  "name": "__@iterator@685",
+                  "optional": false,
+                  "typeText": "ArrayIterator<T>"
+                },
+                {
+                  "name": "__@unscopables@687",
+                  "optional": false,
+                  "typeText": "{[K in keyof any[]]?:boolean;}"
+                }
+              ]
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "EntityDeleteOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "failOnFirst",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityDeleteResponse>"
+        },
+        {
+          "name": "downloadAttachment",
+          "description": "Downloads an attachment stored in a File-type field of an entity record.",
+          "example": "```typescript\nimport { Entities } from '@uipath/uipath-typescript/entities';\n\nconst entities = new Entities(sdk);\n\n// First, get records to obtain the record ID\nconst records = await entities.getAllRecords(\"<entityId>\");\n// Get the recordId for the record that contains the attachment\nconst recordId = records.items[0].id;\n\n// Download attachment using service method\nconst response = await entities.downloadAttachment({\n  entityName: 'Invoice',\n  recordId: recordId,\n  fieldName: 'Documents'\n});\n\n// Or download using entity method\nconst entity = await entities.getById(\"<entityId>\");\nconst blob = await entity.downloadAttachment(recordId, 'Documents');\n\n// Browser: Display Image\nconst url = URL.createObjectURL(response);\ndocument.getElementById('image').src = url;\n// Call URL.revokeObjectURL(url) when done\n\n// Browser: Display PDF in iframe\nconst url = URL.createObjectURL(response);\ndocument.getElementById('pdf-viewer').src = url;\n// Call URL.revokeObjectURL(url) when done\n\n// Browser: Render PDF with PDF.js\nconst arrayBuffer = await response.arrayBuffer();\nconst pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;\n\n// Node.js: Save to file\nconst buffer = Buffer.from(await response.arrayBuffer());\nfs.writeFileSync('attachment.pdf', buffer);\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "EntityDownloadAttachmentOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "entityName",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "recordId",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "fieldName",
+                  "optional": false,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<Blob>"
+        },
+        {
+          "name": "uploadAttachment",
+          "description": "Uploads an attachment to a File-type field of an entity record.\n\nUses multipart/form-data to upload the file content to the specified field.",
+          "example": "```typescript\nimport { Entities } from '@uipath/uipath-typescript/entities';\n\nconst entities = new Entities(sdk);\n\n// Browser: Upload a file from an input element\nconst fileInput = document.getElementById('file-input') as HTMLInputElement;\nconst file = fileInput.files[0];\nconst response = await entities.uploadAttachment({\n  entityName: 'Invoice',\n  recordId: '<recordId>',\n  fieldName: 'Documents',\n  file: file\n});\n\n// Node.js: Upload a file from disk\nconst fileBuffer = fs.readFileSync('document.pdf');\nconst blob = new Blob([fileBuffer], { type: 'application/pdf' });\nconst response = await entities.uploadAttachment({\n  entityName: 'Invoice',\n  recordId: '<recordId>',\n  fieldName: 'Documents',\n  file: blob\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "EntityUploadAttachmentOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "entityName",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "recordId",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "fieldName",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "file",
+                  "optional": false,
+                  "typeText": "Blob | File | Uint8Array"
+                },
+                {
+                  "name": "expansionLevel",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<EntityUploadAttachmentResponse>"
+        }
+      ]
+    },
+    {
+      "name": "Exchanges",
+      "className": "ExchangeService",
+      "subpath": "conversational-agent",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all exchanges for a conversation with optional filtering and pagination",
+          "example": "```typescript\n// Get all exchanges (non-paginated)\nconst conversationExchanges = await exchanges.getAll(conversationId);\n\n// First page with pagination\nconst firstPageOfExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });\n\n// Navigate using cursor\nif (firstPageOfExchanges.hasNextPage) {\n  const nextPageOfExchanges = await exchanges.getAll(conversationId, {\n    cursor: firstPageOfExchanges.nextCursor\n  });\n}\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "exchangeSort",
+                  "optional": true,
+                  "typeText": "SortOrder"
+                },
+                {
+                  "name": "messageSort",
+                  "optional": true,
+                  "typeText": "SortOrder"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ExchangeGetResponse> : NonPaginatedResponse<ExchangeGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets an exchange by ID with its messages",
+          "example": "```typescript\nconst exchange = await exchanges.getById(conversationId, exchangeId);\n\n// Access messages\nfor (const message of exchange.messages) {\n  console.log(message.role, message.contentParts);\n}\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "exchangeId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ExchangeGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "messageSort",
+                  "optional": true,
+                  "typeText": "SortOrder"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ExchangeGetResponse>"
+        },
+        {
+          "name": "createFeedback",
+          "description": "Creates feedback for an exchange",
+          "example": "```typescript\nawait exchanges.createFeedback(\n  conversationId,\n  exchangeId,\n  { rating: FeedbackRating.Positive, comment: 'Very helpful!' }\n);\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "exchangeId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "CreateFeedbackOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "rating",
+                  "optional": false,
+                  "typeText": "FeedbackRating"
+                },
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<FeedbackCreateResponse>"
+        }
+      ]
+    },
+    {
+      "name": "MaestroProcesses",
+      "className": "MaestroProcessesService",
+      "subpath": "maestro-processes",
+      "methods": [
+        {
+          "name": "getAll",
+          "example": "```typescript\n// Get all processes\nconst allProcesses = await maestroProcesses.getAll();\n\n// Access process information and incidents\nfor (const process of allProcesses) {\n  console.log(`Process: ${process.processKey}`);\n  console.log(`Running instances: ${process.runningCount}`);\n  console.log(`Faulted instances: ${process.faultedCount}`);\n\n  // Get incidents for this process\n  const incidents = await process.getIncidents();\n  console.log(`Incidents: ${incidents.length}`);\n}\n```",
+          "params": [],
+          "returnType": "Promise<MaestroProcessGetAllResponse[]>"
+        },
+        {
+          "name": "getIncidents",
+          "description": "Get incidents for a specific process",
+          "example": "```typescript\n// Get incidents for a specific process\nconst incidents = await maestroProcesses.getIncidents('<processKey>', '<folderKey>');\n\n// Access incident details\nfor (const incident of incidents) {\n  console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);\n  console.log(`Status: ${incident.incidentStatus}`);\n  console.log(`Error: ${incident.errorMessage}`);\n}\n```",
+          "params": [
+            {
+              "name": "processKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ProcessIncidentGetResponse[]>"
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "className": "MessageService",
+      "subpath": "conversational-agent",
+      "methods": [
+        {
+          "name": "getById",
+          "description": "Gets a message by ID\n\nReturns the message including its content parts, tool calls, and interrupts.",
+          "example": "```typescript\nconst message = await messages.getById(conversationId, exchangeId, messageId);\n\nconsole.log(message.role);\nconsole.log(message.contentParts);\nconsole.log(message.toolCalls);\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "exchangeId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "messageId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<MessageGetResponse>"
+        },
+        {
+          "name": "getContentPartById",
+          "description": "Gets an external content part by ID",
+          "example": "```typescript\nconst contentPart = await messages.getContentPartById(\n  conversationId,\n  exchangeId,\n  messageId,\n  contentPartId\n);\n```",
+          "params": [
+            {
+              "name": "conversationId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "exchangeId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "messageId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "contentPartId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ContentPartGetResponse>"
+        }
+      ]
+    },
+    {
+      "name": "Processes",
+      "className": "ProcessService",
+      "subpath": "processes",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all processes across folders with optional filtering\nReturns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,\nor a PaginatedResponse when any pagination parameter is provided",
+          "example": "```typescript\n// Standard array return\nconst allProcesses = await processes.getAll();\n\n// Get processes within a specific folder\nconst folderProcesses = await processes.getAll({\n  folderId: <folderId>\n});\n\n// Get processes with filtering\nconst filteredProcesses = await processes.getAll({\n  filter: \"name eq 'MyProcess'\"\n});\n\n// First page with pagination\nconst page1 = await processes.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await processes.getAll({ cursor: page1.nextCursor });\n}\n\n// Jump to specific page\nconst page5 = await processes.getAll({\n  jumpToPage: 5,\n  pageSize: 10\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessGetResponse> : NonPaginatedResponse<ProcessGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a single process by ID",
+          "example": "```typescript\n// Get process by ID\nconst process = await processes.getById(<processId>, <folderId>);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ProcessGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ProcessGetResponse>"
+        },
+        {
+          "name": "start",
+          "description": "Starts a process with the specified configuration",
+          "example": "```typescript\n// Start a process by process key\nconst result = await processes.start({\n  processKey: \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\"\n}, <folderId>); // folderId is required\n\n// Start a process by name with specific robots\nconst result = await processes.start({\n  processName: \"MyProcess\"\n}, <folderId>); // folderId is required\n```",
+          "params": [
+            {
+              "name": "request",
+              "optional": false,
+              "typeText": "ProcessStartRequest",
+              "kind": "json"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "RequestOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ProcessStartResponse[]>"
+        }
+      ]
+    },
+    {
+      "name": "ProcessIncidents",
+      "className": "ProcessIncidentsService",
+      "subpath": "maestro-processes",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Get all process incidents across all folders",
+          "example": "```typescript\nimport { ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';\n\nconst processIncidents = new ProcessIncidents(sdk);\n\n// Get all process incidents across all folders\nconst incidents = await processIncidents.getAll();\n\n// Access process incident information\nfor (const incident of incidents) {\n  console.log(`Process: ${incident.processKey}`);\n  console.log(`Error: ${incident.errorMessage}`);\n  console.log(`Count: ${incident.count}`);\n  console.log(`First occurrence: ${incident.firstOccuranceTime}`);\n}\n```",
+          "params": [],
+          "returnType": "Promise<ProcessIncidentGetAllResponse[]>"
+        }
+      ]
+    },
+    {
+      "name": "ProcessInstances",
+      "className": "ProcessInstancesService",
+      "subpath": "maestro-processes",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Get all process instances with optional filtering and pagination\n\nThe method returns either:\n- A NonPaginatedResponse with items array (when no pagination parameters are provided)\n- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)",
+          "example": "```typescript\n// Get all instances (non-paginated)\nconst instances = await processInstances.getAll();\n\n// Cancel faulted instances using methods directly on instances\nfor (const instance of instances.items) {\n  if (instance.latestRunStatus === 'Faulted') {\n    await instance.cancel({ comment: 'Cancelling faulted instance' });\n  }\n}\n\n// With filtering\nconst filteredInstances = await processInstances.getAll({\n  processKey: 'MyProcess'\n});\n\n// First page with pagination\nconst page1 = await processInstances.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await processInstances.getAll({ cursor: page1.nextCursor });\n}\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "packageId",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "packageVersion",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "processKey",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "errorCode",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessInstanceGetResponse> : NonPaginatedResponse<ProcessInstanceGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Get a process instance by ID with operation methods (cancel, pause, resume)",
+          "example": "```typescript\n// Get a specific process instance\nconst instance = await processInstances.getById(\n  <instanceId>,\n  <folderKey>\n);\n\n// Access instance properties\nconsole.log(`Status: ${instance.latestRunStatus}`);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ProcessInstanceGetResponse>"
+        },
+        {
+          "name": "getExecutionHistory",
+          "description": "Get execution history (spans) for a process instance",
+          "example": "```typescript\n// Get execution history for a process instance\nconst history = await processInstances.getExecutionHistory(\n  <instanceId>\n);\n\n// Analyze execution timeline\nhistory.forEach(span => {\n  console.log(`Activity: ${span.name}`);\n  console.log(`Start: ${span.startTime}`);\n  console.log(`Duration: ${span.duration}ms`);\n});\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ProcessInstanceExecutionHistoryResponse[]>"
+        },
+        {
+          "name": "getBpmn",
+          "description": "Get BPMN XML file for a process instance",
+          "example": "```typescript\n// Get BPMN XML for a process instance\nconst bpmnXml = await processInstances.getBpmn(\n  <instanceId>,\n  <folderKey>\n);\n\n// Render BPMN diagram in frontend using bpmn-js\nimport BpmnViewer from 'bpmn-js/lib/Viewer';\n\nconst viewer = new BpmnViewer({\n  container: '#bpmn-diagram'\n});\n\nawait viewer.importXML(bpmnXml);\n\n// Zoom to fit the diagram\nviewer.get('canvas').zoom('fit-viewport');\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<BpmnXmlString>"
+        },
+        {
+          "name": "cancel",
+          "description": "Cancel a process instance",
+          "example": "```typescript\n// Cancel a process instance\nconst result = await processInstances.cancel(\n  <instanceId>,\n  <folderKey>\n);\n\n// Or using instance method\nconst instance = await processInstances.getById(\n  <instanceId>,\n  <folderKey>\n);\nconst result = await instance.cancel();\n\nconsole.log(`Cancelled: ${result.success}`);\n\n// Cancel with a comment\nconst resultWithComment = await instance.cancel({\n  comment: 'Cancelling due to invalid input data'\n});\n\nif (resultWithComment.success) {\n  console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);\n}\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ProcessInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<ProcessInstanceOperationResponse>>"
+        },
+        {
+          "name": "pause",
+          "description": "Pause a process instance",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ProcessInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<ProcessInstanceOperationResponse>>"
+        },
+        {
+          "name": "resume",
+          "description": "Resume a process instance",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ProcessInstanceOperationOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "comment",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<OperationResponse<ProcessInstanceOperationResponse>>"
+        },
+        {
+          "name": "getVariables",
+          "description": "Get global variables for a process instance",
+          "example": "```typescript\n// Get all variables for a process instance\nconst variables = await processInstances.getVariables(\n  <instanceId>,\n  <folderKey>\n);\n\n// Access global variables\nconsole.log('Global variables:', variables.globalVariables);\n\n// Iterate through global variables with metadata\nvariables.globalVariables?.forEach(variable => {\n  console.log(`Variable: ${variable.name} (${variable.id})`);\n  console.log(`  Type: ${variable.type}`);\n  console.log(`  Element: ${variable.elementId}`);\n  console.log(`  Value: ${variable.value}`);\n});\n\n// Get variables for a specific parent element\nconst elementVariables = await processInstances.getVariables(\n  <instanceId>,\n  <folderKey>,\n  { parentElementId: <parentElementId> }\n);\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "ProcessInstanceGetVariablesOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "parentElementId",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<ProcessInstanceGetVariablesResponse>"
+        },
+        {
+          "name": "getIncidents",
+          "description": "Get incidents for a process instance",
+          "example": "```typescript\n// Get incidents for a specific instance\nconst incidents = await processInstances.getIncidents('<instanceId>', '<folderKey>');\n\n// Access process incident details\nfor (const incident of incidents) {\n  console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);\n  console.log(`Severity: ${incident.incidentSeverity}`);\n  console.log(`Error: ${incident.errorMessage}`);\n}\n```",
+          "params": [
+            {
+              "name": "instanceId",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            },
+            {
+              "name": "folderKey",
+              "optional": false,
+              "typeText": "string",
+              "kind": "string"
+            }
+          ],
+          "returnType": "Promise<ProcessIncidentGetResponse[]>"
+        }
+      ]
+    },
+    {
+      "name": "Queues",
+      "className": "QueueService",
+      "subpath": "queues",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all queues across folders with optional filtering and folder scoping",
+          "example": "```typescript\n// Standard array return\nconst allQueues = await queues.getAll();\n\n// Get queues within a specific folder\nconst folderQueues = await queues.getAll({\n  folderId: <folderId>\n});\n\n// Get queues with filtering\nconst filteredQueues = await queues.getAll({\n  filter: \"name eq 'MyQueue'\"\n});\n\n// First page with pagination\nconst page1 = await queues.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await queues.getAll({ cursor: page1.nextCursor });\n}\n\n// Jump to specific page\nconst page5 = await queues.getAll({\n  jumpToPage: 5,\n  pageSize: 10\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<QueueGetResponse> : NonPaginatedResponse<QueueGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a single queue by ID",
+          "example": "```typescript\n// Get queue by ID\nconst queue = await queues.getById(<queueId>, <folderId>);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "QueueGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<QueueGetResponse>"
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "className": "TaskService",
+      "subpath": "tasks",
+      "methods": [
+        {
+          "name": "getAll",
+          "description": "Gets all tasks across folders with optional filtering",
+          "example": "```typescript\n// Standard array return\nconst allTasks = await tasks.getAll();\n\n// Get tasks within a specific folder\nconst folderTasks = await tasks.getAll({\n  folderId: 123\n});\n\n// Get tasks with admin permissions\n// This fetches tasks across folders where the user has Task.View, Task.Edit and TaskAssignment.Create permissions\nconst adminTasks = await tasks.getAll({\n  asTaskAdmin: true\n});\n\n// Get tasks without admin permissions (default)\n// This fetches tasks across folders where the user has Task.View and Task.Edit permissions\nconst userTasks = await tasks.getAll({\n  asTaskAdmin: false\n});\n\n// First page with pagination\nconst page1 = await tasks.getAll({ pageSize: 10 });\n\n// Navigate using cursor\nif (page1.hasNextPage) {\n  const page2 = await tasks.getAll({ cursor: page1.nextCursor });\n}\n\n// Jump to specific page\nconst page5 = await tasks.getAll({\n  jumpToPage: 5,\n  pageSize: 10\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                },
+                {
+                  "name": "folderId",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "asTaskAdmin",
+                  "optional": true,
+                  "typeText": "boolean"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>>"
+        },
+        {
+          "name": "getById",
+          "description": "Gets a task by ID\nIMPORTANT: For form tasks, folderId must be provided.",
+          "example": "```typescript\n// Get a task by ID\nconst task = await tasks.getById(<taskId>);\n\n// Get a form task by ID\nconst formTask = await tasks.getById(<taskId>, <folderId>);\n\n// Access form task properties\nconsole.log(formTask.formLayout);\n```",
+          "params": [
+            {
+              "name": "id",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "TaskGetByIdOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                }
+              ]
+            },
+            {
+              "name": "folderId",
+              "optional": true,
+              "typeText": "number",
+              "kind": "number"
+            }
+          ],
+          "returnType": "Promise<TaskGetResponse>"
+        },
+        {
+          "name": "create",
+          "description": "Creates a new task",
+          "example": "```typescript\nimport { TaskPriority } from '@uipath/uipath-typescript';\nconst task = await tasks.create({\n  title: \"My Task\",\n  priority: TaskPriority.Medium\n}, <folderId>); // folderId is required\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "TaskCreateOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "title",
+                  "optional": false,
+                  "typeText": "string"
+                },
+                {
+                  "name": "data",
+                  "optional": true,
+                  "typeText": "Record<string, unknown>"
+                },
+                {
+                  "name": "priority",
+                  "optional": true,
+                  "typeText": "TaskPriority"
+                }
+              ]
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            }
+          ],
+          "returnType": "Promise<TaskCreateResponse>"
+        },
+        {
+          "name": "assign",
+          "description": "Assigns tasks to users",
+          "example": "```typescript\n// Assign a single task to a user by ID\nconst result = await tasks.assign({\n  taskId: <taskId>,\n  userId: <userId>\n});\n\n// Or using instance method\nconst task = await tasks.getById(<taskId>);\nconst result = await task.assign({\n  userId: <userId>\n});\n\n// Assign a single task to a user by email\nconst result = await tasks.assign({\n  taskId: <taskId>,\n  userNameOrEmail: \"user@example.com\"\n});\n\n// Assign multiple tasks\nconst result = await tasks.assign([\n  { taskId: <taskId1>, userId: <userId> },\n  { taskId: <taskId2>, userNameOrEmail: \"user@example.com\" }\n]);\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "TaskAssignmentOptions | TaskAssignmentOptions[]",
+              "kind": "json"
+            }
+          ],
+          "returnType": "Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>"
+        },
+        {
+          "name": "reassign",
+          "description": "Reassigns tasks to new users",
+          "example": "```typescript\n// Reassign a single task to a user by ID\nconst result = await tasks.reassign({\n  taskId: <taskId>,\n  userId: <userId>\n});\n\n// Or using instance method\nconst task = await tasks.getById(<taskId>);\nconst result = await task.reassign({\n  userId: <userId>\n});\n\n// Reassign a single task to a user by email\nconst result = await tasks.reassign({\n  taskId: <taskId>,\n  userNameOrEmail: \"user@example.com\"\n});\n\n// Reassign multiple tasks\nconst result = await tasks.reassign([\n  { taskId: <taskId1>, userId: <userId> },\n  { taskId: <taskId2>, userNameOrEmail: \"user@example.com\" }\n]);\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "TaskAssignmentOptions | TaskAssignmentOptions[]",
+              "kind": "json"
+            }
+          ],
+          "returnType": "Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>"
+        },
+        {
+          "name": "unassign",
+          "description": "Unassigns tasks (removes current assignees)",
+          "example": "```typescript\n// Unassign a single task\nconst result = await tasks.unassign(<taskId>);\n\n// Or using instance method\nconst task = await tasks.getById(<taskId>);\nconst result = await task.unassign();\n\n// Unassign multiple tasks\nconst result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);\n```",
+          "params": [
+            {
+              "name": "taskId",
+              "optional": false,
+              "typeText": "number | number[]",
+              "kind": "json"
+            }
+          ],
+          "returnType": "Promise<OperationResponse<{\n        taskId: number;\n    }[] | TaskAssignmentResponse[]>>"
+        },
+        {
+          "name": "complete",
+          "description": "Completes a task with the specified type and data",
+          "example": "```typescript\n// Complete an app task\nawait tasks.complete({\n  type: TaskType.App,\n  taskId: <taskId>,\n  data: {},\n  action: \"submit\"\n}, <folderId>); // folderId is required\n\n// Complete an external task\nawait tasks.complete({\n  type: TaskType.External,\n  taskId: <taskId>\n}, <folderId>); // folderId is required\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "TaskCompletionOptions",
+              "kind": "json"
+            },
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            }
+          ],
+          "returnType": "Promise<OperationResponse<TaskCompletionOptions>>"
+        },
+        {
+          "name": "getUsers",
+          "description": "Gets users in the given folder who have Tasks.View and Tasks.Edit permissions\nReturns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,\nor a PaginatedResponse when any pagination parameter is provided",
+          "example": "```typescript\n// Get users from a folder\nconst users = await tasks.getUsers(<folderId>);\n\n// Access user properties\nconsole.log(users.items[0].name);\nconsole.log(users.items[0].emailAddress);\n```",
+          "params": [
+            {
+              "name": "folderId",
+              "optional": false,
+              "typeText": "number",
+              "kind": "number"
+            },
+            {
+              "name": "options",
+              "optional": true,
+              "typeText": "T",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "filter",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "orderby",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "expand",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "select",
+                  "optional": true,
+                  "typeText": "string"
+                },
+                {
+                  "name": "pageSize",
+                  "optional": true,
+                  "typeText": "number"
+                },
+                {
+                  "name": "cursor",
+                  "optional": true,
+                  "typeText": "PaginationCursor"
+                },
+                {
+                  "name": "jumpToPage",
+                  "optional": true,
+                  "typeText": "never"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<UserLoginInfo> : NonPaginatedResponse<UserLoginInfo>>"
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "className": "UserService",
+      "subpath": "conversational-agent",
+      "methods": [
+        {
+          "name": "getSettings",
+          "description": "Gets the current user's profile and context settings",
+          "example": "```typescript\nconst userSettings = await userService.getSettings();\nconsole.log(userSettings.name);\nconsole.log(userSettings.email);\n```",
+          "params": [],
+          "returnType": "Promise<UserSettingsGetResponse>"
+        },
+        {
+          "name": "updateSettings",
+          "description": "Updates the current user's profile and context settings",
+          "example": "```typescript\nconst updatedUserSettings = await userService.updateSettings({\n  name: 'John Doe',\n  timezone: 'America/New_York'\n});\n```",
+          "params": [
+            {
+              "name": "options",
+              "optional": false,
+              "typeText": "UserSettingsUpdateOptions",
+              "kind": "json",
+              "properties": [
+                {
+                  "name": "name",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "email",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "role",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "department",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "company",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "country",
+                  "optional": true,
+                  "typeText": "string | null"
+                },
+                {
+                  "name": "timezone",
+                  "optional": true,
+                  "typeText": "string | null"
+                }
+              ]
+            }
+          ],
+          "returnType": "Promise<UserSettingsUpdateResponse>"
+        }
+      ]
+    }
+  ]
+}
