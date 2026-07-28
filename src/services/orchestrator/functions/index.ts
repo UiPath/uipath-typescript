@@ -15,13 +15,13 @@
  * await sdk.initialize();
  *
  * const functions = new Functions(sdk);
- * const result = await functions.invoke('hello', { name: 'Alice' }, { folderId: 123 });
+ * const result = await functions.invoke('hello', { name: 'Alice' }, { folderId: <folderId> });
  * ```
  *
  * @module
  */
 
-export { FunctionService as Functions, FunctionService } from './functions';
+export { FunctionService as Functions } from './functions';
 
 export * from '../../../models/orchestrator/functions.types';
 export * from '../../../models/orchestrator/functions.models';

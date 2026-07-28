@@ -6,7 +6,7 @@ import {
   RawFunctionGetResponse,
 } from '../../../models/orchestrator/functions.types';
 import { RawFolderResponse, RawFunctionTrigger } from '../../../models/orchestrator/functions.internal-types';
-import { CollectionResponse } from '../../../models/common/types';
+import { CollectionResponse, FolderScopedOptions } from '../../../models/common/types';
 import { UiPathError } from '../../../core/errors/base';
 import { NotFoundError } from '../../../core/errors/not-found';
 import { isNotFoundError } from '../../../core/errors/guards';
@@ -99,14 +99,14 @@ export class FunctionService extends FolderScopedService implements FunctionServ
    */
   private async findByName(
     name: string,
-    options?: FunctionInvokeOptions
+    options: FolderScopedOptions
   ): Promise<RawFunctionGetResponse> {
     try {
       return await this.getByNameLookup<Record<string, unknown>, RawFunctionGetResponse>(
         'Function',
         FUNCTION_ENDPOINTS.GET_ALL,
         name,
-        options ?? {},
+        options,
         (raw) => this.toFunctionResponse(raw),
         FunctionMap,
       );
@@ -125,14 +125,14 @@ export class FunctionService extends FolderScopedService implements FunctionServ
    */
   private async withAvailableFunctionNames(
     error: NotFoundError,
-    options?: FunctionInvokeOptions
+    options: FolderScopedOptions
   ): Promise<UiPathError> {
     try {
       const headers = resolveFolderHeaders({
-        folderId: options?.folderId,
-        folderKey: options?.folderKey,
-        folderPath: options?.folderPath,
-        resourceType: 'Function.getByName',
+        folderId: options.folderId,
+        folderKey: options.folderKey,
+        folderPath: options.folderPath,
+        resourceType: 'Functions.invoke',
         fallbackFolderKey: this.config.folderKey,
       });
 
@@ -147,7 +147,9 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       }
 
       const shown = names.slice(0, MAX_SUGGESTED_NAMES).join(', ');
-      const suffix = names.length > MAX_SUGGESTED_NAMES ? `, and ${names.length - MAX_SUGGESTED_NAMES} more` : '';
+      // The lookup asks for one row beyond the cap, so an overflow tells us there are
+      // more names but not how many.
+      const suffix = names.length > MAX_SUGGESTED_NAMES ? ', and more' : '';
       return new NotFoundError({
         message: `${error.message} Available functions: ${shown}${suffix}. Note that a function name is not the name of the package it is deployed from.`,
       });
@@ -163,12 +165,12 @@ export class FunctionService extends FolderScopedService implements FunctionServ
    */
   private async resolveInvokeFolderKey(
     fn: RawFunctionGetResponse,
-    options?: FunctionInvokeOptions
+    options: FolderScopedOptions
   ): Promise<string> {
-    const explicitKey = options?.folderKey?.trim();
+    const explicitKey = options.folderKey?.trim();
     if (explicitKey) return explicitKey;
 
-    const hasExplicitFolder = options?.folderId !== undefined || Boolean(options?.folderPath?.trim());
+    const hasExplicitFolder = options.folderId !== undefined || Boolean(options.folderPath?.trim());
     if (!hasExplicitFolder && this.config.folderKey) return this.config.folderKey;
 
     return this.getFolderKey(fn.folderId);
@@ -203,7 +205,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     // verbs receive it as the JSON request body.
     const response = fn.method === FunctionHttpMethod.Get
       ? await this.get<TOutput>(endpoint, { params: toQueryParams(input), headers })
-      : await this.request<TOutput>(fn.method.toUpperCase(), endpoint, { body: input, headers });
+      : await this.request<TOutput>(fn.method, endpoint, { body: input, headers });
 
     return response.data;
   }

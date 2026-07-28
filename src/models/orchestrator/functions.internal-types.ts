@@ -33,7 +33,6 @@ export interface RawFunctionTrigger {
   organizationUnitFullyQualifiedName?: string | null;
   /** Release (process) that packages the function. */
   release: {
-    id: number;
     name: string;
     slug: string;
   };

@@ -26,8 +26,7 @@ export const RESPONSE_TYPES = {
   JSON: 'json',
   TEXT: 'text',
   BLOB: 'blob',
-  ARRAYBUFFER: 'arraybuffer',
-  RAW: 'raw'
+  ARRAYBUFFER: 'arraybuffer'
 } as const;
 
 /**

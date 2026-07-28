@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FunctionService } from '../../../../src/services/orchestrator/functions';
+import { FunctionService } from '../../../../src/services/orchestrator/functions/functions';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {

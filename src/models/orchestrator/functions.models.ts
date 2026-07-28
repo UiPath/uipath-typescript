@@ -43,30 +43,30 @@ export interface FunctionServiceModel {
    * @example
    * ```typescript
    * // Get all functions in a folder
-   * const functions = await fns.getAll({ folderId: <folderId> });
+   * const deployed = await functions.getAll({ folderId: <folderId> });
    *
    * // By folder path
-   * const shared = await fns.getAll({ folderPath: 'Shared/Finance' });
+   * const shared = await functions.getAll({ folderPath: 'Shared/Finance' });
    *
    * // With filtering
-   * const enabled = await fns.getAll({
+   * const enabled = await functions.getAll({
    *   folderId: <folderId>,
    *   filter: 'enabled eq true',
    *   orderby: 'name asc',
    * });
    *
    * // Only the functions deployed from one package
-   * const fromPackage = await fns.getAll({
+   * const fromPackage = await functions.getAll({
    *   folderId: <folderId>,
    *   filter: "processName eq 'my-functions'",
    * });
    *
    * // First page with pagination
-   * const page1 = await fns.getAll({ folderId: <folderId>, pageSize: 10 });
+   * const page1 = await functions.getAll({ folderId: <folderId>, pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await fns.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+   *   const page2 = await functions.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -100,7 +100,7 @@ export interface FunctionServiceModel {
    * @example
    * ```typescript
    * // Invoke a function
-   * const result = await fns.invoke('hello', { name: 'Alice' }, { folderId: <folderId> });
+   * const result = await functions.invoke('hello', { name: 'Alice' }, { folderId: <folderId> });
    * ```
    *
    * @example
@@ -109,7 +109,7 @@ export interface FunctionServiceModel {
    * interface SyncInput { since: string }
    * interface SyncOutput { processed: number }
    *
-   * const result = await fns.invoke<SyncInput, SyncOutput>(
+   * const result = await functions.invoke<SyncInput, SyncOutput>(
    *   'sync-invoices',
    *   { since: '2026-01-01' },
    *   { folderPath: 'Shared/Finance', jobKey: '<parentJobKey>' }
@@ -138,8 +138,8 @@ export interface FunctionMethods {
    *
    * @example
    * ```typescript
-   * const functions = await fns.getAll({ folderId: <folderId> });
-   * const hello = functions.items.find(f => f.name === 'hello');
+   * const deployed = await functions.getAll({ folderId: <folderId> });
+   * const hello = deployed.items.find(f => f.name === 'hello');
    *
    * if (hello) {
    *   const result = await hello.invoke({ name: 'Alice' });
