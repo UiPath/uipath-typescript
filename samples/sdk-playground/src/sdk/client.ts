@@ -175,7 +175,7 @@ export async function resumeClient(version: string, config: ConnectionConfig): P
 /** Best-effort teardown before a client is replaced (release sockets, timers, tokens). */
 export function disposeClient(playground: PlaygroundClient | null): void {
   if (!playground) return;
-  const candidate = playground.client as unknown as Record<string, unknown>;
+  const candidate = playground.client as UiPathClientLike & Record<string, unknown>;
   for (const name of ['destroy', 'dispose', 'close']) {
     const fn = candidate[name];
     if (typeof fn === 'function') {

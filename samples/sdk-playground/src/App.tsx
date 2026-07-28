@@ -32,6 +32,10 @@ export function App() {
   const [statusDetail, setStatusDetail] = useState<string>();
   const clientRef = useRef<PlaygroundClient | null>(null);
   const configRef = useRef<ConnectionConfig | null>(null);
+  // Monotonic guard for in-flight connects: a resolution belonging to a
+  // superseded attempt (rapid version switch / double-click) is disposed
+  // instead of overwriting the newer client.
+  const connectEpoch = useRef(0);
 
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<InvocationResult | null>(null);
@@ -73,6 +77,7 @@ export function App() {
   const connect = useCallback(
     async (config: ConnectionConfig) => {
       teardown();
+      const epoch = ++connectEpoch.current;
       setStatus('connecting');
       setStatusDetail(undefined);
       try {
@@ -84,10 +89,15 @@ export function App() {
           clearOAuthConnection();
         }
         const client = await createClient(version, config);
+        if (epoch !== connectEpoch.current) {
+          disposeClient(client);
+          return;
+        }
         clientRef.current = client;
         configRef.current = config;
         setStatus('connected');
       } catch (err) {
+        if (epoch !== connectEpoch.current) return;
         configRef.current = null;
         if (config.mode === 'oauth') clearOAuthConnection();
         setStatus('error');
@@ -107,10 +117,15 @@ export function App() {
     didResumeOAuth.current = true;
     const stored = loadOAuthConnection();
     if (!stored) return;
+    const epoch = ++connectEpoch.current;
     setVersion(stored.version);
     setStatus('connecting');
     resumeClient(stored.version, stored.config)
       .then((client) => {
+        if (epoch !== connectEpoch.current) {
+          disposeClient(client);
+          return;
+        }
         if (client) {
           clientRef.current = client;
           configRef.current = stored.config;
@@ -121,6 +136,7 @@ export function App() {
         }
       })
       .catch((err) => {
+        if (epoch !== connectEpoch.current) return;
         clearOAuthConnection();
         setStatus('error');
         setStatusDetail(err instanceof Error ? err.message : String(err));
@@ -133,6 +149,10 @@ export function App() {
     (next: string) => {
       setVersion(next);
       setResult(null);
+      // invalidate any in-flight attempt unconditionally — its client would
+      // belong to the previously selected version even when clientRef is
+      // still null (teardown at the start of connect() nulls it)
+      const epoch = ++connectEpoch.current;
       if (clientRef.current && configRef.current) {
         const config = configRef.current;
         teardown();
@@ -140,13 +160,21 @@ export function App() {
         if (config.mode === 'oauth') saveOAuthConnection(next, config);
         createClient(next, config)
           .then((client) => {
+            if (epoch !== connectEpoch.current) {
+              disposeClient(client);
+              return;
+            }
             clientRef.current = client;
             setStatus('connected');
           })
           .catch((err) => {
+            if (epoch !== connectEpoch.current) return;
             setStatus('error');
             setStatusDetail(err instanceof Error ? err.message : String(err));
           });
+      } else {
+        // an orphaned in-flight attempt leaves no client behind
+        setStatus((s) => (s === 'connecting' ? 'disconnected' : s));
       }
     },
     [teardown]

@@ -54,20 +54,23 @@ function ParamInput({ param, value, onChange }: { param: ParamManifest; value: s
 
 /** Builds a copy-pasteable TypeScript snippet. Credentials are always masked. */
 function buildSnippet(service: ServiceManifest, method: MethodManifest, values: Record<string, string>, version: string): string {
-  const args = method.params
-    .map((p) => {
-      const raw = (values[p.name] ?? '').trim();
-      if (raw === '') return undefined;
-      if (p.kind === 'string') return JSON.stringify(raw);
-      if (p.kind === 'enum' && typeof p.enumValues?.[0] === 'string') return JSON.stringify(raw);
-      if (p.kind === 'date') return `new Date(${JSON.stringify(raw)})`;
-      return raw;
-    })
-    .filter((a): a is string => a !== undefined);
+  const args = method.params.map((p) => {
+    const raw = (values[p.name] ?? '').trim();
+    if (raw === '') return undefined;
+    if (p.kind === 'string') return JSON.stringify(raw);
+    if (p.kind === 'enum' && typeof p.enumValues?.[0] === 'string') return JSON.stringify(raw);
+    if (p.kind === 'date') return `new Date(${JSON.stringify(raw)})`;
+    return raw;
+  });
+  // trim trailing omitted optionals, but keep interior gaps as explicit
+  // `undefined` so later arguments stay in their correct positions
+  while (args.length > 0 && args[args.length - 1] === undefined) args.pop();
+  const renderedArgs = args.map((a) => a ?? 'undefined');
 
   return [
-    `import { UiPath } from '@uipath/uipath-typescript@${version}/core';`,
-    `import { ${service.name} } from '@uipath/uipath-typescript@${version}/${service.subpath}';`,
+    `// npm install @uipath/uipath-typescript@${version}`,
+    `import { UiPath } from '@uipath/uipath-typescript/core';`,
+    `import { ${service.name} } from '@uipath/uipath-typescript/${service.subpath}';`,
     '',
     `const sdk = new UiPath({`,
     `  baseUrl: '<YOUR_BASE_URL>',`,
@@ -78,7 +81,7 @@ function buildSnippet(service: ServiceManifest, method: MethodManifest, values: 
     `await sdk.initialize();`,
     '',
     `const service = new ${service.name}(sdk);`,
-    `const result = await service.${method.name}(${args.join(', ')});`,
+    `const result = await service.${method.name}(${renderedArgs.join(', ')});`,
   ].join('\n');
 }
 

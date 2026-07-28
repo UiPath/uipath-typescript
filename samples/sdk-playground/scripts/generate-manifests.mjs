@@ -79,16 +79,19 @@ function classifyType(type, typeText) {
 
 function extractObjectShape(type) {
   const parts = type.isUnion() ? type.getUnionTypes().filter((t) => !t.isUndefined() && !t.isNull()) : [type];
-  if (parts.length !== 1) return undefined;
+  // arrays would surface Array.prototype members (push, splice, …) as "shape";
+  // the param's typeText (e.g. `EntityRecord[]`) is the useful hint there
+  if (parts.length !== 1 || parts[0].isArray() || parts[0].isTuple()) return undefined;
   const props = parts[0].getProperties().slice(0, MAX_OBJECT_PROPS);
   if (props.length === 0) return undefined;
   const shape = [];
   for (const p of props) {
+    if (p.getName().startsWith('__@')) continue; // well-known symbols (Symbol.unscopables, …)
     const decl = p.getDeclarations()[0];
     if (!decl) continue;
+    const kind = decl.getKindName();
+    if (kind !== 'PropertySignature' && kind !== 'PropertyDeclaration') continue; // skip methods
     const declText = decl.getText();
-    // skip methods on response-ish shapes
-    if (/^\s*\w+\s*[(<]/.test(declText) && !declText.includes(':')) continue;
     shape.push({
       name: p.getName(),
       optional: p.isOptional?.() ?? declText.includes('?:'),
