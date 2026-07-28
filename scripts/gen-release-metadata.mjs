@@ -9,7 +9,7 @@
  *
  *   npm run build && node scripts/gen-release-metadata.mjs
  *
- * Contract (see release-metadata.md): `services` is an array of
+ * Contract (see docs/release-metadata.md): `services` is an array of
  * { name, subpath, since, methods[] }; `methods` is an array of { name, since };
  * `since: null` = baseline (shipped before tracking); `@internal` is excluded.
  */
