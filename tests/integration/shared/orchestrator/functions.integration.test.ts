@@ -87,6 +87,17 @@ describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
       expect(typeof result.hasNextPage).toBe('boolean');
     });
 
+    it('should filter to the functions of a single package by name', async () => {
+      // processName maps to the nested Release/Name navigation path server-side.
+      const result = await functions.getAll({
+        folderId,
+        filter: `processName eq '${seededFunction.processName}'`,
+      });
+
+      expect(result.items.length).toBeGreaterThan(0);
+      expect(result.items.every((f) => f.processName === seededFunction.processName)).toBe(true);
+    });
+
     it('should resolve folder context from folderKey', async () => {
       const config = getTestConfig();
       if (!config.folderKey) {

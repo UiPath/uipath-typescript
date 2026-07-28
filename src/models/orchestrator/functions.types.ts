@@ -64,12 +64,6 @@ export type FunctionGetAllOptions = RequestOptions & PaginationOptions & FolderS
  */
 export interface FunctionInvokeOptions extends FolderScopedOptions {
   /**
-   * Maximum total time, in seconds, to wait for the function to complete.
-   * Long-running functions are awaited by following the platform's status
-   * long-poll chain until the output is available. Defaults to 300.
-   */
-  maxWaitSeconds?: number;
-  /**
    * Key (GUID) of the parent job to attribute this invocation to. Sent as the
    * `X-UIPATH-JobKey` header; the platform records it as the created job's
    * `parentJobKey` so the run inherits the parent job's context and licensing

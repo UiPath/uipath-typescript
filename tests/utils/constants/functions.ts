@@ -4,6 +4,8 @@
 export const FUNCTION_TEST_CONSTANTS = {
   ID: 'e758581f-2f78-4d86-a8e9-f4bc3aad52ec',
   NAME: 'hello',
+  /** A second function in the same package — used for name-listing assertions. */
+  OTHER_NAME: 'echo-headers',
   SLUG: 'hello',
   METHOD: 'Post',
   DESCRIPTION: 'Returns a greeting message.',
@@ -17,6 +19,5 @@ export const FUNCTION_TEST_CONSTANTS = {
   INVOKE_INPUT: { name: 'Alice' },
   INVOKE_OUTPUT: { message: 'Hello, Alice!' },
   JOB_KEY: '7f3f4bd6-6f2e-4c5a-9d38-6f3f0a1b2c3d',
-  STATUS_URL: 'https://alpha.uipath.com/org/tenant/orchestrator_/t/status/status-token?sig=abc',
   ERROR_FUNCTION_NOT_FOUND: 'Function not found',
 } as const;

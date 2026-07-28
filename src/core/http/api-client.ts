@@ -62,7 +62,10 @@ export class ApiClient {
 
     const isFormData = options.body instanceof FormData;
     const defaultHeaders = await this.getDefaultHeaders();
-    if (isFormData) {
+    // FormData sets its own boundary header; GET/HEAD carry no body, and some
+    // gateways (e.g. function HTTP triggers) reject them when a json
+    // Content-Type is present. Explicit options.headers still take precedence.
+    if (isFormData || method === 'GET' || method === 'HEAD') {
       delete defaultHeaders['Content-Type'];
     }
 

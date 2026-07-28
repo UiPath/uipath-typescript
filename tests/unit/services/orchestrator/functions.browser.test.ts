@@ -11,8 +11,9 @@ import { FUNCTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
 
-// Browser environment: the invoke leg must rely on the engine's automatic
-// redirect handling — no manual 303 chain, no raw response handling.
+// Browser environment. Invocation must behave exactly as it does in Node — the
+// service has no platform branch and never inspects response headers, which a
+// browser cannot read on a cross-origin call.
 vi.mock('../../../../src/utils/platform', () => ({ isBrowser: true }));
 
 // ===== TEST SUITE =====
@@ -33,7 +34,7 @@ describe('FunctionService invoke in browser environments', () => {
     vi.clearAllMocks();
   });
 
-  it('should invoke via automatic redirect handling (no manual redirect, no raw response)', async () => {
+  it('should invoke without manual redirect handling', async () => {
     mockApiClient.get
       .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
       .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
@@ -54,9 +55,6 @@ describe('FunctionService invoke in browser environments', () => {
       FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
       expect.not.objectContaining({ redirect: 'manual' })
     );
-    const spec = mockApiClient.post.mock.calls[0][2];
-    expect(spec.responseType).toBeUndefined();
-
     expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
   });
 });
