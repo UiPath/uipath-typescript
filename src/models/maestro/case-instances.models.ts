@@ -547,7 +547,7 @@ export interface CaseInstanceMethods {
    * Gets global variables for this case instance
    *
    * @param options - Optional options including parentElementId to filter by parent element
-   * @returns Promise resolving to variables response with elements and globals
+   * @returns Promise resolving to variables response with elements and enriched global variables
    */
   getVariables(options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse>;
 }
