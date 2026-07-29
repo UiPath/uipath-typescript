@@ -376,7 +376,7 @@ Returns the case instance's elements with their inputs/outputs and the global va
 
 `Promise`\<`CaseInstanceGetVariablesResponse`>
 
-Promise resolving to variables response with elements and globals [CaseInstanceGetVariablesResponse](../CaseInstanceGetVariablesResponse/)
+Promise resolving to [CaseInstanceGetVariablesResponse](../CaseInstanceGetVariablesResponse/) with elements and enriched global variables
 
 #### Example
 
@@ -388,7 +388,7 @@ const variables = await caseInstances.getVariables(
 );
 
 // Iterate through global variables with metadata
-variables.globalVariables?.forEach(variable => {
+variables.globalVariables.forEach(variable => {
   console.log(`Variable: ${variable.name} (${variable.id})`);
   console.log(`  Type: ${variable.type}`);
   console.log(`  Value: ${variable.value}`);
