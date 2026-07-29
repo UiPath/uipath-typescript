@@ -48,29 +48,32 @@ const subpaths = Object.keys(pkg.exports ?? {})
 const isInternal = (node) =>
   (ts.getJSDocTags(node) || []).some((t) => t.tagName?.escapedText === 'internal');
 
-const modifiersOf = (n) => (ts.canHaveModifiers?.(n) ? ts.getModifiers(n) : n.modifiers) || [];
-const isHidden = (n) =>
-  modifiersOf(n).some((m) =>
-    [ts.SyntaxKind.PrivateKeyword, ts.SyntaxKind.ProtectedKeyword, ts.SyntaxKind.StaticKeyword].includes(m.kind)
-  );
-
-// public instance methods of a class, walking its extends chain (base classes in the same file)
-function methodsOf(className, classesByName, acc = new Set(), seen = new Set()) {
-  if (seen.has(className)) return acc;
-  seen.add(className);
-  const cls = classesByName.get(className);
-  if (!cls) return acc;
-  for (const m of cls.members) {
-    if (!ts.isMethodDeclaration(m) && !ts.isMethodSignature(m)) continue;
+// The `*ServiceModel` interface is the SDK's source of truth for the public surface.
+// PR #594 moved each method's JSDoc — including `@internal` — off the service class onto
+// its interface, and TypeDoc renders the docs from the interface with `excludeInternal`.
+// Reading the class would miss interface-level `@internal` and publish hidden methods, so
+// enumerate the interface. Service classes carry no public methods beyond their model, and
+// no `*ServiceModel` extends another, so no heritage walk is needed.
+function interfaceMethods(iface) {
+  const out = new Set();
+  for (const m of iface.members) {
+    if (!ts.isMethodSignature(m)) continue;
     if (!m.name || !ts.isIdentifier(m.name)) continue;
-    if (isHidden(m) || isInternal(m)) continue;
-    acc.add(m.name.text);
+    if (isInternal(m)) continue;
+    out.add(m.name.text);
   }
+  return out;
+}
+
+// the `*ServiceModel` a service class implements (its public contract)
+function implementedModel(cls) {
   for (const h of cls.heritageClauses || []) {
-    if (h.token !== ts.SyntaxKind.ExtendsKeyword) continue;
-    for (const t of h.types) if (ts.isIdentifier(t.expression)) methodsOf(t.expression.text, classesByName, acc, seen);
+    if (h.token !== ts.SyntaxKind.ImplementsKeyword) continue;
+    for (const t of h.types) {
+      if (ts.isIdentifier(t.expression) && t.expression.text.endsWith('ServiceModel')) return t.expression.text;
+    }
   }
-  return acc;
+  return undefined;
 }
 
 const surface = []; // { name, subpath, methods: string[] }
@@ -79,9 +82,11 @@ for (const sub of subpaths) {
   if (!existsSync(dts)) continue;
   const sf = ts.createSourceFile(dts, readFileSync(dts, 'utf8'), ts.ScriptTarget.Latest, true);
   const classesByName = new Map();
+  const interfacesByName = new Map();
   const alias = new Map(); // local *Service class -> public export name
   sf.forEachChild((node) => {
     if (ts.isClassDeclaration(node) && node.name) classesByName.set(node.name.text, node);
+    if (ts.isInterfaceDeclaration(node) && node.name) interfacesByName.set(node.name.text, node);
     if (ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause)) {
       for (const el of node.exportClause.elements) {
         // Only aliased exports (`XService as PublicName`) are public services;
@@ -93,8 +98,24 @@ for (const sub of subpaths) {
     }
   });
   for (const [local, publicName] of alias) {
-    if (!classesByName.has(local)) continue;
-    const methods = [...methodsOf(local, classesByName)].filter((m) => m !== 'constructor');
+    const cls = classesByName.get(local);
+    if (!cls) continue;
+    const modelName = implementedModel(cls);
+    const iface = modelName && interfacesByName.get(modelName);
+    if (!iface) {
+      // No `*ServiceModel` to read → skip and flag loudly, rather than silently falling
+      // back to the (leak-prone) class surface.
+      console.warn(`WARN: ${publicName} (${local}) implements no *ServiceModel — skipping.`);
+      continue;
+    }
+    const methods = [...interfaceMethods(iface)].filter((m) => m !== 'constructor');
+    if (!methods.length) {
+      // Entire *ServiceModel is @internal → no public surface. The SDK docs omit these
+      // (excludeInternal renders an empty page; docs-post-process never lists them), so
+      // the metadata omits them too — a service with nothing public advertises nothing.
+      console.log(`skip ${publicName}: no public methods (all @internal)`);
+      continue;
+    }
     surface.push({ name: publicName, subpath: `${PKG}/${sub}`, methods });
   }
 }

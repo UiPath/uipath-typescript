@@ -280,35 +280,11 @@
       "since": null,
       "methods": [
         {
-          "name": "create",
-          "since": null
-        },
-        {
-          "name": "deleteById",
-          "since": null
-        },
-        {
-          "name": "deleteValuesById",
-          "since": null
-        },
-        {
           "name": "getAll",
           "since": null
         },
         {
           "name": "getById",
-          "since": null
-        },
-        {
-          "name": "insertValueById",
-          "since": null
-        },
-        {
-          "name": "updateById",
-          "since": null
-        },
-        {
-          "name": "updateValueById",
           "since": null
         }
       ]
@@ -331,10 +307,6 @@
           "since": null
         },
         {
-          "name": "getFeatureFlags",
-          "since": null
-        },
-        {
           "name": "onConnectionStatusChanged",
           "since": null
         }
@@ -350,15 +322,7 @@
           "since": null
         },
         {
-          "name": "create",
-          "since": null
-        },
-        {
           "name": "deleteAttachment",
-          "since": null
-        },
-        {
-          "name": "deleteById",
           "since": null
         },
         {
@@ -411,10 +375,6 @@
         },
         {
           "name": "queryRecordsById",
-          "since": null
-        },
-        {
-          "name": "updateById",
           "since": null
         },
         {
@@ -598,52 +558,6 @@
       ]
     },
     {
-      "name": "Notifications",
-      "subpath": "@uipath/uipath-typescript/notifications",
-      "since": "1.5.1",
-      "methods": [
-        {
-          "name": "deleteAll",
-          "since": "1.5.1"
-        },
-        {
-          "name": "deleteByIds",
-          "since": "1.5.1"
-        },
-        {
-          "name": "getAll",
-          "since": "1.5.1"
-        },
-        {
-          "name": "markAllAsRead",
-          "since": "1.5.1"
-        },
-        {
-          "name": "markAsRead",
-          "since": "1.5.1"
-        },
-        {
-          "name": "markAsUnread",
-          "since": "1.5.1"
-        }
-      ]
-    },
-    {
-      "name": "OrchestratorDuModule",
-      "subpath": "@uipath/uipath-typescript/orchestrator-du-module",
-      "since": null,
-      "methods": [
-        {
-          "name": "processExtractedData",
-          "since": null
-        },
-        {
-          "name": "submitExceptionReport",
-          "since": null
-        }
-      ]
-    },
-    {
       "name": "Processes",
       "subpath": "@uipath/uipath-typescript/processes",
       "since": null,
@@ -736,25 +650,6 @@
         {
           "name": "getById",
           "since": null
-        }
-      ]
-    },
-    {
-      "name": "Subscriptions",
-      "subpath": "@uipath/uipath-typescript/notifications",
-      "since": "1.5.5",
-      "methods": [
-        {
-          "name": "getAll",
-          "since": "1.5.5"
-        },
-        {
-          "name": "getPublishers",
-          "since": "1.5.5"
-        },
-        {
-          "name": "getSupportedChannels",
-          "since": "1.5.5"
         }
       ]
     },
