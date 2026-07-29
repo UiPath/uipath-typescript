@@ -10,9 +10,9 @@ export interface ElementMetaData {
   elementId: string;
   elementRunId: string;
   isMarker: boolean;
-  inputs: Record<string, any>;
-  inputDefinitions: Record<string, any>;
-  outputs: Record<string, any>;
+  inputs: Record<string, unknown>;
+  inputDefinitions: Record<string, unknown>;
+  outputs: Record<string, unknown>;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface GlobalVariableMetaData {
   elementId: string;
   /** Name of the BPMN node/element */
   source: string;
-  value: any;
+  value: unknown;
 }
 
 /**

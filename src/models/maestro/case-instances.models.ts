@@ -419,8 +419,7 @@ export interface CaseInstancesServiceModel {
    * @param instanceId The ID of the case instance to get variables for
    * @param folderKey The folder key for authorization
    * @param options Optional options including parentElementId to filter by parent element
-   * @returns Promise resolving to variables response with elements and globals
-   * {@link CaseInstanceGetVariablesResponse}
+   * @returns Promise resolving to {@link CaseInstanceGetVariablesResponse} with elements and enriched global variables
    * @example
    * ```typescript
    * // Get all variables for a case instance
@@ -430,7 +429,7 @@ export interface CaseInstancesServiceModel {
    * );
    *
    * // Iterate through global variables with metadata
-   * variables.globalVariables?.forEach(variable => {
+   * variables.globalVariables.forEach(variable => {
    *   console.log(`Variable: ${variable.name} (${variable.id})`);
    *   console.log(`  Type: ${variable.type}`);
    *   console.log(`  Value: ${variable.value}`);
