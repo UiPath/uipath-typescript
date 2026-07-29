@@ -296,7 +296,7 @@
       "methods": [
         {
           "name": "downloadCitationSource",
-          "since": "1.5.5"
+          "since": "1.5.4"
         },
         {
           "name": "getAll",
