@@ -10,7 +10,9 @@ import {
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
   CaseInstanceStageSLAResponse,
-  CaseInstanceStageSLAOptions
+  CaseInstanceStageSLAOptions,
+  CaseInstanceGetVariablesOptions,
+  CaseInstanceGetVariablesResponse
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -407,6 +409,46 @@ export interface CaseInstancesServiceModel {
    * ```
    */
   getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]>;
+
+  /**
+   * Get global variables for a case instance
+   *
+   * Returns the case instance's elements with their inputs/outputs and the global variables
+   * enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
+   *
+   * @param instanceId The ID of the case instance to get variables for
+   * @param folderKey The folder key for authorization
+   * @param options Optional options including parentElementId to filter by parent element
+   * @returns Promise resolving to variables response with elements and globals
+   * {@link CaseInstanceGetVariablesResponse}
+   * @example
+   * ```typescript
+   * // Get all variables for a case instance
+   * const variables = await caseInstances.getVariables(
+   *   '<instanceId>',
+   *   '<folderKey>'
+   * );
+   *
+   * // Iterate through global variables with metadata
+   * variables.globalVariables?.forEach(variable => {
+   *   console.log(`Variable: ${variable.name} (${variable.id})`);
+   *   console.log(`  Type: ${variable.type}`);
+   *   console.log(`  Value: ${variable.value}`);
+   * });
+   *
+   * // Get variables scoped to a specific parent element (e.g. a stage)
+   * const stageVariables = await caseInstances.getVariables(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { parentElementId: '<parentElementId>' }
+   * );
+   *
+   * // Or using the bound method on a retrieved instance
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * const instanceVariables = await instance.getVariables();
+   * ```
+   */
+  getVariables(instanceId: string, folderKey: string, options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse>;
 }
 
 // Method interface that will be added to case instance objects
@@ -501,6 +543,14 @@ export interface CaseInstanceMethods {
    * @returns Promise resolving to an array of stage SLA summary items for this case instance
    */
   getStagesSlaSummary(): Promise<CaseInstanceStageSLAResponse[]>;
+
+  /**
+   * Gets global variables for this case instance
+   *
+   * @param options - Optional options including parentElementId to filter by parent element
+   * @returns Promise resolving to variables response with elements and globals
+   */
+  getVariables(options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse>;
 }
 
 // Combined type for case instance data with methods
@@ -592,6 +642,13 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getStagesSlaSummary({ caseInstanceId: instanceData.instanceId });
+    },
+
+    async getVariables(options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.getVariables(instanceData.instanceId, instanceData.folderKey, options);
     }
   };
 }

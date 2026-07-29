@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CaseInstancesService } from '../../../../src/services/maestro/cases/case-instances';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { FOLDER_KEY, CONTENT_TYPES } from '../../../../src/utils/constants/headers';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   MAESTRO_TEST_CONSTANTS,
@@ -19,6 +19,8 @@ import {
   createMockSlaSummaryResponse,
   createMockCaseInstanceStageSLAResponse,
   createMockCaseInstanceStageSLAStage,
+  createMockBpmnWithVariables,
+  createMockProcessVariables,
 } from '../../../utils/mocks';
 import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
@@ -28,7 +30,8 @@ import type {
   CaseInstanceOperationOptions,
   CaseInstanceReopenOptions,
   CaseInstanceSendMessageOptions,
-  CaseInstanceGetResponse
+  CaseInstanceGetResponse,
+  CaseInstanceGetVariablesOptions
 } from '../../../../src/models/maestro';
 import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
@@ -240,6 +243,8 @@ describe('CaseInstancesService', () => {
       expect(result).toHaveProperty('getExecutionHistory');
       expect(result).toHaveProperty('getStages');
       expect(result).toHaveProperty('getActionTasks');
+      expect(result).toHaveProperty('getVariables');
+      expect(typeof result.getVariables).toBe('function');
     });
 
     it('should handle case JSON without caseAppConfig', async () => {
@@ -1099,6 +1104,138 @@ describe('CaseInstancesService', () => {
       const result = await service.getStagesSlaSummary();
 
       expect(result[0].stages[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
+    });
+  });
+
+  describe('getVariables', () => {
+    it('should return variables for case instance with BPMN metadata', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const mockBpmnXml = createMockBpmnWithVariables({
+        elementId: MAESTRO_TEST_CONSTANTS.START_EVENT_ID,
+        elementName: MAESTRO_TEST_CONSTANTS.START_EVENT_NAME,
+        variableId: MAESTRO_TEST_CONSTANTS.VARIABLE_ID,
+        variableName: MAESTRO_TEST_CONSTANTS.VARIABLE_NAME
+      });
+
+      const mockVariablesResponse = createMockProcessVariables({
+        globals: {
+          [MAESTRO_TEST_CONSTANTS.VARIABLE_ID]: MAESTRO_TEST_CONSTANTS.VARIABLE_VALUE
+        },
+        instanceId
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(mockBpmnXml) // First call for BPMN
+        .mockResolvedValueOnce(mockVariablesResponse); // Second call for variables
+
+      const result = await service.getVariables(instanceId, folderKey);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId),
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey,
+            'Accept': CONTENT_TYPES.XML
+          })
+        }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId),
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          }),
+          params: undefined
+        }
+      );
+
+      expect(result).toHaveProperty('instanceId', instanceId);
+      expect(result).toHaveProperty('elements');
+      expect(result).toHaveProperty('globalVariables');
+      expect(result.globalVariables).toHaveLength(1);
+      expect(result.globalVariables[0]).toMatchObject({
+        id: MAESTRO_TEST_CONSTANTS.VARIABLE_ID,
+        name: MAESTRO_TEST_CONSTANTS.VARIABLE_NAME,
+        type: MAESTRO_TEST_CONSTANTS.VARIABLE_TYPE,
+        elementId: MAESTRO_TEST_CONSTANTS.START_EVENT_ID,
+        source: MAESTRO_TEST_CONSTANTS.START_EVENT_NAME,
+        value: MAESTRO_TEST_CONSTANTS.VARIABLE_VALUE
+      });
+      // Raw globals map should be reshaped, not passed through
+      expect(result).not.toHaveProperty('globals');
+    });
+
+    it('should return variables with parentElementId filter', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const options: CaseInstanceGetVariablesOptions = {
+        parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+      };
+
+      const mockVariablesResponse = createMockProcessVariables({
+        globals: {},
+        instanceId,
+        parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce('<?xml version="1.0"?><bpmn:definitions></bpmn:definitions>')
+        .mockResolvedValueOnce(mockVariablesResponse);
+
+      const result = await service.getVariables(instanceId, folderKey, options);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId),
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          }),
+          params: {
+            parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+          }
+        }
+      );
+
+      expect(result.parentElementId).toBe(MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID);
+    });
+
+    it('should handle BPMN fetch failure gracefully', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const mockVariablesResponse = createMockProcessVariables({
+        globals: {
+          [MAESTRO_TEST_CONSTANTS.VARIABLE_ID]: MAESTRO_TEST_CONSTANTS.VARIABLE_VALUE
+        },
+        instanceId
+      });
+
+      // Mock console.warn to avoid test output
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      mockApiClient.get
+        .mockRejectedValueOnce(new Error('BPMN fetch failed')) // First call fails
+        .mockResolvedValueOnce(mockVariablesResponse); // Second call succeeds
+
+      const result = await service.getVariables(instanceId, folderKey);
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to fetch BPMN metadata'),
+        expect.any(Error)
+      );
+
+      expect(result).toHaveProperty('instanceId', instanceId);
+      expect(result.globalVariables).toHaveLength(0); // No metadata available
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
