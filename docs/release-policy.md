@@ -80,6 +80,7 @@ Breaking changes are introduced in minor releases (X.Y.0) and follow these guide
 
 3. **Release**:
     - Version number is updated in `package.json`
+    - `release-metadata.json` is regenerated and committed onto the version-bump PR automatically — do not hand-edit it (see [`release-metadata.md`](release-metadata.md))
     - Release notes are prepared
     - Package is published to npm
     - Documentation is updated
