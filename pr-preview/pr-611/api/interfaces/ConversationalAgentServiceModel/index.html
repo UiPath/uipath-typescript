@@ -2219,6 +2219,30 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#app-scoped-authentication-anonymous-sign-in-free-chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      App-scoped authentication (anonymous, sign-in-free chat)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="App-scoped authentication (anonymous, sign-in-free chat)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limitations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       Properties
@@ -2375,6 +2399,40 @@ and stream real-time responses over WebSocket. <a href="https://docs.uipath.com/
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="c1">// 7. Retrieve conversation history (offline)</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="kd">const</span><span class="w"> </span><span class="nx">exchanges</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversation</span><span class="p">.</span><span class="nx">exchanges</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
+<h2 id="app-scoped-authentication-anonymous-sign-in-free-chat">App-scoped authentication (anonymous, sign-in-free chat)<a class="headerlink" href="#app-scoped-authentication-anonymous-sign-in-free-chat" title="Permanent link">&para;</a></h2>
+<p>Conversational Agents can be driven with an <strong>app-scoped token</strong> — one issued to an
+External App via the client-credentials grant, which carries no end-user identity.
+This lets an application offer chat without requiring each of its users to sign in to UiPath.
+For more information on creating External Apps, see the official UiPath documentation on
+<a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications">managing external OAuth applications</a>;
+for details on how to request client-credentials tokens, see the official UiPath documentation on
+<a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications">the OAuth bearer token types</a>
+issued to an External App.</p>
+<p>To use it, pass an <code>externalUserId</code> — your application's own identifier for the end user —
+when constructing the service:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ConversationalAgent</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/conversational-agent&#39;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ConversationalAgent</span><span class="p">(</span><span class="nx">sdk</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">externalUserId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;app-user-42&#39;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">});</span>
+</code></pre></div>
+<p>The SDK forwards this identifier on every HTTP request and real-time WebSocket session. Each distinct
+<code>externalUserId</code> — scoped to the client ID of the External App the token was issued for — gets its own
+conversation history and user settings, and the same value always maps back to the same user.</p>
+<h3 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>App-scoped tokens only.</strong> <code>externalUserId</code> takes effect only when the SDK is authenticated
+  with an app-scoped External App token. With a standard UiPath user token the server ignores it
+  and uses the token's own user identity — so omit it in that case.</li>
+<li><strong>Required with an app-scoped token.</strong> When the token is app-scoped, <code>externalUserId</code> is
+  mandatory; requests without it are rejected with a <code>401</code>. It is set once at construction and
+  applies to all calls made through that service instance (including <code>conversations</code>, <code>exchanges</code>,
+  <code>messages</code>, <code>user</code>, and WebSocket sessions).</li>
+<li><strong>Value constraints.</strong> May contain only letters, digits, dot (<code>.</code>), underscore (<code>_</code>), and
+  hyphen (<code>-</code>), and must be at most 255 characters. Other characters are rejected with a <code>400</code>.</li>
+<li><strong>Identity scope.</strong> The derived identity is scoped per application: the same <code>externalUserId</code>
+  under a different app is a different user.</li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2435,13 +2493,13 @@ rejected before any request is made.</p>
 <p><code>Promise</code>&lt;<code>Blob</code>&gt;</p>
 <p>Promise resolving to the document as a <code>Blob</code></p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">isCitationSourceMedia</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/conversational-agent&#39;</span><span class="p">;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isCitationSourceMedia</span><span class="p">(</span><span class="nx">source</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">blob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">downloadCitationSource</span><span class="p">(</span><span class="nx">source</span><span class="p">);</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">URL</span><span class="p">.</span><span class="nx">createObjectURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_blank&#39;</span><span class="p">);</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">isCitationSourceMedia</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/conversational-agent&#39;</span><span class="p">;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isCitationSourceMedia</span><span class="p">(</span><span class="nx">source</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">blob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">downloadCitationSource</span><span class="p">(</span><span class="nx">source</span><span class="p">);</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">URL</span><span class="p">.</span><span class="nx">createObjectURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_blank&#39;</span><span class="p">);</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
@@ -2471,13 +2529,13 @@ rejected before any request is made.</p>
 <p>Promise resolving to an array of agents
 <a href="../../type-aliases/AgentGetResponse/">AgentGetResponse</a></p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">agents</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">agents</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="nx">folderId</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="nx">folderId</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
@@ -2512,10 +2570,10 @@ rejected before any request is made.</p>
 <p>Promise resolving to the agent
 <a href="../../type-aliases/AgentGetByIdResponse/">AgentGetByIdResponse</a></p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="onconnectionstatuschanged">onConnectionStatusChanged()<a class="headerlink" href="#onconnectionstatuschanged" title="Permanent link">&para;</a></h3>
@@ -2548,15 +2606,15 @@ rejected before any request is made.</p>
 <h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
 <p><code>void</code></p>
 <h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">cleanup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">onConnectionStatusChanged</span><span class="p">((</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Connection status:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="p">);</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">});</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1">// Later, remove the handler</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nx">cleanup</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">cleanup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">onConnectionStatusChanged</span><span class="p">((</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Connection status:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="p">);</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">});</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// Later, remove the handler</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nx">cleanup</span><span class="p">();</span>
 </code></pre></div>
 
 
