@@ -21,7 +21,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular-builders/custom-esbuild": "^20.0.0",
+    "@angular-builders/custom-esbuild": "^22.0.1",
     "@angular/build": "^20.0.0",
     "@angular/cli": "^20.0.0",
     "@angular/compiler-cli": "^20.0.0",
