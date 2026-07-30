@@ -2,5 +2,5 @@
  * Identity models barrel export.
  */
 
-export * from './settings.types';
-export * from './settings.models';
+export * from './identity.types';
+export * from './identity.models';

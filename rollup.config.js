@@ -235,9 +235,9 @@ const serviceEntries = [
     output: 'notifications/index'
   },
   {
-    name: 'identity-settings',
+    name: 'identity',
     input: 'src/services/identity/index.ts',
-    output: 'identity-settings/index'
+    output: 'identity/index'
   }
 ];
 

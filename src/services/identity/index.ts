@@ -1,23 +1,23 @@
 /**
- * Identity Settings Module
+ * Identity Module
  *
- * Provides access to organization-level UiPath Identity settings:
- * - `IdentitySettings` — bulk read and bulk create/update of identity setting key/value pairs
+ * Provides access to organization-level UiPath Identity configuration:
+ * - `Identity` — bulk read and bulk create/update of identity setting key/value pairs
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { IdentitySettings } from '@uipath/uipath-typescript/identity-settings';
+ * import { Identity } from '@uipath/uipath-typescript/identity';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const identitySettings = new IdentitySettings(sdk);
- * const settings = await identitySettings.getAll();
+ * const identity = new Identity(sdk);
+ * const settings = await identity.getSettings();
  *
- * await identitySettings.updateSettings([
+ * await identity.updateSettings([
  *   { key: 'Auth.Password.DefaultLifetimeDays', value: '90' },
  * ]);
  * ```
@@ -25,7 +25,7 @@
  * @module
  */
 
-export { IdentitySettingService as IdentitySettings } from './settings';
+export { IdentityService as Identity } from './identity';
 
 // Models (types, response shapes)
 export * from '../../models/identity';

@@ -40,11 +40,11 @@ export interface IntegrationConfig {
   tasksTestUserGroupId?: string;
   tasksTestUserId?: string;
   /**
-   * Organization (partition) GUID used to exercise explicit `partitionGlobalId` scoping on
-   * the Identity Settings API. Omit to skip only that assertion — the settings payload does
-   * not carry the partition GUID, so it cannot be discovered at runtime.
+   * An identity setting key that already has a stored value in the test organization
+   * (e.g. `UserTheme.Theme`). The Identity suite snapshots it, overwrites it, and restores
+   * the snapshot, so it must be a benign, user-scoped setting.
    */
-  identityTestPartitionGlobalId?: string;
+  identityTestSettingKey?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -106,7 +106,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
-    identityTestPartitionGlobalId: typeof rawConfig.identityTestPartitionGlobalId === 'string' ? rawConfig.identityTestPartitionGlobalId : undefined,
+    identityTestSettingKey: typeof rawConfig.identityTestSettingKey === 'string' ? rawConfig.identityTestSettingKey : undefined,
   };
 }
 
@@ -152,7 +152,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
-    identityTestPartitionGlobalId: process.env.IDENTITY_TEST_PARTITION_GLOBAL_ID || undefined,
+    identityTestSettingKey: process.env.IDENTITY_TEST_SETTING_KEY || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
