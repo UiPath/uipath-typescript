@@ -15,6 +15,7 @@
  * ```
  *
  * @module
+ * @internal
  */
 
 export { OntologyService as Ontologies, OntologyService } from './ontology';

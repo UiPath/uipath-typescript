@@ -45,6 +45,8 @@ export interface OntologyServiceModel {
    * });
    * console.log(ontology.id);
    * ```
+   *
+   * @internal
    */
   create(name: string, options?: OntologyCreateOptions): Promise<OntologySummary>;
 
@@ -68,6 +70,8 @@ export interface OntologyServiceModel {
    * const page = await ontologies.getAll({ pageSize: 10 });
    * const next = await ontologies.getAll({ cursor: page.nextCursor });
    * ```
+   *
+   * @internal
    */
   getAll<T extends OntologyGetAllOptions>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<OntologySummary> : NonPaginatedResponse<OntologySummary>>;
 
@@ -85,6 +89,8 @@ export interface OntologyServiceModel {
    * // By GUID
    * const o2 = await ontologies.getById('a1b2c3d4-...');
    * ```
+   *
+   * @internal
    */
   getById(idOrName: string): Promise<OntologySummary>;
 
@@ -103,6 +109,8 @@ export interface OntologyServiceModel {
    *   description: 'Updated sales pipeline ontology',
    * });
    * ```
+   *
+   * @internal
    */
   update(idOrName: string, updates: OntologyUpdateOptions): Promise<OntologySummary>;
 
@@ -116,6 +124,8 @@ export interface OntologyServiceModel {
    * const ontologies = new Ontologies(sdk);
    * await ontologies.deleteById('ecommerce');
    * ```
+   *
+   * @internal
    */
   deleteById(idOrName: string): Promise<void>;
 
@@ -138,6 +148,8 @@ export interface OntologyServiceModel {
    * const zip = await ontologies.exportOntology('ecommerce');
    * await writeFile('ecommerce.zip', zip);
    * ```
+   *
+   * @internal
    */
   exportOntology(idOrName: string): Promise<Uint8Array>;
 
@@ -159,6 +171,8 @@ export interface OntologyServiceModel {
    * const shapes = await ontologies.listArtifacts('ecommerce', { type: ArtifactType.Constraints });
    * shapes.forEach(a => console.log(a.fileName, a.sizeBytes));
    * ```
+   *
+   * @internal
    */
   listArtifacts(idOrName: string, options?: ArtifactListOptions): Promise<ArtifactMetadata[]>;
 
@@ -181,6 +195,8 @@ export interface OntologyServiceModel {
    * const content = await ontologies.getArtifact('ecommerce', 'schema.ofn');
    * console.log(content);
    * ```
+   *
+   * @internal
    */
   getArtifact(idOrName: string, fileName: string): Promise<string>;
 
@@ -206,6 +222,8 @@ export interface OntologyServiceModel {
    *   { mediaType: 'text/owl-functional', content: 'Ontology( … )' }
    * );
    * ```
+   *
+   * @internal
    */
   upsertArtifact(idOrName: string, fileName: string, request: ArtifactUpsertRequest): Promise<ArtifactMetadata>;
 
@@ -232,6 +250,8 @@ export interface OntologyServiceModel {
    *   { fileName: 'supplier-shapes.ttl', type: ArtifactType.Constraints, mediaType: 'text/turtle', content: '@prefix sh: … ' },
    * ]);
    * ```
+   *
+   * @internal
    */
   uploadArtifacts(idOrName: string, items: ArtifactBulkItem[]): Promise<ArtifactMetadata[]>;
 
@@ -248,6 +268,8 @@ export interface OntologyServiceModel {
    * const ontologies = new Ontologies(sdk);
    * await ontologies.deleteArtifact('ecommerce', 'po-shapes.ttl');
    * ```
+   *
+   * @internal
    */
   deleteArtifact(idOrName: string, fileName: string): Promise<void>;
 
@@ -275,6 +297,8 @@ export interface OntologyServiceModel {
    *   result.violations.forEach(v => console.error(v.severity, v.message));
    * }
    * ```
+   *
+   * @internal
    */
   validateArtifact(idOrName: string, fileName: string, request: ArtifactUpsertRequest): Promise<ValidationResult>;
 }

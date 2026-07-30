@@ -141,4 +141,3 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Traces | `getById()` | ❌ No |
 | Traces | `getSpansByIds()` | ❌ No |
 | Governance | `getPolicyTraces()` | ✅ Yes |
-| Ontologies | `getAll()` | ✅ Yes |

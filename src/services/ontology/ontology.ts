@@ -24,6 +24,9 @@ import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { BaseService } from '../base';
 
+/**
+ * @internal
+ */
 export class OntologyService extends BaseService implements OntologyServiceModel {
   @track('Ontologies.Create')
   async create(name: string, options?: OntologyCreateOptions): Promise<OntologySummary> {
