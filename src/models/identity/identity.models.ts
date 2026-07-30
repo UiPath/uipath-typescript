@@ -8,7 +8,6 @@ import type {
   IdentitySettingUpsert,
   IdentitySettingsGetOptions,
   IdentitySettingsUpdateOptions,
-  IdentitySettingsUpdateResponse,
 } from './identity.types';
 
 /**
@@ -61,33 +60,44 @@ export interface IdentityServiceModel {
    *
    * Each submitted key is upserted — keys that do not yet exist are created, existing keys
    * are overwritten. Keys absent from the request are left untouched, so there is no need
-   * to send back the settings you are not changing.
+   * to send back the settings you are not changing. Returns the stored rows as they are
+   * after the write, including their generated `id`.
+   *
+   * Unlike {@link getSettings}, the partition cannot be inferred on a write and must be
+   * supplied. Read a setting first if you do not have it — every
+   * {@link IdentitySetting} carries its `partitionGlobalId`.
    *
    * @param settings - Settings to create or update
-   * @param options - Optional partition and user scoping
-   * @returns Operation result echoing the submitted settings
-   * {@link IdentitySettingsUpdateResponse}
+   * @param partitionGlobalId - Organization (partition) GUID to write to
+   * @param options - Optional user scoping
+   * @returns The settings as stored after the write
+   * {@link IdentitySetting}
    *
    * @example Update a setting
    * ```typescript
-   * await identity.updateSettings([
-   *   { key: 'UserTheme.Theme', value: 'dark' },
-   * ]);
+   * const [current] = await identity.getSettings(['UserTheme.Theme']);
+   *
+   * const updated = await identity.updateSettings(
+   *   [{ key: 'UserTheme.Theme', value: 'dark' }],
+   *   current.partitionGlobalId
+   * );
    * ```
    *
-   * @example Update several settings for a specific user and organization
+   * @example Update several settings for a specific user
    * ```typescript
    * await identity.updateSettings(
    *   [
    *     { key: 'UserTheme.Theme', value: 'dark' },
    *     { key: 'UserAccessibility.Accessibility', value: 'true' },
    *   ],
-   *   { partitionGlobalId: '<partitionGlobalId>', userId: '<userId>' }
+   *   '<partitionGlobalId>',
+   *   { userId: '<userId>' }
    * );
    * ```
    */
   updateSettings(
     settings: IdentitySettingUpsert[],
+    partitionGlobalId: string,
     options?: IdentitySettingsUpdateOptions
-  ): Promise<IdentitySettingsUpdateResponse>;
+  ): Promise<IdentitySetting[]>;
 }

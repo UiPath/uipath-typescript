@@ -2,8 +2,6 @@
  * Identity service types — request/response shapes for identity settings.
  */
 
-import type { OperationResponse } from '../common/types';
-
 /**
  * A stored identity setting.
  *
@@ -36,14 +34,9 @@ export interface IdentitySettingUpsert {
 }
 
 /**
- * Request scoping shared by every identity settings operation.
+ * User scoping shared by identity settings operations.
  */
-export interface IdentitySettingsScopeOptions {
-  /**
-   * Organization (partition) GUID to operate on. When omitted, the API falls back to the
-   * partition the calling token is scoped to.
-   */
-  partitionGlobalId?: string;
+export interface IdentitySettingsUserScopeOptions {
   /** GUID of the user whose settings to operate on. When omitted, the calling user is used. */
   userId?: string;
 }
@@ -51,16 +44,15 @@ export interface IdentitySettingsScopeOptions {
 /**
  * Options for `Identity.getSettings()`.
  */
-export interface IdentitySettingsGetOptions extends IdentitySettingsScopeOptions {}
+export interface IdentitySettingsGetOptions extends IdentitySettingsUserScopeOptions {
+  /**
+   * Organization (partition) GUID to read from. When omitted, the API falls back to the
+   * partition the calling token is scoped to.
+   */
+  partitionGlobalId?: string;
+}
 
 /**
  * Options for `Identity.updateSettings()`.
  */
-export interface IdentitySettingsUpdateOptions extends IdentitySettingsScopeOptions {}
-
-/**
- * Response from `updateSettings()` — echoes the settings that were submitted.
- */
-export type IdentitySettingsUpdateResponse = OperationResponse<{
-  settings: IdentitySettingUpsert[];
-}>;
+export interface IdentitySettingsUpdateOptions extends IdentitySettingsUserScopeOptions {}

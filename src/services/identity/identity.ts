@@ -10,24 +10,11 @@ import type {
   IdentitySetting,
   IdentitySettingUpsert,
   IdentitySettingsGetOptions,
-  IdentitySettingsScopeOptions,
   IdentitySettingsUpdateOptions,
-  IdentitySettingsUpdateResponse,
 } from '../../models/identity/identity.types';
 import type { IdentityServiceModel } from '../../models/identity/identity.models';
 
 import { IDENTITY_SETTING_ENDPOINTS } from '../../utils/constants/endpoints';
-
-/**
- * Builds the partition/user query params. Omitting either lets the API fall back to the
- * partition and user the calling token is scoped to.
- */
-const createScopeParams = (options?: IdentitySettingsScopeOptions): Record<string, string> => {
-  const params: Record<string, string> = {};
-  if (options?.partitionGlobalId) params.partitionGlobalId = options.partitionGlobalId;
-  if (options?.userId) params.userId = options.userId;
-  return params;
-};
 
 /**
  * Service for reading and writing UiPath Identity settings.
@@ -46,24 +33,35 @@ export class IdentityService extends BaseService implements IdentityServiceModel
       throw new ValidationError({ message: 'keys must contain at least one setting key' });
     }
 
-    const response = await this.get<IdentitySetting[]>(IDENTITY_SETTING_ENDPOINTS.SETTINGS, {
-      params: { key: keys, ...createScopeParams(options) },
-    });
+    // Scope goes in the query string on reads, but in the body on writes
+    const params: Record<string, string | string[]> = { key: keys };
+    if (options?.partitionGlobalId) params.partitionGlobalId = options.partitionGlobalId;
+    if (options?.userId) params.userId = options.userId;
+
+    const response = await this.get<IdentitySetting[]>(
+      IDENTITY_SETTING_ENDPOINTS.SETTINGS,
+      { params }
+    );
     return response.data;
   }
 
   @track('Identity.UpdateSettings')
   async updateSettings(
     settings: IdentitySettingUpsert[],
+    partitionGlobalId: string,
     options?: IdentitySettingsUpdateOptions
-  ): Promise<IdentitySettingsUpdateResponse> {
+  ): Promise<IdentitySetting[]> {
     if (settings.length === 0) {
       throw new ValidationError({ message: 'settings must contain at least one setting to update' });
     }
+    if (!partitionGlobalId) {
+      throw new ValidationError({ message: 'partitionGlobalId is required for updateSettings' });
+    }
 
-    await this.put(IDENTITY_SETTING_ENDPOINTS.SETTINGS, settings, {
-      params: createScopeParams(options),
-    });
-    return { success: true, data: { settings } };
+    const body: Record<string, unknown> = { settings, partitionGlobalId };
+    if (options?.userId) body.userId = options.userId;
+
+    const response = await this.put<IdentitySetting[]>(IDENTITY_SETTING_ENDPOINTS.SETTINGS, body);
+    return response.data;
   }
 }
