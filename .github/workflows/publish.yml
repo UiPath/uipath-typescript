@@ -72,6 +72,9 @@ jobs:
 
       # Pack in the same run so the release asset is byte-identical to the npm
       # publish (the build above has the telemetry version stamped in).
+      # Retried because this is the only fallible step after npm publish — a
+      # re-run of the whole workflow would fail on the already-published
+      # version and never reach this step.
       - name: Attach package tarball to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -79,11 +82,20 @@ jobs:
           SDK_VERSION=$(node -p "require('./package.json').version")
           npm pack
           TARBALL="uipath-uipath-typescript-${SDK_VERSION}.tgz"
-          if gh release view "$SDK_VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$SDK_VERSION" "$TARBALL" --clobber --repo "$GITHUB_REPOSITORY"
-          else
-            gh release create "$SDK_VERSION" "$TARBALL" --title "$SDK_VERSION" --generate-notes --repo "$GITHUB_REPOSITORY"
-          fi
+          attach() {
+            if gh release view "$SDK_VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              gh release upload "$SDK_VERSION" "$TARBALL" --clobber --repo "$GITHUB_REPOSITORY"
+            else
+              gh release create "$SDK_VERSION" "$TARBALL" --title "$SDK_VERSION" --target "$GITHUB_SHA" --generate-notes --repo "$GITHUB_REPOSITORY"
+            fi
+          }
+          for attempt in 1 2 3; do
+            attach && exit 0
+            echo "Attach attempt $attempt failed"
+            sleep 10
+          done
+          echo "::error::Failed to attach tarball to release $SDK_VERSION after 3 attempts"
+          exit 1
 
       - name: Generate Summary
         run: |
