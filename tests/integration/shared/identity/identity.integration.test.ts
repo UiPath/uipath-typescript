@@ -43,7 +43,10 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   afterAll(async () => {
     if (!identity || !originalSetting) return;
     // Restore from the snapshot — never a hardcoded assumed value.
-    await identity.updateSettings([{ key: originalSetting.key, value: originalSetting.value }]);
+    await identity.updateSettings(
+      [{ key: originalSetting.key, value: originalSetting.value }],
+      originalSetting.partitionGlobalId
+    );
   });
 
   describe('getSettings', () => {
@@ -78,36 +81,40 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   });
 
   describe('updateSettings', () => {
-    it('should overwrite a setting value and read the new value back', async () => {
+    it('should overwrite a setting value and return the stored row', async () => {
       const newValue = `${originalSetting.value}-sdktest`;
 
-      const result = await identity.updateSettings([{ key: settingKey, value: newValue }]);
-      expect(result.success).toBe(true);
-      expect(result.data.settings).toHaveLength(1);
+      const updated = await identity.updateSettings(
+        [{ key: settingKey, value: newValue }],
+        originalSetting.partitionGlobalId
+      );
+
+      expect(Array.isArray(updated)).toBe(true);
+      const updatedRow = updated.find((s) => s.key === settingKey);
+      expect(updatedRow?.value).toBe(newValue);
+      expect(typeof updatedRow?.id).toBe('number');
 
       const afterWrite = await identity.getSettings([settingKey]);
       expect(afterWrite.find((s) => s.key === settingKey)?.value).toBe(newValue);
 
       // Restore immediately so a later failure cannot leave the modified value behind
-      await identity.updateSettings([{ key: settingKey, value: originalSetting.value }]);
+      await identity.updateSettings(
+        [{ key: settingKey, value: originalSetting.value }],
+        originalSetting.partitionGlobalId
+      );
 
       const afterRestore = await identity.getSettings([settingKey]);
       expect(afterRestore.find((s) => s.key === settingKey)?.value).toBe(originalSetting.value);
     });
 
-    it('should accept explicit partitionGlobalId and userId scoping on a write', async () => {
-      const result = await identity.updateSettings(
+    it('should accept explicit userId scoping on a write', async () => {
+      const updated = await identity.updateSettings(
         [{ key: settingKey, value: originalSetting.value }],
-        {
-          partitionGlobalId: originalSetting.partitionGlobalId,
-          userId: originalSetting.userId,
-        }
+        originalSetting.partitionGlobalId,
+        { userId: originalSetting.userId }
       );
 
-      expect(result.success).toBe(true);
-
-      const settings = await identity.getSettings([settingKey]);
-      expect(settings.find((s) => s.key === settingKey)?.value).toBe(originalSetting.value);
+      expect(updated.find((s) => s.key === settingKey)?.userId).toBe(originalSetting.userId);
     });
   });
 });
