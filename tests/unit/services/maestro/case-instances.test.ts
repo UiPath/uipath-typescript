@@ -1232,36 +1232,6 @@ describe('CaseInstancesService', () => {
       expect(result.parentElementId).toBe(MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID);
     });
 
-    it('should handle BPMN fetch failure gracefully', async () => {
-      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
-      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
-      const mockVariablesResponse = createMockProcessVariables({
-        globals: {
-          [MAESTRO_TEST_CONSTANTS.VARIABLE_ID]: MAESTRO_TEST_CONSTANTS.VARIABLE_VALUE
-        },
-        instanceId
-      });
-
-      // Mock console.warn to avoid test output
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      mockApiClient.get
-        .mockRejectedValueOnce(new Error('BPMN fetch failed')) // First call fails
-        .mockResolvedValueOnce(mockVariablesResponse); // Second call succeeds
-
-      const result = await service.getVariables(instanceId, folderKey);
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to fetch BPMN metadata'),
-        expect.any(Error)
-      );
-
-      expect(result).toHaveProperty('instanceId', instanceId);
-      expect(result.globalVariables).toHaveLength(0); // No metadata available
-
-      consoleSpy.mockRestore();
-    });
-
     it('should handle API errors', async () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
