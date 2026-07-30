@@ -9,8 +9,9 @@ import { PaginationServiceAccess } from '../../utils/pagination/internal-types';
 // Handles: <uipath:inputOutput .../> and <uipath:inputOutput ...>content</uipath:inputOutput>
 const INPUT_OUTPUT_REGEX = /<uipath:inputOutput\s+([^/]+?)(?:\/(?:>)?|>[\s\S]*?<\/uipath:inputOutput>)/g;
 
-// Regex to match any BPMN element with both id and name attributes
-const BPMN_ELEMENT_REGEX = /<bpmn:\w+\s+([^>]*id="([^"]+)"[^>]*name="([^"]+)"[^>]*)/g;
+// Regex to capture the attribute block of any BPMN element — id/name are extracted
+// independently afterwards, since XML does not guarantee attribute ordering
+const BPMN_ELEMENT_REGEX = /<bpmn:\w+\s+([^>]+)/g;
 
 /**
  * Extracts element names from BPMN XML and maps them to their element IDs
@@ -22,11 +23,12 @@ function getVariableSource(bpmnXml: string): Map<string, string> {
   const elementMatches = bpmnXml.matchAll(BPMN_ELEMENT_REGEX);
 
   for (const match of elementMatches) {
-    const elementId = match[2];
-    const elementName = match[3];
+    const attributes = match[1];
+    const idMatch = attributes.match(/id="([^"]+)"/);
+    const nameMatch = attributes.match(/name="([^"]+)"/);
 
-    if (elementId && elementName) {
-      elementNameMap.set(elementId, elementName);
+    if (idMatch && nameMatch) {
+      elementNameMap.set(idMatch[1], nameMatch[1]);
     }
   }
 

@@ -1167,6 +1167,37 @@ describe('CaseInstancesService', () => {
       expect(result).not.toHaveProperty('globals');
     });
 
+    it('should resolve variable source when BPMN attributes are in reverse order', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+
+      // name precedes id — XML does not guarantee attribute ordering
+      const mockBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
+        <bpmn:definitions>
+          <bpmn:process id="proc1" name="Proc">
+            <bpmn:startEvent name="${MAESTRO_TEST_CONSTANTS.START_EVENT_NAME}" id="${MAESTRO_TEST_CONSTANTS.START_EVENT_ID}">
+              <uipath:inputOutput id="${MAESTRO_TEST_CONSTANTS.VARIABLE_ID}" name="${MAESTRO_TEST_CONSTANTS.VARIABLE_NAME}" type="${MAESTRO_TEST_CONSTANTS.VARIABLE_TYPE}" elementId="${MAESTRO_TEST_CONSTANTS.START_EVENT_ID}"/>
+            </bpmn:startEvent>
+          </bpmn:process>
+        </bpmn:definitions>`;
+
+      const mockVariablesResponse = createMockProcessVariables({
+        globals: {
+          [MAESTRO_TEST_CONSTANTS.VARIABLE_ID]: MAESTRO_TEST_CONSTANTS.VARIABLE_VALUE
+        },
+        instanceId
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(mockBpmnXml)
+        .mockResolvedValueOnce(mockVariablesResponse);
+
+      const result = await service.getVariables(instanceId, folderKey);
+
+      expect(result.globalVariables).toHaveLength(1);
+      expect(result.globalVariables[0].source).toBe(MAESTRO_TEST_CONSTANTS.START_EVENT_NAME);
+    });
+
     it('should return variables with parentElementId filter', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
       const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
