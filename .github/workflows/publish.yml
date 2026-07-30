@@ -24,6 +24,7 @@ jobs:
       contents: write
       packages: write
       id-token: write
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,33 +98,19 @@ jobs:
           echo "::error::Failed to attach tarball to release $SDK_VERSION after 3 attempts"
           exit 1
 
-      # Bundle the just-published SDK + @uipath/coded-action-app (latest) with
-      # their full transitive dependency closure so registry-restricted
-      # customers can install both offline. Retried because the bundle pulls
-      # the SDK version published moments ago from the registry, which may
-      # need a short propagation window.
-      - name: Attach air-gapped bundle to GitHub Release
+      # The release created above by GITHUB_TOKEN cannot fire the airgap
+      # workflow's `release: published` trigger (recursion guard), so dispatch
+      # it explicitly. It builds the bundle (SDK + coded-action-app + full
+      # dependency closure), verifies it installs from a throwaway Verdaccio
+      # alone, and attaches the ZIP to this release.
+      - name: Trigger air-gapped bundle export
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OUT_DIR: ${{ github.workspace }}/airgap-bundle
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
-          built=false
-          for attempt in 1 2 3; do
-            if SDK_VERSION="$SDK_VERSION" node scripts/airgap/build-airgap-bundle.mjs; then
-              built=true
-              break
-            fi
-            echo "Bundle build attempt $attempt failed (registry propagation?)"
-            sleep 30
-          done
-          if [ "$built" != "true" ]; then
-            echo "::error::Failed to build air-gapped bundle for $SDK_VERSION"
-            exit 1
-          fi
-          BUNDLE="uipath-sdk-airgap-bundle-${SDK_VERSION}.zip"
-          (cd "$OUT_DIR" && zip -qr "${GITHUB_WORKSPACE}/${BUNDLE}" .)
-          gh release upload "$SDK_VERSION" "$BUNDLE" --clobber --repo "$GITHUB_REPOSITORY"
+          gh workflow run export-airgap-bundle.yml --repo "$GITHUB_REPOSITORY" \
+            --field sdk_version="$SDK_VERSION" \
+            --field release_tag="$SDK_VERSION"
 
       - name: Generate Summary
         run: |
@@ -138,7 +125,7 @@ jobs:
           echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "- Attached packed tarball to GitHub Release" >> $GITHUB_STEP_SUMMARY
-          echo "- Attached air-gapped bundle (SDK + coded-action-app + dependency closure) to GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered air-gapped bundle export (build, Verdaccio verify, attach to release)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY

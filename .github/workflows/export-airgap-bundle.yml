@@ -1,0 +1,189 @@
+name: Export air-gapped SDK bundle
+
+# Mirrors UiPath/cli's export-airgapped workflow: build a bundle of the exact
+# published npm tarballs for @uipath/uipath-typescript + @uipath/coded-action-app
+# and their full transitive dependency closure, VERIFY it by publishing every
+# tarball into a throwaway Verdaccio and installing both SDKs from it alone
+# (no uplinks — completeness is genuinely tested), then attach the ZIP to the
+# GitHub release. Verdaccio is a test harness only — it is not part of the
+# bundle.
+#
+# Triggers:
+#   - release published: bundles the released version, attaches to that release.
+#     Covers manually created releases; releases created by publish.yml's own
+#     GITHUB_TOKEN cannot fire this event (recursion guard), so publish.yml
+#     also dispatches this workflow explicitly.
+#   - workflow_dispatch: on-demand builds, optionally attached to a release.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: >-
+          Version of @uipath/uipath-typescript to bundle (exact, e.g. 1.5.5).
+          Empty = latest.
+        required: false
+        type: string
+      coded_action_app_version:
+        description: >-
+          Version of @uipath/coded-action-app to bundle (exact, incl.
+          prerelease). Empty = latest.
+        required: false
+        type: string
+      release_tag:
+        description: >-
+          Attach the ZIP to an EXISTING GitHub release with this tag
+          (e.g. 1.5.5). Empty = leave as a workflow artifact only.
+        required: false
+        type: string
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sdk_version: ${{ steps.meta.outputs.sdk_version }}
+      caa_version: ${{ steps.meta.outputs.caa_version }}
+      bundle_name: ${{ steps.meta.outputs.bundle_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # On a release event the tag IS the SDK version. Inputs reach the script
+      # via env only; it regex-validates them before any npm command.
+      - name: Build bundle
+        env:
+          OUT_DIR: ${{ github.workspace }}/airgap-bundle
+          SDK_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.sdk_version }}
+          CAA_VERSION: ${{ inputs.coded_action_app_version }}
+        run: node scripts/airgap/build-airgap-bundle.mjs
+
+      - name: Resolve bundle metadata
+        id: meta
+        run: |
+          SDK_VERSION=$(jq -r '.roots[] | select(.name == "@uipath/uipath-typescript").version' airgap-bundle/manifest.json)
+          CAA_VERSION=$(jq -r '.roots[] | select(.name == "@uipath/coded-action-app").version' airgap-bundle/manifest.json)
+          echo "sdk_version=$SDK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "caa_version=$CAA_VERSION" >> "$GITHUB_OUTPUT"
+          echo "bundle_name=uipath-sdk-airgap-bundle-${SDK_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "## Air-gapped bundle" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`@uipath/uipath-typescript@${SDK_VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`@uipath/coded-action-app@${CAA_VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '"- Tarballs: \(.packages | length)"' airgap-bundle/manifest.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.bundle_name }}
+          if-no-files-found: error
+          retention-days: 30
+          path: airgap-bundle/
+
+  verify:
+    name: Verify bundle installs offline
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Download bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.bundle_name }}
+          path: airgap-bundle
+
+      # No uplinks: Verdaccio can only serve what the bundle publishes into
+      # it, so a missing dependency fails the install below.
+      - name: Start Verdaccio (test harness)
+        run: |
+          mkdir -p "$RUNNER_TEMP/verd/storage"
+          cat > "$RUNNER_TEMP/verd/config.yaml" <<'EOF'
+          storage: ./storage
+          auth:
+            htpasswd:
+              file: ./htpasswd
+          packages:
+            '**':
+              access: $all
+              publish: $all
+          uplinks: {}
+          log: { type: stdout, level: warn }
+          EOF
+          (cd "$RUNNER_TEMP/verd" && npx --yes verdaccio@6 --config config.yaml --listen 4873 > server.log 2>&1 &)
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:4873/-/ping > /dev/null 2>&1; then
+              echo "Verdaccio up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Verdaccio failed to start"; cat "$RUNNER_TEMP/verd/server.log"; exit 1
+
+      # --tag latest: npm refuses to publish prerelease versions (the
+      # coded-action-app betas) without an explicit tag.
+      - name: Publish bundle tarballs into Verdaccio
+        run: |
+          NPMRC="$RUNNER_TEMP/verd/publish.npmrc"
+          printf 'registry=http://localhost:4873/\n@uipath:registry=http://localhost:4873/\n//localhost:4873/:_authToken=anonymous\n' > "$NPMRC"
+          count=0
+          for t in airgap-bundle/*.tgz; do
+            npm publish "./$t" --userconfig="$NPMRC" \
+              --registry=http://localhost:4873/ --@uipath:registry=http://localhost:4873/ \
+              --tag latest > /dev/null
+            count=$((count + 1))
+          done
+          echo "Published $count tarballs into Verdaccio"
+
+      - name: Install both SDKs from the offline registry
+        env:
+          SDK_VERSION: ${{ needs.build.outputs.sdk_version }}
+          CAA_VERSION: ${{ needs.build.outputs.caa_version }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/install-test" && cd "$RUNNER_TEMP/install-test"
+          npm init -y > /dev/null
+          npm install "@uipath/uipath-typescript@${SDK_VERSION}" "@uipath/coded-action-app@${CAA_VERSION}" \
+            --registry=http://localhost:4873/ --@uipath:registry=http://localhost:4873/ \
+            --ignore-scripts --no-audit --no-fund
+          node -e "require('@uipath/uipath-typescript'); require('@uipath/coded-action-app'); console.log('both SDKs install and load from the bundle alone')"
+
+  attach:
+    name: Attach bundle to release
+    needs: [build, verify]
+    if: github.event_name == 'release' || inputs.release_tag != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.bundle_name }}
+          path: airgap-bundle
+
+      # Tag passed via env (never interpolated into the script) to avoid
+      # shell injection through a crafted tag name.
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name || inputs.release_tag }}
+          BUNDLE_NAME: ${{ needs.build.outputs.bundle_name }}
+        run: |
+          (cd airgap-bundle && zip -qr "${GITHUB_WORKSPACE}/${BUNDLE_NAME}.zip" .)
+          gh release upload "$TAG_NAME" "${BUNDLE_NAME}.zip" --clobber --repo "$GITHUB_REPOSITORY"
+          echo "- Attached \`${BUNDLE_NAME}.zip\` to release \`${TAG_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
