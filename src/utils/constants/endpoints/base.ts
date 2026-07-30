@@ -6,6 +6,20 @@ export const ORCHESTRATOR_BASE = 'orchestrator_';
 export const PIMS_BASE = 'pims_';
 export const DATAFABRIC_BASE = 'datafabric_';
 export const IDENTITY_BASE = 'identity_';
+/**
+ * Identity API base for requests routed through {@link ApiClient}.
+ *
+ * The Identity API is routed at the **organization** level — its URLs do not include a
+ * tenant segment (unlike most UiPath services). Compare {@link IDENTITY_BASE}, which is
+ * used for the `connect/*` OAuth endpoints called directly against `baseUrl`.
+ *
+ * The `../` prefix relies on `URL` path normalization to collapse the tenant segment
+ * that {@link ApiClient} unconditionally inserts (`{orgName}/{tenantName}/{path}`). Concretely,
+ * `{orgName}/{tenantName}/../identity_/api/Setting` resolves to `{orgName}/identity_/api/Setting`.
+ *
+ * Do NOT remove the leading `../`.
+ */
+export const IDENTITY_API_BASE = `../${IDENTITY_BASE}`;
 export const AUTOPILOT_BASE = 'autopilotforeveryone_';
 export const LLMOPS_BASE = 'llmopstenant_';
 export const INSIGHTS_RTM_BASE = 'insightsrtm_';

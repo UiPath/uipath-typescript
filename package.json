@@ -225,6 +225,16 @@
                 "types": "./dist/notifications/index.d.ts",
                 "default": "./dist/notifications/index.cjs"
             }
+        },
+        "./identity-settings": {
+            "import": {
+                "types": "./dist/identity-settings/index.d.ts",
+                "default": "./dist/identity-settings/index.mjs"
+            },
+            "require": {
+                "types": "./dist/identity-settings/index.d.ts",
+                "default": "./dist/identity-settings/index.cjs"
+            }
         }
     },
     "files": [
