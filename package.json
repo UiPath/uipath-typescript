@@ -235,6 +235,16 @@
                 "types": "./dist/functions/index.d.ts",
                 "default": "./dist/functions/index.cjs"
             }
+        },
+        "./identity-settings": {
+            "import": {
+                "types": "./dist/identity-settings/index.d.ts",
+                "default": "./dist/identity-settings/index.mjs"
+            },
+            "require": {
+                "types": "./dist/identity-settings/index.d.ts",
+                "default": "./dist/identity-settings/index.cjs"
+            }
         }
     },
     "files": [

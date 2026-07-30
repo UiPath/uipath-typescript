@@ -23,6 +23,7 @@ import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { Functions } from '../../../src/services/orchestrator/functions';
+import { IdentitySettings } from '../../../src/services/identity';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -68,6 +69,7 @@ export interface TestServices {
   notifications?: Notifications;
   subscriptions?: Subscriptions;
   functions?: Functions;
+  identitySettings?: IdentitySettings;
 }
 
 /**
@@ -160,6 +162,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
     functions: new Functions(sdk),
+    identitySettings: new IdentitySettings(sdk),
   };
 }
 

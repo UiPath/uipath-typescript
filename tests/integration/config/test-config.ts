@@ -41,6 +41,12 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
+  /**
+   * Organization (partition) GUID used to exercise explicit `partitionGlobalId` scoping on
+   * the Identity Settings API. Omit to skip only that assertion — the settings payload does
+   * not carry the partition GUID, so it cannot be discovered at runtime.
+   */
+  identityTestPartitionGlobalId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -104,6 +110,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
+    identityTestPartitionGlobalId: typeof rawConfig.identityTestPartitionGlobalId === 'string' ? rawConfig.identityTestPartitionGlobalId : undefined,
   };
 }
 
@@ -151,6 +158,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
+    identityTestPartitionGlobalId: process.env.IDENTITY_TEST_PARTITION_GLOBAL_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
