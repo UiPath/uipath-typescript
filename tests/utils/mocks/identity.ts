@@ -1,28 +1,34 @@
 /**
- * Identity Settings mock factories.
+ * Identity mock factories.
+ *
+ * Shapes mirror the real API response captured during onboarding.
  */
 
-import type { IdentitySetting } from '../../../src/models/identity/settings.types';
-import { IDENTITY_SETTING_TEST_CONSTANTS } from '../constants/identity';
+import type { IdentitySetting } from '../../../src/models/identity/identity.types';
+import { IDENTITY_TEST_CONSTANTS } from '../constants/identity';
 
 /**
- * Builds a single identity setting.
+ * Builds a single stored identity setting.
  */
 export const createBasicIdentitySetting = (
   overrides?: Partial<IdentitySetting>
 ): IdentitySetting => ({
-  key: IDENTITY_SETTING_TEST_CONSTANTS.SETTING_KEY,
-  value: IDENTITY_SETTING_TEST_CONSTANTS.SETTING_VALUE,
+  id: IDENTITY_TEST_CONSTANTS.SETTING_ID,
+  key: IDENTITY_TEST_CONSTANTS.SETTING_KEY,
+  value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE,
+  partitionGlobalId: IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID,
+  userId: IDENTITY_TEST_CONSTANTS.USER_ID,
   ...overrides,
 });
 
 /**
- * Builds the settings list returned by a bulk read.
+ * Builds the settings list returned by a multi-key read.
  */
 export const createBasicIdentitySettings = (): IdentitySetting[] => [
   createBasicIdentitySetting(),
   createBasicIdentitySetting({
-    key: IDENTITY_SETTING_TEST_CONSTANTS.SETTING_KEY_ALT,
-    value: IDENTITY_SETTING_TEST_CONSTANTS.SETTING_VALUE_ALT,
+    id: IDENTITY_TEST_CONSTANTS.SETTING_ID_ALT,
+    key: IDENTITY_TEST_CONSTANTS.SETTING_KEY_ALT,
+    value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE_ALT,
   }),
 ];

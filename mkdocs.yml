@@ -200,7 +200,7 @@ nav:
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Functions: api/interfaces/FunctionServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
-          - Identity Settings: api/interfaces/IdentitySettingServiceModel.md
+          - Identity: api/interfaces/IdentityServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
