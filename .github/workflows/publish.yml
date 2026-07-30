@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
     steps:
@@ -70,6 +70,21 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Pack in the same run so the release asset is byte-identical to the npm
+      # publish (the build above has the telemetry version stamped in).
+      - name: Attach package tarball to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SDK_VERSION=$(node -p "require('./package.json').version")
+          npm pack
+          TARBALL="uipath-uipath-typescript-${SDK_VERSION}.tgz"
+          if gh release view "$SDK_VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$SDK_VERSION" "$TARBALL" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$SDK_VERSION" "$TARBALL" --title "$SDK_VERSION" --generate-notes --repo "$GITHUB_REPOSITORY"
+          fi
+
       - name: Generate Summary
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
@@ -82,6 +97,7 @@ jobs:
           echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
           echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "- Attached packed tarball to GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
