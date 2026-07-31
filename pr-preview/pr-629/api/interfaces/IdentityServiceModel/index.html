@@ -2342,7 +2342,7 @@ the generated API reference documentation.</p>
 </blockquote>
 <p>Gets a user's identity settings by key.</p>
 <p>Returns one entry per key that has a stored value for that user, each carrying the
-value plus the partition and user it belongs to. Keys with nothing stored are
+value plus the organization and user it belongs to. Keys with nothing stored are
 <strong>omitted</strong> from the response rather than returned with an empty value, so the result
 may be shorter than the list of keys requested.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -2368,7 +2368,7 @@ may be shorter than the list of keys requested.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../IdentitySettingsGetOptions/"><code>IdentitySettingsGetOptions</code></a></td>
-<td>Optional partition scoping</td>
+<td>Optional organization scoping</td>
 </tr>
 </tbody>
 </table>
@@ -2396,7 +2396,7 @@ may be shorter than the list of keys requested.</p>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nx">IdentitySettingKey</span><span class="p">.</span><span class="nx">UserCasePinnedInstancesByTenant</span><span class="p">,</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="p">],</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">partitionGlobalId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;partitionGlobalId&gt;&#39;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">organizationId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">);</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1">// Structured settings arrive as a JSON string</span>
@@ -2406,16 +2406,16 @@ may be shorter than the list of keys requested.</p>
 <hr />
 <h3 id="updatesettings">updateSettings()<a class="headerlink" href="#updatesettings" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateSettings</strong>(<code>settings</code>: <a href="../IdentitySettingUpsert/"><code>IdentitySettingUpsert</code></a>[], <code>userId</code>: <code>string</code>, <code>partitionGlobalId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
+<p><strong>updateSettings</strong>(<code>settings</code>: <a href="../IdentitySettingUpsert/"><code>IdentitySettingUpsert</code></a>[], <code>userId</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
 </blockquote>
 <p>Creates or updates a user's identity settings in bulk.</p>
 <p>Each submitted key is upserted for that user — keys that do not yet exist are created,
 existing keys are overwritten. Keys absent from the request are left untouched, so
 there is no need to send back the settings you are not changing. Returns the stored
 rows as they are after the write, including their generated <code>id</code>.</p>
-<p>Unlike <a href="#getsettings">getSettings</a>, the partition cannot be inferred on a write and must be
+<p>Unlike <a href="#getsettings">getSettings</a>, the organization cannot be inferred on a write and must be
 supplied. Read a setting first if you do not have it — every
-<a href="../IdentitySetting/">IdentitySetting</a> carries its <code>partitionGlobalId</code>.</p>
+<a href="../IdentitySetting/">IdentitySetting</a> carries its <code>organizationId</code>.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2437,9 +2437,9 @@ supplied. Read a setting first if you do not have it — every
 <td>GUID of the user whose settings to write</td>
 </tr>
 <tr>
-<td><code>partitionGlobalId</code></td>
+<td><code>organizationId</code></td>
 <td><code>string</code></td>
-<td>Organization (partition) GUID to write to</td>
+<td>Organization (account) GUID to write to</td>
 </tr>
 </tbody>
 </table>
@@ -2455,7 +2455,7 @@ supplied. Read a setting first if you do not have it — every
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">identity</span><span class="p">.</span><span class="nx">updateSettings</span><span class="p">(</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p">[{</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">IdentitySettingKey.UserTheme</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;dark&#39;</span><span class="w"> </span><span class="p">}],</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">current</span><span class="p">.</span><span class="nx">userId</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">current</span><span class="p">.</span><span class="nx">partitionGlobalId</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">current</span><span class="p">.</span><span class="nx">organizationId</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">identity</span><span class="p">.</span><span class="nx">updateSettings</span><span class="p">(</span>
@@ -2464,7 +2464,7 @@ supplied. Read a setting first if you do not have it — every
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">IdentitySettingKey.UserAccessibility</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;true&#39;</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="p">],</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="s1">&#39;&lt;partitionGlobalId&gt;&#39;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">);</span>
 </code></pre></div>
 

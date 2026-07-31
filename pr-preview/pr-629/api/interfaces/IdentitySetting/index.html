@@ -2232,7 +2232,7 @@
   <h1>IdentitySetting</h1>
 
 <p>A stored identity setting.</p>
-<p>Settings are key/value pairs belonging to one user within an organization (partition).
+<p>Settings are key/value pairs belonging to one user within an organization.
 Values are always strings — numbers and booleans arrive as <code>'8'</code> / <code>'false'</code>, and
 structured settings as a JSON string the caller parses.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
@@ -2256,9 +2256,9 @@ structured settings as a JSON string the caller parses.</p>
 <td>The setting's key.</td>
 </tr>
 <tr>
-<td><a id="partitionglobalid"></a> <code>partitionGlobalId</code></td>
+<td><a id="organizationid"></a> <code>organizationId</code></td>
 <td><code>string</code></td>
-<td>Organization (partition) GUID the setting belongs to.</td>
+<td>Organization (account) GUID the setting belongs to.</td>
 </tr>
 <tr>
 <td><a id="userid"></a> <code>userId</code></td>
