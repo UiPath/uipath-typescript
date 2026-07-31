@@ -8,8 +8,9 @@
 import { IdentitySettingKey } from '../../../src/models/identity/identity.types';
 
 export const IDENTITY_TEST_CONSTANTS = {
-  // Scope GUIDs — optional query params on both operations
-  PARTITION_GLOBAL_ID: 'bc2ddac5-57bc-40e6-93fe-3b319b60ce36',
+  // Scope GUIDs. The API calls the organization a "partition" on the wire; the SDK
+  // exposes the same GUID as `organizationId`.
+  ORGANIZATION_ID: 'bc2ddac5-57bc-40e6-93fe-3b319b60ce36',
   USER_ID: '81a27926-9d8d-4c62-84e5-df1c51c0b676',
 
   // Setting rows
@@ -29,5 +30,5 @@ export const IDENTITY_TEST_CONSTANTS = {
 
   // Error messages
   ERROR_SETTING_NOT_FOUND: 'Setting not found',
-  ERROR_SETTING_FORBIDDEN: 'Caller is not authorized for the requested partition',
+  ERROR_SETTING_FORBIDDEN: 'Caller is not authorized for the requested organization',
 } as const;

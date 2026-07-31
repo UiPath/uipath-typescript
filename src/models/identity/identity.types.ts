@@ -35,7 +35,7 @@ export enum IdentitySettingKey {
 /**
  * A stored identity setting.
  *
- * Settings are key/value pairs belonging to one user within an organization (partition).
+ * Settings are key/value pairs belonging to one user within an organization.
  * Values are always strings — numbers and booleans arrive as `'8'` / `'false'`, and
  * structured settings as a JSON string the caller parses.
  */
@@ -46,15 +46,15 @@ export interface IdentitySetting {
   key: IdentitySettingKey;
   /** Setting value, always serialized as a string. */
   value: string;
-  /** Organization (partition) GUID the setting belongs to. */
-  partitionGlobalId: string;
+  /** Organization (account) GUID the setting belongs to. */
+  organizationId: string;
   /** GUID of the user the setting belongs to. */
   userId: string;
 }
 
 /**
  * A setting to create or update. Only the key and its new value are sent — the owning
- * partition and user come from the request scope.
+ * organization and user come from the request scope.
  */
 export interface IdentitySettingUpsert {
   /** The setting to write. */
@@ -68,8 +68,8 @@ export interface IdentitySettingUpsert {
  */
 export interface IdentitySettingsGetOptions {
   /**
-   * Organization (partition) GUID to read from. When omitted, the API falls back to the
-   * partition the calling token is scoped to.
+   * Organization (account) GUID to read from. When omitted, the API falls back to the
+   * organization the calling token is scoped to.
    */
-  partitionGlobalId?: string;
+  organizationId?: string;
 }

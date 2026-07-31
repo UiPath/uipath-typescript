@@ -21,13 +21,13 @@ export interface IdentityServiceModel {
    * Gets a user's identity settings by key.
    *
    * Returns one entry per key that has a stored value for that user, each carrying the
-   * value plus the partition and user it belongs to. Keys with nothing stored are
+   * value plus the organization and user it belongs to. Keys with nothing stored are
    * **omitted** from the response rather than returned with an empty value, so the result
    * may be shorter than the list of keys requested.
    *
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
-   * @param options - Optional partition scoping
+   * @param options - Optional organization scoping
    * @returns The user's stored settings for the requested keys
    * {@link IdentitySetting}
    *
@@ -55,7 +55,7 @@ export interface IdentityServiceModel {
    *     IdentitySettingKey.UserCasePinnedInstancesByTenant,
    *   ],
    *   '<userId>',
-   *   { partitionGlobalId: '<partitionGlobalId>' }
+   *   { organizationId: '<organizationId>' }
    * );
    *
    * // Structured settings arrive as a JSON string
@@ -77,13 +77,13 @@ export interface IdentityServiceModel {
    * there is no need to send back the settings you are not changing. Returns the stored
    * rows as they are after the write, including their generated `id`.
    *
-   * Unlike {@link getSettings}, the partition cannot be inferred on a write and must be
+   * Unlike {@link getSettings}, the organization cannot be inferred on a write and must be
    * supplied. Read a setting first if you do not have it — every
-   * {@link IdentitySetting} carries its `partitionGlobalId`.
+   * {@link IdentitySetting} carries its `organizationId`.
    *
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
-   * @param partitionGlobalId - Organization (partition) GUID to write to
+   * @param organizationId - Organization (account) GUID to write to
    * @returns The settings as stored after the write
    * {@link IdentitySetting}
    *
@@ -96,7 +96,7 @@ export interface IdentityServiceModel {
    * const updated = await identity.updateSettings(
    *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],
    *   current.userId,
-   *   current.partitionGlobalId
+   *   current.organizationId
    * );
    * ```
    *
@@ -108,13 +108,13 @@ export interface IdentityServiceModel {
    *     { key: IdentitySettingKey.UserAccessibility, value: 'true' },
    *   ],
    *   '<userId>',
-   *   '<partitionGlobalId>'
+   *   '<organizationId>'
    * );
    * ```
    */
   updateSettings(
     settings: IdentitySettingUpsert[],
     userId: string,
-    partitionGlobalId: string
+    organizationId: string
   ): Promise<IdentitySetting[]>;
 }

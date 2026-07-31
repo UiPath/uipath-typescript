@@ -12,9 +12,16 @@ import type {
   IdentitySettingUpsert,
   IdentitySettingsGetOptions,
 } from '../../models/identity/identity.types';
+import type { RawIdentitySetting } from '../../models/identity/identity.internal-types';
 import type { IdentityServiceModel } from '../../models/identity/identity.models';
+import { IdentitySettingMap } from '../../models/identity/identity.constants';
 
 import { IDENTITY_SETTING_ENDPOINTS } from '../../utils/constants/endpoints';
+import { transformData } from '../../utils/transform';
+
+/** Renames the API's `partitionGlobalId` to the SDK-wide `organizationId`. */
+const toIdentitySetting = (raw: RawIdentitySetting): IdentitySetting =>
+  transformData(raw, IdentitySettingMap) as unknown as IdentitySetting;
 
 /**
  * Service for reading and writing UiPath Identity settings.
@@ -43,20 +50,20 @@ export class IdentityService extends BaseService implements IdentityServiceModel
 
     // Scope travels in the query string on reads, but in the body on writes
     const params: Record<string, string | IdentitySettingKey[]> = { key: keys, userId };
-    if (options?.partitionGlobalId) params.partitionGlobalId = options.partitionGlobalId;
+    if (options?.organizationId) params.partitionGlobalId = options.organizationId;
 
-    const response = await this.get<IdentitySetting[]>(
+    const response = await this.get<RawIdentitySetting[]>(
       IDENTITY_SETTING_ENDPOINTS.SETTINGS,
       { params }
     );
-    return response.data;
+    return response.data.map(toIdentitySetting);
   }
 
   @track('Identity.UpdateSettings')
   async updateSettings(
     settings: IdentitySettingUpsert[],
     userId: string,
-    partitionGlobalId: string
+    organizationId: string
   ): Promise<IdentitySetting[]> {
     if (settings.length === 0) {
       throw new ValidationError({ message: 'settings must contain at least one setting to update' });
@@ -64,15 +71,15 @@ export class IdentityService extends BaseService implements IdentityServiceModel
     if (!userId) {
       throw new ValidationError({ message: 'userId is required for updateSettings' });
     }
-    if (!partitionGlobalId) {
-      throw new ValidationError({ message: 'partitionGlobalId is required for updateSettings' });
+    if (!organizationId) {
+      throw new ValidationError({ message: 'organizationId is required for updateSettings' });
     }
 
-    const response = await this.put<IdentitySetting[]>(IDENTITY_SETTING_ENDPOINTS.SETTINGS, {
+    const response = await this.put<RawIdentitySetting[]>(IDENTITY_SETTING_ENDPOINTS.SETTINGS, {
       settings,
-      partitionGlobalId,
+      partitionGlobalId: organizationId,
       userId,
     });
-    return response.data;
+    return response.data.map(toIdentitySetting);
   }
 }

@@ -22,7 +22,7 @@
  * await identity.updateSettings(
  *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],
  *   settings[0].userId,
- *   settings[0].partitionGlobalId
+ *   settings[0].organizationId
  * );
  * ```
  *

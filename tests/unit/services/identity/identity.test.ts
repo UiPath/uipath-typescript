@@ -63,8 +63,7 @@ describe('IdentityService Unit Tests', () => {
     });
 
     it('should GET Setting with each key as a repeated key param', async () => {
-      const mockData = createBasicIdentitySettings();
-      mockApiClient.get.mockResolvedValue(mockData);
+      mockApiClient.get.mockResolvedValue(createBasicIdentitySettings());
 
       const result = await identityService.getSettings(
         [IDENTITY_TEST_CONSTANTS.SETTING_KEY, IDENTITY_TEST_CONSTANTS.SETTING_KEY_ALT],
@@ -77,21 +76,24 @@ describe('IdentityService Unit Tests', () => {
           userId: IDENTITY_TEST_CONSTANTS.USER_ID,
         },
       });
-      expect(result).toEqual(mockData);
+      expect(result.map((s) => s.key)).toEqual([
+        IDENTITY_TEST_CONSTANTS.SETTING_KEY,
+        IDENTITY_TEST_CONSTANTS.SETTING_KEY_ALT,
+      ]);
     });
 
-    it('should GET Setting with partitionGlobalId when supplied', async () => {
+    it('should send organizationId as the wire param partitionGlobalId', async () => {
       mockApiClient.get.mockResolvedValue(createBasicIdentitySettings());
 
       await identityService.getSettings([IDENTITY_TEST_CONSTANTS.SETTING_KEY], IDENTITY_TEST_CONSTANTS.USER_ID, {
-        partitionGlobalId: IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID,
+        organizationId: IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID,
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(IDENTITY_SETTING_ENDPOINTS.SETTINGS, {
         params: {
           key: [IDENTITY_TEST_CONSTANTS.SETTING_KEY],
           userId: IDENTITY_TEST_CONSTANTS.USER_ID,
-          partitionGlobalId: IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID,
+          partitionGlobalId: IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID,
         },
       });
     });
@@ -104,6 +106,7 @@ describe('IdentityService Unit Tests', () => {
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params.userId).toBe(IDENTITY_TEST_CONSTANTS.USER_ID);
       expect(spec.params).not.toHaveProperty('partitionGlobalId');
+      expect(spec.params).not.toHaveProperty('organizationId');
     });
 
     it('should target the organization-level Setting URL with no tenant segment', async () => {
@@ -126,8 +129,20 @@ describe('IdentityService Unit Tests', () => {
       expect(result[0].id).toBe(IDENTITY_TEST_CONSTANTS.SETTING_ID);
       expect(result[0].key).toBe(IDENTITY_TEST_CONSTANTS.SETTING_KEY);
       expect(result[0].value).toBe(IDENTITY_TEST_CONSTANTS.SETTING_VALUE);
-      expect(result[0].partitionGlobalId).toBe(IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      expect(result[0].organizationId).toBe(IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
       expect(result[0].userId).toBe(IDENTITY_TEST_CONSTANTS.USER_ID);
+    });
+
+    it('should rename partitionGlobalId to organizationId and drop the wire field', async () => {
+      mockApiClient.get.mockResolvedValue([createBasicIdentitySetting()]);
+
+      const result = await identityService.getSettings(
+        [IDENTITY_TEST_CONSTANTS.SETTING_KEY],
+        IDENTITY_TEST_CONSTANTS.USER_ID
+      );
+
+      expect(result[0].organizationId).toBe(IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(result[0]).not.toHaveProperty('partitionGlobalId');
     });
 
     it('should return a JSON-valued setting as an unparsed string', async () => {
@@ -185,24 +200,24 @@ describe('IdentityService Unit Tests', () => {
       { key: IDENTITY_TEST_CONSTANTS.SETTING_KEY, value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE },
     ];
 
-    it('should PUT Setting with settings, partitionGlobalId and userId in the body', async () => {
-      const updated = [createBasicIdentitySetting()];
-      mockApiClient.put.mockResolvedValue(updated);
+    it('should PUT Setting with settings, the organization as partitionGlobalId, and userId in the body', async () => {
+      mockApiClient.put.mockResolvedValue([createBasicIdentitySetting()]);
 
-      const result = await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      const result = await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(mockApiClient.put).toHaveBeenCalledWith(
         IDENTITY_SETTING_ENDPOINTS.SETTINGS,
-        { settings, partitionGlobalId: IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID, userId: IDENTITY_TEST_CONSTANTS.USER_ID },
+        { settings, partitionGlobalId: IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID, userId: IDENTITY_TEST_CONSTANTS.USER_ID },
         {}
       );
-      expect(result).toEqual(updated);
+      expect(result[0].key).toBe(IDENTITY_TEST_CONSTANTS.SETTING_KEY);
+      expect(result[0].organizationId).toBe(IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
     });
 
     it('should always send userId in the body, so writes are never organization-scoped', async () => {
       mockApiClient.put.mockResolvedValue([createBasicIdentitySetting()]);
 
-      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
 
       const body = mockApiClient.put.mock.calls[0][1] as Record<string, unknown>;
       expect(body.userId).toBe(IDENTITY_TEST_CONSTANTS.USER_ID);
@@ -212,7 +227,7 @@ describe('IdentityService Unit Tests', () => {
     it('should send no scope in the query string on a write', async () => {
       mockApiClient.put.mockResolvedValue([createBasicIdentitySetting()]);
 
-      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(mockApiClient.put.mock.calls[0][2]).toEqual({});
     });
@@ -223,17 +238,20 @@ describe('IdentityService Unit Tests', () => {
         createBasicIdentitySetting({ value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE_ALT }),
       ]);
 
-      const result = await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      const result = await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(result[0].id).toBe(IDENTITY_TEST_CONSTANTS.SETTING_ID);
       expect(result[0].value).toBe(IDENTITY_TEST_CONSTANTS.SETTING_VALUE_ALT);
       expect(result[0].userId).toBe(IDENTITY_TEST_CONSTANTS.USER_ID);
+      // The write response goes through the same rename as a read
+      expect(result[0].organizationId).toBe(IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(result[0]).not.toHaveProperty('partitionGlobalId');
     });
 
     it('should send only the key and value for each submitted setting', async () => {
       mockApiClient.put.mockResolvedValue([createBasicIdentitySetting()]);
 
-      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID);
+      await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
 
       const body = mockApiClient.put.mock.calls[0][1] as { settings: IdentitySettingUpsert[] };
       expect(Object.keys(body.settings[0])).toEqual(['key', 'value']);
@@ -241,14 +259,14 @@ describe('IdentityService Unit Tests', () => {
 
     it('should throw ValidationError when settings is empty and make no request', async () => {
       await expect(
-        identityService.updateSettings([], IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID)
+        identityService.updateSettings([], IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when userId is empty and make no request', async () => {
       await expect(
-        identityService.updateSettings(settings, '', IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID)
+        identityService.updateSettings(settings, '', IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
@@ -266,7 +284,7 @@ describe('IdentityService Unit Tests', () => {
       );
 
       await expect(
-        identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.PARTITION_GLOBAL_ID)
+        identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toThrow(IDENTITY_TEST_CONSTANTS.ERROR_SETTING_FORBIDDEN);
     });
   });
