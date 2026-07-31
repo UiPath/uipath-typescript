@@ -25,3 +25,4 @@ dist
 *.sln
 *.sw?
 *.env
+uipath.json

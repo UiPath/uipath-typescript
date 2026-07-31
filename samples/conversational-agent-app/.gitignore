@@ -19,3 +19,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+uipath.json
