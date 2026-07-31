@@ -9,7 +9,6 @@
  */
 export const FunctionMap = {
   organizationUnitId: 'folderId',
-  organizationUnitFullyQualifiedName: 'folderName',
   releaseKey: 'processKey',
   // The package fields are flattened out of the nested `Release` entity, so the
   // API names are navigation paths. Keeps `filter: "processName eq '...'"` working.

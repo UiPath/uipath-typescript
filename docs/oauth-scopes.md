@@ -24,7 +24,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 ## Functions
 
-Coded functions are invoked through their HTTP endpoint, which requires the `OR.Default` scope (auto-granted to any registered external app, but it must appear explicitly in the app's scope string).
+Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
 
 | Method | OAuth Scope |
 |--------|-------------|

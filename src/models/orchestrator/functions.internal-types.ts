@@ -29,8 +29,6 @@ export interface RawFunctionTrigger {
   releaseKey: string;
   /** Numeric ID of the folder the trigger lives in. */
   organizationUnitId: number;
-  /** Fully qualified folder name. */
-  organizationUnitFullyQualifiedName?: string | null;
   /** Release (process) that packages the function. */
   release: {
     name: string;

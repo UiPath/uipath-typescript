@@ -32,7 +32,7 @@ export interface RawFunctionGetResponse {
   description?: string | null;
   /** Whether the function can currently be invoked. */
   enabled: boolean;
-  /** Default input arguments as a JSON string — parse with `JSON.parse()`. */
+  /** Sample input arguments as a JSON string — parse with `JSON.parse()`. */
   inputArguments?: string | null;
   /** Source file path of the function inside its package (e.g. `content/functions/hello.ts`). */
   entryPointPath?: string | null;
@@ -44,8 +44,6 @@ export interface RawFunctionGetResponse {
   processSlug: string;
   /** ID of the folder the function lives in. */
   folderId: number;
-  /** Fully qualified name of the folder the function lives in. */
-  folderName?: string | null;
 }
 
 /**
@@ -63,12 +61,6 @@ export type FunctionGetAllOptions = RequestOptions & PaginationOptions & FolderS
  * or initialize the SDK with a folder context.
  */
 export interface FunctionInvokeOptions extends FolderScopedOptions {
-  /**
-   * Key (GUID) of the parent job to attribute this invocation to. Sent as the
-   * `X-UIPATH-JobKey` header; the platform records it as the created job's
-   * `parentJobKey` so the run inherits the parent job's context and licensing
-   * transaction. Must be a job key in GUID format — other values are ignored
-   * by the platform.
-   */
+  /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
 }

@@ -185,12 +185,15 @@ describe('FunctionService Unit Tests', () => {
 
       // Renamed and reshaped fields carry the raw values
       expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
-      expect(transformed.folderName).toBe(FUNCTION_TEST_CONSTANTS.FOLDER_NAME);
       expect(transformed.processKey).toBe(FUNCTION_TEST_CONSTANTS.PROCESS_KEY);
       expect(transformed.processName).toBe(FUNCTION_TEST_CONSTANTS.PROCESS_NAME);
       expect(transformed.processSlug).toBe(FUNCTION_TEST_CONSTANTS.PROCESS_SLUG);
       expect(transformed.method).toBe(FunctionHttpMethod.Post);
       expect(transformed.slug).toBe(FUNCTION_TEST_CONSTANTS.SLUG);
+
+      // The API returns OrganizationUnitFullyQualifiedName as null on list
+      // responses, so it is not surfaced at all.
+      expect((transformed as any).folderName).toBeUndefined();
 
       // Original PascalCase fields are absent
       expect((transformed as any).OrganizationUnitId).toBeUndefined();

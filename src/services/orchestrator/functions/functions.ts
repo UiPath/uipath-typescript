@@ -226,7 +226,6 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       processName: trigger.release.name,
       processSlug: trigger.release.slug,
       folderId: trigger.organizationUnitId,
-      folderName: trigger.organizationUnitFullyQualifiedName,
     };
   }
 }

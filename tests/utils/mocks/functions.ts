@@ -13,7 +13,7 @@ export const createMockRawFunctionTrigger = (
   return {
     Type: 'Http',
     OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
-    OrganizationUnitFullyQualifiedName: FUNCTION_TEST_CONSTANTS.FOLDER_NAME,
+    OrganizationUnitFullyQualifiedName: null,
     Enabled: true,
     ReleaseKey: FUNCTION_TEST_CONSTANTS.PROCESS_KEY,
     Name: FUNCTION_TEST_CONSTANTS.NAME,
@@ -58,7 +58,6 @@ export const createBasicFunction = (
     processName: FUNCTION_TEST_CONSTANTS.PROCESS_NAME,
     processSlug: FUNCTION_TEST_CONSTANTS.PROCESS_SLUG,
     folderId: TEST_CONSTANTS.FOLDER_ID,
-    folderName: FUNCTION_TEST_CONSTANTS.FOLDER_NAME,
     ...overrides,
   };
 };

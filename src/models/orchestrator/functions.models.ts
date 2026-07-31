@@ -1,5 +1,6 @@
 import { FunctionGetAllOptions, FunctionInvokeOptions, RawFunctionGetResponse } from './functions.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { ValidationError } from '../../core/errors/validation';
 
 /** Combined response type for function data with bound methods. */
 export type FunctionGetResponse = RawFunctionGetResponse & FunctionMethods;
@@ -80,9 +81,7 @@ export interface FunctionServiceModel {
   /**
    * Invokes a function by name and returns its output.
    *
-   * The call is synchronous — it resolves with the function's output. Coded
-   * functions exposed over HTTP are request/response only, so a run that exceeds
-   * the platform's execution limit fails rather than continuing in the background.
+   * The call is synchronous — it resolves with the function's output.
    *
    * Type the input and output by supplying the generics — they should match the
    * input/output schema the function declares. Folder context is required — pass
@@ -165,8 +164,8 @@ function createFunctionMethods(
     async invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(
       input?: TInput
     ): Promise<TOutput> {
-      if (!functionData.name) throw new Error('Function name is undefined');
-      if (!functionData.folderId) throw new Error('Function folderId is undefined');
+      if (!functionData.name) throw new ValidationError({ message: 'Function name is undefined' });
+      if (!functionData.folderId) throw new ValidationError({ message: 'Function folderId is undefined' });
       return service.invoke<TInput, TOutput>(functionData.name, input, { folderId: functionData.folderId });
     },
   };

@@ -15,7 +15,6 @@ export const FUNCTION_TEST_CONSTANTS = {
   PROCESS_NAME: 'my-functions',
   PROCESS_SLUG: 'my-functions',
   FOLDER_KEY: '4dbf78cb-576c-4847-9959-788ab5e6dd9d',
-  FOLDER_NAME: 'Shared/Solution',
   INVOKE_INPUT: { name: 'Alice' },
   INVOKE_OUTPUT: { message: 'Hello, Alice!' },
   JOB_KEY: '7f3f4bd6-6f2e-4c5a-9d38-6f3f0a1b2c3d',
