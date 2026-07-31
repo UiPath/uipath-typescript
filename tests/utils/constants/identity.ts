@@ -29,6 +29,5 @@ export const IDENTITY_TEST_CONSTANTS = {
   SETTING_VALUE_JSON: '{"CaseManagement":["instance-a","instance-b"],"DefaultTenant":[]}',
 
   // Error messages
-  ERROR_SETTING_NOT_FOUND: 'Setting not found',
   ERROR_SETTING_FORBIDDEN: 'Caller is not authorized for the requested organization',
 } as const;
