@@ -7,7 +7,7 @@ import type {
   IdentitySetting,
   IdentitySettingKey,
   IdentitySettingUpsert,
-  IdentitySettingsGetOptions,
+  IdentitySettingGetOptions,
 } from './identity.types';
 
 /**
@@ -66,7 +66,7 @@ export interface IdentityServiceModel {
   getSettings(
     keys: IdentitySettingKey[],
     userId: string,
-    options?: IdentitySettingsGetOptions
+    options?: IdentitySettingGetOptions
   ): Promise<IdentitySetting[]>;
 
   /**
