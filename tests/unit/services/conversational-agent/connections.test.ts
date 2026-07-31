@@ -9,11 +9,12 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import type {
-  AvailableConnection,
-  AvailableConnectionsItem,
-  AvailableConnectionsResponse,
-  ConnectionAuthResponse,
+import {
+  ConnectionState,
+  type AvailableConnection,
+  type AvailableConnectionsItem,
+  type AvailableConnectionsResponse,
+  type ConnectionAuthResponse,
 } from '@/models/conversational-agent';
 
 // ===== MOCKING =====
@@ -38,7 +39,7 @@ const FOLDER_ID = TEST_CONSTANTS.FOLDER_ID;
 const createMockAvailableConnection = (overrides: Partial<AvailableConnection> = {}): AvailableConnection => ({
   id: 'conn-123',
   name: 'My Jira Connection',
-  state: 'Enabled',
+  state: ConnectionState.Enabled,
   isDefault: true,
   personalWorkspace: true,
   folderKey: null,
@@ -73,7 +74,7 @@ const createMockConnectionsResponse = (
 // ===== TEST SUITE =====
 describe('ConversationalAgentService — Connections', () => {
   let conversationalAgent: ConversationalAgentService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();

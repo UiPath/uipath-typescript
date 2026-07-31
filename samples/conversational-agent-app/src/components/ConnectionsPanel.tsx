@@ -161,9 +161,16 @@ function ConnectionRow({ item, selectedConnectionId, onSelect }: ConnectionRowPr
               className="w-6 h-6 object-contain flex-shrink-0 rounded"
             />
           )}
-          <span className="font-medium text-sm truncate">
-            {item.connectorName ?? item.connectorKey}
-          </span>
+          <div className="min-w-0">
+            <span className="font-medium text-sm truncate block">
+              {item.connectorName ?? formatConnectorKey(item.connectorKey)}
+            </span>
+            {item.currentConnectionName && (
+              <span className="text-xs text-gray-500 truncate block">
+                {item.currentConnectionName}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Status badge */}
@@ -180,7 +187,7 @@ function ConnectionRow({ item, selectedConnectionId, onSelect }: ConnectionRowPr
           className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
         >
           <span className={selectedConnection ? 'text-white' : 'text-gray-500'}>
-            {selectedConnection?.name ?? '+ Connection'}
+            {selectedConnection?.name ?? item.currentConnectionName ?? 'Select a connection...'}
           </span>
           <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -267,6 +274,15 @@ const STATUS_LABELS: Record<string, string> = {
   Expired: 'Expired',
   Disabled: 'Disabled',
   Failed: 'Failed',
+}
+
+/** Turns "uipath-microsoft-outlook365" into "Microsoft Outlook365" */
+function formatConnectorKey(key: string): string {
+  return key
+    .replace(/^uipath-/i, '')
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 function StatusBadge({ state, size = 'default' }: { state: string; size?: 'default' | 'sm' }) {

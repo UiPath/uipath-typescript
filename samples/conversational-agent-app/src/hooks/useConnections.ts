@@ -65,8 +65,8 @@ export function useConnections(
     try {
       const updatedItems = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
         selections: Object.entries(stagedSelections)
-          .filter(([, connectionId]) => Boolean(connectionId))
-          .map(([connectorKey, connectionId]) => ({ connectorKey, connectionId }))
+          .filter(([connectorKey]) => stagedSelections[connectorKey] !== initialSelections[connectorKey])
+          .map(([connectorKey, connectionId]) => ({ connectorKey, connectionId: connectionId || null }))
       })
       const selections = getInitialSelections(updatedItems)
       setAvailableConnections(updatedItems)

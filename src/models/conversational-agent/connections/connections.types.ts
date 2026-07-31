@@ -6,6 +6,16 @@
  */
 
 /**
+ * State of a connection
+ */
+export enum ConnectionState {
+  Enabled = 'Enabled',
+  Disabled = 'Disabled',
+  Expired = 'Expired',
+  Failed = 'Failed',
+}
+
+/**
  * A single connection available for selection
  */
 export interface AvailableConnection {
@@ -14,7 +24,7 @@ export interface AvailableConnection {
   /** Display name of the connection */
   name: string;
   /** Current state of the connection */
-  state: 'Enabled' | 'Disabled' | 'Expired' | 'Failed';
+  state: ConnectionState;
   /** Whether this is the user's default connection for the connector */
   isDefault: boolean;
   /** Whether this connection belongs to the user's personal workspace */
