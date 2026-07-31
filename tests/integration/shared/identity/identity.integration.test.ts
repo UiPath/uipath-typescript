@@ -13,13 +13,7 @@ const ALL_KEYS = Object.values(IdentitySettingKey);
 // organization returns no rows rather than an error.
 const DEFAULT_TEST_USER_ID = '81a27926-9d8d-4c62-84e5-df1c51c0b676';
 
-// skip: the CI external application is not authorized for identity settings — the first
-// getSettings call returns 403 Forbidden before reaching the resource, so no user GUID or
-// configuration value makes this suite pass. Re-enable by removing `.skip` once the CI app
-// is granted the `PM.Setting` scope (if identity endpoints turn out to reject PAT auth
-// outright, as insightsrtm_ does, this needs OAuth in the harness instead). The body is
-// kept intact so it runs as-is when that lands.
-describe.skip.each(modes)('Identity - Integration Tests [%s]', (mode) => {
+describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let identity!: Identity;
