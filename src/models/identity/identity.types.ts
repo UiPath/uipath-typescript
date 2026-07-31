@@ -66,7 +66,7 @@ export interface IdentitySettingUpsert {
 /**
  * Options for `Identity.getSettings()`.
  */
-export interface IdentitySettingsGetOptions {
+export interface IdentitySettingGetOptions {
   /**
    * Organization (account) GUID to read from. When omitted, the API falls back to the
    * organization the calling token is scoped to.

@@ -10,7 +10,7 @@ import type {
   IdentitySetting,
   IdentitySettingKey,
   IdentitySettingUpsert,
-  IdentitySettingsGetOptions,
+  IdentitySettingGetOptions,
 } from '../../models/identity/identity.types';
 import type { RawIdentitySetting } from '../../models/identity/identity.internal-types';
 import type { IdentityServiceModel } from '../../models/identity/identity.models';
@@ -39,7 +39,7 @@ export class IdentityService extends BaseService implements IdentityServiceModel
   async getSettings(
     keys: IdentitySettingKey[],
     userId: string,
-    options?: IdentitySettingsGetOptions
+    options?: IdentitySettingGetOptions
   ): Promise<IdentitySetting[]> {
     if (keys.length === 0) {
       throw new ValidationError({ message: 'keys must contain at least one setting key' });
