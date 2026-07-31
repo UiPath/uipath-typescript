@@ -44,6 +44,12 @@ export interface IntegrationConfig {
   /**
    * the snapshot, so it must be a benign, user-scoped setting.
    */
+  /**
+   * GUID of the user whose identity settings the Identity suite reads and round-trips.
+   * Required: every Identity operation is user-scoped and the SDK cannot derive the
+   * caller's user ID from a PAT.
+   */
+  identityTestUserId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -107,6 +113,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
+    identityTestUserId: typeof rawConfig.identityTestUserId === 'string' ? rawConfig.identityTestUserId : undefined,
   };
 }
 
@@ -154,6 +161,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
+    identityTestUserId: process.env.IDENTITY_TEST_USER_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);

@@ -1,8 +1,10 @@
 /**
  * Identity Module
  *
- * Provides access to organization-level UiPath Identity configuration:
- * - `Identity` — bulk read and bulk create/update of identity setting key/value pairs
+ * Provides access to UiPath Identity settings:
+ * - `Identity` — bulk read and bulk create/update of a user's setting key/value pairs
+ *
+ * Every operation is user-scoped — see {@link IdentitySettingKey}.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *
@@ -15,10 +17,11 @@
  * await sdk.initialize();
  *
  * const identity = new Identity(sdk);
- * const settings = await identity.getSettings([IdentitySettingKey.UserTheme]);
+ * const settings = await identity.getSettings([IdentitySettingKey.UserTheme], '<userId>');
  *
  * await identity.updateSettings(
  *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],
+ *   settings[0].userId,
  *   settings[0].partitionGlobalId
  * );
  * ```
