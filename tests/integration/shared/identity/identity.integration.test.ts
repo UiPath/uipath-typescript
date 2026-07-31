@@ -12,8 +12,10 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
 
   let identity!: Identity;
   let userId!: string;
-  // Snapshot of the key under test, restored in afterAll so the suite leaves the
+  // Snapshot of every stored setting, restored in afterAll so the suite leaves the
   // shared environment exactly as it found it.
+  let originalSettings!: IdentitySetting[];
+  // The single row the write tests round-trip.
   let originalSetting!: IdentitySetting;
 
   beforeAll(async () => {
@@ -40,16 +42,17 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
           'value for the test user; the settings round-trip cannot be verified.'
       );
     }
+    originalSettings = settings;
     originalSetting = settings[0];
   });
 
   afterAll(async () => {
-    if (!identity || !originalSetting || !userId) return;
-    // Restore from the snapshot — never a hardcoded assumed value.
+    if (!identity || !originalSettings?.length || !userId) return;
+    // Restore from the snapshot — never hardcoded assumed values.
     await identity.updateSettings(
-      [{ key: originalSetting.key, value: originalSetting.value }],
+      originalSettings.map((s) => ({ key: s.key, value: s.value })),
       userId,
-      originalSetting.organizationId
+      originalSettings[0].organizationId
     );
   });
 
@@ -122,6 +125,26 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       expect(afterRestore.find((s) => s.key === originalSetting.key)?.value).toBe(
         originalSetting.value
       );
+    });
+
+    it('should upsert every submitted setting in one request', async () => {
+      if (originalSettings.length < 2) {
+        throw new Error(
+          'Test user has fewer than 2 stored identity settings; the bulk write path cannot ' +
+            'be verified without creating keys this suite has no way to remove.'
+        );
+      }
+
+      // Writes each setting's existing value back, so the call is a no-op on the
+      // environment while still exercising the multi-item path end to end.
+      const batch = originalSettings.map((s) => ({ key: s.key, value: s.value }));
+
+      const updated = await identity.updateSettings(batch, userId, originalSetting.organizationId);
+
+      expect(updated.length).toBe(batch.length);
+      batch.forEach(({ key, value }) => {
+        expect(updated.find((s) => s.key === key)?.value).toBe(value);
+      });
     });
 
     it('should write against the same user the read returned', async () => {

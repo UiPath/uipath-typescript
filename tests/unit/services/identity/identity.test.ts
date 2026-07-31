@@ -1,6 +1,8 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { IdentityService } from '../../../../src/services/identity/identity';
+// Imported through the subpath barrel, the way consumers reach it — this also catches a
+// barrel that stops re-exporting the class or the enum as runtime values.
+import { Identity, IdentitySettingKey } from '../../../../src/services/identity';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import {
@@ -12,14 +14,13 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { IDENTITY_SETTING_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import type { IdentitySettingUpsert } from '../../../../src/models/identity';
-import { IdentitySettingKey } from '../../../../src/models/identity';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
 
 // ===== TEST SUITE =====
-describe('IdentityService Unit Tests', () => {
-  let identityService: IdentityService;
+describe('Identity Service Unit Tests', () => {
+  let identityService: Identity;
   let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('IdentityService Unit Tests', () => {
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
-    identityService = new IdentityService(instance);
+    identityService = new Identity(instance);
   });
 
   afterEach(() => {
@@ -49,9 +50,35 @@ describe('IdentityService Unit Tests', () => {
         UserCaseInstancesTableFiltersByTenant: 'UserCase.InstancesTableFiltersByTenant',
       });
     });
+
+    it('should be reachable as a runtime value through the subpath barrel', () => {
+      // A barrel using `export type *` would drop the enum and break every documented example
+      expect(typeof IdentitySettingKey).toBe('object');
+      expect(IdentitySettingKey.UserTheme).toBe('UserTheme.Theme');
+      expect(typeof Identity).toBe('function');
+    });
   });
 
   describe('getSettings', () => {
+    it('should accept every supported key in a single request', async () => {
+      const allKeys = Object.values(IdentitySettingKey);
+      mockApiClient.get.mockResolvedValue([createBasicIdentitySetting()]);
+
+      await identityService.getSettings(allKeys, IDENTITY_TEST_CONSTANTS.USER_ID);
+
+      const spec = mockApiClient.get.mock.calls[0][1] as { params: { key: string[] } };
+      expect(spec.params.key).toEqual(allKeys);
+      expect(spec.params.key).toHaveLength(8);
+    });
+
+    it('should return an empty array when no requested key has a stored value', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      const result = await identityService.getSettings([IDENTITY_TEST_CONSTANTS.SETTING_KEY], IDENTITY_TEST_CONSTANTS.USER_ID);
+
+      expect(result).toEqual([]);
+    });
+
     it('should send the enum wire value, not the member name, as the key param', async () => {
       mockApiClient.get.mockResolvedValue([createBasicIdentitySetting()]);
 
@@ -257,6 +284,38 @@ describe('IdentityService Unit Tests', () => {
       expect(Object.keys(body.settings[0])).toEqual(['key', 'value']);
     });
 
+    it('should PUT every submitted setting in one request and return each stored row', async () => {
+      const batch: IdentitySettingUpsert[] = [
+        { key: IDENTITY_TEST_CONSTANTS.SETTING_KEY, value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE },
+        { key: IDENTITY_TEST_CONSTANTS.SETTING_KEY_ALT, value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE_ALT },
+        { key: IDENTITY_TEST_CONSTANTS.SETTING_KEY_JSON, value: IDENTITY_TEST_CONSTANTS.SETTING_VALUE_JSON },
+      ];
+      // One stored row per submitted setting, as the API returns
+      mockApiClient.put.mockResolvedValue(
+        batch.map(({ key, value }, index) =>
+          createBasicIdentitySetting({ id: IDENTITY_TEST_CONSTANTS.SETTING_ID + index, key, value })
+        )
+      );
+
+      const result = await identityService.updateSettings(batch, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
+
+      const body = mockApiClient.put.mock.calls[0][1] as { settings: IdentitySettingUpsert[] };
+      expect(body.settings).toEqual(batch);
+      expect(result).toHaveLength(batch.length);
+      batch.forEach(({ key, value }) => {
+        expect(result.find((row) => row.key === key)?.value).toBe(value);
+      });
+      result.forEach((row) => expect(row.organizationId).toBe(IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID));
+    });
+
+    it('should return an empty array when the write response carries no rows', async () => {
+      mockApiClient.put.mockResolvedValue([]);
+
+      const result = await identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID);
+
+      expect(result).toEqual([]);
+    });
+
     it('should throw ValidationError when settings is empty and make no request', async () => {
       await expect(
         identityService.updateSettings([], IDENTITY_TEST_CONSTANTS.USER_ID, IDENTITY_TEST_CONSTANTS.ORGANIZATION_ID)
@@ -271,7 +330,7 @@ describe('IdentityService Unit Tests', () => {
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when partitionGlobalId is empty and make no request', async () => {
+    it('should throw ValidationError when organizationId is empty and make no request', async () => {
       await expect(
         identityService.updateSettings(settings, IDENTITY_TEST_CONSTANTS.USER_ID, '')
       ).rejects.toBeInstanceOf(ValidationError);
