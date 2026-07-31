@@ -39,6 +39,12 @@ export interface IntegrationConfig {
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
   tasksTestUserId?: string;
+  /**
+   * GUID of the user whose identity settings the Identity suite reads and round-trips.
+   * Required: every Identity operation is user-scoped and the SDK cannot derive the
+   * caller's user ID from a PAT.
+   */
+  identityTestUserId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -100,6 +106,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
+    identityTestUserId: typeof rawConfig.identityTestUserId === 'string' ? rawConfig.identityTestUserId : undefined,
   };
 }
 
@@ -145,6 +152,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
+    identityTestUserId: process.env.IDENTITY_TEST_USER_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);

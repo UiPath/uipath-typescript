@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Identity } from '../../../../src/services/identity';
 import { IdentitySettingKey, type IdentitySetting } from '../../../../src/models/identity';
 
@@ -11,6 +11,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let identity!: Identity;
+  let userId!: string;
   // Snapshot of the key under test, restored in afterAll so the suite leaves the
   // shared environment exactly as it found it.
   let originalSetting!: IdentitySetting;
@@ -22,9 +23,17 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
     }
     identity = service;
 
+    const { identityTestUserId } = getTestConfig();
+    if (!identityTestUserId) {
+      throw new Error(
+        'IDENTITY_TEST_USER_ID is not configured; every Identity operation is user-scoped.'
+      );
+    }
+    userId = identityTestUserId;
+
     // Any supported key with a stored value works — the write tests round-trip it and
     // restore the original, so nothing needs to be configured per environment.
-    const settings = await identity.getSettings(ALL_KEYS);
+    const settings = await identity.getSettings(ALL_KEYS, userId);
     if (settings.length === 0) {
       throw new Error(
         `None of the supported identity settings (${ALL_KEYS.join(', ')}) have a stored ` +
@@ -35,10 +44,11 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   });
 
   afterAll(async () => {
-    if (!identity || !originalSetting) return;
+    if (!identity || !originalSetting || !userId) return;
     // Restore from the snapshot — never a hardcoded assumed value.
     await identity.updateSettings(
       [{ key: originalSetting.key, value: originalSetting.value }],
+      userId,
       originalSetting.partitionGlobalId
     );
   });
@@ -54,23 +64,22 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
 
     it('should return no more rows than the number of keys requested', async () => {
       // Keys with nothing stored are omitted rather than returned with an empty value
-      const result = await identity.getSettings(ALL_KEYS);
+      const result = await identity.getSettings(ALL_KEYS, userId);
 
       expect(result.length).toBeLessThanOrEqual(ALL_KEYS.length);
       result.forEach((setting) => expect(ALL_KEYS).toContain(setting.key));
     });
 
     it('should retrieve a single key when only that key is requested', async () => {
-      const result = await identity.getSettings([originalSetting.key]);
+      const result = await identity.getSettings([originalSetting.key], userId);
 
       expect(result).toHaveLength(1);
       expect(result[0].key).toBe(originalSetting.key);
     });
 
-    it('should retrieve settings when partitionGlobalId and userId are passed explicitly', async () => {
-      const result = await identity.getSettings([originalSetting.key], {
+    it('should retrieve settings when partitionGlobalId is passed explicitly', async () => {
+      const result = await identity.getSettings([originalSetting.key], userId, {
         partitionGlobalId: originalSetting.partitionGlobalId,
-        userId: originalSetting.userId,
       });
 
       expect(result).toHaveLength(1);
@@ -85,6 +94,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
 
       const updated = await identity.updateSettings(
         [{ key: originalSetting.key, value: newValue }],
+        userId,
         originalSetting.partitionGlobalId
       );
 
@@ -93,31 +103,30 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       expect(updatedRow?.value).toBe(newValue);
       expect(typeof updatedRow?.id).toBe('number');
 
-      const afterWrite = await identity.getSettings([originalSetting.key]);
+      const afterWrite = await identity.getSettings([originalSetting.key], userId);
       expect(afterWrite.find((s) => s.key === originalSetting.key)?.value).toBe(newValue);
 
       // Restore immediately so a later failure cannot leave the modified value behind
       await identity.updateSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
+        userId,
         originalSetting.partitionGlobalId
       );
 
-      const afterRestore = await identity.getSettings([originalSetting.key]);
+      const afterRestore = await identity.getSettings([originalSetting.key], userId);
       expect(afterRestore.find((s) => s.key === originalSetting.key)?.value).toBe(
         originalSetting.value
       );
     });
 
-    it('should accept explicit userId scoping on a write', async () => {
+    it('should write against the same user the read returned', async () => {
       const updated = await identity.updateSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
-        originalSetting.partitionGlobalId,
-        { userId: originalSetting.userId }
+        userId,
+        originalSetting.partitionGlobalId
       );
 
-      expect(updated.find((s) => s.key === originalSetting.key)?.userId).toBe(
-        originalSetting.userId
-      );
+      expect(updated.find((s) => s.key === originalSetting.key)?.userId).toBe(userId);
     });
   });
 });

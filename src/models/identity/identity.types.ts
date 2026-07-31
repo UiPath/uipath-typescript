@@ -7,6 +7,11 @@
  *
  * Only these keys can be read or written — the identity settings store holds other keys,
  * but they are not part of this SDK's surface.
+ *
+ * Every operation in this module is **user-scoped**: `userId` is always sent, so reads and
+ * writes act on one user's own value for a key. The underlying store can also hold an
+ * organization-wide value per key (selected by omitting `userId`), but this SDK does not
+ * expose that scope.
  */
 export enum IdentitySettingKey {
   /** The user's preferred UI language. */
@@ -30,7 +35,7 @@ export enum IdentitySettingKey {
 /**
  * A stored identity setting.
  *
- * Settings are key/value pairs scoped to a user within an organization (partition).
+ * Settings are key/value pairs belonging to one user within an organization (partition).
  * Values are always strings — numbers and booleans arrive as `'8'` / `'false'`, and
  * structured settings as a JSON string the caller parses.
  */
@@ -59,25 +64,12 @@ export interface IdentitySettingUpsert {
 }
 
 /**
- * User scoping shared by identity settings operations.
- */
-export interface IdentitySettingsUserScopeOptions {
-  /** GUID of the user whose settings to operate on. When omitted, the calling user is used. */
-  userId?: string;
-}
-
-/**
  * Options for `Identity.getSettings()`.
  */
-export interface IdentitySettingsGetOptions extends IdentitySettingsUserScopeOptions {
+export interface IdentitySettingsGetOptions {
   /**
    * Organization (partition) GUID to read from. When omitted, the API falls back to the
    * partition the calling token is scoped to.
    */
   partitionGlobalId?: string;
 }
-
-/**
- * Options for `Identity.updateSettings()`.
- */
-export interface IdentitySettingsUpdateOptions extends IdentitySettingsUserScopeOptions {}

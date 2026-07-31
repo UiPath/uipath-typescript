@@ -240,6 +240,7 @@ Tests skip gracefully when:
 | `DATA_FABRIC_TEST_JOIN_FIELD_NAME` | Join key field on the base entity | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
+| `IDENTITY_TEST_USER_ID` | GUID of the user whose identity settings are read and round-tripped | (required for the Identity tests) |
 
 ## Test Data Management
 
