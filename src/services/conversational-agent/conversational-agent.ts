@@ -28,6 +28,7 @@ import type {
 } from '@/models/conversational-agent';
 import {
   AgentMap,
+  ConnectionAuthMap,
   createAgentWithMethods
 } from '@/models/conversational-agent';
 
@@ -190,7 +191,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
       AGENT_ENDPOINTS.CONNECTION_AUTH,
       { connectorKey } as ConnectionAuthRequest
     );
-    return response.data;
+    return transformData(response.data, ConnectionAuthMap) as ConnectionAuthResponse;
   }
 
   /**

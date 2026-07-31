@@ -101,5 +101,5 @@ export interface ConnectionAuthResponse {
   /** The connector-specific auth URL to open */
   authUrl: string;
   /** Unix timestamp when the auth URL expires */
-  expiresAt: number;
+  expiresTime: number;
 }

@@ -194,7 +194,7 @@ describe('ConversationalAgentService — Connections', () => {
     it('should call the correct endpoint with the connector key', async () => {
       const mockResponse: ConnectionAuthResponse = {
         authUrl: 'https://auth.example.com/oauth?connector=jira',
-        expiresAt: 1700000000,
+        expiresTime: 1700000000,
       };
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -206,7 +206,7 @@ describe('ConversationalAgentService — Connections', () => {
         expect.any(Object),
       );
       expect(result.authUrl).toBe('https://auth.example.com/oauth?connector=jira');
-      expect(result.expiresAt).toBe(1700000000);
+      expect(result.expiresTime).toBe(1700000000);
     });
 
     it('should propagate API errors', async () => {
@@ -225,7 +225,7 @@ describe('ConversationalAgentService — Connections', () => {
     it('should return authUrl when getConnectionAuthUrl succeeds', async () => {
       mockApiClient.post.mockResolvedValue({
         authUrl: 'https://auth.example.com/oauth?connector=jira',
-        expiresAt: 1700000000,
+        expiresTime: 1700000000,
       });
 
       const result = await conversationalAgent.getAddConnectionUrl({
