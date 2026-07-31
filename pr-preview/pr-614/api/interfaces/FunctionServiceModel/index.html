@@ -2445,9 +2445,7 @@ folder context.</p>
 <p><strong>invoke</strong>&lt;<code>TInput</code>, <code>TOutput</code>&gt;(<code>name</code>: <code>string</code>, <code>input?</code>: <code>TInput</code>, <code>options?</code>: <a href="../FunctionInvokeOptions/"><code>FunctionInvokeOptions</code></a>): <code>Promise</code>&lt;<code>TOutput</code>&gt;</p>
 </blockquote>
 <p>Invokes a function by name and returns its output.</p>
-<p>The call is synchronous — it resolves with the function's output. Coded
-functions exposed over HTTP are request/response only, so a run that exceeds
-the platform's execution limit fails rather than continuing in the background.</p>
+<p>The call is synchronous — it resolves with the function's output.</p>
 <p>Type the input and output by supplying the generics — they should match the
 input/output schema the function declares. Folder context is required — pass
 one of <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code> in the options, or initialize

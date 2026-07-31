@@ -2280,7 +2280,7 @@ or initialize the SDK with a folder context.</p>
 <tr>
 <td><a id="jobkey"></a> <code>jobKey?</code></td>
 <td><code>string</code></td>
-<td>Key (GUID) of the parent job to attribute this invocation to. Sent as the <code>X-UIPATH-JobKey</code> header; the platform records it as the created job's <code>parentJobKey</code> so the run inherits the parent job's context and licensing transaction. Must be a job key in GUID format — other values are ignored by the platform.</td>
+<td>Key (GUID) of the job this invocation belongs to, so the run is attributed to it.</td>
 </tr>
 <tr>
 <td><a id="select"></a> <code>select?</code></td>

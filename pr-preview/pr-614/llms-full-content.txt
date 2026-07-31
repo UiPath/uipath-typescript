@@ -193,6 +193,29 @@ To Generate a PAT Token:
 1. Give it a name and expiration date
 1. Provide relevant scopes
 
+### Confidential App-scoped External App (client-credentials)
+
+You can also authenticate the SDK with a token issued to a confidential, app-scoped [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the `secret` parameter — like any other bearer token above.
+
+To create a confidential app-scoped External App:
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+1. Click **Add Application** → **Confidential Application**
+1. Configure:
+   - **Name**: Your app name
+   - **Scopes**: Select the permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes)). All scopes must be added as **Application** scopes, not **User** scopes.
+1. Save and copy the **Client ID** and the **Client Secret** — you will not be shown the Client Secret again
+1. Follow the [official UiPath documentation](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) on how to request client-credentials tokens for a confidential app with application scopes
+1. Pass this token as your `secret`, as shown in the Secret-based Authentication example above
+
+Keep the Client Secret confidential
+
+The Client Secret must never be exposed to public or client-side consumers. If it is exposed, revoke it immediately and generate a new one.
+
+No refresh tokens
+
+The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
+
 ## SDK Initialization - The initialize() Method
 
 ### When to Use initialize()
@@ -4690,6 +4713,29 @@ conversation.endSession();
 // 7. Retrieve conversation history (offline)
 const exchanges = await conversation.exchanges.getAll();
 ```
+
+## App-scoped authentication (anonymous, sign-in-free chat)
+
+Conversational Agents can be driven with an **app-scoped token** — one issued to an External App via the client-credentials grant, which carries no end-user identity. This lets an application offer chat without requiring each of its users to sign in to UiPath. For more information on creating External Apps, see the official UiPath documentation on [managing external OAuth applications](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications); for details on how to request client-credentials tokens, see the official UiPath documentation on [the OAuth bearer token types](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) issued to an External App.
+
+To use it, pass an `externalUserId` — your application's own identifier for the end user — when constructing the service:
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk, {
+  externalUserId: 'app-user-42'
+});
+```
+
+The SDK forwards this identifier on every HTTP request and real-time WebSocket session. Each distinct `externalUserId` — scoped to the client ID of the External App the token was issued for — gets its own conversation history and user settings, and the same value always maps back to the same user.
+
+### Limitations
+
+- **App-scoped tokens only.** `externalUserId` takes effect only when the SDK is authenticated with an app-scoped External App token. With a standard UiPath user token the server ignores it and uses the token's own user identity — so omit it in that case.
+- **Required with an app-scoped token.** When the token is app-scoped, `externalUserId` is mandatory; requests without it are rejected with a `401`. It is set once at construction and applies to all calls made through that service instance (including `conversations`, `exchanges`, `messages`, `user`, and WebSocket sessions).
+- **Value constraints.** May contain only letters, digits, dot (`.`), underscore (`_`), and hyphen (`-`), and must be at most 255 characters. Other characters are rejected with a `400`.
+- **Identity scope.** The derived identity is scoped per application: the same `externalUserId` under a different app is a different user.
 
 ## Properties
 

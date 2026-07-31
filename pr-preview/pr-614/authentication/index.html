@@ -425,6 +425,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Secret-based Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidential-app-scoped-external-app-client-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Confidential App-scoped External App (client-credentials)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2396,6 +2411,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Secret-based Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidential-app-scoped-external-app-client-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Confidential App-scoped External App (client-credentials)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2565,6 +2595,29 @@
 <li>Give it a name and expiration date</li>
 <li>Provide relevant scopes</li>
 </ol>
+<h3 id="confidential-app-scoped-external-app-client-credentials">Confidential App-scoped External App (client-credentials)<a class="headerlink" href="#confidential-app-scoped-external-app-client-credentials" title="Permanent link">&para;</a></h3>
+<p>You can also authenticate the SDK with a token issued to a confidential, app-scoped <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications">External App</a> via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the <code>secret</code> parameter — like any other bearer token above.</p>
+<p>To create a confidential app-scoped External App:</p>
+<ol type="1">
+<li>In UiPath Cloud: <strong>Admin</strong> → <strong>External Applications</strong></li>
+<li>Click <strong>Add Application</strong> → <strong>Confidential Application</strong></li>
+<li>Configure:<ul>
+<li><strong>Name</strong>: Your app name</li>
+<li><strong>Scopes</strong>: Select the permissions you need (<a href="/uipath-typescript/oauth-scopes">see scopes guide</a>). All scopes must be added as <strong>Application</strong> scopes, not <strong>User</strong> scopes.</li>
+</ul>
+</li>
+<li>Save and copy the <strong>Client ID</strong> and the <strong>Client Secret</strong> — you will not be shown the Client Secret again</li>
+<li>Follow the <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications">official UiPath documentation</a> on how to request client-credentials tokens for a confidential app with application scopes</li>
+<li>Pass this token as your <code>secret</code>, as shown in the Secret-based Authentication example above</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Keep the Client Secret confidential</p>
+<p>The Client Secret must never be exposed to public or client-side consumers. If it is exposed, revoke it immediately and generate a new one.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">No refresh tokens</p>
+<p>The client-credentials flow does <strong>not</strong> support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.</p>
+</div>
 <h2 id="sdk-initialization-the-initialize-method">SDK Initialization - The initialize() Method<a class="headerlink" href="#sdk-initialization-the-initialize-method" title="Permanent link">&para;</a></h2>
 <h3 id="when-to-use-initialize">When to Use initialize()<a class="headerlink" href="#when-to-use-initialize" title="Permanent link">&para;</a></h3>
 <p>The <code>initialize()</code> method completes the authentication process for the SDK:</p>
