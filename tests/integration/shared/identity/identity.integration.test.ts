@@ -49,7 +49,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
     await identity.updateSettings(
       [{ key: originalSetting.key, value: originalSetting.value }],
       userId,
-      originalSetting.partitionGlobalId
+      originalSetting.organizationId
     );
   });
 
@@ -58,8 +58,13 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       expect(ALL_KEYS).toContain(originalSetting.key);
       expect(typeof originalSetting.id).toBe('number');
       expect(typeof originalSetting.value).toBe('string');
-      expect(typeof originalSetting.partitionGlobalId).toBe('string');
+      expect(typeof originalSetting.organizationId).toBe('string');
       expect(typeof originalSetting.userId).toBe('string');
+    });
+
+    it('should expose the organization as organizationId, not the wire partitionGlobalId', () => {
+      expect(originalSetting.organizationId).toBeTruthy();
+      expect(originalSetting).not.toHaveProperty('partitionGlobalId');
     });
 
     it('should return no more rows than the number of keys requested', async () => {
@@ -77,13 +82,13 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       expect(result[0].key).toBe(originalSetting.key);
     });
 
-    it('should retrieve settings when partitionGlobalId is passed explicitly', async () => {
+    it('should retrieve settings when organizationId is passed explicitly', async () => {
       const result = await identity.getSettings([originalSetting.key], userId, {
-        partitionGlobalId: originalSetting.partitionGlobalId,
+        organizationId: originalSetting.organizationId,
       });
 
       expect(result).toHaveLength(1);
-      expect(result[0].partitionGlobalId).toBe(originalSetting.partitionGlobalId);
+      expect(result[0].organizationId).toBe(originalSetting.organizationId);
       expect(result[0].userId).toBe(originalSetting.userId);
     });
   });
@@ -95,7 +100,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       const updated = await identity.updateSettings(
         [{ key: originalSetting.key, value: newValue }],
         userId,
-        originalSetting.partitionGlobalId
+        originalSetting.organizationId
       );
 
       expect(Array.isArray(updated)).toBe(true);
@@ -110,7 +115,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       await identity.updateSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
         userId,
-        originalSetting.partitionGlobalId
+        originalSetting.organizationId
       );
 
       const afterRestore = await identity.getSettings([originalSetting.key], userId);
@@ -123,7 +128,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       const updated = await identity.updateSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
         userId,
-        originalSetting.partitionGlobalId
+        originalSetting.organizationId
       );
 
       expect(updated.find((s) => s.key === originalSetting.key)?.userId).toBe(userId);
