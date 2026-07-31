@@ -14,7 +14,6 @@ import {
   type AvailableConnection,
   type AvailableConnectionsItem,
   type AvailableConnectionsResponse,
-  type ConnectionAuthResponse,
 } from '@/models/conversational-agent';
 
 // ===== MOCKING =====
