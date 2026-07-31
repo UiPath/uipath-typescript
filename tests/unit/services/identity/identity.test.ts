@@ -12,6 +12,7 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { IDENTITY_SETTING_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import type { IdentitySettingUpsert } from '../../../../src/models/identity';
+import { IdentitySettingKey } from '../../../../src/models/identity';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -33,7 +34,34 @@ describe('IdentityService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  describe('IdentitySettingKey', () => {
+    it('should expose exactly the supported keys with their wire values', () => {
+      // Pinned deliberately: only these keys are supported, so adding or renaming a
+      // member is a public API change that must be made intentionally.
+      expect({ ...IdentitySettingKey }).toEqual({
+        UserLanguage: 'UserLanguage.Language',
+        UserLanguageDate: 'UserLanguage.Date',
+        UserTheme: 'UserTheme.Theme',
+        UserAccessibility: 'UserAccessibility.Accessibility',
+        UserAlert: 'UserAlert.AlertDuration',
+        UserCaseAppOrder: 'UserCase.AppOrderByTenant',
+        UserCasePinnedInstancesByTenant: 'UserCase.PinnedInstancesByTenant',
+        UserCaseInstancesTableFiltersByTenant: 'UserCase.InstancesTableFiltersByTenant',
+      });
+    });
+  });
+
   describe('getSettings', () => {
+    it('should send the enum wire value, not the member name, as the key param', async () => {
+      mockApiClient.get.mockResolvedValue([createBasicIdentitySetting()]);
+
+      await identityService.getSettings([IdentitySettingKey.UserCaseAppOrder]);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(IDENTITY_SETTING_ENDPOINTS.SETTINGS, {
+        params: { key: ['UserCase.AppOrderByTenant'] },
+      });
+    });
+
     it('should GET Setting with each key as a repeated key param', async () => {
       const mockData = createBasicIdentitySettings();
       mockApiClient.get.mockResolvedValue(mockData);

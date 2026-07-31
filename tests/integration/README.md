@@ -240,7 +240,6 @@ Tests skip gracefully when:
 | `DATA_FABRIC_TEST_JOIN_FIELD_NAME` | Join key field on the base entity | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
-| `IDENTITY_TEST_SETTING_KEY` | Existing identity setting key the Identity suite snapshots, overwrites, and restores (e.g. `UserTheme.Theme`) | (required for the Identity tests) |
 
 ## Test Data Management
 

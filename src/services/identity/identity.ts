@@ -8,6 +8,7 @@ import { BaseService } from '../base';
 
 import type {
   IdentitySetting,
+  IdentitySettingKey,
   IdentitySettingUpsert,
   IdentitySettingsGetOptions,
   IdentitySettingsUpdateOptions,
@@ -28,13 +29,13 @@ import { IDENTITY_SETTING_ENDPOINTS } from '../../utils/constants/endpoints';
  */
 export class IdentityService extends BaseService implements IdentityServiceModel {
   @track('Identity.GetSettings')
-  async getSettings(keys: string[], options?: IdentitySettingsGetOptions): Promise<IdentitySetting[]> {
+  async getSettings(keys: IdentitySettingKey[], options?: IdentitySettingsGetOptions): Promise<IdentitySetting[]> {
     if (keys.length === 0) {
       throw new ValidationError({ message: 'keys must contain at least one setting key' });
     }
 
     // Scope goes in the query string on reads, but in the body on writes
-    const params: Record<string, string | string[]> = { key: keys };
+    const params: Record<string, string | IdentitySettingKey[]> = { key: keys };
     if (options?.partitionGlobalId) params.partitionGlobalId = options.partitionGlobalId;
     if (options?.userId) params.userId = options.userId;
 

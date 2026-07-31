@@ -1,8 +1,11 @@
 /**
  * Identity test constants.
  *
- * Values mirror a real API response captured during onboarding.
+ * Scope GUIDs and the theme/accessibility values mirror a real API response captured
+ * during onboarding.
  */
+
+import { IdentitySettingKey } from '../../../src/models/identity/identity.types';
 
 export const IDENTITY_TEST_CONSTANTS = {
   // Scope GUIDs — optional query params on both operations
@@ -11,18 +14,18 @@ export const IDENTITY_TEST_CONSTANTS = {
 
   // Setting rows
   SETTING_ID: 63036,
-  SETTING_KEY: 'UserTheme.Theme',
+  SETTING_KEY: IdentitySettingKey.UserTheme,
   SETTING_VALUE: 'light',
   SETTING_ID_ALT: 63051,
-  SETTING_KEY_ALT: 'UserAccessibility.Accessibility',
+  SETTING_KEY_ALT: IdentitySettingKey.UserAccessibility,
   SETTING_VALUE_ALT: 'false',
 
-  // A key the API returns nothing for — unset keys are omitted from the response
-  SETTING_KEY_UNSET: 'UserAlert.AlertDuration',
+  // A key the API returned nothing for — unset keys are omitted from the response
+  SETTING_KEY_UNSET: IdentitySettingKey.UserAlert,
 
   // Structured setting: the API stores JSON as a string
-  SETTING_KEY_JSON: 'Favorites',
-  SETTING_VALUE_JSON: '{"adetenant":["admin","home"],"DefaultTenant":["actions"]}',
+  SETTING_KEY_JSON: IdentitySettingKey.UserCasePinnedInstancesByTenant,
+  SETTING_VALUE_JSON: '{"CaseManagement":["instance-a","instance-b"],"DefaultTenant":[]}',
 
   // Error messages
   ERROR_SETTING_NOT_FOUND: 'Setting not found',

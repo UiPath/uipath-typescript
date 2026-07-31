@@ -5,6 +5,7 @@
 
 import type {
   IdentitySetting,
+  IdentitySettingKey,
   IdentitySettingUpsert,
   IdentitySettingsGetOptions,
   IdentitySettingsUpdateOptions,
@@ -31,29 +32,35 @@ export interface IdentityServiceModel {
    * @example Basic usage
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Identity } from '@uipath/uipath-typescript/identity';
+   * import { Identity, IdentitySettingKey } from '@uipath/uipath-typescript/identity';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
    *
    * const identity = new Identity(sdk);
-   * const settings = await identity.getSettings(['UserTheme.Theme']);
-   * const theme = settings.find(s => s.key === 'UserTheme.Theme')?.value;
+   * const settings = await identity.getSettings([IdentitySettingKey.UserTheme]);
+   * const theme = settings.find(s => s.key === IdentitySettingKey.UserTheme)?.value;
    * ```
    *
    * @example Fetch several keys for a specific user and organization
    * ```typescript
+   * import { IdentitySettingKey } from '@uipath/uipath-typescript/identity';
+   *
    * const settings = await identity.getSettings(
-   *   ['UserTheme.Theme', 'UserAccessibility.Accessibility', 'Favorites'],
+   *   [
+   *     IdentitySettingKey.UserTheme,
+   *     IdentitySettingKey.UserAccessibility,
+   *     IdentitySettingKey.UserCasePinnedInstancesByTenant,
+   *   ],
    *   { partitionGlobalId: '<partitionGlobalId>', userId: '<userId>' }
    * );
    *
    * // Structured settings arrive as a JSON string
-   * const favorites = settings.find(s => s.key === 'Favorites');
-   * const parsed = favorites ? JSON.parse(favorites.value) : {};
+   * const pinned = settings.find(s => s.key === IdentitySettingKey.UserCasePinnedInstancesByTenant);
+   * const parsed = pinned ? JSON.parse(pinned.value) : {};
    * ```
    */
-  getSettings(keys: string[], options?: IdentitySettingsGetOptions): Promise<IdentitySetting[]>;
+  getSettings(keys: IdentitySettingKey[], options?: IdentitySettingsGetOptions): Promise<IdentitySetting[]>;
 
   /**
    * Creates or updates identity settings in bulk.
@@ -75,10 +82,12 @@ export interface IdentityServiceModel {
    *
    * @example Update a setting
    * ```typescript
-   * const [current] = await identity.getSettings(['UserTheme.Theme']);
+   * import { IdentitySettingKey } from '@uipath/uipath-typescript/identity';
+   *
+   * const [current] = await identity.getSettings([IdentitySettingKey.UserTheme]);
    *
    * const updated = await identity.updateSettings(
-   *   [{ key: 'UserTheme.Theme', value: 'dark' }],
+   *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],
    *   current.partitionGlobalId
    * );
    * ```
@@ -87,8 +96,8 @@ export interface IdentityServiceModel {
    * ```typescript
    * await identity.updateSettings(
    *   [
-   *     { key: 'UserTheme.Theme', value: 'dark' },
-   *     { key: 'UserAccessibility.Accessibility', value: 'true' },
+   *     { key: IdentitySettingKey.UserTheme, value: 'dark' },
+   *     { key: IdentitySettingKey.UserAccessibility, value: 'true' },
    *   ],
    *   '<partitionGlobalId>',
    *   { userId: '<userId>' }

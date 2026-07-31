@@ -9,17 +9,18 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Identity } from '@uipath/uipath-typescript/identity';
+ * import { Identity, IdentitySettingKey } from '@uipath/uipath-typescript/identity';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
  * const identity = new Identity(sdk);
- * const settings = await identity.getSettings();
+ * const settings = await identity.getSettings([IdentitySettingKey.UserTheme]);
  *
- * await identity.updateSettings([
- *   { key: 'Auth.Password.DefaultLifetimeDays', value: '90' },
- * ]);
+ * await identity.updateSettings(
+ *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],
+ *   settings[0].partitionGlobalId
+ * );
  * ```
  *
  * @module
