@@ -41,8 +41,9 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   /**
    * GUID of the user whose identity settings the Identity suite reads and round-trips.
-   * Required: every Identity operation is user-scoped and the SDK cannot derive the
-   * caller's user ID from a PAT.
+   * Optional — the suite falls back to the dev test user. Set it when running against a
+   * different organization, since settings are scoped to (organization, user) and the SDK
+   * cannot derive the caller's user ID from a PAT.
    */
   identityTestUserId?: string;
 }
