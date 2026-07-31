@@ -2338,7 +2338,7 @@ the generated API reference documentation.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="getsettings">getSettings()<a class="headerlink" href="#getsettings" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getSettings</strong>(<code>keys</code>: <a href="../../enumerations/IdentitySettingKey/"><code>IdentitySettingKey</code></a>[], <code>userId</code>: <code>string</code>, <code>options?</code>: <a href="../IdentitySettingsGetOptions/"><code>IdentitySettingsGetOptions</code></a>): <code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
+<p><strong>getSettings</strong>(<code>keys</code>: <a href="../../enumerations/IdentitySettingKey/"><code>IdentitySettingKey</code></a>[], <code>userId</code>: <code>string</code>, <code>options?</code>: <a href="../IdentitySettingGetOptions/"><code>IdentitySettingGetOptions</code></a>): <code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
 </blockquote>
 <p>Gets a user's identity settings by key.</p>
 <p>Returns one entry per key that has a stored value for that user, each carrying the
@@ -2367,7 +2367,7 @@ may be shorter than the list of keys requested.</p>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../IdentitySettingsGetOptions/"><code>IdentitySettingsGetOptions</code></a></td>
+<td><a href="../IdentitySettingGetOptions/"><code>IdentitySettingGetOptions</code></a></td>
 <td>Optional organization scoping</td>
 </tr>
 </tbody>
