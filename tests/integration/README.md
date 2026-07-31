@@ -200,7 +200,7 @@ These services do not support create/update/delete via SDK:
 - **Access**: Skipped tests for Data Fabric role listing, directory principals, and assignment validation until the CI app has the required DataFabric scopes
 
 #### Identity Services
-- **Identity**: Skipped tests for reading and writing a user's identity settings until the CI app has the `PM.Setting` scope — the endpoint currently returns 403 Forbidden
+- **Identity**: Read and bulk create/update of a user's identity settings, snapshotting and restoring the values it touches
 
 #### Action Center Services
 - **Tasks**: Create, list, get by ID, assign, unassign, complete
