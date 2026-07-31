@@ -93,7 +93,7 @@ jobs:
           for attempt in 1 2 3; do
             attach && exit 0
             echo "Attach attempt $attempt failed"
-            sleep 10
+            [ "$attempt" -lt 3 ] && sleep 10
           done
           echo "::error::Failed to attach tarball to release $SDK_VERSION after 3 attempts"
           exit 1

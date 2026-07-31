@@ -102,10 +102,11 @@ try {
             return { ...pkg, tarball };
         });
 
-    const roots = ROOTS.map(({ name }) => ({
-        name,
-        version: packages.find((pkg) => pkg.name === name).version,
-    }));
+    const roots = ROOTS.map(({ name }) => {
+        const found = packages.find((pkg) => pkg.name === name);
+        if (!found) throw new Error(`Root package ${name} not found in resolved closure`);
+        return { name, version: found.version };
+    });
     writeFileSync(
         join(OUT_DIR, "manifest.json"),
         `${JSON.stringify(
