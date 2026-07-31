@@ -42,11 +42,8 @@ export interface IntegrationConfig {
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
-   * An identity setting key that already has a stored value in the test organization
-   * (e.g. `UserTheme.Theme`). The Identity suite snapshots it, overwrites it, and restores
    * the snapshot, so it must be a benign, user-scoped setting.
    */
-  identityTestSettingKey?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -110,7 +107,6 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
-    identityTestSettingKey: typeof rawConfig.identityTestSettingKey === 'string' ? rawConfig.identityTestSettingKey : undefined,
   };
 }
 
@@ -158,7 +154,6 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
-    identityTestSettingKey: process.env.IDENTITY_TEST_SETTING_KEY || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
