@@ -90,3 +90,21 @@ export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
   SUBMIT_EXCEPTION_REPORT: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/SubmitExceptionReport`,
   PROCESS_EXTRACTED_DATA: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/ProcessExtractedData`,
 } as const;
+
+/**
+ * Orchestrator Folder Endpoints
+ */
+export const FOLDER_ENDPOINTS = {
+  GET_BY_ID: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Folders(${folderId})`,
+} as const;
+
+/**
+ * Coded Functions Endpoints
+ */
+export const FUNCTION_ENDPOINTS = {
+  /** Folder-scoped list of function HTTP endpoints. */
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/HttpTriggers`,
+  /** Invokes a function through its HTTP endpoint; the response body is the function output. */
+  INVOKE: (folderKey: string, processSlug: string, functionSlug: string) =>
+    `${ORCHESTRATOR_BASE}/t/${folderKey}/${processSlug}/${functionSlug}`,
+} as const;
