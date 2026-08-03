@@ -1947,12 +1947,12 @@
   
   
     <li class="md-nav__item">
-      <a href="https://github.com/UiPath/uipath-typescript/tree/main/samples" class="md-nav__link">
+      <a href="../../../samples/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Sample Application
+    Sample Apps Gallery
     
   </span>
   
@@ -3034,6 +3034,8 @@ trigger events to fire for each inserted record.</p>
 <p>Queries entity records with filters, sorting, aggregates, and SDK-managed pagination</p>
 <p><code>MULTILINE_MAX</code> fields are returned as a size marker (e.g. <code>"HasValue=true Length=512"</code>)
 instead of the full content — use <a href="#getrecordbyid">getRecordById</a> to retrieve the full value.</p>
+<p>Cross-entity joins are supported via the <code>joins</code> option — see <a href="../EntityJoin/">EntityJoin</a>
+for constraints and the result-row key format.</p>
 <h4 id="type-parameters_1">Type Parameters<a class="headerlink" href="#type-parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3120,25 +3122,26 @@ instead of the full content — use <a href="#getrecordbyid">getRecordById</a> t
 <a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a><span class="p">});</span>
 <a id="__codelineno-12-43" name="__codelineno-12-43" href="#__codelineno-12-43"></a>
 <a id="__codelineno-12-44" name="__codelineno-12-44" href="#__codelineno-12-44"></a><span class="c1">// Multi-join: pull fields from related entities into the query</span>
-<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a><span class="w">  </span><span class="nx">selectedFields</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;amount&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a><span class="w">  </span><span class="nx">joins</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Order&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
-<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;customerId&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
-<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;regionId&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Region&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a><span class="p">});</span>
+<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a><span class="c1">// (result rows use entity-qualified keys).</span>
+<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a><span class="w">  </span><span class="nx">selectedFields</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Order.amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Customer.name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Region.name&quot;</span><span class="p">],</span>
+<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a><span class="w">  </span><span class="nx">joins</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Order&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
+<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;customerId&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
+<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;regionId&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Region&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-12-64" name="__codelineno-12-64" href="#__codelineno-12-64"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="updaterecordbyid">updateRecordById()<a class="headerlink" href="#updaterecordbyid" title="Permanent link">&para;</a></h3>

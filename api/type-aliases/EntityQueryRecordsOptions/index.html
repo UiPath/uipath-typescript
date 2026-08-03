@@ -1943,12 +1943,12 @@
   
   
     <li class="md-nav__item">
-      <a href="https://github.com/UiPath/uipath-typescript/tree/main/samples" class="md-nav__link">
+      <a href="../../../samples/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Sample Application
+    Sample Apps Gallery
     
   </span>
   
@@ -2307,9 +2307,9 @@ The SDK computes and manages offset parameters automatically.</p>
 <p><code>optional</code> <strong>joins</strong>: <a href="../../interfaces/EntityJoin/"><code>EntityJoin</code></a>[]</p>
 </blockquote>
 <p>Cross-entity joins. Each entry joins one related entity into the query;
-supply several for a multi-join query. A maximum of 3 joins is supported
-(the SDK throws a <code>ValidationError</code> for more), and all joins must be of
-the same <a href="../../enumerations/JoinType/">JoinType</a>.</p>
+supply several for a multi-join query. Requires <code>selectedFields</code> or
+<code>aggregates</code> to be set. See <a href="../../interfaces/EntityJoin/">EntityJoin</a> for constraints and the
+result-row key format.</p>
 <h3 id="selectedfields">selectedFields?<a class="headerlink" href="#selectedfields" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>selectedFields</strong>: <code>string</code>[]</p>

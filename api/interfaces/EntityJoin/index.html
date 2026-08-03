@@ -1943,12 +1943,12 @@
   
   
     <li class="md-nav__item">
-      <a href="https://github.com/UiPath/uipath-typescript/tree/main/samples" class="md-nav__link">
+      <a href="../../../samples/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Sample Application
+    Sample Apps Gallery
     
   </span>
   
@@ -2222,6 +2222,13 @@ entity (<code>joinFieldName</code>) to a field on a related (right) entity
 several composes a multi-entity (multi-join) query. Up to 3 joins are
 supported (the SDK throws a <code>ValidationError</code> for more), and all of them
 must share the same <a href="../../enumerations/JoinType/">JoinType</a>.</p>
+<p>A join query must also set <code>selectedFields</code> or <code>aggregates</code> on
+<a href="../../type-aliases/EntityQueryRecordsOptions/">EntityQueryRecordsOptions</a>, referencing fields as
+<code>"&lt;EntityName&gt;.&lt;FieldName&gt;"</code> (e.g. <code>"Customer.Name"</code>) — bare field names
+resolve only while unique across the joined entities. Result rows use the
+same qualified keys; a LEFT join with no match omits the related entity's
+keys. Joins are not supported on choice-set, relationship, file, encrypted,
+or system fields, nor on folder-scoped entities.</p>
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">EntityJoin</span><span class="p">,</span><span class="w"> </span><span class="nx">JoinType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -2255,7 +2262,7 @@ must share the same <a href="../../enumerations/JoinType/">JoinType</a>.</p>
 </tr>
 <tr>
 <td><a id="jointype"></a> <code>joinType?</code></td>
-<td><a href="../../enumerations/JoinType/#leftjoin"><code>LeftJoin</code></a></td>
+<td><a href="../../enumerations/JoinType/"><code>JoinType</code></a></td>
 <td>Join type to apply (default: <a href="../../enumerations/JoinType/#leftjoin">JoinType.LeftJoin</a>).</td>
 </tr>
 <tr>

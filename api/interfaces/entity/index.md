@@ -507,6 +507,8 @@ Queries entity records with filters, sorting, aggregates, and SDK-managed pagina
 
 `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
 
+Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
+
 #### Type Parameters
 
 - `T` *extends* `EntityQueryRecordsOptions` = `EntityQueryRecordsOptions`
@@ -569,8 +571,9 @@ await entities.queryRecordsById(<id>, {
 });
 
 // Multi-join: pull fields from related entities into the query
+// (result rows use entity-qualified keys).
 await entities.queryRecordsById(<id>, {
-  selectedFields: ["Id", "amount"],
+  selectedFields: ["Order.amount", "Customer.name", "Region.name"],
   joins: [
     {
       entityName: "Order",
