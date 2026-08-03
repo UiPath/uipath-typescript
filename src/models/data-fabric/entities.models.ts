@@ -698,7 +698,6 @@ export interface EntityServiceModel {
    *   },
    * ], { folderKey: "<sourceFolderKey>" });
    * ```
-   * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
@@ -715,7 +714,6 @@ export interface EntityServiceModel {
    * // Folder-scoped: pass the entity's folder key
    * await entities.deleteById(<id>, { folderKey: "<folderKey>" });
    * ```
-   * @experimental
    */
   deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void>;
 
@@ -767,7 +765,6 @@ export interface EntityServiceModel {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
-   * @experimental
    */
   updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
 
@@ -1027,7 +1024,6 @@ export interface EntityMethods {
    * // Folder-scoped entity: pass the entity's folder key
    * await entity.delete({ folderKey: "<folderKey>" });
    * ```
-   * @experimental
    */
   delete(options?: EntityDeleteByIdOptions): Promise<void>;
 
@@ -1052,7 +1048,6 @@ export interface EntityMethods {
    *   ],
    * });
    * ```
-   * @experimental
    */
   update(options?: EntityUpdateByIdOptions): Promise<void>;
 
