@@ -30,7 +30,7 @@ vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mo
 // ===== TEST SUITE =====
 describe('FunctionService Unit Tests', () => {
   let functionService: FunctionService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();

@@ -1,4 +1,6 @@
 import { RawFunctionGetResponse, FunctionHttpMethod } from '../../../src/models/orchestrator/functions.types';
+import { FunctionGetResponse } from '../../../src/models/orchestrator/functions.models';
+import { NonPaginatedResponse } from '../../../src/utils/pagination';
 import { FUNCTION_TEST_CONSTANTS } from '../constants/functions';
 import { TEST_CONSTANTS } from '../constants/common';
 import { createMockBaseResponse, createMockCollection } from './core';
@@ -75,7 +77,7 @@ export const createMockTransformedFunctionCollection = (
     currentPage?: number;
     totalPages?: number;
   }
-): any => {
+): NonPaginatedResponse<FunctionGetResponse> => {
   const items = createMockCollection(count, (index) => createBasicFunction({
     name: `${FUNCTION_TEST_CONSTANTS.NAME}-${index}`,
     slug: `${FUNCTION_TEST_CONSTANTS.SLUG}-${index}`,
