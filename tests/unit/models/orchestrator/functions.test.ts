@@ -41,7 +41,7 @@ describe('Function Models Unit Tests', () => {
         const result = await fn.invoke(FUNCTION_TEST_CONSTANTS.INVOKE_INPUT);
 
         expect(mockService.invoke).toHaveBeenCalledWith(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         );
@@ -56,7 +56,7 @@ describe('Function Models Unit Tests', () => {
         await fn.invoke();
 
         expect(mockService.invoke).toHaveBeenCalledWith(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           undefined,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         );

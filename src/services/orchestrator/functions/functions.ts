@@ -3,6 +3,7 @@ import {
   FunctionGetAllOptions,
   FunctionHttpMethod,
   FunctionInvokeOptions,
+  FunctionRef,
   RawFunctionGetResponse,
 } from '../../../models/orchestrator/functions.types';
 import { RawFolderResponse, RawFunctionTrigger } from '../../../models/orchestrator/functions.internal-types';
@@ -79,14 +80,14 @@ export class FunctionService extends FolderScopedService implements FunctionServ
 
   @track('Functions.Invoke')
   async invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(
-    name: string,
+    func: FunctionRef,
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput> {
     // jobKey governs only the invocation leg — keep it out of the folder-scoped
     // discovery lookup, which would forward it as a query param.
     const { jobKey, ...folderOptions } = options ?? {};
-    const fn = await this.findByName(name, folderOptions);
+    const fn = await this.findByName(func.name, folderOptions);
     const folderKey = await this.resolveInvokeFolderKey(fn, folderOptions);
     return this.invokeFunction<TOutput>(fn, folderKey, input ?? {}, jobKey);
   }

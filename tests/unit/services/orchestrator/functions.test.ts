@@ -226,7 +226,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
@@ -269,7 +269,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
       );
@@ -292,7 +292,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, jobKey: FUNCTION_TEST_CONSTANTS.JOB_KEY }
       );
@@ -323,7 +323,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY }
       );
@@ -345,7 +345,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await service.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT
       );
 
@@ -367,7 +367,7 @@ describe('FunctionService Unit Tests', () => {
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         undefined,
         { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
@@ -386,7 +386,7 @@ describe('FunctionService Unit Tests', () => {
         .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
       const result = await functionService.invoke(
-        FUNCTION_TEST_CONSTANTS.NAME,
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
         FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
         { folderId: TEST_CONSTANTS.FOLDER_ID, jobKey: FUNCTION_TEST_CONSTANTS.JOB_KEY }
       );
@@ -415,7 +415,7 @@ describe('FunctionService Unit Tests', () => {
 
       await expect(
         functionService.invoke(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
@@ -434,7 +434,7 @@ describe('FunctionService Unit Tests', () => {
       // A package name passed where a function name belongs — the common mistake.
       await expect(
         functionService.invoke(
-          FUNCTION_TEST_CONSTANTS.PROCESS_NAME,
+          { name: FUNCTION_TEST_CONSTANTS.PROCESS_NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
@@ -450,7 +450,7 @@ describe('FunctionService Unit Tests', () => {
 
       await expect(
         functionService.invoke(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
@@ -464,7 +464,7 @@ describe('FunctionService Unit Tests', () => {
 
       await expect(
         functionService.invoke(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
@@ -473,7 +473,7 @@ describe('FunctionService Unit Tests', () => {
 
     it('should throw ValidationError when no folder context is available', async () => {
       await expect(
-        functionService.invoke(FUNCTION_TEST_CONSTANTS.NAME, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT)
+        functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT)
       ).rejects.toThrow(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
@@ -487,7 +487,7 @@ describe('FunctionService Unit Tests', () => {
 
       await expect(
         functionService.invoke(
-          FUNCTION_TEST_CONSTANTS.NAME,
+          { name: FUNCTION_TEST_CONSTANTS.NAME },
           FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )

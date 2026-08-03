@@ -15,7 +15,7 @@
  * await sdk.initialize();
  *
  * const functions = new Functions(sdk);
- * const result = await functions.invoke('hello', { name: 'Alice' }, { folderId: <folderId> });
+ * const result = await functions.invoke({ name: 'hello' }, { name: 'Alice' }, { folderId: <folderId> });
  * ```
  *
  * @module

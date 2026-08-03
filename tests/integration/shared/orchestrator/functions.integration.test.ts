@@ -114,7 +114,7 @@ describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
   describe('invoke', () => {
     it('should invoke a function by name and return its output', async () => {
       const output = await functions.invoke<Record<string, unknown>, unknown>(
-        functionName,
+        { name: functionName },
         {},
         { folderId },
       );

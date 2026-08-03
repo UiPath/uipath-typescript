@@ -64,3 +64,12 @@ export interface FunctionInvokeOptions extends FolderScopedOptions {
   /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
 }
+
+/**
+ * Identifies the function to invoke. Currently only `name` is supported;
+ * additional identifiers (for example, `id`) may be added in future releases.
+ */
+export interface FunctionRef {
+  /** Name of the function to invoke (unique within a folder). */
+  name: string;
+}

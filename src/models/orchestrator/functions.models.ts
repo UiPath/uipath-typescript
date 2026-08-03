@@ -1,4 +1,4 @@
-import { FunctionGetAllOptions, FunctionInvokeOptions, RawFunctionGetResponse } from './functions.types';
+import { FunctionGetAllOptions, FunctionInvokeOptions, FunctionRef, RawFunctionGetResponse } from './functions.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { ValidationError } from '../../core/errors/validation';
 
@@ -22,7 +22,7 @@ export type FunctionGetResponse = RawFunctionGetResponse & FunctionMethods;
  * import { Functions } from '@uipath/uipath-typescript/functions';
  *
  * const functions = new Functions(sdk);
- * const result = await functions.invoke('my-function', { amount: 42 }, { folderId: <folderId> });
+ * const result = await functions.invoke({ name: 'my-function' }, { amount: 42 }, { folderId: <folderId> });
  * ```
  */
 export interface FunctionServiceModel {
@@ -79,7 +79,7 @@ export interface FunctionServiceModel {
   >;
 
   /**
-   * Invokes a function by name and returns its output.
+   * Invokes a function and returns its output.
    *
    * The call is synchronous — it resolves with the function's output.
    *
@@ -88,7 +88,8 @@ export interface FunctionServiceModel {
    * one of `folderId`, `folderKey`, or `folderPath` in the options, or initialize
    * the SDK with a folder context.
    *
-   * @param name - Name of the function to invoke (unique within a folder)
+   * @param func - Function to invoke. Currently identified by `name` (unique within
+   *   a folder); additional identifiers may be added in future releases.
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and
@@ -98,7 +99,7 @@ export interface FunctionServiceModel {
    * @example
    * ```typescript
    * // Invoke a function
-   * const result = await functions.invoke('hello', { name: 'Alice' }, { folderId: <folderId> });
+   * const result = await functions.invoke({ name: 'hello' }, { name: 'Alice' }, { folderId: <folderId> });
    * ```
    *
    * @example
@@ -108,7 +109,7 @@ export interface FunctionServiceModel {
    * interface SyncOutput { processed: number }
    *
    * const result = await functions.invoke<SyncInput, SyncOutput>(
-   *   'sync-invoices',
+   *   { name: 'sync-invoices' },
    *   { since: '2026-01-01' },
    *   { folderPath: 'Shared/Finance', jobKey: '<parentJobKey>' }
    * );
@@ -116,7 +117,7 @@ export interface FunctionServiceModel {
    * ```
    */
   invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(
-    name: string,
+    func: FunctionRef,
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput>;
@@ -166,7 +167,7 @@ function createFunctionMethods(
     ): Promise<TOutput> {
       if (!functionData.name) throw new ValidationError({ message: 'Function name is undefined' });
       if (!functionData.folderId) throw new ValidationError({ message: 'Function folderId is undefined' });
-      return service.invoke<TInput, TOutput>(functionData.name, input, { folderId: functionData.folderId });
+      return service.invoke<TInput, TOutput>({ name: functionData.name }, input, { folderId: functionData.folderId });
     },
   };
 }
