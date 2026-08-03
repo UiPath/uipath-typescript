@@ -2497,7 +2497,7 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogCreateRequest/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogCreateOptions/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
@@ -2513,7 +2513,7 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateRequest/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateOptions/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>

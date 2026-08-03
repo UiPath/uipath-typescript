@@ -140,14 +140,14 @@ const task = await tasks.create({
 
 ### createCatalog()
 
-> **createCatalog**(`request`: `TaskCatalogCreateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCatalogGetResponse`>
+> **createCatalog**(`name`: `string`, `options?`: `TaskCatalogCreateOptions`): `Promise`\<`TaskCatalogGetResponse`>
 
 Creates a task catalog.
 
 #### Parameters
 
-- `request`: `TaskCatalogCreateRequest` — The task catalog to create
-- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath) to create it in
+- `name`: `string` — Name of the task catalog (max 50 characters)
+- `options?`: `TaskCatalogCreateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -158,7 +158,7 @@ The created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
 #### Example
 
 ```
-const catalog = await tasks.createCatalog({ name: "Invoices" }, { folderId: <folderId> });
+const catalog = await tasks.createCatalog("Invoices", { description: "Invoice tasks", folderId: <folderId> });
 ```
 
 ### createNote()
@@ -600,15 +600,15 @@ const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
 
 ### updateCatalog()
 
-> **updateCatalog**(`id`: `number`, `request`: `TaskCatalogUpdateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+> **updateCatalog**(`id`: `number`, `name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
 Updates a task catalog.
 
 #### Parameters
 
 - `id`: `number` — The task catalog id
-- `request`: `TaskCatalogUpdateRequest` — The updated fields
-- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+- `name`: `string` — Name of the task catalog (max 50 characters)
+- `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -619,5 +619,5 @@ Promise resolving once the update completes
 #### Example
 
 ```
-await tasks.updateCatalog(<catalogId>, { name: "Invoices" }, { folderId: <folderId> });
+await tasks.updateCatalog(<catalogId>, "Invoices", { description: "Updated", folderId: <folderId> });
 ```

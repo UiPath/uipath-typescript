@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateRequest/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateOptions/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>TaskCatalogUpdateRequest - UiPath TypeScript SDK</title>
+        <title>TaskCatalogUpdateOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              TaskCatalogUpdateRequest
+              TaskCatalogUpdateOptions
             
           </span>
         </div>
@@ -2213,12 +2213,12 @@
   
 
 
-  <h1>TaskCatalogUpdateRequest</h1>
+  <h1>TaskCatalogUpdateOptions</h1>
 
-<p>Fields to update a task catalog. Same shape as <a href="../TaskCatalogCreateRequest/">TaskCatalogCreateRequest</a>.</p>
+<p>Optional fields for updating a task catalog, plus folder scope. Same shape as <a href="../TaskCatalogCreateOptions/">TaskCatalogCreateOptions</a>.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../TaskCatalogCreateRequest/"><code>TaskCatalogCreateRequest</code></a></li>
+<li><a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -2241,9 +2241,24 @@
 <td>When true, tasks associated with this catalog have their Data encrypted.</td>
 </tr>
 <tr>
-<td><a id="name"></a> <code>name</code></td>
+<td><a id="expand"></a> <code>expand?</code></td>
 <td><code>string</code></td>
-<td>Name of the task catalog (max 50 characters).</td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
+<td><code>number</code></td>
+<td>Numeric folder ID.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Folder key (GUID-formatted string).</td>
+</tr>
+<tr>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
 </tr>
 <tr>
 <td><a id="retentionaction"></a> <code>retentionAction?</code></td>
@@ -2259,6 +2274,11 @@
 <td><a id="retentionperiod"></a> <code>retentionPeriod?</code></td>
 <td><code>number</code></td>
 <td>Retention period, in days.</td>
+</tr>
+<tr>
+<td><a id="select"></a> <code>select?</code></td>
+<td><code>string</code></td>
+<td>-</td>
 </tr>
 <tr>
 <td><a id="tags"></a> <code>tags?</code></td>

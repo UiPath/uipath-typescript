@@ -2798,7 +2798,7 @@
 <hr />
 <h3 id="createcatalog">createCatalog()<a class="headerlink" href="#createcatalog" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>createCatalog</strong>(<code>request</code>: <a href="../TaskCatalogCreateRequest/"><code>TaskCatalogCreateRequest</code></a>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt;</p>
+<p><strong>createCatalog</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Creates a task catalog.</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
@@ -2812,14 +2812,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>request</code></td>
-<td><a href="../TaskCatalogCreateRequest/"><code>TaskCatalogCreateRequest</code></a></td>
-<td>The task catalog to create</td>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>Name of the task catalog (max 50 characters)</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
-<td>Folder scope (folderId, folderKey, or folderPath) to create it in</td>
+<td><a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a></td>
+<td>Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)</td>
 </tr>
 </tbody>
 </table>
@@ -2827,7 +2827,7 @@
 <p><code>Promise</code>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt;</p>
 <p>The created task catalog <a href="../TaskCatalogGetResponse/">TaskCatalogGetResponse</a></p>
 <h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">createCatalog</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">createCatalog</span><span class="p">(</span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invoice tasks&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="createnote">createNote()<a class="headerlink" href="#createnote" title="Permanent link">&para;</a></h3>
@@ -3471,7 +3471,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <hr />
 <h3 id="updatecatalog">updateCatalog()<a class="headerlink" href="#updatecatalog" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateCatalog</strong>(<code>id</code>: <code>number</code>, <code>request</code>: <a href="../TaskCatalogUpdateRequest/"><code>TaskCatalogUpdateRequest</code></a>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>updateCatalog</strong>(<code>id</code>: <code>number</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Updates a task catalog.</p>
 <h4 id="parameters_18">Parameters<a class="headerlink" href="#parameters_18" title="Permanent link">&para;</a></h4>
@@ -3490,14 +3490,14 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <td>The task catalog id</td>
 </tr>
 <tr>
-<td><code>request</code></td>
-<td><a href="../TaskCatalogUpdateRequest/"><code>TaskCatalogUpdateRequest</code></a></td>
-<td>The updated fields</td>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>Name of the task catalog (max 50 characters)</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
-<td>Folder scope (folderId, folderKey, or folderPath)</td>
+<td><a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a></td>
+<td>Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)</td>
 </tr>
 </tbody>
 </table>
@@ -3505,7 +3505,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the update completes</p>
 <h4 id="example_16">Example<a class="headerlink" href="#example_16" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">updateCatalog</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">catalogId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">updateCatalog</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">catalogId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 
 
