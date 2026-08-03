@@ -1,9 +1,17 @@
 import { InstanceGetVariablesOptions, InstanceGetVariablesResponse, GlobalVariableMetaData } from '../../models/maestro/instance-variables.types';
 import { BpmnVariableMetadata, RawInstanceGetVariablesResponse } from '../../models/maestro/instance-variables.internal-types';
+import { RequestSpec } from '../../models/common/request-spec';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
-import { PaginationServiceAccess } from '../../utils/pagination/internal-types';
+
+/**
+ * The single authenticated-HTTP capability `fetchInstanceVariables` needs from its calling
+ * service. Services pass an arrow closing over their protected `BaseService.get`, so the
+ * method itself never becomes public.
+ * @internal
+ */
+export type AuthenticatedGet = <T>(path: string, options?: RequestSpec) => Promise<{ data: T }>;
 
 // Match both self-closing and content-bearing uipath:inputOutput elements
 // Handles: <uipath:inputOutput .../> and <uipath:inputOutput ...>content</uipath:inputOutput>
@@ -110,7 +118,7 @@ function transformGlobalVariables(
  * @internal
  */
 export async function fetchInstanceVariables(
-  serviceAccess: PaginationServiceAccess,
+  httpGet: AuthenticatedGet,
   instanceId: string,
   folderKey: string,
   options?: InstanceGetVariablesOptions
@@ -120,13 +128,13 @@ export async function fetchInstanceVariables(
   // Fetch BPMN XML (variable metadata) and variables in parallel — BPMN failure is
   // tolerated (globals stay unenriched), a variables failure propagates to the caller
   const [bpmnResult, variablesResult] = await Promise.allSettled([
-    serviceAccess.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
+    httpGet<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: createHeaders({
         [FOLDER_KEY]: folderKey,
         'Accept': CONTENT_TYPES.XML
       })
     }),
-    serviceAccess.get<RawInstanceGetVariablesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId), {
+    httpGet<RawInstanceGetVariablesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId), {
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       params: queryParams
     })

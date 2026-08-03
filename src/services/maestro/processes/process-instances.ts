@@ -14,6 +14,7 @@ import {
 } from '../../../models/maestro';
 import { BpmnHelpers } from './helpers';
 import { fetchInstanceVariables } from '../instance-variables';
+import { RequestSpec } from '../../../models/common/request-spec';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { createHeaders } from '../../../utils/http/headers';
@@ -188,7 +189,12 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
 
   @track('ProcessInstances.GetVariables')
   async getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse> {
-    return fetchInstanceVariables(this.createPaginationServiceAccess(), instanceId, folderKey, options);
+    return fetchInstanceVariables(
+      <T>(path: string, opts?: RequestSpec) => this.get<T>(path, opts ?? {}),
+      instanceId,
+      folderKey,
+      options
+    );
   }
 
   @track('ProcessInstances.GetIncidents')

@@ -22,6 +22,7 @@ import {
   CaseInstanceGetVariablesResponse
 } from '../../../models/maestro';
 import { fetchInstanceVariables } from '../instance-variables';
+import { RequestSpec } from '../../../models/common/request-spec';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse,
@@ -305,7 +306,12 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
 
   @track('CaseInstances.GetVariables')
   async getVariables(instanceId: string, folderKey: string, options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse> {
-    return fetchInstanceVariables(this.createPaginationServiceAccess(), instanceId, folderKey, options);
+    return fetchInstanceVariables(
+      <T>(path: string, opts?: RequestSpec) => this.get<T>(path, opts ?? {}),
+      instanceId,
+      folderKey,
+      options
+    );
   }
 
   @track('CaseInstances.GetStages')
