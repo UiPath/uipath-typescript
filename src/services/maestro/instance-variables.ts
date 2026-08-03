@@ -115,28 +115,38 @@ export async function fetchInstanceVariables(
   folderKey: string,
   options?: InstanceGetVariablesOptions
 ): Promise<InstanceGetVariablesResponse> {
-  // Fetch the BPMN XML to get variable metadata
-  let variableMetadata = new Map<string, BpmnVariableMetadata>();
+  const queryParams = options?.parentElementId ? { parentElementId: options.parentElementId } : undefined;
 
-  try {
-    const bpmnResponse = await serviceAccess.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
+  // Fetch BPMN XML (variable metadata) and variables in parallel — BPMN failure is
+  // tolerated (globals stay unenriched), a variables failure propagates to the caller
+  const [bpmnResult, variablesResult] = await Promise.allSettled([
+    serviceAccess.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: createHeaders({
         [FOLDER_KEY]: folderKey,
         'Accept': CONTENT_TYPES.XML
       })
-    });
-    variableMetadata = parseBpmnVariables(bpmnResponse.data);
+    }),
+    serviceAccess.get<RawInstanceGetVariablesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      params: queryParams
+    })
+  ]);
+
+  if (variablesResult.status === 'rejected') {
+    throw variablesResult.reason;
+  }
+  const response = variablesResult.value;
+
+  let variableMetadata = new Map<string, BpmnVariableMetadata>();
+
+  try {
+    if (bpmnResult.status === 'rejected') {
+      throw bpmnResult.reason;
+    }
+    variableMetadata = parseBpmnVariables(bpmnResult.value.data);
   } catch (error) {
     console.warn(`Failed to fetch BPMN metadata for instance ${instanceId} :`, error);
   }
-
-  // Fetch the variables
-  const queryParams = options?.parentElementId ? { parentElementId: options.parentElementId } : undefined;
-
-  const response = await serviceAccess.get<RawInstanceGetVariablesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_VARIABLES(instanceId), {
-    headers: createHeaders({ [FOLDER_KEY]: folderKey }),
-    params: queryParams
-  });
 
   // Transform the globals object to include metadata from BPMN
   const enrichedGlobalVariables = transformGlobalVariables(response.data.globals, variableMetadata);
