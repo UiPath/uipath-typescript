@@ -15,6 +15,7 @@ import type {
   CaseInstanceOperationOptions,
   CaseInstanceReopenOptions,
   CaseInstanceSendMessageOptions,
+  CaseInstanceGetVariablesOptions,
 } from '../../../../src/models/maestro/case-instances.types';
 import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 
@@ -36,7 +37,8 @@ describe('Case Instance Models', () => {
       getStages: vi.fn(),
       getActionTasks: vi.fn(),
       getSlaSummary: vi.fn(),
-      getStagesSlaSummary: vi.fn()
+      getStagesSlaSummary: vi.fn(),
+      getVariables: vi.fn()
     } as any;
   });
 
@@ -505,6 +507,71 @@ describe('Case Instance Models', () => {
         await expect(invalidInstance.getStagesSlaSummary()).rejects.toThrow('Case instance ID is undefined');
       });
     });
+
+    describe('caseInstance.getVariables()', () => {
+      it('should call caseInstance.getVariables with bound instanceId and folderKey', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        const mockVariables = {
+          elements: [],
+          globalVariables: [],
+          instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          parentElementId: null
+        };
+        mockService.getVariables = vi.fn().mockResolvedValue(mockVariables);
+
+        const result = await instance.getVariables();
+
+        expect(mockService.getVariables).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          undefined
+        );
+        expect(result).toEqual(mockVariables);
+      });
+
+      it('should call caseInstance.getVariables with bound parameters and options', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        const options: CaseInstanceGetVariablesOptions = {
+          parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+        };
+        const mockVariables = {
+          elements: [],
+          globalVariables: [],
+          instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+        };
+        mockService.getVariables = vi.fn().mockResolvedValue(mockVariables);
+
+        const result = await instance.getVariables(options);
+
+        expect(mockService.getVariables).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          options
+        );
+        expect(result).toEqual(mockVariables);
+      });
+
+      it('should throw error if instanceId is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.getVariables()).rejects.toThrow('Case instance ID is undefined');
+      });
+
+      it('should throw error if folderKey is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.getVariables()).rejects.toThrow('Case instance folder key is undefined');
+      });
+    });
   });
 
   describe('createCaseInstanceWithMethods', () => {
@@ -525,6 +592,7 @@ describe('Case Instance Models', () => {
       expect(typeof instance.getActionTasks).toBe('function');
       expect(typeof instance.getSlaSummary).toBe('function');
       expect(typeof instance.getStagesSlaSummary).toBe('function');
+      expect(typeof instance.getVariables).toBe('function');
     });
 
     it('should preserve all original instance data', () => {

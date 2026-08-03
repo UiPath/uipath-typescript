@@ -17,8 +17,12 @@ import {
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
   CaseInstanceStageSLAResponse,
-  CaseInstanceStageSLAOptions
+  CaseInstanceStageSLAOptions,
+  CaseInstanceGetVariablesOptions,
+  CaseInstanceGetVariablesResponse
 } from '../../../models/maestro';
+import { fetchInstanceVariables } from '../instance-variables';
+import { RequestSpec } from '../../../models/common/request-spec';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse,
@@ -298,6 +302,16 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     }
     
     return transformedResponse as CaseInstanceExecutionHistoryResponse;
+  }
+
+  @track('CaseInstances.GetVariables')
+  async getVariables(instanceId: string, folderKey: string, options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse> {
+    return fetchInstanceVariables(
+      <T>(path: string, opts?: RequestSpec) => this.get<T>(path, opts ?? {}),
+      instanceId,
+      folderKey,
+      options
+    );
   }
 
   @track('CaseInstances.GetStages')

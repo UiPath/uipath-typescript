@@ -91,7 +91,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getById()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` `Traces.Api` |
 | `getBpmn()` | `OR.Execution.Read` |
-| `getVariables()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getIncidents()` | `PIMS` |
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
@@ -124,6 +124,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `reopen()` | `PIMS` |
 | `sendMessage()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
