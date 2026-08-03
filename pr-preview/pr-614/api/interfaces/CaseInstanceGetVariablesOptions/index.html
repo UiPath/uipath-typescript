@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ProcessInstanceGetVariablesResponse/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetVariablesOptions/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>ProcessInstanceGetVariablesResponse - UiPath TypeScript SDK</title>
+        <title>CaseInstanceGetVariablesOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ProcessInstanceGetVariablesResponse
+              CaseInstanceGetVariablesOptions
             
           </span>
         </div>
@@ -2238,12 +2238,12 @@
   
 
 
-  <h1>ProcessInstanceGetVariablesResponse</h1>
+  <h1>CaseInstanceGetVariablesOptions</h1>
 
-<p>Response for getting global variables for process instance</p>
+<p>Options for getting global variables</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../InstanceGetVariablesResponse/"><code>InstanceGetVariablesResponse</code></a></li>
+<li><a href="../InstanceGetVariablesOptions/"><code>InstanceGetVariablesOptions</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -2251,24 +2251,14 @@
 <tr>
 <th>Property</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a id="elements"></a> <code>elements</code></td>
-<td><a href="../ElementMetaData/"><code>ElementMetaData</code></a>[]</td>
-</tr>
-<tr>
-<td><a id="globalvariables"></a> <code>globalVariables</code></td>
-<td><a href="../GlobalVariableMetaData/"><code>GlobalVariableMetaData</code></a>[]</td>
-</tr>
-<tr>
-<td><a id="instanceid"></a> <code>instanceId</code></td>
+<td><a id="parentelementid"></a> <code>parentElementId?</code></td>
 <td><code>string</code></td>
-</tr>
-<tr>
-<td><a id="parentelementid"></a> <code>parentElementId</code></td>
-<td><code>null</code> | <code>string</code></td>
+<td>Scope the variables to a specific parent element (e.g. a subprocess or stage). When omitted, root-level variables are returned.</td>
 </tr>
 </tbody>
 </table>
