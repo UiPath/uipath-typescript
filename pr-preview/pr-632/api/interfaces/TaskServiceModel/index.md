@@ -140,14 +140,14 @@ const task = await tasks.create({
 
 ### createCatalog()
 
-> **createCatalog**(`request`: `TaskCatalogCreateRequest`, `folderId`: `number`): `Promise`\<`TaskCatalogGetResponse`>
+> **createCatalog**(`request`: `TaskCatalogCreateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCatalogGetResponse`>
 
 Creates a task catalog.
 
 #### Parameters
 
 - `request`: `TaskCatalogCreateRequest` — The task catalog to create
-- `folderId`: `number` — The folder to create it in
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath) to create it in
 
 #### Returns
 
@@ -158,19 +158,19 @@ The created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
 #### Example
 
 ```
-const catalog = await tasks.createCatalog({ name: "Invoices" }, <folderId>);
+const catalog = await tasks.createCatalog({ name: "Invoices" }, { folderId: <folderId> });
 ```
 
 ### createNote()
 
-> **createNote**(`request`: `TaskNoteCreateRequest`, `folderId`: `number`): `Promise`\<`TaskNoteGetResponse`>
+> **createNote**(`request`: `TaskNoteCreateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskNoteGetResponse`>
 
 Creates a note on a task.
 
 #### Parameters
 
 - `request`: `TaskNoteCreateRequest` — The note to create (taskId + text)
-- `folderId`: `number` — The folder the task belongs to
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -181,19 +181,19 @@ The created note [TaskNoteGetResponse](../TaskNoteGetResponse/)
 #### Example
 
 ```
-const note = await tasks.createNote({ taskId: <taskId>, text: "Escalated" }, <folderId>);
+const note = await tasks.createNote({ taskId: <taskId>, text: "Escalated" }, { folderId: <folderId> });
 ```
 
 ### editMetadata()
 
-> **editMetadata**(`options`: `TaskEditMetadataOptions`, `folderId`: `number`): `Promise`\<`void`>
+> **editMetadata**(`request`: `TaskEditMetadataOptions`, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
 
 Edits a task's metadata (title, priority, catalog association, ...).
 
 #### Parameters
 
-- `options`: `TaskEditMetadataOptions` — The metadata edit (taskId + fields to change)
-- `folderId`: `number` — The folder the task belongs to
+- `request`: `TaskEditMetadataOptions` — The metadata edit (taskId + fields to change)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -205,7 +205,7 @@ Promise resolving once the edit completes
 
 ```
 import { TaskPriority } from '@uipath/uipath-typescript/tasks';
-await tasks.editMetadata({ taskId: <taskId>, title: "Review invoice", priority: TaskPriority.High }, <folderId>);
+await tasks.editMetadata({ taskId: <taskId>, title: "Review invoice", priority: TaskPriority.High }, { folderId: <folderId> });
 ```
 
 ### getAll()
@@ -302,15 +302,14 @@ const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValida
 
 ### getCatalogById()
 
-> **getCatalogById**(`id`: `number`, `folderId`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+> **getCatalogById**(`id`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
 
 Gets a task catalog by id.
 
 #### Parameters
 
 - `id`: `number` — The task catalog id
-- `folderId`: `number` — The folder the task catalog belongs to
-- `options?`: `TaskCatalogGetByIdOptions` — Expand/select options
+- `options?`: `TaskCatalogGetByIdOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
 
 #### Returns
 
@@ -321,12 +320,12 @@ The task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
 #### Example
 
 ```
-const catalog = await tasks.getCatalogById(<catalogId>, <folderId>);
+const catalog = await tasks.getCatalogById(<catalogId>, { folderId: <folderId> });
 ```
 
 ### getCatalogs()
 
-> **getCatalogs**\<`T`>(`folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+> **getCatalogs**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
 
 Gets task catalogs in a folder.
 
@@ -336,8 +335,7 @@ Gets task catalogs in a folder.
 
 #### Parameters
 
-- `folderId`: `number` — The folder to list task catalogs from
-- `options?`: `T` — Query and pagination options
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
 
 #### Returns
 
@@ -348,12 +346,12 @@ The task catalogs [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
 #### Example
 
 ```
-const catalogs = await tasks.getCatalogs(<folderId>);
+const catalogs = await tasks.getCatalogs({ folderId: <folderId> });
 ```
 
 ### getData()
 
-> **getData**(`taskId`: `number`, `folderId`: `number`): `Promise`\<`TaskDataGetResponse`>
+> **getData**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
 
 Gets a task's data (form/task payload) and core metadata.
 
@@ -362,24 +360,24 @@ Works for any task type (Form, App, External, etc.).
 #### Parameters
 
 - `taskId`: `number` — The task to fetch data for
-- `folderId`: `number` — The folder the task belongs to
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
 `Promise`\<`TaskDataGetResponse`>
 
-Promise resolving to the task data [TaskDataGetResponse](../TaskDataGetResponse/)
+The task data [TaskDataGetResponse](../TaskDataGetResponse/)
 
 #### Example
 
 ```
-const task = await tasks.getData(<taskId>, <folderId>);
+const task = await tasks.getData(<taskId>, { folderId: <folderId> });
 console.log(task.data);
 ```
 
 ### getNotes()
 
-> **getNotes**\<`T`>(`taskId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
+> **getNotes**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
 
 Gets the notes for a task.
 
@@ -390,8 +388,7 @@ Gets the notes for a task.
 #### Parameters
 
 - `taskId`: `number` — The task to list notes for
-- `folderId`: `number` — The folder the task belongs to
-- `options?`: `T` — Query and pagination options
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
 
 #### Returns
 
@@ -402,7 +399,7 @@ The task's notes [TaskNoteGetResponse](../TaskNoteGetResponse/)
 #### Example
 
 ```
-const notes = await tasks.getNotes(<taskId>, <folderId>);
+const notes = await tasks.getNotes(<taskId>, { folderId: <folderId> });
 ```
 
 ### getUsers()
@@ -501,7 +498,7 @@ const result2 = await tasks.reassign({
 
 ### saveData()
 
-> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `folderId`: `number`): `Promise`\<`void`>
+> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
 
 Saves a task's data (form/task payload).
 
@@ -509,7 +506,7 @@ Saves a task's data (form/task payload).
 
 - `taskId`: `number` — The task to update
 - `data`: `Record`\<`string`, `unknown`> — The task data to save
-- `folderId`: `number` — The folder the task belongs to
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -520,12 +517,12 @@ Promise resolving once the save completes
 #### Example
 
 ```
-await tasks.saveData(<taskId>, { amount: 1200, approved: true }, <folderId>);
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
 ```
 
 ### saveTags()
 
-> **saveTags**(`taskId`: `number`, `tags`: `Tag`[], `folderId`: `number`): `Promise`\<`void`>
+> **saveTags**(`taskId`: `number`, `tags`: `Tag`[], `options?`: `FolderScopedOptions`): `Promise`\<`void`>
 
 Saves the tags on a task, replacing any existing tags.
 
@@ -533,7 +530,7 @@ Saves the tags on a task, replacing any existing tags.
 
 - `taskId`: `number` — The task to tag
 - `tags`: `Tag`[] — The tags to set
-- `folderId`: `number` — The folder the task belongs to
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -544,7 +541,7 @@ Promise resolving once the save completes
 #### Example
 
 ```
-await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], <folderId>);
+await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], { folderId: <folderId> });
 ```
 
 ### unassign()
@@ -579,7 +576,7 @@ const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
 
 ### updateCatalog()
 
-> **updateCatalog**(`id`: `number`, `request`: `TaskCatalogUpdateRequest`, `folderId`: `number`): `Promise`\<`void`>
+> **updateCatalog**(`id`: `number`, `request`: `TaskCatalogUpdateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
 
 Updates a task catalog.
 
@@ -587,7 +584,7 @@ Updates a task catalog.
 
 - `id`: `number` — The task catalog id
 - `request`: `TaskCatalogUpdateRequest` — The updated fields
-- `folderId`: `number` — The folder the task catalog belongs to
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -596,5 +593,5 @@ Updates a task catalog.
 #### Example
 
 ```
-await tasks.updateCatalog(<catalogId>, { name: "Invoices" }, <folderId>);
+await tasks.updateCatalog(<catalogId>, { name: "Invoices" }, { folderId: <folderId> });
 ```

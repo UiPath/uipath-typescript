@@ -2215,10 +2215,10 @@
 
   <h1>TaskCatalogGetByIdOptions</h1>
 
-<p>Options for getting a task catalog by id (expand/select).</p>
+<p>Options for getting a task catalog by id: folder scope + expand/select.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../BaseOptions/"><code>BaseOptions</code></a></li>
+<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -2226,16 +2226,34 @@
 <tr>
 <th>Property</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a id="expand"></a> <code>expand?</code></td>
 <td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
+<td><code>number</code></td>
+<td>Numeric folder ID.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Folder key (GUID-formatted string).</td>
+</tr>
+<tr>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
 </tr>
 <tr>
 <td><a id="select"></a> <code>select?</code></td>
 <td><code>string</code></td>
+<td>-</td>
 </tr>
 </tbody>
 </table>

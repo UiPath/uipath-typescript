@@ -1441,6 +1441,14 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetVariablesOptions/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetVariablesResponse/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceMethods/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2074,6 +2082,14 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/InlineValue/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/InstanceGetVariablesOptions/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/InstanceGetVariablesResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
