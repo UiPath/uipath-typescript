@@ -47,7 +47,7 @@ const id = await entities.create("product_catalog", [
 const ordersId = await entities.create("orders", [
   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-  { name: "quantity", type: EntityFieldDataType.DECIMAL, maxValue: 10000, minValue: 1, defaultValue: "0" },
+  { name: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
 ]);
 
 // Cross-folder references — link a folder-scoped entity to entities and
