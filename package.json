@@ -225,6 +225,16 @@
                 "types": "./dist/notifications/index.d.ts",
                 "default": "./dist/notifications/index.cjs"
             }
+        },
+        "./ontologies": {
+            "import": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.mjs"
+            },
+            "require": {
+                "types": "./dist/ontologies/index.d.ts",
+                "default": "./dist/ontologies/index.cjs"
+            }
         }
     },
     "files": [

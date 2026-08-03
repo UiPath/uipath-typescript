@@ -93,9 +93,14 @@ export class ApiClient {
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
     let body = undefined;
-    
-    if(options.body) {
-      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
+    if (options.body) {
+      if (isFormData) {
+        body = options.body as FormData;
+      } else if (options.bodyOptions?.stringify === false) {
+        body = options.body as string;
+      } else {
+        body = JSON.stringify(options.body);
+      }
     }
 
     try {
@@ -131,6 +136,9 @@ export class ApiClient {
       const text = await response.text();
       if (!text) {
         return undefined as T;
+      }
+      if (options.responseType === RESPONSE_TYPES.TEXT) {
+        return text as T;
       }
       try {
         return JSON.parse(text);
