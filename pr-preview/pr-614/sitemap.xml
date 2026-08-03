@@ -753,10 +753,6 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FunctionHttpMethod/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/InputStreamSpeechSensitivity/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -970,10 +966,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/functions/createEntityWithMethods/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/functions/createFunctionWithMethods/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
@@ -2041,22 +2033,6 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionInvokeOptions/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionMethods/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionRef/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionServiceModel/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/GenericInterruptStartEvent/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2378,10 +2354,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawEntityGetResponse/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawFunctionGetResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
@@ -2766,14 +2738,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FeedbackGetCategoriesOptions/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetAllOptions/</loc>
-         <lastmod>2026-08-03</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
