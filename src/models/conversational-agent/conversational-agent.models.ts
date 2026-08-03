@@ -99,6 +99,56 @@ import type { ConnectionStatus } from '@/core/websocket';
  * const exchanges = await conversation.exchanges.getAll();
  * ```
  *
+ * ## Client-side tools
+ *
+ * Agents can define tools that execute locally in the client rather than on the server.
+ * When starting an exchange, pass `clientSideTools` to declare which tools this client
+ * supports. The names must match tools defined in the agent's design-time configuration.
+ * Only the declared subset is routed to the client — omitting a tool means the server
+ * handles it (or skips it). This lets each client advertise only the tools it can run.
+ *
+ * When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with
+ * the final input. The client executes the tool locally and returns the result via
+ * `sendToolCallEnd`.
+ *
+ * ```typescript
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const conversationalAgent = new ConversationalAgent(sdk);
+ * const agents = await conversationalAgent.getAll();
+ * const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+ * const session = conversation.startSession();
+ *
+ * // 1. Listen for tool calls and handle client-side tools
+ * session.onExchangeStart((exchange) => {
+ *   exchange.onMessageStart((message) => {
+ *     message.onToolCallStart((toolCall) => {
+ *       const { isClientSideTool, toolName } = toolCall.startEvent;
+ *       if (!isClientSideTool) return;
+ *
+ *       // 2. Execute when the server signals the tool is ready
+ *       toolCall.onExecutingToolCall(async (event) => {
+ *         const result = await runClientTool(toolName, event.input);
+ *         toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+ *       });
+ *     });
+ *   });
+ * });
+ *
+ * session.onSessionStarted(() => {
+ *   // 3. Declare the subset of client-side tools this client supports
+ *   //    The agent may define more tools, but only these will be routed here
+ *   const exchange = session.startExchange({
+ *     clientSideTools: [
+ *       { name: 'get_user_location' },
+ *       { name: 'get_clipboard_contents' },
+ *     ],
+ *   });
+ *
+ *   exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+ * });
+ * ```
+ *
  * ## App-scoped authentication (anonymous, sign-in-free chat)
  *
  * Conversational Agents can be driven with an **app-scoped token** — one issued to an
