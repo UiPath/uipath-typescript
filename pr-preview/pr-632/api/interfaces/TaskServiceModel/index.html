@@ -2814,7 +2814,7 @@
 <hr />
 <h3 id="createnote">createNote()<a class="headerlink" href="#createnote" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>createNote</strong>(<code>request</code>: <a href="../TaskNoteCreateRequest/"><code>TaskNoteCreateRequest</code></a>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskNoteGetResponse/"><code>TaskNoteGetResponse</code></a>&gt;</p>
+<p><strong>createNote</strong>(<code>taskId</code>: <code>number</code>, <code>text</code>: <code>string</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskNoteGetResponse/"><code>TaskNoteGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Creates a note on a task.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
@@ -2828,9 +2828,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>request</code></td>
-<td><a href="../TaskNoteCreateRequest/"><code>TaskNoteCreateRequest</code></a></td>
-<td>The note to create (taskId + text)</td>
+<td><code>taskId</code></td>
+<td><code>number</code></td>
+<td>Id of the task the note belongs to</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td><code>string</code></td>
+<td>Note text (max 512 characters)</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
@@ -2843,12 +2848,12 @@
 <p><code>Promise</code>&lt;<a href="../TaskNoteGetResponse/"><code>TaskNoteGetResponse</code></a>&gt;</p>
 <p>The created note <a href="../TaskNoteGetResponse/">TaskNoteGetResponse</a></p>
 <h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">createNote</span><span class="p">({</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Escalated&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">note</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">createNote</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Escalated&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="editmetadata">editMetadata()<a class="headerlink" href="#editmetadata" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>editMetadata</strong>(<code>request</code>: <a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>editMetadata</strong>(<code>taskId</code>: <code>number</code>, <code>options?</code>: <a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Edits a task's metadata (title, priority, catalog association, ...).</p>
 <h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
@@ -2862,14 +2867,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>request</code></td>
-<td><a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a></td>
-<td>The metadata edit (taskId + fields to change)</td>
+<td><code>taskId</code></td>
+<td><code>number</code></td>
+<td>Id of the task to edit</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
-<td>Folder scope (folderId, folderKey, or folderPath)</td>
+<td><a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a></td>
+<td>Fields to change plus folder scope (folderId, folderKey, or folderPath)</td>
 </tr>
 </tbody>
 </table>
@@ -2878,7 +2883,7 @@
 <p>Promise resolving once the edit completes</p>
 <h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TaskPriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/tasks&#39;</span><span class="p">;</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">editMetadata</span><span class="p">({</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Review invoice&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskPriority.High</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">editMetadata</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Review invoice&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskPriority.High</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>

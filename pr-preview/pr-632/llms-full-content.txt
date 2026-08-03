@@ -1787,13 +1787,14 @@ const catalog = await tasks.createCatalog({ name: "Invoices" }, { folderId: <fol
 
 ### createNote()
 
-> **createNote**(`request`: `TaskNoteCreateRequest`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskNoteGetResponse`>
+> **createNote**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskNoteGetResponse`>
 
 Creates a note on a task.
 
 #### Parameters
 
-- `request`: `TaskNoteCreateRequest` — The note to create (taskId + text)
+- `taskId`: `number` — Id of the task the note belongs to
+- `text`: `string` — Note text (max 512 characters)
 - `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
@@ -1805,19 +1806,19 @@ The created note [TaskNoteGetResponse](../TaskNoteGetResponse/)
 #### Example
 
 ```
-const note = await tasks.createNote({ taskId: <taskId>, text: "Escalated" }, { folderId: <folderId> });
+const note = await tasks.createNote(<taskId>, "Escalated", { folderId: <folderId> });
 ```
 
 ### editMetadata()
 
-> **editMetadata**(`request`: `TaskEditMetadataOptions`, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+> **editMetadata**(`taskId`: `number`, `options?`: `TaskEditMetadataOptions`): `Promise`\<`void`>
 
 Edits a task's metadata (title, priority, catalog association, ...).
 
 #### Parameters
 
-- `request`: `TaskEditMetadataOptions` — The metadata edit (taskId + fields to change)
-- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+- `taskId`: `number` — Id of the task to edit
+- `options?`: `TaskEditMetadataOptions` — Fields to change plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -1829,7 +1830,7 @@ Promise resolving once the edit completes
 
 ```
 import { TaskPriority } from '@uipath/uipath-typescript/tasks';
-await tasks.editMetadata({ taskId: <taskId>, title: "Review invoice", priority: TaskPriority.High }, { folderId: <folderId> });
+await tasks.editMetadata(<taskId>, { title: "Review invoice", priority: TaskPriority.High, folderId: <folderId> });
 ```
 
 ### getAll()
