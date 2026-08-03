@@ -21,10 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     permissions:
-      contents: write
+      contents: read
       packages: write
       id-token: write
-      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,47 +70,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Pack in the same run so the release asset is byte-identical to the npm
-      # publish (the build above has the telemetry version stamped in).
-      # Retried because this is the only fallible step after npm publish — a
-      # re-run of the whole workflow would fail on the already-published
-      # version and never reach this step.
-      - name: Attach package tarball to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          SDK_VERSION=$(node -p "require('./package.json').version")
-          npm pack
-          TARBALL="uipath-uipath-typescript-${SDK_VERSION}.tgz"
-          attach() {
-            if gh release view "$SDK_VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-              gh release upload "$SDK_VERSION" "$TARBALL" --clobber --repo "$GITHUB_REPOSITORY"
-            else
-              gh release create "$SDK_VERSION" "$TARBALL" --title "$SDK_VERSION" --target "$GITHUB_SHA" --generate-notes --repo "$GITHUB_REPOSITORY"
-            fi
-          }
-          for attempt in 1 2 3; do
-            attach && exit 0
-            echo "Attach attempt $attempt failed"
-            [ "$attempt" -lt 3 ] && sleep 10
-          done
-          echo "::error::Failed to attach tarball to release $SDK_VERSION after 3 attempts"
-          exit 1
-
-      # The release created above by GITHUB_TOKEN cannot fire the airgap
-      # workflow's `release: published` trigger (recursion guard), so dispatch
-      # it explicitly. It builds the bundle (SDK + coded-action-app + full
-      # dependency closure), verifies it installs from a throwaway Verdaccio
-      # alone, and attaches the ZIP to this release.
-      - name: Trigger air-gapped bundle export
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          SDK_VERSION=$(node -p "require('./package.json').version")
-          gh workflow run export-airgap-bundle.yml --repo "$GITHUB_REPOSITORY" \
-            --field sdk_version="$SDK_VERSION" \
-            --field release_tag="$SDK_VERSION"
-
       - name: Generate Summary
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
@@ -124,8 +82,6 @@ jobs:
           echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
           echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
-          echo "- Attached packed tarball to GitHub Release" >> $GITHUB_STEP_SUMMARY
-          echo "- Triggered air-gapped bundle export (build, Verdaccio verify, attach to release)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY

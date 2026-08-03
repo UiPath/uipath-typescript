@@ -4,16 +4,20 @@ name: Export air-gapped SDK bundle
 # published npm tarballs for @uipath/uipath-typescript + @uipath/coded-action-app
 # and their full transitive dependency closure, VERIFY it by publishing every
 # tarball into a throwaway Verdaccio and installing both SDKs from it alone
-# (no uplinks — completeness is genuinely tested), then attach the ZIP to the
-# GitHub release. Verdaccio is a test harness only — it is not part of the
-# bundle.
+# (no uplinks — completeness is genuinely tested), then attach the SDK tarball
+# and the bundle ZIP to the GitHub release. Verdaccio is a test harness only —
+# it is not part of the bundle.
+#
+# Releases stay human-created (draft notes published manually — this workflow
+# never creates releases or tags, it only adds assets to an existing release;
+# publishing a draft fires the release trigger below).
 #
 # Triggers:
-#   - release published: bundles the released version, attaches to that release.
-#     Covers manually created releases; releases created by publish.yml's own
-#     GITHUB_TOKEN cannot fire this event (recursion guard), so publish.yml
-#     also dispatches this workflow explicitly.
-#   - workflow_dispatch: on-demand builds, optionally attached to a release.
+#   - release published: bundles the released version (tag = SDK version) and
+#     attaches the assets to that release. This is the primary path.
+#   - workflow_dispatch: backfill for past releases, recovery after a failed
+#     run, refreshing the coded-action-app side, or artifact-only dry runs
+#     (leave release_tag empty).
 
 on:
   release:
@@ -163,10 +167,13 @@ jobs:
           node -e "require('@uipath/uipath-typescript'); require('@uipath/coded-action-app'); console.log('both SDKs install and load from the bundle alone')"
 
   attach:
-    name: Attach bundle to release
+    name: Attach assets to release
     needs: [build, verify]
     if: github.event_name == 'release' || inputs.release_tag != ''
     runs-on: ubuntu-latest
+    # The only side-effecting job: writing assets to a customer-facing release
+    # requires the production environment's approval rules.
+    environment: production
     permissions:
       contents: write
     steps:
@@ -176,6 +183,8 @@ jobs:
           name: ${{ needs.build.outputs.bundle_name }}
           path: airgap-bundle
 
+      # Attaches both the standalone SDK tarball (registry-fetched, so
+      # byte-identical to what npm serves) and the full bundle ZIP.
       # Tag passed via env (never interpolated into the script) to avoid
       # shell injection through a crafted tag name.
       - name: Upload to GitHub Release
@@ -185,5 +194,6 @@ jobs:
           BUNDLE_NAME: ${{ needs.build.outputs.bundle_name }}
         run: |
           (cd airgap-bundle && zip -qr "${GITHUB_WORKSPACE}/${BUNDLE_NAME}.zip" .)
-          gh release upload "$TAG_NAME" "${BUNDLE_NAME}.zip" --clobber --repo "$GITHUB_REPOSITORY"
-          echo "- Attached \`${BUNDLE_NAME}.zip\` to release \`${TAG_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          gh release upload "$TAG_NAME" "${BUNDLE_NAME}.zip" airgap-bundle/uipath-uipath-typescript-*.tgz \
+            --clobber --repo "$GITHUB_REPOSITORY"
+          echo "- Attached \`${BUNDLE_NAME}.zip\` and the SDK tarball to release \`${TAG_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
