@@ -138,6 +138,52 @@ const task = await tasks.create({
 }, <folderId>); // folderId is required
 ```
 
+### createCatalog()
+
+> **createCatalog**(`request`: `TaskCatalogCreateRequest`, `folderId`: `number`): `Promise`\<`TaskCatalogGetResponse`>
+
+Creates a task catalog.
+
+#### Parameters
+
+- `request`: `TaskCatalogCreateRequest` — The task catalog to create
+- `folderId`: `number` — The folder to create it in
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+The created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await tasks.createCatalog({ name: "Invoices" }, <folderId>);
+```
+
+### createNote()
+
+> **createNote**(`request`: `TaskNoteCreateRequest`, `folderId`: `number`): `Promise`\<`TaskNoteGetResponse`>
+
+Creates a note on a task.
+
+#### Parameters
+
+- `request`: `TaskNoteCreateRequest` — The note to create (taskId + text)
+- `folderId`: `number` — The folder the task belongs to
+
+#### Returns
+
+`Promise`\<`TaskNoteGetResponse`>
+
+The created note [TaskNoteGetResponse](../TaskNoteGetResponse/)
+
+#### Example
+
+```
+const note = await tasks.createNote({ taskId: <taskId>, text: "Escalated" }, <folderId>);
+```
+
 ### editMetadata()
 
 > **editMetadata**(`options`: `TaskEditMetadataOptions`, `folderId`: `number`): `Promise`\<`void`>
@@ -254,6 +300,57 @@ console.log(formTask.formLayout);
 const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
 ```
 
+### getCatalogById()
+
+> **getCatalogById**(`id`: `number`, `folderId`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by id.
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `folderId`: `number` — The folder the task catalog belongs to
+- `options?`: `TaskCatalogGetByIdOptions` — Expand/select options
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+The task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await tasks.getCatalogById(<catalogId>, <folderId>);
+```
+
+### getCatalogs()
+
+> **getCatalogs**\<`T`>(`folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Gets task catalogs in a folder.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCatalogGetAllOptions` = `TaskCatalogGetAllOptions`
+
+#### Parameters
+
+- `folderId`: `number` — The folder to list task catalogs from
+- `options?`: `T` — Query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+The task catalogs [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalogs = await tasks.getCatalogs(<folderId>);
+```
+
 ### getData()
 
 > **getData**(`taskId`: `number`, `folderId`: `number`): `Promise`\<`TaskDataGetResponse`>
@@ -278,6 +375,34 @@ Promise resolving to the task data [TaskDataGetResponse](../TaskDataGetResponse/
 ```
 const task = await tasks.getData(<taskId>, <folderId>);
 console.log(task.data);
+```
+
+### getNotes()
+
+> **getNotes**\<`T`>(`taskId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
+
+Gets the notes for a task.
+
+#### Type Parameters
+
+- `T` *extends* `TaskNoteGetByTaskIdOptions` = `TaskNoteGetByTaskIdOptions`
+
+#### Parameters
+
+- `taskId`: `number` — The task to list notes for
+- `folderId`: `number` — The folder the task belongs to
+- `options?`: `T` — Query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
+
+The task's notes [TaskNoteGetResponse](../TaskNoteGetResponse/)
+
+#### Example
+
+```
+const notes = await tasks.getNotes(<taskId>, <folderId>);
 ```
 
 ### getUsers()
@@ -450,4 +575,26 @@ const result = await task.unassign();
 
 // Unassign multiple tasks
 const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
+```
+
+### updateCatalog()
+
+> **updateCatalog**(`id`: `number`, `request`: `TaskCatalogUpdateRequest`, `folderId`: `number`): `Promise`\<`void`>
+
+Updates a task catalog.
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `request`: `TaskCatalogUpdateRequest` — The updated fields
+- `folderId`: `number` — The folder the task catalog belongs to
+
+#### Returns
+
+`Promise`\<`void`>
+
+#### Example
+
+```
+await tasks.updateCatalog(<catalogId>, { name: "Invoices" }, <folderId>);
 ```

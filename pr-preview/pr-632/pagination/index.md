@@ -133,8 +133,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Queues                            | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
-| Task Catalogs                     | `getAll()`                 | ✅ Yes                 |
-| Task Notes                        | `getByTaskId()`            | ✅ Yes                 |
+| Tasks                             | `getCatalogs()`            | ✅ Yes                 |
+| Tasks                             | `getNotes()`               | ✅ Yes                 |
 | ConversationalAgent.conversations | `getAll()`                 | ❌ No                  |
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |

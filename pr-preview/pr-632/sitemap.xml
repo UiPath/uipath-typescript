@@ -913,6 +913,10 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/TaskCatalogRetentionAction/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/TaskPriority/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2353,6 +2357,10 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskCatalogGetResponse/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskCreateResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2362,6 +2370,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskGetResponse/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskNoteGetResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
@@ -2469,6 +2481,22 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogCreateRequest/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogGetByIdOptions/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogGetResponse/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateRequest/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCreateOptions/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2486,6 +2514,14 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskMethods/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskNoteCreateRequest/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskNoteGetResponse/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
@@ -2861,6 +2897,10 @@
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCatalogGetAllOptions/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCompleteOptions/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
@@ -2882,6 +2922,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskGetUsersOptions/</loc>
+         <lastmod>2026-08-03</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskNoteGetByTaskIdOptions/</loc>
          <lastmod>2026-08-03</lastmod>
     </url>
     <url>
