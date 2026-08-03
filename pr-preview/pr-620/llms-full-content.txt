@@ -495,6 +495,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `queryRecordsById()`       | ✅ Yes                 |
 | Processes                         | `getAll()`                 | ✅ Yes                 |
+| Functions                         | `getAll()`                 | ✅ Yes                 |
 | ProcessInstances                  | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
@@ -4487,6 +4488,54 @@ const filtered = await caseInstances.getStagesSlaSummary({
 // Using bound method on a case instance
 const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
 const stagesSla = await instance.getStagesSlaSummary();
+```
+
+### getVariables()
+
+> **getVariables**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceGetVariablesOptions`): `Promise`\<`CaseInstanceGetVariablesResponse`>
+
+Get global variables for a case instance
+
+Returns the case instance's elements with their inputs/outputs and the global variables enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
+
+#### Parameters
+
+- `instanceId`: `string` — The ID of the case instance to get variables for
+- `folderKey`: `string` — The folder key for authorization
+- `options?`: `CaseInstanceGetVariablesOptions` — Optional options including parentElementId to filter by parent element
+
+#### Returns
+
+`Promise`\<`CaseInstanceGetVariablesResponse`>
+
+Promise resolving to [CaseInstanceGetVariablesResponse](../CaseInstanceGetVariablesResponse/) with elements and enriched global variables
+
+#### Example
+
+```
+// Get all variables for a case instance
+const variables = await caseInstances.getVariables(
+  '<instanceId>',
+  '<folderKey>'
+);
+
+// Iterate through global variables with metadata
+variables.globalVariables.forEach(variable => {
+  console.log(`Variable: ${variable.name} (${variable.id})`);
+  console.log(`  Type: ${variable.type}`);
+  console.log(`  Value: ${variable.value}`);
+});
+
+// Get variables scoped to a specific parent element (e.g. a stage)
+const stageVariables = await caseInstances.getVariables(
+  '<instanceId>',
+  '<folderKey>',
+  { parentElementId: '<parentElementId>' }
+);
+
+// Or using the bound method on a retrieved instance
+const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+const instanceVariables = await instance.getVariables();
 ```
 
 ### pause()
