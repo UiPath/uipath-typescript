@@ -670,14 +670,14 @@ export interface EntityServiceModel {
    *
    * const id = await entities.create("product_catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    *
    * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
    * const ordersId = await entities.create("orders", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
    *   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   { name: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   *   { name: "quantity", type: EntityFieldDataType.DECIMAL, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
    *
    * // Cross-folder references — link a folder-scoped entity to entities and
@@ -698,7 +698,7 @@ export interface EntityServiceModel {
    *   },
    * ], { folderKey: "<sourceFolderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
@@ -715,7 +715,7 @@ export interface EntityServiceModel {
    * // Folder-scoped: pass the entity's folder key
    * await entities.deleteById(<id>, { folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void>;
 
@@ -767,7 +767,7 @@ export interface EntityServiceModel {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
-   * @internal
+   * @experimental
    */
   updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
 
@@ -1027,7 +1027,7 @@ export interface EntityMethods {
    * // Folder-scoped entity: pass the entity's folder key
    * await entity.delete({ folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   delete(options?: EntityDeleteByIdOptions): Promise<void>;
 
@@ -1052,7 +1052,7 @@ export interface EntityMethods {
    *   ],
    * });
    * ```
-   * @internal
+   * @experimental
    */
   update(options?: EntityUpdateByIdOptions): Promise<void>;
 

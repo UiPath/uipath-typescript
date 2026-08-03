@@ -422,6 +422,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return this.insertRecordsById(id, data, options);
   }
 
+  /** @experimental */
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
@@ -446,6 +447,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
+  /** @experimental */
   @track('Entities.DeleteById')
   async deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void> {
     await this.delete(
@@ -454,6 +456,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
   }
 
+  /** @experimental */
   @track('Entities.UpdateById')
   async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
     const opts = options ?? {};
