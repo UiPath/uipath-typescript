@@ -1,0 +1,2712 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="UiPath">
+      
+      
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/design/plt-107228-cloud-logout/">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+    
+    
+      
+        <title>PLT-107228 — Offer Cloud logout in the SDK (design & plan) - UiPath TypeScript SDK</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+      <link rel="stylesheet" href="../../termynal.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#plt-107228-offer-cloud-logout-in-the-sdk-design-plan" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="UiPath TypeScript SDK" class="md-header__button md-logo" aria-label="UiPath TypeScript SDK" data-md-component="logo">
+      <picture data-light="../../assets/logo-light.svg" data-dark="../../assets/logo-dark.svg">
+    <source srcset="../../assets/logo-dark.svg" media="(prefers-color-scheme: dark)">
+    <img src="../../assets/logo-light.svg">
+</picture>
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            UiPath TypeScript SDK
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              PLT-107228 — Offer Cloud logout in the SDK (design &amp; plan)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/UiPath/uipath-typescript" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    UiPath/uipath-typescript
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="UiPath TypeScript SDK" class="md-nav__button md-logo" aria-label="UiPath TypeScript SDK" data-md-component="logo">
+      <picture data-light="../../assets/logo-light.svg" data-dark="../../assets/logo-dark.svg">
+    <source srcset="../../assets/logo-dark.svg" media="(prefers-color-scheme: dark)">
+    <img src="../../assets/logo-light.svg">
+</picture>
+    </a>
+    UiPath TypeScript SDK
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/UiPath/uipath-typescript" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    UiPath/uipath-typescript
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    TypeScript SDK
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            TypeScript SDK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../authentication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Authentication
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../oauth-scopes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OAuth Scopes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pagination/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pagination
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Error Handling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../agents/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Agents
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_1" id="__nav_2_1_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            Agents
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../conversational-agent/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Conversational Agent
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_1_2" id="__nav_2_1_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_2_1_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Conversational Agent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_1_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../conversations/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Conversations
+    
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="5" aria-labelledby="__nav_2_1_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Conversations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/SessionStream/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Session
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/ExchangeServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exchanges
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/MessageServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Messages
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/UserSettingsServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    User Settings
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/FeedbackServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Feedback
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/AgentMemoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Memory Spaces
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/interfaces/attachments/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Attachments
+    
+  </span>
+  
+
+            </a>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            Attachments
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/AssetServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Assets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/BucketServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Buckets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/interfaces/entity/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Entities
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_5" id="__nav_2_1_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_5">
+            <span class="md-nav__icon md-icon"></span>
+            Entities
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/ChoiceSetServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Choice Sets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/FunctionServiceModel.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/GovernanceServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Governance
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Maestro
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_8">
+            <span class="md-nav__icon md-icon"></span>
+            Maestro
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/MaestroProcessesServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Processes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/ProcessInstancesServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Process Instances
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/CasesServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cases
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/CaseInstancesServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Case Instances
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/JobServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Jobs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/ProcessServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Processes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/QueueServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Queues
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/TaskServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tasks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/interfaces/traces/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Traces
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            Traces
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/AgentTracesServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Agent
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Coded Apps
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Coded Apps
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-apps/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-apps/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            CI/CD
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-apps/ci-cd-github-actions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub Actions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Coded Action Apps
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Coded Action Apps
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-action-apps/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-action-apps/cli-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Coded Action App SDK
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            Coded Action App SDK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-action-app-sdk/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../coded-action-app-sdk/interfaces/CodedActionAppServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SDK Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Plugins
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Plugins
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/codex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Codex
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sample Apps Gallery
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    How To Contribute
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../integration-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integration Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-policy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Release Policy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            API Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.uipath.com/data-service/automation-cloud/latest/api-guide/get-entity-endpoint" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Fabric
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.uipath.com/orchestrator/automation-cloud/latest/api-guide/introduction" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Orchestrator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-scope-read-this-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Scope (read this first)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Problem
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-three-sessions-across-two-domains-the-core-mental-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. The three sessions across two domains (the core mental model)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-why-the-fix-is-inherently-two-part-cross-origin-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Why the fix is inherently two-part (cross-origin boundary)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-current-code-facts-this-plan-is-built-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Current code (facts this plan is built on)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-cloud-logout-does-and-does-not-do-account-picker-clarification" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. What "cloud logout" does and does NOT do (account picker clarification)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. Design
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-new-endpoint-constant-srcutilsconstantsendpointsidentityts" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.1 New endpoint constant — src/utils/constants/endpoints/identity.ts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-end-session-url-builder-srccoreauthservicets-mirrors-getauthorizationurl" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.2 End-session URL builder — src/core/auth/service.ts (mirrors getAuthorizationUrl)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-extend-logout-opt-in-backward-compatible" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.3 Extend logout() — opt-in, backward-compatible
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-two-implementation-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      7.4 Two implementation tiers
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-live-verification-on-the-real-uipathhost-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. Live verification on the real uipath.host topology
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-backward-compatibility-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. Backward compatibility &amp; migration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-dependencies-to-confirm-with-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. Dependencies to confirm with Identity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-testing-auth-paths-require-100-coverage-per-agent_docsrulesmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. Testing (auth paths require 100% coverage per agent_docs/rules.md)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-docs-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. Docs &amp; release
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-rollout-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      13. Rollout summary
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="plt-107228-offer-cloud-logout-in-the-sdk-design-plan">PLT-107228 — Offer Cloud logout in the SDK (design &amp; plan)<a class="headerlink" href="#plt-107228-offer-cloud-logout-in-the-sdk-design-plan" title="Permanent link">&para;</a></h1>
+<p><strong>Status:</strong> Proposed · <strong>Type:</strong> Core-auth enhancement · <strong>Semver impact:</strong> minor (additive, backward-compatible)
+<strong>Owner:</strong> Shivendra Tripathi · <strong>Reporter:</strong> Naren Venkateswaran
+<strong>Ticket:</strong> <a href="https://uipath.atlassian.net/browse/PLT-107228">PLT-107228</a></p>
+<hr />
+<h2 id="1-scope-read-this-first">1. Scope (read this first)<a class="headerlink" href="#1-scope-read-this-first" title="Permanent link">&para;</a></h2>
+<p>Per Raina Middha (clarifying the ticket): <strong>"The task for this ticket is to provide an option in the SDK to log out of <code>cloud.uipath.com</code>."</strong></p>
+<ul>
+<li><strong>In scope:</strong> add an SDK capability to terminate the <strong>Automation Cloud / Identity session</strong> (uipath.com), on top of the local token clear <code>logout()</code> already does.</li>
+<li><strong>Out of scope (explicitly):</strong> the <code>setMultiLogin</code> / account-picker behavior discussed in the originating Slack thread. Raina: <em>"ignore all the messages in the thread."</em> The account picker is <strong>not</strong> a requirement — it is a natural <em>side effect</em> of the session being gone (see §6). Access-token revocation and configurable token lifetime are <strong>separate Identity items</strong> (SMBC questions #1 and #2), not this ticket.</li>
+</ul>
+<h2 id="2-problem">2. Problem<a class="headerlink" href="#2-problem" title="Permanent link">&para;</a></h2>
+<p>Today <code>sdk.logout()</code> clears only <strong>browser-side</strong> state (the SDK's <code>sessionStorage</code> token). It does <strong>not</strong> end the Automation Cloud / Identity session. Result: after <code>logout()</code>, the next <code>initialize()</code> → <code>/authorize</code> finds the still-alive Identity session and <strong>silently re-authenticates</strong> the user — no login screen, no chance to switch account. The customer's logout button does not truly log the user out of the platform.</p>
+<h2 id="3-the-three-sessions-across-two-domains-the-core-mental-model">3. The three sessions across two domains (the core mental model)<a class="headerlink" href="#3-the-three-sessions-across-two-domains-the-core-mental-model" title="Permanent link">&para;</a></h2>
+<p>A logged-in coded app actually holds <strong>three</strong> pieces of auth state, living on <strong>two</strong> domains:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>State</th>
+<th>Storage</th>
+<th>Domain</th>
+<th>Cleared by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>App session</strong> — SDK access token</td>
+<td><code>sessionStorage</code> (<code>uipath_sdk_user_token-&lt;clientId&gt;</code>)</td>
+<td><strong>uipath.host</strong> (the coded app)</td>
+<td><code>sdk.logout()</code> (already)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Cloud / Identity session</strong> — SSO cookie (<code>idsrv.session</code>, <code>.AspNetCore.Identity</code>, <code>UiPathIdentity…</code>)</td>
+<td>cookie</td>
+<td><strong>uipath.com</strong> (Identity)</td>
+<td><strong>nothing today</strong> ← the gap</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Refresh token</strong> — mints new access tokens</td>
+<td>Identity, server-side</td>
+<td>uipath.com</td>
+<td>endsession (side effect of #2)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>The <strong>app</strong> decides "am I logged in?" from <strong>#1</strong>.</li>
+<li>The <strong>whole Automation Cloud</strong> (portal + silent login into any app) is gated by <strong>#2</strong>.</li>
+<li>"<strong>Cloud logout</strong>" in the ticket = terminate <strong>#2</strong> (which, via the endsession flow, also invalidates <strong>#3</strong>).</li>
+</ul>
+<h2 id="4-why-the-fix-is-inherently-two-part-cross-origin-boundary">4. Why the fix is inherently two-part (cross-origin boundary)<a class="headerlink" href="#4-why-the-fix-is-inherently-two-part-cross-origin-boundary" title="Permanent link">&para;</a></h2>
+<p><code>#1</code> and <code>#2</code> live on different origins and can only be cleared by different actors — a hard browser rule, not a design choice:</p>
+<table>
+<thead>
+<tr>
+<th>Cleanup</th>
+<th>Who can do it</th>
+<th>Why only them</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clear the <strong>sessionStorage token</strong> (#1) on uipath.host</td>
+<td>the <strong>SDK's <code>logout()</code></strong> (JS in the app)</td>
+<td><code>sessionStorage</code> is <strong>per-origin</strong>; only JS on the app's origin can touch it. No server endpoint can.</td>
+</tr>
+<tr>
+<td>Kill the <strong>Identity session</strong> (#2) + refresh token (#3) on uipath.com</td>
+<td><strong><code>/connect/endsession</code></strong> (browser navigation to uipath.com)</td>
+<td>Only Identity, on its own domain, can clear its own cookie + refresh token. endsession is cross-origin to the app and <strong>cannot</strong> touch the app's sessionStorage.</td>
+</tr>
+</tbody>
+</table>
+<p>Neither can do the other's job. Therefore a complete logout <strong>must</strong> do both — this is the crux of the fix.</p>
+<h2 id="5-current-code-facts-this-plan-is-built-on">5. Current code (facts this plan is built on)<a class="headerlink" href="#5-current-code-facts-this-plan-is-built-on" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>src/utils/constants/endpoints/identity.ts</code> — <code>IDENTITY_ENDPOINTS</code> has only <code>TOKEN</code> and <code>AUTHORIZE</code>; <strong>no end-session endpoint</strong>. (<code>IDENTITY_BASE = 'identity_'</code>, a relative path on <code>baseUrl</code>, so an endsession URL correctly targets uipath.com.)</li>
+<li><code>src/core/auth/service.ts</code> — <code>logout()</code> (~L258) calls <code>tokenManager.clearToken()</code> + removes <code>OAUTH_CONTEXT</code>/<code>CODE_VERIFIER</code> from <code>sessionStorage</code>. <strong>No navigation, no cookie touch, no network call.</strong></li>
+<li><code>token-manager.ts</code> — <code>clearToken()</code> removes <code>uipath_sdk_user_token-&lt;clientId&gt;</code>.</li>
+<li><code>types.ts</code> — <code>AuthToken</code> = <code>{ access_token, token_type, expires_in, scope, refresh_token? }</code> — <strong>no <code>id_token</code></strong>; <code>_getAccessToken</code> never reads one.</li>
+<li><code>getAuthorizationUrl</code> requests <code>scope + ' offline_access'</code> — <strong><code>openid</code> is not requested</strong>, so no <code>id_token</code> is issued today. (Relevant to Tier 2 only.)</li>
+</ul>
+<h2 id="6-what-cloud-logout-does-and-does-not-do-account-picker-clarification">6. What "cloud logout" does and does NOT do (account picker clarification)<a class="headerlink" href="#6-what-cloud-logout-does-and-does-not-do-account-picker-clarification" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>endsession logs the user <em>out</em> — it does not <em>show</em> a login screen.</strong> It kills session #2 and lands the browser on a logged-out page (Identity's signed-out page, or back at the app).</li>
+<li>The <strong>login / account picker only appears on the next <code>/authorize</code></strong>, which is reached by <code>initialize()</code>. Once #2 is dead, that <code>/authorize</code> <strong>prompts</strong> instead of silently re-authenticating. So the picker is a <em>consequence</em> of the session being gone — the SDK does not render it, Identity does.</li>
+<li>Two consumer intents therefore differ:</li>
+<li><strong>Plain logout</strong> → <code>logout({ endSession: true })</code> only. User ends logged out. (No picker.)</li>
+<li><strong>Logout-then-relogin</strong> (switch account) → still requires <code>initialize()</code> afterward to reach <code>/authorize</code>. Whether the prompt is a full account picker vs. a tenant-pinned login is the <code>setMultiLogin</code>/<code>acr_values</code> behavior — <strong>out of scope</strong> here.</li>
+<li><strong>Sequencing note:</strong> <code>logout({ endSession: true })</code> <strong>navigates the page away</strong> to endsession, so any <code>setMultiLogin()</code>/<code>initialize()</code> calls placed <em>after</em> it will not execute in the same tick. In a relogin flow, the re-login runs when the browser returns from endsession and the app re-mounts (its normal <code>initialize()</code>).</li>
+</ul>
+<h2 id="7-design">7. Design<a class="headerlink" href="#7-design" title="Permanent link">&para;</a></h2>
+<h3 id="71-new-endpoint-constant-srcutilsconstantsendpointsidentityts">7.1 New endpoint constant — <code>src/utils/constants/endpoints/identity.ts</code><a class="headerlink" href="#71-new-endpoint-constant-srcutilsconstantsendpointsidentityts" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">IDENTITY_ENDPOINTS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nx">BASE_PATH</span><span class="o">:</span><span class="w">   </span><span class="sb">`</span><span class="si">${</span><span class="nx">IDENTITY_BASE</span><span class="si">}</span><span class="sb">/connect`</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nx">TOKEN</span><span class="o">:</span><span class="w">       </span><span class="sb">`</span><span class="si">${</span><span class="nx">IDENTITY_BASE</span><span class="si">}</span><span class="sb">/connect/token`</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nx">AUTHORIZE</span><span class="o">:</span><span class="w">   </span><span class="sb">`</span><span class="si">${</span><span class="nx">IDENTITY_BASE</span><span class="si">}</span><span class="sb">/connect/authorize`</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">END_SESSION</span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">IDENTITY_BASE</span><span class="si">}</span><span class="sb">/connect/endsession`</span><span class="p">,</span><span class="w">   </span><span class="c1">// NEW</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span><span class="p">;</span>
+</code></pre></div>
+<blockquote>
+<p>The interactive <code>…/ui/account/logout?logoutId=…</code> URL is IdentityServer's UI page with a server-minted <code>logoutId</code> — an SPA cannot construct it. <code>connect/endsession</code> is the correct RP-initiated logout endpoint.</p>
+</blockquote>
+<h3 id="72-end-session-url-builder-srccoreauthservicets-mirrors-getauthorizationurl">7.2 End-session URL builder — <code>src/core/auth/service.ts</code> (mirrors <code>getAuthorizationUrl</code>)<a class="headerlink" href="#72-end-session-url-builder-srccoreauthservicets-mirrors-getauthorizationurl" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">private</span><span class="w"> </span><span class="nx">buildEndSessionUrl</span><span class="p">(</span><span class="nx">params</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">idTokenHint?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="nx">postLogoutRedirectUri?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">})</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">URLSearchParams</span><span class="p">();</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">idTokenHint</span><span class="p">)</span><span class="w"> </span><span class="nx">q</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;id_token_hint&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">params</span><span class="p">.</span><span class="nx">idTokenHint</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="nx">q</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">clientId</span><span class="p">);</span><span class="w">            </span><span class="c1">// identifier when no id_token available</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">postLogoutRedirectUri</span><span class="p">)</span><span class="w"> </span><span class="nx">q</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;post_logout_redirect_uri&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">params</span><span class="p">.</span><span class="nx">postLogoutRedirectUri</span><span class="p">);</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">baseUrl</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">IDENTITY_ENDPOINTS</span><span class="p">.</span><span class="nx">END_SESSION</span><span class="si">}</span><span class="sb">?</span><span class="si">${</span><span class="nx">q</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="73-extend-logout-opt-in-backward-compatible">7.3 Extend <code>logout()</code> — opt-in, backward-compatible<a class="headerlink" href="#73-extend-logout-opt-in-backward-compatible" title="Permanent link">&para;</a></h3>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">public</span><span class="w"> </span><span class="nx">logout</span><span class="p">(</span><span class="nx">options</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">endSession?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="nx">postLogoutRedirectUri?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">})</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">idTokenHint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">getIdToken</span><span class="o">?</span><span class="p">.();</span><span class="w">     </span><span class="c1">// undefined in Tier 1 / for old sessions</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">clearToken</span><span class="p">();</span><span class="w">                           </span><span class="c1">// #1: clears the sessionStorage token</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">OAUTH_CONTEXT</span><span class="p">);</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">CODE_VERIFIER</span><span class="p">);</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s1">&#39;Failed to clear OAuth context&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">e</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="c1">// NEW: opt-in cloud logout. Default path is byte-for-byte today&#39;s behavior.</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">options</span><span class="o">?</span><span class="p">.</span><span class="nx">endSession</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">buildEndSessionUrl</span><span class="p">({</span><span class="w">       </span><span class="c1">// #2: kills the Identity session</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">      </span><span class="nx">idTokenHint</span><span class="p">,</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="kt">options.postLogoutRedirectUri</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="p">});</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">}</span>
+</code></pre></div>
+The public <code>UiPath.logout()</code> wrapper (<code>src/core/uipath.ts</code>) threads the same options through.</p>
+<h3 id="74-two-implementation-tiers">7.4 Two implementation tiers<a class="headerlink" href="#74-two-implementation-tiers" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Tier 1 — minimal (recommended for v1)</strong></th>
+<th><strong>Tier 2 — seamless (follow-up)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sent to endsession</td>
+<td><code>client_id</code> (+ optional <code>post_logout_redirect_uri</code>)</td>
+<td><code>id_token_hint</code> (+ optional <code>post_logout_redirect_uri</code>)</td>
+</tr>
+<tr>
+<td>Extra plumbing</td>
+<td>none</td>
+<td>request <code>openid</code>; add/capture/store <code>id_token</code>; <code>TokenManager.getIdToken()</code></td>
+</tr>
+<tr>
+<td>Identity UX</td>
+<td>may show a "Sign out?" confirmation page (see §8, finding 3)</td>
+<td>fully silent logout</td>
+</tr>
+<tr>
+<td>Works for already-logged-in users after update</td>
+<td>✅ immediately</td>
+<td>⚠️ only after re-login (old sessions have no <code>id_token</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> ship <strong>Tier 1</strong> to unblock the customer; treat Tier 2 as a follow-up. If Tier 2 lands, <code>id_token</code> absence <strong>must degrade gracefully</strong> (fall back to <code>client_id</code>) — never require a re-login as a precondition.</p>
+<h2 id="8-live-verification-on-the-real-uipathhost-topology">8. Live verification on the real <code>uipath.host</code> topology<a class="headerlink" href="#8-live-verification-on-the-real-uipathhost-topology" title="Permanent link">&para;</a></h2>
+<p>The data-fabric coded-app sample was deployed via the <code>uip</code> CLI to <strong><code>appsdev.alpha.uipath.host</code></strong> (org <code>appsdev</code>, tenant <code>appsdevDefault</code>, <code>baseUrl</code> alpha) and tested against <code>alpha.uipath.com</code> Identity. Findings:</p>
+<ol type="1">
+<li>
+<p><strong>endsession targets the correct (uipath.com) session.</strong> Hitting <code>/identity_/connect/endsession</code> logged the user out of the <strong>Cloud portal</strong> — confirming it terminates the uipath.com Identity session, not merely a host cookie.</p>
+</li>
+<li>
+<p><strong>Killing the Cloud session alone does NOT log out the coded app.</strong> With the Identity session gone but the <strong>sessionStorage token still present</strong>, the app kept working — it runs on its cached access token (~60 min), which endsession cannot touch. → confirms the token-clear half is required.</p>
+</li>
+<li>
+<p><strong>Bare endsession may not complete without a hint.</strong> <code>/connect/endsession</code> with no <code>id_token_hint</code> can show a "Do you want to sign out?" confirmation; if not confirmed, the session isn't terminated. → the fix should pass <code>id_token_hint</code>/<code>client_id</code> so it completes without a prompt.</p>
+</li>
+<li>
+<p><strong>Domain-split concern (Raina) — RESOLVED: there is no gateway/auth session on <code>uipath.host</code>.</strong> Isolation test:</p>
+</li>
+</ol>
+<ul>
+<li>Cleared the <code>sessionStorage</code> token, <strong>left every <code>uipath.host</code> cookie intact</strong>, killed the uipath.com Identity session via endsession, then reloaded the app.</li>
+<li><strong>Result: the app required a fresh login — it did not let the user in.</strong></li>
+<li>Therefore the <code>uipath.host</code> cookies do <strong>not</strong> gate access. They are preferences/telemetry — <code>UiPathSessionId</code>, <code>lastUsedLoginEmail-alp</code>, <code>currentLoginMethod-alp</code>, <code>language-*</code>, <code>_gcl_au</code> — and non-HttpOnly. The Identity auth cookies (<code>idsrv.session</code>, etc.) live only on uipath.com and are not visible to the host page.</li>
+<li><strong>Conclusion:</strong> the coded app's auth is exactly (#1) the sessionStorage token + (#2) the uipath.com Identity session — both reachable from the SDK side. <strong>No platform/gateway dependency; the SDK-only fix is sufficient.</strong></li>
+</ul>
+<p>Access-state matrix established by the tests:</p>
+<table>
+<thead>
+<tr>
+<th>Token (#1)</th>
+<th>Identity session (#2)</th>
+<th>uipath.host cookies</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>present</td>
+<td>killed</td>
+<td>—</td>
+<td>stays in (runs on token)</td>
+</tr>
+<tr>
+<td>cleared</td>
+<td>killed</td>
+<td><strong>intact</strong></td>
+<td><strong>login required</strong> ✅ (isolation test)</td>
+</tr>
+</tbody>
+</table>
+<p>→ App access is governed by (#1 <strong>or</strong> #2) only; uipath.host cookies are irrelevant to auth.</p>
+<h2 id="9-backward-compatibility-migration">9. Backward compatibility &amp; migration<a class="headerlink" href="#9-backward-compatibility-migration" title="Permanent link">&para;</a></h2>
+<p><strong>No coded app — existing or new — requires migration or re-registration, by design.</strong></p>
+<ul>
+<li><strong>Axis A — SDK consumer code: no migration.</strong> The new behavior is opt-in. Every existing <code>sdk.logout()</code> call behaves exactly as today (local clear, synchronous, no redirect). Adopting cloud logout is a one-line change (<code>logout({ endSession: true })</code>), not a migration. The default is <strong>not</strong> flipped to <code>true</code> (that would silently turn a non-navigating call into a full-page redirect — a breaking change); revisit the default only in a future major version.</li>
+<li><strong>Axis B — Identity registration: no migration in v1.</strong> If a <code>post_logout_redirect_uri</code> is sent, it typically must be pre-registered on the External App. v1 <strong>omits</strong> it (Identity lands on its own signed-out page), so <strong>no per-app registration change</strong>. Optional auto-return (reuse the registered login <code>redirect_uri</code> as a post-logout target) is a Tier-2 / Identity-supported enhancement.</li>
+<li><strong>Axis C — existing live sessions: no migration; graceful.</strong> Users logged in before the update have no stored <code>id_token</code>; Tier 1 doesn't need one. Tier 2 must skip <code>id_token_hint</code> when absent.</li>
+</ul>
+<h2 id="10-dependencies-to-confirm-with-identity">10. Dependencies to confirm with Identity<a class="headerlink" href="#10-dependencies-to-confirm-with-identity" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[x] <strong>Does endsession clear the correct session given the uipath.host/uipath.com split?</strong> — <strong>Resolved by §8</strong>: endsession kills the uipath.com session (portal logged out); no separate uipath.host auth session exists (isolation test). SDK-only fix is sufficient.</li>
+<li>[ ] Does <code>connect/endsession</code> work with <code>post_logout_redirect_uri</code> <strong>omitted</strong> (lands on Identity's signed-out page) — and can the registered login <code>redirect_uri</code> optionally be reused as a post-logout target (for auto-return, Tier 2)?</li>
+<li>[ ] Confirm in writing that end-session <strong>invalidates the refresh token</strong> (verbal yes from Calin Popa: <em>"if it initiates an endsession flow, then it will"</em>).</li>
+<li>[ ] Is <code>openid</code> scope grantable for coded-app external apps? (Tier 2 only.)</li>
+<li>[ ] Confirm <code>UiPathSessionId</code> on uipath.host is telemetry/correlation (not an auth gate) — behavior in §8 already indicates it is not.</li>
+</ul>
+<h2 id="11-testing-auth-paths-require-100-coverage-per-agent_docsrulesmd">11. Testing (auth paths require 100% coverage per <code>agent_docs/rules.md</code>)<a class="headerlink" href="#11-testing-auth-paths-require-100-coverage-per-agent_docsrulesmd" title="Permanent link">&para;</a></h2>
+<p>Unit (<code>tests/unit/core/auth/</code>):
+- End-session URL construction: with/without <code>id_token_hint</code>, with/without <code>post_logout_redirect_uri</code>, <code>client_id</code> fallback.
+- <code>logout()</code> / <code>logout({ endSession: false })</code> → <strong>no navigation</strong>, storage cleared (proves Axis-A back-compat).
+- <code>logout({ endSession: true })</code> in browser → <code>window.location.href</code> set to the end-session URL.
+- Non-browser (<code>isBrowser === false</code>) → no navigation.</p>
+<p>Manual E2E (redirect flow — not headlessly assertable, like login; note the skip per rules): on the deployed <code>uipath.host</code> app, <code>logout({ endSession: true })</code> → confirm the app logs out <strong>and</strong> the next sign-in shows the Identity login screen (not a silent return). This is the single-flow test that reflects the actual fix (the two-tab endsession-only test does not).</p>
+<h2 id="12-docs-release">12. Docs &amp; release<a class="headerlink" href="#12-docs-release" title="Permanent link">&para;</a></h2>
+<ul>
+<li>JSDoc on the public <code>logout()</code>: the opt-in flag, redirect behavior, and the caveat that an already-issued access token stays valid ~60 min (no revocation — SMBC #1, out of scope).</li>
+<li>Short logout guide / auth-docs update showing <code>logout({ endSession: true })</code>.</li>
+<li><code>docs/oauth-scopes.md</code> only if Tier 2 adds <code>openid</code>.</li>
+<li><strong>Two PRs</strong> per repo rule: (1) feature (no version bump); (2) a <strong>separate</strong> version-bump PR (minor).</li>
+</ul>
+<h2 id="13-rollout-summary">13. Rollout summary<a class="headerlink" href="#13-rollout-summary" title="Permanent link">&para;</a></h2>
+<ol type="1">
+<li>Implement Tier 1 (§7.1–7.3) — <code>logout({ endSession: true })</code> = clear token <strong>+</strong> endsession redirect (with <code>client_id</code>; <code>id_token_hint</code> if/when Tier 2).</li>
+<li>Unit tests (§11) + the single-flow manual E2E on the deployed <code>uipath.host</code> app.</li>
+<li>Docs (§12); feature PR; separate version-bump PR.</li>
+<li>Customer message: on <code>logout({ endSession: true })</code> the app session and Identity/cloud session (and refresh token) are terminated and the next sign-in prompts; <strong>already-issued access tokens remain valid ~60 min</strong> (separate Identity item).</li>
+<li>(Later) Tier 2 for prompt-free logout + optional auto-return, pending the §10 Identity confirmations.
+```</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 UiPath
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.footnote.tooltips", "content.tabs.link", "content.tooltips", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.sections", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "content.code.copy", "content.footnote.tooltips", "content.tabs.link", "content.tooltips", "navigation.expand", "navigation.footer", "navigation.sections", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+        <script src="../../overrides/assets/javascripts/extra.js"></script>
+      
+        <script src="../../termynal.js"></script>
+      
+    
+  </body>
+</html>
