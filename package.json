@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.5.5",
+    "version": "1.6.0",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -240,7 +240,8 @@
     "files": [
         "dist",
         "README.md",
-        "docs/oauth-scopes.md"
+        "docs/oauth-scopes.md",
+        "release-metadata.json"
     ],
     "scripts": {
         "prepack": "rimraf *.tgz",
@@ -254,6 +255,7 @@
         "lint": "oxlint",
         "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
+        "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",

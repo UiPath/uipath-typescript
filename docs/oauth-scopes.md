@@ -100,7 +100,7 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `getById()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` `Traces.Api` |
 | `getBpmn()` | `OR.Execution.Read` |
-| `getVariables()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getIncidents()` | `PIMS` |
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
@@ -133,6 +133,7 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `reopen()` | `PIMS` |
 | `sendMessage()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
