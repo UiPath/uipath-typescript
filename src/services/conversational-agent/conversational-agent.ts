@@ -194,11 +194,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
     return transformData(response.data, ConnectionAuthMap) as ConnectionAuthResponse;
   }
 
-  /**
-   * Gets feature flags for the current tenant
-   *
-   * @internal
-   */
   async getFeatureFlags(): Promise<FeatureFlags> {
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
