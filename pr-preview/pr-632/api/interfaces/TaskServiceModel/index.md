@@ -591,6 +591,8 @@ Updates a task catalog.
 
 `Promise`\<`void`>
 
+Promise resolving once the update completes
+
 #### Example
 
 ```
