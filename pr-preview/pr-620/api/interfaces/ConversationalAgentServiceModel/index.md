@@ -221,7 +221,7 @@ Gets available connections for each configurable connector binding of an agent. 
 
 `Promise`\<`AvailableConnectionsResponse`>
 
-Promise resolving to an array of connector items with their available connections
+Promise resolving to an array of connector items with their available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
 
 #### Example
 
@@ -302,7 +302,7 @@ Updates the current user's connection selections for an agent. Only configurable
 
 `Promise`\<`AvailableConnectionsResponse`>
 
-Promise resolving to the updated available connections
+Promise resolving to the updated available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
 
 #### Example
 

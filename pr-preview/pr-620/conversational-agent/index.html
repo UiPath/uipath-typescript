@@ -2674,7 +2674,8 @@ Only returns bindings that are "configurable by users" (not admin-fixed).</p>
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../api/type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
-<p>Promise resolving to an array of connector items with their available connections</p>
+<p>Promise resolving to an array of connector items with their available connections
+<a href="../api/type-aliases/AvailableConnectionsResponse/">AvailableConnectionsResponse</a></p>
 <h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAvailableConnections</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">connections</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2796,7 +2797,8 @@ Only configurable bindings (not admin-fixed) can be updated.</p>
 </table>
 <h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../api/type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
-<p>Promise resolving to the updated available connections</p>
+<p>Promise resolving to the updated available connections
+<a href="../api/type-aliases/AvailableConnectionsResponse/">AvailableConnectionsResponse</a></p>
 <h4 id="example_5">Example<a class="headerlink" href="#example_5" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">updateConnectionSelections</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nx">selections</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">connectorKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;jira&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">connectionId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;conn-123&#39;</span><span class="w"> </span><span class="p">}]</span>
