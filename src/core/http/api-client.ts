@@ -39,14 +39,16 @@ export class ApiClient {
     return this.tokenManager.getValidToken();
   }
 
-  private async getDefaultHeaders(): Promise<Record<string, string>> {
+  private async getDefaultHeaders(includeDefaultContentType: boolean): Promise<Record<string, string>> {
     const token = await this.getValidToken();
 
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': CONTENT_TYPES.JSON,
-      ...this.clientConfig.headers
-    };
+    const base: Record<string, string> = { 'Authorization': `Bearer ${token}` };
+    if (includeDefaultContentType) {
+      base['Content-Type'] = CONTENT_TYPES.JSON;
+    }
+    // clientConfig.headers is spread last so a caller-configured Content-Type
+    // wins over the default and is preserved on bodyless requests.
+    return { ...base, ...this.clientConfig.headers };
   }
 
 
@@ -61,13 +63,14 @@ export class ApiClient {
     ).toString();
 
     const isFormData = options.body instanceof FormData;
-    const defaultHeaders = await this.getDefaultHeaders();
     // FormData sets its own boundary header; GET/HEAD carry no body, and some
-    // gateways (e.g. function HTTP triggers) reject them when a json
-    // Content-Type is present. Explicit options.headers still take precedence.
-    if (isFormData || method === 'GET' || method === 'HEAD') {
-      delete defaultHeaders['Content-Type'];
-    }
+    // gateways (e.g. function HTTP triggers) reject Content-Type on bodyless
+    // requests. Only inject the default JSON Content-Type when the request has
+    // a JSON body. Callers can still override via clientConfig.headers or
+    // per-request options.headers, and those overrides survive regardless of
+    // the request method.
+    const isBodyless = isFormData || method === 'GET' || method === 'HEAD';
+    const defaultHeaders = await this.getDefaultHeaders(!isBodyless);
 
     const traceId = crypto.randomUUID().replace(/-/g, '');
     const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
