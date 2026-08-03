@@ -204,6 +204,7 @@ export interface ConversationalAgentServiceModel {
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
    * @returns Promise resolving to an array of connector items with their available connections
+   * {@link AvailableConnectionsResponse}
    *
    * @example
    * ```typescript
@@ -223,6 +224,7 @@ export interface ConversationalAgentServiceModel {
    * @param folderId - ID of the folder containing the agent
    * @param request - The connection selections to apply
    * @returns Promise resolving to the updated available connections
+   * {@link AvailableConnectionsResponse}
    *
    * @example
    * ```typescript
@@ -263,6 +265,7 @@ export interface ConversationalAgentServiceModel {
    *
    * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
    * @returns Promise resolving to the auth URL and its expiration
+   * {@link ConnectionAuthResponse}
    * @internal
    */
   getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
