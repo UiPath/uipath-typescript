@@ -145,6 +145,11 @@ const serviceEntries = [
     output: 'entities/index'
   },
   {
+    name: 'entities-v3',
+    input: 'src/services/data-fabric/entities-v3/index.ts',
+    output: 'entities-v3/index'
+  },
+  {
     name: 'tasks',
     input: 'src/services/action-center/index.ts',
     output: 'tasks/index'

@@ -198,6 +198,7 @@ nav:
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
+            - Entities v3: api/interfaces/EntityV3ServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
