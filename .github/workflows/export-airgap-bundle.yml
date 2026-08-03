@@ -10,38 +10,18 @@ name: Export air-gapped SDK bundle
 #
 # Releases stay human-created (draft notes published manually — this workflow
 # never creates releases or tags, it only adds assets to an existing release;
-# publishing a draft fires the release trigger below).
-#
-# Triggers:
-#   - release published: bundles the released version (tag = SDK version) and
-#     attaches the assets to that release. This is the primary path.
-#   - workflow_dispatch: backfill for past releases, recovery after a failed
-#     run, refreshing the coded-action-app side, or artifact-only dry runs
-#     (leave release_tag empty).
+# publishing a draft fires the release trigger below). Publishing the draft is
+# the human approval for the attach, so there is no extra environment gate,
+# and the workflow is deliberately NOT manually runnable: it never publishes
+# to any registry (the verify job's `npm publish` targets a throwaway
+# localhost Verdaccio that dies with the runner), so its only side effect is
+# adding assets to the release that was just published. To backfill an older
+# release, run scripts/airgap/build-airgap-bundle.mjs locally and
+# `gh release upload` the results.
 
 on:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      sdk_version:
-        description: >-
-          Version of @uipath/uipath-typescript to bundle (exact, e.g. 1.5.5).
-          Empty = latest.
-        required: false
-        type: string
-      coded_action_app_version:
-        description: >-
-          Version of @uipath/coded-action-app to bundle (exact, incl.
-          prerelease). Empty = latest.
-        required: false
-        type: string
-      release_tag:
-        description: >-
-          Attach the ZIP to an EXISTING GitHub release with this tag
-          (e.g. 1.5.5). Empty = leave as a workflow artifact only.
-        required: false
-        type: string
 
 permissions: {}
 
@@ -66,13 +46,13 @@ jobs:
         with:
           node-version: '24'
 
-      # On a release event the tag IS the SDK version. Inputs reach the script
-      # via env only; it regex-validates them before any npm command.
+      # The release tag IS the SDK version (bare-version tags, e.g. 1.5.5).
+      # It reaches the script via env only; the script regex-validates it
+      # before any npm command. coded-action-app defaults to latest.
       - name: Build bundle
         env:
           OUT_DIR: ${{ github.workspace }}/airgap-bundle
-          SDK_VERSION: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.sdk_version }}
-          CAA_VERSION: ${{ inputs.coded_action_app_version }}
+          SDK_VERSION: ${{ github.event.release.tag_name }}
         run: node scripts/airgap/build-airgap-bundle.mjs
 
       - name: Resolve bundle metadata
@@ -169,11 +149,7 @@ jobs:
   attach:
     name: Attach assets to release
     needs: [build, verify]
-    if: github.event_name == 'release' || inputs.release_tag != ''
     runs-on: ubuntu-latest
-    # The only side-effecting job: writing assets to a customer-facing release
-    # requires the production environment's approval rules.
-    environment: production
     permissions:
       contents: write
     steps:
@@ -190,7 +166,7 @@ jobs:
       - name: Upload to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.event.release.tag_name || inputs.release_tag }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
           BUNDLE_NAME: ${{ needs.build.outputs.bundle_name }}
         run: |
           (cd airgap-bundle && zip -qr "${GITHUB_WORKSPACE}/${BUNDLE_NAME}.zip" .)
