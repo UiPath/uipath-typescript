@@ -75,7 +75,11 @@ export class FunctionService extends FolderScopedService implements FunctionServ
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
         },
       },
-    }, apiOptions) as any;
+    }, apiOptions) as Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<FunctionGetResponse>
+        : NonPaginatedResponse<FunctionGetResponse>
+    >;
   }
 
   @track('Functions.Invoke')
