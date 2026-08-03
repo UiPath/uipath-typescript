@@ -7,12 +7,9 @@ import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
-const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
-  private skipAcrValues: boolean = false;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Only use stored OAuth context when completing an active callback (URL has ?code=).
@@ -116,15 +113,6 @@ export class AuthService {
    */
   public getTokenManager(): TokenManager {
     return this.tokenManager;
-  }
-
-  /**
-   * Enables the UiPath login picker during OAuth sign-in.
-   *
-   * @internal
-   */
-  public setMultiLogin(): void {
-    this.skipAcrValues = true;
   }
 
   /**
@@ -340,10 +328,6 @@ export class AuthService {
     scope: string;
     state?: string;
   }): string {
-    const orgName = this.config.orgName;
-    const isGuid = GUID_REGEX.test(orgName);
-    const acrValues = isGuid ? `tenant:${orgName}` : `tenantName:${orgName}`;
-
     const queryParams = new URLSearchParams({
       response_type: 'code',
       client_id: params.clientId,
@@ -354,10 +338,10 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
-    return this.skipAcrValues
-      ? authorizeUrl
-      : `${authorizeUrl}&acr_values=${acrValues}`;
+    // acr_values is intentionally omitted: Identity resolves the target org from
+    // client_id, and sending acr_values routes directly to the org's SAML IdP,
+    // which blocks Basic Auth users in mixed-auth orgs.
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
   }
 
   /**

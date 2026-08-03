@@ -40,7 +40,7 @@ describe('AuthService', () => {
       expect(url).toContain('offline_access');
     });
 
-    it('should include all required OAuth params alongside acr_values', () => {
+    it('should include all required OAuth params', () => {
       const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
       const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
       const params = new URLSearchParams(url.split('?')[1]);
@@ -50,37 +50,21 @@ describe('AuthService', () => {
       expect(params.get('code_challenge')).toBe(codeChallenge);
       expect(params.get('code_challenge_method')).toBe('S256');
       expect(params.get('scope')).toContain(scope);
-      expect(params.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.ORGANIZATION_ID}`);
     });
 
-    it('should set acr_values with tenant: prefix when orgName is a GUID', () => {
-      const service = createService(TEST_CONSTANTS.GUID_ORG_ID);
-      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
-      const parsedUrl = new URL(url);
-      expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenant:${TEST_CONSTANTS.GUID_ORG_ID}`);
-    });
-
-    it('should set acr_values with tenantName: prefix when orgName is a human-readable name', () => {
-      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
-      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
-      const parsedUrl = new URL(url);
-      expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.ORGANIZATION_ID}`);
-    });
-
-    it('should set acr_values with tenantName: prefix for a GUID-like string with wrong segment length', () => {
-      const service = createService(TEST_CONSTANTS.INVALID_GUID_ORG_ID);
-      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
-      const parsedUrl = new URL(url);
-      expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`);
-    });
-
-    it('should omit acr_values when multi-login is enabled', () => {
-      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
-      service.setMultiLogin();
-      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
-      const parsedUrl = new URL(url);
-      expect(parsedUrl.searchParams.has('acr_values')).toBe(false);
-      expect(url).not.toContain('acr_values=');
+    // acr_values is never sent: Identity resolves the org from client_id, and
+    // sending it routes directly to the org's SAML IdP, blocking Basic Auth users.
+    it('should never emit acr_values, regardless of orgName format', () => {
+      for (const orgName of [
+        TEST_CONSTANTS.ORGANIZATION_ID,
+        TEST_CONSTANTS.GUID_ORG_ID,
+        TEST_CONSTANTS.INVALID_GUID_ORG_ID,
+      ]) {
+        const service = createService(orgName);
+        const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+        expect(new URL(url).searchParams.has('acr_values')).toBe(false);
+        expect(url).not.toContain('acr_values');
+      }
     });
   });
 
