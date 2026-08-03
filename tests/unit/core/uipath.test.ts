@@ -415,6 +415,22 @@ describe('UiPath Core', () => {
       expect(mockLogout).toHaveBeenCalledOnce();
       expect(sdk.isInitialized()).toBe(false);
     });
+
+    it('should forward end-session options to the auth service', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: 'http://localhost:3000/callback',
+        scope: 'offline_access'
+      });
+
+      const options = { endSession: true, postLogoutRedirectUri: 'https://myapp.example.com/logged-out' };
+      sdk.logout(options);
+
+      expect(mockLogout).toHaveBeenCalledWith(options);
+    });
   });
 
   describe('destroy()', () => {

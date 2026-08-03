@@ -1,7 +1,7 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { TokenInfo } from './auth/types';
+import { TokenInfo, LogoutOptions } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -288,13 +288,40 @@ export class UiPath implements IUiPath {
   /**
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
+   *
+   * By default only local authentication state is cleared — the Automation Cloud
+   * session is untouched, so a subsequent sign-in completes silently without
+   * showing a login screen. Pass `endSession: true` to also terminate the
+   * Automation Cloud session: the browser is redirected to the Identity
+   * end-session endpoint (invalidating the refresh token as well), so the next
+   * sign-in prompts for credentials. Note that an already-issued access token
+   * remains valid until its natural expiry.
+   *
+   * For the smoothest cloud logout, include the `openid` scope in your SDK
+   * configuration — the SDK then sends the OIDC ID token as `id_token_hint`,
+   * letting Identity skip its logout-confirmation prompt and honor
+   * `postLogoutRedirectUri`.
+   *
+   * @param options - Logout behavior options
+   *
+   * @example
+   * ```typescript
+   * // Local logout only (default — previous behavior)
+   * sdk.logout();
+   *
+   * // Also log out of Automation Cloud (redirects the browser)
+   * sdk.logout({ endSession: true });
+   *
+   * // Log out of Automation Cloud and return the user to your app
+   * sdk.logout({ endSession: true, postLogoutRedirectUri: window.location.origin });
+   * ```
    */
-  public logout(): void {
+  public logout(options?: LogoutOptions): void {
     // Secret-based auth has no session to end — skip silently
     if (this.#config && hasSecretConfig(this.#config)) {
       return;
     }
-    this.#authService?.logout();
+    this.#authService?.logout(options);
     this.#initialized = false;
   }
 
