@@ -1948,6 +1948,29 @@ The task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
 const catalog = await tasks.getCatalogById(<catalogId>, { folderId: <folderId> });
 ```
 
+### getCatalogByName()
+
+> **getCatalogByName**(`name`: `string`, `options?`: `TaskCatalogGetByNameOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by name within a folder.
+
+#### Parameters
+
+- `name`: `string` — The task catalog name
+- `options?`: `TaskCatalogGetByNameOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+The matching task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await tasks.getCatalogByName("Invoices", { folderId: <folderId> });
+```
+
 ### getCatalogs()
 
 > **getCatalogs**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
