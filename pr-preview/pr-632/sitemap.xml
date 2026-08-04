@@ -2545,10 +2545,6 @@
          <lastmod>2026-08-04</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/</loc>
-         <lastmod>2026-08-04</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskSlaDetail/</loc>
          <lastmod>2026-08-04</lastmod>
     </url>
@@ -2638,6 +2634,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/entity/</loc>
+         <lastmod>2026-08-04</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/task/</loc>
          <lastmod>2026-08-04</lastmod>
     </url>
     <url>

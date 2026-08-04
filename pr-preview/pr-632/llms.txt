@@ -13,7 +13,7 @@
 - [Processes](https://uipath.github.io/uipath-typescript/api/interfaces/ProcessServiceModel/index.md): Process service methods
 - [Queues](https://uipath.github.io/uipath-typescript/api/interfaces/QueueServiceModel/index.md): Queue service methods
 - [Buckets](https://uipath.github.io/uipath-typescript/api/interfaces/BucketServiceModel/index.md): Bucket service methods
-- [TaskServiceModel](https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/index.md): Task service methods
+- [Tasks](https://uipath.github.io/uipath-typescript/api/interfaces/task/index.md): Task service methods
 - [Task Catalogs](https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogServiceModel/index.md): Task catalog service methods
 - [Attachments](https://uipath.github.io/uipath-typescript/api/interfaces/attachments/index.md): Attachment service methods
 - [Entities](https://uipath.github.io/uipath-typescript/api/interfaces/entity/index.md): Entity service methods
