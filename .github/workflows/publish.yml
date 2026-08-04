@@ -12,6 +12,11 @@ on:
           - ts-sdk
           - coded-action-app-sdk
           - telemetry
+      github_packages_only:
+        description: 'Publish only to GitHub Packages (skip npm, docs deploy, and CF worker)'
+        required: false
+        default: false
+        type: boolean
 
 permissions: {}
 
@@ -58,6 +63,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public
@@ -71,6 +77,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
           echo "## SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -80,7 +88,11 @@ jobs:
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
           echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
@@ -88,6 +100,7 @@ jobs:
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
 
   deploy-docs:
+    if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
     uses: ./.github/workflows/docs.yml
     permissions:
@@ -97,6 +110,7 @@ jobs:
       deployments: write
 
   trigger-cf-worker:
+    if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
     runs-on: ubuntu-latest
     permissions: {}
@@ -159,6 +173,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public --tag latest
@@ -172,6 +187,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
           echo "## Coded Action Apps SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -181,7 +198,11 @@ jobs:
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
           echo "- Built coded-action-app package" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
@@ -235,6 +256,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public --tag latest
@@ -248,6 +270,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           TELEMETRY_VERSION=$(node -p "require('./package.json').version")
           echo "## Telemetry Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -258,7 +282,11 @@ jobs:
           echo "- Replaced connection string" >> $GITHUB_STEP_SUMMARY
           echo "- Built telemetry package" >> $GITHUB_STEP_SUMMARY
           echo "- Ran unit tests" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
