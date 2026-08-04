@@ -53,12 +53,17 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- SDK_VERSION (from root package): $SDK_VERSION"
 
-      - name: Validate prerelease version
-        if: ${{ inputs.github_packages_only }}
+      - name: Validate version matches publish mode
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$VERSION" != *-* ]]; then
+          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
+            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
@@ -81,9 +86,10 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
         env:
@@ -172,12 +178,17 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- CODED_ACTION_APP_SDK_VERSION: $SDK_VERSION"
 
-      - name: Validate prerelease version
-        if: ${{ inputs.github_packages_only }}
+      - name: Validate version matches publish mode
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$VERSION" != *-* ]]; then
+          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
+            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
@@ -200,9 +211,10 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
         env:
@@ -261,12 +273,17 @@ jobs:
 
           echo "Replaced connection string"
 
-      - name: Validate prerelease version
-        if: ${{ inputs.github_packages_only }}
+      - name: Validate version matches publish mode
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$VERSION" != *-* ]]; then
+          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
+            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
@@ -292,9 +309,10 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
         env:
