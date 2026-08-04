@@ -53,17 +53,12 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- SDK_VERSION (from root package): $SDK_VERSION"
 
-      - name: Validate version matches publish mode
-        env:
-          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
+          if [[ "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
-            exit 1
-          fi
-          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
-            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
@@ -178,17 +173,12 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- CODED_ACTION_APP_SDK_VERSION: $SDK_VERSION"
 
-      - name: Validate version matches publish mode
-        env:
-          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
+          if [[ "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
-            exit 1
-          fi
-          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
-            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
@@ -273,17 +263,12 @@ jobs:
 
           echo "Replaced connection string"
 
-      - name: Validate version matches publish mode
-        env:
-          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if [[ "$GITHUB_PACKAGES_ONLY" == "true" && "$VERSION" != *-* ]]; then
+          if [[ "$VERSION" != *-* ]]; then
             echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
-            exit 1
-          fi
-          if [[ "$GITHUB_PACKAGES_ONLY" != "true" && "$VERSION" == *-* ]]; then
-            echo "::error::refusing to publish prerelease version $VERSION to npm as latest — set github_packages_only=true"
             exit 1
           fi
 
