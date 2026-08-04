@@ -43,9 +43,9 @@ export interface IntegrationConfig {
   functionsTestFunctionName?: string;
   /**
    * GUID of the user whose identity settings the Identity suite reads and round-trips.
-   * Optional — the suite falls back to the dev test user. Set it when running against a
-   * different organization, since settings are scoped to (organization, user) and the SDK
-   * cannot derive the caller's user ID from a PAT.
+   * Required: settings are scoped to (organization, user), the user must belong to the
+   * organization the test PAT authenticates against, and the SDK cannot derive the calling
+   * user from a PAT.
    */
   identityTestUserId?: string;
 }

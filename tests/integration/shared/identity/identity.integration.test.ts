@@ -7,12 +7,6 @@ const modes: InitMode[] = ['v1'];
 
 const ALL_KEYS = Object.values(IdentitySettingKey);
 
-// Identity settings are scoped to (organization, user), so this GUID is only meaningful in
-// the organization the test PAT authenticates against. Set IDENTITY_TEST_USER_ID to
-// override when running against a different organization — a GUID from another
-// organization returns no rows rather than an error.
-const DEFAULT_TEST_USER_ID = '81a27926-9d8d-4c62-84e5-df1c51c0b676';
-
 describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
@@ -31,16 +25,25 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
     }
     identity = service;
 
-    userId = getTestConfig().identityTestUserId ?? DEFAULT_TEST_USER_ID;
+    // Settings are scoped to (organization, user), so the user must belong to the
+    // organization the test PAT authenticates against — there is no sensible default.
+    const { identityTestUserId } = getTestConfig();
+    if (!identityTestUserId) {
+      throw new Error(
+        'IDENTITY_TEST_USER_ID is not configured; every Identity operation is user-scoped ' +
+          'and the SDK cannot derive the calling user from a PAT.'
+      );
+    }
+    userId = identityTestUserId;
 
     // Any supported key with a stored value works — the write tests round-trip it and
     // restore the original, so nothing needs to be configured per environment.
     const settings = await identity.getSettings(ALL_KEYS, userId);
     if (settings.length === 0) {
       throw new Error(
-        `No supported identity setting has a stored value for user ${userId}. Either that ` +
-          'user has never set one, or the user belongs to a different organization than ' +
-          'the test PAT — set IDENTITY_TEST_USER_ID to a user in the PAT\'s organization.'
+        `No supported identity setting has a stored value for user ${userId}; the settings ` +
+          'round-trip cannot be verified. Point IDENTITY_TEST_USER_ID at a user who has ' +
+          'set at least one of them.'
       );
     }
     originalSettings = settings;
