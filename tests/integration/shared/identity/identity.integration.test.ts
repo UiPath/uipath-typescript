@@ -12,6 +12,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
 
   let identity!: Identity;
   let userId!: string;
+  let organizationId!: string;
   // Snapshot of every stored setting, restored in afterAll so the suite leaves the
   // shared environment exactly as it found it.
   let originalSettings!: IdentitySetting[];
@@ -25,20 +26,22 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
     }
     identity = service;
 
-    // Settings are scoped to (organization, user), so the user must belong to the
-    // organization the test PAT authenticates against — there is no sensible default.
-    const { identityTestUserId } = getTestConfig();
-    if (!identityTestUserId) {
+    // Settings are scoped to (organization, user). Both have to be supplied: the SDK
+    // cannot derive the calling user from a PAT, and omitting the organization makes the
+    // API fall back to the host partition rather than this one.
+    const { identityTestUserId, organizationId: configuredOrganizationId } = getTestConfig();
+    if (!identityTestUserId || !configuredOrganizationId) {
       throw new Error(
-        'IDENTITY_TEST_USER_ID is not configured; every Identity operation is user-scoped ' +
-          'and the SDK cannot derive the calling user from a PAT.'
+        'IDENTITY_TEST_USER_ID and UIPATH_ORGANIZATION_ID must both be configured; identity ' +
+          'settings are scoped to (organization, user).'
       );
     }
     userId = identityTestUserId;
+    organizationId = configuredOrganizationId;
 
     // Any supported key with a stored value works — the write tests round-trip it and
     // restore the original, so nothing needs to be configured per environment.
-    const settings = await identity.getSettings(ALL_KEYS, userId);
+    const settings = await identity.getSettings(ALL_KEYS, userId, { organizationId });
     if (settings.length === 0) {
       throw new Error(
         `No supported identity setting has a stored value for user ${userId}; the settings ` +
@@ -76,14 +79,14 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
 
     it('should return no more rows than the number of keys requested', async () => {
       // Keys with nothing stored are omitted rather than returned with an empty value
-      const result = await identity.getSettings(ALL_KEYS, userId);
+      const result = await identity.getSettings(ALL_KEYS, userId, { organizationId });
 
       expect(result.length).toBeLessThanOrEqual(ALL_KEYS.length);
       result.forEach((setting) => expect(ALL_KEYS).toContain(setting.key));
     });
 
     it('should retrieve a single key when only that key is requested', async () => {
-      const result = await identity.getSettings([originalSetting.key], userId);
+      const result = await identity.getSettings([originalSetting.key], userId, { organizationId });
 
       expect(result).toHaveLength(1);
       expect(result[0].key).toBe(originalSetting.key);
@@ -115,7 +118,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
       expect(updatedRow?.value).toBe(newValue);
       expect(typeof updatedRow?.id).toBe('number');
 
-      const afterWrite = await identity.getSettings([originalSetting.key], userId);
+      const afterWrite = await identity.getSettings([originalSetting.key], userId, { organizationId });
       expect(afterWrite.find((s) => s.key === originalSetting.key)?.value).toBe(newValue);
 
       // Restore immediately so a later failure cannot leave the modified value behind
@@ -125,7 +128,7 @@ describe.each(modes)('Identity - Integration Tests [%s]', (mode) => {
         originalSetting.organizationId
       );
 
-      const afterRestore = await identity.getSettings([originalSetting.key], userId);
+      const afterRestore = await identity.getSettings([originalSetting.key], userId, { organizationId });
       expect(afterRestore.find((s) => s.key === originalSetting.key)?.value).toBe(
         originalSetting.value
       );

@@ -244,6 +244,7 @@ Tests skip gracefully when:
 | `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
 | `IDENTITY_TEST_USER_ID` | GUID of the user whose identity settings are read and round-tripped; must be in the test PAT's organization | (required for the Identity tests) |
+| `UIPATH_ORGANIZATION_ID` | Organization (account) GUID; identity settings reads fall back to the host partition without it | (required for the Identity tests) |
 
 ## Test Data Management
 

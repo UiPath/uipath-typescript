@@ -27,7 +27,7 @@ export interface IdentityServiceModel {
    *
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
-   * @param options - Optional organization scoping
+   * @param options - Organization scoping; supply `organizationId` unless you intend the host partition
    * @returns The user's stored settings for the requested keys, as {@link IdentitySetting} rows
    *
    * @example Basic usage
@@ -39,7 +39,9 @@ export interface IdentityServiceModel {
    * await sdk.initialize();
    *
    * const identity = new Identity(sdk);
-   * const settings = await identity.getSettings([IdentitySettingKey.UserTheme], '<userId>');
+   * const settings = await identity.getSettings([IdentitySettingKey.UserTheme], '<userId>', {
+   *   organizationId: '<organizationId>',
+   * });
    * const theme = settings.find(s => s.key === IdentitySettingKey.UserTheme)?.value;
    * ```
    *
@@ -76,9 +78,9 @@ export interface IdentityServiceModel {
    * there is no need to send back the settings you are not changing. Returns the stored
    * rows as they are after the write, including their generated `id`.
    *
-   * Unlike {@link getSettings}, the organization cannot be inferred on a write and must be
-   * supplied. Read a setting first if you do not have it — every
-   * {@link IdentitySetting} carries its `organizationId`.
+   * The organization must be supplied — on a write it is a required argument, and on a read
+   * omitting it targets the host partition instead. Read a setting first if you do not have
+   * it: every {@link IdentitySetting} carries its `organizationId`.
    *
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
@@ -89,7 +91,9 @@ export interface IdentityServiceModel {
    * ```typescript
    * import { IdentitySettingKey } from '@uipath/uipath-typescript/identity';
    *
-   * const [current] = await identity.getSettings([IdentitySettingKey.UserTheme], '<userId>');
+   * const [current] = await identity.getSettings([IdentitySettingKey.UserTheme], '<userId>', {
+   *   organizationId: '<organizationId>',
+   * });
    *
    * const updated = await identity.updateSettings(
    *   [{ key: IdentitySettingKey.UserTheme, value: 'dark' }],

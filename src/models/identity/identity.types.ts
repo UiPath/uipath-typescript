@@ -68,8 +68,11 @@ export interface IdentitySettingUpsert {
  */
 export interface IdentitySettingGetOptions {
   /**
-   * Organization (account) GUID to read from. When omitted, the API falls back to the
-   * organization the calling token is scoped to.
+   * Organization (account) GUID to read from.
+   *
+   * Supply this in practice. When omitted the API falls back to the **host** partition
+   * rather than the caller's own organization, and an external application is not
+   * authorized for it — the request comes back `403 Forbidden`.
    */
   organizationId?: string;
 }
