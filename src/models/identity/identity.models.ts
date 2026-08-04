@@ -100,6 +100,8 @@ export interface IdentityServiceModel {
    *
    * @example Update several settings at once
    * ```typescript
+   * import { IdentitySettingKey } from '@uipath/uipath-typescript/identity';
+   *
    * await identity.updateSettings(
    *   [
    *     { key: IdentitySettingKey.UserTheme, value: 'dark' },
