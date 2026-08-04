@@ -117,15 +117,15 @@ Promise resolving to the matching task catalog [TaskCatalogGetResponse](../TaskC
 const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> });
 ```
 
-### updateByIdOrName()
+### updateById()
 
-> **updateByIdOrName**(`idOrName`: `string` | `number`, `name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+> **updateById**(`id`: `number`, `name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
-Updates a task catalog, identified by id or name.
+Updates a task catalog by id.
 
 #### Parameters
 
-- `idOrName`: `string` | `number` — The task catalog id (number) or name (string) to update
+- `id`: `number` — The task catalog id
 - `name`: `string` — Name of the task catalog (max 50 characters)
 - `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
 
@@ -138,9 +138,29 @@ Promise resolving once the update completes
 #### Example
 
 ```
-// By id
-await taskCatalogs.updateByIdOrName(<catalogId>, "Invoices", { description: "Updated", folderId: <folderId> });
+await taskCatalogs.updateById(<catalogId>, "Invoices", { description: "Updated", folderId: <folderId> });
+```
 
-// By name
-await taskCatalogs.updateByIdOrName("Invoices", "Invoices", { description: "Updated", folderId: <folderId> });
+### updateByName()
+
+> **updateByName**(`name`: `string`, `newName`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by name, resolving the id internally.
+
+#### Parameters
+
+- `name`: `string` — The current name of the task catalog to update
+- `newName`: `string` — Name to set on the task catalog (max 50 characters)
+- `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+await taskCatalogs.updateByName("Invoices", "Invoices", { description: "Updated", folderId: <folderId> });
 ```

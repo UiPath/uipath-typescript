@@ -1536,9 +1536,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#updatebyidorname" class="md-nav__link">
+  <a href="#updatebyid" class="md-nav__link">
     <span class="md-ellipsis">
-      updateByIdOrName()
+      updateById()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatebyname" class="md-nav__link">
+    <span class="md-ellipsis">
+      updateByName()
     </span>
   </a>
   
@@ -2437,9 +2446,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#updatebyidorname" class="md-nav__link">
+  <a href="#updatebyid" class="md-nav__link">
     <span class="md-ellipsis">
-      updateByIdOrName()
+      updateById()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatebyname" class="md-nav__link">
+    <span class="md-ellipsis">
+      updateByName()
     </span>
   </a>
   
@@ -2634,11 +2652,11 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">getByName</span><span class="p">(</span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
-<h3 id="updatebyidorname">updateByIdOrName()<a class="headerlink" href="#updatebyidorname" title="Permanent link">&para;</a></h3>
+<h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateByIdOrName</strong>(<code>idOrName</code>: <code>string</code> | <code>number</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>updateById</strong>(<code>id</code>: <code>number</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Updates a task catalog, identified by id or name.</p>
+<p>Updates a task catalog by id.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2650,9 +2668,9 @@
 </thead>
 <tbody>
 <tr>
-<td><code>idOrName</code></td>
-<td><code>string</code> | <code>number</code></td>
-<td>The task catalog id (number) or name (string) to update</td>
+<td><code>id</code></td>
+<td><code>number</code></td>
+<td>The task catalog id</td>
 </tr>
 <tr>
 <td><code>name</code></td>
@@ -2670,11 +2688,46 @@
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the update completes</p>
 <h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// By id</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">updateByIdOrName</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">catalogId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// By name</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">updateByIdOrName</span><span class="p">(</span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">catalogId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<hr />
+<h3 id="updatebyname">updateByName()<a class="headerlink" href="#updatebyname" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>updateByName</strong>(<code>name</code>: <code>string</code>, <code>newName</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Updates a task catalog by name, resolving the id internally.</p>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>The current name of the task catalog to update</td>
+</tr>
+<tr>
+<td><code>newName</code></td>
+<td><code>string</code></td>
+<td>Name to set on the task catalog (max 50 characters)</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a></td>
+<td>Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving once the update completes</p>
+<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">updateByName</span><span class="p">(</span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Invoices&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 
 
