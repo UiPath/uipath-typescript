@@ -495,6 +495,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `queryRecordsById()`       | ✅ Yes                 |
 | Processes                         | `getAll()`                 | ✅ Yes                 |
+| Functions                         | `getAll()`                 | ✅ Yes                 |
 | ProcessInstances                  | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getAll()`                 | ❌ No                  |
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
@@ -502,8 +503,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Queues                            | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
-| Tasks                             | `getCatalogs()`            | ✅ Yes                 |
-| Tasks                             | `getNotes()`               | ✅ Yes                 |
+| Tasks                             | `getComments()`            | ✅ Yes                 |
+| TaskCatalogs                      | `getAll()`                 | ✅ Yes                 |
 | ConversationalAgent.conversations | `getAll()`                 | ❌ No                  |
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
@@ -1762,51 +1763,28 @@ const task = await tasks.create({
 }, <folderId>); // folderId is required
 ```
 
-### createCatalog()
+### createComment()
 
-> **createCatalog**(`name`: `string`, `options?`: `TaskCatalogCreateOptions`): `Promise`\<`TaskCatalogGetResponse`>
+> **createComment**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCommentGetResponse`>
 
-Creates a task catalog.
-
-#### Parameters
-
-- `name`: `string` — Name of the task catalog (max 50 characters)
-- `options?`: `TaskCatalogCreateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
-
-#### Returns
-
-`Promise`\<`TaskCatalogGetResponse`>
-
-The created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
-
-#### Example
-
-```
-const catalog = await tasks.createCatalog("Invoices", { description: "Invoice tasks", folderId: <folderId> });
-```
-
-### createNote()
-
-> **createNote**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskNoteGetResponse`>
-
-Creates a note on a task.
+Creates a comment on a task.
 
 #### Parameters
 
-- `taskId`: `number` — Id of the task the note belongs to
-- `text`: `string` — Note text (max 512 characters)
+- `taskId`: `number` — Id of the task the comment belongs to
+- `text`: `string` — Comment text (max 512 characters)
 - `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
-`Promise`\<`TaskNoteGetResponse`>
+`Promise`\<`TaskCommentGetResponse`>
 
-The created note [TaskNoteGetResponse](../TaskNoteGetResponse/)
+The created comment [TaskCommentGetResponse](../TaskCommentGetResponse/)
 
 #### Example
 
 ```
-const note = await tasks.createNote(<taskId>, "Escalated", { folderId: <folderId> });
+const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <folderId> });
 ```
 
 ### editMetadata()
@@ -1925,76 +1903,31 @@ console.log(formTask.formLayout);
 const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
 ```
 
-### getCatalogById()
+### getComments()
 
-> **getCatalogById**(`id`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+> **getComments**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
 
-Gets a task catalog by id.
-
-#### Parameters
-
-- `id`: `number` — The task catalog id
-- `options?`: `TaskCatalogGetByIdOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
-
-#### Returns
-
-`Promise`\<`TaskCatalogGetResponse`>
-
-The task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
-
-#### Example
-
-```
-const catalog = await tasks.getCatalogById(<catalogId>, { folderId: <folderId> });
-```
-
-### getCatalogByName()
-
-> **getCatalogByName**(`name`: `string`, `options?`: `TaskCatalogGetByNameOptions`): `Promise`\<`TaskCatalogGetResponse`>
-
-Gets a task catalog by name within a folder.
-
-#### Parameters
-
-- `name`: `string` — The task catalog name
-- `options?`: `TaskCatalogGetByNameOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
-
-#### Returns
-
-`Promise`\<`TaskCatalogGetResponse`>
-
-The matching task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
-
-#### Example
-
-```
-const catalog = await tasks.getCatalogByName("Invoices", { folderId: <folderId> });
-```
-
-### getCatalogs()
-
-> **getCatalogs**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
-
-Gets task catalogs in a folder.
+Gets the comments for a task.
 
 #### Type Parameters
 
-- `T` *extends* `TaskCatalogGetAllOptions` = `TaskCatalogGetAllOptions`
+- `T` *extends* `TaskCommentGetByTaskIdOptions` = `TaskCommentGetByTaskIdOptions`
 
 #### Parameters
 
+- `taskId`: `number` — The task to list comments for
 - `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
 
-The task catalogs [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+The task's comments [TaskCommentGetResponse](../TaskCommentGetResponse/)
 
 #### Example
 
 ```
-const catalogs = await tasks.getCatalogs({ folderId: <folderId> });
+const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
 ```
 
 ### getData()
@@ -2021,33 +1954,6 @@ The task data [TaskDataGetResponse](../TaskDataGetResponse/)
 ```
 const task = await tasks.getData(<taskId>, { folderId: <folderId> });
 console.log(task.data);
-```
-
-### getNotes()
-
-> **getNotes**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
-
-Gets the notes for a task.
-
-#### Type Parameters
-
-- `T` *extends* `TaskNoteGetByTaskIdOptions` = `TaskNoteGetByTaskIdOptions`
-
-#### Parameters
-
-- `taskId`: `number` — The task to list notes for
-- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
-
-#### Returns
-
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskNoteGetResponse`> : `NonPaginatedResponse`\<`TaskNoteGetResponse`>>
-
-The task's notes [TaskNoteGetResponse](../TaskNoteGetResponse/)
-
-#### Example
-
-```
-const notes = await tasks.getNotes(<taskId>, { folderId: <folderId> });
 ```
 
 ### getUsers()
@@ -2220,30 +2126,6 @@ const result = await task.unassign();
 
 // Unassign multiple tasks
 const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
-```
-
-### updateCatalog()
-
-> **updateCatalog**(`id`: `number`, `name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
-
-Updates a task catalog.
-
-#### Parameters
-
-- `id`: `number` — The task catalog id
-- `name`: `string` — Name of the task catalog (max 50 characters)
-- `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
-
-#### Returns
-
-`Promise`\<`void`>
-
-Promise resolving once the update completes
-
-#### Example
-
-```
-await tasks.updateCatalog(<catalogId>, "Invoices", { description: "Updated", folderId: <folderId> });
 ```
 
 Service for managing UiPath Orchestrator Attachments.
