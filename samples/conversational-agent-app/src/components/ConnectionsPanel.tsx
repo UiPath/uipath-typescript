@@ -39,23 +39,6 @@ export function ConnectionsPanel({
     cancel,
   } = useConnections(conversationalAgent, agentId, folderId, setError)
 
-  if (isLoading) {
-    return (
-      <div className="p-6 flex items-center gap-3 text-gray-400">
-        <Spinner className="w-4 h-4 border-accent" />
-        <span className="text-sm">Loading connections...</span>
-      </div>
-    )
-  }
-
-  if (availableConnections.length === 0) {
-    return (
-      <div className="p-6 text-center text-gray-500 text-sm">
-        No configurable connections for this agent.
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -71,6 +54,17 @@ export function ConnectionsPanel({
           </svg>
         </button>
       </div>
+
+      {isLoading ? (
+        <div className="p-6 flex items-center gap-3 text-gray-400">
+          <Spinner className="w-4 h-4 border-accent" />
+          <span className="text-sm">Loading connections...</span>
+        </div>
+      ) : availableConnections.length === 0 ? (
+        <div className="p-6 text-center text-gray-500 text-sm">
+          No configurable connections for this agent.
+        </div>
+      ) : (<>
 
       {/* Save status */}
       {saveStatus && (
@@ -96,6 +90,7 @@ export function ConnectionsPanel({
             item={item}
             selectedConnectionId={stagedSelections[item.connectorKey] ?? ''}
             onSelect={(connectionId) => selectConnection(item.connectorKey, connectionId)}
+            conversationalAgent={conversationalAgent}
           />
         ))}
       </div>
@@ -118,6 +113,8 @@ export function ConnectionsPanel({
           Save
         </button>
       </div>
+
+      </>)}
     </div>
   )
 }
@@ -128,9 +125,10 @@ interface ConnectionRowProps {
   item: AvailableConnectionsItem
   selectedConnectionId: string
   onSelect: (connectionId: string) => void
+  conversationalAgent: ConversationalAgent | null
 }
 
-function ConnectionRow({ item, selectedConnectionId, onSelect }: ConnectionRowProps) {
+function ConnectionRow({ item, selectedConnectionId, onSelect, conversationalAgent }: ConnectionRowProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const selectedConnection = item.connections.find(c => c.id === selectedConnectionId)
@@ -207,10 +205,13 @@ function ConnectionRow({ item, selectedConnectionId, onSelect }: ConnectionRowPr
                 className="flex-1 bg-transparent text-sm placeholder:text-gray-500 focus:outline-none"
                 autoFocus
               />
-              {item.configurationUrl && (
+              {conversationalAgent && (
                 <button
                   type="button"
-                  onClick={() => window.open(item.configurationUrl, '_blank', 'noopener,noreferrer')}
+                  onClick={async () => {
+                    const url = await conversationalAgent.getAddConnectionUrl(item)
+                    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+                  }}
                   className="text-accent text-xs whitespace-nowrap hover:underline"
                 >
                   + Connection
