@@ -57,10 +57,12 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Run `npm run docs:api` to regenerate.
 
 **JSDoc quality rules:**
-- Link response types with `{@link TypeName}` in every method's JSDoc `@returns`. **NEVER** add `{@link TypeName}` inside `@param` descriptions — TypeDoc automatically links parameter types, so adding it is redundant noise.
+- Link response types with `{@link TypeName}` in every method's JSDoc `@returns`, embedded **inline within the sentence** — a `{@link}` placed on a standalone line after `@returns` renders as stray text in TypeDoc, not a clickable link. **NEVER** add `{@link TypeName}` inside `@param` descriptions — TypeDoc automatically links parameter types, so adding it is redundant noise.
 - Show how to get prerequisite IDs (e.g., "First, get entities with `entities.getAll()`").
 - Use `<paramName>` placeholder convention for IDs in examples.
 - Use camelCase in examples, matching SDK response format. **NEVER** use PascalCase in JSDoc examples — users will write broken code.
+- **JSDoc descriptions and `@returns` text must reference SDK field names, not raw wire field names** — when a transform pipeline renames a field (e.g., `globals` → `globalVariables`), JSDoc prose must use the post-transform name. Mentioning wire field names confuses IDE users who hover over a method and see field names that don't exist on the returned type.
+- **NEVER** use optional chaining (`?.`) on fields typed as non-optional in `@example` blocks — it implies the field could be `undefined` when the type guarantees it isn't, misleading users into writing unnecessary defensive code.
 - Keep JSDoc in sync with method names.
 - **Do NOT duplicate JSDoc on service class methods** — service classes `implements {Entity}ServiceModel`, and TypeScript inherits the interface's JSDoc onto the implementing method's IDE hover when the class method has no JSDoc of its own. Write method JSDoc **only** on `{Entity}ServiceModel`; leave the service class method bare (keep the `@track` decorator and body). This makes the interface the single source of truth for both the docs site (TypeDoc renders the interface) and IDE tooltips (inherited via `implements`), so the two can't drift. A partial JSDoc comment on the class method silently disables inheritance — so class methods must carry **no** method JSDoc at all. Methods not declared on the interface keep their own JSDoc (nothing to inherit).
 - **When a method supports `expand`**, show multiple expandable entities in the `@example` (e.g., `expand: 'Robot,Machine,Release'`) so users see the comma-separated pattern.
