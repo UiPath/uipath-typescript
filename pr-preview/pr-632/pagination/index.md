@@ -121,10 +121,11 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Assets                            | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getAll()`                 | ✅ Yes                 |
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
+| Buckets                           | `getFileMetaData()`        | ❌ No                  |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
-| Entities                          | `getAll()`                 | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `queryRecordsById()`       | ✅ Yes                 |
+| ChoiceSets                        | `getById()`                | ✅ Yes                 |
 | Processes                         | `getAll()`                 | ✅ Yes                 |
 | Functions                         | `getAll()`                 | ✅ Yes                 |
 | ProcessInstances                  | `getAll()`                 | ❌ No                  |
@@ -140,6 +141,4 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
 | Feedback                          | `getCategories()`          | ✅ Yes                 |
-| Traces                            | `getById()`                | ❌ No                  |
-| Traces                            | `getSpansByIds()`          | ❌ No                  |
 | Governance                        | `getPolicyTraces()`        | ✅ Yes                 |
