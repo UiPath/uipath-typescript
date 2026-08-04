@@ -1921,7 +1921,7 @@ Gets the comments for a task.
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
 
-The task's comments [TaskCommentGetResponse](../TaskCommentGetResponse/)
+Promise resolving to either the task's comments NonPaginatedResponse or a PaginatedResponse when pagination options are used.
 
 #### Example
 
@@ -2192,7 +2192,7 @@ Gets task catalogs in a folder.
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
 
-Promise resolving to either an array of task catalogs NonPaginatedResponse or a PaginatedResponse when pagination options are used. [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+Promise resolving to either an array of task catalogs NonPaginatedResponse or a PaginatedResponse when pagination options are used.
 
 #### Example
 

@@ -2561,8 +2561,7 @@
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of task catalogs NonPaginatedResponse<TaskCatalogGetResponse> or a PaginatedResponse<TaskCatalogGetResponse> when pagination options are used.
-<a href="../TaskCatalogGetResponse/">TaskCatalogGetResponse</a></p>
+<p>Promise resolving to either an array of task catalogs NonPaginatedResponse<TaskCatalogGetResponse> or a PaginatedResponse<TaskCatalogGetResponse> when pagination options are used.</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">catalogs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>

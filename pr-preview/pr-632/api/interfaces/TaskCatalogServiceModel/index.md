@@ -63,7 +63,7 @@ Gets task catalogs in a folder.
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
 
-Promise resolving to either an array of task catalogs NonPaginatedResponse or a PaginatedResponse when pagination options are used. [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+Promise resolving to either an array of task catalogs NonPaginatedResponse or a PaginatedResponse when pagination options are used.
 
 #### Example
 
