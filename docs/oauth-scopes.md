@@ -245,6 +245,24 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getDataById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getDataByKey()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `saveData()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `saveTags()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `editMetadata()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getComments()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `createComment()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## TaskCatalogs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getByName()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateById()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateByName()` | `OR.Tasks` or `OR.Tasks.Write` |
 
 ## Agents
 

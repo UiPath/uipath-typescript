@@ -4,38 +4,44 @@ import { DEFAULT_TASK_EXPAND, TaskMap, TaskStatusMap } from '../../models/action
 import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
   TaskCreateResponse,
+  TaskDataGetResponse,
   TaskGetResponse,
+  TaskCommentGetResponse,
   TaskServiceModel,
   createTaskWithMethods
 } from '../../models/action-center/tasks.models';
 import {
+  Tag,
   TaskAssignmentOptions,
   TaskAssignmentResponse,
   TaskCompletionOptions,
   TaskCreateOptions,
+  TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
   TaskGetUsersOptions,
+  TaskCommentGetByTaskIdOptions,
   TaskType,
   TasksUnassignOptions,
   UserLoginInfo,
 } from '../../models/action-center/tasks.types';
-import { BaseOptions, OperationResponse } from '../../models/common/types';
+import { BaseOptions, FolderScopedOptions, OperationResponse } from '../../models/common/types';
 import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION, ODATA_PREFIX } from '../../utils/constants/common';
-import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
+import { TASK_ENDPOINTS, TASK_NOTE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
+import { resolveFolderHeaders } from '../../utils/folder/folder-headers';
 import { processODataArrayResponse } from '../../utils/object';
 import { HasPaginationOptions, NonPaginatedResponse, PaginatedResponse } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../utils/transform';
-import { BaseService } from '../base';
+import { FolderScopedService } from '../folder-scoped';
 
 /**
  * Service for interacting with UiPath Tasks API
  */
-export class TaskService extends BaseService implements TaskServiceModel {
+export class TaskService extends FolderScopedService implements TaskServiceModel {
   @track('Tasks.Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -270,12 +276,148 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     // CompleteAppTask returns 204 no content
     await this.post<void>(endpoint, options, { headers });
-    
+
     // Return success with the request context data
     return {
       success: true,
       data: options
     };
+  }
+
+  @track('Tasks.GetDataById')
+  async getDataById(id: number, options?: FolderScopedOptions): Promise<TaskDataGetResponse> {
+    if (!id) {
+      throw new ValidationError({ message: 'id is required for getDataById' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.getDataById');
+    return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, { taskId: id }, headers);
+  }
+
+  @track('Tasks.GetDataByKey')
+  async getDataByKey(key: string, options?: FolderScopedOptions): Promise<TaskDataGetResponse> {
+    if (!key) {
+      throw new ValidationError({ message: 'key is required for getDataByKey' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.getDataByKey');
+    return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY, { taskKey: key }, headers);
+  }
+
+  private async fetchTaskData(endpoint: string, params: Record<string, string | number>, headers: Record<string, string>): Promise<TaskDataGetResponse> {
+    const response = await this.get<Record<string, unknown>>(endpoint, { params, headers });
+
+    // Preserve the user-defined data payload keys verbatim; only transform system fields.
+    // The generic-task endpoint already returns camelCase, so no case conversion is needed.
+    const { data: userPayload, ...systemFields } = response.data;
+    const transformed = transformData(systemFields, TaskMap) as TaskDataGetResponse;
+    const withStatus = applyDataTransforms(transformed, { field: 'status', valueMap: TaskStatusMap }) as TaskDataGetResponse;
+    return { ...withStatus, data: (userPayload ?? null) as Record<string, unknown> | null };
+  }
+
+  @track('Tasks.SaveData')
+  async saveData(taskId: number, data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {
+    if (!taskId) {
+      throw new ValidationError({ message: 'taskId is required for saveData' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.saveData');
+    // Keep data keys verbatim.
+    await this.put<void>(TASK_ENDPOINTS.SAVE_TASK_DATA, { TaskId: taskId, Data: data }, { headers });
+  }
+
+  @track('Tasks.SaveTags')
+  async saveTags(taskId: number, tags: Tag[], options?: FolderScopedOptions): Promise<void> {
+    if (!taskId) {
+      throw new ValidationError({ message: 'taskId is required for saveTags' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.saveTags');
+    const body = { TaskId: taskId, Tags: tags.map((tag) => camelToPascalCaseKeys(tag)) };
+    await this.put<void>(TASK_ENDPOINTS.SAVE_TASK_TAGS, body, { headers });
+  }
+
+  @track('Tasks.EditMetadata')
+  async editMetadata(taskId: number, options?: TaskEditMetadataOptions): Promise<void> {
+    if (!taskId) {
+      throw new ValidationError({ message: 'taskId is required for editMetadata' });
+    }
+
+    const { folderId, folderKey, folderPath, expand: _expand, select: _select, unlinkTaskCatalog, ...metadata } = options ?? {};
+    const headers = resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Tasks.editMetadata', fallbackFolderKey: this.config.folderKey });
+    const body = { taskId, ...metadata, ...(unlinkTaskCatalog !== undefined ? { unsetTaskCatalog: unlinkTaskCatalog } : {}) };
+    await this.post<void>(TASK_ENDPOINTS.EDIT_TASK_METADATA, camelToPascalCaseKeys(body), { headers });
+  }
+
+  @track('Tasks.GetComments')
+  async getComments<T extends TaskCommentGetByTaskIdOptions = TaskCommentGetByTaskIdOptions>(
+    taskId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskCommentGetResponse>
+      : NonPaginatedResponse<TaskCommentGetResponse>
+  > {
+    if (!taskId) {
+      throw new ValidationError({ message: 'taskId is required for getComments' });
+    }
+
+    const { folderId, folderKey, folderPath, ...queryOptions } = options ?? {};
+    const headers = resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Tasks.getComments', fallbackFolderKey: this.config.folderKey });
+
+    const transformComment = (comment: unknown) =>
+      transformData(pascalToCamelCaseKeys(comment as Record<string, unknown>) as TaskCommentGetResponse, TaskMap);
+
+    const apiOptions = transformOptions(queryOptions, TaskMap);
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => TASK_NOTE_ENDPOINTS.GET_BY_TASK_ID(taskId),
+      headers,
+      transformFn: transformComment,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
+        }
+      }
+    }, apiOptions as T) as any;
+  }
+
+  @track('Tasks.CreateComment')
+  async createComment(taskId: number, text: string, options?: FolderScopedOptions): Promise<TaskCommentGetResponse> {
+    if (!taskId) {
+      throw new ValidationError({ message: 'taskId is required for createComment' });
+    }
+    if (!text) {
+      throw new ValidationError({ message: 'text is required for createComment' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.createComment');
+    const response = await this.post<TaskCommentGetResponse>(
+      TASK_NOTE_ENDPOINTS.CREATE,
+      camelToPascalCaseKeys({ taskId, text }),
+      { headers }
+    );
+    return transformData(pascalToCamelCaseKeys(response.data) as TaskCommentGetResponse, TaskMap);
+  }
+
+  /**
+   * Resolves folder scope (folderId, folderKey, or folderPath) into Orchestrator
+   * folder headers, falling back to the SDK init-time folder key.
+   */
+  private resolveFolder(options: FolderScopedOptions | undefined, resourceType: string): Record<string, string> {
+    return resolveFolderHeaders({
+      folderId: options?.folderId,
+      folderKey: options?.folderKey,
+      folderPath: options?.folderPath,
+      resourceType,
+      fallbackFolderKey: this.config.folderKey,
+    });
   }
 
   /**
