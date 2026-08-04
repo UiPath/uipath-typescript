@@ -162,5 +162,5 @@ Promise resolving once the update completes
 #### Example
 
 ```
-await taskCatalogs.updateByName("Invoices", "Invoices", { description: "Updated", folderId: <folderId> });
+await taskCatalogs.updateByName("Invoices", "Updated Invoices", { description: "Updated", folderId: <folderId> });
 ```
