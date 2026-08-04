@@ -42,9 +42,6 @@ export interface IntegrationConfig {
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
-   * the snapshot, so it must be a benign, user-scoped setting.
-   */
-  /**
    * GUID of the user whose identity settings the Identity suite reads and round-trips.
    * Optional — the suite falls back to the dev test user. Set it when running against a
    * different organization, since settings are scoped to (organization, user) and the SDK

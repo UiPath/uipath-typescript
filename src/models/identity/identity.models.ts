@@ -28,8 +28,7 @@ export interface IdentityServiceModel {
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
    * @param options - Optional organization scoping
-   * @returns The user's stored settings for the requested keys
-   * {@link IdentitySetting}
+   * @returns The user's stored settings for the requested keys, as {@link IdentitySetting} rows
    *
    * @example Basic usage
    * ```typescript
@@ -84,8 +83,7 @@ export interface IdentityServiceModel {
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
    * @param organizationId - Organization (account) GUID to write to
-   * @returns The settings as stored after the write
-   * {@link IdentitySetting}
+   * @returns The settings as stored after the write, as {@link IdentitySetting} rows
    *
    * @example Update a setting
    * ```typescript
