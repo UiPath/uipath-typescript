@@ -527,6 +527,8 @@
       
         
       
+        
+      
     
     
     
@@ -1107,6 +1109,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../FunctionServiceModel.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../GovernanceServiceModel/" class="md-nav__link">
         
   
@@ -1248,10 +1273,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_8" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_9" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
             
   
   
@@ -1264,8 +1289,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_8">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_9">
             <span class="md-nav__icon md-icon"></span>
             Maestro
           </label>
@@ -1490,7 +1515,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1507,14 +1532,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2374,8 +2399,7 @@ may be shorter than the list of keys requested.</p>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
-<p>The user's stored settings for the requested keys
-<a href="../IdentitySetting/">IdentitySetting</a></p>
+<p>The user's stored settings for the requested keys, as <a href="../IdentitySetting/">IdentitySetting</a> rows</p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Identity</span><span class="p">,</span><span class="w"> </span><span class="nx">IdentitySettingKey</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/identity&#39;</span><span class="p">;</span>
@@ -2445,8 +2469,7 @@ supplied. Read a setting first if you do not have it — every
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../IdentitySetting/"><code>IdentitySetting</code></a>[]&gt;</p>
-<p>The settings as stored after the write
-<a href="../IdentitySetting/">IdentitySetting</a></p>
+<p>The settings as stored after the write, as <a href="../IdentitySetting/">IdentitySetting</a> rows</p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">IdentitySettingKey</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/identity&#39;</span><span class="p">;</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>

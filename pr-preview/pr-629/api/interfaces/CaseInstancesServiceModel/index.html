@@ -527,6 +527,8 @@
       
         
       
+        
+      
     
     
     
@@ -1107,6 +1109,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../FunctionServiceModel.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Functions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../GovernanceServiceModel/" class="md-nav__link">
         
   
@@ -1175,10 +1200,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_9" checked>
         
           
-          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
             
   
   
@@ -1191,8 +1216,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_1_8">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1_9">
             <span class="md-nav__icon md-icon"></span>
             Maestro
           </label>
@@ -1413,6 +1438,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getvariables" class="md-nav__link">
+    <span class="md-ellipsis">
+      getVariables()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pause" class="md-nav__link">
     <span class="md-ellipsis">
       pause()
@@ -1589,7 +1623,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1606,14 +1640,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2469,6 +2503,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getvariables" class="md-nav__link">
+    <span class="md-ellipsis">
+      getVariables()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pause" class="md-nav__link">
     <span class="md-ellipsis">
       pause()
@@ -3000,12 +3043,75 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stagesSla</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">getStagesSlaSummary</span><span class="p">();</span>
 </code></pre></div>
 <hr />
+<h3 id="getvariables">getVariables()<a class="headerlink" href="#getvariables" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getVariables</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceGetVariablesOptions/"><code>CaseInstanceGetVariablesOptions</code></a>): <code>Promise</code>&lt;<a href="../CaseInstanceGetVariablesResponse/"><code>CaseInstanceGetVariablesResponse</code></a>&gt;</p>
+</blockquote>
+<p>Get global variables for a case instance</p>
+<p>Returns the case instance's elements with their inputs/outputs and the global variables
+enriched with metadata (name, type, source element) parsed from the case's BPMN definition.</p>
+<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>instanceId</code></td>
+<td><code>string</code></td>
+<td>The ID of the case instance to get variables for</td>
+</tr>
+<tr>
+<td><code>folderKey</code></td>
+<td><code>string</code></td>
+<td>The folder key for authorization</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../CaseInstanceGetVariablesOptions/"><code>CaseInstanceGetVariablesOptions</code></a></td>
+<td>Optional options including parentElementId to filter by parent element</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../CaseInstanceGetVariablesResponse/"><code>CaseInstanceGetVariablesResponse</code></a>&gt;</p>
+<p>Promise resolving to <a href="../CaseInstanceGetVariablesResponse/">CaseInstanceGetVariablesResponse</a> with elements and enriched global variables</p>
+<h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Get all variables for a case instance</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">variables</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getVariables</span><span class="p">(</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">);</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1">// Iterate through global variables with metadata</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nx">variables</span><span class="p">.</span><span class="nx">globalVariables</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">variable</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Variable: </span><span class="si">${</span><span class="nx">variable</span><span class="p">.</span><span class="nx">name</span><span class="si">}</span><span class="sb"> (</span><span class="si">${</span><span class="nx">variable</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="sb">)`</span><span class="p">);</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`  Type: </span><span class="si">${</span><span class="nx">variable</span><span class="p">.</span><span class="kr">type</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`  Value: </span><span class="si">${</span><span class="nx">variable</span><span class="p">.</span><span class="nx">value</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="p">});</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1">// Get variables scoped to a specific parent element (e.g. a stage)</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stageVariables</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getVariables</span><span class="p">(</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">parentElementId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;parentElementId&gt;&#39;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="p">);</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="c1">// Or using the bound method on a retrieved instance</span>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instanceVariables</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">getVariables</span><span class="p">();</span>
+</code></pre></div>
+<hr />
 <h3 id="pause">pause()<a class="headerlink" href="#pause" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>pause</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Pause a case instance</p>
-<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3032,7 +3138,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 </tr>
 </tbody>
 </table>
-<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
+<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to operation result with instance data</p>
 <hr />
@@ -3041,7 +3147,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>reopen</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options</code>: <a href="../CaseInstanceReopenOptions/"><code>CaseInstanceReopenOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Reopen a case instance from a specified element</p>
-<h4 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3068,37 +3174,37 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
+<h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to operation result with instance data
 <a href="../CaseInstanceOperationResponse/">CaseInstanceOperationResponse</a></p>
-<h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/cases&#39;</span><span class="p">;</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1">// First, get the available stages for the case instance</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getStages</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stageId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">stages</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">;</span><span class="w"> </span><span class="c1">// Select the stage to reopen from</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1">// Reopen a case instance from a specific stage</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">reopen</span><span class="p">(</span>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">stageId</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="p">);</span>
-<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
-<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1">// Reopen with a comment</span>
-<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">reopen</span><span class="p">(</span>
-<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">stageId</span><span class="p">,</span><span class="w"> </span><span class="nx">comment</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Reopening to retry failed stage&#39;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="p">);</span>
-<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>
-<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="c1">// Or using instance method</span>
-<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">getStages</span><span class="p">();</span>
-<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">reopen</span><span class="p">({</span><span class="w"> </span><span class="nx">stageId</span><span class="o">:</span><span class="w"> </span><span class="kt">stages</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_9">Example<a class="headerlink" href="#example_9" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/cases&#39;</span><span class="p">;</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1">// First, get the available stages for the case instance</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getStages</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stageId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">stages</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">;</span><span class="w"> </span><span class="c1">// Select the stage to reopen from</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1">// Reopen a case instance from a specific stage</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">reopen</span><span class="p">(</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">stageId</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="p">);</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="c1">// Reopen with a comment</span>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">reopen</span><span class="p">(</span>
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">stageId</span><span class="p">,</span><span class="w"> </span><span class="nx">comment</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Reopening to retry failed stage&#39;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="p">);</span>
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="c1">// Or using instance method</span>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="kd">const</span><span class="w"> </span><span class="nx">stages</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">getStages</span><span class="p">();</span>
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">reopen</span><span class="p">({</span><span class="w"> </span><span class="nx">stageId</span><span class="o">:</span><span class="w"> </span><span class="kt">stages</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="resume">resume()<a class="headerlink" href="#resume" title="Permanent link">&para;</a></h3>
@@ -3106,7 +3212,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>resume</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Resume a case instance</p>
-<h4 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3133,7 +3239,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 </tr>
 </tbody>
 </table>
-<h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
+<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to operation result with instance data</p>
 <hr />
@@ -3144,7 +3250,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p>Send a message to a running case instance</p>
 <p>Messages resolve wait points in the case — selecting the next stage when the case
 is waiting for a user to choose one, or starting a manually-triggered (ad-hoc) case task.</p>
-<h4 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3176,36 +3282,36 @@ is waiting for a user to choose one, or starting a manually-triggered (ad-hoc) c
 </tr>
 </tbody>
 </table>
-<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
+<h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise that resolves when the message is accepted</p>
-<h4 id="example_9">Example<a class="headerlink" href="#example_9" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">,</span><span class="w"> </span><span class="nx">CaseInstanceMessageName</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/cases&#39;</span><span class="p">;</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1">// Select the next stage when the case is waiting for a user to choose one</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserSelectStage</span><span class="p">,</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">stageName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Review&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="p">);</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1">// Start a manually-triggered (ad-hoc) case task</span>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserAdhocTrigger</span><span class="p">,</span>
-<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">taskNames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve Invoice&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="p">);</span>
-<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>
-<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="c1">// Or using instance method</span>
-<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
-<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserAdhocTrigger</span><span class="p">,</span>
-<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">taskNames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve Invoice&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a><span class="p">);</span>
+<h4 id="example_10">Example<a class="headerlink" href="#example_10" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">,</span><span class="w"> </span><span class="nx">CaseInstanceMessageName</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/cases&#39;</span><span class="p">;</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1">// Select the next stage when the case is waiting for a user to choose one</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserSelectStage</span><span class="p">,</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">stageName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Review&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">);</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="c1">// Start a manually-triggered (ad-hoc) case task</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">  </span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">  </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserAdhocTrigger</span><span class="p">,</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">taskNames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve Invoice&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="p">);</span>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="c1">// Or using instance method</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="kd">const</span><span class="w"> </span><span class="nx">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;instanceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="k">await</span><span class="w"> </span><span class="nx">instance</span><span class="p">.</span><span class="nx">sendMessage</span><span class="p">(</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="w">  </span><span class="nx">CaseInstanceMessageName</span><span class="p">.</span><span class="nx">UserAdhocTrigger</span><span class="p">,</span>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">itemData</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">taskNames</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve Invoice&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="p">);</span>
 </code></pre></div>
 
 
