@@ -9,6 +9,7 @@ export interface IntegrationConfig {
   orgName: string;
   tenantName: string;
   tenantId?: string;
+  organizationId?: string;
   secret: string;
   timeout: number;
   skipCleanup: boolean;
@@ -39,12 +40,6 @@ export interface IntegrationConfig {
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
   tasksTestUserId?: string;
-  /**
-   * GUID of the user whose identity settings the Identity suite reads and round-trips.
-   * Optional — the suite falls back to the dev test user. Set it when running against a
-   * different organization, since settings are scoped to (organization, user) and the SDK
-   * cannot derive the caller's user ID from a PAT.
-   */
   identityTestUserId?: string;
 }
 
@@ -86,6 +81,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     orgName: rawConfig.orgName as string,
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
+    organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
     secret: rawConfig.secret as string,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
@@ -130,6 +126,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
     tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
+    organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
     secret: process.env.UIPATH_SECRET,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
