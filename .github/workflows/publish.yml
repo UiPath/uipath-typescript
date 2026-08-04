@@ -53,6 +53,15 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- SDK_VERSION (from root package): $SDK_VERSION"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
@@ -72,7 +81,7 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish
+          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -163,6 +172,15 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- CODED_ACTION_APP_SDK_VERSION: $SDK_VERSION"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
@@ -182,7 +200,7 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag latest
+          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -243,6 +261,15 @@ jobs:
 
           echo "Replaced connection string"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
@@ -265,7 +292,7 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag latest
+          npm publish --tag ${{ inputs.github_packages_only && 'dev' || 'latest' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
