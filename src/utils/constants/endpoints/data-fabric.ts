@@ -37,11 +37,12 @@ export const DATA_FABRIC_ENDPOINTS = {
     // Same URL as GET_BY_ID; the HTTP method (DELETE vs GET) is resolved at the call site.
     DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,
     UPDATE_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}/metadata`,
-    // Kept on v1: the v3 query endpoint rejects multi-entity joins (req.Joins),
-    // which queryRecordsById supports. v1 query supports joins.
-    QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
-    // Name-based structured query. The multi-entity (joins) contract is only
-    // implemented on this route — QUERY_BY_ID silently drops the `joins` body key.
+    // v3 by-id query — used for every non-join query. Supports Federated entities (the
+    // legacy v1 by-id route blocks them). v3 rejects a `joins` body, so queryRecordsById
+    // routes join queries to QUERY_BY_NAME (v1) instead.
+    QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/query`,
+    // Name-based structured query on v1 — the multi-entity (joins) contract is only
+    // implemented on this route. queryRecordsById routes join queries here.
     QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
