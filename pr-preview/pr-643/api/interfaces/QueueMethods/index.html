@@ -2212,15 +2212,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#completetransaction" class="md-nav__link">
-    <span class="md-ellipsis">
-      completeTransaction()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#getallitems" class="md-nav__link">
     <span class="md-ellipsis">
       getAllItems()
@@ -2233,15 +2224,6 @@
   <a href="#insertitem" class="md-nav__link">
     <span class="md-ellipsis">
       insertItem()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#starttransaction" class="md-nav__link">
-    <span class="md-ellipsis">
-      startTransaction()
     </span>
   </a>
   
@@ -2277,39 +2259,6 @@
 getAll/getById. The queue's own id, name, and folder are filled in
 automatically.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
-<h3 id="completetransaction">completeTransaction()<a class="headerlink" href="#completetransaction" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>options</code>: <a href="../TransactionCompletionOptions/"><code>TransactionCompletionOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TransactionCompletionOptions/"><code>TransactionCompletionOptions</code></a>&gt;&gt;</p>
-</blockquote>
-<p>Reports the processing outcome of one of this queue's items
-(consumer operation).</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>itemId</code></td>
-<td><code>number</code></td>
-<td>Queue item ID of the transaction to complete</td>
-</tr>
-<tr>
-<td><code>options</code></td>
-<td><a href="../TransactionCompletionOptions/"><code>TransactionCompletionOptions</code></a></td>
-<td>Completion outcome (success flag, output data, failure details)</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TransactionCompletionOptions/"><code>TransactionCompletionOptions</code></a>&gt;&gt;</p>
-<p>Promise resolving to an operation response containing the completion options
-<a href="../TransactionCompletionOptions/">TransactionCompletionOptions</a></p>
-<hr />
 <h3 id="getallitems">getAllItems()<a class="headerlink" href="#getallitems" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
@@ -2330,7 +2279,7 @@ automatically.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2347,7 +2296,7 @@ automatically.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to the queue's items
 <a href="../QueueItemResponse/">QueueItemResponse</a></p>
@@ -2359,7 +2308,7 @@ automatically.</p>
 <p>Inserts a new item into this queue (producer operation).</p>
 <p>The payload must be flat — nested objects and arrays are rejected by
 Orchestrator.</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2381,25 +2330,10 @@ Orchestrator.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
 <p>Promise resolving to the created queue item
 <a href="../QueueItemResponse/">QueueItemResponse</a></p>
-<hr />
-<h3 id="starttransaction">startTransaction()<a class="headerlink" href="#starttransaction" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>startTransaction</strong>(): <code>Promise</code>&lt;<code>null</code> | <a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
-</blockquote>
-<p>Acquires the next available item from this queue (consumer operation).
-Returns <code>null</code> when no item is available for processing.</p>
-<p>Requires a robot session — Orchestrator returns the item to the robot that
-requested it, so user and application identities receive <code>null</code>. <code>null</code>
-means either no eligible items or no allocation target; the API does not
-distinguish them.</p>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>null</code> | <a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
-<p>Promise resolving to the acquired transaction item, or <code>null</code>
-<a href="../../type-aliases/TransactionItemResponse/">TransactionItemResponse</a></p>
 
 
 
