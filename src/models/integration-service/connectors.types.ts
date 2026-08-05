@@ -4,6 +4,8 @@
  * Types for the Connectors API (`connections_/api/v1/Connectors`).
  */
 
+import { IntegrationServiceFolderScopedOptions } from './integration-service.types';
+
 /**
  * Lifecycle stage of a connector.
  */
@@ -95,12 +97,7 @@ export interface ConnectorGetAllOptions {
 /**
  * Options for {@link ConnectorsServiceModel.getDefaultConnection}.
  */
-export interface ConnectorGetDefaultConnectionOptions {
-  /** Folder key (GUID) to scope the lookup. */
-  folderKey?: string;
-  /** Search across folders the caller has access to. */
-  allFolders?: boolean;
-}
+export interface ConnectorGetDefaultConnectionOptions extends IntegrationServiceFolderScopedOptions {}
 
 /**
  * Options for {@link ConnectorsServiceModel.getConnections}.
@@ -108,11 +105,7 @@ export interface ConnectorGetDefaultConnectionOptions {
  * The API returns a plain array — pagination is page-indexed via `pageIndex`/`pageSize`.
  * There is no continuation cursor; callers paginate by incrementing `pageIndex`.
  */
-export interface ConnectorGetConnectionsOptions {
-  /** Folder key (GUID) to scope the query to a specific folder. */
-  folderKey?: string;
-  /** Include connections from all folders the caller has access to. */
-  allFolders?: boolean;
+export interface ConnectorGetConnectionsOptions extends IntegrationServiceFolderScopedOptions {
   /** Include only default connections. */
   folderDefaults?: boolean;
   /** 1-indexed page number. */

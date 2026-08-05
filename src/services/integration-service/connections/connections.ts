@@ -1,8 +1,7 @@
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
-import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { resolveFolderScope } from '../folder-scope';
 import { CONNECTION_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { QueryParams } from '../../../models/common/request-spec';
 import {
@@ -46,7 +45,12 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * via `pageIndex`/`pageSize`; there is no continuation cursor, so callers
    * paginate by incrementing `pageIndex` until a short page is returned.
    *
-   * @param options - Folder scoping, paging, sorting, and filter options
+   * Folder scoping is optional — pass `folderId`, `folderKey`, or `folderPath`
+   * to narrow the query. When none is supplied, the folder context the SDK was
+   * initialized with is used; without one the query spans every folder the
+   * caller can access.
+   *
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, sorting, and filter options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -74,12 +78,26 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    *   mostRecentFirst: true,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Scope by folder path or numeric folder ID instead of a key
+   * const byPath = await connections.getAll({ folderPath: 'Shared/Finance' });
+   * const byId = await connections.getAll({ folderId: 123 });
+   *
+   * // Or span every folder the caller can access
+   * const everywhere = await connections.getAll({ allFolders: true });
+   * ```
    */
   @track('Connections.GetAll')
   async getAll(options?: ConnectionGetAllOptions): Promise<ConnectionGetResponse[]> {
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connections.getAll',
+      this.config.folderKey,
+    );
     const response = await this.get<RawConnectionGetResponse[]>(CONNECTION_ENDPOINTS.GET_ALL, {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers,
       params: queryOptions as QueryParams,
     });
     return (response.data ?? []).map((conn) => createConnectionWithMethods(conn, this));
@@ -89,7 +107,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * Get a single connection by ID.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping and optional `includeConfigs` flag
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -110,15 +128,25 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * // Include the full configuration blob
    * const conn = await connections.getById('<connectionId>', { includeConfigs: true });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Scope the lookup to a folder path
+   * const conn = await connections.getById('<connectionId>', { folderPath: 'Shared/Finance' });
+   * ```
    */
   @track('Connections.GetById')
   async getById(connectionId: string, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse> {
     if (!connectionId) {
       throw new ValidationError({ message: 'connectionId is required for getById' });
     }
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connections.getById',
+      this.config.folderKey,
+    );
     const response = await this.get<RawConnectionGetResponse>(CONNECTION_ENDPOINTS.GET_BY_ID(connectionId), {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers,
       params: queryOptions as QueryParams,
     });
     return createConnectionWithMethods(response.data, this);
@@ -132,7 +160,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * expired or been disabled.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping and `forceRefresh` flag
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and `forceRefresh` flag
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    * @example
    * ```typescript
@@ -157,9 +185,13 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
     if (!connectionId) {
       throw new ValidationError({ message: 'connectionId is required for ping' });
     }
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connections.ping',
+      this.config.folderKey,
+    );
     const response = await this.get<ConnectionPingResponse>(CONNECTION_ENDPOINTS.PING(connectionId), {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers,
       params: queryOptions as QueryParams,
     });
     return response.data;
@@ -172,7 +204,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
    * refresh consent. The session expires at {@link ConnectionReauthenticateResponse.expiresAt}.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionReauthenticateResponse}
    * @example
    * ```typescript
@@ -193,12 +225,16 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
     if (!connectionId) {
       throw new ValidationError({ message: 'connectionId is required for reauthenticate' });
     }
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connections.reauthenticate',
+      this.config.folderKey,
+    );
     const response = await this.post<ConnectionReauthenticateResponse>(
       CONNECTION_ENDPOINTS.REAUTHENTICATE(connectionId),
       undefined,
       {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+        headers,
         params: queryOptions as QueryParams,
       },
     );

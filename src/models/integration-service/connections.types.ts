@@ -4,6 +4,8 @@
  * Types for the Connections API (`connections_/api/v1/Connections`).
  */
 
+import { IntegrationServiceFolderScopedOptions } from './integration-service.types';
+
 /**
  * Lifecycle state of an Integration Service connection.
  */
@@ -102,11 +104,7 @@ export interface RawConnectionGetResponse {
  * The API returns a plain array — pagination is page-indexed via `pageIndex`/`pageSize`.
  * There is no continuation cursor; callers paginate by incrementing `pageIndex`.
  */
-export interface ConnectionGetAllOptions {
-  /** Folder key (GUID) to scope the query to a specific folder. Sent as `x-uipath-folderkey` header. */
-  folderKey?: string;
-  /** Include connections from all folders the caller has access to. */
-  allFolders?: boolean;
+export interface ConnectionGetAllOptions extends IntegrationServiceFolderScopedOptions {
   /** Include only default connections (one per connector per folder). */
   folderDefaults?: boolean;
   /** 1-indexed page number. */
@@ -124,11 +122,7 @@ export interface ConnectionGetAllOptions {
 /**
  * Options for {@link ConnectionsServiceModel.getById}.
  */
-export interface ConnectionGetByIdOptions {
-  /** Folder key (GUID) to scope the lookup. */
-  folderKey?: string;
-  /** Search across folders the caller has access to. */
-  allFolders?: boolean;
+export interface ConnectionGetByIdOptions extends IntegrationServiceFolderScopedOptions {
   /** Include the connector's full configuration blob in the response. */
   includeConfigs?: boolean;
 }
@@ -136,11 +130,7 @@ export interface ConnectionGetByIdOptions {
 /**
  * Options for {@link ConnectionsServiceModel.ping}.
  */
-export interface ConnectionPingOptions {
-  /** Folder key (GUID) to scope the lookup. */
-  folderKey?: string;
-  /** Search across folders the caller has access to. */
-  allFolders?: boolean;
+export interface ConnectionPingOptions extends IntegrationServiceFolderScopedOptions {
   /** Force a live re-validation instead of cached status. */
   forceRefresh?: boolean;
 }
@@ -160,12 +150,7 @@ export interface ConnectionPingResponse {
 /**
  * Options for {@link ConnectionsServiceModel.reauthenticate}.
  */
-export interface ConnectionReauthenticateOptions {
-  /** Folder key (GUID) to scope the operation. */
-  folderKey?: string;
-  /** Search across folders the caller has access to. */
-  allFolders?: boolean;
-}
+export interface ConnectionReauthenticateOptions extends IntegrationServiceFolderScopedOptions {}
 
 /**
  * Response from {@link ConnectionsServiceModel.reauthenticate}.
