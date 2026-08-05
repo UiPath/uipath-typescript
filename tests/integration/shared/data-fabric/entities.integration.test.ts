@@ -9,7 +9,9 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
+  DataDirectionType,
   EntityAggregateFunction,
+  EntityClass,
   EntityFieldDataType,
   EntityHavingOperator,
   EntityRecord,
@@ -1283,7 +1285,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       await entities.updateById(entityId, { isAnalyticsEnabled: true });
 
       const updated = await entities.getById(entityId);
-      expect(updated.isInsightsEnabled).toBe(true);
+      expect(updated.isAnalyticsEnabled).toBe(true);
     });
 
     it('should add a new field to an existing entity', async () => {
@@ -1380,6 +1382,131 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const updated = after.fields.find(f => f.name === 'to_update');
       expect(updated?.displayName).toBe('After Update');
     });
+  });
+
+  // Skipped: needs DataFabric.Schema.Write scope AND a live Integration Service connection
+  // fixture (a federated entity requires a connector source). Standard CI has neither. To run
+  // locally against a federated-capable tenant, set: DF_FED_CONNECTION_ID,
+  // DF_FED_ELEMENT_INSTANCE_ID, DF_FED_CONNECTOR_KEY, DF_FED_OBJECT, DF_FED_OBJECT_METHOD
+  // (the operations-catalog JSON string from `is resources describe <connector> <object>
+  // --operation List`), DF_FED_PRIMARY_KEY, DF_FED_FIELD (an external field name on the object).
+  // Auto-runs once the federated env vars above are set (DF_FED_PRIMARY_KEY defaults to 'Id').
+  const federatedEnvReady = Boolean(
+    process.env.DF_FED_CONNECTION_ID &&
+      process.env.DF_FED_ELEMENT_INSTANCE_ID &&
+      process.env.DF_FED_CONNECTOR_KEY &&
+      process.env.DF_FED_OBJECT &&
+      process.env.DF_FED_OBJECT_METHOD &&
+      process.env.DF_FED_FIELD,
+  );
+  describe.skipIf(!federatedEnvReady)('updateById — federated source & join deltas', () => {
+    const entityFolderKey = getTestConfig().folderKey;
+    const conn = {
+      connectionId: process.env.DF_FED_CONNECTION_ID ?? '',
+      elementInstanceId: Number(process.env.DF_FED_ELEMENT_INSTANCE_ID ?? 0),
+      connectorKey: process.env.DF_FED_CONNECTOR_KEY ?? '',
+      connectorName: process.env.DF_FED_CONNECTOR_NAME ?? process.env.DF_FED_CONNECTOR_KEY ?? '',
+      folderKey: process.env.DF_FED_FOLDER_KEY ?? entityFolderKey,
+    };
+    const objectName = process.env.DF_FED_OBJECT ?? '';
+    const method = process.env.DF_FED_OBJECT_METHOD ?? '';
+    const primaryKey = process.env.DF_FED_PRIMARY_KEY ?? 'Id';
+    const externalField = process.env.DF_FED_FIELD ?? '';
+
+    async function createSingleSourceFederated(): Promise<string> {
+      const { entities } = getServices();
+      const name = `sdk_fed_${generateRandomString(8).toLowerCase()}`;
+      const id = await entities.create(name, [], {
+        folderKey: entityFolderKey,
+        entityClass: EntityClass.Federated,
+        externalFields: [
+          {
+            externalConnectionDetail: conn,
+            externalObjectDetail: { externalObjectName: objectName, primaryKey, isPrimarySource: true, method },
+            fields: [
+              {
+                field: { name: 'PkField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: primaryKey, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      createdEntityIds.push(id);
+      return id;
+    }
+
+    it('should create a single-source federated entity with EntityClass.Federated', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.entityClass).toBe(EntityClass.Federated);
+      expect(got.externalFields?.length).toBe(1);
+    });
+
+    it('should add a field to an existing source and preserve the source', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'AddedField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(names).toContain('PkField');
+      expect(names).toContain('AddedField');
+    });
+
+    it('should remove a field from a source and keep the source and its other fields', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      // Add a second field, then remove it — a real removeFieldsFromSource round-trip.
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'RemovableField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        removeFieldsFromSource: [{ sourceObjectName: objectName, fieldNames: ['RemovableField'] }],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(got.externalFields?.length).toBe(1);
+      expect(names).toContain('PkField');
+      expect(names).not.toContain('RemovableField');
+    });
+
+    // Cascade (join dropped when its source is removed via removeExternalSources) needs a
+    // two-source + join fixture — a second connector object that standard env vars don't
+    // configure. Left visible rather than faked on a single-source entity.
+    it.todo('should cascade-remove a join when its source is removed');
   });
 
   // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
