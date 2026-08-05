@@ -24,7 +24,7 @@ jobs:
   publish-sdk:
     if: github.event.inputs.package == 'ts-sdk'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
@@ -141,7 +141,7 @@ jobs:
   publish-coded-action-app-sdk:
     if: github.event.inputs.package == 'coded-action-app-sdk'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
@@ -232,7 +232,7 @@ jobs:
   publish-telemetry:
     if: github.event.inputs.package == 'telemetry'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
