@@ -8,6 +8,8 @@ export const ConfigSchema = z.object({
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
   scope: z.string().optional(),
+  runtimeAuthMode: z.string().optional(),
+  appId: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -20,6 +22,8 @@ interface ConfigOptions {
   clientId?: string;
   redirectUri?: string;
   scope?: string;
+  runtimeAuthMode?: string;
+  appId?: string;
 }
 
 export class UiPathConfig {
@@ -30,6 +34,10 @@ export class UiPathConfig {
   public readonly clientId?: string;
   public readonly redirectUri?: string;
   public readonly scope?: string;
+  /** 'application' when the app runs in public mode (no user login). */
+  public readonly runtimeAuthMode?: string;
+  /** Deployment id used to build Apps-gateway routes in public mode. */
+  public readonly appId?: string;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -39,6 +47,8 @@ export class UiPathConfig {
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
+    this.runtimeAuthMode = options.runtimeAuthMode;
+    this.appId = options.appId;
   }
 }
 

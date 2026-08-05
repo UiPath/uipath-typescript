@@ -96,9 +96,20 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   @track('Jobs.GetOutput')
-  async getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null> {
+  async getOutput(jobKey: string, folderId?: number): Promise<Record<string, unknown> | null> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
+    }
+
+    // Public (anonymous) mode: the gateway checks this session owns the job (404 if
+    // not), mints the app token, and returns the output — no folderId, no user token.
+    if (this.publicApp) {
+      const result = await this.publicApp.getJobOutput(jobKey) as { output?: Record<string, unknown> | null } | null;
+      return result?.output ?? null;
+    }
+
+    if (folderId === undefined) {
+      throw new ValidationError({ message: 'folderId is required for getOutput' });
     }
 
     const job = await this.getById(jobKey, folderId, { select: 'outputArguments,outputFile' });

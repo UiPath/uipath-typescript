@@ -3,7 +3,7 @@ import { UiPathSDKConfig, PartialUiPathConfig, hasOAuthConfig, hasSecretConfig }
 /**
  * Check if config has all required base fields
  */
-function hasRequiredBaseFields(config: PartialUiPathConfig): boolean {
+export function hasRequiredBaseFields(config: PartialUiPathConfig): boolean {
   return Boolean(config.baseUrl && config.orgName && config.tenantName);
 }
 
