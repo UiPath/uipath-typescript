@@ -1,0 +1,8 @@
+{
+  "clientId": "47566886-99a6-4f83-80c0-5ebaa0db579c",
+  "scope": "OR.Execution OR.Folders OR.Jobs ConversationalAgents Traces.Api",
+  "orgName": "procodeapps",
+  "tenantName": "integrationtest",
+  "baseUrl": "https://alpha.api.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}

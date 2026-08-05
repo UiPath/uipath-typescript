@@ -1,0 +1,8 @@
+{
+  "clientId": "47566886-99a6-4f83-80c0-5ebaa0db579c",
+  "scope": "Traces.Api PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write OR.Execution.Read",
+  "orgName": "procodeapps",
+  "tenantName": "integrationtest",
+  "baseUrl": "https://alpha.api.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}
