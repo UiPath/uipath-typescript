@@ -2,8 +2,9 @@ import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo } from './auth/types';
-import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
+import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig, isPublicMode } from './config/sdk-config';
+import { validateConfig, normalizeBaseUrl, isCompleteConfig, hasRequiredBaseFields } from './config/config-utils';
+import { PublicAppClient } from './http/public-app-client';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
@@ -73,34 +74,51 @@ export class UiPath implements IUiPath {
     // Merge configuration: constructor config overrides meta tags
     const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
 
-    if (mergedConfig && isCompleteConfig(mergedConfig)) {
+    // Public (anonymous) mode is complete without OAuth/secret: the app carries no
+    // creds — the Apps gateway holds its identity. Base fields (baseUrl/org/tenant)
+    // still come from meta tags/config.
+    if (mergedConfig && (isCompleteConfig(mergedConfig) || (isPublicMode(mergedConfig) && hasRequiredBaseFields(mergedConfig)))) {
       this.#initializeWithConfig(mergedConfig);
     } else if (config) {
       this.#partialConfig = config;
     }
   }
 
-  #initializeWithConfig(config: UiPathSDKConfig): void {
-    // Validate and normalize the configuration
-    validateConfig(config);
+  #initializeWithConfig(config: PartialUiPathConfig): void {
+    const publicMode = isPublicMode(config);
+
+    // Public mode carries no OAuth/secret — skip auth validation. Base fields are
+    // already guaranteed by the caller's gate.
+    if (!publicMode) {
+      validateConfig(config as UiPathSDKConfig);
+    }
 
     const hasSecretAuth = hasSecretConfig(config);
     const hasOAuthAuth = hasOAuthConfig(config);
 
     // Initialize core components
     const internalConfig = new UiPathConfig({
-      baseUrl: normalizeBaseUrl(config.baseUrl),
-      orgName: config.orgName,
-      tenantName: config.tenantName,
+      baseUrl: normalizeBaseUrl(config.baseUrl!),
+      orgName: config.orgName!,
+      tenantName: config.tenantName!,
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
+      runtimeAuthMode: config.runtimeAuthMode,
+      appId: config.appId,
     });
 
     const executionContext = new ExecutionContext();
+    // AuthService is safe without creds (no token manager work happens until a call
+    // needs one, which public-mode services never do — they route through the gateway).
     this.#authService = new AuthService(internalConfig, executionContext);
     this.#config = internalConfig;
+
+    // In public mode, build the gateway client the supported services route through.
+    const publicAppClient = publicMode
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appId!)
+      : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // `folderKey` is meta-tag-only — kept off `UiPathConfig` (which mirrors
@@ -110,6 +128,7 @@ export class UiPath implements IUiPath {
       context: executionContext,
       tokenManager: this.#authService.getTokenManager(),
       folderKey: this.#metaFolderKey,
+      publicAppClient,
     });
 
     // Expose read-only config for user convenience

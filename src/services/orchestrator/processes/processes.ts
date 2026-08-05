@@ -21,6 +21,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
+import { ValidationError } from '../../../core/errors';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -69,6 +70,17 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     optionsOrFolderId?: ProcessStartOptions | number,
     legacyOptions?: RequestOptions,
   ): Promise<ProcessStartResponse[]> {
+    // Public (anonymous) mode: the gateway resolves folder + identity from the
+    // deployment, so folder context and the OData shape don't apply here — send the
+    // process key + inputs and let the gateway forward StartJobs as the app.
+    if (this.publicApp) {
+      if (!request.processKey) {
+        throw new ValidationError({ message: 'processKey is required to start a process in public mode' });
+      }
+      const job = await this.publicApp.startProcess(request.processKey, request.inputArguments);
+      return (job ? [job] : []) as ProcessStartResponse[];
+    }
+
     // Normalize the two overload forms into a single internal shape.
     let folderId: number | undefined;
     let folderKey: string | undefined;

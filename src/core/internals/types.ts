@@ -6,6 +6,7 @@
 import { UiPathConfig } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
+import { PublicAppClient } from '../http/public-app-client';
 
 /**
  * Private SDK components used by services.
@@ -25,4 +26,10 @@ export interface PrivateSDK {
    * Not user-settable via the SDK constructor.
    */
   folderKey?: string;
+  /**
+   * Present only in public (anonymous) coded-app mode. Routes supported calls
+   * through the Apps gateway with a session cookie instead of a user token.
+   * @internal
+   */
+  publicAppClient?: PublicAppClient;
 }
