@@ -1790,7 +1790,7 @@ const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <fo
 
 > **editMetadata**(`taskId`: `number`, `options?`: `TaskEditMetadataOptions`): `Promise`\<`void`>
 
-Edits a task's metadata (title, priority, catalog association, ...).
+Edits a task's metadata (title, priority, catalog association, etc.).
 
 #### Parameters
 
