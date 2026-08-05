@@ -2364,9 +2364,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#getdata" class="md-nav__link">
+  <a href="#getdatabyid" class="md-nav__link">
     <span class="md-ellipsis">
-      getData()
+      getDataById()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getdatabykey" class="md-nav__link">
+    <span class="md-ellipsis">
+      getDataByKey()
     </span>
   </a>
   
@@ -2858,11 +2867,11 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">comments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getComments</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
-<h3 id="getdata">getData()<a class="headerlink" href="#getdata" title="Permanent link">&para;</a></h3>
+<h3 id="getdatabyid">getDataById()<a class="headerlink" href="#getdatabyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getData</strong>(<code>taskId</code>: <code>number</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskDataGetResponse/"><code>TaskDataGetResponse</code></a>&gt;</p>
+<p><strong>getDataById</strong>(<code>id</code>: <code>number</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskDataGetResponse/"><code>TaskDataGetResponse</code></a>&gt;</p>
 </blockquote>
-<p>Gets a task's data (form/task payload) and core metadata.</p>
+<p>Gets a task's data (form/task payload) and core metadata, by task id.</p>
 <p>Works for any task type (Form, App, External, etc.).</p>
 <h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
@@ -2875,9 +2884,9 @@
 </thead>
 <tbody>
 <tr>
-<td><code>taskId</code></td>
+<td><code>id</code></td>
 <td><code>number</code></td>
-<td>The task to fetch data for</td>
+<td>The task id to fetch data for</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
@@ -2890,8 +2899,44 @@
 <p><code>Promise</code>&lt;<a href="../TaskDataGetResponse/"><code>TaskDataGetResponse</code></a>&gt;</p>
 <p>The task data <a href="../TaskDataGetResponse/">TaskDataGetResponse</a></p>
 <h4 id="example_7">Example<a class="headerlink" href="#example_7" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getDataById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">task</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="getdatabykey">getDataByKey()<a class="headerlink" href="#getdatabykey" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getDataByKey</strong>(<code>key</code>: <code>string</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskDataGetResponse/"><code>TaskDataGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Gets a task's data (form/task payload) and core metadata, by task key.</p>
+<p>Works for any task type (Form, App, External, etc.).</p>
+<h4 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td><code>string</code></td>
+<td>The task key (GUID) to fetch data for</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Folder scope (folderId, folderKey, or folderPath)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../TaskDataGetResponse/"><code>TaskDataGetResponse</code></a>&gt;</p>
+<p>The task data <a href="../TaskDataGetResponse/">TaskDataGetResponse</a></p>
+<h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getDataByKey</span><span class="p">(</span><span class="s2">&quot;&lt;taskKey&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">task</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getusers">getUsers()<a class="headerlink" href="#getusers" title="Permanent link">&para;</a></h3>
@@ -2916,7 +2961,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2938,17 +2983,17 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
+<h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../UserLoginInfo/"><code>UserLoginInfo</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../UserLoginInfo/"><code>UserLoginInfo</code></a>&gt;&gt;</p>
 <p>Promise resolving to either an array of task users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
 <a href="../UserLoginInfo/">UserLoginInfo</a></p>
-<h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// Get task users from a folder</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getUsers</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1">// Access user properties</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">);</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">emailAddress</span><span class="p">);</span>
+<h4 id="example_9">Example<a class="headerlink" href="#example_9" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// Get task users from a folder</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getUsers</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1">// Access user properties</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">);</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">emailAddress</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="reassign">reassign()<a class="headerlink" href="#reassign" title="Permanent link">&para;</a></h3>
@@ -2956,7 +3001,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><strong>reassign</strong>(<code>options</code>: <a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a> | <a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[]): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 </blockquote>
 <p>Reassigns tasks to new users</p>
-<h4 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2973,50 +3018,50 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
+<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 <p>Promise resolving to array of task assignment results
 <a href="../TaskAssignmentResponse/">TaskAssignmentResponse</a></p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// Reassign a single task to a user by ID</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="p">});</span>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1">// Or using instance method</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
-<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span>
-<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">});</span>
-<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>
-<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="c1">// Reassign a single task to a user by email</span>
-<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
-<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="w">  </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span>
-<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="p">});</span>
-<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>
-<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="c1">// Reassign multiple tasks</span>
-<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">([</span>
-<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId1</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId2</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="p">]);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// Reassign a single task to a user by ID</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">});</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1">// Or using instance method</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="p">});</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="c1">// Reassign a single task to a user by email</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">  </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="p">});</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="c1">// Reassign multiple tasks</span>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">([</span>
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId1</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">userId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId2</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user@example.com&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="p">]);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TaskAssignmentCriteria</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/tasks&#39;</span><span class="p">;</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1">// Reassign to a directory group by userId + criteria</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">groupId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="c1">// a DirectoryGroup id from tasks.getUsers()</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="nx">assignmentCriteria</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskAssignmentCriteria.AllUsers</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="p">});</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
-<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="c1">// ...or identify the group by name instead of id</span>
-<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
-<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">  </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;groupName&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">  </span><span class="nx">assignmentCriteria</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskAssignmentCriteria.AllUsers</span>
-<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TaskAssignmentCriteria</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/tasks&#39;</span><span class="p">;</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="c1">// Reassign to a directory group by userId + criteria</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">groupId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="c1">// a DirectoryGroup id from tasks.getUsers()</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span><span class="nx">assignmentCriteria</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskAssignmentCriteria.AllUsers</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="p">});</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1">// ...or identify the group by name instead of id</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">reassign</span><span class="p">({</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">  </span><span class="nx">taskId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">  </span><span class="nx">userNameOrEmail</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;groupName&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">  </span><span class="nx">assignmentCriteria</span><span class="o">:</span><span class="w"> </span><span class="kt">TaskAssignmentCriteria.AllUsers</span>
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="savedata">saveData()<a class="headerlink" href="#savedata" title="Permanent link">&para;</a></h3>
@@ -3024,7 +3069,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><strong>saveData</strong>(<code>taskId</code>: <code>number</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Saves a task's data (form/task payload).</p>
-<h4 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3051,11 +3096,11 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
+<h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the save completes</p>
-<h4 id="example_9">Example<a class="headerlink" href="#example_9" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">saveData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="kt">1200</span><span class="p">,</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_10">Example<a class="headerlink" href="#example_10" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">saveData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="kt">1200</span><span class="p">,</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="savetags">saveTags()<a class="headerlink" href="#savetags" title="Permanent link">&para;</a></h3>
@@ -3063,7 +3108,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><strong>saveTags</strong>(<code>taskId</code>: <code>number</code>, <code>tags</code>: <a href="../Tag/"><code>Tag</code></a>[], <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Saves the tags on a task, replacing any existing tags.</p>
-<h4 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3090,11 +3135,11 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
+<h4 id="returns_13">Returns<a class="headerlink" href="#returns_13" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving once the save completes</p>
-<h4 id="example_10">Example<a class="headerlink" href="#example_10" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">saveTags</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;priority&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Priority&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">displayValue</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;High&quot;</span><span class="w"> </span><span class="p">}],</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_11">Example<a class="headerlink" href="#example_11" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">saveTags</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;priority&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Priority&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">displayValue</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;High&quot;</span><span class="w"> </span><span class="p">}],</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="unassign">unassign()<a class="headerlink" href="#unassign" title="Permanent link">&para;</a></h3>
@@ -3102,7 +3147,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p><strong>unassign</strong>(<code>taskId</code>: <code>number</code> | <code>number</code>[]): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 </blockquote>
 <p>Unassigns tasks (removes current assignees)</p>
-<h4 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_14">Parameters<a class="headerlink" href="#parameters_14" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3119,20 +3164,20 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_13">Returns<a class="headerlink" href="#returns_13" title="Permanent link">&para;</a></h4>
+<h4 id="returns_14">Returns<a class="headerlink" href="#returns_14" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 <p>Promise resolving to array of task assignment results
 <a href="../TaskAssignmentResponse/">TaskAssignmentResponse</a></p>
-<h4 id="example_11">Example<a class="headerlink" href="#example_11" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1">// Unassign a single task</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">unassign</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1">// Or using instance method</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="nx">unassign</span><span class="p">();</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="c1">// Unassign multiple tasks</span>
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">unassign</span><span class="p">([</span><span class="o">&lt;</span><span class="nx">taskId1</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId2</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId3</span><span class="o">&gt;</span><span class="p">]);</span>
+<h4 id="example_12">Example<a class="headerlink" href="#example_12" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1">// Unassign a single task</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">unassign</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1">// Or using instance method</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">taskId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">task</span><span class="p">.</span><span class="nx">unassign</span><span class="p">();</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="c1">// Unassign multiple tasks</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tasks</span><span class="p">.</span><span class="nx">unassign</span><span class="p">([</span><span class="o">&lt;</span><span class="nx">taskId1</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId2</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">taskId3</span><span class="o">&gt;</span><span class="p">]);</span>
 </code></pre></div>
 
 

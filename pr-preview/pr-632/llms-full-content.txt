@@ -1929,17 +1929,17 @@ Promise resolving to either the task's comments NonPaginatedResponse or a Pagina
 const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
 ```
 
-### getData()
+### getDataById()
 
-> **getData**(`taskId`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+> **getDataById**(`id`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
 
-Gets a task's data (form/task payload) and core metadata.
+Gets a task's data (form/task payload) and core metadata, by task id.
 
 Works for any task type (Form, App, External, etc.).
 
 #### Parameters
 
-- `taskId`: `number` — The task to fetch data for
+- `id`: `number` — The task id to fetch data for
 - `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
@@ -1951,7 +1951,33 @@ The task data [TaskDataGetResponse](../TaskDataGetResponse/)
 #### Example
 
 ```
-const task = await tasks.getData(<taskId>, { folderId: <folderId> });
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+console.log(task.data);
+```
+
+### getDataByKey()
+
+> **getDataByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task key.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `key`: `string` — The task key (GUID) to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+The task data [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
 console.log(task.data);
 ```
 
