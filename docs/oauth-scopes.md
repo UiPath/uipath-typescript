@@ -243,6 +243,8 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `OR.Queues` or `OR.Queues.Read` |
 | `getAllItems()` / `queue.getAllItems()` | `OR.Queues` or `OR.Queues.Read` |
 | `insertItemByName()` / `queue.insertItem()` | `OR.Queues` or `OR.Queues.Write` |
+| `startTransactionByName()` / `queue.startTransaction()` | `OR.Queues` or `OR.Queues.Write` |
+| `completeTransaction()` / `queue.completeTransaction()` | `OR.Queues` or `OR.Queues.Write` |
 
 ## Tasks
 

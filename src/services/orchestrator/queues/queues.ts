@@ -6,13 +6,16 @@ import {
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
   QueueItemResponse,
-  QueuePriority
+  QueuePriority,
+  TransactionItemResponse,
+  TransactionCompletionOptions
 } from '../../../models/orchestrator/queues.types';
 import {
   QueueServiceModel,
   QueueWithMethods,
   createQueueWithMethods
 } from '../../../models/orchestrator/queues.models';
+import { OperationResponse } from '../../../models/common/types';
 import {
   addPrefixToKeys,
   camelToPascalCaseKeys,
@@ -157,6 +160,68 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     );
 
     return this.transformQueueItem(response.data);
+  }
+
+  @track('Queues.StartTransactionByName')
+  async startTransactionByName(queueName: string, folderId: number): Promise<TransactionItemResponse | null> {
+    // RobotIdentifier is deliberately not exposed: the API defines it as the key
+    // of the robot that sent the request, so only a robot can supply one, and a
+    // robot session already identifies itself through its token.
+    const response = await this.post<object | undefined>(
+      QUEUE_ENDPOINTS.START_TRANSACTION,
+      {
+        transactionData: camelToPascalCaseKeys({ name: queueName })
+      },
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId })
+      }
+    );
+
+    // Orchestrator returns 204 (empty body) when no item is available.
+    if (!response.data || typeof response.data !== 'object') {
+      return null;
+    }
+
+    return this.transformQueueItem(response.data);
+  }
+
+  @track('Queues.CompleteTransaction')
+  async completeTransaction(
+    itemId: number,
+    folderId: number,
+    options: TransactionCompletionOptions
+  ): Promise<OperationResponse<TransactionCompletionOptions>> {
+    const transactionResult: Record<string, unknown> = camelToPascalCaseKeys({
+      isSuccessful: options.isSuccessful,
+      processingException: options.processingException,
+      deferDate: toIsoString(options.deferDate),
+      dueDate: toIsoString(options.dueDate),
+      progress: options.progress,
+      operationId: options.operationId
+    });
+
+    // Output/Analytics hold user-defined keys — attach unchanged.
+    if (options.outputData !== undefined) {
+      transactionResult.Output = options.outputData;
+    }
+    if (options.analytics !== undefined) {
+      transactionResult.Analytics = options.analytics;
+    }
+
+    // SetTransactionResult returns no content
+    await this.post<void>(
+      QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(itemId),
+      { transactionResult },
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId })
+      }
+    );
+
+    // Return success with the request context data
+    return {
+      success: true,
+      data: options
+    };
   }
 
   private transformQueue(queue: object): QueueWithMethods {

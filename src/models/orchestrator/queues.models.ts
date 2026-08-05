@@ -4,8 +4,11 @@ import {
   QueueGetResponse,
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
-  QueueItemResponse
+  QueueItemResponse,
+  TransactionItemResponse,
+  TransactionCompletionOptions
 } from './queues.types';
+import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -161,6 +164,78 @@ export interface QueueServiceModel {
     specificData: Record<string, unknown>,
     options?: QueueInsertItemOptions
   ): Promise<QueueItemResponse>;
+
+  /**
+   * Starts a transaction: acquires the next available item from a queue by
+   * queue name (consumer operation)
+   *
+   * Orchestrator hands out the next eligible item (by priority and defer
+   * date), marks it `InProgress`, and returns it to the robot that requested
+   * it. Returns `null` when no item is available for processing.
+   *
+   * Requires a robot session. Orchestrator allocates the item to the robot
+   * making the request, so user and application identities receive `null`
+   * however many items are waiting.
+   *
+   * Queue items are normally consumed by a robot running a process. Apps
+   * produce with `insertItemByName` and observe with `getAllItems`, leaving
+   * acquisition to the robot.
+   *
+   * `null` covers both "no eligible items" and "no allocation target" — the two
+   * are not distinguishable.
+   *
+   * @param queueName - Name of the queue to take the next item from
+   * @param folderId - Required folder ID
+   * @returns Promise resolving to the acquired transaction item, or `null` when no item is available
+   * {@link TransactionItemResponse}
+   * @example
+   * ```typescript
+   * const transaction = await queues.startTransactionByName('<queueName>', <folderId>);
+   * if (transaction) {
+   *   console.log(transaction.specificData);
+   * }
+   * ```
+   */
+  startTransactionByName(queueName: string, folderId: number): Promise<TransactionItemResponse | null>;
+
+  /**
+   * Completes a transaction: reports the processing outcome of a queue item
+   * (consumer operation)
+   *
+   * Marks the item `Successful` or `Failed` (with failure details), and can
+   * persist output data alongside the result.
+   *
+   * Applies to items with an active transaction. Changing the outcome of an
+   * item that already reached a terminal status is rejected by Orchestrator.
+   *
+   * @param itemId - Queue item ID of the transaction to complete
+   * @param folderId - Required folder ID
+   * @param options Completion outcome (success flag, output data, failure details)
+   * @returns Promise resolving to an operation response containing the completion options
+   * {@link TransactionCompletionOptions}
+   * @example
+   * ```typescript
+   * // Report success with output data
+   * await queues.completeTransaction(<itemId>, <folderId>, {
+   *   isSuccessful: true,
+   *   outputData: { paymentId: 'P-778' }
+   * });
+   *
+   * // Report a business failure (not retried)
+   * await queues.completeTransaction(<itemId>, <folderId>, {
+   *   isSuccessful: false,
+   *   processingException: {
+   *     reason: 'Vendor not found',
+   *     type: 'BusinessException'
+   *   }
+   * });
+   * ```
+   */
+  completeTransaction(
+    itemId: number,
+    folderId: number,
+    options: TransactionCompletionOptions
+  ): Promise<OperationResponse<TransactionCompletionOptions>>;
 }
 
 /**
@@ -197,6 +272,34 @@ export interface QueueMethods {
     specificData: Record<string, unknown>,
     options?: QueueInsertItemOptions
   ): Promise<QueueItemResponse>;
+
+  /**
+   * Acquires the next available item from this queue (consumer operation).
+   * Returns `null` when no item is available for processing.
+   *
+   * Requires a robot session — Orchestrator returns the item to the robot that
+   * requested it, so user and application identities receive `null`. `null`
+   * means either no eligible items or no allocation target; the API does not
+   * distinguish them.
+   *
+   * @returns Promise resolving to the acquired transaction item, or `null`
+   * {@link TransactionItemResponse}
+   */
+  startTransaction(): Promise<TransactionItemResponse | null>;
+
+  /**
+   * Reports the processing outcome of one of this queue's items
+   * (consumer operation).
+   *
+   * @param itemId - Queue item ID of the transaction to complete
+   * @param options Completion outcome (success flag, output data, failure details)
+   * @returns Promise resolving to an operation response containing the completion options
+   * {@link TransactionCompletionOptions}
+   */
+  completeTransaction(
+    itemId: number,
+    options: TransactionCompletionOptions
+  ): Promise<OperationResponse<TransactionCompletionOptions>>;
 }
 
 /**
@@ -222,6 +325,17 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
       if (!queueData.name) throw new Error('Queue name is undefined');
       if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
       return service.insertItemByName(queueData.name, queueData.folderId, specificData, options);
+    },
+
+    startTransaction(): Promise<TransactionItemResponse | null> {
+      if (!queueData.name) throw new Error('Queue name is undefined');
+      if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
+      return service.startTransactionByName(queueData.name, queueData.folderId);
+    },
+
+    completeTransaction(itemId: number, options: TransactionCompletionOptions): Promise<OperationResponse<TransactionCompletionOptions>> {
+      if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
+      return service.completeTransaction(itemId, queueData.folderId, options);
     }
   };
 }
