@@ -51,6 +51,20 @@ describe('Connection bound methods', () => {
       });
     });
 
+    it('should pass folder context through', async () => {
+      const connection = createConnectionWithMethods(createMockConnection(), mockService);
+      mockService.ping = vi.fn().mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        status: ConnectionState.Enabled,
+      });
+
+      await connection.ping({ folderPath: IS_TEST_CONSTANTS.FOLDER_PATH });
+
+      expect(mockService.ping).toHaveBeenCalledWith(IS_TEST_CONSTANTS.CONNECTION_ID, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+    });
+
     it('should throw when the underlying connection has no id', async () => {
       const connection = createConnectionWithMethods(
         createMockConnection({ id: '' }),
@@ -93,6 +107,22 @@ describe('Connection bound methods', () => {
 
       expect(mockService.reauthenticate).toHaveBeenCalledWith(IS_TEST_CONSTANTS.CONNECTION_ID, {
         folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+    });
+
+    it('should pass folderId through', async () => {
+      const connection = createConnectionWithMethods(createMockConnection(), mockService);
+      mockService.reauthenticate = vi.fn().mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
+        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
+        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
+      });
+
+      await connection.reauthenticate({ folderId: IS_TEST_CONSTANTS.FOLDER_ID });
+
+      expect(mockService.reauthenticate).toHaveBeenCalledWith(IS_TEST_CONSTANTS.CONNECTION_ID, {
+        folderId: IS_TEST_CONSTANTS.FOLDER_ID,
       });
     });
   });

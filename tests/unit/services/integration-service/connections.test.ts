@@ -3,7 +3,7 @@ import { ConnectionsService } from '../../../../src/services/integration-service
 import { CONNECTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
-import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ConnectionState } from '../../../../src/models/integration-service/connections.types';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import {
@@ -71,6 +71,110 @@ describe('ConnectionsService', () => {
       mockApiClient.get.mockRejectedValue(createMockError(IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND));
       await expect(service.getAll()).rejects.toThrow(IS_TEST_CONSTANTS.ERROR_CONNECTION_NOT_FOUND);
     });
+
+    it('should route folderId to the folder ID header', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll({ folderId: IS_TEST_CONSTANTS.FOLDER_ID });
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: { [FOLDER_ID]: String(IS_TEST_CONSTANTS.FOLDER_ID) },
+        params: {},
+      });
+    });
+
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll({ folderPath: IS_TEST_CONSTANTS.FOLDER_PATH });
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE },
+        params: {},
+      });
+    });
+
+    it('should forward every folder header when more than one is supplied', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll({
+        folderId: IS_TEST_CONSTANTS.FOLDER_ID,
+        folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: {
+          [FOLDER_ID]: String(IS_TEST_CONSTANTS.FOLDER_ID),
+          [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY,
+          [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE,
+        },
+        params: {},
+      });
+    });
+
+    it('should never leak folder context into query params', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll({
+        folderId: IS_TEST_CONSTANTS.FOLDER_ID,
+        folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+        allFolders: true,
+      });
+      const [, requestOptions] = mockApiClient.get.mock.calls[0];
+      expect(requestOptions.params).toEqual({ allFolders: true });
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getAll();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY },
+        params: {},
+      });
+    });
+
+    it('should prefer an explicit folder path over the init-time folder key', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getAll({ folderPath: IS_TEST_CONSTANTS.FOLDER_PATH });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE },
+        params: {},
+      });
+    });
+
+    it('should send no folder header when neither options nor init supply folder context', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll();
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: {},
+        params: {},
+      });
+    });
+
+    it('should treat a whitespace-only folderKey as no folder context', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+      await service.getAll({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY_WHITESPACE });
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: {},
+        params: {},
+      });
+    });
+
+    it('should fall back to the init-time folder key when folderKey is whitespace-only', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getAll({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY_WHITESPACE });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY },
+        params: {},
+      });
+    });
   });
 
   describe('getById', () => {
@@ -108,6 +212,30 @@ describe('ConnectionsService', () => {
       );
     });
 
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+      await service.getById(IS_TEST_CONSTANTS.CONNECTION_ID, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.GET_BY_ID(IS_TEST_CONSTANTS.CONNECTION_ID),
+        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+      );
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+
+      await scopedService.getById(IS_TEST_CONSTANTS.CONNECTION_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.GET_BY_ID(IS_TEST_CONSTANTS.CONNECTION_ID),
+        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
+    });
+
     it('should throw ValidationError when connectionId is empty', async () => {
       await expect(service.getById('')).rejects.toThrow(ValidationError);
     });
@@ -139,6 +267,36 @@ describe('ConnectionsService', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
         { headers: {}, params: { forceRefresh: true } },
+      );
+    });
+
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.get.mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        status: ConnectionState.Enabled,
+      });
+      await service.ping(IS_TEST_CONSTANTS.CONNECTION_ID, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
+        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+      );
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        status: ConnectionState.Enabled,
+      });
+
+      await scopedService.ping(IS_TEST_CONSTANTS.CONNECTION_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
+        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
       );
     });
 
@@ -184,6 +342,42 @@ describe('ConnectionsService', () => {
       await service.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID, {
         folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
       });
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
+        undefined,
+        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
+    });
+
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.post.mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
+        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
+        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
+      });
+      await service.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
+        undefined,
+        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+      );
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.post.mockResolvedValue({
+        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
+        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
+        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
+        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
+      });
+
+      await scopedService.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID);
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
         undefined,
