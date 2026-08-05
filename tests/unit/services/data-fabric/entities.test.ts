@@ -2782,31 +2782,6 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should leave field unchanged when updateFields ID does not match any existing field", async () => {
-      mockApiClient.get.mockResolvedValue(mockRawEntity);
-      mockApiClient.post.mockResolvedValue(undefined);
-
-      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        updateFields: [{ id: "non-existent-id", displayName: "Ghost" }],
-      });
-
-      const call = mockApiClient.post.mock.calls[0][1];
-      const titleField = call.entityDefinition.fields[0];
-      expect(titleField.displayName).toBe("Title");
-    });
-
-    it("should make no API calls when no schema or metadata changes are specified", async () => {
-      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [],
-        removeFields: [],
-        updateFields: [],
-      });
-
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-      expect(mockApiClient.patch).not.toHaveBeenCalled();
-    });
-
     it.each([
       { type: EntityFieldDataType.STRING, expectedSqlType: "NVARCHAR" },
       {
@@ -3502,6 +3477,46 @@ describe("EntityService Unit Tests", () => {
           displayName: "X",
         }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it("should throw ValidationError when called with no options", async () => {
+      await expect(
+        entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+      ).rejects.toThrow(/updateById requires at least one change/);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+      expect(mockApiClient.patch).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when options is empty", async () => {
+      await expect(
+        entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {}),
+      ).rejects.toThrow(/updateById requires at least one change/);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+      expect(mockApiClient.patch).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when removeFields targets a name that does not exist", async () => {
+      mockApiClient.get.mockResolvedValue(mockRawEntity);
+
+      await expect(
+        entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          removeFields: [{ name: "does_not_exist" }],
+        }),
+      ).rejects.toThrow(/Cannot remove field\(s\).*does_not_exist/);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when updateFields targets an id that does not exist", async () => {
+      mockApiClient.get.mockResolvedValue(mockRawEntity);
+
+      await expect(
+        entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          updateFields: [{ id: "non-existent-id", displayName: "X" }],
+        }),
+      ).rejects.toThrow(/Cannot update field\(s\).*non-existent-id/);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
   });
 });

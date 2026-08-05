@@ -69,6 +69,9 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `deleteAttachment()` | `DataFabric.Data.Write` |
 | `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
+| `create()` | `DataFabric.Schema.Write` |
+| `updateById()` / `update()` | `DataFabric.Schema.Write` |
+| `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
 
 ## ChoiceSets
 
