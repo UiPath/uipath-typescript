@@ -5,13 +5,17 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockRawQueue,
-  createMockTransformedQueueCollection
+  createMockRawQueueItem,
+  createMockTransformedQueueCollection,
+  createMockTransformedQueueItemCollection
 } from '../../../utils/mocks/queues';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
 import {
   QueueGetAllOptions,
-  QueueGetByIdOptions
+  QueueGetByIdOptions,
+  QueueItemStatus,
+  QueuePriority
 } from '../../../../src/models/orchestrator/queues.types';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -267,6 +271,231 @@ describe('QueueService Unit Tests', () => {
           }),
         }),
       );
+    });
+  });
+
+  describe('bound queue methods', () => {
+    it('should attach queue methods to the queue returned by getById', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+
+      const queue = await queueService.getById(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(typeof queue.getAllItems).toBe('function');
+      expect(typeof queue.insertItem).toBe('function');
+    });
+
+    it('should attach queue methods to queues returned via the getAll transform', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueCollection()
+      );
+
+      await queueService.getAll();
+
+      // Run the transformFn the service handed to PaginationHelpers on a raw
+      // queue and verify it produces a queue with bound methods.
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const transformed = (config as any).transformFn(createMockRawQueue());
+
+      expect(transformed.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
+      expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(typeof transformed.getAllItems).toBe('function');
+      expect(typeof transformed.insertItem).toBe('function');
+    });
+  });
+
+  describe('getAllItems', () => {
+    it('should scope the listing to the queue and pass the folder', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection()
+      );
+
+      const result = await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      // The queue scoping filter is written with SDK field names and rewritten
+      // to API names (queueId → queueDefinitionId) before delegating.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ITEMS),
+          transformFn: expect.any(Function)
+        }),
+        expect.objectContaining({
+          filter: `queueDefinitionId eq ${QUEUE_TEST_CONSTANTS.QUEUE_ID}`,
+          folderId: TEST_CONSTANTS.FOLDER_ID
+        })
+      );
+
+      expect(result).toBeDefined();
+    });
+
+    it('should merge a caller filter with the queue filter and rewrite field names', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection()
+      );
+
+      await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        {
+          filter: "status eq 'Failed'",
+          orderby: 'createdTime desc'
+        }
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filter: `(status eq 'Failed') and queueDefinitionId eq ${QUEUE_TEST_CONSTANTS.QUEUE_ID}`,
+          orderby: 'creationTime desc',
+          folderId: TEST_CONSTANTS.FOLDER_ID
+        })
+      );
+    });
+
+    it('should pass pagination options through', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection(10)
+      );
+
+      await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE }
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          pageSize: TEST_CONSTANTS.PAGE_SIZE
+        })
+      );
+    });
+
+    it('should transform queue items preserving user-defined payload keys exactly', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection()
+      );
+
+      await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const item = (config as any).transformFn(createMockRawQueueItem());
+
+      // Renamed fields carry their values
+      expect(item.id).toBe(QUEUE_TEST_CONSTANTS.ITEM_ID);
+      expect(item.status).toBe(QueueItemStatus.New);
+      expect(item.priority).toBe(QueuePriority.High);
+      expect(item.queueId).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
+      expect(item.createdTime).toBe(QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME);
+      expect(item.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(item.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+      expect(item.reference).toBe(QUEUE_TEST_CONSTANTS.ITEM_REFERENCE);
+
+      // The business payload keeps its keys EXACTLY as stored (mixed casing) —
+      // no case conversion is applied to user-defined keys.
+      expect(item.specificData).toEqual(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+      // The raw JSON-string wire form surfaces under the explicit *Json name.
+      expect(item.specificDataJson).toBe(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_DATA_JSON);
+
+      // Original PascalCase fields are gone
+      expect((item as any).QueueDefinitionId).toBeUndefined();
+      expect((item as any).CreationTime).toBeUndefined();
+      expect((item as any).SpecificContent).toBeUndefined();
+      expect((item as any).SpecificData).toBeUndefined();
+      expect((item as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+
+      await expect(queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('insertItemByName', () => {
+    it('should post the item with queue name, defaulted priority, and untouched payload keys', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+
+      const result = await queueService.insertItemByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.ADD_ITEM,
+        expect.objectContaining({
+          itemData: expect.objectContaining({
+            Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+            Priority: QueuePriority.Normal
+          })
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          })
+        })
+      );
+
+      // The payload is attached under SpecificContent with its keys EXACTLY
+      // as provided — user-defined keys are never case-converted.
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.itemData.SpecificContent).toEqual(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+
+      // The created item is returned transformed
+      expect(result.id).toBe(QUEUE_TEST_CONSTANTS.ITEM_ID);
+      expect(result.specificData).toEqual(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+    });
+
+    it('should serialize option metadata and Date fields into the item body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+
+      const deferDate = new Date(QUEUE_TEST_CONSTANTS.ITEM_DEFER_DATE);
+      const dueDate = new Date(QUEUE_TEST_CONSTANTS.ITEM_DUE_DATE);
+
+      await queueService.insertItemByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+        {
+          priority: QueuePriority.High,
+          reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE,
+          progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS,
+          deferDate,
+          dueDate
+        }
+      );
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.itemData.Priority).toBe(QueuePriority.High);
+      expect(body.itemData.Reference).toBe(QUEUE_TEST_CONSTANTS.ITEM_REFERENCE);
+      expect(body.itemData.Progress).toBe(QUEUE_TEST_CONSTANTS.ITEM_PROGRESS);
+      // Date options are converted to the ISO-8601 strings the API expects
+      expect(body.itemData.DeferDate).toBe(deferDate.toISOString());
+      expect(body.itemData.DueDate).toBe(dueDate.toISOString());
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(queueService.insertItemByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
