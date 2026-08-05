@@ -15,7 +15,8 @@ import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
   QueueItemStatus,
-  QueuePriority
+  QueuePriority,
+  TransactionCompletionOptions
 } from '../../../../src/models/orchestrator/queues.types';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -285,6 +286,8 @@ describe('QueueService Unit Tests', () => {
 
       expect(typeof queue.getAllItems).toBe('function');
       expect(typeof queue.insertItem).toBe('function');
+      expect(typeof queue.startTransaction).toBe('function');
+      expect(typeof queue.completeTransaction).toBe('function');
     });
 
     it('should attach queue methods to queues returned via the getAll transform', async () => {
@@ -303,6 +306,8 @@ describe('QueueService Unit Tests', () => {
       expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
       expect(typeof transformed.getAllItems).toBe('function');
       expect(typeof transformed.insertItem).toBe('function');
+      expect(typeof transformed.startTransaction).toBe('function');
+      expect(typeof transformed.completeTransaction).toBe('function');
     });
   });
 
@@ -496,6 +501,175 @@ describe('QueueService Unit Tests', () => {
         TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('startTransactionByName', () => {
+    it('should post the transaction request and return the transformed item', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem({
+        Status: 'InProgress',
+        StartProcessing: QUEUE_TEST_CONSTANTS.ITEM_START_PROCESSING
+      }));
+
+      const result = await queueService.startTransactionByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.START_TRANSACTION,
+        {
+          transactionData: { Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME }
+        },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          })
+        })
+      );
+
+      expect(result).not.toBeNull();
+      expect(result!.status).toBe(QueueItemStatus.InProgress);
+      expect(result!.startProcessing).toBe(QUEUE_TEST_CONSTANTS.ITEM_START_PROCESSING);
+      expect(result!.specificData).toEqual(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+    });
+
+    it('should not send a robot identifier', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
+
+      await queueService.startTransactionByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      // The API defines RobotIdentifier as the key of the robot that sent the
+      // request, so the SDK never supplies one on the caller's behalf.
+      const body = mockApiClient.post.mock.calls[0][1] as {
+        transactionData: Record<string, unknown>;
+      };
+      expect(body.transactionData.RobotIdentifier).toBeUndefined();
+    });
+
+    it('should return null when no item is available (204 empty body)', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const result = await queueService.startTransactionByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when the response body is an empty string', async () => {
+      mockApiClient.post.mockResolvedValue('');
+
+      const result = await queueService.startTransactionByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(queueService.startTransactionByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('completeTransaction', () => {
+    it('should post a successful result with the output payload untouched', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const options: TransactionCompletionOptions = {
+        isSuccessful: true,
+        outputData: QUEUE_TEST_CONSTANTS.ITEM_OUTPUT_CONTENT,
+        progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS
+      };
+
+      const result = await queueService.completeTransaction(
+        QUEUE_TEST_CONSTANTS.ITEM_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        options
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(QUEUE_TEST_CONSTANTS.ITEM_ID),
+        expect.objectContaining({
+          transactionResult: expect.objectContaining({
+            IsSuccessful: true,
+            Progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS
+          })
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          })
+        })
+      );
+
+      // Output keys are user-defined — sent exactly as provided
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.transactionResult.Output).toEqual(QUEUE_TEST_CONSTANTS.ITEM_OUTPUT_CONTENT);
+
+      expect(result).toEqual({ success: true, data: options });
+    });
+
+    it('should post a failed result with the processing exception in API casing', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await queueService.completeTransaction(
+        QUEUE_TEST_CONSTANTS.ITEM_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        {
+          isSuccessful: false,
+          processingException: {
+            reason: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_REASON,
+            details: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_DETAILS,
+            type: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_TYPE
+          }
+        }
+      );
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.transactionResult.IsSuccessful).toBe(false);
+      expect(body.transactionResult.ProcessingException).toEqual({
+        Reason: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_REASON,
+        Details: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_DETAILS,
+        Type: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_TYPE
+      });
+    });
+
+    it('should convert Date fields to ISO strings in the transaction result', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      const deferDate = new Date(QUEUE_TEST_CONSTANTS.ITEM_DEFER_DATE);
+
+      await queueService.completeTransaction(
+        QUEUE_TEST_CONSTANTS.ITEM_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { isSuccessful: false, deferDate }
+      );
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.transactionResult.DeferDate).toBe(deferDate.toISOString());
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(QUEUE_TEST_CONSTANTS.ERROR_QUEUE_ITEM_NOT_FOUND);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(queueService.completeTransaction(
+        QUEUE_TEST_CONSTANTS.ITEM_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { isSuccessful: true }
+      )).rejects.toThrow(QUEUE_TEST_CONSTANTS.ERROR_QUEUE_ITEM_NOT_FOUND);
     });
   });
 });

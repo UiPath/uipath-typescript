@@ -117,6 +117,8 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       const queue = result.items[0];
       expect(typeof queue.getAllItems).toBe('function');
       expect(typeof queue.insertItem).toBe('function');
+      expect(typeof queue.startTransaction).toBe('function');
+      expect(typeof queue.completeTransaction).toBe('function');
     });
   });
 
@@ -246,6 +248,48 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
 
       expect(page.items.length).toBeLessThanOrEqual(1);
       expect(page.totalCount).toBeGreaterThan(0);
+    });
+
+    // skip: get-next allocation returns the item to the robot that requested it,
+    // so it cannot be exercised by the PAT-authenticated suite — a user identity
+    // is not a robot and always receives null. Body kept intact so the test runs
+    // once the suite can authenticate as a robot.
+    it.skip('should start and complete a transaction against the queue', async () => {
+      const queue = await getTestQueue();
+      const reference = `sdk-it-${generateRandomString(10)}`;
+
+      await queue.insertItem({ InvoiceId: reference }, { reference });
+
+      const transaction = await queue.startTransaction();
+      if (transaction === null) {
+        // Loud failure instead of a silent skip, per the integration test rules.
+        throw new Error(
+          'startTransaction returned no item although items exist — the configured identity cannot acquire queue transactions; a robot session is required'
+        );
+      }
+
+      expect(transaction.status).toBe(QueueItemStatus.InProgress);
+      expect(transaction.startProcessing).toBeDefined();
+      expect(transaction.id).toBeDefined();
+
+      const outputData = { Result_Code: 'OK', processedBy: 'integration-test' };
+      const completion = await queue.completeTransaction(transaction.id, {
+        isSuccessful: true,
+        outputData,
+        progress: 'done'
+      });
+
+      expect(completion.success).toBe(true);
+
+      // Verify the item reached its terminal state with the output persisted
+      // (keys exactly as provided).
+      const after = await queue.getAllItems({
+        filter: `reference eq '${transaction.reference}'`
+      });
+      const completed = after.items.find((item) => item.id === transaction.id);
+      expect(completed).toBeDefined();
+      expect(completed!.status).toBe(QueueItemStatus.Successful);
+      expect(completed!.outputData).toEqual(outputData);
     });
   });
 });

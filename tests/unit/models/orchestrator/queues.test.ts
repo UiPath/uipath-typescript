@@ -11,7 +11,8 @@ import {
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import {
-  QueuePriority
+  QueuePriority,
+  TransactionCompletionOptions
 } from '../../../../src/models/orchestrator/queues.types';
 
 // ===== TEST SUITE =====
@@ -24,7 +25,9 @@ describe('Queue Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getAllItems: vi.fn(),
-      insertItemByName: vi.fn()
+      insertItemByName: vi.fn(),
+      startTransactionByName: vi.fn(),
+      completeTransaction: vi.fn()
     };
   });
 
@@ -105,10 +108,65 @@ describe('Queue Models', () => {
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
     });
+
+    describe('queue.startTransaction()', () => {
+      it('should delegate to service.startTransactionByName with the bound queue name and folder ID', async () => {
+        const queueData = createBasicQueue();
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const transactionItem = createBasicQueueItem();
+        vi.mocked(mockService.startTransactionByName).mockResolvedValue(transactionItem);
+
+        const result = await queue.startTransaction();
+
+        expect(mockService.startTransactionByName).toHaveBeenCalledWith(
+          queueData.name,
+          queueData.folderId
+        );
+        expect(result).toEqual(transactionItem);
+      });
+
+      it('should pass through null when no item is available', async () => {
+        const queue = createQueueWithMethods(createBasicQueue(), mockService);
+        vi.mocked(mockService.startTransactionByName).mockResolvedValue(null);
+
+        const result = await queue.startTransaction();
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('queue.completeTransaction()', () => {
+      it('should delegate to service.completeTransaction with the bound folder ID', async () => {
+        const queueData = createBasicQueue();
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const options: TransactionCompletionOptions = {
+          isSuccessful: true,
+          outputData: QUEUE_TEST_CONSTANTS.ITEM_OUTPUT_CONTENT
+        };
+        vi.mocked(mockService.completeTransaction).mockResolvedValue({
+          success: true,
+          data: options
+        });
+
+        const result = await queue.completeTransaction(
+          QUEUE_TEST_CONSTANTS.ITEM_ID,
+          options
+        );
+
+        expect(mockService.completeTransaction).toHaveBeenCalledWith(
+          QUEUE_TEST_CONSTANTS.ITEM_ID,
+          queueData.folderId,
+          options
+        );
+        expect(result).toEqual({ success: true, data: options });
+      });
+    });
   });
 
   describe('createQueueWithMethods', () => {
-    it('should preserve all queue fields and attach the bound methods', () => {
+    it('should preserve all queue fields and attach the four methods', () => {
       const queueData = createBasicQueue();
       const queue = createQueueWithMethods(queueData, mockService);
 
@@ -121,6 +179,8 @@ describe('Queue Models', () => {
       // Methods attached
       expect(typeof queue.getAllItems).toBe('function');
       expect(typeof queue.insertItem).toBe('function');
+      expect(typeof queue.startTransaction).toBe('function');
+      expect(typeof queue.completeTransaction).toBe('function');
     });
   });
 });

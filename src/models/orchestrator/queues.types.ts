@@ -204,3 +204,51 @@ export interface QueueItemResponse {
   /** Folder display path returned by Orchestrator */
   folderName?: string;
 }
+
+/**
+ * A queue item handed out by `startTransaction` — the same shape as a queue
+ * item, in `InProgress` status with `startProcessing` set.
+ */
+export type TransactionItemResponse = QueueItemResponse;
+
+/**
+ * Options describing the outcome of a transaction.
+ */
+export interface TransactionCompletionOptions {
+  /**
+   * True when the item was processed successfully; false records a failure
+   * (provide `processingException` with the failure details).
+   */
+  isSuccessful: boolean;
+  /**
+   * Failure details recorded when the transaction is unsuccessful.
+   */
+  processingException?: QueueProcessingException;
+  /**
+   * Re-defer the item to this time (used with retry flows).
+   */
+  deferDate?: Date;
+  /**
+   * Updated due date for the item.
+   */
+  dueDate?: Date;
+  /**
+   * Output payload to persist on the item, as an object. Keys are
+   * user-defined and sent to Orchestrator exactly as provided (no case
+   * conversion).
+   */
+  outputData?: Record<string, unknown>;
+  /**
+   * Analytics payload to persist on the item. Keys are user-defined and
+   * sent exactly as provided.
+   */
+  analytics?: Record<string, unknown>;
+  /**
+   * Free-form progress text to persist on the item.
+   */
+  progress?: string;
+  /**
+   * Operation identifier associated with the completion.
+   */
+  operationId?: string;
+}
