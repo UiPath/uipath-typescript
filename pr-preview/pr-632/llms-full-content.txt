@@ -2276,7 +2276,7 @@ const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> 
 
 > **updateById**(`id`: `number`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
-Updates a task catalog by id. Only the fields passed in options are changed; everything else (name, description, tags, retention, encryption) is preserved.
+Updates a task catalog by id. Name, description and retention are preserved when not passed; tags are replaced only when provided (the catalog is not returned with its tags, so they cannot be auto preserved).
 
 #### Parameters
 
@@ -2303,7 +2303,7 @@ await taskCatalogs.updateById(<catalogId>, { name: "Invoices 2025", folderId: <f
 
 > **updateByName**(`name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
-Updates a task catalog by name, resolving the id internally. Only the fields passed in options are changed; everything else is preserved.
+Updates a task catalog by name, resolving the id internally. Name, description and retention are preserved when not passed; tags are replaced only when provided.
 
 #### Parameters
 

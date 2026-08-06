@@ -2307,10 +2307,10 @@
 
   <h1>TaskCatalogUpdateOptions</h1>
 
-<p>Optional fields for updating a task catalog, plus folder scope. Extends <a href="../TaskCatalogCreateOptions/">TaskCatalogCreateOptions</a> with an optional new name.</p>
+<p>Optional fields for updating a task catalog, plus folder scope. <code>encrypted</code> is omitted because the backend does not allow changing it after creation.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a></li>
+<li><code>Omit</code>&lt;<a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a>, <code>"encrypted"</code>&gt;</li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -2326,11 +2326,6 @@
 <td><a id="description"></a> <code>description?</code></td>
 <td><code>string</code></td>
 <td>Description of the task catalog (max 512 characters).</td>
-</tr>
-<tr>
-<td><a id="encrypted"></a> <code>encrypted?</code></td>
-<td><code>boolean</code></td>
-<td>When true, tasks associated with this catalog have their Data encrypted.</td>
 </tr>
 <tr>
 <td><a id="expand"></a> <code>expand?</code></td>

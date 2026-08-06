@@ -2656,7 +2656,7 @@
 <blockquote>
 <p><strong>updateById</strong>(<code>id</code>: <code>number</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Updates a task catalog by id. Only the fields passed in options are changed; everything else (name, description, tags, retention, encryption) is preserved.</p>
+<p>Updates a task catalog by id. Name, description and retention are preserved when not passed; tags are replaced only when provided (the catalog is not returned with its tags, so they cannot be auto preserved).</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2694,7 +2694,7 @@
 <blockquote>
 <p><strong>updateByName</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../TaskCatalogUpdateOptions/"><code>TaskCatalogUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Updates a task catalog by name, resolving the id internally. Only the fields passed in options are changed; everything else is preserved.</p>
+<p>Updates a task catalog by name, resolving the id internally. Name, description and retention are preserved when not passed; tags are replaced only when provided.</p>
 <h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
