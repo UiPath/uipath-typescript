@@ -237,6 +237,43 @@ export interface EntityAggregate {
   alias?: string;
 }
 
+/** Comparison operators supported in a {@link EntityHavingFilter} condition. */
+export type EntityHavingOperator = "=" | "!=" | "<>" | ">" | ">=" | "<" | "<=";
+
+/**
+ * One `HAVING` condition over a declared aggregate's result.
+ *
+ * Conditions reference aggregates by alias (aggregates-only): `aggregateAlias`
+ * must match the `alias` of an entry in
+ * {@link EntityQueryRecordsOptions.aggregates}. Row-level conditions belong in
+ * `filterGroup`, which filters before grouping.
+ */
+export interface EntityHavingCondition {
+  /** Alias of the declared aggregate this condition applies to. */
+  aggregateAlias: string;
+  /** Comparison operator. */
+  operator: EntityHavingOperator;
+  /**
+   * Comparison value, as a string. Must parse as an integer for `COUNT` and as
+   * a number for `SUM`/`AVG`; `MIN`/`MAX` values follow the aggregated field's type.
+   */
+  value: string;
+}
+
+/**
+ * Post-aggregation filter (SQL `HAVING`) applied to grouped aggregate results.
+ *
+ * Requires `aggregates` and `groupBy` on the query. Supported for native (LDO)
+ * entities only, and gated by the tenant's `enable-having-on-query` feature
+ * flag — the server responds 400 when either doesn't hold. Maximum 5 conditions.
+ */
+export interface EntityHavingFilter {
+  /** Logical operator between conditions (default: {@link LogicalOperator.And}). */
+  logicalOperator?: LogicalOperator;
+  /** Conditions over declared aggregate aliases. */
+  aggregateFilters: EntityHavingCondition[];
+}
+
 /**
  * A single cross-entity JOIN clause for a structured query.
  *
@@ -300,6 +337,12 @@ export type EntityQueryRecordsOptions = {
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
   groupBy?: string[];
+  /**
+   * Post-aggregation filter on grouped results (SQL `HAVING`). Conditions
+   * reference declared aggregate aliases; requires `aggregates` and `groupBy`.
+   * See {@link EntityHavingFilter} for constraints.
+   */
+  havingFilter?: EntityHavingFilter;
   /**
    * Cross-entity joins. Each entry joins one related entity into the query;
    * supply several for a multi-join query. Requires `selectedFields` or

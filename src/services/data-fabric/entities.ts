@@ -307,6 +307,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
         message: 'Join queries require selectedFields or aggregates — reference fields as "<EntityName>.<FieldName>" (e.g. "Customer.name")',
       });
     }
+    // The server's aggregates-only HAVING contract requires aggregates + groupBy;
+    // surface that requirement client-side with an actionable message.
+    if (options?.havingFilter && (!options.aggregates?.length || !options.groupBy?.length)) {
+      throw new ValidationError({
+        message: 'havingFilter requires aggregates and groupBy — conditions reference declared aggregate aliases; use filterGroup for row-level conditions',
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
     // The multi-entity (joins) contract only exists on the name-based query route —
@@ -335,7 +342,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins', 'havingFilter']
     }, downstreamOptions);
   }
 

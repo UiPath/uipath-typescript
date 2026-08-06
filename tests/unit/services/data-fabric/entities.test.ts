@@ -40,6 +40,7 @@ import {
   ExternalField,
   FieldDisplayType,
   JoinType,
+  LogicalOperator,
   QueryFilterOperator,
   RawEntityGetResponse,
 } from "../../../../src/models/data-fabric/entities.types";
@@ -1932,6 +1933,65 @@ describe("EntityService Unit Tests", () => {
       ).rejects.toThrow(/Join queries require selectedFields or aggregates/);
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("should forward havingFilter verbatim and include it in excludeFromPrefix", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: "Id", alias: "cnt" },
+        ],
+        groupBy: ["region"],
+        havingFilter: {
+          logicalOperator: LogicalOperator.Or,
+          aggregateFilters: [
+            { aggregateAlias: "cnt", operator: ">", value: "5" },
+            { aggregateAlias: "cnt", operator: "<=", value: "100" },
+          ],
+        },
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeFromPrefix: expect.arrayContaining(["havingFilter"]),
+        }),
+        expect.objectContaining({
+          havingFilter: {
+            logicalOperator: LogicalOperator.Or,
+            aggregateFilters: [
+              { aggregateAlias: "cnt", operator: ">", value: "5" },
+              { aggregateAlias: "cnt", operator: "<=", value: "100" },
+            ],
+          },
+        }),
+      );
+    });
+
+    it("should throw ValidationError when havingFilter is supplied without aggregates", async () => {
+      await expect(
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          groupBy: ["region"],
+          havingFilter: {
+            aggregateFilters: [{ aggregateAlias: "cnt", operator: ">", value: "5" }],
+          },
+        }),
+      ).rejects.toThrow(/havingFilter requires aggregates and groupBy/);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it("should throw ValidationError when havingFilter is supplied without groupBy", async () => {
+      await expect(
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          aggregates: [
+            { function: EntityAggregateFunction.Count, field: "Id", alias: "cnt" },
+          ],
+          havingFilter: {
+            aggregateFilters: [{ aggregateAlias: "cnt", operator: ">", value: "5" }],
+          },
+        }),
+      ).rejects.toThrow(/havingFilter requires aggregates and groupBy/);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
     it("should accept joins with aggregates and no selectedFields", async () => {
