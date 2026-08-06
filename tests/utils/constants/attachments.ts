@@ -30,4 +30,10 @@ export const ATTACHMENT_TEST_CONSTANTS = {
 
   // OData Parameters
   ODATA_SELECT_FIELDS: 'id,name,blobFileAccess',
+
+  // Create
+  UPLOAD_CONTENT: 'file body',
+  ERROR_NAME_REQUIRED: 'name is required for create',
+  ERROR_CONTENT_REQUIRED: 'content is required for create',
+  ERROR_UPLOAD_FAILED: 'Failed to upload',
 } as const;
