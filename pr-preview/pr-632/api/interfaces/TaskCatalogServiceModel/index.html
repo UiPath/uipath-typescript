@@ -2490,7 +2490,7 @@
   <h1>Task Catalogs</h1>
 
 <p>Service for managing UiPath Action Center task catalogs.</p>
-<p>Task catalogs group and configure tasks (retention, encryption, tags) and can be associated with a task's metadata. <a href="https://docs.uipath.com/automation-cloud/docs/actions">UiPath Action Center Guide</a></p>
+<p>A task catalog is a reusable, folder-scoped definition that groups related tasks and configures how they behave: data retention (delete or archive the tasks after a retention period), encryption of task data, and tags. A task is linked to a catalog through its metadata (see <code>editMetadata</code>) to inherit that configuration. <a href="https://docs.uipath.com/automation-cloud/docs/actions">UiPath Action Center Guide</a></p>
 <h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
 <p>Prerequisites: Initialize the SDK first - see <a href="/uipath-typescript/getting-started/#import-initialize">Getting Started</a></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TaskCatalogs</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/tasks&#39;</span><span class="p">;</span>
@@ -2579,7 +2579,7 @@
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../TaskCatalogGetResponse/"><code>TaskCatalogGetResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of task catalogs NonPaginatedResponse<TaskCatalogGetResponse> or a PaginatedResponse<TaskCatalogGetResponse> when pagination options are used.</p>
+<p>Promise resolving to either a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> or <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../TaskCatalogGetResponse/">TaskCatalogGetResponse</a> items, paginated when pagination options are used.</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">catalogs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">taskCatalogs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>

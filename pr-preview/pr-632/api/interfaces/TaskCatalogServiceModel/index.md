@@ -1,6 +1,6 @@
 Service for managing UiPath Action Center task catalogs.
 
-Task catalogs group and configure tasks (retention, encryption, tags) and can be associated with a task's metadata. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+A task catalog is a reusable, folder-scoped definition that groups related tasks and configures how they behave: data retention (delete or archive the tasks after a retention period), encryption of task data, and tags. A task is linked to a catalog through its metadata (see `editMetadata`) to inherit that configuration. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
 
 ### Usage
 
@@ -63,7 +63,7 @@ Gets task catalogs in a folder.
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
 
-Promise resolving to either an array of task catalogs NonPaginatedResponse or a PaginatedResponse when pagination options are used.
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCatalogGetResponse](../TaskCatalogGetResponse/) items, paginated when pagination options are used.
 
 #### Example
 
