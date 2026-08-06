@@ -69,6 +69,12 @@ Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) o
 
 ```
 const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+
+// Paginated
+const page1 = await taskCatalogs.getAll({ folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await taskCatalogs.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+}
 ```
 
 ### getById()

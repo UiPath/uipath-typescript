@@ -154,7 +154,7 @@ Creates a comment on a task.
 
 `Promise`\<`TaskCommentGetResponse`>
 
-The created comment [TaskCommentGetResponse](../TaskCommentGetResponse/)
+Promise resolving to [TaskCommentGetResponse](../TaskCommentGetResponse/)
 
 #### Example
 
@@ -303,6 +303,12 @@ Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) o
 
 ```
 const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
+
+// Paginated
+const page1 = await tasks.getComments(<taskId>, { folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await tasks.getComments(<taskId>, { folderId: <folderId>, cursor: page1.nextCursor });
+}
 ```
 
 ### getDataById()
@@ -322,7 +328,7 @@ Works for any task type (Form, App, External, etc.).
 
 `Promise`\<`TaskDataGetResponse`>
 
-The task data [TaskDataGetResponse](../TaskDataGetResponse/)
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
 
 #### Example
 
@@ -348,7 +354,7 @@ Works for any task type (Form, App, External, etc.).
 
 `Promise`\<`TaskDataGetResponse`>
 
-The task data [TaskDataGetResponse](../TaskDataGetResponse/)
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
 
 #### Example
 
