@@ -153,7 +153,9 @@ export class ErrorResponseParser {
    */
   async parse(response: Response): Promise<ParsedErrorInfo> {
     try {
-      const errorBody = await response.json();
+      // Parse a clone so the body stays readable — a non-JSON error (e.g. the XML
+      // Azure Storage returns) must still be recoverable in the fallback below.
+      const errorBody = await response.clone().json();
       
       // Find the first strategy that can parse this error format
       const strategy = this.strategies.find(s => s.canParse(errorBody));

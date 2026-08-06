@@ -3,7 +3,7 @@ import {
   createJobWithMethods,
   JobServiceModel
 } from '../../../../src/models/orchestrator/jobs.models';
-import { createBasicJob } from '../../../utils/mocks/jobs';
+import { createBasicJob, createMockRawJobAttachment } from '../../../utils/mocks/jobs';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
@@ -20,6 +20,8 @@ describe('Job Models', () => {
       stop: vi.fn(),
       resume: vi.fn(),
       restart: vi.fn(),
+      getAttachments: vi.fn(),
+      linkAttachment: vi.fn(),
     } as any;
   });
 
@@ -187,5 +189,87 @@ describe('Job Models', () => {
         await expect(job.restart()).rejects.toThrow('Job folderId is undefined');
       });
     });
+    describe('job.getAttachments()', () => {
+      it('should call service.getAttachments with the job key and folder ID', async () => {
+        const job = createJobWithMethods(createBasicJob(), mockService);
+        const links = [createMockRawJobAttachment()] as any;
+        vi.mocked(mockService.getAttachments).mockResolvedValue(links);
+
+        const result = await job.getAttachments();
+
+        expect(mockService.getAttachments).toHaveBeenCalledWith(
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          TEST_CONSTANTS.FOLDER_ID
+        );
+        expect(result).toEqual(links);
+      });
+
+      it('should throw when the job key is undefined', async () => {
+        const job = createJobWithMethods(createBasicJob({ key: undefined as any }), mockService);
+
+        await expect(job.getAttachments()).rejects.toThrow('Job key is undefined');
+        expect(mockService.getAttachments).not.toHaveBeenCalled();
+      });
+
+      it('should throw when the job folderId is undefined', async () => {
+        const job = createJobWithMethods(createBasicJob({ folderId: undefined as any }), mockService);
+
+        await expect(job.getAttachments()).rejects.toThrow('Job folderId is undefined');
+        expect(mockService.getAttachments).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('job.linkAttachment()', () => {
+      it('should call service.linkAttachment with the captured job key and folder ID', async () => {
+        const job = createJobWithMethods(createBasicJob(), mockService);
+        const link = createMockRawJobAttachment() as any;
+        vi.mocked(mockService.linkAttachment).mockResolvedValue(link);
+
+        const result = await job.linkAttachment(JOB_TEST_CONSTANTS.ATTACHMENT_ID, {
+          category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY,
+        });
+
+        expect(mockService.linkAttachment).toHaveBeenCalledWith(
+          JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          TEST_CONSTANTS.FOLDER_ID,
+          { category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY }
+        );
+        expect(result).toEqual(link);
+      });
+
+      it('should forward undefined options when none are supplied', async () => {
+        const job = createJobWithMethods(createBasicJob(), mockService);
+        vi.mocked(mockService.linkAttachment).mockResolvedValue(createMockRawJobAttachment() as any);
+
+        await job.linkAttachment(JOB_TEST_CONSTANTS.ATTACHMENT_ID);
+
+        expect(mockService.linkAttachment).toHaveBeenCalledWith(
+          JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          TEST_CONSTANTS.FOLDER_ID,
+          undefined
+        );
+      });
+
+      it('should throw when the job key is undefined', async () => {
+        const job = createJobWithMethods(createBasicJob({ key: undefined as any }), mockService);
+
+        await expect(
+          job.linkAttachment(JOB_TEST_CONSTANTS.ATTACHMENT_ID)
+        ).rejects.toThrow('Job key is undefined');
+        expect(mockService.linkAttachment).not.toHaveBeenCalled();
+      });
+
+      it('should throw when the job folderId is undefined', async () => {
+        const job = createJobWithMethods(createBasicJob({ folderId: undefined as any }), mockService);
+
+        await expect(
+          job.linkAttachment(JOB_TEST_CONSTANTS.ATTACHMENT_ID)
+        ).rejects.toThrow('Job folderId is undefined');
+        expect(mockService.linkAttachment).not.toHaveBeenCalled();
+      });
+    });
+
   });
 });

@@ -65,6 +65,12 @@ export const JOB_ENDPOINTS = {
   STOP: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
   RESUME: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob`,
   RESTART: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob`,
+  ATTACHMENTS: {
+    /** Attachments linked to a job; the job is addressed by the `jobKey` query param. */
+    GET_BY_JOB_KEY: `${ORCHESTRATOR_BASE}/api/JobAttachments/GetByJobKey`,
+    /** Links an existing attachment to a job. */
+    LINK: `${ORCHESTRATOR_BASE}/api/JobAttachments/Post`,
+  },
 } as const;
 
 /**
@@ -81,6 +87,8 @@ export const ASSET_ENDPOINTS = {
  */
 export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
   GET_BY_ID: (id: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${id})`,
+  /** Creates an attachment record and returns a short-lived URI to upload its content to. */
+  CREATE: `${ORCHESTRATOR_BASE}/odata/Attachments`,
 } as const;
 
 /**
