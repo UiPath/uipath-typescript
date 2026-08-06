@@ -297,7 +297,7 @@ Gets the comments for a task.
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
 
-Promise resolving to either the task's comments NonPaginatedResponse or a PaginatedResponse when pagination options are used.
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCommentGetResponse](../TaskCommentGetResponse/) items, paginated when pagination options are used.
 
 #### Example
 

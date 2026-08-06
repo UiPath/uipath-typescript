@@ -2307,7 +2307,7 @@
 
   <h1>TaskCatalogUpdateOptions</h1>
 
-<p>Optional fields for updating a task catalog, plus folder scope. Same shape as <a href="../TaskCatalogCreateOptions/">TaskCatalogCreateOptions</a>.</p>
+<p>Optional fields for updating a task catalog, plus folder scope. Extends <a href="../TaskCatalogCreateOptions/">TaskCatalogCreateOptions</a> with an optional new name.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../TaskCatalogCreateOptions/"><code>TaskCatalogCreateOptions</code></a></li>
@@ -2351,6 +2351,11 @@
 <td><a id="folderpath"></a> <code>folderPath?</code></td>
 <td><code>string</code></td>
 <td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name?</code></td>
+<td><code>string</code></td>
+<td>New name for the catalog (max 50 characters). Defaults to the catalog's current name.</td>
 </tr>
 <tr>
 <td><a id="retentionaction"></a> <code>retentionAction?</code></td>

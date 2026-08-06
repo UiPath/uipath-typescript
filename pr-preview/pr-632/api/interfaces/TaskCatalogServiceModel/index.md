@@ -119,15 +119,14 @@ const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> 
 
 ### updateById()
 
-> **updateById**(`id`: `number`, `name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+> **updateById**(`id`: `number`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
-Updates a task catalog by id.
+Updates a task catalog by id. Only the fields passed in options are changed; everything else (name, description, tags, retention, encryption) is preserved.
 
 #### Parameters
 
 - `id`: `number` — The task catalog id
-- `name`: `string` — Name of the task catalog (max 50 characters)
-- `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -138,20 +137,23 @@ Promise resolving once the update completes
 #### Example
 
 ```
-await taskCatalogs.updateById(<catalogId>, "Invoices", { description: "Updated", folderId: <folderId> });
+// Change only the description, keep everything else
+await taskCatalogs.updateById(<catalogId>, { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateById(<catalogId>, { name: "Invoices 2025", folderId: <folderId> });
 ```
 
 ### updateByName()
 
-> **updateByName**(`name`: `string`, `newName`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+> **updateByName**(`name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
 
-Updates a task catalog by name, resolving the id internally.
+Updates a task catalog by name, resolving the id internally. Only the fields passed in options are changed; everything else is preserved.
 
 #### Parameters
 
 - `name`: `string` — The current name of the task catalog to update
-- `newName`: `string` — Name to set on the task catalog (max 50 characters)
-- `options?`: `TaskCatalogUpdateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -162,5 +164,9 @@ Promise resolving once the update completes
 #### Example
 
 ```
-await taskCatalogs.updateByName("Invoices", "Updated Invoices", { description: "Updated", folderId: <folderId> });
+// Change only the description
+await taskCatalogs.updateByName("Invoices", { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateByName("Invoices", { name: "Invoices 2025", folderId: <folderId> });
 ```
