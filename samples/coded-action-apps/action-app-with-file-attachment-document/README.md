@@ -4,6 +4,10 @@ A UiPath Coded Action App template for **Loan Application Review** with direct f
 
 This template demonstrates how to handle direct file attachments in coded action apps, as opposed to referencing files from Storage Buckets.
 
+## Preview
+
+![Loan application review with a directly attached PDF: preview and download the attachment, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites

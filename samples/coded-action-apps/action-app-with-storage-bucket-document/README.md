@@ -4,6 +4,10 @@ A UiPath Coded Action App template for **Loan Application Review** that loads it
 
 This template demonstrates how to load a document from a Storage Bucket by bucket name and file path, as opposed to receiving a direct file attachment.
 
+## Preview
+
+![Loan application review loading its document from a Storage Bucket: review details, view document, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites

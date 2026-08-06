@@ -4,6 +4,10 @@ A UiPath Coded Action App template for **Loan Application Review** backed by a *
 
 This template demonstrates how to read from and write to a Data Fabric entity and how to view entity file attachments in coded action apps.
 
+## Preview
+
+![Loan application review backed by a Data Fabric entity: fetch applicant record, review details, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites

@@ -2,6 +2,10 @@
 
 A UiPath Coded Action App template for **Loan Application Review**. Reviewers can assess an applicant's details and view a bundled sample PDF document, then complete the task with an Approve or Reject decision.
 
+## Preview
+
+![Loan application review with a bundled PDF document: review details, view document, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites
