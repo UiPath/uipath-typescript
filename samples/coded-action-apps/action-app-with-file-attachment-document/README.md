@@ -137,8 +137,3 @@ When the app loads inside Action Center:
 3. **Theme** — The app initializes in light or dark mode based on the Action Center theme preference and supports toggling via the button in the top-right corner.
 
 4. **Read-only mode** — If the task is already completed or the current user does not have edit access, all input fields are disabled and the Approve / Reject buttons are greyed out.
-
-
-
-
-https://github.com/user-attachments/assets/72cf662b-426e-4cf2-97e8-73245b6d5523

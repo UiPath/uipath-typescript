@@ -105,10 +105,3 @@ When the app loads inside Action Center:
 4. **Read-only mode** — If the task is already completed or the current user does not have edit access, all input fields are disabled and the Approve / Reject buttons are greyed out.
 
    
-
-
-https://github.com/user-attachments/assets/9ec77f6a-be3d-4810-8362-072f0ddcdb87
-
-
-
-
