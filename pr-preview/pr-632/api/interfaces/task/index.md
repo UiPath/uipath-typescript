@@ -455,12 +455,12 @@ const result2 = await tasks.reassign({
 
 > **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
 
-Saves a task's data (form/task payload).
+Saves a task's data (form/task payload), replacing the existing payload.
 
 #### Parameters
 
 - `taskId`: `number` — The task to update
-- `data`: `Record`\<`string`, `unknown`> — The task data to save
+- `data`: `Record`\<`string`, `unknown`> — The task data to save (replaces the existing payload)
 - `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
 
 #### Returns

@@ -3068,7 +3068,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <blockquote>
 <p><strong>saveData</strong>(<code>taskId</code>: <code>number</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Saves a task's data (form/task payload).</p>
+<p>Saves a task's data (form/task payload), replacing the existing payload.</p>
 <h4 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3087,7 +3087,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <tr>
 <td><code>data</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>The task data to save</td>
+<td>The task data to save (replaces the existing payload)</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
