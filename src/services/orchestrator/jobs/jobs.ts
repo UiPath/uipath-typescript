@@ -1,10 +1,10 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions, JobAttachmentGetResponse, JobLinkAttachmentOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformOptions, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
-import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
+import { JobMap, JobAttachmentMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
@@ -185,6 +185,63 @@ export class JobService extends FolderScopedService implements JobServiceModel {
 
     const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
     return createJobWithMethods(rawJob, this);
+  }
+
+  @track('Jobs.GetAttachments')
+  async getAttachments(jobKey: string, folderId: number): Promise<JobAttachmentGetResponse[]> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for getAttachments' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for getAttachments' });
+    }
+
+    const response = await this.get<Record<string, unknown>[]>(
+      JOB_ENDPOINTS.ATTACHMENTS.GET_BY_JOB_KEY,
+      {
+        params: { jobKey },
+        headers: createHeaders({ [FOLDER_ID]: folderId }),
+      }
+    );
+
+    // The endpoint answers in camelCase already, so only the semantic renames apply.
+    return transformData(response.data, JobAttachmentMap) as unknown as JobAttachmentGetResponse[];
+  }
+
+  @track('Jobs.LinkAttachment')
+  async linkAttachment(
+    attachmentId: string,
+    jobKey: string,
+    folderId: number,
+    options?: JobLinkAttachmentOptions
+  ): Promise<JobAttachmentGetResponse> {
+    if (!attachmentId) {
+      throw new ValidationError({ message: 'attachmentId is required for linkAttachment' });
+    }
+
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for linkAttachment' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for linkAttachment' });
+    }
+
+    // Request field names match the API's, so no outbound field map is needed.
+    const response = await this.post<Record<string, unknown>>(
+      JOB_ENDPOINTS.ATTACHMENTS.LINK,
+      {
+        attachmentId,
+        jobKey,
+        category: options?.category,
+      },
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId }),
+      }
+    );
+
+    return transformData(response.data, JobAttachmentMap) as unknown as JobAttachmentGetResponse;
   }
 
   /**

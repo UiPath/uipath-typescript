@@ -15,3 +15,12 @@ export const JobMap: { [key: string]: string } = {
   processType: 'packageType',
   release: 'process',
 };
+
+/**
+ * Maps fields for attachments linked to a job to ensure consistent naming
+ * Semantic renames only — the endpoint already answers in camelCase
+ */
+export const JobAttachmentMap: { [key: string]: string } = {
+  creationTime: 'createdTime',
+  lastModificationTime: 'lastModifiedTime'
+};

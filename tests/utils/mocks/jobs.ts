@@ -168,3 +168,29 @@ export const createMockTransformedJobCollection = (
     ...(options?.totalPages !== undefined && { totalPages: options.totalPages }),
   });
 };
+
+/**
+ * Creates a mock job attachment in RAW API format (before transformation).
+ *
+ * The endpoint answers in camelCase, so only the two semantically renamed
+ * fields (`creationTime`, `lastModificationTime`) differ from the SDK shape.
+ *
+ * @param overrides - Optional overrides for specific fields
+ * @returns Raw job attachment data as it comes from the API
+ */
+export const createMockRawJobAttachment = (
+  overrides: Partial<Record<string, unknown>> = {}
+): Record<string, unknown> => {
+  return createMockBaseResponse<Record<string, unknown>>({
+    id: JOB_TEST_CONSTANTS.ATTACHMENT_LINK_ID,
+    attachmentId: JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+    jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+    category: JOB_TEST_CONSTANTS.ATTACHMENT_CATEGORY,
+    attachmentName: JOB_TEST_CONSTANTS.ATTACHMENT_NAME,
+    creatorUserId: JOB_TEST_CONSTANTS.ATTACHMENT_CREATOR_USER_ID,
+    lastModifierUserId: JOB_TEST_CONSTANTS.ATTACHMENT_LAST_MODIFIER_USER_ID,
+    // Raw API field names that the transform pipeline renames
+    creationTime: JOB_TEST_CONSTANTS.ATTACHMENT_CREATED_TIME,
+    lastModificationTime: JOB_TEST_CONSTANTS.ATTACHMENT_LAST_MODIFIED_TIME,
+  }, overrides);
+};

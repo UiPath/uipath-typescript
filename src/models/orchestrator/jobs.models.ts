@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions, JobAttachmentGetResponse, JobLinkAttachmentOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /** Combined response type for job data with bound methods. */
@@ -216,6 +216,78 @@ export interface JobServiceModel {
    * ```
    */
   restart(jobKey: string, folderId: number): Promise<JobGetResponse>;
+
+  /**
+   * Gets all attachments linked to a job.
+   *
+   * Returns one entry per link, each carrying the attachment's name, its
+   * category, and the `attachmentId` needed to read the file itself. To get a
+   * job key and its folder, first list jobs with {@link getAll} — each job
+   * exposes `key` and `folderId`.
+   *
+   * The result is empty when the job has no attachments.
+   *
+   * @param jobKey - The unique key (GUID) of the job whose attachments to retrieve
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to an array of {@link JobAttachmentGetResponse} links, empty when the job has none
+   *
+   * @example
+   * ```typescript
+   * const attachments = await jobs.getAttachments(<jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { Attachments } from '@uipath/uipath-typescript/attachments';
+   *
+   * // Read the underlying file of each attachment linked to a job
+   * const attachmentsService = new Attachments(sdk);
+   * const links = await jobs.getAttachments(<jobKey>, <folderId>);
+   *
+   * for (const link of links) {
+   *   const attachment = await attachmentsService.getById(link.attachmentId);
+   *   console.log(link.category, attachment.blobFileAccess.uri);
+   * }
+   * ```
+   */
+  getAttachments(jobKey: string, folderId: number): Promise<JobAttachmentGetResponse[]>;
+
+  /**
+   * Links an existing attachment to a job.
+   *
+   * This does not upload a file — it associates an attachment that already
+   * exists in Orchestrator with a job. Supply the `attachmentId` of that
+   * attachment; the job is identified by `jobKey`.
+   *
+   * The returned link does not carry `attachmentName` or `creatorUserId` yet —
+   * read the job's attachments back with {@link getAttachments} to get the
+   * fully populated entry.
+   *
+   * @param attachmentId - The unique ID (GUID) of the attachment to link
+   * @param jobKey - The unique key (GUID) of the job to link the attachment to
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional settings for the link, such as its category
+   * @returns Promise resolving to the created {@link JobAttachmentGetResponse} link
+   *
+   * @example
+   * ```typescript
+   * const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Group the attachment under a category of your choosing
+   * const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>, {
+   *   category: 'Invoice',
+   * });
+   * ```
+   */
+  linkAttachment(
+    attachmentId: string,
+    jobKey: string,
+    folderId: number,
+    options?: JobLinkAttachmentOptions
+  ): Promise<JobAttachmentGetResponse>;
 }
 
 /**
@@ -278,6 +350,37 @@ export interface JobMethods {
    * @returns Promise resolving to the new {@link JobGetResponse} with full job details
    */
   restart(): Promise<JobGetResponse>;
+
+  /**
+   * Gets all attachments linked to this job.
+   *
+   * @returns Promise resolving to an array of {@link JobAttachmentGetResponse} links, empty when the job has none
+   *
+   * @example
+   * ```typescript
+   * const job = await jobs.getById(<jobKey>, <folderId>);
+   * const attachments = await job.getAttachments();
+   * ```
+   */
+  getAttachments(): Promise<JobAttachmentGetResponse[]>;
+
+  /**
+   * Links an existing attachment to this job.
+   *
+   * @param attachmentId - The unique ID (GUID) of the attachment to link
+   * @param options - Optional settings for the link, such as its category
+   * @returns Promise resolving to the created {@link JobAttachmentGetResponse} link
+   *
+   * @example
+   * ```typescript
+   * const job = await jobs.getById(<jobKey>, <folderId>);
+   * const link = await job.linkAttachment(<attachmentId>, { category: 'Invoice' });
+   * ```
+   */
+  linkAttachment(
+    attachmentId: string,
+    options?: JobLinkAttachmentOptions
+  ): Promise<JobAttachmentGetResponse>;
 }
 
 /**
@@ -308,6 +411,19 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.restart(jobData.key, jobData.folderId);
+    },
+    async getAttachments(): Promise<JobAttachmentGetResponse[]> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.getAttachments(jobData.key, jobData.folderId);
+    },
+    async linkAttachment(
+      attachmentId: string,
+      options?: JobLinkAttachmentOptions
+    ): Promise<JobAttachmentGetResponse> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.linkAttachment(attachmentId, jobData.key, jobData.folderId, options);
     },
   };
 }
