@@ -1,4 +1,16 @@
-import { EntityType, FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
+import { EntityType, FieldDisplayType, EntityRecord, ReferenceType, SqlType, EntityUpdateByIdOptions } from './entities.types';
+
+/**
+ * Numeric v3 entity-class discriminator sent on create as
+ * `entityDefinition.entityClassId`. Wire-format counterpart of {@link EntityClass};
+ * internal — consumers pass {@link EntityClass} and the SDK translates via `EntityClassToIdMap`.
+ */
+export enum EntityClassId {
+  /** Native entity — data fully stored and managed within UiPath */
+  Native = 9,
+  /** Federated entity — unified read-only view across UiPath and external sources */
+  Federated = 10,
+}
 
 /**
  * Write-side payload shape for creating a new field in a schema upsert call.
@@ -64,6 +76,25 @@ export interface EntityJoinPayload {
   entity: string;
   on: { left: string; right: string };
 }
+
+/** Wire-ready Federated parts produced by `buildFederatedUpsertParts`. */
+export interface FederatedUpsertParts {
+  externalFields: Array<Record<string, unknown>>;
+  sourceJoinConditionDetails?: Array<Record<string, unknown>>;
+  entityClassId?: number;
+}
+
+/** The Federated source/join delta fields of `EntityUpdateByIdOptions`. */
+export type FederatedUpdateDeltas = Pick<
+  EntityUpdateByIdOptions,
+  | 'addExternalSources'
+  | 'removeExternalSources'
+  | 'addFieldsToSource'
+  | 'removeFieldsFromSource'
+  | 'updateExternalFieldMapping'
+  | 'addSourceJoins'
+  | 'updateSourceJoin'
+>;
 
 /**
  * Names of the per-field SQL constraint properties (i.e. the contents of `sqlType`

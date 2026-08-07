@@ -9,7 +9,9 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
+  DataDirectionType,
   EntityAggregateFunction,
+  EntityClass,
   EntityFieldDataType,
   EntityRecord,
   FieldDisplayType,
@@ -19,6 +21,12 @@ import {
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+
+// Record Ids are GUIDs (case-insensitive). Data Fabric endpoints return them in
+// different casing (v3 single-record read upper-cases; list/write and v1 lower-case),
+// so compare Ids case-insensitively rather than with exact string equality.
+const idsEqual = (a?: string | null, b?: string | null): boolean =>
+  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -242,7 +250,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
     });
 
-    // includeFolderEntities switches to the v2 endpoint, which returns tenant-level and
+    // includeFolderEntities switches to the v3 endpoint, which returns tenant-level and
     // folder-level entities together — a superset of the default tenant-only result.
     // Requires the OR.Users OAuth scope on the integration token.
     it('should return tenant and folder entities together when includeFolderEntities is true', async () => {
@@ -428,7 +436,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
   });
 
@@ -479,7 +487,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should batch insert multiple records using insertRecordsById', async () => {
@@ -669,7 +677,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entity.getRecord(recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should update records via entity.updateRecords', async () => {
@@ -764,7 +772,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(updateTestRecordId);
+      expect(idsEqual(result.Id, updateTestRecordId)).toBe(true);
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -1218,6 +1226,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(updated.description).toBe('Updated description');
     });
 
+    it('should enable analytics via isAnalyticsEnabled', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+      createdEntityIds.push(entityId);
+
+      // Exercises the isAnalyticsEnabled option end to end — the SDK sends it as the
+      // isInsightsEnabled wire field, which the API validates and round-trips back on read.
+      await entities.updateById(entityId, { isAnalyticsEnabled: true });
+
+      const updated = await entities.getById(entityId);
+      expect(updated.isAnalyticsEnabled).toBe(true);
+    });
+
     it('should add a new field to an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
@@ -1312,6 +1334,131 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const updated = after.fields.find(f => f.name === 'to_update');
       expect(updated?.displayName).toBe('After Update');
     });
+  });
+
+  // Skipped: needs DataFabric.Schema.Write scope AND a live Integration Service connection
+  // fixture (a federated entity requires a connector source). Standard CI has neither. To run
+  // locally against a federated-capable tenant, set: DF_FED_CONNECTION_ID,
+  // DF_FED_ELEMENT_INSTANCE_ID, DF_FED_CONNECTOR_KEY, DF_FED_OBJECT, DF_FED_OBJECT_METHOD
+  // (the operations-catalog JSON string from `is resources describe <connector> <object>
+  // --operation List`), DF_FED_PRIMARY_KEY, DF_FED_FIELD (an external field name on the object).
+  // Auto-runs once the federated env vars above are set (DF_FED_PRIMARY_KEY defaults to 'Id').
+  const federatedEnvReady = Boolean(
+    process.env.DF_FED_CONNECTION_ID &&
+      process.env.DF_FED_ELEMENT_INSTANCE_ID &&
+      process.env.DF_FED_CONNECTOR_KEY &&
+      process.env.DF_FED_OBJECT &&
+      process.env.DF_FED_OBJECT_METHOD &&
+      process.env.DF_FED_FIELD,
+  );
+  describe.skipIf(!federatedEnvReady)('updateById — federated source & join deltas', () => {
+    const entityFolderKey = getTestConfig().folderKey;
+    const conn = {
+      connectionId: process.env.DF_FED_CONNECTION_ID ?? '',
+      elementInstanceId: Number(process.env.DF_FED_ELEMENT_INSTANCE_ID ?? 0),
+      connectorKey: process.env.DF_FED_CONNECTOR_KEY ?? '',
+      connectorName: process.env.DF_FED_CONNECTOR_NAME ?? process.env.DF_FED_CONNECTOR_KEY ?? '',
+      folderKey: process.env.DF_FED_FOLDER_KEY ?? entityFolderKey,
+    };
+    const objectName = process.env.DF_FED_OBJECT ?? '';
+    const method = process.env.DF_FED_OBJECT_METHOD ?? '';
+    const primaryKey = process.env.DF_FED_PRIMARY_KEY ?? 'Id';
+    const externalField = process.env.DF_FED_FIELD ?? '';
+
+    async function createSingleSourceFederated(): Promise<string> {
+      const { entities } = getServices();
+      const name = `sdk_fed_${generateRandomString(8).toLowerCase()}`;
+      const id = await entities.create(name, [], {
+        folderKey: entityFolderKey,
+        entityClass: EntityClass.Federated,
+        externalFields: [
+          {
+            externalConnectionDetail: conn,
+            externalObjectDetail: { externalObjectName: objectName, primaryKey, isPrimarySource: true, method },
+            fields: [
+              {
+                field: { name: 'PkField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: primaryKey, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      createdEntityIds.push(id);
+      return id;
+    }
+
+    it('should create a single-source federated entity with EntityClass.Federated', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.entityClass).toBe(EntityClass.Federated);
+      expect(got.externalFields?.length).toBe(1);
+    });
+
+    it('should add a field to an existing source and preserve the source', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'AddedField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(names).toContain('PkField');
+      expect(names).toContain('AddedField');
+    });
+
+    it('should remove a field from a source and keep the source and its other fields', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      // Add a second field, then remove it — a real removeFieldsFromSource round-trip.
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'RemovableField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        removeFieldsFromSource: [{ sourceObjectName: objectName, fieldNames: ['RemovableField'] }],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(got.externalFields?.length).toBe(1);
+      expect(names).toContain('PkField');
+      expect(names).not.toContain('RemovableField');
+    });
+
+    // Cascade (join dropped when its source is removed via removeExternalSources) needs a
+    // two-source + join fixture — a second connector object that standard env vars don't
+    // configure. Left visible rather than faked on a single-source entity.
+    it.todo('should cascade-remove a join when its source is removed');
   });
 
   // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
@@ -1570,7 +1717,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   // Verifies the MULTILINE_MAX lazy-load contract end to end: list returns a size
-  // marker, getRecordById (v2 read) returns the full content. Creating the field
+  // marker, getRecordById (v3 read) returns the full content. Creating the field
   // needs DataFabric.Schema.Write scope, absent in the standard test env — so this is
   // gated on SCHEMA_WRITE_SCOPE_AVAILABLE and skipped there (a hard throw would redden
   // CI permanently). Runs in any environment whose PAT carries the scope.
@@ -1598,7 +1745,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(listedRecord!.body).toMatch(/^HasValue=true/);
       expect(listedRecord!.body).not.toBe(bodyValue);
 
-      // getRecordById (v2 read) returns the full content.
+      // getRecordById (v3 read) returns the full content.
       const full = await entities.getRecordById(entityId, inserted.Id);
       expect(full.body).toBe(bodyValue);
     });
@@ -1775,7 +1922,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(record.Id, folderRecordIds[0])).toBe(true);
     });
 
     it('should list paginated records with folderKey via getAllRecords', async () => {
@@ -1801,7 +1948,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.items)).toBe(true);
       // The folder header must reach the server for the row to be retrievable; the
       // filter narrows to the record we just inserted in this run.
-      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
+      expect(result.items.some((r) => idsEqual(r.Id, folderRecordIds[0]))).toBe(true);
     });
 
     it('should update a record with folderKey via updateRecordById', async () => {
@@ -1810,7 +1957,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(result.Id, folderRecordIds[0])).toBe(true);
     });
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
@@ -1846,7 +1993,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
           ],
         },
       });
-      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
+      expect(result.items.some((r) => idsEqual(r.Id, idToDelete))).toBe(false);
     });
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {
