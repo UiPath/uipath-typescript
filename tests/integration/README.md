@@ -199,6 +199,9 @@ These services do not support create/update/delete via SDK:
 - **ChoiceSets**: Read operations for choice sets
 - **Access**: Skipped tests for Data Fabric role listing, directory principals, and assignment validation until the CI app has the required DataFabric scopes
 
+#### Identity Services
+- **Identity**: Read and bulk create/update of a user's identity settings, snapshotting and restoring the values it touches
+
 #### Action Center Services
 - **Tasks**: Create, list, get by ID, assign, unassign, complete
 
@@ -240,6 +243,8 @@ Tests skip gracefully when:
 | `DATA_FABRIC_TEST_JOIN_FIELD_NAME` | Join key field on the base entity | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
+| `IDENTITY_TEST_USER_ID` | GUID of the user whose identity settings are read and round-tripped; must be in the test PAT's organization | (required for the Identity tests) |
+| `UIPATH_ORGANIZATION_ID` | Organization (account) GUID; identity settings reads fall back to the host partition without it | (required for the Identity tests) |
 
 ## Test Data Management
 

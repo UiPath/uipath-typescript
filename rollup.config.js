@@ -238,6 +238,11 @@ const serviceEntries = [
     name: 'functions',
     input: 'src/services/orchestrator/functions/index.ts',
     output: 'functions/index'
+  },
+  {
+    name: 'identity',
+    input: 'src/services/identity/index.ts',
+    output: 'identity/index'
   }
 ];
 
