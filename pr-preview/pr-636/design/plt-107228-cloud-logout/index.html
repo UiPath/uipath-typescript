@@ -2240,9 +2240,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-current-code-facts-this-plan-is-built-on" class="md-nav__link">
+  <a href="#5-code-before-this-change-the-facts-the-plan-was-built-on" class="md-nav__link">
     <span class="md-ellipsis">
-      5. Current code (facts this plan is built on)
+      5. Code before this change (the facts the plan was built on)
     </span>
   </a>
   
@@ -2286,18 +2286,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#73-extend-logout-opt-in-backward-compatible" class="md-nav__link">
+  <a href="#73-extend-logout-opt-in-backward-compatible-as-implemented" class="md-nav__link">
     <span class="md-ellipsis">
-      7.3 Extend logout() — opt-in, backward-compatible
+      7.3 Extend logout() — opt-in, backward-compatible (as implemented)
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#74-two-implementation-tiers" class="md-nav__link">
+  <a href="#74-both-tiers-ship-together-openid-selects-which-one-runs" class="md-nav__link">
     <span class="md-ellipsis">
-      7.4 Two implementation tiers
+      7.4 Both tiers ship together; openid selects which one runs
     </span>
   </a>
   
@@ -2327,9 +2327,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-dependencies-to-confirm-with-identity" class="md-nav__link">
+  <a href="#10-identity-dependencies-all-resolved" class="md-nav__link">
     <span class="md-ellipsis">
-      10. Dependencies to confirm with Identity
+      10. Identity dependencies — all resolved
     </span>
   </a>
   
@@ -2382,9 +2382,10 @@
 
 
 <h1 id="plt-107228-offer-cloud-logout-in-the-sdk-design-plan">PLT-107228 — Offer Cloud logout in the SDK (design &amp; plan)<a class="headerlink" href="#plt-107228-offer-cloud-logout-in-the-sdk-design-plan" title="Permanent link">&para;</a></h1>
-<p><strong>Status:</strong> Proposed · <strong>Type:</strong> Core-auth enhancement · <strong>Semver impact:</strong> minor (additive, backward-compatible)
+<p><strong>Status:</strong> Implemented (draft PR <a href="https://github.com/UiPath/uipath-typescript/pull/636">#636</a>) — pending the §11 alpha E2E matrix · <strong>Type:</strong> Core-auth enhancement · <strong>Semver impact:</strong> minor (additive, backward-compatible)
 <strong>Owner:</strong> Shivendra Tripathi · <strong>Reporter:</strong> Naren Venkateswaran
-<strong>Ticket:</strong> <a href="https://uipath.atlassian.net/browse/PLT-107228">PLT-107228</a></p>
+<strong>Ticket:</strong> <a href="https://uipath.atlassian.net/browse/APPS-35767">APPS-35767</a> — moved from <code>PLT-107228</code>, which no longer resolves as a key (branch and commit names keep the old key)
+<strong>Identity dependency:</strong> <a href="https://uipath.atlassian.net/browse/PLT-108129">PLT-108129</a> — <code>post_logout_redirect_uri</code> support · <strong>Merged, deployed to alpha 2026-08-06</strong></p>
 <hr />
 <h2 id="1-scope-read-this-first">1. Scope (read this first)<a class="headerlink" href="#1-scope-read-this-first" title="Permanent link">&para;</a></h2>
 <p>Per Raina Middha (clarifying the ticket): <strong>"The task for this ticket is to provide an option in the SDK to log out of <code>cloud.uipath.com</code>."</strong></p>
@@ -2459,13 +2460,13 @@
 </tbody>
 </table>
 <p>Neither can do the other's job. Therefore a complete logout <strong>must</strong> do both — this is the crux of the fix.</p>
-<h2 id="5-current-code-facts-this-plan-is-built-on">5. Current code (facts this plan is built on)<a class="headerlink" href="#5-current-code-facts-this-plan-is-built-on" title="Permanent link">&para;</a></h2>
+<h2 id="5-code-before-this-change-the-facts-the-plan-was-built-on">5. Code before this change (the facts the plan was built on)<a class="headerlink" href="#5-code-before-this-change-the-facts-the-plan-was-built-on" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>src/utils/constants/endpoints/identity.ts</code> — <code>IDENTITY_ENDPOINTS</code> has only <code>TOKEN</code> and <code>AUTHORIZE</code>; <strong>no end-session endpoint</strong>. (<code>IDENTITY_BASE = 'identity_'</code>, a relative path on <code>baseUrl</code>, so an endsession URL correctly targets uipath.com.)</li>
 <li><code>src/core/auth/service.ts</code> — <code>logout()</code> (~L258) calls <code>tokenManager.clearToken()</code> + removes <code>OAUTH_CONTEXT</code>/<code>CODE_VERIFIER</code> from <code>sessionStorage</code>. <strong>No navigation, no cookie touch, no network call.</strong></li>
 <li><code>token-manager.ts</code> — <code>clearToken()</code> removes <code>uipath_sdk_user_token-&lt;clientId&gt;</code>.</li>
 <li><code>types.ts</code> — <code>AuthToken</code> = <code>{ access_token, token_type, expires_in, scope, refresh_token? }</code> — <strong>no <code>id_token</code></strong>; <code>_getAccessToken</code> never reads one.</li>
-<li><code>getAuthorizationUrl</code> requests <code>scope + ' offline_access'</code> — <strong><code>openid</code> is not requested</strong>, so no <code>id_token</code> is issued today. (Relevant to Tier 2 only.)</li>
+<li><code>getAuthorizationUrl</code> requests <code>scope + ' offline_access'</code> — <code>openid</code> was never appended automatically, so no <code>id_token</code> was issued unless the consumer put <code>openid</code> in their configured scope. (Unchanged by this work — see §7.4 for why.)</li>
 </ul>
 <h2 id="6-what-cloud-logout-does-and-does-not-do-account-picker-clarification">6. What "cloud logout" does and does NOT do (account picker clarification)<a class="headerlink" href="#6-what-cloud-logout-does-and-does-not-do-account-picker-clarification" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2497,59 +2498,78 @@
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="k">this</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">baseUrl</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">IDENTITY_ENDPOINTS</span><span class="p">.</span><span class="nx">END_SESSION</span><span class="si">}</span><span class="sb">?</span><span class="si">${</span><span class="nx">q</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
 </code></pre></div>
-<h3 id="73-extend-logout-opt-in-backward-compatible">7.3 Extend <code>logout()</code> — opt-in, backward-compatible<a class="headerlink" href="#73-extend-logout-opt-in-backward-compatible" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">public</span><span class="w"> </span><span class="nx">logout</span><span class="p">(</span><span class="nx">options</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">endSession?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="nx">postLogoutRedirectUri?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">})</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">idTokenHint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">getIdToken</span><span class="o">?</span><span class="p">.();</span><span class="w">     </span><span class="c1">// undefined in Tier 1 / for old sessions</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">clearToken</span><span class="p">();</span><span class="w">                           </span><span class="c1">// #1: clears the sessionStorage token</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">OAUTH_CONTEXT</span><span class="p">);</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">CODE_VERIFIER</span><span class="p">);</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s1">&#39;Failed to clear OAuth context&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">e</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="c1">// NEW: opt-in cloud logout. Default path is byte-for-byte today&#39;s behavior.</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">options</span><span class="o">?</span><span class="p">.</span><span class="nx">endSession</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">buildEndSessionUrl</span><span class="p">({</span><span class="w">       </span><span class="c1">// #2: kills the Identity session</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">      </span><span class="nx">idTokenHint</span><span class="p">,</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="kt">options.postLogoutRedirectUri</span><span class="p">,</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="p">});</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">}</span>
+<h3 id="73-extend-logout-opt-in-backward-compatible-as-implemented">7.3 Extend <code>logout()</code> — opt-in, backward-compatible (as implemented)<a class="headerlink" href="#73-extend-logout-opt-in-backward-compatible-as-implemented" title="Permanent link">&para;</a></h3>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">public</span><span class="w"> </span><span class="nx">logout</span><span class="p">(</span><span class="nx">options?</span><span class="o">:</span><span class="w"> </span><span class="kt">LogoutOptions</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="c1">// Capture the ID token before clearToken() wipes it.</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">idTokenHint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">options</span><span class="o">?</span><span class="p">.</span><span class="nx">endSession</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">getIdToken</span><span class="p">()</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">undefined</span><span class="p">;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="c1">// Identity needs id_token_hint to sign out without a confirmation prompt</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="c1">// and to accept post_logout_redirect_uri (§10) — warn so the missing</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="c1">// `openid` scope is discoverable instead of failing silently.</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">options</span><span class="o">?</span><span class="p">.</span><span class="nx">endSession</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">isBrowser</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">idTokenHint</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s2">&quot;Cloud logout: no OIDC ID token is available … Add the &#39;openid&#39; scope …&quot;</span><span class="p">);</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="k">this</span><span class="p">.</span><span class="nx">tokenManager</span><span class="p">.</span><span class="nx">clearToken</span><span class="p">();</span><span class="w">                           </span><span class="c1">// #1: clears the sessionStorage token</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">OAUTH_CONTEXT</span><span class="p">);</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">      </span><span class="nx">sessionStorage</span><span class="p">.</span><span class="nx">removeItem</span><span class="p">(</span><span class="nx">AUTH_STORAGE_KEYS</span><span class="p">.</span><span class="nx">CODE_VERIFIER</span><span class="p">);</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s1">&#39;Failed to clear OAuth context&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">e</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="c1">// NEW: opt-in cloud logout. Default path is byte-for-byte today&#39;s behavior.</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">options</span><span class="o">?</span><span class="p">.</span><span class="nx">endSession</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">isBrowser</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">href</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">buildEndSessionUrl</span><span class="p">({</span><span class="w">       </span><span class="c1">// #2: kills the Identity session</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">      </span><span class="nx">idTokenHint</span><span class="p">,</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">      </span><span class="c1">// Caller-supplied; Identity validates it against the app&#39;s registered</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">      </span><span class="c1">// redirect URIs by exact string match (§10).</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">      </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="kt">options.postLogoutRedirectUri</span><span class="p">,</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="p">});</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="p">}</span>
 </code></pre></div>
+The <code>id_token</code> is captured from token responses (<code>AuthToken.id_token</code> → <code>TokenInfo.idToken</code>), survives page reloads (the whole <code>TokenInfo</code> is persisted to <code>sessionStorage</code>), and survives refreshes (a refresh response may omit <code>id_token</code>; the one from initial login is kept).
 The public <code>UiPath.logout()</code> wrapper (<code>src/core/uipath.ts</code>) threads the same options through.</p>
-<h3 id="74-two-implementation-tiers">7.4 Two implementation tiers<a class="headerlink" href="#74-two-implementation-tiers" title="Permanent link">&para;</a></h3>
+<h3 id="74-both-tiers-ship-together-openid-selects-which-one-runs">7.4 Both tiers ship together; <code>openid</code> selects which one runs<a class="headerlink" href="#74-both-tiers-ship-together-openid-selects-which-one-runs" title="Permanent link">&para;</a></h3>
+<p>Both paths are implemented, and which one a consumer gets is decided by whether their SDK config requests the <code>openid</code> scope. There is no flag and no version gate.</p>
 <table>
 <thead>
 <tr>
 <th></th>
-<th><strong>Tier 1 — minimal (recommended for v1)</strong></th>
-<th><strong>Tier 2 — seamless (follow-up)</strong></th>
+<th><strong>Without <code>openid</code></strong> (fallback)</th>
+<th><strong>With <code>openid</code></strong> (recommended)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Sent to endsession</td>
-<td><code>client_id</code> (+ optional <code>post_logout_redirect_uri</code>)</td>
-<td><code>id_token_hint</code> (+ optional <code>post_logout_redirect_uri</code>)</td>
-</tr>
-<tr>
-<td>Extra plumbing</td>
-<td>none</td>
-<td>request <code>openid</code>; add/capture/store <code>id_token</code>; <code>TokenManager.getIdToken()</code></td>
+<td><code>client_id</code></td>
+<td><code>id_token_hint</code></td>
 </tr>
 <tr>
 <td>Identity UX</td>
-<td>may show a "Sign out?" confirmation page (see §8, finding 3)</td>
-<td>fully silent logout</td>
+<td>asks the user to confirm sign-out (§10)</td>
+<td>signs out silently</td>
 </tr>
 <tr>
-<td>Works for already-logged-in users after update</td>
-<td>✅ immediately</td>
-<td>⚠️ only after re-login (old sessions have no <code>id_token</code>)</td>
+<td><code>postLogoutRedirectUri</code></td>
+<td><strong>ignored</strong> by Identity (§10)</td>
+<td>honored</td>
+</tr>
+<tr>
+<td>Cloud session terminated</td>
+<td>✅ (once confirmed)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>SDK behavior</td>
+<td>logs a warning naming <code>openid</code></td>
+<td>silent</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Recommendation:</strong> ship <strong>Tier 1</strong> to unblock the customer; treat Tier 2 as a follow-up. If Tier 2 lands, <code>id_token</code> absence <strong>must degrade gracefully</strong> (fall back to <code>client_id</code>) — never require a re-login as a precondition.</p>
+<p>Exactly one client identifier is sent, never both: RP-initiated logout requires Identity to reject a request whose <code>id_token_hint</code> and <code>client_id</code> disagree, so <code>client_id</code> is strictly the fallback branch.</p>
+<p><strong>Why <code>openid</code> is not appended automatically</strong> (the SDK does append <code>offline_access</code>): Calin confirmed <code>openid</code> <em>should</em> be granted by default for non-confidential apps, but "should" is not a guarantee for every already-registered External Application. If a registration lacked it, <code>/authorize</code> would fail and <strong>login would break outright</strong> — an unacceptable trade for a logout nicety. Consumers opt in, and the warning makes the missing scope discoverable. Revisit once alpha validation confirms <code>openid</code> is universally granted.</p>
 <h2 id="8-live-verification-on-the-real-uipathhost-topology">8. Live verification on the real <code>uipath.host</code> topology<a class="headerlink" href="#8-live-verification-on-the-real-uipathhost-topology" title="Permanent link">&para;</a></h2>
 <p>The data-fabric coded-app sample was deployed via the <code>uip</code> CLI to <strong><code>appsdev.alpha.uipath.host</code></strong> (org <code>appsdev</code>, tenant <code>appsdevDefault</code>, <code>baseUrl</code> alpha) and tested against <code>alpha.uipath.com</code> Identity. Findings:</p>
 <ol type="1">
@@ -2602,38 +2622,81 @@ The public <code>UiPath.logout()</code> wrapper (<code>src/core/uipath.ts</code>
 <p><strong>No coded app — existing or new — requires migration or re-registration, by design.</strong></p>
 <ul>
 <li><strong>Axis A — SDK consumer code: no migration.</strong> The new behavior is opt-in. Every existing <code>sdk.logout()</code> call behaves exactly as today (local clear, synchronous, no redirect). Adopting cloud logout is a one-line change (<code>logout({ endSession: true })</code>), not a migration. The default is <strong>not</strong> flipped to <code>true</code> (that would silently turn a non-navigating call into a full-page redirect — a breaking change); revisit the default only in a future major version.</li>
-<li><strong>Axis B — Identity registration: no migration in v1.</strong> If a <code>post_logout_redirect_uri</code> is sent, it typically must be pre-registered on the External App. v1 <strong>omits</strong> it (Identity lands on its own signed-out page), so <strong>no per-app registration change</strong>. Optional auto-return (reuse the registered login <code>redirect_uri</code> as a post-logout target) is a Tier-2 / Identity-supported enhancement.</li>
-<li><strong>Axis C — existing live sessions: no migration; graceful.</strong> Users logged in before the update have no stored <code>id_token</code>; Tier 1 doesn't need one. Tier 2 must skip <code>id_token_hint</code> when absent.</li>
+<li><strong>Axis B — Identity registration: none required.</strong> Per §10, Identity never persisted a <code>PostLogoutRedirectUris</code> collection for External Application clients, so there is no place to register one. PLT-108129 changed Identity to validate the passed URI against the app's <strong>registered redirect URIs</strong> (exact match) instead. Callers pass a registered URI — typically the app's login redirect — via <code>postLogoutRedirectUri</code>; omitted or mismatched values land the user on the Automation Cloud portal.</li>
+<li><strong>Axis C — existing live sessions: no migration; graceful.</strong> Users logged in before the update have no stored <code>id_token</code>; the endsession redirect still happens without one. Only the prompt-free experience and <code>post_logout_redirect_uri</code> need it, and the SDK warns rather than failing.</li>
 </ul>
-<h2 id="10-dependencies-to-confirm-with-identity">10. Dependencies to confirm with Identity<a class="headerlink" href="#10-dependencies-to-confirm-with-identity" title="Permanent link">&para;</a></h2>
+<h2 id="10-identity-dependencies-all-resolved">10. Identity dependencies — all resolved<a class="headerlink" href="#10-identity-dependencies-all-resolved" title="Permanent link">&para;</a></h2>
 <ul>
 <li>[x] <strong>Does endsession clear the correct session given the uipath.host/uipath.com split?</strong> — <strong>Resolved by §8</strong>: endsession kills the uipath.com session (portal logged out); no separate uipath.host auth session exists (isolation test). SDK-only fix is sufficient.</li>
-<li>[ ] Does <code>connect/endsession</code> work with <code>post_logout_redirect_uri</code> <strong>omitted</strong> (lands on Identity's signed-out page) — and can the registered login <code>redirect_uri</code> optionally be reused as a post-logout target (for auto-return, Tier 2)?</li>
-<li>[ ] Confirm in writing that end-session <strong>invalidates the refresh token</strong> (verbal yes from Calin Popa: <em>"if it initiates an endsession flow, then it will"</em>).</li>
-<li>[ ] Is <code>openid</code> scope grantable for coded-app external apps? (Tier 2 only.)</li>
-<li>[ ] Confirm <code>UiPathSessionId</code> on uipath.host is telemetry/correlation (not an auth gate) — behavior in §8 already indicates it is not.</li>
+<li>[x] <strong>Why was <code>post_logout_redirect_uri</code> ignored?</strong> — Root-caused in the Identity repo: <code>/connect/endsession</code> dropped it for coded-app / External Application clients because Identity <strong>never persisted a <code>PostLogoutRedirectUris</code> value for that client type at all</strong>. Duende IdentityServer (pinned at 7.4.3) can only validate the URI against a client resolved from <code>id_token_hint</code>; with that client's collection always empty, validation failed, the URI was dropped, and Identity's <code>UsePortalBaseUrlAsFallbackPostLogoutUrl</code> setting (on in every cloud ring) sent the user to the portal. <strong>Session termination itself was never affected — only the final redirect target.</strong></li>
+<li>[x] <strong>Is <code>client_id</code> alone sufficient to validate <code>post_logout_redirect_uri</code>, or is <code>id_token_hint</code> required?</strong> — <strong><code>id_token_hint</code> is required.</strong> Calin Popa: <em>"id_token is required (otherwise it is a security risk, endsession is an unauthenticated endpoint); w/o it the current experience is to prompt the users &amp; validate their intention."</em> This is why the SDK sends <code>client_id</code> <strong>only</strong> as a fallback and warns when no ID token is available.</li>
+<li>[x] <strong>Is <code>openid</code> in the default allowed-scopes list for coded-app external apps?</strong> — Yes for <strong>non-confidential</strong> apps (the SDK's browser OAuth flow). <strong>Confidential apps cannot be granted <code>openid</code> at all</strong> — Calin: <em>"openid's purpose is for the client to obtain information about the user; for confidential apps there is no user involved (and not endsession either)."</em> Consistent with <code>UiPath.logout()</code> already skipping end-session for secret-based config.</li>
+<li>[x] <strong>Is the fix shipped?</strong> — <strong>PLT-108129 is merged and deployed to alpha</strong> (Swapnil Shah, 2026-08-06: <em>"The change is merged and currently deploying to alpha … Please perform any validations from your end and let us know"</em>).</li>
+<li>[x] Confirm end-session <strong>invalidates the refresh token</strong> — Calin Popa: <em>"if it initiates an endsession flow, then it will."</em></li>
+<li>[x] Confirm <code>UiPathSessionId</code> on uipath.host is telemetry/correlation, not an auth gate — established by the §8 isolation test.</li>
 </ul>
+<p><strong>Answered during alpha validation (2026-08-07):</strong> Identity does <strong>not</strong> honor arbitrary URIs (Naren's original ask) — it validates <code>post_logout_redirect_uri</code> by <strong>exact string match against the app's registered redirect URI</strong>, and on any mismatch silently falls back to the portal. Observed with the localhost registration <code>http://localhost:5173</code>: passing <code>http://localhost:5173/</code> (trailing slash) → portal; passing it verbatim → returned to the app. Deployed, <code>https://appsdev.alpha.uipath.host/data-fabric-app</code> was honored verbatim. This is OAuth's simple-string-comparison rule (RFC 6749 §3.1.2.3) applied to post-logout URIs — consumers must pass the URI exactly as registered, trailing slash included.</p>
 <h2 id="11-testing-auth-paths-require-100-coverage-per-agent_docsrulesmd">11. Testing (auth paths require 100% coverage per <code>agent_docs/rules.md</code>)<a class="headerlink" href="#11-testing-auth-paths-require-100-coverage-per-agent_docsrulesmd" title="Permanent link">&para;</a></h2>
 <p>Unit (<code>tests/unit/core/auth/</code>):
 - End-session URL construction: with/without <code>id_token_hint</code>, with/without <code>post_logout_redirect_uri</code>, <code>client_id</code> fallback.
+- <code>client_id</code> is <strong>never</strong> sent alongside <code>id_token_hint</code>.
+- Missing-ID-token warning: fires for <code>endSession: true</code> without an ID token, names <code>postLogoutRedirectUri</code> when one was passed, silent when an ID token exists, silent for local-only logout.
 - <code>logout()</code> / <code>logout({ endSession: false })</code> → <strong>no navigation</strong>, storage cleared (proves Axis-A back-compat).
 - <code>logout({ endSession: true })</code> in browser → <code>window.location.href</code> set to the end-session URL.
 - Non-browser (<code>isBrowser === false</code>) → no navigation.</p>
-<p>Manual E2E (redirect flow — not headlessly assertable, like login; note the skip per rules): on the deployed <code>uipath.host</code> app, <code>logout({ endSession: true })</code> → confirm the app logs out <strong>and</strong> the next sign-in shows the Identity login screen (not a silent return). This is the single-flow test that reflects the actual fix (the two-tab endsession-only test does not).</p>
+<p>Manual E2E (redirect flow — not headlessly assertable, like login; note the skip per rules). Run on the <code>data-fabric-app</code> sample against <strong>alpha</strong>, first on <code>localhost:5173</code>, then deployed to <code>https://appsdev.alpha.uipath.host/data-fabric-app</code>. The sample's <strong>Sign out</strong> button performs the full flow — <code>logout({ endSession: true, postLogoutRedirectUri })</code> in <code>AuthContext.tsx</code>, passing the app URL (origin + pathname, trailing slash stripped, so it equals the registered redirect URI):</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Config</th>
+<th>Action</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>openid</code> in scope (default)</td>
+<td>click <strong>Sign out</strong></td>
+<td>no confirmation page; browser bounces through Identity and returns <strong>to the app</strong>, signed out — the PLT-108129 fix. Before it: portal.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>openid</code> in scope</td>
+<td>after #1, sign in again</td>
+<td>Identity <strong>prompts</strong> for credentials — no silent re-auth (the original bug)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>openid</code> <strong>removed</strong> from <code>uipath.json</code> scope (restart dev server)</td>
+<td>click <strong>Sign out</strong></td>
+<td>console warning naming <code>openid</code>; Identity shows its confirm-sign-out page; after confirming, lands on the <strong>portal</strong> (redirect ignored)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>openid</code> in scope; a <code>postLogoutRedirectUri</code> that differs from the registered redirect URI</td>
+<td>click <strong>Sign out</strong></td>
+<td>✅ <strong>Answered 2026-08-07</strong> (accidentally — a trailing-slash mismatch): exact-match validation, mismatch → silent portal fallback. See §10.</td>
+</tr>
+</tbody>
+</table>
+<p>Case 1 ✅ (deployed) and case 2 ✅ (Entra number-matching MFA prompt on re-login — the org's login federates to Microsoft via <code>idp: auth0|microsoft</code>, so a <em>real</em> logout surfaces the IdP's MFA policy) were validated on 2026-08-07. The exact-match finding drove two design iterations: an SDK-side default to <code>config.redirectUri</code> was implemented and validated, then <strong>dropped by product decision (2026-08-08)</strong> in favor of the explicit <code>postLogoutRedirectUri</code> option — the parameter is Identity's new capability (PLT-108129) and the SDK surfaces it directly rather than coupling logout to the login redirect. Consequence: consumers (and the sample) must pass the URI exactly as registered — the sample strips the trailing slash from <code>origin + pathname</code> for this reason.</p>
+<p><strong>Identity-side confirmation (Swapnil Shah, telemetry, 2026-08-08):</strong> with the SDK default in place, both environments' UX flows were captured as curls and checked server-side — <code>post_logout_redirect_uri=http://localhost:5173</code> <strong>accepted</strong>, <code>post_logout_redirect_uri=https://appsdev.alpha.uipath.host/data-fabric-app</code> <strong>also worked</strong>. Notes from the captures: (a) both flows carried <code>id_token_hint</code> with <code>aud</code> = the app's clientId — both environments run on the <strong>same</strong> External Application (<code>17945bbd-…</code>), whose registered redirect URIs include both values, which is exactly the set Identity validates against; (b) the deployed flow hits end-session on <code>alpha.api.uipath.com</code> (the platform-injected <code>baseUrl</code>) while the token <code>iss</code> is <code>alpha.uipath.com/identity_</code> — same Identity behind both hosts, session termination confirmed by the re-login prompt; (c) ID tokens are <strong>5-minute</strong> tokens — both tests logged out seconds after login, and per the OIDC RP-initiated-logout spec (and Duende defaults) an <em>expired</em> ID token is still valid as a hint, but a logout after a &gt;5-minute session is a cheap sanity test still worth running once.</p>
 <h2 id="12-docs-release">12. Docs &amp; release<a class="headerlink" href="#12-docs-release" title="Permanent link">&para;</a></h2>
 <ul>
 <li>JSDoc on the public <code>logout()</code>: the opt-in flag, redirect behavior, and the caveat that an already-issued access token stays valid ~60 min (no revocation — SMBC #1, out of scope).</li>
 <li>Short logout guide / auth-docs update showing <code>logout({ endSession: true })</code>.</li>
-<li><code>docs/oauth-scopes.md</code> only if Tier 2 adds <code>openid</code>.</li>
+<li>No <code>docs/oauth-scopes.md</code> entry: that file maps API methods to <code>OR.*</code> resource scopes; <code>openid</code> is an OIDC identity scope on the consumer's own config, documented in <code>docs/authentication.md</code> and the <code>LogoutOptions</code> JSDoc.</li>
 <li><strong>Two PRs</strong> per repo rule: (1) feature (no version bump); (2) a <strong>separate</strong> version-bump PR (minor).</li>
 </ul>
 <h2 id="13-rollout-summary">13. Rollout summary<a class="headerlink" href="#13-rollout-summary" title="Permanent link">&para;</a></h2>
 <ol type="1">
-<li>Implement Tier 1 (§7.1–7.3) — <code>logout({ endSession: true })</code> = clear token <strong>+</strong> endsession redirect (with <code>client_id</code>; <code>id_token_hint</code> if/when Tier 2).</li>
-<li>Unit tests (§11) + the single-flow manual E2E on the deployed <code>uipath.host</code> app.</li>
-<li>Docs (§12); feature PR; separate version-bump PR.</li>
-<li>Customer message: on <code>logout({ endSession: true })</code> the app session and Identity/cloud session (and refresh token) are terminated and the next sign-in prompts; <strong>already-issued access tokens remain valid ~60 min</strong> (separate Identity item).</li>
-<li>(Later) Tier 2 for prompt-free logout + optional auto-return, pending the §10 Identity confirmations.
+<li>✅ Implement §7.1–7.3 — <code>logout({ endSession: true })</code> = clear token <strong>+</strong> endsession redirect, <code>id_token_hint</code> when <code>openid</code> is configured and <code>client_id</code> otherwise.</li>
+<li>✅ Unit tests (§11).</li>
+<li><strong>Now:</strong> run the §11 alpha E2E matrix on <code>data-fabric-app</code> (localhost, then deployed) and report back on the PLT-108129 thread — Swapnil explicitly asked for validation.</li>
+<li>Docs (§12); undraft the feature PR; separate version-bump PR.</li>
+<li>Customer message: on <code>logout({ endSession: true })</code> the app session and Identity/cloud session (and refresh token) are terminated and the next sign-in prompts; pass <code>postLogoutRedirectUri</code> (exactly a registered redirect URI) plus the <code>openid</code> scope to return the user to the app afterwards; <strong>already-issued access tokens remain valid ~60 min</strong> (separate Identity item, SMBC #1).
 ```</li>
 </ol>
 

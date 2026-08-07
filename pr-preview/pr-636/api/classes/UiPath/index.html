@@ -2701,10 +2701,11 @@ Automation Cloud session: the browser is redirected to the Identity
 end-session endpoint (invalidating the refresh token as well), so the next
 sign-in prompts for credentials. Note that an already-issued access token
 remains valid until its natural expiry.</p>
-<p>For the smoothest cloud logout, include the <code>openid</code> scope in your SDK
-configuration — the SDK then sends the OIDC ID token as <code>id_token_hint</code>,
-letting Identity skip its logout-confirmation prompt and honor
-<code>postLogoutRedirectUri</code>.</p>
+<p>Include the <code>openid</code> scope in your SDK configuration — the SDK then sends
+the OIDC ID token as <code>id_token_hint</code>, which lets Identity skip its
+logout-confirmation prompt and is required for <code>postLogoutRedirectUri</code> to
+be honored. Without it the SDK logs a warning and Identity prompts the
+user instead.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2728,11 +2729,14 @@ letting Identity skip its logout-confirmation prompt and honor
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default — previous behavior)</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also log out of Automation Cloud (redirects the browser)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// Log out of Automation Cloud and return the user to your app</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="kt">window.location.origin</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also log out of Automation Cloud (redirects the browser; without a</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// postLogoutRedirectUri the user lands on the Automation Cloud portal)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1">// Log out of Automation Cloud and return the user to your app — the</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1">// value must exactly match a redirect URI registered on your</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1">// External Application</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;your-registered-redirect-uri&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.logout</code></p>
