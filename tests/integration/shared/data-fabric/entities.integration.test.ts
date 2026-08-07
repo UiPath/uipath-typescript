@@ -844,13 +844,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
-      if (!config.dataFabricTestJoinFieldName) {
-        throw new Error('DATA_FABRIC_TEST_JOIN_FIELD_NAME env var is required for the havingFilter test (used as the groupBy field)');
-      }
-      const groupField = config.dataFabricTestJoinFieldName;
+      // Group by Id: always present on every entity, no fixture coupling — one
+      // group per record, each with cnt = 1, which keeps both assertions meaningful.
       const base = {
-        selectedFields: [groupField],
-        groupBy: [groupField],
+        selectedFields: ['Id'],
+        groupBy: ['Id'],
         aggregates: [
           { function: EntityAggregateFunction.Count, field: 'Id', alias: 'cnt' },
         ],
@@ -867,7 +865,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
       expect(all.items.length).toBeGreaterThan(0);
       all.items.forEach(item => {
-        expect((item as Record<string, any>).cnt).toBeGreaterThanOrEqual(1);
+        expect((item as Record<string, unknown>).cnt).toBeGreaterThanOrEqual(1);
       });
 
       // An unsatisfiable threshold must return no groups. A backend that ignores

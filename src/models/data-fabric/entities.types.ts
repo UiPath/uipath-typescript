@@ -270,8 +270,8 @@ export interface EntityHavingCondition {
 /**
  * Post-aggregation filter (SQL `HAVING`) applied to grouped aggregate results.
  *
- * Requires `aggregates` and `groupBy` on the query. Supported for native (LDO)
- * entities only, and gated by the tenant's `enable-having-on-query` feature
+ * Requires `aggregates` and `groupBy` on the query. Supported for native entities
+ * only; gated by the tenant's `enable-having-on-query` feature
  * flag — the server responds 400 when either doesn't hold. Maximum 5 conditions.
  */
 export interface EntityHavingFilter {
