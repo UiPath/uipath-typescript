@@ -25,6 +25,12 @@ const sections = [
     removeSource: true,
   },
   {
+    source: 'api/interfaces/TaskServiceModel.md',
+    dest: 'api/interfaces/task/index.md',
+    header: '---\ntitle: Tasks\n---\n',
+    removeSource: true,
+  },
+  {
     source: 'api/interfaces/AttachmentServiceModel.md',
     dest: 'api/interfaces/attachments/index.md',
     header: '---\ntitle: Attachments\n---\n',

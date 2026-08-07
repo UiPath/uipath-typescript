@@ -5,7 +5,7 @@ import {
   DataFabricRoleService,
   Entities,
 } from '../../../src/services/data-fabric';
-import { Tasks } from '../../../src/services/action-center';
+import { Tasks, TaskCatalogs } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
 import {
@@ -48,6 +48,7 @@ export interface TestServices {
   dataFabricRoles: DataFabricRoleService;
   dataFabricDirectory: DataFabricDirectoryService;
   tasks: Tasks;
+  taskCatalogs?: TaskCatalogs;
   assets: Assets;
   buckets: Buckets;
   queues: Queues;
@@ -140,6 +141,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     dataFabricRoles: new DataFabricRoleService(sdk),
     dataFabricDirectory: new DataFabricDirectoryService(sdk),
     tasks: new Tasks(sdk),
+    taskCatalogs: new TaskCatalogs(sdk),
     assets: new Assets(sdk),
     buckets: new Buckets(sdk),
     queues: new Queues(sdk),

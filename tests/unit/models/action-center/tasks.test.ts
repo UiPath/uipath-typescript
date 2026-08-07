@@ -23,6 +23,11 @@ describe('Task Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getUsers: vi.fn(),
+      saveData: vi.fn(),
+      saveTags: vi.fn(),
+      editMetadata: vi.fn(),
+      getComments: vi.fn(),
+      createComment: vi.fn(),
     } as any;
   });
 
@@ -365,6 +370,121 @@ describe('Task Models', () => {
         })).rejects.toThrow('Folder ID is required');
       });
     });
+
+    describe('task.saveData()', () => {
+      it('should call service.saveData with the task id and default folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        mockService.saveData = vi.fn().mockResolvedValue(undefined);
+
+        await task.saveData({ amount: 1200 });
+
+        expect(mockService.saveData).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          { amount: 1200 },
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+      });
+
+      it('should throw error if taskId is undefined', async () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        await expect(task.saveData({})).rejects.toThrow('Task ID is undefined');
+      });
+    });
+
+    describe('task.saveTags()', () => {
+      it('should call service.saveTags with the task id and default folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        mockService.saveTags = vi.fn().mockResolvedValue(undefined);
+        const tags = [{ name: 'urgent', displayName: 'Urgent', displayValue: 'yes' }];
+
+        await task.saveTags(tags);
+
+        expect(mockService.saveTags).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          tags,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+      });
+
+      it('should throw error if taskId is undefined', async () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        await expect(task.saveTags([])).rejects.toThrow('Task ID is undefined');
+      });
+    });
+
+    describe('task.editMetadata()', () => {
+      it('should call service.editMetadata with the task id and default folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        mockService.editMetadata = vi.fn().mockResolvedValue(undefined);
+
+        await task.editMetadata({ title: 'Renamed' });
+
+        expect(mockService.editMetadata).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          { title: 'Renamed', folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+      });
+
+      it('should respect an explicit folder override instead of the task folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        mockService.editMetadata = vi.fn().mockResolvedValue(undefined);
+
+        await task.editMetadata({ title: 'Renamed', folderKey: 'other-folder' });
+
+        expect(mockService.editMetadata).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          { title: 'Renamed', folderKey: 'other-folder' },
+        );
+      });
+
+      it('should throw error if taskId is undefined', async () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        await expect(task.editMetadata({ title: 'x' })).rejects.toThrow('Task ID is undefined');
+      });
+    });
+
+    describe('task.getComments()', () => {
+      it('should call service.getComments with the task id and default folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        const mockResponse = { items: [], totalCount: 0 };
+        mockService.getComments = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await task.getComments();
+
+        expect(mockService.getComments).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should throw error if taskId is undefined', () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        expect(() => task.getComments()).toThrow('Task ID is undefined');
+      });
+    });
+
+    describe('task.createComment()', () => {
+      it('should call service.createComment with the task id, text and default folder', async () => {
+        const task = createTaskWithMethods(createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID }), mockService);
+        const mockComment = { id: 1, text: 'Escalated' };
+        mockService.createComment = vi.fn().mockResolvedValue(mockComment);
+
+        const result = await task.createComment('Escalated');
+
+        expect(mockService.createComment).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          'Escalated',
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+        expect(result).toEqual(mockComment);
+      });
+
+      it('should throw error if taskId is undefined', async () => {
+        const task = createTaskWithMethods(createBasicTask({ id: undefined }), mockService);
+        await expect(task.createComment('x')).rejects.toThrow('Task ID is undefined');
+      });
+    });
   });
 
   describe('Task data and methods are combined correctly', () => {
@@ -388,6 +508,11 @@ describe('Task Models', () => {
       expect(typeof task.reassign).toBe('function');
       expect(typeof task.unassign).toBe('function');
       expect(typeof task.complete).toBe('function');
+      expect(typeof task.saveData).toBe('function');
+      expect(typeof task.saveTags).toBe('function');
+      expect(typeof task.editMetadata).toBe('function');
+      expect(typeof task.getComments).toBe('function');
+      expect(typeof task.createComment).toBe('function');
     });
   });
 });

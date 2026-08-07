@@ -91,7 +91,8 @@ plugins:
           - api/interfaces/ProcessServiceModel.md: Process service methods
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
-          - api/interfaces/TaskServiceModel.md: Task service methods
+          - api/interfaces/task/index.md: Task service methods
+          - api/interfaces/TaskCatalogServiceModel.md: Task catalog service methods
           - api/interfaces/attachments/index.md: Attachment service methods
           - api/interfaces/entity/index.md: Entity service methods
           - api/interfaces/ChoiceSetServiceModel.md: Choice set service methods
@@ -208,7 +209,9 @@ nav:
           - Jobs: api/interfaces/JobServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
-          - Tasks: api/interfaces/TaskServiceModel.md
+          - Tasks:
+            - api/interfaces/task/index.md
+            - Task Catalogs: api/interfaces/TaskCatalogServiceModel.md
           - Traces:
             - api/interfaces/traces/index.md
             - Agent: api/interfaces/AgentTracesServiceModel.md
