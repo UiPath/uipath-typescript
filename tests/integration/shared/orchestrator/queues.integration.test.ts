@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { generateRandomString } from '../../utils/helpers';
-import { QueueItemStatus, QueuePriority } from '../../../../src/models/orchestrator/queues.types';
+import { QueueItemReviewStatus, QueueItemStatus, QueuePriority } from '../../../../src/models/orchestrator/queues.types';
+import type { QueueGetResponse } from '../../../../src/models/orchestrator/queues.models';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -125,8 +126,10 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
   // remain in that queue — which is why the tests refuse to run against
   // arbitrary queues.
   describe('Queue items and transactions', () => {
-    /** Resolves the dedicated test queue, throwing when preconditions are unmet. */
-    async function getTestQueue() {
+    // The queue does not change between tests — resolve it once.
+    let testQueue!: QueueGetResponse;
+
+    beforeAll(async () => {
       const { queues } = getServices();
       const config = getTestConfig();
 
@@ -149,11 +152,11 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
         );
       }
 
-      return result.items[0];
-    }
+      testQueue = result.items[0];
+    });
 
     it('should insert an item and return it with payload keys preserved exactly', async () => {
-      const queue = await getTestQueue();
+      const queue = testQueue;
       const reference = `sdk-it-${generateRandomString(10)}`;
 
       // Mixed key casing on purpose — the SDK must not case-convert
@@ -181,17 +184,23 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       // Transform validation: camelCase fields present with values...
       expect(item.createdTime).toBeDefined();
       expect(item.key).toBeDefined();
-      // ...original PascalCase wire fields absent...
+      expect(item.reviewStatus).toBe(QueueItemReviewStatus.None);
+      expect(item.processingStartTime).toBeNull();
+      expect(item.folderId).toBe(queue.folderId);
+      // ...original PascalCase / renamed wire fields absent...
       expect((item as any).CreationTime).toBeUndefined();
       expect((item as any).QueueDefinitionId).toBeUndefined();
       expect((item as any).SpecificContent).toBeUndefined();
+      expect((item as any).startProcessing).toBeUndefined();
+      // ...the JSON-string wire duplicates dropped...
+      expect((item as any).specificDataJson).toBeUndefined();
+      expect((item as any).outputDataJson).toBeUndefined();
       // ...and the payload keys preserved EXACTLY as provided.
       expect(item.specificData).toEqual(payload);
-      expect(item.specificDataJson).toContain('InvoiceId');
     });
 
     it('should round-trip every insert field the low-code parity contract requires', async () => {
-      const queue = await getTestQueue();
+      const queue = testQueue;
       const reference = `sdk-it-${generateRandomString(10)}`;
 
       // PLT-104203 requires AddQueueItem to support Name, SpecificContent,
@@ -220,7 +229,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
     });
 
     it('should list queue items filtered by reference', async () => {
-      const queue = await getTestQueue();
+      const queue = testQueue;
       const reference = `sdk-it-${generateRandomString(10)}`;
 
       await queue.insertItem({ InvoiceId: reference }, { reference });
@@ -236,7 +245,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
     });
 
     it('should paginate queue items', async () => {
-      const queue = await getTestQueue();
+      const queue = testQueue;
       const reference = `sdk-it-${generateRandomString(10)}`;
 
       // Ensure at least one item exists

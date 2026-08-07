@@ -2,9 +2,9 @@ import { BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
- * Interface for queue response
+ * Raw queue shape returned by the API, before bound methods are attached.
  */
-export interface QueueGetResponse {
+export interface RawQueueGetResponse {
   key: string;
   name: string;
   id: number;
@@ -64,7 +64,7 @@ export enum QueueItemStatus {
   New = 'New',
   /** Handed out to a consumer and locked (an active transaction) */
   InProgress = 'InProgress',
-  /** Processing failed (see `processingException`) */
+  /** Processing failed (see `processingError`) */
   Failed = 'Failed',
   /** Processing completed successfully */
   Successful = 'Successful',
@@ -75,6 +75,13 @@ export enum QueueItemStatus {
   /** The item was deleted */
   Deleted = 'Deleted'
 }
+
+/**
+ * Value allowed in a queue item payload. Payloads are flat — every value is
+ * a simple scalar (`Date` values are serialized to ISO-8601 strings); nested
+ * objects and arrays are rejected.
+ */
+export type QueueItemValue = string | number | boolean | Date | null | undefined;
 
 /**
  * Optional settings for inserting a queue item.
@@ -113,9 +120,33 @@ export interface QueueInsertItemOptions {
 }
 
 /**
+ * Review status of a failed queue item.
+ */
+export enum QueueItemReviewStatus {
+  /** The item is not under review */
+  None = 'None',
+  /** The item is being reviewed */
+  InReview = 'InReview',
+  /** The failure was reviewed and confirmed */
+  Verified = 'Verified',
+  /** The item was re-queued for another attempt after review */
+  Retried = 'Retried'
+}
+
+/**
+ * Category of a queue processing failure.
+ */
+export enum QueueExceptionType {
+  /** A transient system error — the item is eligible for retry */
+  ApplicationException = 'ApplicationException',
+  /** The item's data cannot be processed — the item is not retried */
+  BusinessException = 'BusinessException'
+}
+
+/**
  * Failure details recorded when a transaction completes unsuccessfully.
  */
-export interface QueueProcessingException {
+export interface QueueProcessingError {
   /**
    * Short reason for the failure (e.g. "Vendor not found").
    */
@@ -125,26 +156,23 @@ export interface QueueProcessingException {
    */
   details?: string;
   /**
-   * Exception category. Orchestrator distinguishes `BusinessException`
-   * (the item's data cannot be processed — not retried) from
-   * `ApplicationException` (a transient system error — eligible for retry).
+   * Failure category — see {@link QueueExceptionType}.
    */
-  type?: string;
+  type?: QueueExceptionType;
   /**
    * Optional path to a screenshot or image associated with the failure.
    */
   associatedImageFilePath?: string;
   /**
-   * Timestamp when the exception was recorded. Set by Orchestrator on
-   * responses.
+   * Timestamp when the failure was recorded. Present on responses.
    */
-  creationTime?: string;
+  createdTime?: string;
 }
 
 /**
- * Queue item response shape.
+ * A queue work item.
  */
-export interface QueueItemResponse {
+export interface QueueItem {
   /** Queue item identifier */
   id: number;
   /** Queue item key (GUID) */
@@ -152,35 +180,23 @@ export interface QueueItemResponse {
   /** Current processing status */
   status: QueueItemStatus;
   /** Review status for failed items */
-  reviewStatus: string;
+  reviewStatus: QueueItemReviewStatus;
   /** Processing priority */
   priority: QueuePriority;
   /** Identifier of the queue that owns the item */
   queueId: number;
   /**
-   * The item's business payload as a ready-to-use object.
-   *
-   * Orchestrator names the source field `SpecificContent`. Its keys are
-   * user-defined and are returned exactly as stored — the SDK performs no
-   * case conversion on them.
+   * The item's business payload. Keys are user-defined and are returned
+   * exactly as stored — the SDK performs no case conversion on them.
    */
   specificData: Record<string, unknown> | null;
   /**
-   * Raw JSON-string form of the payload as returned by Orchestrator
-   * (`SpecificData` on the wire).
-   */
-  specificDataJson: string | null;
-  /**
-   * Output payload written back when the item completed, as an object.
-   * Keys are user-defined and returned exactly as stored.
+   * Output payload written back when the item completed. Keys are
+   * user-defined and returned exactly as stored.
    */
   outputData: Record<string, unknown> | null;
-  /**
-   * Raw JSON-string form of the output payload (`OutputData` on the wire).
-   */
-  outputDataJson: string | null;
   /** Failure details when the item failed processing */
-  processingException: QueueProcessingException | null;
+  processingError: QueueProcessingError | null;
   /** Free-form progress text */
   progress: string | null;
   /** User-defined business identifier */
@@ -194,13 +210,13 @@ export interface QueueItemResponse {
   /** The time after which the item is at risk of breaching the SLA */
   riskSlaDate: string | null;
   /** Timestamp when processing started (set once a transaction begins) */
-  startProcessing: string | null;
+  processingStartTime: string | null;
   /** Timestamp when processing ended */
-  endProcessing: string | null;
+  processingEndTime: string | null;
   /** Number of times the item has been retried */
   retryNumber: number;
   /** Folder identifier the item belongs to */
-  folderId?: number;
-  /** Folder display path returned by Orchestrator */
-  folderName?: string;
+  folderId: number;
+  /** Folder display path */
+  folderName: string;
 }

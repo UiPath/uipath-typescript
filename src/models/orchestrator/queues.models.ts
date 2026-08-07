@@ -1,12 +1,16 @@
 import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
-  QueueGetResponse,
+  RawQueueGetResponse,
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
-  QueueItemResponse
+  QueueItem,
+  QueueItemValue
 } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+
+/** Combined response type for queue data with bound methods. */
+export type QueueGetResponse = RawQueueGetResponse & QueueMethods;
 
 /**
  * Service for managing UiPath Queues
@@ -29,8 +33,7 @@ export interface QueueServiceModel {
    * Gets all queues across folders with optional filtering and folder scoping
    *
    * @param options Query options including optional folderId and pagination options
-   * @returns Promise resolving to either an array of queues NonPaginatedResponse<QueueWithMethods> or a PaginatedResponse<QueueWithMethods> when pagination options are used. Each queue has methods attached for operating on its items.
-   * {@link QueueWithMethods}
+   * @returns Promise resolving to either a {@link QueueGetResponse} array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
    * @example
    * ```typescript
    * // Standard array return
@@ -63,8 +66,8 @@ export interface QueueServiceModel {
    */
   getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueWithMethods>
-      : NonPaginatedResponse<QueueWithMethods>
+      ? PaginatedResponse<QueueGetResponse>
+      : NonPaginatedResponse<QueueGetResponse>
   >;
 
   /**
@@ -72,8 +75,7 @@ export interface QueueServiceModel {
    *
    * @param id - Queue ID
    * @param folderId - Required folder ID
-   * @returns Promise resolving to a queue definition with methods attached for operating on its items
-   * {@link QueueWithMethods}
+   * @returns Promise resolving to a {@link QueueGetResponse} — the queue definition with methods attached for operating on its items
    * @example
    * ```typescript
    * // Get queue by ID
@@ -81,9 +83,13 @@ export interface QueueServiceModel {
    *
    * // Operate on the queue directly via the attached methods
    * const items = await queue.getAllItems();
+   * const item = await queue.insertItem({
+   *   invoiceId: 'INV-1001',
+   *   amount: 1520
+   * });
    * ```
    */
-  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueWithMethods>;
+  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
 
   /**
    * Gets the items of a queue with optional filtering and pagination
@@ -94,11 +100,9 @@ export interface QueueServiceModel {
    * @param queueId - Queue ID
    * @param folderId - Required folder ID
    * @param options Query options including filtering and pagination options
-   * @returns Promise resolving to either an array of queue items NonPaginatedResponse<QueueItemResponse> or a PaginatedResponse<QueueItemResponse> when pagination options are used.
-   * {@link QueueItemResponse}
+   * @returns Promise resolving to either a {@link QueueItem} array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueItem>` when pagination options are used.
    * @example
    * ```typescript
-   * // First, get queues with queues.getAll()
    * const items = await queues.getAllItems(<queueId>, <folderId>);
    *
    * // Failed items only, newest first
@@ -108,6 +112,12 @@ export interface QueueServiceModel {
    *   pageSize: 25
    * });
    * ```
+   * @example
+   * ```typescript
+   * // Or operate on a queue returned by getById/getAll
+   * const queue = await queues.getById(<queueId>, <folderId>);
+   * const items = await queue.getAllItems();
+   * ```
    */
   getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueId: number,
@@ -115,26 +125,25 @@ export interface QueueServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueItemResponse>
-      : NonPaginatedResponse<QueueItemResponse>
+      ? PaginatedResponse<QueueItem>
+      : NonPaginatedResponse<QueueItem>
   >;
 
   /**
-   * Inserts a new item into a queue by queue name (producer operation)
+   * Inserts a new item into a queue by queue name
    *
    * Returns the created queue item including its id, status, and the stored
    * payload. The payload keys are user-defined and are stored and returned
    * exactly as provided.
    *
-   * The payload must be flat: values have to be simple scalars (string, number,
-   * boolean, date). Nested objects and arrays are rejected by Orchestrator.
+   * The payload must be flat — values are simple scalars (see
+   * {@link QueueItemValue}); nested objects and arrays are rejected.
    *
    * @param queueName - Name of the queue to insert into
    * @param folderId - Required folder ID
    * @param specificData - The item's business payload (stored as the queue item's specific content)
    * @param options Optional item metadata (priority, reference, defer/due dates)
-   * @returns Promise resolving to the created queue item
-   * {@link QueueItemResponse}
+   * @returns Promise resolving to the created {@link QueueItem}
    * @example
    * ```typescript
    * import { QueuePriority } from '@uipath/uipath-typescript/queues';
@@ -158,9 +167,9 @@ export interface QueueServiceModel {
   insertItemByName(
     queueName: string,
     folderId: number,
-    specificData: Record<string, unknown>,
+    specificData: Record<string, QueueItemValue>,
     options?: QueueInsertItemOptions
-  ): Promise<QueueItemResponse>;
+  ): Promise<QueueItem>;
 }
 
 /**
@@ -173,36 +182,28 @@ export interface QueueMethods {
    * Gets this queue's items with optional filtering and pagination.
    *
    * @param options Query options including filtering and pagination options
-   * @returns Promise resolving to the queue's items
-   * {@link QueueItemResponse}
+   * @returns Promise resolving to the queue's {@link QueueItem} entries
    */
   getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueItemResponse>
-      : NonPaginatedResponse<QueueItemResponse>
+      ? PaginatedResponse<QueueItem>
+      : NonPaginatedResponse<QueueItem>
   >;
 
   /**
-   * Inserts a new item into this queue (producer operation).
+   * Inserts a new item into this queue.
    *
-   * The payload must be flat — nested objects and arrays are rejected by
-   * Orchestrator.
+   * The payload must be flat — nested objects and arrays are rejected.
    *
    * @param specificData - The item's business payload (keys are stored exactly as provided)
    * @param options Optional item metadata (priority, reference, defer/due dates)
-   * @returns Promise resolving to the created queue item
-   * {@link QueueItemResponse}
+   * @returns Promise resolving to the created {@link QueueItem}
    */
   insertItem(
-    specificData: Record<string, unknown>,
+    specificData: Record<string, QueueItemValue>,
     options?: QueueInsertItemOptions
-  ): Promise<QueueItemResponse>;
+  ): Promise<QueueItem>;
 }
-
-/**
- * Queue metadata combined with queue-bound helper methods.
- */
-export type QueueWithMethods = QueueGetResponse & QueueMethods;
 
 /**
  * Creates queue methods bound to a specific queue's data
@@ -210,15 +211,19 @@ export type QueueWithMethods = QueueGetResponse & QueueMethods;
  * @param service - The queue service instance
  * @returns Object containing queue methods
  */
-function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueMethods {
+function createQueueMethods(queueData: RawQueueGetResponse, service: QueueServiceModel): QueueMethods {
   return {
-    getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(options?: T) {
+    async getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(options?: T): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<QueueItem>
+        : NonPaginatedResponse<QueueItem>
+    > {
       if (queueData.id === undefined) throw new Error('Queue ID is undefined');
       if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
       return service.getAllItems(queueData.id, queueData.folderId, options);
     },
 
-    insertItem(specificData: Record<string, unknown>, options?: QueueInsertItemOptions): Promise<QueueItemResponse> {
+    async insertItem(specificData: Record<string, QueueItemValue>, options?: QueueInsertItemOptions): Promise<QueueItem> {
       if (!queueData.name) throw new Error('Queue name is undefined');
       if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
       return service.insertItemByName(queueData.name, queueData.folderId, specificData, options);
@@ -232,6 +237,6 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
  * @param service - The queue service instance
  * @returns Queue data with bound methods
  */
-export function createQueueWithMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueWithMethods {
+export function createQueueWithMethods(queueData: RawQueueGetResponse, service: QueueServiceModel): QueueGetResponse {
   return Object.assign({}, queueData, createQueueMethods(queueData, service));
 }

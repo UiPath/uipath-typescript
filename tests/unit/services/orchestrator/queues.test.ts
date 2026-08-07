@@ -14,9 +14,12 @@ import { createMockError } from '../../../utils/mocks/core';
 import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
+  QueueExceptionType,
+  QueueItemReviewStatus,
   QueueItemStatus,
   QueuePriority
 } from '../../../../src/models/orchestrator/queues.types';
+import { ValidationError } from '../../../../src/core/errors';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { QUEUE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -392,25 +395,84 @@ describe('QueueService Unit Tests', () => {
       // Renamed fields carry their values
       expect(item.id).toBe(QUEUE_TEST_CONSTANTS.ITEM_ID);
       expect(item.status).toBe(QueueItemStatus.New);
+      expect(item.reviewStatus).toBe(QueueItemReviewStatus.None);
       expect(item.priority).toBe(QueuePriority.High);
       expect(item.queueId).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
       expect(item.createdTime).toBe(QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME);
       expect(item.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
       expect(item.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
       expect(item.reference).toBe(QUEUE_TEST_CONSTANTS.ITEM_REFERENCE);
+      expect(item.processingStartTime).toBeNull();
+      expect(item.processingEndTime).toBeNull();
+      expect(item.processingError).toBeNull();
 
       // The business payload keeps its keys EXACTLY as stored (mixed casing) —
       // no case conversion is applied to user-defined keys.
       expect(item.specificData).toEqual(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
-      // The raw JSON-string wire form surfaces under the explicit *Json name.
-      expect(item.specificDataJson).toBe(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_DATA_JSON);
+      // The JSON-string wire duplicates are dropped from the SDK shape.
+      expect((item as any).specificDataJson).toBeUndefined();
+      expect((item as any).outputDataJson).toBeUndefined();
 
-      // Original PascalCase fields are gone
+      // Original PascalCase / renamed wire fields are gone
       expect((item as any).QueueDefinitionId).toBeUndefined();
       expect((item as any).CreationTime).toBeUndefined();
       expect((item as any).SpecificContent).toBeUndefined();
       expect((item as any).SpecificData).toBeUndefined();
       expect((item as any).OrganizationUnitId).toBeUndefined();
+      expect((item as any).startProcessing).toBeUndefined();
+      expect((item as any).endProcessing).toBeUndefined();
+      expect((item as any).processingException).toBeUndefined();
+    });
+
+    it('should transform the nested processing error, including its createdTime rename', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection()
+      );
+
+      await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const item = (config as any).transformFn(createMockRawQueueItem({
+        Status: 'Failed',
+        ProcessingException: {
+          Reason: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_REASON,
+          Details: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_DETAILS,
+          Type: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_TYPE,
+          CreationTime: QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME
+        }
+      }));
+
+      expect(item.status).toBe(QueueItemStatus.Failed);
+      expect(item.processingError).toEqual({
+        reason: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_REASON,
+        details: QUEUE_TEST_CONSTANTS.TRANSACTION_FAILURE_DETAILS,
+        type: QueueExceptionType.BusinessException,
+        createdTime: QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME
+      });
+      // The nested wire-name variants are gone
+      expect((item.processingError as any).creationTime).toBeUndefined();
+      expect((item as any).processingException).toBeUndefined();
+    });
+
+    it('should throw a ValidationError when queueId is missing', async () => {
+      await expect(queueService.getAllItems(
+        undefined as unknown as number,
+        TEST_CONSTANTS.FOLDER_ID
+      )).rejects.toThrow(ValidationError);
+
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should throw a ValidationError when folderId is missing', async () => {
+      await expect(queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        undefined as unknown as number
+      )).rejects.toThrow(ValidationError);
+
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
     it('should handle API errors', async () => {
@@ -496,6 +558,26 @@ describe('QueueService Unit Tests', () => {
         TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should throw a ValidationError when queueName is missing', async () => {
+      await expect(queueService.insertItemByName(
+        undefined as unknown as string,
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+      )).rejects.toThrow(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw a ValidationError when folderId is missing', async () => {
+      await expect(queueService.insertItemByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        undefined as unknown as number,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+      )).rejects.toThrow(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
     });
   });
 });

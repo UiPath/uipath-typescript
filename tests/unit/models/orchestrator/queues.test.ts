@@ -52,11 +52,11 @@ describe('Queue Models', () => {
         expect(result).toEqual(mockResponse);
       });
 
-      it('should throw when the queue ID is undefined', () => {
+      it('should reject when the queue ID is undefined', async () => {
         const queueData = createBasicQueue({ id: undefined as unknown as number });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        expect(() => queue.getAllItems()).toThrow('Queue ID is undefined');
+        await expect(queue.getAllItems()).rejects.toThrow('Queue ID is undefined');
         expect(mockService.getAllItems).not.toHaveBeenCalled();
       });
     });
@@ -87,21 +87,21 @@ describe('Queue Models', () => {
         expect(result).toEqual(createdItem);
       });
 
-      it('should throw when the queue name is undefined', () => {
+      it('should reject when the queue name is undefined', async () => {
         const queueData = createBasicQueue({ name: undefined as unknown as string });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        expect(() => queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
-          .toThrow('Queue name is undefined');
+        await expect(queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
+          .rejects.toThrow('Queue name is undefined');
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
 
-      it('should throw when the folder ID is undefined', () => {
+      it('should reject when the folder ID is undefined', async () => {
         const queueData = createBasicQueue({ folderId: undefined as unknown as number });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        expect(() => queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
-          .toThrow('Folder ID is undefined');
+        await expect(queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
+          .rejects.toThrow('Folder ID is undefined');
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
     });

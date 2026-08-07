@@ -3,9 +3,10 @@
  * Uses generic utilities from core.ts for base functionality
  */
 import {
-  QueueGetResponse,
-  QueueItemResponse,
+  RawQueueGetResponse,
+  QueueItem,
   QueueItemStatus,
+  QueueItemReviewStatus,
   QueuePriority
 } from '../../../src/models/orchestrator/queues.types';
 import { createMockBaseResponse, createMockCollection } from './core';
@@ -52,7 +53,7 @@ export const createMockRawQueue = (overrides: Partial<any> = {}): any => {
  * @param overrides - Optional overrides for specific fields
  * @returns Queue with transformed field names (camelCase)
  */
-export const createBasicQueue = (overrides: Partial<QueueGetResponse> = {}): QueueGetResponse => {
+export const createBasicQueue = (overrides: Partial<RawQueueGetResponse> = {}): RawQueueGetResponse => {
   return createMockBaseResponse({
     id: QUEUE_TEST_CONSTANTS.QUEUE_ID,
     name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
@@ -159,12 +160,12 @@ export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
  * @param overrides - Optional overrides for specific fields
  * @returns Queue item with transformed field names (camelCase)
  */
-export const createBasicQueueItem = (overrides: Partial<QueueItemResponse> = {}): QueueItemResponse => {
+export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueItem => {
   return createMockBaseResponse({
     id: QUEUE_TEST_CONSTANTS.ITEM_ID,
     key: QUEUE_TEST_CONSTANTS.ITEM_KEY,
     status: QueueItemStatus.New,
-    reviewStatus: QUEUE_TEST_CONSTANTS.ITEM_REVIEW_STATUS,
+    reviewStatus: QueueItemReviewStatus.None,
     priority: QueuePriority.High,
     queueId: QUEUE_TEST_CONSTANTS.QUEUE_ID,
     reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE,
@@ -173,13 +174,11 @@ export const createBasicQueueItem = (overrides: Partial<QueueItemResponse> = {})
     deferDate: QUEUE_TEST_CONSTANTS.ITEM_DEFER_DATE,
     dueDate: QUEUE_TEST_CONSTANTS.ITEM_DUE_DATE,
     riskSlaDate: null,
-    startProcessing: null,
-    endProcessing: null,
-    processingException: null,
+    processingStartTime: null,
+    processingEndTime: null,
+    processingError: null,
     specificData: QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT as Record<string, unknown>,
-    specificDataJson: QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_DATA_JSON,
     outputData: null,
-    outputDataJson: null,
     createdTime: QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME,
     folderId: TEST_CONSTANTS.FOLDER_ID,
     folderName: TEST_CONSTANTS.FOLDER_NAME,
