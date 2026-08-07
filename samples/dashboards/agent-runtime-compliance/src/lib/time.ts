@@ -37,9 +37,18 @@ const RANGE_MS: Record<RangeKey, number> = {
   '30d': 2_592_000_000,
 }
 
+/** Granularity `end` is rounded down to, so widgets mounting a few ms apart
+ *  produce an identical window. The SDK serializes times with
+ *  `toISOString()` (ms precision), and the fetch cache keys read POSTs by
+ *  URL + body — an unrounded `new Date()` per widget yields a distinct key
+ *  each time, so the several widgets sharing a range would each hit the API
+ *  instead of collapsing to one call. */
+const WINDOW_QUANTUM_MS = 60_000
+
 /** Fresh [start, end] window for an in-card range toggle, computed at call
- *  time (unlike the module-load constants above) so a re-fetch reflects now. */
+ *  time (unlike the module-load constants above) so a re-fetch reflects now,
+ *  quantized to {@link WINDOW_QUANTUM_MS} so concurrent widgets share it. */
 export function rangeWindow(range: RangeKey): { start: Date; end: Date } {
-  const end = new Date()
+  const end = new Date(Math.floor(Date.now() / WINDOW_QUANTUM_MS) * WINDOW_QUANTUM_MS)
   return { start: new Date(end.getTime() - RANGE_MS[range]), end }
 }
