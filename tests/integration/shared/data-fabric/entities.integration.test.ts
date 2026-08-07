@@ -11,6 +11,7 @@ import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidP
 import {
   EntityAggregateFunction,
   EntityFieldDataType,
+  EntityHavingOperator,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -831,6 +832,53 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(row.total).toBeDefined();
       expect(typeof row.total).toBe('number');
       expect(row.total).toBeGreaterThanOrEqual(0);
+    });
+
+    // The tenant must have the `enable-having-on-query` feature flag; without it the
+    // server rejects havingFilter with a 400 naming the flag, which fails this test
+    // loudly rather than letting the coverage be silently absent.
+    it('should filter grouped results with havingFilter (HAVING)', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      // Group by Id: always present on every entity, no fixture coupling — one
+      // group per record, each with cnt = 1, which keeps both assertions meaningful.
+      const base = {
+        selectedFields: ['Id'],
+        groupBy: ['Id'],
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: 'Id', alias: 'cnt' },
+        ],
+      };
+
+      // Every group has at least one record, so `cnt >= 1` must return every group.
+      const all = await entities.queryRecordsById(entityId, {
+        ...base,
+        havingFilter: {
+          aggregateFilters: [
+            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThanOrEqual, value: '1' },
+          ],
+        },
+      });
+      expect(all.items.length).toBeGreaterThan(0);
+      all.items.forEach(item => {
+        expect((item as Record<string, unknown>).cnt).toBeGreaterThanOrEqual(1);
+      });
+
+      // An unsatisfiable threshold must return no groups. A backend that ignores
+      // havingFilter returns every group here — that is the failing signal.
+      const none = await entities.queryRecordsById(entityId, {
+        ...base,
+        havingFilter: {
+          aggregateFilters: [
+            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThan, value: '1000000000' },
+          ],
+        },
+      });
+      expect(none.items.length).toBe(0);
     });
 
     // Regression guard: DF reads `expansionLevel` only from the URL on POST record endpoints.
