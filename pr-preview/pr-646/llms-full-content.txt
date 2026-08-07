@@ -504,6 +504,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Queues                            | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
+| Tasks                             | `getComments()`            | ✅ Yes                 |
+| TaskCatalogs                      | `getAll()`                 | ✅ Yes                 |
 | ConversationalAgent.conversations | `getAll()`                 | ❌ No                  |
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
@@ -1836,6 +1838,54 @@ const task = await tasks.create({
 }, <folderId>); // folderId is required
 ```
 
+### createComment()
+
+> **createComment**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCommentGetResponse`>
+
+Creates a comment on a task.
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task the comment belongs to
+- `text`: `string` — Comment text (max 512 characters)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCommentGetResponse`>
+
+Promise resolving to [TaskCommentGetResponse](../TaskCommentGetResponse/)
+
+#### Example
+
+```
+const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <folderId> });
+```
+
+### editMetadata()
+
+> **editMetadata**(`taskId`: `number`, `options?`: `TaskEditMetadataOptions`): `Promise`\<`void`>
+
+Edits a task's metadata (title, priority, catalog association, etc.).
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task to edit
+- `options?`: `TaskEditMetadataOptions` — Fields to change plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the edit completes
+
+#### Example
+
+```
+import { TaskPriority } from '@uipath/uipath-typescript/tasks';
+await tasks.editMetadata(<taskId>, { title: "Review invoice", priority: TaskPriority.High, folderId: <folderId> });
+```
+
 ### getAll()
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskGetResponse`> : `NonPaginatedResponse`\<`TaskGetResponse`>>
@@ -1926,6 +1976,91 @@ console.log(formTask.formLayout);
 
 // Get a document validation task by ID (faster with taskType provided in the options)
 const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
+```
+
+### getComments()
+
+> **getComments**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Gets the comments for a task.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCommentGetByTaskIdOptions` = `TaskCommentGetByTaskIdOptions`
+
+#### Parameters
+
+- `taskId`: `number` — The task to list comments for
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCommentGetResponse](../TaskCommentGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
+
+// Paginated
+const page1 = await tasks.getComments(<taskId>, { folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await tasks.getComments(<taskId>, { folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getDataById()
+
+> **getDataById**(`id`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task id.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `id`: `number` — The task id to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+console.log(task.data);
+```
+
+### getDataByKey()
+
+> **getDataByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task key.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `key`: `string` — The task key (GUID) to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
+console.log(task.data);
 ```
 
 ### getUsers()
@@ -2022,6 +2157,54 @@ const result2 = await tasks.reassign({
 });
 ```
 
+### saveData()
+
+> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+
+Saves a task's data (form/task payload), replacing the existing payload.
+
+#### Parameters
+
+- `taskId`: `number` — The task to update
+- `data`: `Record`\<`string`, `unknown`> — The task data to save (replaces the existing payload)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Example
+
+```
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
+```
+
+### saveTags()
+
+> **saveTags**(`taskId`: `number`, `tags`: `Tag`[], `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+
+Saves the tags on a task, replacing any existing tags.
+
+#### Parameters
+
+- `taskId`: `number` — The task to tag
+- `tags`: `Tag`[] — The tags to set
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Example
+
+```
+await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], { folderId: <folderId> });
+```
+
 ### unassign()
 
 > **unassign**(`taskId`: `number` | `number`[]): `Promise`\<`OperationResponse`\<`TaskAssignmentResponse`[] | { `taskId`: `number`; }[]>>
@@ -2050,6 +2233,185 @@ const result = await task.unassign();
 
 // Unassign multiple tasks
 const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
+```
+
+Service for managing UiPath Action Center task catalogs.
+
+A task catalog is a reusable, folder-scoped definition that groups related tasks and configures how they behave: data retention (delete or archive the tasks after a retention period), encryption of task data, and tags. A task is linked to a catalog through its metadata (see `editMetadata`) to inherit that configuration. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+
+### Usage
+
+```
+import { TaskCatalogs } from '@uipath/uipath-typescript/tasks';
+
+const taskCatalogs = new TaskCatalogs(sdk);
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+```
+
+## Methods
+
+### create()
+
+> **create**(`name`: `string`, `options?`: `TaskCatalogCreateOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Creates a task catalog.
+
+#### Parameters
+
+- `name`: `string` — Name of the task catalog (max 50 characters)
+- `options?`: `TaskCatalogCreateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Examples
+
+```
+const catalog = await taskCatalogs.create("Invoices", { description: "Invoice tasks", folderId: <folderId> });
+```
+
+```
+import { TaskCatalogRetentionAction } from '@uipath/uipath-typescript/tasks';
+const catalog = await taskCatalogs.create("Invoices", {
+  retentionAction: TaskCatalogRetentionAction.Delete,
+  retentionPeriod: 30,
+  folderId: <folderId>
+});
+```
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Gets task catalogs in a folder.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCatalogGetAllOptions` = `TaskCatalogGetAllOptions`
+
+#### Parameters
+
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCatalogGetResponse](../TaskCatalogGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+
+// Paginated
+const page1 = await taskCatalogs.getAll({ folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await taskCatalogs.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getById()
+
+> **getById**(`id`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by id.
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogGetByIdOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getById(<catalogId>, { folderId: <folderId> });
+```
+
+### getByName()
+
+> **getByName**(`name`: `string`, `options?`: `TaskCatalogGetByNameOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by name within a folder.
+
+#### Parameters
+
+- `name`: `string` — The task catalog name
+- `options?`: `TaskCatalogGetByNameOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the matching task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> });
+```
+
+### updateById()
+
+> **updateById**(`id`: `number`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by id. Name, description and retention are preserved when not passed; tags are replaced only when provided (the catalog is not returned with its tags, so they cannot be auto preserved).
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description, keep everything else
+await taskCatalogs.updateById(<catalogId>, { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateById(<catalogId>, { name: "Invoices 2025", folderId: <folderId> });
+```
+
+### updateByName()
+
+> **updateByName**(`name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by name, resolving the id internally. Name, description and retention are preserved when not passed; tags are replaced only when provided.
+
+#### Parameters
+
+- `name`: `string` — The current name of the task catalog to update
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description
+await taskCatalogs.updateByName("Invoices", { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateByName("Invoices", { name: "Invoices 2025", folderId: <folderId> });
 ```
 
 Service for managing UiPath Orchestrator Attachments.
