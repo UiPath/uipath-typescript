@@ -36,6 +36,12 @@ export interface IntegrationConfig {
   dataFabricTestJoinRelatedEntityName?: string;
   dataFabricTestJoinRelatedFieldName?: string;
   orchestratorAttachmentId?: string;
+  /**
+   * Name of a dedicated queue used by the queue item / transaction
+   * integration tests (items are inserted into it). The write tests throw
+   * when it is not configured, so they never mutate arbitrary queues.
+   */
+  queuesTestQueueName?: string;
   jobsTestFolderId?: string;
   tasksTestUserGroupId?: string;
   tasksTestUserId?: string;
@@ -99,6 +105,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
     dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
+    queuesTestQueueName: typeof rawConfig.queuesTestQueueName === 'string' ? rawConfig.queuesTestQueueName : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
     tasksTestUserGroupId: typeof rawConfig.tasksTestUserGroupId === 'string' ? rawConfig.tasksTestUserGroupId : undefined,
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
@@ -146,6 +153,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
     dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
+    queuesTestQueueName: process.env.QUEUES_TEST_QUEUE_NAME || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
     tasksTestUserGroupId: process.env.TASKS_TEST_USER_GROUP_ID || undefined,
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
