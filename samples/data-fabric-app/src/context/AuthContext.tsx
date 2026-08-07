@@ -73,8 +73,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /**
+   * Signs the user out of the app AND Automation Cloud (OIDC RP-initiated
+   * logout): local tokens are cleared, then the browser is redirected to
+   * Identity's end-session endpoint and returned here via
+   * `postLogoutRedirectUri`. The next sign-in prompts for credentials.
+   * Requires the `openid` scope (see uipath.json) — without it, Identity
+   * shows a confirmation page and skips the return redirect (the SDK logs
+   * a warning).
+   *
+   * For an app-only logout — cloud session survives, next sign-in is
+   * silent — call `sdk.logout()` with no options instead.
+   */
   const logout = () => {
-    sdk.logout()
+    sdk.logout({
+      endSession: true,
+      // Identity validates this against the app's registered redirect URIs
+      // by EXACT string match, and registrations carry no trailing slash —
+      // on localhost, pathname is "/" and "http://localhost:5173/" would be
+      // silently rejected (landing the user on the portal). Strip it.
+      postLogoutRedirectUri: (
+        window.location.origin + window.location.pathname
+      ).replace(/\/$/, ''),
+    })
+    // The redirect is asynchronous — clear UI state for the interim tick.
     setIsAuthenticated(false)
     setError(null)
   }

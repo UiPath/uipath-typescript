@@ -24,6 +24,8 @@ describe('AuthService logout end-session (browser)', () => {
     scope: TEST_CONSTANTS.OAUTH_SCOPE
   };
 
+  const POST_LOGOUT_REDIRECT_URI = 'https://myapp.example.com/logged-out';
+
   let sessionStore: Record<string, string>;
   let windowStub: { location: { href: string }; document: object };
 
@@ -75,6 +77,16 @@ describe('AuthService logout end-session (browser)', () => {
     expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
     const params = new URL(windowStub.location.href).searchParams;
     expect(params.get('client_id')).toBe(TEST_CONSTANTS.CLIENT_ID);
+  });
+
+  it('should omit post_logout_redirect_uri when not provided', () => {
+    const service = createService();
+
+    service.logout({ endSession: true });
+
+    // The parameter is caller-supplied only — without it Identity lands the
+    // user on the Automation Cloud portal.
+    const params = new URL(windowStub.location.href).searchParams;
     expect(params.has('post_logout_redirect_uri')).toBe(false);
   });
 
@@ -92,12 +104,11 @@ describe('AuthService logout end-session (browser)', () => {
 
   it('should include post_logout_redirect_uri when provided', () => {
     const service = createService();
-    const postLogoutRedirectUri = 'https://myapp.example.com/logged-out';
 
-    service.logout({ endSession: true, postLogoutRedirectUri });
+    service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
 
     const params = new URL(windowStub.location.href).searchParams;
-    expect(params.get('post_logout_redirect_uri')).toBe(postLogoutRedirectUri);
+    expect(params.get('post_logout_redirect_uri')).toBe(POST_LOGOUT_REDIRECT_URI);
   });
 
   it('should omit client_id when the config has none', () => {
@@ -124,6 +135,18 @@ describe('AuthService logout end-session (browser)', () => {
     expect(params.get('id_token_hint')).toBe(TEST_CONSTANTS.ID_TOKEN);
   });
 
+  it('should send client_id only as a fallback, never alongside id_token_hint', () => {
+    const service = createService();
+    service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+
+    service.logout({ endSession: true });
+
+    // RP-initiated logout requires Identity to reject a request where
+    // id_token_hint and client_id identify different clients.
+    const params = new URL(windowStub.location.href).searchParams;
+    expect(params.has('client_id')).toBe(false);
+  });
+
   it('should omit id_token_hint when no id_token is available', () => {
     const service = createService();
     service.updateToken({ token: 'access-token', type: 'oauth' });
@@ -144,5 +167,50 @@ describe('AuthService logout end-session (browser)', () => {
     expect(new URL(windowStub.location.href).searchParams.get('id_token_hint')).toBe(TEST_CONSTANTS.ID_TOKEN);
     // ...and the stored id_token was cleared as part of logout.
     expect(service.getTokenManager().getIdToken()).toBeUndefined();
+  });
+
+  describe('missing ID token warning', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('should warn that Identity will prompt when no id_token is available', () => {
+      const service = createService();
+
+      service.logout({ endSession: true });
+
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("'openid'"));
+    });
+
+    it('should warn that postLogoutRedirectUri is ignored when no id_token is available', () => {
+      const service = createService();
+
+      service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
+
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('postLogoutRedirectUri'));
+    });
+
+    it('should not warn when an id_token is available', () => {
+      const service = createService();
+      service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+
+      service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn for a local-only logout', () => {
+      const service = createService();
+
+      service.logout();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 });

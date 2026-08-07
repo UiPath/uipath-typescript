@@ -34,11 +34,17 @@ export interface LogoutOptions {
    */
   endSession?: boolean;
   /**
-   * URL the user is returned to after the cloud session is terminated.
-   * Must be registered as an allowed post-logout redirect URI on the
-   * External Application, and is only honored when an `id_token_hint` is
-   * available (see `endSession`). When omitted, Identity shows its own
-   * signed-out page.
+   * URL the user is returned to after the cloud session is terminated — pass
+   * this to bring the user back to your app instead of the Automation Cloud
+   * portal. Identity validates the value against the redirect URIs registered
+   * on your External Application by **exact string match** (even a
+   * trailing-slash difference is a mismatch), so pass the URI exactly as it
+   * is registered — typically your app's login redirect URI.
+   *
+   * Only honored when an `id_token_hint` is available, so the `openid` scope
+   * is required for it to take effect (see `endSession`). When omitted,
+   * mismatched, or no ID token is available, the user lands on the
+   * Automation Cloud portal instead.
    */
   postLogoutRedirectUri?: string;
 }

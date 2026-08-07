@@ -266,6 +266,16 @@ export class AuthService {
     // Capture the ID token before clearToken() wipes it.
     const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
 
+    // Identity needs id_token_hint to sign the user out without a confirmation
+    // prompt and to accept post_logout_redirect_uri; there is none without `openid`.
+    if (options?.endSession && isBrowser && !idTokenHint) {
+      console.warn(
+        'Cloud logout: no OIDC ID token is available, so Identity will ask the user to confirm sign-out' +
+        (options.postLogoutRedirectUri ? ' and will ignore postLogoutRedirectUri' : '') +
+        ". Add the 'openid' scope to your SDK configuration to avoid this."
+      );
+    }
+
     this.tokenManager.clearToken();
 
     // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
@@ -282,8 +292,10 @@ export class AuthService {
     }
 
     if (options?.endSession && isBrowser) {
-      window.location.href = this._buildEndSessionUrl({
+      window.location.href = this.buildEndSessionUrl({
         idTokenHint,
+        // Caller-supplied; Identity validates it against the app's registered
+        // redirect URIs by exact string match (PLT-108129).
         postLogoutRedirectUri: options.postLogoutRedirectUri
       });
     }
@@ -383,12 +395,13 @@ export class AuthService {
    * available so Identity can skip its confirmation prompt and validate
    * `post_logout_redirect_uri`; otherwise falls back to `client_id`.
    */
-  private _buildEndSessionUrl(params: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
+  private buildEndSessionUrl(params: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
     const queryParams = new URLSearchParams();
+    // Exactly one client identifier: RP-initiated logout requires Identity to
+    // reject the request when id_token_hint and client_id disagree.
     if (params.idTokenHint) {
       queryParams.set('id_token_hint', params.idTokenHint);
-    }
-    if (this.config.clientId) {
+    } else if (this.config.clientId) {
       queryParams.set('client_id', this.config.clientId);
     }
     if (params.postLogoutRedirectUri) {

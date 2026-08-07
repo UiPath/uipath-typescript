@@ -297,10 +297,11 @@ export class UiPath implements IUiPath {
    * sign-in prompts for credentials. Note that an already-issued access token
    * remains valid until its natural expiry.
    *
-   * For the smoothest cloud logout, include the `openid` scope in your SDK
-   * configuration — the SDK then sends the OIDC ID token as `id_token_hint`,
-   * letting Identity skip its logout-confirmation prompt and honor
-   * `postLogoutRedirectUri`.
+   * Include the `openid` scope in your SDK configuration — the SDK then sends
+   * the OIDC ID token as `id_token_hint`, which lets Identity skip its
+   * logout-confirmation prompt and is required for `postLogoutRedirectUri` to
+   * be honored. Without it the SDK logs a warning and Identity prompts the
+   * user instead.
    *
    * @param options - Logout behavior options
    *
@@ -309,11 +310,14 @@ export class UiPath implements IUiPath {
    * // Local logout only (default — previous behavior)
    * sdk.logout();
    *
-   * // Also log out of Automation Cloud (redirects the browser)
+   * // Also log out of Automation Cloud (redirects the browser; without a
+   * // postLogoutRedirectUri the user lands on the Automation Cloud portal)
    * sdk.logout({ endSession: true });
    *
-   * // Log out of Automation Cloud and return the user to your app
-   * sdk.logout({ endSession: true, postLogoutRedirectUri: window.location.origin });
+   * // Log out of Automation Cloud and return the user to your app — the
+   * // value must exactly match a redirect URI registered on your
+   * // External Application
+   * sdk.logout({ endSession: true, postLogoutRedirectUri: '<your-registered-redirect-uri>' });
    * ```
    */
   public logout(options?: LogoutOptions): void {
