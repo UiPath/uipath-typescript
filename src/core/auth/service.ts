@@ -1,7 +1,7 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
-import { AuthToken, TokenInfo, OAuthContext } from './types';
+import { AuthToken, TokenInfo, OAuthContext, LogoutOptions } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
@@ -242,8 +242,28 @@ export class AuthService {
 
   /**
    * Clears all authentication state including tokens and stored OAuth context.
+   * With `endSession: true`, additionally redirects the browser to the
+   * Identity end-session endpoint so the Automation Cloud session (and
+   * refresh token) are terminated — local cleanup alone cannot reach them,
+   * and without this the next sign-in silently reuses the cloud session.
+   * When an OIDC ID token is available (the `openid` scope was requested), it
+   * is sent as `id_token_hint` so Identity can skip its confirmation prompt
+   * and honor `postLogoutRedirectUri`.
    */
-  public logout(): void {
+  public logout(options?: LogoutOptions): void {
+    // Capture the ID token before clearToken() wipes it.
+    const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
+
+    // Identity needs id_token_hint to sign the user out without a confirmation
+    // prompt and to accept post_logout_redirect_uri; there is none without `openid`.
+    if (options?.endSession && isBrowser && !idTokenHint) {
+      console.warn(
+        'Cloud logout: no OIDC ID token is available, so Identity will ask the user to confirm sign-out' +
+        (options.postLogoutRedirectUri ? ' and will ignore postLogoutRedirectUri' : '') +
+        ". Add the 'openid' scope to your SDK configuration to avoid this."
+      );
+    }
+
     this.tokenManager.clearToken();
 
     // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
@@ -257,6 +277,15 @@ export class AuthService {
       } catch (error) {
         console.warn('Failed to clear OAuth context from session storage', error);
       }
+    }
+
+    if (options?.endSession && isBrowser) {
+      window.location.href = this.buildEndSessionUrl({
+        idTokenHint,
+        // Caller-supplied; Identity validates it against the app's registered
+        // redirect URIs by exact string match (PLT-108129).
+        postLogoutRedirectUri: options.postLogoutRedirectUri
+      });
     }
   }
 
@@ -345,6 +374,28 @@ export class AuthService {
   }
 
   /**
+   * Builds the Identity end-session URL used to terminate the Automation
+   * Cloud session (OIDC RP-initiated logout). Sends `id_token_hint` when
+   * available so Identity can skip its confirmation prompt and validate
+   * `post_logout_redirect_uri`; otherwise falls back to `client_id`.
+   */
+  private buildEndSessionUrl(params: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
+    const queryParams = new URLSearchParams();
+    // Exactly one client identifier: RP-initiated logout requires Identity to
+    // reject the request when id_token_hint and client_id disagree.
+    if (params.idTokenHint) {
+      queryParams.set('id_token_hint', params.idTokenHint);
+    } else if (this.config.clientId) {
+      queryParams.set('client_id', this.config.clientId);
+    }
+    if (params.postLogoutRedirectUri) {
+      queryParams.set('post_logout_redirect_uri', params.postLogoutRedirectUri);
+    }
+    const query = queryParams.toString();
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.END_SESSION}${query ? `?${query}` : ''}`;
+  }
+
+  /**
    * Exchanges the authorization code for an access token and automatically updates the current token
    */
   private async _getAccessToken(params: {
@@ -380,7 +431,8 @@ export class AuthService {
       token: token.access_token,
       type: 'oauth',
       expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : undefined,
-      refreshToken: token.refresh_token
+      refreshToken: token.refresh_token,
+      idToken: token.id_token
     });
 
     return token;
