@@ -49,7 +49,7 @@ $ uip login [options]
 | `--it, --interactive` | boolean | Interactively select tenant from list | — |
 
 !!! note
-    Publishing and deploying coded apps with `client-id` and `client-secret` based login is not currently supported. Use interactive browser-based user OAuth login only.
+    For **automated / non-interactive** deploys (CI/CD, AI app builders), authenticate with a **confidential external app** using `--client-id` and `--client-secret` (requires CLI 1.1.0+) — see [CI/CD: GitHub Actions](ci-cd-github-actions.md) and [AI App Builders](../ai-app-builders/index.md). Interactive browser login (`uip login -it`) is intended for local development.
 
 **Examples**
 
