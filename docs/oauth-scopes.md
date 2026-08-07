@@ -133,7 +133,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:
 
-`OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api` · `IS.Connections.Read`
+`OR.Execution` · `OR.Folders` · `OR.Users` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api` · `IS.Connections.Read` · `IS.Connectors.Read`
 
 /// note
 The `ConversationalAgents` scope is required for real-time WebSocket sessions (`startSession()`). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.
@@ -178,7 +178,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read` |
+| `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
 | `updateConnectionSelections()` | `OR.Execution`, `IS.Connections.Read` |
 | `getAddConnectionUrl()` | `OR.Execution` or `OR.Execution.Read` |
 
