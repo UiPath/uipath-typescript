@@ -36,6 +36,7 @@ import type {
 import {
   EntityFieldDataType,
   EntityAggregateFunction,
+  EntityHavingOperator,
   EntityType,
   ExternalField,
   FieldDisplayType,
@@ -1946,8 +1947,8 @@ describe("EntityService Unit Tests", () => {
         havingFilter: {
           logicalOperator: LogicalOperator.Or,
           aggregateFilters: [
-            { aggregateAlias: "cnt", operator: ">", value: "5" },
-            { aggregateAlias: "cnt", operator: "<=", value: "100" },
+            { aggregateAlias: "cnt", operator: EntityHavingOperator.GreaterThan, value: "5" },
+            { aggregateAlias: "cnt", operator: EntityHavingOperator.LessThanOrEqual, value: "100" },
           ],
         },
       });
@@ -1960,8 +1961,8 @@ describe("EntityService Unit Tests", () => {
           havingFilter: {
             logicalOperator: LogicalOperator.Or,
             aggregateFilters: [
-              { aggregateAlias: "cnt", operator: ">", value: "5" },
-              { aggregateAlias: "cnt", operator: "<=", value: "100" },
+              { aggregateAlias: "cnt", operator: EntityHavingOperator.GreaterThan, value: "5" },
+              { aggregateAlias: "cnt", operator: EntityHavingOperator.LessThanOrEqual, value: "100" },
             ],
           },
         }),
@@ -1973,7 +1974,7 @@ describe("EntityService Unit Tests", () => {
         entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           groupBy: ["region"],
           havingFilter: {
-            aggregateFilters: [{ aggregateAlias: "cnt", operator: ">", value: "5" }],
+            aggregateFilters: [{ aggregateAlias: "cnt", operator: EntityHavingOperator.GreaterThan, value: "5" }],
           },
         }),
       ).rejects.toThrow(/havingFilter requires aggregates and groupBy/);
@@ -1987,7 +1988,7 @@ describe("EntityService Unit Tests", () => {
             { function: EntityAggregateFunction.Count, field: "Id", alias: "cnt" },
           ],
           havingFilter: {
-            aggregateFilters: [{ aggregateAlias: "cnt", operator: ">", value: "5" }],
+            aggregateFilters: [{ aggregateAlias: "cnt", operator: EntityHavingOperator.GreaterThan, value: "5" }],
           },
         }),
       ).rejects.toThrow(/havingFilter requires aggregates and groupBy/);

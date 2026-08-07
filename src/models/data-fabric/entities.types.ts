@@ -238,7 +238,14 @@ export interface EntityAggregate {
 }
 
 /** Comparison operators supported in a {@link EntityHavingFilter} condition. */
-export type EntityHavingOperator = "=" | "!=" | "<>" | ">" | ">=" | "<" | "<=";
+export enum EntityHavingOperator {
+  Equals = '=',
+  NotEquals = '!=',
+  GreaterThan = '>',
+  GreaterThanOrEqual = '>=',
+  LessThan = '<',
+  LessThanOrEqual = '<=',
+}
 
 /**
  * One `HAVING` condition over a declared aggregate's result.
