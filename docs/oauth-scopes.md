@@ -2,6 +2,44 @@
 
 This page lists the specific OAuth scopes required in external app for each SDK method.
 
+## Integration Service — Connectors
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connectors.Read` |
+| `getById()` | `IS.Connectors.Read` |
+| `getDefaultConnection()` | `IS.Connectors.Read` |
+| `getConnections()` | `IS.Connectors.Read` |
+
+## Integration Service — Connections
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connections.Read` |
+| `getById()` | `IS.Connections.Read` |
+| `ping()` | `IS.Connections.Read` |
+| `reauthenticate()` | `IS.Connections.Read` |
+
+## Integration Service — Elements
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getObjects()` | `IS.Connector.Export` |
+| `getActivities()` | `IS.Connector.Export` |
+| `getObjectMetadata()` | `IS.Connector.Export` |
+| `getEventObjects()` | `IS.Connector.Export` |
+| `getEventObjectMetadata()` | `IS.Connector.Export` |
+| `getInstanceObjects()` | `IS.Connector.Export` |
+| `getInstanceObjectMetadata()` | `IS.Connector.Export` |
+| `getInstanceEventObjects()` | `IS.Connector.Export` |
+| `getInstanceEventObjectMetadata()` | `IS.Connector.Export` |
+
+## Integration Service — Execution
+
+| Function | OAuth Scope |
+|----------|-------------|
+| `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
+
 ## Assets
 
 | Method | OAuth Scope |
