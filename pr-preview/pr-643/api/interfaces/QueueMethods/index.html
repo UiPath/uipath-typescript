@@ -2261,7 +2261,7 @@ automatically.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="getallitems">getAllItems()<a class="headerlink" href="#getallitems" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
+<p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets this queue's items with optional filtering and pagination.</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
@@ -2297,17 +2297,15 @@ automatically.</p>
 </tbody>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to the queue's items
-<a href="../QueueItemResponse/">QueueItemResponse</a></p>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
+<p>Promise resolving to the queue's <a href="../QueueItem/">QueueItem</a> entries</p>
 <hr />
 <h3 id="insertitem">insertItem()<a class="headerlink" href="#insertitem" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>insertItem</strong>(<code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>): <code>Promise</code>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
+<p><strong>insertItem</strong>(<code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;, <code>options?</code>: <a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>): <code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
 </blockquote>
-<p>Inserts a new item into this queue (producer operation).</p>
-<p>The payload must be flat — nested objects and arrays are rejected by
-Orchestrator.</p>
+<p>Inserts a new item into this queue.</p>
+<p>The payload must be flat — nested objects and arrays are rejected.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2320,7 +2318,7 @@ Orchestrator.</p>
 <tbody>
 <tr>
 <td><code>specificData</code></td>
-<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td><code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;</td>
 <td>The item's business payload (keys are stored exactly as provided)</td>
 </tr>
 <tr>
@@ -2331,9 +2329,8 @@ Orchestrator.</p>
 </tbody>
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
-<p>Promise resolving to the created queue item
-<a href="../QueueItemResponse/">QueueItemResponse</a></p>
+<p><code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
+<p>Promise resolving to the created <a href="../QueueItem/">QueueItem</a></p>
 
 
 

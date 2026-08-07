@@ -2398,7 +2398,7 @@
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt;&gt;</p>
+<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets all queues across folders with optional filtering and folder scoping</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
@@ -2434,9 +2434,8 @@
 </tbody>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of queues NonPaginatedResponse<QueueWithMethods> or a PaginatedResponse<QueueWithMethods> when pagination options are used. Each queue has methods attached for operating on its items.
-<a href="../../type-aliases/QueueWithMethods/">QueueWithMethods</a></p>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;&gt;</p>
+<p>Promise resolving to either a <a href="../../type-aliases/QueueGetResponse/">QueueGetResponse</a> array (<code>NonPaginatedResponse</code>) or a <code>PaginatedResponse&lt;QueueGetResponse&gt;</code> when pagination options are used. Each queue has methods attached for operating on its items.</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Standard array return</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allQueues</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
@@ -2468,7 +2467,7 @@
 <hr />
 <h3 id="getallitems">getAllItems()<a class="headerlink" href="#getallitems" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>queueId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
+<p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>queueId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets the items of a queue with optional filtering and pagination</p>
 <p>Returns the queue's work items including their status, business payload
@@ -2516,24 +2515,26 @@
 </tbody>
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of queue items NonPaginatedResponse<QueueItemResponse> or a PaginatedResponse<QueueItemResponse> when pagination options are used.
-<a href="../QueueItemResponse/">QueueItemResponse</a></p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// First, get queues with queues.getAll()</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Failed items only, newest first</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">failed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;status eq &#39;Failed&#39;&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">orderby</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;createdTime desc&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">});</span>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
+<p>Promise resolving to either a <a href="../QueueItem/">QueueItem</a> array (<code>NonPaginatedResponse</code>) or a <code>PaginatedResponse&lt;QueueItem&gt;</code> when pagination options are used.</p>
+<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">// Failed items only, newest first</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">failed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;status eq &#39;Failed&#39;&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">orderby</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;createdTime desc&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">});</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Or operate on a queue returned by getById/getAll</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queue</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">();</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getById</strong>(<code>id</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../QueueGetByIdOptions/"><code>QueueGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt;</p>
+<p><strong>getById</strong>(<code>id</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../QueueGetByIdOptions/"><code>QueueGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single queue by ID</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
@@ -2564,27 +2565,30 @@
 </tbody>
 </table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../../type-aliases/QueueWithMethods/"><code>QueueWithMethods</code></a>&gt;</p>
-<p>Promise resolving to a queue definition with methods attached for operating on its items
-<a href="../../type-aliases/QueueWithMethods/">QueueWithMethods</a></p>
-<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Get queue by ID</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Operate on the queue directly via the attached methods</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queue</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">();</span>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;</p>
+<p>Promise resolving to a <a href="../../type-aliases/QueueGetResponse/">QueueGetResponse</a> — the queue definition with methods attached for operating on its items</p>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Get queue by ID</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1">// Operate on the queue directly via the attached methods</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queue</span><span class="p">.</span><span class="nx">getAllItems</span><span class="p">();</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queue</span><span class="p">.</span><span class="nx">insertItem</span><span class="p">({</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nx">invoiceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1001&#39;</span><span class="p">,</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="kt">1520</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="insertitembyname">insertItemByName()<a class="headerlink" href="#insertitembyname" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>insertItemByName</strong>(<code>queueName</code>: <code>string</code>, <code>folderId</code>: <code>number</code>, <code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>): <code>Promise</code>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
+<p><strong>insertItemByName</strong>(<code>queueName</code>: <code>string</code>, <code>folderId</code>: <code>number</code>, <code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;, <code>options?</code>: <a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>): <code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
 </blockquote>
-<p>Inserts a new item into a queue by queue name (producer operation)</p>
+<p>Inserts a new item into a queue by queue name</p>
 <p>Returns the created queue item including its id, status, and the stored
 payload. The payload keys are user-defined and are stored and returned
 exactly as provided.</p>
-<p>The payload must be flat: values have to be simple scalars (string, number,
-boolean, date). Nested objects and arrays are rejected by Orchestrator.</p>
+<p>The payload must be flat — values are simple scalars (see
+<a href="../../type-aliases/QueueItemValue/">QueueItemValue</a>); nested objects and arrays are rejected.</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2607,7 +2611,7 @@ boolean, date). Nested objects and arrays are rejected by Orchestrator.</p>
 </tr>
 <tr>
 <td><code>specificData</code></td>
-<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td><code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;</td>
 <td>The item's business payload (stored as the queue item's specific content)</td>
 </tr>
 <tr>
@@ -2618,26 +2622,25 @@ boolean, date). Nested objects and arrays are rejected by Orchestrator.</p>
 </tbody>
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../QueueItemResponse/"><code>QueueItemResponse</code></a>&gt;</p>
-<p>Promise resolving to the created queue item
-<a href="../QueueItemResponse/">QueueItemResponse</a></p>
-<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">QueuePriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/queues&#39;</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// Minimal insert</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">insertItemByName</span><span class="p">(</span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nx">invoiceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1001&#39;</span><span class="p">,</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="kt">1520</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">});</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// With metadata</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">rushItem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">insertItemByName</span><span class="p">(</span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nx">invoiceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1002&#39;</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">},</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="kt">QueuePriority.High</span><span class="p">,</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span><span class="nx">reference</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1002&#39;</span><span class="p">,</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="nx">dueDate</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2026-08-15&#39;</span><span class="p">)</span>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="p">});</span>
+<p><code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
+<p>Promise resolving to the created <a href="../QueueItem/">QueueItem</a></p>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">QueuePriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/queues&#39;</span><span class="p">;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1">// Minimal insert</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">insertItemByName</span><span class="p">(</span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nx">invoiceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1001&#39;</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="kt">1520</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">});</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1">// With metadata</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">rushItem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">insertItemByName</span><span class="p">(</span><span class="s1">&#39;&lt;queueName&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span><span class="nx">invoiceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1002&#39;</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="kt">QueuePriority.High</span><span class="p">,</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="nx">reference</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INV-1002&#39;</span><span class="p">,</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span><span class="nx">dueDate</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2026-08-15&#39;</span><span class="p">)</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="p">});</span>
 </code></pre></div>
 
 

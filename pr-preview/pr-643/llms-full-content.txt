@@ -1124,7 +1124,7 @@ const allQueues = await queues.getAll();
 
 ### getAll()
 
-> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueWithMethods`> : `NonPaginatedResponse`\<`QueueWithMethods`>>
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
 Gets all queues across folders with optional filtering and folder scoping
 
@@ -1138,9 +1138,9 @@ Gets all queues across folders with optional filtering and folder scoping
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueWithMethods`> : `NonPaginatedResponse`\<`QueueWithMethods`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
-Promise resolving to either an array of queues NonPaginatedResponse or a PaginatedResponse when pagination options are used. Each queue has methods attached for operating on its items. [QueueWithMethods](../../type-aliases/QueueWithMethods/)
+Promise resolving to either a [QueueGetResponse](../../type-aliases/QueueGetResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
 
 #### Example
 
@@ -1175,7 +1175,7 @@ const page5 = await queues.getAll({
 
 ### getAllItems()
 
-> **getAllItems**\<`T`>(`queueId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItemResponse`> : `NonPaginatedResponse`\<`QueueItemResponse`>>
+> **getAllItems**\<`T`>(`queueId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
 
 Gets the items of a queue with optional filtering and pagination
 
@@ -1193,14 +1193,13 @@ Returns the queue's work items including their status, business payload (`specif
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItemResponse`> : `NonPaginatedResponse`\<`QueueItemResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
 
-Promise resolving to either an array of queue items NonPaginatedResponse or a PaginatedResponse when pagination options are used. [QueueItemResponse](../QueueItemResponse/)
+Promise resolving to either a [QueueItem](../QueueItem/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueItem>` when pagination options are used.
 
-#### Example
+#### Examples
 
 ```
-// First, get queues with queues.getAll()
 const items = await queues.getAllItems(<queueId>, <folderId>);
 
 // Failed items only, newest first
@@ -1211,9 +1210,15 @@ const failed = await queues.getAllItems(<queueId>, <folderId>, {
 });
 ```
 
+```
+// Or operate on a queue returned by getById/getAll
+const queue = await queues.getById(<queueId>, <folderId>);
+const items = await queue.getAllItems();
+```
+
 ### getById()
 
-> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueWithMethods`>
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetResponse`>
 
 Gets a single queue by ID
 
@@ -1225,9 +1230,9 @@ Gets a single queue by ID
 
 #### Returns
 
-`Promise`\<`QueueWithMethods`>
+`Promise`\<`QueueGetResponse`>
 
-Promise resolving to a queue definition with methods attached for operating on its items [QueueWithMethods](../../type-aliases/QueueWithMethods/)
+Promise resolving to a [QueueGetResponse](../../type-aliases/QueueGetResponse/) — the queue definition with methods attached for operating on its items
 
 #### Example
 
@@ -1237,30 +1242,34 @@ const queue = await queues.getById(<queueId>, <folderId>);
 
 // Operate on the queue directly via the attached methods
 const items = await queue.getAllItems();
+const item = await queue.insertItem({
+  invoiceId: 'INV-1001',
+  amount: 1520
+});
 ```
 
 ### insertItemByName()
 
-> **insertItemByName**(`queueName`: `string`, `folderId`: `number`, `specificData`: `Record`\<`string`, `unknown`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItemResponse`>
+> **insertItemByName**(`queueName`: `string`, `folderId`: `number`, `specificData`: `Record`\<`string`, `QueueItemValue`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItem`>
 
-Inserts a new item into a queue by queue name (producer operation)
+Inserts a new item into a queue by queue name
 
 Returns the created queue item including its id, status, and the stored payload. The payload keys are user-defined and are stored and returned exactly as provided.
 
-The payload must be flat: values have to be simple scalars (string, number, boolean, date). Nested objects and arrays are rejected by Orchestrator.
+The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
 
 #### Parameters
 
 - `queueName`: `string` — Name of the queue to insert into
 - `folderId`: `number` — Required folder ID
-- `specificData`: `Record`\<`string`, `unknown`> — The item's business payload (stored as the queue item's specific content)
+- `specificData`: `Record`\<`string`, `QueueItemValue`> — The item's business payload (stored as the queue item's specific content)
 - `options?`: `QueueInsertItemOptions` — Optional item metadata (priority, reference, defer/due dates)
 
 #### Returns
 
-`Promise`\<`QueueItemResponse`>
+`Promise`\<`QueueItem`>
 
-Promise resolving to the created queue item [QueueItemResponse](../QueueItemResponse/)
+Promise resolving to the created [QueueItem](../QueueItem/)
 
 #### Example
 

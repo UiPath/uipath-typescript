@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/type-aliases/QueueWithMethods/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/type-aliases/QueueItemValue/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>QueueWithMethods - UiPath TypeScript SDK</title>
+        <title>QueueItemValue - UiPath TypeScript SDK</title>
       
     
     
@@ -107,7 +107,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              QueueWithMethods
+              QueueItemValue
             
           </span>
         </div>
@@ -2207,12 +2207,14 @@
   
 
 
-  <h1>QueueWithMethods</h1>
+  <h1>QueueItemValue</h1>
 
 <blockquote>
-<p><strong>QueueWithMethods</strong> = <a href="../../interfaces/QueueGetResponse/"><code>QueueGetResponse</code></a> &amp; <a href="../../interfaces/QueueMethods/"><code>QueueMethods</code></a></p>
+<p><strong>QueueItemValue</strong> = <code>string</code> | <code>number</code> | <code>boolean</code> | <code>Date</code> | <code>null</code> | <code>undefined</code></p>
 </blockquote>
-<p>Queue metadata combined with queue-bound helper methods.</p>
+<p>Value allowed in a queue item payload. Payloads are flat — every value is
+a simple scalar (<code>Date</code> values are serialized to ISO-8601 strings); nested
+objects and arrays are rejected.</p>
 
 
 
