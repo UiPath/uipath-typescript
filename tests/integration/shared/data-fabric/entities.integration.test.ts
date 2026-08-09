@@ -1141,7 +1141,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const entityId = await entities.create(name, [
         { name: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
-        { name: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
+        { name: 'count', displayName: 'Count', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
 
       expect(typeof entityId).toBe('string');
@@ -1227,7 +1227,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
 
       await entities.updateById(entityId, {
-        addFields: [{ name: 'new_field', type: EntityFieldDataType.INTEGER }],
+        addFields: [{ name: 'new_field', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 }],
       });
 
       const updated = await entities.getById(entityId);
@@ -1240,7 +1240,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
         { name: 'keep_field', type: EntityFieldDataType.STRING },
-        { name: 'remove_me', type: EntityFieldDataType.INTEGER },
+        { name: 'remove_me', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1285,7 +1285,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
         { name: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
-        { name: 'to_remove', type: EntityFieldDataType.INTEGER },
+        { name: 'to_remove', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1554,13 +1554,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(field?.fieldDataType.lengthLimit).toBe(200);
     });
 
-    it('should reject INTEGER when minValue >= maxValue without hitting the API', async () => {
+    it('should reject DECIMAL when minValue >= maxValue without hitting the API', async () => {
       const { entities } = getServices();
-      const name = `sdk_int_minmax_${generateRandomString(8).toLowerCase()}`;
+      const name = `sdk_dec_minmax_${generateRandomString(8).toLowerCase()}`;
 
       await expect(
         entities.create(name, [
-          { name: 'int_field', type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
+          { name: 'num_field', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, minValue: 100, maxValue: 50 },
         ]),
       ).rejects.toThrow(/minValue 100 >= maxValue 50/);
 

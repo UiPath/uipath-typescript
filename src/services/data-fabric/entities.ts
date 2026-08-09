@@ -460,6 +460,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
     const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
 
+    if (!hasSchemaChanges && !hasMetadataChanges) {
+      throw new ValidationError({
+        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, or isRbacEnabled.',
+      });
+    }
+
     if (hasSchemaChanges) {
       await this.applySchemaUpdate(id, opts);
     }
@@ -497,12 +503,26 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     // Filter out removed fields
     if (options.removeFields?.length) {
+      const existingNames = new Set(fields.map(f => f.name));
+      const missing = options.removeFields.filter(r => !existingNames.has(r.name)).map(r => r.name);
+      if (missing.length) {
+        throw new ValidationError({
+          message: `Cannot remove field(s) — no matching non-system field found for name(s): ${missing.join(', ')}.`,
+        });
+      }
       const removeSet = new Set(options.removeFields.map(r => r.name));
       fields = fields.filter(f => !removeSet.has(f.name));
     }
 
     // Apply per-field metadata updates (matched by field ID)
     if (options.updateFields?.length) {
+      const existingIds = new Set(fields.map(f => f.id));
+      const missing = options.updateFields.filter(u => !existingIds.has(u.id)).map(u => u.id);
+      if (missing.length) {
+        throw new ValidationError({
+          message: `Cannot update field(s) — no matching non-system field found for id(s): ${missing.join(', ')}.`,
+        });
+      }
       const updateMap = new Map(options.updateFields.map(u => [u.id, u]));
       fields = fields.map(f => {
         const update = updateMap.get(f.id ?? '');
