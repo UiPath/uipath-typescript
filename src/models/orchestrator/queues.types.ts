@@ -217,6 +217,6 @@ export interface QueueItem {
   retryNumber: number;
   /** Folder identifier the item belongs to */
   folderId: number;
-  /** Folder display path */
-  folderName: string;
+  /** Folder display path — populated when listing items; `null` on insert responses */
+  folderName: string | null;
 }

@@ -187,6 +187,9 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       expect(item.reviewStatus).toBe(QueueItemReviewStatus.None);
       expect(item.processingStartTime).toBeNull();
       expect(item.folderId).toBe(queue.folderId);
+      // The insert response does not populate the folder name (listing does) —
+      // which is why QueueItem types it string | null.
+      expect(item.folderName).toBeNull();
       // ...original PascalCase / renamed wire fields absent...
       expect((item as any).CreationTime).toBeUndefined();
       expect((item as any).QueueDefinitionId).toBeUndefined();
