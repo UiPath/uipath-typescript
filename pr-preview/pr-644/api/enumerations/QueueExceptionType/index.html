@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/type-aliases/QueueWithMethods/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/enumerations/QueueExceptionType/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>QueueWithMethods - UiPath TypeScript SDK</title>
+        <title>QueueExceptionType - UiPath TypeScript SDK</title>
       
     
     
@@ -75,6 +75,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#enumeration-members" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -107,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              QueueWithMethods
+              QueueExceptionType
             
           </span>
         </div>
@@ -2190,6 +2195,47 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enumeration-members" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enumeration Members
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Enumeration Members">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#applicationexception" class="md-nav__link">
+    <span class="md-ellipsis">
+      ApplicationException
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#businessexception" class="md-nav__link">
+    <span class="md-ellipsis">
+      BusinessException
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2207,12 +2253,21 @@
   
 
 
-  <h1>QueueWithMethods</h1>
+  <h1>QueueExceptionType</h1>
 
+<p>Category of a queue processing failure.</p>
+<h2 id="enumeration-members">Enumeration Members<a class="headerlink" href="#enumeration-members" title="Permanent link">&para;</a></h2>
+<h3 id="applicationexception">ApplicationException<a class="headerlink" href="#applicationexception" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>QueueWithMethods</strong> = <a href="../../interfaces/QueueGetResponse/"><code>QueueGetResponse</code></a> &amp; <a href="../../interfaces/QueueMethods/"><code>QueueMethods</code></a></p>
+<p><strong>ApplicationException</strong>: <code>"ApplicationException"</code></p>
 </blockquote>
-<p>Queue metadata combined with queue-bound helper methods.</p>
+<p>A transient system error — the item is eligible for retry</p>
+<hr />
+<h3 id="businessexception">BusinessException<a class="headerlink" href="#businessexception" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>BusinessException</strong>: <code>"BusinessException"</code></p>
+</blockquote>
+<p>The item's data cannot be processed — the item is not retried</p>
 
 
 

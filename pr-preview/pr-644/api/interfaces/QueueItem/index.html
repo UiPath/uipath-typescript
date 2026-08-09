@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/QueueItemResponse/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/QueueItem/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>QueueItemResponse - UiPath TypeScript SDK</title>
+        <title>QueueItem - UiPath TypeScript SDK</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              QueueItemResponse
+              QueueItem
             
           </span>
         </div>
@@ -2229,9 +2229,9 @@
   
 
 
-  <h1>QueueItemResponse</h1>
+  <h1>QueueItem</h1>
 
-<p>Queue item response shape.</p>
+<p>A queue work item.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2258,19 +2258,14 @@
 <td>The time by which the item should be processed</td>
 </tr>
 <tr>
-<td><a id="endprocessing"></a> <code>endProcessing</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td>Timestamp when processing ended</td>
-</tr>
-<tr>
-<td><a id="folderid"></a> <code>folderId?</code></td>
+<td><a id="folderid"></a> <code>folderId</code></td>
 <td><code>number</code></td>
 <td>Folder identifier the item belongs to</td>
 </tr>
 <tr>
-<td><a id="foldername"></a> <code>folderName?</code></td>
+<td><a id="foldername"></a> <code>folderName</code></td>
 <td><code>string</code></td>
-<td>Folder display path returned by Orchestrator</td>
+<td>Folder display path</td>
 </tr>
 <tr>
 <td><a id="id"></a> <code>id</code></td>
@@ -2285,12 +2280,7 @@
 <tr>
 <td><a id="outputdata"></a> <code>outputData</code></td>
 <td><code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>Output payload written back when the item completed, as an object. Keys are user-defined and returned exactly as stored.</td>
-</tr>
-<tr>
-<td><a id="outputdatajson"></a> <code>outputDataJson</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td>Raw JSON-string form of the output payload (<code>OutputData</code> on the wire).</td>
+<td>Output payload written back when the item completed. Keys are user-defined and returned exactly as stored.</td>
 </tr>
 <tr>
 <td><a id="priority"></a> <code>priority</code></td>
@@ -2298,9 +2288,19 @@
 <td>Processing priority</td>
 </tr>
 <tr>
-<td><a id="processingexception"></a> <code>processingException</code></td>
-<td><code>null</code> | <a href="../QueueProcessingException/"><code>QueueProcessingException</code></a></td>
+<td><a id="processingendtime"></a> <code>processingEndTime</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Timestamp when processing ended</td>
+</tr>
+<tr>
+<td><a id="processingerror"></a> <code>processingError</code></td>
+<td><code>null</code> | <a href="../QueueProcessingError/"><code>QueueProcessingError</code></a></td>
 <td>Failure details when the item failed processing</td>
+</tr>
+<tr>
+<td><a id="processingstarttime"></a> <code>processingStartTime</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Timestamp when processing started (set once a transaction begins)</td>
 </tr>
 <tr>
 <td><a id="progress"></a> <code>progress</code></td>
@@ -2324,7 +2324,7 @@
 </tr>
 <tr>
 <td><a id="reviewstatus"></a> <code>reviewStatus</code></td>
-<td><code>string</code></td>
+<td><a href="../../enumerations/QueueItemReviewStatus/"><code>QueueItemReviewStatus</code></a></td>
 <td>Review status for failed items</td>
 </tr>
 <tr>
@@ -2335,17 +2335,7 @@
 <tr>
 <td><a id="specificdata"></a> <code>specificData</code></td>
 <td><code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>The item's business payload as a ready-to-use object. Orchestrator names the source field <code>SpecificContent</code>. Its keys are user-defined and are returned exactly as stored — the SDK performs no case conversion on them.</td>
-</tr>
-<tr>
-<td><a id="specificdatajson"></a> <code>specificDataJson</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td>Raw JSON-string form of the payload as returned by Orchestrator (<code>SpecificData</code> on the wire).</td>
-</tr>
-<tr>
-<td><a id="startprocessing"></a> <code>startProcessing</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td>Timestamp when processing started (set once a transaction begins)</td>
+<td>The item's business payload. Keys are user-defined and are returned exactly as stored — the SDK performs no case conversion on them.</td>
 </tr>
 <tr>
 <td><a id="status"></a> <code>status</code></td>

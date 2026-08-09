@@ -2231,7 +2231,8 @@
 
   <h1>TransactionCompletionOptions</h1>
 
-<p>Options describing the outcome of a transaction.</p>
+<p>Optional details accompanying a transaction completion. The success flag is
+passed positionally to <code>completeTransaction</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2258,11 +2259,6 @@
 <td>Updated due date for the item.</td>
 </tr>
 <tr>
-<td><a id="issuccessful"></a> <code>isSuccessful</code></td>
-<td><code>boolean</code></td>
-<td>True when the item was processed successfully; false records a failure (provide <code>processingException</code> with the failure details).</td>
-</tr>
-<tr>
 <td><a id="operationid"></a> <code>operationId?</code></td>
 <td><code>string</code></td>
 <td>Operation identifier associated with the completion.</td>
@@ -2270,11 +2266,11 @@
 <tr>
 <td><a id="outputdata"></a> <code>outputData?</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>Output payload to persist on the item, as an object. Keys are user-defined and sent to Orchestrator exactly as provided (no case conversion).</td>
+<td>Output payload to persist on the item. Keys are user-defined and sent exactly as provided (no case conversion).</td>
 </tr>
 <tr>
-<td><a id="processingexception"></a> <code>processingException?</code></td>
-<td><a href="../QueueProcessingException/"><code>QueueProcessingException</code></a></td>
+<td><a id="processingerror"></a> <code>processingError?</code></td>
+<td><a href="../QueueProcessingError/"><code>QueueProcessingError</code></a></td>
 <td>Failure details recorded when the transaction is unsuccessful.</td>
 </tr>
 <tr>

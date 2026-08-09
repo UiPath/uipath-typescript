@@ -1124,48 +1124,49 @@ const allQueues = await queues.getAll();
 
 ### completeTransaction()
 
-> **completeTransaction**(`itemId`: `number`, `folderId`: `number`, `options`: `TransactionCompletionOptions`): `Promise`\<`OperationResponse`\<`TransactionCompletionOptions`>>
+> **completeTransaction**(`itemId`: `number`, `folderId`: `number`, `isSuccessful`: `boolean`, `options?`: `TransactionCompletionOptions`): `Promise`\<`OperationResponse`\<`void`>>
 
-Completes a transaction: reports the processing outcome of a queue item (consumer operation)
+Completes a transaction: reports the processing outcome of a queue item
 
-Marks the item `Successful` or `Failed` (with failure details), and can persist output data alongside the result.
+Marks the item `Successful` or `Failed` (with the failure details from [TransactionCompletionOptions](../TransactionCompletionOptions/)), and can persist output data alongside the result.
 
-Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected by Orchestrator.
+Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
 
 #### Parameters
 
 - `itemId`: `number` — Queue item ID of the transaction to complete
 - `folderId`: `number` — Required folder ID
-- `options`: `TransactionCompletionOptions` — Completion outcome (success flag, output data, failure details)
+- `isSuccessful`: `boolean` — True when the item was processed successfully; false records a failure (provide `processingError` in options)
+- `options?`: `TransactionCompletionOptions` — Completion details (output data, failure details, new defer/due dates)
 
 #### Returns
 
-`Promise`\<`OperationResponse`\<`TransactionCompletionOptions`>>
+`Promise`\<`OperationResponse`\<`void`>>
 
-Promise resolving to an operation response containing the completion options [TransactionCompletionOptions](../TransactionCompletionOptions/)
+Promise resolving to an operation response confirming the completion was applied
 
 #### Example
 
 ```
+import { QueueExceptionType } from '@uipath/uipath-typescript/queues';
+
 // Report success with output data
-await queues.completeTransaction(<itemId>, <folderId>, {
-  isSuccessful: true,
+await queues.completeTransaction(<itemId>, <folderId>, true, {
   outputData: { paymentId: 'P-778' }
 });
 
 // Report a business failure (not retried)
-await queues.completeTransaction(<itemId>, <folderId>, {
-  isSuccessful: false,
-  processingException: {
+await queues.completeTransaction(<itemId>, <folderId>, false, {
+  processingError: {
     reason: 'Vendor not found',
-    type: 'BusinessException'
+    type: QueueExceptionType.BusinessException
   }
 });
 ```
 
 ### getAll()
 
-> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueWithMethods`> : `NonPaginatedResponse`\<`QueueWithMethods`>>
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
 Gets all queues across folders with optional filtering and folder scoping
 
@@ -1179,9 +1180,9 @@ Gets all queues across folders with optional filtering and folder scoping
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueWithMethods`> : `NonPaginatedResponse`\<`QueueWithMethods`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
-Promise resolving to either an array of queues NonPaginatedResponse or a PaginatedResponse when pagination options are used. Each queue has methods attached for operating on its items. [QueueWithMethods](../../type-aliases/QueueWithMethods/)
+Promise resolving to either a [QueueGetResponse](../../type-aliases/QueueGetResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
 
 #### Example
 
@@ -1216,7 +1217,7 @@ const page5 = await queues.getAll({
 
 ### getAllItems()
 
-> **getAllItems**\<`T`>(`queueId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItemResponse`> : `NonPaginatedResponse`\<`QueueItemResponse`>>
+> **getAllItems**\<`T`>(`queueId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
 
 Gets the items of a queue with optional filtering and pagination
 
@@ -1234,14 +1235,13 @@ Returns the queue's work items including their status, business payload (`specif
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItemResponse`> : `NonPaginatedResponse`\<`QueueItemResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
 
-Promise resolving to either an array of queue items NonPaginatedResponse or a PaginatedResponse when pagination options are used. [QueueItemResponse](../QueueItemResponse/)
+Promise resolving to either a [QueueItem](../QueueItem/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueItem>` when pagination options are used.
 
-#### Example
+#### Examples
 
 ```
-// First, get queues with queues.getAll()
 const items = await queues.getAllItems(<queueId>, <folderId>);
 
 // Failed items only, newest first
@@ -1252,9 +1252,15 @@ const failed = await queues.getAllItems(<queueId>, <folderId>, {
 });
 ```
 
+```
+// Or operate on a queue returned by getById/getAll
+const queue = await queues.getById(<queueId>, <folderId>);
+const items = await queue.getAllItems();
+```
+
 ### getById()
 
-> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueWithMethods`>
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetResponse`>
 
 Gets a single queue by ID
 
@@ -1266,9 +1272,9 @@ Gets a single queue by ID
 
 #### Returns
 
-`Promise`\<`QueueWithMethods`>
+`Promise`\<`QueueGetResponse`>
 
-Promise resolving to a queue definition with methods attached for operating on its items [QueueWithMethods](../../type-aliases/QueueWithMethods/)
+Promise resolving to a [QueueGetResponse](../../type-aliases/QueueGetResponse/) — the queue definition with methods attached for operating on its items
 
 #### Example
 
@@ -1278,30 +1284,34 @@ const queue = await queues.getById(<queueId>, <folderId>);
 
 // Operate on the queue directly via the attached methods
 const items = await queue.getAllItems();
+const item = await queue.insertItem({
+  invoiceId: 'INV-1001',
+  amount: 1520
+});
 ```
 
 ### insertItemByName()
 
-> **insertItemByName**(`queueName`: `string`, `folderId`: `number`, `specificData`: `Record`\<`string`, `unknown`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItemResponse`>
+> **insertItemByName**(`queueName`: `string`, `folderId`: `number`, `specificData`: `Record`\<`string`, `QueueItemValue`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItem`>
 
-Inserts a new item into a queue by queue name (producer operation)
+Inserts a new item into a queue by queue name
 
 Returns the created queue item including its id, status, and the stored payload. The payload keys are user-defined and are stored and returned exactly as provided.
 
-The payload must be flat: values have to be simple scalars (string, number, boolean, date). Nested objects and arrays are rejected by Orchestrator.
+The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
 
 #### Parameters
 
 - `queueName`: `string` — Name of the queue to insert into
 - `folderId`: `number` — Required folder ID
-- `specificData`: `Record`\<`string`, `unknown`> — The item's business payload (stored as the queue item's specific content)
+- `specificData`: `Record`\<`string`, `QueueItemValue`> — The item's business payload (stored as the queue item's specific content)
 - `options?`: `QueueInsertItemOptions` — Optional item metadata (priority, reference, defer/due dates)
 
 #### Returns
 
-`Promise`\<`QueueItemResponse`>
+`Promise`\<`QueueItem`>
 
-Promise resolving to the created queue item [QueueItemResponse](../QueueItemResponse/)
+Promise resolving to the created [QueueItem](../QueueItem/)
 
 #### Example
 
@@ -1326,15 +1336,11 @@ const rushItem = await queues.insertItemByName('<queueName>', <folderId>, {
 
 ### startTransactionByName()
 
-> **startTransactionByName**(`queueName`: `string`, `folderId`: `number`): `Promise`\<`null` | `QueueItemResponse`>
+> **startTransactionByName**(`queueName`: `string`, `folderId`: `number`): `Promise`\<`null` | `QueueItem`>
 
-Starts a transaction: acquires the next available item from a queue by queue name (consumer operation)
+Starts a transaction: acquires the next available item from a queue and marks it `InProgress`
 
-Orchestrator hands out the next eligible item (by priority and defer date), marks it `InProgress`, and returns it to the robot that requested it. Returns `null` when no item is available for processing.
-
-Requires a robot session. Orchestrator allocates the item to the robot making the request, so user and application identities receive `null` however many items are waiting.
-
-Queue items are normally consumed by a robot running a process. Apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
+Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
 
 `null` covers both "no eligible items" and "no allocation target" — the two are not distinguishable.
 
@@ -1345,16 +1351,25 @@ Queue items are normally consumed by a robot running a process. Apps produce wit
 
 #### Returns
 
-`Promise`\<`null` | `QueueItemResponse`>
+`Promise`\<`null` | `QueueItem`>
 
-Promise resolving to the acquired transaction item, or `null` when no item is available [TransactionItemResponse](../../type-aliases/TransactionItemResponse/)
+Promise resolving to the acquired [QueueItem](../QueueItem/) (in `InProgress` status with `processingStartTime` set), or `null` when no item is available
 
 #### Example
 
 ```
 const transaction = await queues.startTransactionByName('<queueName>', <folderId>);
+
 if (transaction) {
-  console.log(transaction.specificData);
+  // Running under a robot session: the item is now locked to this caller
+  console.log(transaction.status);        // 'InProgress'
+  console.log(transaction.specificData);  // the item's business payload
+} else {
+  // No item was acquired. This happens when the queue has no eligible
+  // items — and always for user/application identities (e.g. a coded app
+  // signed in with OAuth), which have no robot session for Orchestrator
+  // to allocate the item to.
+  console.log('Nothing to process');
 }
 ```
 
