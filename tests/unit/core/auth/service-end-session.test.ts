@@ -48,6 +48,13 @@ describe('AuthService logout end-session (browser)', () => {
     return new AuthService(config, new ExecutionContext());
   }
 
+  /** A service whose token carries an OIDC ID token (`openid` was granted). */
+  function createServiceWithIdToken() {
+    const service = createService();
+    service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+    return service;
+  }
+
   it('should clear stored OAuth context without navigating when called with no options', () => {
     sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT] = '{"codeVerifier":"v"}';
     sessionStore[AUTH_STORAGE_KEYS.CODE_VERIFIER] = 'v';
@@ -61,39 +68,52 @@ describe('AuthService logout end-session (browser)', () => {
   });
 
   it('should not navigate when endSession is false', () => {
-    const service = createService();
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: false });
 
     expect(windowStub.location.href).toBe('');
   });
 
-  it('should redirect to the Identity end-session endpoint when endSession is true', () => {
-    const service = createService();
+  it('should redirect to the Identity end-session endpoint with the id_token_hint', () => {
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: true });
 
     expect(windowStub.location.href.startsWith(TEST_CONSTANTS.BASE_URL)).toBe(true);
     expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
     const params = new URL(windowStub.location.href).searchParams;
-    expect(params.get('client_id')).toBe(TEST_CONSTANTS.CLIENT_ID);
+    expect(params.get('id_token_hint')).toBe(TEST_CONSTANTS.ID_TOKEN);
   });
 
-  it('should omit post_logout_redirect_uri when not provided', () => {
-    const service = createService();
+  it('should never send client_id on the end-session request', () => {
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: true });
 
-    // The parameter is caller-supplied only — without it Identity lands the
-    // user on the Automation Cloud portal.
+    // The ID token alone proves the request; a client_id alongside it could
+    // only agree or mismatch, so it is never sent.
     const params = new URL(windowStub.location.href).searchParams;
-    expect(params.has('post_logout_redirect_uri')).toBe(false);
+    expect(params.has('client_id')).toBe(false);
+  });
+
+  it('should skip the cloud logout entirely when no ID token is available', () => {
+    sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT] = '{"codeVerifier":"v"}';
+    const service = createService();
+    service.updateToken({ token: 'access-token', type: 'oauth' });
+
+    service.logout({ endSession: true });
+
+    // Local state is cleared, but no end-session navigation happens —
+    // endsession is unauthenticated and id_token_hint is what proves it.
+    expect(sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT]).toBeUndefined();
+    expect(windowStub.location.href).toBe('');
   });
 
   it('should clear stored OAuth context before redirecting', () => {
     sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT] = '{"codeVerifier":"v"}';
     sessionStore[AUTH_STORAGE_KEYS.CODE_VERIFIER] = 'v';
-    const service = createService();
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: true });
 
@@ -102,8 +122,17 @@ describe('AuthService logout end-session (browser)', () => {
     expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
   });
 
+  it('should omit post_logout_redirect_uri when not provided', () => {
+    const service = createServiceWithIdToken();
+
+    service.logout({ endSession: true });
+
+    const params = new URL(windowStub.location.href).searchParams;
+    expect(params.has('post_logout_redirect_uri')).toBe(false);
+  });
+
   it('should include post_logout_redirect_uri when provided', () => {
-    const service = createService();
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
 
@@ -111,55 +140,8 @@ describe('AuthService logout end-session (browser)', () => {
     expect(params.get('post_logout_redirect_uri')).toBe(POST_LOGOUT_REDIRECT_URI);
   });
 
-  it('should omit client_id when the config has none', () => {
-    const service = createService({
-      baseUrl: TEST_CONSTANTS.BASE_URL,
-      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-      tenantName: TEST_CONSTANTS.TENANT_ID
-    });
-
-    service.logout({ endSession: true });
-
-    expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
-    const params = new URL(windowStub.location.href).searchParams;
-    expect(params.has('client_id')).toBe(false);
-  });
-
-  it('should send id_token_hint when an OIDC id_token is available', () => {
-    const service = createService();
-    service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
-
-    service.logout({ endSession: true });
-
-    const params = new URL(windowStub.location.href).searchParams;
-    expect(params.get('id_token_hint')).toBe(TEST_CONSTANTS.ID_TOKEN);
-  });
-
-  it('should send client_id only as a fallback, never alongside id_token_hint', () => {
-    const service = createService();
-    service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
-
-    service.logout({ endSession: true });
-
-    // RP-initiated logout requires Identity to reject a request where
-    // id_token_hint and client_id identify different clients.
-    const params = new URL(windowStub.location.href).searchParams;
-    expect(params.has('client_id')).toBe(false);
-  });
-
-  it('should omit id_token_hint when no id_token is available', () => {
-    const service = createService();
-    service.updateToken({ token: 'access-token', type: 'oauth' });
-
-    service.logout({ endSession: true });
-
-    const params = new URL(windowStub.location.href).searchParams;
-    expect(params.has('id_token_hint')).toBe(false);
-  });
-
   it('should capture the id_token before clearing it, then clear the stored token', () => {
-    const service = createService();
-    service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+    const service = createServiceWithIdToken();
 
     service.logout({ endSession: true });
 
@@ -180,25 +162,17 @@ describe('AuthService logout end-session (browser)', () => {
       warnSpy.mockRestore();
     });
 
-    it('should warn that Identity will prompt when no id_token is available', () => {
+    it('should warn that the cloud logout was skipped when no id_token is available', () => {
       const service = createService();
 
       service.logout({ endSession: true });
 
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Cloud logout skipped'));
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("'openid'"));
     });
 
-    it('should warn that postLogoutRedirectUri is ignored when no id_token is available', () => {
-      const service = createService();
-
-      service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
-
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('postLogoutRedirectUri'));
-    });
-
     it('should not warn when an id_token is available', () => {
-      const service = createService();
-      service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+      const service = createServiceWithIdToken();
 
       service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
 

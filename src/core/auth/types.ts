@@ -25,26 +25,21 @@ export interface LogoutOptions {
    * still-active cloud session. Browser-only. Defaults to false, which
    * preserves the previous local-only logout behavior.
    *
-   * For the smoothest experience, include the `openid` scope in your SDK
-   * configuration: the SDK then captures the OIDC ID token and sends it as
-   * `id_token_hint`, which lets Identity skip its logout-confirmation prompt
-   * and honor `postLogoutRedirectUri`. Without `openid`, logout still
-   * terminates the cloud session but Identity may show a confirmation prompt
-   * and ignore `postLogoutRedirectUri`.
+   * Requires the `openid` scope in your SDK configuration: the SDK captures
+   * the OIDC ID token and sends it as `id_token_hint`, which is what proves
+   * the end-session request. Without an ID token the cloud logout is
+   * skipped — only local state is cleared — and a warning is logged.
    */
   endSession?: boolean;
   /**
    * URL the user is returned to after the cloud session is terminated — pass
    * this to bring the user back to your app instead of the Automation Cloud
-   * portal. Identity validates the value against the redirect URIs registered
-   * on your External Application by **exact string match** (even a
-   * trailing-slash difference is a mismatch), so pass the URI exactly as it
-   * is registered — typically your app's login redirect URI.
+   * portal, e.g.
+   * `(window.location.origin + window.location.pathname).replace(/\/$/, '')`.
    *
-   * Only honored when an `id_token_hint` is available, so the `openid` scope
-   * is required for it to take effect (see `endSession`). When omitted,
-   * mismatched, or no ID token is available, the user lands on the
-   * Automation Cloud portal instead.
+   * Identity compares the value by exact string match, so even a
+   * trailing-slash difference is a mismatch — when omitted or mismatched,
+   * the user lands on the Automation Cloud portal instead.
    */
   postLogoutRedirectUri?: string;
 }

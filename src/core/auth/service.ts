@@ -258,21 +258,22 @@ export class AuthService {
    * Identity end-session endpoint so the Automation Cloud session (and
    * refresh token) are terminated — local cleanup alone cannot reach them,
    * and without this the next sign-in silently reuses the cloud session.
-   * When an OIDC ID token is available (the `openid` scope was requested), it
-   * is sent as `id_token_hint` so Identity can skip its confirmation prompt
-   * and honor `postLogoutRedirectUri`.
+   * The end-session redirect requires the OIDC ID token (the `openid`
+   * scope): it is sent as `id_token_hint` to prove the request. Without one
+   * the cloud logout is skipped — only local state is cleared — and a
+   * warning is logged.
    */
   public logout(options?: LogoutOptions): void {
     // Capture the ID token before clearToken() wipes it.
     const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
 
-    // Identity needs id_token_hint to sign the user out without a confirmation
-    // prompt and to accept post_logout_redirect_uri; there is none without `openid`.
+    // End-session is an unauthenticated Identity endpoint — id_token_hint is
+    // what proves the request, so without `openid` there is nothing to send.
     if (options?.endSession && isBrowser && !idTokenHint) {
       console.warn(
-        'Cloud logout: no OIDC ID token is available, so Identity will ask the user to confirm sign-out' +
-        (options.postLogoutRedirectUri ? ' and will ignore postLogoutRedirectUri' : '') +
-        ". Add the 'openid' scope to your SDK configuration to avoid this."
+        'Cloud logout skipped: no OIDC ID token is available, so only local ' +
+        "authentication state was cleared. Add the 'openid' scope to your " +
+        'SDK configuration to enable endSession.'
       );
     }
 
@@ -291,11 +292,9 @@ export class AuthService {
       }
     }
 
-    if (options?.endSession && isBrowser) {
-      window.location.href = this.buildEndSessionUrl({
+    if (options?.endSession && isBrowser && idTokenHint) {
+      window.location.href = this._buildEndSessionUrl({
         idTokenHint,
-        // Caller-supplied; Identity validates it against the app's registered
-        // redirect URIs by exact string match (PLT-108129).
         postLogoutRedirectUri: options.postLogoutRedirectUri
       });
     }
@@ -391,24 +390,16 @@ export class AuthService {
 
   /**
    * Builds the Identity end-session URL used to terminate the Automation
-   * Cloud session (OIDC RP-initiated logout). Sends `id_token_hint` when
-   * available so Identity can skip its confirmation prompt and validate
-   * `post_logout_redirect_uri`; otherwise falls back to `client_id`.
+   * Cloud session (OIDC RP-initiated logout). `id_token_hint` proves the
+   * request and lets Identity validate `post_logout_redirect_uri`.
    */
-  private buildEndSessionUrl(params: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
+  private _buildEndSessionUrl(params: { idTokenHint: string; postLogoutRedirectUri?: string }): string {
     const queryParams = new URLSearchParams();
-    // Exactly one client identifier: RP-initiated logout requires Identity to
-    // reject the request when id_token_hint and client_id disagree.
-    if (params.idTokenHint) {
-      queryParams.set('id_token_hint', params.idTokenHint);
-    } else if (this.config.clientId) {
-      queryParams.set('client_id', this.config.clientId);
-    }
+    queryParams.set('id_token_hint', params.idTokenHint);
     if (params.postLogoutRedirectUri) {
       queryParams.set('post_logout_redirect_uri', params.postLogoutRedirectUri);
     }
-    const query = queryParams.toString();
-    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.END_SESSION}${query ? `?${query}` : ''}`;
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.END_SESSION}?${queryParams.toString()}`;
   }
 
   /**
