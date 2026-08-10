@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformSettingGetOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskSaveDataOptions/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>PlatformSettingGetOptions - UiPath TypeScript SDK</title>
+        <title>TaskSaveDataOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PlatformSettingGetOptions
+              TaskSaveDataOptions
             
           </span>
         </div>
@@ -2294,6 +2294,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       Properties
@@ -2321,9 +2330,13 @@
   
 
 
-  <h1>PlatformSettingGetOptions</h1>
+  <h1>TaskSaveDataOptions</h1>
 
-<p>Options for <code>Platform.getUserSettings()</code>.</p>
+<p>Options for saving a task's data.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2335,9 +2348,34 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="organizationid"></a> <code>organizationId?</code></td>
+<td><a id="expand"></a> <code>expand?</code></td>
 <td><code>string</code></td>
-<td>Organization (account) GUID to read from. Supply this in practice. When omitted the API falls back to the <strong>host</strong> partition rather than the caller's own organization, and an external application is not authorized for it — the request comes back <code>403 Forbidden</code>.</td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
+<td><code>number</code></td>
+<td>Numeric folder ID.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Folder key (GUID-formatted string).</td>
+</tr>
+<tr>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
+</tr>
+<tr>
+<td><a id="select"></a> <code>select?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="type"></a> <code>type?</code></td>
+<td><a href="../../enumerations/TaskType/"><code>TaskType</code></a></td>
+<td>Task type. Routes the save to the type-specific endpoint (Form and App tasks are saved via their own endpoints). Looked up automatically when omitted.</td>
 </tr>
 </tbody>
 </table>
