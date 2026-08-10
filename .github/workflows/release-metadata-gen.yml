@@ -26,6 +26,9 @@ jobs:
     env:
       BASE_REF: ${{ github.base_ref }}
       HEAD_REF: ${{ github.head_ref }}
+      # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
+      # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - name: Checkout PR head
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
