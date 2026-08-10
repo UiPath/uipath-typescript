@@ -2337,7 +2337,7 @@
 <tr>
 <td><a id="organizationid"></a> <code>organizationId?</code></td>
 <td><code>string</code></td>
-<td>Organization (account) GUID to read from. Supply this in practice. When omitted the API falls back to the <strong>host</strong> partition rather than the caller's own organization, and an external application is not authorized for it — the request comes back <code>403 Forbidden</code>.</td>
+<td>Organization (account) GUID to read from. Supply this in practice. When omitted the API falls back to the <strong>host</strong> partition rather than the caller's own organization, and an external application is not authorized for it — the request comes back <code>403 Forbidden</code>. Passing an empty string is rejected rather than treated as omitted.</td>
 </tr>
 </tbody>
 </table>
