@@ -113,6 +113,8 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
 
+**User-defined nested payloads:** When a response contains a nested payload whose keys are user-defined (e.g., task data, entity record fields, custom metadata), apply `pascalToCamelCaseKeys()` to the wrapper/envelope fields only — do not recurse into the nested payload. User-controlled key names are part of the schema contract and must be returned verbatim. Always verify the raw API response: if the nested endpoint already returns camelCase, do not apply `pascalToCamelCaseKeys()` at all.
+
 ## Endpoint constants
 
 Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`):
@@ -248,6 +250,8 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
+**`FolderScopedOptions` for string-keyed folder services** — when a service accepts a folder identifier as a string (`folderKey` GUID or `folderPath` slash-delimited path), use `FolderScopedOptions` from `src/models/common/types.ts` instead of declaring a custom folder field. `FolderScopedOptions` extends `BaseOptions` and bundles all three folder identifier forms (`folderId`, `folderKey`, `folderPath`) in a single, consistent interface. Extend it in the service's options type: `export interface MyGetAllOptions extends FolderScopedOptions { ... }`.
+
 ## OperationResponse pattern
 
 ```typescript
@@ -257,6 +261,30 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 **Use for:** Lifecycle operations (cancel, pause, resume), bulk operations with error checking via `processODataArrayResponse()`.
 
 **DO NOT use for:** `getAll()`, `getById()`, `create()`, methods returning entity data directly.
+
+## Write request body hygiene
+
+**Strip `expand` and `select` from write request bodies** — when a write method (create, update) accepts an options type that extends `BaseOptions` (which includes `expand` and `select`), those fields must be explicitly destructured out before building the request body. Failing to do so silently injects OData query params into the write payload. Pattern:
+```typescript
+const { expand, select, folderKey, ...writeBody } = options ?? {};
+await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: folderKey }) });
+```
+The same principle applies to any header-only field included in an options type — strip it before forwarding the remainder as the request body.
+
+## Read-modify-write for replace-style updates
+
+When a backend update endpoint performs a full replace (not a PATCH), implement read-modify-write in the SDK — read the current entity state, merge the caller's options over it, then send the merged object. Failing to do so wipes any field the caller did not explicitly pass, even if they had no intent to change it.
+
+Pattern:
+```typescript
+const current = await this.fetchById(id);  // untracked helper, no @track
+const updated = { ...current, ...options };
+await this.put(ENDPOINTS.UPDATE(id), updated, { headers });
+```
+
+**NEVER** send a read-only sentinel enum value to a write endpoint — when the API returns a sentinel like `RetentionAction.None` on reads but forbids it on writes, map it to `null` (or omit it) before forwarding. Add a unit test asserting the sentinel is never present in the write body.
+
+Add a **merge-preservation unit test** for every read-modify-write update method: verify that fields NOT included in the update options retain their values from the current entity state.
 
 ## Code hygiene
 
