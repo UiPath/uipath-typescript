@@ -226,7 +226,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
-## Identity
+## Platform
 
 | Method | OAuth Scope |
 |--------|-------------|

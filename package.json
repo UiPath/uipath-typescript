@@ -236,14 +236,14 @@
                 "default": "./dist/functions/index.cjs"
             }
         },
-        "./identity": {
+        "./platform": {
             "import": {
-                "types": "./dist/identity/index.d.ts",
-                "default": "./dist/identity/index.mjs"
+                "types": "./dist/platform/index.d.ts",
+                "default": "./dist/platform/index.mjs"
             },
             "require": {
-                "types": "./dist/identity/index.d.ts",
-                "default": "./dist/identity/index.cjs"
+                "types": "./dist/platform/index.d.ts",
+                "default": "./dist/platform/index.cjs"
             }
         }
     },

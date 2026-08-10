@@ -200,13 +200,13 @@ nav:
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Functions: api/interfaces/FunctionServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
-          - Identity: api/interfaces/IdentityServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
+          - Platform: api/interfaces/PlatformServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md

@@ -42,16 +42,19 @@ export interface IntegrationConfig {
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
-   * Organization (account) GUID of the test organization. Required by the Identity suite:
+   * Organization (account) GUID of the test organization. Required by the Platform suite:
    * omitting it on a read makes the API fall back to the host partition rather than the
    * caller's organization, which an external application is not authorized for.
    */
   organizationId?: string;
   /**
-   * GUID of the user whose identity settings the Identity suite reads and round-trips.
+   * GUID of the user whose platform settings the Platform suite reads and round-trips.
    * Required: settings are scoped to (organization, user), the user must belong to the
    * organization the test PAT authenticates against, and the SDK cannot derive the calling
    * user from a PAT.
+   *
+   * Named for `IDENTITY_TEST_USER_ID` / the `UIPATH_IDENTITY_TEST_USER_ID` repository secret,
+   * which are already provisioned under that name and are not developer-facing.
    */
   identityTestUserId?: string;
 }

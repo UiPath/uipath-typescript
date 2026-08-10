@@ -1,13 +1,13 @@
 /**
- * Identity test constants.
+ * Platform test constants.
  *
  * Scope GUIDs and the theme/accessibility values mirror a real API response captured
  * during onboarding.
  */
 
-import { IdentitySettingKey } from '../../../src/models/identity/identity.types';
+import { PlatformSettingKey } from '../../../src/models/platform/platform.types';
 
-export const IDENTITY_TEST_CONSTANTS = {
+export const PLATFORM_TEST_CONSTANTS = {
   // Scope GUIDs. The API calls the organization a "partition" on the wire; the SDK
   // exposes the same GUID as `organizationId`.
   ORGANIZATION_ID: 'bc2ddac5-57bc-40e6-93fe-3b319b60ce36',
@@ -15,17 +15,17 @@ export const IDENTITY_TEST_CONSTANTS = {
 
   // Setting rows
   SETTING_ID: 63036,
-  SETTING_KEY: IdentitySettingKey.UserTheme,
+  SETTING_KEY: PlatformSettingKey.UserTheme,
   SETTING_VALUE: 'light',
   SETTING_ID_ALT: 63051,
-  SETTING_KEY_ALT: IdentitySettingKey.UserAccessibility,
+  SETTING_KEY_ALT: PlatformSettingKey.UserAccessibility,
   SETTING_VALUE_ALT: 'false',
 
   // A key the API returned nothing for — unset keys are omitted from the response
-  SETTING_KEY_UNSET: IdentitySettingKey.UserAlert,
+  SETTING_KEY_UNSET: PlatformSettingKey.UserAlert,
 
   // Structured setting: the API stores JSON as a string
-  SETTING_KEY_JSON: IdentitySettingKey.UserCasePinnedInstancesByTenant,
+  SETTING_KEY_JSON: PlatformSettingKey.UserCasePinnedInstancesByTenant,
   SETTING_VALUE_JSON: '{"CaseManagement":["instance-a","instance-b"],"DefaultTenant":[]}',
 
   // Error messages

@@ -1,11 +1,11 @@
 /**
- * Identity service types — request/response shapes for identity settings.
+ * Platform service types — request/response shapes for platform settings.
  */
 
 /**
- * Identity setting keys the SDK supports.
+ * Platform setting keys the SDK supports.
  *
- * Only these keys can be read or written — the identity settings store holds other keys,
+ * Only these keys can be read or written — the settings store holds other keys,
  * but they are not part of this SDK's surface.
  *
  * Every operation in this module is **user-scoped**: `userId` is always sent, so reads and
@@ -13,7 +13,7 @@
  * organization-wide value per key (selected by omitting `userId`), but this SDK does not
  * expose that scope.
  */
-export enum IdentitySettingKey {
+export enum PlatformSettingKey {
   /** The user's preferred UI language. */
   UserLanguage = 'UserLanguage.Language',
   /** The user's preferred date format. */
@@ -33,17 +33,17 @@ export enum IdentitySettingKey {
 }
 
 /**
- * A stored identity setting.
+ * A stored platform setting.
  *
  * Settings are key/value pairs belonging to one user within an organization.
  * Values are always strings — numbers and booleans arrive as `'8'` / `'false'`, and
  * structured settings as a JSON string the caller parses.
  */
-export interface IdentitySetting {
+export interface PlatformSetting {
   /** Identifier of the stored setting row. */
   id: number;
   /** The setting's key. */
-  key: IdentitySettingKey;
+  key: PlatformSettingKey;
   /** Setting value, always serialized as a string. */
   value: string;
   /** Organization (account) GUID the setting belongs to. */
@@ -56,17 +56,17 @@ export interface IdentitySetting {
  * A setting to create or update. Only the key and its new value are sent — the owning
  * organization and user come from the request scope.
  */
-export interface IdentitySettingUpsert {
+export interface PlatformSettingUpsert {
   /** The setting to write. */
-  key: IdentitySettingKey;
+  key: PlatformSettingKey;
   /** New value, serialized as a string. */
   value: string;
 }
 
 /**
- * Options for `Identity.getSettings()`.
+ * Options for `Platform.getSettings()`.
  */
-export interface IdentitySettingGetOptions {
+export interface PlatformSettingGetOptions {
   /**
    * Organization (account) GUID to read from.
    *

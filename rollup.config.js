@@ -240,9 +240,9 @@ const serviceEntries = [
     output: 'functions/index'
   },
   {
-    name: 'identity',
-    input: 'src/services/identity/index.ts',
-    output: 'identity/index'
+    name: 'platform',
+    input: 'src/services/platform/index.ts',
+    output: 'platform/index'
   }
 ];
 

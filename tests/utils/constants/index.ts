@@ -20,4 +20,4 @@ export * from './traces';
 export * from './agents';
 export * from './governance';
 export * from './notification';
-export * from './identity';
+export * from './platform';
