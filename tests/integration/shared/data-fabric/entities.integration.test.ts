@@ -878,7 +878,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
           ],
         },
       });
-      expect(none.items.length).toBe(0);
+      expect(none.items).toHaveLength(0);
     });
 
     // Regression guard: DF reads `expansionLevel` only from the URL on POST record endpoints.
