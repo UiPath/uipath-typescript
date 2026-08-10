@@ -238,6 +238,11 @@ const serviceEntries = [
     name: 'functions',
     input: 'src/services/orchestrator/functions/index.ts',
     output: 'functions/index'
+  },
+  {
+    name: 'platform',
+    input: 'src/services/platform/index.ts',
+    output: 'platform/index'
   }
 ];
 
