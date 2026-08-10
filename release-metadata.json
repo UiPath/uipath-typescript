@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.0",
+  "sdkVersion": "1.7.0",
   "services": [
     {
       "name": "AgentMemory",
@@ -212,6 +212,10 @@
         {
           "name": "getStagesSlaSummary",
           "since": null
+        },
+        {
+          "name": "getVariables",
+          "since": "1.6.0"
         },
         {
           "name": "pause",
@@ -450,6 +454,21 @@
       ]
     },
     {
+      "name": "Functions",
+      "subpath": "@uipath/uipath-typescript/functions",
+      "since": "1.7.0",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.0"
+        },
+        {
+          "name": "invoke",
+          "since": "1.7.0"
+        }
+      ]
+    },
+    {
       "name": "Governance",
       "subpath": "@uipath/uipath-typescript/governance",
       "since": "1.4.1",
@@ -654,6 +673,37 @@
       ]
     },
     {
+      "name": "TaskCatalogs",
+      "subpath": "@uipath/uipath-typescript/tasks",
+      "since": "1.7.0",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.7.0"
+        },
+        {
+          "name": "getAll",
+          "since": "1.7.0"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.0"
+        },
+        {
+          "name": "getByName",
+          "since": "1.7.0"
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.0"
+        },
+        {
+          "name": "updateByName",
+          "since": "1.7.0"
+        }
+      ]
+    },
+    {
       "name": "Tasks",
       "subpath": "@uipath/uipath-typescript/tasks",
       "since": null,
@@ -671,6 +721,14 @@
           "since": null
         },
         {
+          "name": "createComment",
+          "since": "1.7.0"
+        },
+        {
+          "name": "editMetadata",
+          "since": "1.7.0"
+        },
+        {
           "name": "getAll",
           "since": null
         },
@@ -679,12 +737,32 @@
           "since": null
         },
         {
+          "name": "getComments",
+          "since": "1.7.0"
+        },
+        {
+          "name": "getDataById",
+          "since": "1.7.0"
+        },
+        {
+          "name": "getDataByKey",
+          "since": "1.7.0"
+        },
+        {
           "name": "getUsers",
           "since": null
         },
         {
           "name": "reassign",
           "since": null
+        },
+        {
+          "name": "saveData",
+          "since": "1.7.0"
+        },
+        {
+          "name": "saveTags",
+          "since": "1.7.0"
         },
         {
           "name": "unassign",
