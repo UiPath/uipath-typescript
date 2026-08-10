@@ -8,7 +8,7 @@ import {
   QueueItem,
   QueueItemValue,
   QueuePriority,
-  QueueProcessingError
+  QueueItemProcessingError
 } from '../../../models/orchestrator/queues.types';
 import {
   QueueServiceModel,
@@ -29,13 +29,8 @@ import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../ut
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
-import { QueueMap, QueueItemMap, QueueProcessingErrorMap } from '../../../models/orchestrator/queues.constants';
+import { QueueMap, QueueItemMap, QueueItemProcessingErrorMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
-
-/** Converts an optional Date to the ISO-8601 string the API expects. */
-function toIsoString(date?: Date): string | undefined {
-  return date ? date.toISOString() : undefined;
-}
 
 /**
  * Transforms a raw API queue item into the SDK shape. `SpecificContent` and
@@ -43,11 +38,8 @@ function toIsoString(date?: Date): string | undefined {
  * and reattached unchanged (same contract as Data Fabric record data); their
  * JSON-string duplicates (`SpecificData`/`OutputData`) are dropped.
  */
-function toQueueItem(queueItem: Record<string, unknown>): QueueItem {
-  const { SpecificContent, Output, ...rest } = queueItem;
-  // JSON-string duplicates of the payload fields — not part of the SDK shape.
-  delete rest.SpecificData;
-  delete rest.OutputData;
+function transformQueueItem(queueItem: Record<string, unknown>): QueueItem {
+  const { SpecificContent, Output, SpecificData: _sd, OutputData: _od, ...rest } = queueItem;
 
   const transformed = transformData(
     pascalToCamelCaseKeys(rest) as QueueItem,
@@ -58,8 +50,8 @@ function toQueueItem(queueItem: Record<string, unknown>): QueueItem {
   if (transformed.processingError) {
     transformed.processingError = transformData(
       transformed.processingError,
-      QueueProcessingErrorMap
-    ) as QueueProcessingError;
+      QueueItemProcessingErrorMap
+    ) as QueueItemProcessingError;
   }
 
   transformed.specificData = (SpecificContent as Record<string, unknown> | undefined) ?? null;
@@ -157,7 +149,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => QUEUE_ENDPOINTS.GET_ITEMS,
       getByFolderEndpoint: QUEUE_ENDPOINTS.GET_ITEMS,
-      transformFn: toQueueItem,
+      transformFn: transformQueueItem,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -193,9 +185,9 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
           Priority: options.priority ?? QueuePriority.Normal,
           Reference: options.reference,
           Progress: options.progress,
-          DeferDate: toIsoString(options.deferDate),
-          DueDate: toIsoString(options.dueDate),
-          RiskSlaDate: toIsoString(options.riskSlaDate),
+          DeferDate: options.deferDate?.toISOString(),
+          DueDate: options.dueDate?.toISOString(),
+          RiskSlaDate: options.riskSlaDate?.toISOString(),
           // User-defined keys — sent exactly as provided (no case conversion).
           SpecificContent: specificData
         }
@@ -205,6 +197,6 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       }
     );
 
-    return toQueueItem(response.data);
+    return transformQueueItem(response.data);
   }
 }

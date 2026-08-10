@@ -24,6 +24,6 @@ export const QueueItemMap: { [key: string]: string } = {
 /**
  * Maps fields nested inside a queue item's processing error.
  */
-export const QueueProcessingErrorMap: { [key: string]: string } = {
+export const QueueItemProcessingErrorMap: { [key: string]: string } = {
   creationTime: 'createdTime'
 };

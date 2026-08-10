@@ -146,7 +146,7 @@ export enum QueueExceptionType {
 /**
  * Failure details recorded when a transaction completes unsuccessfully.
  */
-export interface QueueProcessingError {
+export interface QueueItemProcessingError {
   /**
    * Short reason for the failure (e.g. "Vendor not found").
    */
@@ -196,7 +196,7 @@ export interface QueueItem {
    */
   outputData: Record<string, unknown> | null;
   /** Failure details when the item failed processing */
-  processingError: QueueProcessingError | null;
+  processingError: QueueItemProcessingError | null;
   /** Free-form progress text */
   progress: string | null;
   /** User-defined business identifier */

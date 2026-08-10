@@ -11,6 +11,8 @@ import {
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import {
+  QueueGetAllItemsOptions,
+  QueueInsertItemOptions,
   QueuePriority
 } from '../../../../src/models/orchestrator/queues.types';
 
@@ -41,7 +43,7 @@ describe('Queue Models', () => {
         const mockResponse = createMockTransformedQueueItemCollection();
         vi.mocked(mockService.getAllItems).mockResolvedValue(mockResponse);
 
-        const options = { filter: "status eq 'Failed'" };
+        const options: QueueGetAllItemsOptions = { filter: "status eq 'Failed'" };
         const result = await queue.getAllItems(options);
 
         expect(mockService.getAllItems).toHaveBeenCalledWith(
@@ -59,6 +61,14 @@ describe('Queue Models', () => {
         await expect(queue.getAllItems()).rejects.toThrow('Queue ID is undefined');
         expect(mockService.getAllItems).not.toHaveBeenCalled();
       });
+
+      it('should reject when the folder ID is undefined', async () => {
+        const queueData = createBasicQueue({ folderId: undefined as unknown as number });
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        await expect(queue.getAllItems()).rejects.toThrow('Folder ID is undefined');
+        expect(mockService.getAllItems).not.toHaveBeenCalled();
+      });
     });
 
     describe('queue.insertItem()', () => {
@@ -69,7 +79,7 @@ describe('Queue Models', () => {
         const createdItem = createBasicQueueItem();
         vi.mocked(mockService.insertItemByName).mockResolvedValue(createdItem);
 
-        const options = {
+        const options: QueueInsertItemOptions = {
           priority: QueuePriority.High,
           reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE
         };

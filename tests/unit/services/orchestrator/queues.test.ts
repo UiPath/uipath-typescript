@@ -461,7 +461,7 @@ describe('QueueService Unit Tests', () => {
       await expect(queueService.getAllItems(
         undefined as unknown as number,
         TEST_CONSTANTS.FOLDER_ID
-      )).rejects.toThrow(ValidationError);
+      )).rejects.toBeInstanceOf(ValidationError);
 
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
@@ -470,7 +470,7 @@ describe('QueueService Unit Tests', () => {
       await expect(queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
         undefined as unknown as number
-      )).rejects.toThrow(ValidationError);
+      )).rejects.toBeInstanceOf(ValidationError);
 
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
@@ -565,7 +565,7 @@ describe('QueueService Unit Tests', () => {
         undefined as unknown as string,
         TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
-      )).rejects.toThrow(ValidationError);
+      )).rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -575,7 +575,7 @@ describe('QueueService Unit Tests', () => {
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
         undefined as unknown as number,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
-      )).rejects.toThrow(ValidationError);
+      )).rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });

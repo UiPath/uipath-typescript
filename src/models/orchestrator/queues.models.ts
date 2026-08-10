@@ -218,14 +218,14 @@ function createQueueMethods(queueData: RawQueueGetResponse, service: QueueServic
         ? PaginatedResponse<QueueItem>
         : NonPaginatedResponse<QueueItem>
     > {
-      if (queueData.id === undefined) throw new Error('Queue ID is undefined');
-      if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
+      if (!queueData.id) throw new Error('Queue ID is undefined');
+      if (!queueData.folderId) throw new Error('Folder ID is undefined');
       return service.getAllItems(queueData.id, queueData.folderId, options);
     },
 
     async insertItem(specificData: Record<string, QueueItemValue>, options?: QueueInsertItemOptions): Promise<QueueItem> {
       if (!queueData.name) throw new Error('Queue name is undefined');
-      if (queueData.folderId === undefined) throw new Error('Folder ID is undefined');
+      if (!queueData.folderId) throw new Error('Folder ID is undefined');
       return service.insertItemByName(queueData.name, queueData.folderId, specificData, options);
     }
   };
