@@ -1150,29 +1150,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../interfaces/IdentityServiceModel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Identity
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -1196,10 +1173,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_8" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
             
   
   
@@ -1212,8 +1189,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_9">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_8">
             <span class="md-nav__icon md-icon"></span>
             Maestro
           </label>
@@ -1349,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1394,9 +1394,33 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../interfaces/TaskServiceModel/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../interfaces/task/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1405,7 +1429,50 @@
   </span>
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/TaskCatalogServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Task Catalogs
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2266,7 +2333,7 @@
   <h1>createTaskWithMethods</h1>
 
 <blockquote>
-<p><strong>createTaskWithMethods</strong>(<code>taskData</code>: <a href="../../interfaces/RawTaskGetResponse/"><code>RawTaskGetResponse</code></a> | <a href="../../interfaces/RawTaskCreateResponse/"><code>RawTaskCreateResponse</code></a>, <code>service</code>: <a href="../../interfaces/TaskServiceModel/"><code>TaskServiceModel</code></a>): <a href="../../type-aliases/TaskGetResponse/"><code>TaskGetResponse</code></a> | <a href="../../type-aliases/TaskCreateResponse/"><code>TaskCreateResponse</code></a></p>
+<p><strong>createTaskWithMethods</strong>(<code>taskData</code>: <a href="../../interfaces/RawTaskGetResponse/"><code>RawTaskGetResponse</code></a> | <a href="../../interfaces/RawTaskCreateResponse/"><code>RawTaskCreateResponse</code></a>, <code>service</code>: <a href="../interfaces/TaskServiceModel.md"><code>TaskServiceModel</code></a>): <a href="../../type-aliases/TaskGetResponse/"><code>TaskGetResponse</code></a> | <a href="../../type-aliases/TaskCreateResponse/"><code>TaskCreateResponse</code></a></p>
 </blockquote>
 <p>Creates an actionable task by combining API task data with operational methods.</p>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h2>
@@ -2286,7 +2353,7 @@
 </tr>
 <tr>
 <td><code>service</code></td>
-<td><a href="../../interfaces/TaskServiceModel/"><code>TaskServiceModel</code></a></td>
+<td><a href="../interfaces/TaskServiceModel.md"><code>TaskServiceModel</code></a></td>
 <td>The task service instance</td>
 </tr>
 </tbody>

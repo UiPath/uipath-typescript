@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/IdentitySettingGetOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformSettingUpsert/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>IdentitySettingGetOptions - UiPath TypeScript SDK</title>
+        <title>PlatformSettingUpsert - UiPath TypeScript SDK</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              IdentitySettingGetOptions
+              PlatformSettingUpsert
             
           </span>
         </div>
@@ -1150,29 +1150,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../IdentityServiceModel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Identity
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -1196,10 +1173,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_8" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
             
   
   
@@ -1212,8 +1189,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_9">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_8">
             <span class="md-nav__icon md-icon"></span>
             Maestro
           </label>
@@ -1349,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1394,9 +1394,33 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../TaskServiceModel/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../task/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1405,7 +1429,50 @@
   </span>
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TaskCatalogServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Task Catalogs
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2254,9 +2321,10 @@
   
 
 
-  <h1>IdentitySettingGetOptions</h1>
+  <h1>PlatformSettingUpsert</h1>
 
-<p>Options for <code>Identity.getSettings()</code>.</p>
+<p>A setting to create or update. Only the key and its new value are sent — the owning
+organization and user come from the request scope.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2268,9 +2336,14 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="organizationid"></a> <code>organizationId?</code></td>
+<td><a id="key"></a> <code>key</code></td>
+<td><a href="../../enumerations/PlatformSettingKey/"><code>PlatformSettingKey</code></a></td>
+<td>The setting to write.</td>
+</tr>
+<tr>
+<td><a id="value"></a> <code>value</code></td>
 <td><code>string</code></td>
-<td>Organization (account) GUID to read from. Supply this in practice. When omitted the API falls back to the <strong>host</strong> partition rather than the caller's own organization, and an external application is not authorized for it — the request comes back <code>403 Forbidden</code>.</td>
+<td>New value, serialized as a string.</td>
 </tr>
 </tbody>
 </table>

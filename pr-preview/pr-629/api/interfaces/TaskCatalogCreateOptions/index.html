@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/IdentitySetting/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogCreateOptions/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>IdentitySetting - UiPath TypeScript SDK</title>
+        <title>TaskCatalogCreateOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              IdentitySetting
+              TaskCatalogCreateOptions
             
           </span>
         </div>
@@ -1150,29 +1150,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../IdentityServiceModel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Identity
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -1196,10 +1173,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_8" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_8" id="__nav_2_1_8_label" tabindex="0">
             
   
   
@@ -1212,8 +1189,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_9">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_8">
             <span class="md-nav__icon md-icon"></span>
             Maestro
           </label>
@@ -1349,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1394,9 +1394,33 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../TaskServiceModel/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../task/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1405,7 +1429,50 @@
   </span>
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TaskCatalogServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Task Catalogs
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2227,6 +2294,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       Properties
@@ -2254,12 +2330,13 @@
   
 
 
-  <h1>IdentitySetting</h1>
+  <h1>TaskCatalogCreateOptions</h1>
 
-<p>A stored identity setting.</p>
-<p>Settings are key/value pairs belonging to one user within an organization.
-Values are always strings — numbers and booleans arrive as <code>'8'</code> / <code>'false'</code>, and
-structured settings as a JSON string the caller parses.</p>
+<p>Optional fields for creating a task catalog, plus folder scope.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2271,29 +2348,59 @@ structured settings as a JSON string the caller parses.</p>
 </thead>
 <tbody>
 <tr>
-<td><a id="id"></a> <code>id</code></td>
+<td><a id="description"></a> <code>description?</code></td>
+<td><code>string</code></td>
+<td>Description of the task catalog (max 512 characters).</td>
+</tr>
+<tr>
+<td><a id="encrypted"></a> <code>encrypted?</code></td>
+<td><code>boolean</code></td>
+<td>When true, tasks associated with this catalog have their Data encrypted.</td>
+</tr>
+<tr>
+<td><a id="expand"></a> <code>expand?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
 <td><code>number</code></td>
-<td>Identifier of the stored setting row.</td>
+<td>Numeric folder ID.</td>
 </tr>
 <tr>
-<td><a id="key"></a> <code>key</code></td>
-<td><a href="../../enumerations/IdentitySettingKey/"><code>IdentitySettingKey</code></a></td>
-<td>The setting's key.</td>
-</tr>
-<tr>
-<td><a id="organizationid"></a> <code>organizationId</code></td>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
 <td><code>string</code></td>
-<td>Organization (account) GUID the setting belongs to.</td>
+<td>Folder key (GUID-formatted string).</td>
 </tr>
 <tr>
-<td><a id="userid"></a> <code>userId</code></td>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
 <td><code>string</code></td>
-<td>GUID of the user the setting belongs to.</td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
 </tr>
 <tr>
-<td><a id="value"></a> <code>value</code></td>
+<td><a id="retentionaction"></a> <code>retentionAction?</code></td>
+<td><a href="../../type-aliases/TaskCatalogRetentionActionInput/"><code>TaskCatalogRetentionActionInput</code></a></td>
+<td>Action taken on the catalog's tasks when the retention period is reached.</td>
+</tr>
+<tr>
+<td><a id="retentionbucketid"></a> <code>retentionBucketId?</code></td>
+<td><code>number</code></td>
+<td>Id of the storage bucket used when retentionAction is Archive.</td>
+</tr>
+<tr>
+<td><a id="retentionperiod"></a> <code>retentionPeriod?</code></td>
+<td><code>number</code></td>
+<td>Retention period, in days.</td>
+</tr>
+<tr>
+<td><a id="select"></a> <code>select?</code></td>
 <td><code>string</code></td>
-<td>Setting value, always serialized as a string.</td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="tags"></a> <code>tags?</code></td>
+<td><a href="../Tag/"><code>Tag</code></a>[]</td>
+<td>Tags to associate with the task catalog.</td>
 </tr>
 </tbody>
 </table>
