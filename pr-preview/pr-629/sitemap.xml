@@ -1581,6 +1581,10 @@
          <lastmod>2026-08-10</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ClientSideTool/</loc>
+         <lastmod>2026-08-10</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CollectionResponse/</loc>
          <lastmod>2026-08-10</lastmod>
     </url>
@@ -1938,6 +1942,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExchangeStream/</loc>
+         <lastmod>2026-08-10</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecutingToolCallEvent/</loc>
          <lastmod>2026-08-10</lastmod>
     </url>
     <url>

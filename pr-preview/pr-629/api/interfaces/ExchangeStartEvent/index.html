@@ -2335,6 +2335,11 @@
 </thead>
 <tbody>
 <tr>
+<td><a id="clientsidetools"></a> <code>clientSideTools?</code></td>
+<td><a href="../ClientSideTool/"><code>ClientSideTool</code></a>[]</td>
+<td>Optional list of client-side tools the client supports. Pass these when calling <code>session.startExchange({ clientSideTools: [...] })</code> so the server routes matching tool calls back to the client via <a href="../ToolCallStartEvent/#isclientsidetool">ToolCallStartEvent.isClientSideTool</a>. The server validates names against the agent's design-time tool definitions.</td>
+</tr>
+<tr>
 <td><a id="conversationsequence"></a> <code>conversationSequence?</code></td>
 <td><code>number</code></td>
 <td>Optional value specifying the sequence number of the exchange within the conversation.</td>

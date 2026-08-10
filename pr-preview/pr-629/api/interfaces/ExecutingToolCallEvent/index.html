@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ToolCallStartEvent/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ExecutingToolCallEvent/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>ToolCallStartEvent - UiPath TypeScript SDK</title>
+        <title>ExecutingToolCallEvent - UiPath TypeScript SDK</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ToolCallStartEvent
+              ExecutingToolCallEvent
             
           </span>
         </div>
@@ -2321,9 +2321,11 @@
   
 
 
-  <h1>ToolCallStartEvent</h1>
+  <h1>ExecutingToolCallEvent</h1>
 
-<p>Signals the start of a tool call.</p>
+<p>Signals that the tool is about to be executed. Emitted for both server-side and
+client-side tools. For client-side tools, the client should begin executing its
+handler upon receiving this event and return the result via <code>sendToolCallEnd</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2337,42 +2339,12 @@
 <tr>
 <td><a id="input"></a> <code>input?</code></td>
 <td><a href="../../type-aliases/JSONObject/"><code>JSONObject</code></a></td>
-<td>Optional input value provided to the tool when executed.</td>
-</tr>
-<tr>
-<td><a id="inputschema"></a> <code>inputSchema?</code></td>
-<td><a href="../../type-aliases/JSONValue/"><code>JSONValue</code></a></td>
-<td>JSON schema describing the tool's input parameters. Present when <code>requireConfirmation</code> is true so the client can render an editable form.</td>
-</tr>
-<tr>
-<td><a id="isclientsidetool"></a> <code>isClientSideTool?</code></td>
-<td><code>boolean</code></td>
-<td>When <code>true</code>, this tool call should be executed locally by the client rather than server-side. The client should listen for <a href="../ExecutingToolCallEvent/">ExecutingToolCallEvent</a> via <code>onExecutingToolCall</code>, run the tool, and return the result with <code>sendToolCallEnd</code>.</td>
-</tr>
-<tr>
-<td><a id="metadata"></a> <code>metaData?</code></td>
-<td><a href="../../type-aliases/JSONObject/"><code>JSONObject</code></a></td>
-<td>Optional metadata pertaining to the tool call.</td>
-</tr>
-<tr>
-<td><a id="outputschema"></a> <code>outputSchema?</code></td>
-<td><a href="../../type-aliases/JSONValue/"><code>JSONValue</code></a></td>
-<td>JSON Schema describing the tool's expected output. Present on client-side tool calls so the client can validate or render a form for the result before sending it back via <code>sendToolCallEnd</code>.</td>
-</tr>
-<tr>
-<td><a id="requireconfirmation"></a> <code>requireConfirmation?</code></td>
-<td><code>boolean</code></td>
-<td>Indicates that the tool call requires user confirmation before execution. When true, the client should render a confirmation UI and respond with a <code>confirmToolCall</code> event on the same tool call.</td>
+<td>The final tool input, reflecting any modifications made during tool-call confirmation.</td>
 </tr>
 <tr>
 <td><a id="timestamp"></a> <code>timestamp?</code></td>
 <td><code>string</code></td>
-<td>The time the tool call was made.</td>
-</tr>
-<tr>
-<td><a id="toolname"></a> <code>toolName</code></td>
-<td><code>string</code></td>
-<td>Identifies the tool that is to be called.</td>
+<td>The time the tool call began executing.</td>
 </tr>
 </tbody>
 </table>
