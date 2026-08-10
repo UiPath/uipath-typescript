@@ -43,7 +43,7 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
 
     // Any supported key with a stored value works — the write tests round-trip it and
     // restore the original, so nothing needs to be configured per environment.
-    const settings = await platform.getSettings(ALL_KEYS, userId, { organizationId });
+    const settings = await platform.getUserSettings(ALL_KEYS, userId, { organizationId });
     if (settings.length === 0) {
       throw new Error(
         `No supported platform setting has a stored value for user ${userId}; the settings ` +
@@ -58,14 +58,14 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
   afterAll(async () => {
     if (!platform || !originalSettings?.length || !userId) return;
     // Restore from the snapshot — never hardcoded assumed values.
-    await platform.updateSettings(
+    await platform.updateUserSettings(
       originalSettings.map((s) => ({ key: s.key, value: s.value })),
       userId,
       originalSettings[0].organizationId
     );
   });
 
-  describe('getSettings', () => {
+  describe('getUserSettings', () => {
     it('should retrieve a setting with its value and scope fields', () => {
       expect(ALL_KEYS).toContain(originalSetting.key);
       expect(typeof originalSetting.id).toBe('number');
@@ -81,21 +81,21 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
 
     it('should return no more rows than the number of keys requested', async () => {
       // Keys with nothing stored are omitted rather than returned with an empty value
-      const result = await platform.getSettings(ALL_KEYS, userId, { organizationId });
+      const result = await platform.getUserSettings(ALL_KEYS, userId, { organizationId });
 
       expect(result.length).toBeLessThanOrEqual(ALL_KEYS.length);
       result.forEach((setting) => expect(ALL_KEYS).toContain(setting.key));
     });
 
     it('should retrieve a single key when only that key is requested', async () => {
-      const result = await platform.getSettings([originalSetting.key], userId, { organizationId });
+      const result = await platform.getUserSettings([originalSetting.key], userId, { organizationId });
 
       expect(result).toHaveLength(1);
       expect(result[0].key).toBe(originalSetting.key);
     });
 
     it('should retrieve settings when organizationId is passed explicitly', async () => {
-      const result = await platform.getSettings([originalSetting.key], userId, {
+      const result = await platform.getUserSettings([originalSetting.key], userId, {
         organizationId: originalSetting.organizationId,
       });
 
@@ -105,11 +105,11 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('updateSettings', () => {
+  describe('updateUserSettings', () => {
     it('should overwrite a setting value and return the stored row', async () => {
       const newValue = `${originalSetting.value}-sdktest`;
 
-      const updated = await platform.updateSettings(
+      const updated = await platform.updateUserSettings(
         [{ key: originalSetting.key, value: newValue }],
         userId,
         originalSetting.organizationId
@@ -120,17 +120,17 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
       expect(updatedRow?.value).toBe(newValue);
       expect(typeof updatedRow?.id).toBe('number');
 
-      const afterWrite = await platform.getSettings([originalSetting.key], userId, { organizationId });
+      const afterWrite = await platform.getUserSettings([originalSetting.key], userId, { organizationId });
       expect(afterWrite.find((s) => s.key === originalSetting.key)?.value).toBe(newValue);
 
       // Restore immediately so a later failure cannot leave the modified value behind
-      await platform.updateSettings(
+      await platform.updateUserSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
         userId,
         originalSetting.organizationId
       );
 
-      const afterRestore = await platform.getSettings([originalSetting.key], userId, { organizationId });
+      const afterRestore = await platform.getUserSettings([originalSetting.key], userId, { organizationId });
       expect(afterRestore.find((s) => s.key === originalSetting.key)?.value).toBe(
         originalSetting.value
       );
@@ -148,7 +148,7 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
       // environment while still exercising the multi-item path end to end.
       const batch = originalSettings.map((s) => ({ key: s.key, value: s.value }));
 
-      const updated = await platform.updateSettings(batch, userId, originalSetting.organizationId);
+      const updated = await platform.updateUserSettings(batch, userId, originalSetting.organizationId);
 
       expect(updated.length).toBe(batch.length);
       batch.forEach(({ key, value }) => {
@@ -157,7 +157,7 @@ describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
     });
 
     it('should write against the same user the read returned', async () => {
-      const updated = await platform.updateSettings(
+      const updated = await platform.updateUserSettings(
         [{ key: originalSetting.key, value: originalSetting.value }],
         userId,
         originalSetting.organizationId

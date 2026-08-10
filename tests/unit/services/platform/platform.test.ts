@@ -59,12 +59,12 @@ describe('Platform Service Unit Tests', () => {
     });
   });
 
-  describe('getSettings', () => {
+  describe('getUserSettings', () => {
     it('should accept every supported key in a single request', async () => {
       const allKeys = Object.values(PlatformSettingKey);
       mockApiClient.get.mockResolvedValue([createBasicPlatformSetting()]);
 
-      await platformService.getSettings(allKeys, PLATFORM_TEST_CONSTANTS.USER_ID);
+      await platformService.getUserSettings(allKeys, PLATFORM_TEST_CONSTANTS.USER_ID);
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: { key: string[] } };
       expect(spec.params.key).toEqual(allKeys);
@@ -74,7 +74,7 @@ describe('Platform Service Unit Tests', () => {
     it('should return an empty array when no requested key has a stored value', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      const result = await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
+      const result = await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -82,7 +82,7 @@ describe('Platform Service Unit Tests', () => {
     it('should send the enum wire value, not the member name, as the key param', async () => {
       mockApiClient.get.mockResolvedValue([createBasicPlatformSetting()]);
 
-      await platformService.getSettings([PlatformSettingKey.UserCaseAppOrder], PLATFORM_TEST_CONSTANTS.USER_ID);
+      await platformService.getUserSettings([PlatformSettingKey.UserCaseAppOrder], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
         params: { key: ['UserCase.AppOrderByTenant'], userId: PLATFORM_TEST_CONSTANTS.USER_ID },
@@ -92,7 +92,7 @@ describe('Platform Service Unit Tests', () => {
     it('should GET Setting with each key as a repeated key param', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
-      const result = await platformService.getSettings(
+      const result = await platformService.getUserSettings(
         [PLATFORM_TEST_CONSTANTS.SETTING_KEY, PLATFORM_TEST_CONSTANTS.SETTING_KEY_ALT],
         PLATFORM_TEST_CONSTANTS.USER_ID
       );
@@ -112,7 +112,7 @@ describe('Platform Service Unit Tests', () => {
     it('should send organizationId as the wire param partitionGlobalId', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
-      await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID, {
+      await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID, {
         organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
       });
 
@@ -128,7 +128,7 @@ describe('Platform Service Unit Tests', () => {
     it('should always send userId, so reads are never organization-scoped', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
-      await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
+      await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params.userId).toBe(PLATFORM_TEST_CONSTANTS.USER_ID);
@@ -139,7 +139,7 @@ describe('Platform Service Unit Tests', () => {
     it('should target the organization-level Setting URL with no tenant segment', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
-      await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
+      await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       // `../` collapses the tenant segment ApiClient inserts — see IDENTITY_API_BASE
       expect(PLATFORM_SETTING_ENDPOINTS.SETTINGS).toBe('../identity_/api/Setting');
@@ -151,7 +151,7 @@ describe('Platform Service Unit Tests', () => {
     it('should return the full setting row including scope fields', async () => {
       mockApiClient.get.mockResolvedValue([createBasicPlatformSetting()]);
 
-      const result = await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
+      const result = await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(result[0].id).toBe(PLATFORM_TEST_CONSTANTS.SETTING_ID);
       expect(result[0].key).toBe(PLATFORM_TEST_CONSTANTS.SETTING_KEY);
@@ -163,7 +163,7 @@ describe('Platform Service Unit Tests', () => {
     it('should rename partitionGlobalId to organizationId and drop the wire field', async () => {
       mockApiClient.get.mockResolvedValue([createBasicPlatformSetting()]);
 
-      const result = await platformService.getSettings(
+      const result = await platformService.getUserSettings(
         [PLATFORM_TEST_CONSTANTS.SETTING_KEY],
         PLATFORM_TEST_CONSTANTS.USER_ID
       );
@@ -180,7 +180,7 @@ describe('Platform Service Unit Tests', () => {
         }),
       ]);
 
-      const result = await platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY_JSON], PLATFORM_TEST_CONSTANTS.USER_ID);
+      const result = await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY_JSON], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(typeof result[0].value).toBe('string');
       expect(JSON.parse(result[0].value)).toHaveProperty('DefaultTenant');
@@ -190,7 +190,7 @@ describe('Platform Service Unit Tests', () => {
       // The API leaves unset keys out of the response rather than returning an empty value
       mockApiClient.get.mockResolvedValue([createBasicPlatformSetting()]);
 
-      const result = await platformService.getSettings(
+      const result = await platformService.getUserSettings(
         [PLATFORM_TEST_CONSTANTS.SETTING_KEY, PLATFORM_TEST_CONSTANTS.SETTING_KEY_UNSET],
         PLATFORM_TEST_CONSTANTS.USER_ID
       );
@@ -200,13 +200,13 @@ describe('Platform Service Unit Tests', () => {
     });
 
     it('should throw ValidationError when keys is empty and make no request', async () => {
-      await expect(platformService.getSettings([], PLATFORM_TEST_CONSTANTS.USER_ID)).rejects.toBeInstanceOf(ValidationError);
+      await expect(platformService.getUserSettings([], PLATFORM_TEST_CONSTANTS.USER_ID)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when userId is empty and make no request', async () => {
       await expect(
-        platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], '')
+        platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], '')
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
@@ -217,12 +217,12 @@ describe('Platform Service Unit Tests', () => {
       );
 
       await expect(
-        platformService.getSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID)
+        platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID)
       ).rejects.toThrow(PLATFORM_TEST_CONSTANTS.ERROR_SETTING_FORBIDDEN);
     });
   });
 
-  describe('updateSettings', () => {
+  describe('updateUserSettings', () => {
     const settings: PlatformSettingUpsert[] = [
       { key: PLATFORM_TEST_CONSTANTS.SETTING_KEY, value: PLATFORM_TEST_CONSTANTS.SETTING_VALUE },
     ];
@@ -230,7 +230,7 @@ describe('Platform Service Unit Tests', () => {
     it('should PUT Setting with settings, the organization as partitionGlobalId, and userId in the body', async () => {
       mockApiClient.put.mockResolvedValue([createBasicPlatformSetting()]);
 
-      const result = await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      const result = await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(mockApiClient.put).toHaveBeenCalledWith(
         PLATFORM_SETTING_ENDPOINTS.SETTINGS,
@@ -244,7 +244,7 @@ describe('Platform Service Unit Tests', () => {
     it('should always send userId in the body, so writes are never organization-scoped', async () => {
       mockApiClient.put.mockResolvedValue([createBasicPlatformSetting()]);
 
-      await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       const body = mockApiClient.put.mock.calls[0][1] as Record<string, unknown>;
       expect(body.userId).toBe(PLATFORM_TEST_CONSTANTS.USER_ID);
@@ -254,7 +254,7 @@ describe('Platform Service Unit Tests', () => {
     it('should send no scope in the query string on a write', async () => {
       mockApiClient.put.mockResolvedValue([createBasicPlatformSetting()]);
 
-      await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(mockApiClient.put.mock.calls[0][2]).toEqual({});
     });
@@ -265,7 +265,7 @@ describe('Platform Service Unit Tests', () => {
         createBasicPlatformSetting({ value: PLATFORM_TEST_CONSTANTS.SETTING_VALUE_ALT }),
       ]);
 
-      const result = await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      const result = await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(result[0].id).toBe(PLATFORM_TEST_CONSTANTS.SETTING_ID);
       expect(result[0].value).toBe(PLATFORM_TEST_CONSTANTS.SETTING_VALUE_ALT);
@@ -278,7 +278,7 @@ describe('Platform Service Unit Tests', () => {
     it('should send only the key and value for each submitted setting', async () => {
       mockApiClient.put.mockResolvedValue([createBasicPlatformSetting()]);
 
-      await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       const body = mockApiClient.put.mock.calls[0][1] as { settings: PlatformSettingUpsert[] };
       expect(Object.keys(body.settings[0])).toEqual(['key', 'value']);
@@ -297,7 +297,7 @@ describe('Platform Service Unit Tests', () => {
         )
       );
 
-      const result = await platformService.updateSettings(batch, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      const result = await platformService.updateUserSettings(batch, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       const body = mockApiClient.put.mock.calls[0][1] as { settings: PlatformSettingUpsert[] };
       expect(body.settings).toEqual(batch);
@@ -311,28 +311,28 @@ describe('Platform Service Unit Tests', () => {
     it('should return an empty array when the write response carries no rows', async () => {
       mockApiClient.put.mockResolvedValue([]);
 
-      const result = await platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      const result = await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
 
       expect(result).toEqual([]);
     });
 
     it('should throw ValidationError when settings is empty and make no request', async () => {
       await expect(
-        platformService.updateSettings([], PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
+        platformService.updateUserSettings([], PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when userId is empty and make no request', async () => {
       await expect(
-        platformService.updateSettings(settings, '', PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
+        platformService.updateUserSettings(settings, '', PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when organizationId is empty and make no request', async () => {
       await expect(
-        platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, '')
+        platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, '')
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
@@ -343,7 +343,7 @@ describe('Platform Service Unit Tests', () => {
       );
 
       await expect(
-        platformService.updateSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
+        platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
       ).rejects.toThrow(PLATFORM_TEST_CONSTANTS.ERROR_SETTING_FORBIDDEN);
     });
   });

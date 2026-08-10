@@ -64,7 +64,7 @@ export interface PlatformSettingUpsert {
 }
 
 /**
- * Options for `Platform.getSettings()`.
+ * Options for `Platform.getUserSettings()`.
  */
 export interface PlatformSettingGetOptions {
   /**

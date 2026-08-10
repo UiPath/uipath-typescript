@@ -39,7 +39,7 @@ export interface PlatformServiceModel {
    * await sdk.initialize();
    *
    * const platform = new Platform(sdk);
-   * const settings = await platform.getSettings([PlatformSettingKey.UserTheme], '<userId>', {
+   * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
    *   organizationId: '<organizationId>',
    * });
    * const theme = settings.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
@@ -49,7 +49,7 @@ export interface PlatformServiceModel {
    * ```typescript
    * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
    *
-   * const settings = await platform.getSettings(
+   * const settings = await platform.getUserSettings(
    *   [
    *     PlatformSettingKey.UserTheme,
    *     PlatformSettingKey.UserAccessibility,
@@ -64,7 +64,7 @@ export interface PlatformServiceModel {
    * const parsed = pinned ? JSON.parse(pinned.value) : {};
    * ```
    */
-  getSettings(
+  getUserSettings(
     keys: PlatformSettingKey[],
     userId: string,
     options?: PlatformSettingGetOptions
@@ -91,11 +91,11 @@ export interface PlatformServiceModel {
    * ```typescript
    * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
    *
-   * const [current] = await platform.getSettings([PlatformSettingKey.UserTheme], '<userId>', {
+   * const [current] = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
    *   organizationId: '<organizationId>',
    * });
    *
-   * const updated = await platform.updateSettings(
+   * const updated = await platform.updateUserSettings(
    *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
    *   current.userId,
    *   current.organizationId
@@ -106,7 +106,7 @@ export interface PlatformServiceModel {
    * ```typescript
    * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
    *
-   * await platform.updateSettings(
+   * await platform.updateUserSettings(
    *   [
    *     { key: PlatformSettingKey.UserTheme, value: 'dark' },
    *     { key: PlatformSettingKey.UserAccessibility, value: 'true' },
@@ -116,7 +116,7 @@ export interface PlatformServiceModel {
    * );
    * ```
    */
-  updateSettings(
+  updateUserSettings(
     settings: PlatformSettingUpsert[],
     userId: string,
     organizationId: string

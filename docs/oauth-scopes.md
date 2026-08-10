@@ -230,8 +230,8 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getSettings()` | `PM.Setting` or `PM.Setting.Read` |
-| `updateSettings()` | `PM.Setting` or `PM.Setting.Write` |
+| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
+| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
 
 ## Processes
 

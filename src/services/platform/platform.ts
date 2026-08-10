@@ -28,15 +28,15 @@ const toPlatformSetting = (raw: RawPlatformSetting): PlatformSetting =>
  *
  * Every operation is user-scoped — `userId` is always sent, so reads and writes act on that
  * user's own value for a key. Both operations are bulk:
- * {@link PlatformService.getSettings} fetches many keys in one request, and
- * {@link PlatformService.updateSettings} upserts many keys in one request.
+ * {@link PlatformService.getUserSettings} fetches many keys in one request, and
+ * {@link PlatformService.updateUserSettings} upserts many keys in one request.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write` for
  * read-only / write-only access).
  */
 export class PlatformService extends BaseService implements PlatformServiceModel {
-  @track('Platform.GetSettings')
-  async getSettings(
+  @track('Platform.GetUserSettings')
+  async getUserSettings(
     keys: PlatformSettingKey[],
     userId: string,
     options?: PlatformSettingGetOptions
@@ -45,7 +45,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       throw new ValidationError({ message: 'keys must contain at least one setting key' });
     }
     if (!userId) {
-      throw new ValidationError({ message: 'userId is required for getSettings' });
+      throw new ValidationError({ message: 'userId is required for getUserSettings' });
     }
 
     // Scope travels in the query string on reads, but in the body on writes
@@ -59,8 +59,8 @@ export class PlatformService extends BaseService implements PlatformServiceModel
     return response.data.map(toPlatformSetting);
   }
 
-  @track('Platform.UpdateSettings')
-  async updateSettings(
+  @track('Platform.UpdateUserSettings')
+  async updateUserSettings(
     settings: PlatformSettingUpsert[],
     userId: string,
     organizationId: string
@@ -69,10 +69,10 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       throw new ValidationError({ message: 'settings must contain at least one setting to update' });
     }
     if (!userId) {
-      throw new ValidationError({ message: 'userId is required for updateSettings' });
+      throw new ValidationError({ message: 'userId is required for updateUserSettings' });
     }
     if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for updateSettings' });
+      throw new ValidationError({ message: 'organizationId is required for updateUserSettings' });
     }
 
     const response = await this.put<RawPlatformSetting[]>(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
