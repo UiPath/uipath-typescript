@@ -19,10 +19,6 @@ import { PlatformSettingMap } from '../../models/platform/platform.constants';
 import { PLATFORM_SETTING_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData } from '../../utils/transform';
 
-/** Renames the API's `partitionGlobalId` to the SDK-wide `organizationId`. */
-const toPlatformSetting = (raw: RawPlatformSetting): PlatformSetting =>
-  transformData(raw, PlatformSettingMap) as unknown as PlatformSetting;
-
 /**
  * Service for reading and writing UiPath platform settings.
  *
@@ -56,7 +52,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       PLATFORM_SETTING_ENDPOINTS.SETTINGS,
       { params }
     );
-    return response.data.map(toPlatformSetting);
+    return transformData(response.data, PlatformSettingMap) as unknown as PlatformSetting[];
   }
 
   @track('Platform.UpdateUserSettings')
@@ -80,6 +76,6 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       partitionGlobalId: organizationId,
       userId,
     });
-    return response.data.map(toPlatformSetting);
+    return transformData(response.data, PlatformSettingMap) as unknown as PlatformSetting[];
   }
 }
