@@ -331,6 +331,14 @@ export interface TaskEditMetadataOptions extends FolderScopedOptions {
 }
 
 /**
+ * Options for saving a task's data.
+ */
+export interface TaskSaveDataOptions extends FolderScopedOptions {
+  /** Task type. Routes the save to the type-specific endpoint (Form and App tasks are saved via their own endpoints). Looked up automatically when omitted. */
+  type?: TaskType;
+}
+
+/**
  * Raw task-data shape returned by `getData`, before any method attachment.
  */
 export interface RawTaskDataGetResponse {

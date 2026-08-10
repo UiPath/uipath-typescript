@@ -21,6 +21,7 @@ import {
   TaskGetByIdOptions,
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
+  TaskSaveDataOptions,
   TaskType,
   TasksUnassignOptions,
   UserLoginInfo,
@@ -316,14 +317,36 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
   }
 
   @track('Tasks.SaveData')
-  async saveData(taskId: number, data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {
+  async saveData(taskId: number, data: Record<string, unknown>, options?: TaskSaveDataOptions): Promise<void> {
     if (!taskId) {
       throw new ValidationError({ message: 'taskId is required for saveData' });
     }
 
     const headers = this.resolveFolder(options, 'Tasks.saveData');
+
+    // The generic save endpoint rejects Form and App tasks, which have their own save endpoints.
+    // Look the type up when the caller doesn't provide it so those tasks still route correctly.
+    let type = options?.type;
+    if (!type) {
+      const task = await this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, { taskId }, headers);
+      type = task.type;
+    }
+
+    let endpoint: string;
+    switch (type) {
+      case TaskType.Form:
+        endpoint = TASK_ENDPOINTS.SAVE_FORM_TASK_DATA;
+        break;
+      case TaskType.App:
+        endpoint = TASK_ENDPOINTS.SAVE_APP_TASK_DATA;
+        break;
+      default:
+        endpoint = TASK_ENDPOINTS.SAVE_TASK_DATA;
+        break;
+    }
+
     // Keep data keys verbatim.
-    await this.put<void>(TASK_ENDPOINTS.SAVE_TASK_DATA, { TaskId: taskId, Data: data }, { headers });
+    await this.put<void>(endpoint, { TaskId: taskId, Data: data }, { headers });
   }
 
   @track('Tasks.SaveTags')

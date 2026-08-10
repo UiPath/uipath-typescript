@@ -15,6 +15,7 @@ import type {
   TaskCreateOptions,
   TaskGetUsersOptions,
   TaskCommentGetByTaskIdOptions,
+  TaskSaveDataOptions,
   UserLoginInfo
 } from './tasks.types';
 import { FolderScopedOptions, OperationResponse } from '../common/types';
@@ -352,16 +353,24 @@ export interface TaskServiceModel {
   /**
    * Saves a task's data (form/task payload), replacing the existing payload.
    *
+   * Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
+   *
    * @param taskId - The task to update
    * @param data - The task data to save (replaces the existing payload)
-   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @param options - Task type plus folder scope (folderId, folderKey, or folderPath)
    * @returns Promise resolving once the save completes
    * @example
    * ```typescript
    * await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
    * ```
+   *
+   * @example With an explicit task type (routes to the type-specific endpoint)
+   * ```typescript
+   * import { TaskType } from '@uipath/uipath-typescript/tasks';
+   * await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { type: TaskType.Form, folderId: <folderId> });
+   * ```
    */
-  saveData(taskId: number, data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void>;
+  saveData(taskId: number, data: Record<string, unknown>, options?: TaskSaveDataOptions): Promise<void>;
 
   /**
    * Saves the tags on a task, replacing any existing tags.
@@ -584,7 +593,8 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
 
     async saveData(data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      return service.saveData(taskData.id, data, resolveTaskFolder(options, taskData.folderId));
+      // Route by the task's own type so Form/App tasks hit their save endpoints.
+      return service.saveData(taskData.id, data, resolveTaskFolder({ ...options, type: taskData.type }, taskData.folderId));
     },
 
     async saveTags(tags: Tag[], options?: FolderScopedOptions): Promise<void> {

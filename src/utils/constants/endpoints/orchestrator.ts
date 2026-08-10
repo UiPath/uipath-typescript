@@ -25,6 +25,8 @@ export const TASK_ENDPOINTS = {
   GET_APP_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskById`,
   SAVE_TASK_TAGS: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskTags`,
   SAVE_TASK_DATA: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskData`,
+  SAVE_FORM_TASK_DATA: `${ORCHESTRATOR_BASE}/forms/TaskForms/SaveTaskData`,
+  SAVE_APP_TASK_DATA: `${ORCHESTRATOR_BASE}/tasks/AppTasks/SaveAppTasksData`,
   EDIT_TASK_METADATA: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata`,
 } as const;
 

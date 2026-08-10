@@ -516,11 +516,24 @@ describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integratio
       const marker = `note-${generateRandomString(6)}`;
 
       // Include a PascalCase key to verify getDataById does not case-convert the user payload.
-      const result = await tasks.saveData(taskId, { InvoiceNumber: marker, note: marker }, { folderKey });
+      // Pass the task type to exercise type-based endpoint routing (External uses the generic save endpoint).
+      const result = await tasks.saveData(taskId, { InvoiceNumber: marker, note: marker }, { folderKey, type: TaskType.External });
       expect(result).toBeUndefined();
 
       const after = await tasks.getDataById(taskId, { folderId });
       expect((after.data as any)?.InvoiceNumber).toBe(marker);
+      expect((after.data as any)?.note).toBe(marker);
+    });
+
+    it('should save without an explicit type by looking the type up first', async () => {
+      const { tasks } = getServices();
+      const marker = `note-${generateRandomString(6)}`;
+
+      // No type passed: saveData looks up the task type, then routes (External -> generic here).
+      const result = await tasks.saveData(taskId, { note: marker }, { folderKey });
+      expect(result).toBeUndefined();
+
+      const after = await tasks.getDataById(taskId, { folderId });
       expect((after.data as any)?.note).toBe(marker);
     });
   });
