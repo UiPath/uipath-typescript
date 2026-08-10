@@ -113,7 +113,12 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
 
-**User-defined nested payloads:** When a response contains a nested payload whose keys are user-defined (e.g., task data, entity record fields, custom metadata), apply `pascalToCamelCaseKeys()` to the wrapper/envelope fields only — do not recurse into the nested payload. User-controlled key names are part of the schema contract and must be returned verbatim. Always verify the raw API response: if the nested endpoint already returns camelCase, do not apply `pascalToCamelCaseKeys()` at all.
+**User-defined nested payloads:** When a response contains a nested payload whose keys are user-defined (e.g., task custom data, entity record schema columns), do NOT pass the whole response through `pascalToCamelCaseKeys()`. Because `pascalToCamelCaseKeys()` always recurses, it will corrupt user-defined keys inside the nested payload. Instead, manually transform only the wrapper/envelope fields and pass the nested payload through verbatim (substitute `Data` with the actual API field name):
+```typescript
+const { Data: data, ...envelope } = response.data;  // 'Data' is the API's nested payload field
+return { ...pascalToCamelCaseKeys(envelope), data };
+```
+If the endpoint already returns camelCase, do not apply `pascalToCamelCaseKeys()` at all.
 
 ## Endpoint constants
 
@@ -250,7 +255,7 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
-**`FolderScopedOptions` for string-keyed folder services** — when a service accepts a folder identifier as a string (`folderKey` GUID or `folderPath` slash-delimited path), use `FolderScopedOptions` from `src/models/common/types.ts` instead of declaring a custom folder field. `FolderScopedOptions` extends `BaseOptions` and bundles all three folder identifier forms (`folderId`, `folderKey`, `folderPath`) in a single, consistent interface. Extend it in the service's options type: `export interface MyGetAllOptions extends FolderScopedOptions { ... }`.
+**`FolderScopedOptions` for folder-aware services** — when a service's options type needs to accept any folder identifier, use `FolderScopedOptions` from `src/models/common/types.ts` instead of declaring a custom folder field. `FolderScopedOptions` extends `BaseOptions` and bundles all three forms (`folderId: number`, `folderKey: string`, `folderPath: string`) in a single, consistent interface used across Orchestrator, Maestro, and Action Center. Extend it in the service's options type: `export interface MyGetAllOptions extends FolderScopedOptions { ... }`.
 
 ## OperationResponse pattern
 
@@ -264,12 +269,12 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 ## Write request body hygiene
 
-**Strip `expand` and `select` from write request bodies** — when a write method (create, update) accepts an options type that extends `BaseOptions` (which includes `expand` and `select`), those fields must be explicitly destructured out before building the request body. Failing to do so silently injects OData query params into the write payload. Pattern:
+**Strip `expand`, `select`, and header-only fields from write request bodies** — when a write method (create, update) accepts an options type that extends `BaseOptions` (which includes `expand` and `select`) or `FolderScopedOptions` (which adds `folderId`, `folderKey`, `folderPath`), those fields must be explicitly destructured out before building the request body. Failing to do so silently injects OData query params or folder identifiers into the write payload. Pattern:
 ```typescript
-const { expand, select, folderKey, ...writeBody } = options ?? {};
+const { expand, select, folderId, folderKey, folderPath, ...writeBody } = options ?? {};
 await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: folderKey }) });
 ```
-The same principle applies to any header-only field included in an options type — strip it before forwarding the remainder as the request body.
+Strip all fields that belong in headers or query params — not in the body — before forwarding the remainder as the request payload.
 
 ## Read-modify-write for replace-style updates
 
@@ -282,7 +287,15 @@ const updated = { ...current, ...options };
 await this.put(ENDPOINTS.UPDATE(id), updated, { headers });
 ```
 
-**NEVER** send a read-only sentinel enum value to a write endpoint — when the API returns a sentinel like `RetentionAction.None` on reads but forbids it on writes, map it to `null` (or omit it) before forwarding. Add a unit test asserting the sentinel is never present in the write body.
+**NEVER** send a read-only sentinel enum value to a write endpoint — when the API returns a sentinel like `RetentionAction.None` on reads but forbids it on writes, remap it before forwarding. Pattern:
+```typescript
+const current = await this.fetchById(id);
+const updated = { ...current, ...options };
+// Remap read-only sentinel: API rejects RetentionAction.None on writes
+if (updated.retentionAction === RetentionAction.None) updated.retentionAction = null;
+await this.put(ENDPOINTS.UPDATE(id), updated, { headers });
+```
+Add a unit test asserting the sentinel is absent from the write body when the current entity has it set.
 
 Add a **merge-preservation unit test** for every read-modify-write update method: verify that fields NOT included in the update options retain their values from the current entity state.
 
