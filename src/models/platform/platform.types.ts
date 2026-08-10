@@ -72,7 +72,8 @@ export interface PlatformSettingGetOptions {
    *
    * Supply this in practice. When omitted the API falls back to the **host** partition
    * rather than the caller's own organization, and an external application is not
-   * authorized for it — the request comes back `403 Forbidden`.
+   * authorized for it — the request comes back `403 Forbidden`. Passing an empty string
+   * is rejected rather than treated as omitted.
    */
   organizationId?: string;
 }

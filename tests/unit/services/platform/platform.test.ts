@@ -204,11 +204,46 @@ describe('Platform Service Unit Tests', () => {
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
+    // Untyped JS consumers can reach this; the guard turns a TypeError into a ValidationError
+    it.each([
+      ['undefined', undefined as unknown as PlatformSettingKey[]],
+      ['null', null as unknown as PlatformSettingKey[]],
+    ])('should throw ValidationError when keys is %s and make no request', async (_label, keys) => {
+      await expect(
+        platformService.getUserSettings(keys, PLATFORM_TEST_CONSTANTS.USER_ID)
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
     it('should throw ValidationError when userId is empty and make no request', async () => {
       await expect(
         platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], '')
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when organizationId is provided but empty', async () => {
+      // Dropping it would silently target the host partition and surface an opaque 403
+      await expect(
+        platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID, {
+          organizationId: '',
+        })
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should read without a scope param when options are omitted entirely', async () => {
+      // Omitting the option is still allowed — only an explicitly empty value is rejected
+      mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
+
+      await platformService.getUserSettings(
+        [PLATFORM_TEST_CONSTANTS.SETTING_KEY],
+        PLATFORM_TEST_CONSTANTS.USER_ID
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
+      expect(spec.params).not.toHaveProperty('partitionGlobalId');
     });
 
     it('should propagate errors', async () => {
@@ -319,6 +354,21 @@ describe('Platform Service Unit Tests', () => {
     it('should throw ValidationError when settings is empty and make no request', async () => {
       await expect(
         platformService.updateUserSettings([], PLATFORM_TEST_CONSTANTS.USER_ID, PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID)
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    // Untyped JS consumers can reach this; the guard turns a TypeError into a ValidationError
+    it.each([
+      ['undefined', undefined as unknown as PlatformSettingUpsert[]],
+      ['null', null as unknown as PlatformSettingUpsert[]],
+    ])('should throw ValidationError when settings is %s and make no request', async (_label, submitted) => {
+      await expect(
+        platformService.updateUserSettings(
+          submitted,
+          PLATFORM_TEST_CONSTANTS.USER_ID,
+          PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID
+        )
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });

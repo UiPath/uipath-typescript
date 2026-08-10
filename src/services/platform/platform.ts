@@ -37,11 +37,16 @@ export class PlatformService extends BaseService implements PlatformServiceModel
     userId: string,
     options?: PlatformSettingGetOptions
   ): Promise<PlatformSetting[]> {
-    if (keys.length === 0) {
+    if (!keys?.length) {
       throw new ValidationError({ message: 'keys must contain at least one setting key' });
     }
     if (!userId) {
       throw new ValidationError({ message: 'userId is required for getUserSettings' });
+    }
+    // Reject an empty organization rather than dropping it — omitting it targets the host
+    // partition, so the caller would get an opaque 403 instead of being told what was wrong
+    if (options?.organizationId !== undefined && !options.organizationId) {
+      throw new ValidationError({ message: 'organizationId must not be empty when provided' });
     }
 
     // Scope travels in the query string on reads, but in the body on writes
@@ -61,7 +66,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
     userId: string,
     organizationId: string
   ): Promise<PlatformSetting[]> {
-    if (settings.length === 0) {
+    if (!settings?.length) {
       throw new ValidationError({ message: 'settings must contain at least one setting to update' });
     }
     if (!userId) {
