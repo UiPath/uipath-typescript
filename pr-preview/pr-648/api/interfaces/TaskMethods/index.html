@@ -1369,9 +1369,33 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../TaskServiceModel/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../task/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1380,7 +1404,50 @@
   </span>
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_12">
+            <span class="md-nav__icon md-icon"></span>
+            Tasks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TaskCatalogServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Task Catalogs
+    
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2230,9 +2297,54 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#createcomment" class="md-nav__link">
+    <span class="md-ellipsis">
+      createComment()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#editmetadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      editMetadata()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getcomments" class="md-nav__link">
+    <span class="md-ellipsis">
+      getComments()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reassign" class="md-nav__link">
     <span class="md-ellipsis">
       reassign()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#savedata" class="md-nav__link">
+    <span class="md-ellipsis">
+      saveData()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#savetags" class="md-nav__link">
+    <span class="md-ellipsis">
+      saveTags()
     </span>
   </a>
   
@@ -2326,12 +2438,110 @@
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskCompletionOptions/"><code>TaskCompletionOptions</code></a>&gt;&gt;</p>
 <p>Promise resolving to completion result</p>
 <hr />
+<h3 id="createcomment">createComment()<a class="headerlink" href="#createcomment" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>createComment</strong>(<code>text</code>: <code>string</code>, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Creates a comment on this task.</p>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>text</code></td>
+<td><code>string</code></td>
+<td>Comment text (max 512 characters)</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Optional folder scope override (defaults to this task's folder)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt;</p>
+<p>Promise resolving to the created comment <a href="../TaskCommentGetResponse/">TaskCommentGetResponse</a></p>
+<hr />
+<h3 id="editmetadata">editMetadata()<a class="headerlink" href="#editmetadata" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>editMetadata</strong>(<code>options?</code>: <a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Edits this task's metadata (title, priority, catalog association, etc.).</p>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../TaskEditMetadataOptions/"><code>TaskEditMetadataOptions</code></a></td>
+<td>Fields to change plus optional folder scope override (defaults to this task's folder)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving once the edit completes</p>
+<hr />
+<h3 id="getcomments">getComments()<a class="headerlink" href="#getcomments" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getComments</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt;&gt;</p>
+</blockquote>
+<p>Gets the comments on this task.</p>
+<h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code> <em>extends</em> <a href="../../type-aliases/TaskCommentGetByTaskIdOptions/"><code>TaskCommentGetByTaskIdOptions</code></a></td>
+<td><a href="../../type-aliases/TaskCommentGetByTaskIdOptions/"><code>TaskCommentGetByTaskIdOptions</code></a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><code>T</code></td>
+<td>Optional folder scope override (defaults to this task's folder) plus query and pagination options</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../TaskCommentGetResponse/"><code>TaskCommentGetResponse</code></a>&gt;&gt;</p>
+<p>Promise resolving to either a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> or <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../TaskCommentGetResponse/">TaskCommentGetResponse</a> items, paginated when pagination options are used.</p>
+<hr />
 <h3 id="reassign">reassign()<a class="headerlink" href="#reassign" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>reassign</strong>(<code>options</code>: <a href="../../type-aliases/TaskAssignOptions/"><code>TaskAssignOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 </blockquote>
 <p>Reassigns this task to a new user</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2348,16 +2558,78 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../../type-aliases/TaskAssignmentOptions/"><code>TaskAssignmentOptions</code></a>[] | <a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[]&gt;&gt;</p>
 <p>Promise resolving to task assignment results</p>
+<hr />
+<h3 id="savedata">saveData()<a class="headerlink" href="#savedata" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>saveData</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;, <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Saves this task's data (form/task payload), replacing the existing payload.</p>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>The task data to save</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Optional folder scope override (defaults to this task's folder)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving once the save completes</p>
+<hr />
+<h3 id="savetags">saveTags()<a class="headerlink" href="#savetags" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>saveTags</strong>(<code>tags</code>: <a href="../Tag/"><code>Tag</code></a>[], <code>options?</code>: <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Saves the tags on this task, replacing any existing tags.</p>
+<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tags</code></td>
+<td><a href="../Tag/"><code>Tag</code></a>[]</td>
+<td>The tags to set</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></td>
+<td>Optional folder scope override (defaults to this task's folder)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving once the save completes</p>
 <hr />
 <h3 id="unassign">unassign()<a class="headerlink" href="#unassign" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>unassign</strong>(): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 </blockquote>
 <p>Unassigns this task (removes current assignee)</p>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../TaskAssignmentResponse/"><code>TaskAssignmentResponse</code></a>[] | { <code>taskId</code>: <code>number</code>; }[]&gt;&gt;</p>
 <p>Promise resolving to task assignment results</p>
 
