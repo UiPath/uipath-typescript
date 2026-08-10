@@ -20,6 +20,11 @@ on:
 
 permissions: {}
 
+env:
+  # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
+  # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
+  NODE_OPTIONS: --max-old-space-size=6144
+
 jobs:
   publish-sdk:
     if: github.event.inputs.package == 'ts-sdk'
