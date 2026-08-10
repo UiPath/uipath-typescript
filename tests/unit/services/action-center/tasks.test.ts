@@ -1457,7 +1457,7 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
 
       const data = { line_total: 5, isApproved: true };
-      const result = await service.saveData(EXT_TASK.ID, data, { folderId: EXT_TASK.FOLDER });
+      const result = await service.saveData(EXT_TASK.ID, data, { folderId: EXT_TASK.FOLDER, type: TaskType.External });
 
       expect(result).toBeUndefined();
       const [url, body, spec] = mockApiClient.put.mock.calls[0];
@@ -1467,9 +1467,50 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(spec.headers[FOLDER_ID]).toBe(EXT_TASK.FOLDER.toString());
     });
 
+    it('should route Form tasks to the form save endpoint', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.Form });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_FORM_TASK_DATA);
+    });
+
+    it('should route App tasks to the app save endpoint and not look up the type', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.App });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_APP_TASK_DATA);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should route other task types to the generic save endpoint', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.External });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_TASK_DATA);
+    });
+
+    it('should look up the type when not passed and route Form/App to their endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.App }));
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER });
+      expect(mockApiClient.get).toHaveBeenCalled();
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_APP_TASK_DATA);
+    });
+
+    it('should look up the type when not passed and route other types to the generic endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.External }));
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER });
+      expect(mockApiClient.get).toHaveBeenCalled();
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_TASK_DATA);
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.put.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.saveData(EXT_TASK.ID, {}, { folderId: EXT_TASK.FOLDER, type: TaskType.External })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should propagate errors from the type lookup when no type is passed', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
       await expect(service.saveData(EXT_TASK.ID, {}, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
     });
   });
 

@@ -381,7 +381,23 @@ describe('Task Models', () => {
         expect(mockService.saveData).toHaveBeenCalledWith(
           TASK_TEST_CONSTANTS.TASK_ID,
           { amount: 1200 },
-          { folderId: TEST_CONSTANTS.FOLDER_ID },
+          { folderId: TEST_CONSTANTS.FOLDER_ID, type: TaskType.External },
+        );
+      });
+
+      it('should inject the task\'s own type so it routes to the right endpoint', async () => {
+        const task = createTaskWithMethods(
+          createBasicTask({ folderId: TEST_CONSTANTS.FOLDER_ID, type: TaskType.App }),
+          mockService,
+        );
+        mockService.saveData = vi.fn().mockResolvedValue(undefined);
+
+        await task.saveData({ amount: 1 });
+
+        expect(mockService.saveData).toHaveBeenCalledWith(
+          TASK_TEST_CONSTANTS.TASK_ID,
+          { amount: 1 },
+          expect.objectContaining({ type: TaskType.App }),
         );
       });
 
