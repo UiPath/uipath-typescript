@@ -75,10 +75,6 @@ const page5 = await jobs.getAll({
 
 Gets all attachments linked to a job.
 
-Returns one entry per link, each carrying the attachment's name, its category, and the `attachmentId` needed to read the file itself. To get a job key and its folder, first list jobs with [getAll](#getall) — each job exposes `key` and `folderId`.
-
-The result is empty when the job has no attachments.
-
 #### Parameters
 
 - `jobKey`: `string` — The unique key (GUID) of the job whose attachments to retrieve
@@ -191,9 +187,9 @@ if (completedJob) {
 
 Links an existing attachment to a job.
 
-This does not upload a file — it associates an attachment that already exists in Orchestrator with a job. Supply the `attachmentId` of that attachment; the job is identified by `jobKey`.
+This does not upload a file — it associates an attachment that already exists in Orchestrator with a job.
 
-The returned link does not carry `attachmentName` or `creatorUserId` yet — read the job's attachments back with [getAttachments](#getattachments) to get the fully populated entry.
+The returned link does not carry `attachmentName` or `creatorUserId` yet — read them back with [getAttachments](#getattachments).
 
 #### Parameters
 

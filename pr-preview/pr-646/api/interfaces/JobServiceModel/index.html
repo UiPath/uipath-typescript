@@ -2615,11 +2615,6 @@ Pass <code>folderId</code> to scope the query to a specific folder.</p>
 <p><strong>getAttachments</strong>(<code>jobKey</code>: <code>string</code>, <code>folderId</code>: <code>number</code>): <code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>[]&gt;</p>
 </blockquote>
 <p>Gets all attachments linked to a job.</p>
-<p>Returns one entry per link, each carrying the attachment's name, its
-category, and the <code>attachmentId</code> needed to read the file itself. To get a
-job key and its folder, first list jobs with <a href="#getall">getAll</a> — each job
-exposes <code>key</code> and <code>folderId</code>.</p>
-<p>The result is empty when the job has no attachments.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2765,11 +2760,9 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 </blockquote>
 <p>Links an existing attachment to a job.</p>
 <p>This does not upload a file — it associates an attachment that already
-exists in Orchestrator with a job. Supply the <code>attachmentId</code> of that
-attachment; the job is identified by <code>jobKey</code>.</p>
+exists in Orchestrator with a job.</p>
 <p>The returned link does not carry <code>attachmentName</code> or <code>creatorUserId</code> yet —
-read the job's attachments back with <a href="#getattachments">getAttachments</a> to get the
-fully populated entry.</p>
+read them back with <a href="#getattachments">getAttachments</a>.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
