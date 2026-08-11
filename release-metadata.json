@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.0",
+  "sdkVersion": "1.6.1",
   "services": [
     {
       "name": "AgentMemory",
@@ -132,6 +132,10 @@
       "since": null,
       "methods": [
         {
+          "name": "create",
+          "since": "1.6.1"
+        },
+        {
           "name": "getById",
           "since": null
         }
@@ -212,6 +216,10 @@
         {
           "name": "getStagesSlaSummary",
           "since": null
+        },
+        {
+          "name": "getVariables",
+          "since": "1.6.0"
         },
         {
           "name": "pause",
@@ -450,6 +458,21 @@
       ]
     },
     {
+      "name": "Functions",
+      "subpath": "@uipath/uipath-typescript/functions",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.6.1"
+        },
+        {
+          "name": "invoke",
+          "since": "1.6.1"
+        }
+      ]
+    },
+    {
       "name": "Governance",
       "subpath": "@uipath/uipath-typescript/governance",
       "since": "1.4.1",
@@ -474,12 +497,20 @@
           "since": null
         },
         {
+          "name": "getAttachments",
+          "since": "1.6.1"
+        },
+        {
           "name": "getById",
           "since": null
         },
         {
           "name": "getOutput",
           "since": null
+        },
+        {
+          "name": "linkAttachment",
+          "since": "1.6.1"
         },
         {
           "name": "restart",
@@ -554,6 +585,21 @@
         {
           "name": "getContentPartById",
           "since": null
+        }
+      ]
+    },
+    {
+      "name": "Platform",
+      "subpath": "@uipath/uipath-typescript/platform",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "getUserSettings",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateUserSettings",
+          "since": "1.6.1"
         }
       ]
     },
@@ -654,6 +700,37 @@
       ]
     },
     {
+      "name": "TaskCatalogs",
+      "subpath": "@uipath/uipath-typescript/tasks",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getAll",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getByName",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateByName",
+          "since": "1.6.1"
+        }
+      ]
+    },
+    {
       "name": "Tasks",
       "subpath": "@uipath/uipath-typescript/tasks",
       "since": null,
@@ -671,6 +748,14 @@
           "since": null
         },
         {
+          "name": "createComment",
+          "since": "1.6.1"
+        },
+        {
+          "name": "editMetadata",
+          "since": "1.6.1"
+        },
+        {
           "name": "getAll",
           "since": null
         },
@@ -679,12 +764,32 @@
           "since": null
         },
         {
+          "name": "getComments",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getDataById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getDataByKey",
+          "since": "1.6.1"
+        },
+        {
           "name": "getUsers",
           "since": null
         },
         {
           "name": "reassign",
           "since": null
+        },
+        {
+          "name": "saveData",
+          "since": "1.6.1"
+        },
+        {
+          "name": "saveTags",
+          "since": "1.6.1"
         },
         {
           "name": "unassign",
