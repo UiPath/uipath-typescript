@@ -296,9 +296,8 @@ export class UiPath implements IUiPath {
    * and returns to the configured `redirectUri` (override with
    * `postLogoutRedirectUri`). Already-issued access tokens remain valid
    * until they expire. The redirect is asynchronous — the page keeps
-   * rendering until the browser navigates, so render a brief signing-out
-   * state (rather than your login view) for that gap to avoid the login
-   * screen flashing twice.
+   * rendering until the browser navigates; handle that interim state to
+   * prevent your login screen appearing twice.
    *
    * @param options - Logout behavior options
    *
@@ -324,7 +323,7 @@ export class UiPath implements IUiPath {
    * Updates the access token used for API requests.
    * Use this to inject or refresh a token externally.
    *
-   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.#authService?.updateToken(tokenInfo);

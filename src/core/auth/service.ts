@@ -239,7 +239,7 @@ export class AuthService {
 
   /**
    * Updates the access token used for API requests
-   * @param tokenInfo The token information containing the access token, type, expiration, and refresh token
+   * @param tokenInfo The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.tokenManager.setToken(tokenInfo);
