@@ -132,6 +132,10 @@
       "since": null,
       "methods": [
         {
+          "name": "create",
+          "since": "1.6.1"
+        },
+        {
           "name": "getById",
           "since": null
         }
@@ -493,12 +497,20 @@
           "since": null
         },
         {
+          "name": "getAttachments",
+          "since": "1.6.1"
+        },
+        {
           "name": "getById",
           "since": null
         },
         {
           "name": "getOutput",
           "since": null
+        },
+        {
+          "name": "linkAttachment",
+          "since": "1.6.1"
         },
         {
           "name": "restart",
