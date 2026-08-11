@@ -1,71 +1,49 @@
-/**
- * Runtime resource override resolution.
- *
- * Reads the override dict from <script type="application/json" id="uipath-overrides">
- * injected into index.html at deploy time (by syncResourceOverwritesToCdn).
- *
- * The override dict maps binding keys to new resource names/folders:
- *   { "asset.CustomerConfig.Shared/PublicApps": { "name": "ProdConfig", "folderPath": "Production/Live" } }
- *
- * The DEFAULT name from bindings.gen.ts (compiled into the bundle) acts as
- * a LOOKUP KEY. This function resolves it to the overridden value at runtime.
- */
+import { probeChannel } from '../ambient/channel';
+import { pageOverrides } from './page-overrides';
+import type { ResourceOverride, ResourceOverrides } from './overrides.types';
 
-export interface ResourceOverride {
-  name: string;
-  folderPath: string;
-}
-
-type OverrideDict = Record<string, ResourceOverride>;
-
-let cachedOverrides: OverrideDict | null = null;
-let loaded = false;
-
-function loadOverrides(): OverrideDict {
-  if (loaded) return cachedOverrides ?? {};
-
-  loaded = true;
-
-  if (typeof document === 'undefined') return {};
-
-  const el = document.getElementById('uipath-overrides');
-  if (!el) return {};
-
-  try {
-    cachedOverrides = JSON.parse(el.textContent ?? '{}');
-    console.log('[UiPath SDK] Loaded overrides:', cachedOverrides);
-    return cachedOverrides ?? {};
-  } catch {
-    console.warn('[UiPath SDK] Failed to parse uipath-overrides script tag');
-    return {};
-  }
-}
+const RESOURCE_OVERWRITES_KEY = Symbol.for('uipath.resourceOverwrites.v1');
 
 /**
- * Resolves a resource override at runtime.
+ * The SDK's resource label → the type prefix the publisher spells in its keys (Orchestrator's
+ * `ResourceTypeRaw`, taken from the package's bindings file).
  *
- * @param resourceType - e.g. "asset", "entity", "bucket"
- * @param name - the DEFAULT resource name from compiled bindings (e.g. "CustomerConfig")
- * @param folderPath - the DEFAULT folder path (e.g. "Shared/PublicApps")
- * @returns the override if found, or null if no override exists
+ * Matching is case-sensitive, so the publisher's exact literal is written here rather than derived
+ * from the label at runtime. A label absent from this map is a resource the publisher does not
+ * describe, and is never redirected.
  */
+const BINDING_TYPES: Record<string, string> = {
+  Asset: 'asset',
+  Bucket: 'bucket',
+  Process: 'process',
+};
+
+/** This SDK's end of the resource-overrides channel: a host's table when one is installed,
+ *  otherwise the page's, asked per lookup rather than held. */
+const channel = probeChannel<ResourceOverrides>(RESOURCE_OVERWRITES_KEY, pageOverrides);
+
 export function resolveOverride(
   resourceType: string,
   name: string,
-  folderPath: string,
-): ResourceOverride | null {
-  const overrides = loadOverrides();
+  folderPath?: string,
+): ResourceOverride | undefined {
+  const bindingType = BINDING_TYPES[resourceType];
+  if (!bindingType) return undefined;
 
-  // Solution-inline bindings (design-time folderPath `.`) are written by the
-  // admin under the unscoped `type.name` key, not `type.name..`. Try scoped
-  // first, then fall back so both shapes resolve.
-  const scopedKey = `${resourceType}.${name}.${folderPath}`;
-  const unscopedKey = `${resourceType}.${name}`;
-  const override = overrides[scopedKey] ?? overrides[unscopedKey] ?? null;
+  const table = channel();
+  if (!table) return undefined;
 
-  if (override) {
-    console.log(`[UiPath SDK] Override resolved: "${name}" → "${override.name}" (folder: "${override.folderPath}")`);
-  }
+  // The lookup is literal — the key is built from exactly what the call addressed, and a miss is
+  // a miss. Naming a folder matches only an entry published for that folder
+  // (`asset.CustomerConfig.Shared/PublicApps`, the form coded apps emit); naming none matches only
+  // the unscoped entry (`asset.CustomerConfig`, the form Orchestrator emits with the folder in the
+  // value). Deliberately no widening from one to the other: an override applies to the identity
+  // the caller actually asked for, or not at all.
+  const entry = table[[bindingType, name, folderPath].filter(Boolean).join('.')];
+  if (!entry) return undefined;
 
-  return override;
+  return {
+    name: entry.name,
+    folderPath: entry.folderPath,
+  };
 }

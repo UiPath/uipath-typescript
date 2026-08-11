@@ -7,7 +7,7 @@ import { addPrefixToKeys, transformOptions, FieldMapping } from '../utils/transf
 import { NotFoundError } from '../core/errors';
 import { validateName } from '../utils/validation/name-validator';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
-import { resolveOverride, type ResourceOverride } from '../utils/overrides/resolve-override';
+import { resolveOverride } from '../utils/overrides/resolve-override';
 
 /**
  * Matches single-quote characters in OData string literals — escaped to `''`
@@ -97,26 +97,19 @@ export class FolderScopedService extends BaseService {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
-    // The compiled bundle passes the design-time name from bindings; at runtime,
-    // swap in an admin-configured override (name + folderPath) when present.
-    const override: ResourceOverride | null = resolveOverride(
-      resourceType.toLowerCase(),
-      validatedName,
-      folderPath ?? '.',
-    );
+    // Always consulted, whatever folder context the caller supplied: an override redirects the
+    // design-time name an admin configured, and that holds however the call names its folder.
+    // `folderPath` also scopes the lookup, for publishers that key entries by design-time folder.
+    const override = resolveOverride(resourceType, validatedName, folderPath);
     const resolvedName = override?.name ?? validatedName;
+    // The override's folder describes where its target lives, so it replaces the caller's path.
+    // `folderId`/`folderKey` still ride along; the server applies folderPath > folderKey > folderId.
     const resolvedFolderPath = override?.folderPath ?? folderPath;
-
-    // `.` is the design-time solution-inline sentinel — the resource lives in
-    // "the same folder as the coded app". Drop it so `resolveFolderHeaders`
-    // falls back to the folder context configured at SDK init (meta tags).
-    const effectiveFolderPath =
-      resolvedFolderPath === '.' ? undefined : resolvedFolderPath;
 
     const headers = resolveFolderHeaders({
       folderId,
       folderKey,
-      folderPath: effectiveFolderPath,
+      folderPath: resolvedFolderPath,
       resourceType: `${resourceType}.getByName`,
       fallbackFolderKey: this.config.folderKey,
     });
@@ -138,7 +131,7 @@ export class FolderScopedService extends BaseService {
 
     const items = response.data?.value;
     if (!items?.length) {
-      const folderHint = describeFolderForError(folderId, folderKey, effectiveFolderPath);
+      const folderHint = describeFolderForError(folderId, folderKey, resolvedFolderPath);
       throw new NotFoundError({
         message: `${resourceType} '${resolvedName}' not found${folderHint}.`,
       });
