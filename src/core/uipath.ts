@@ -295,7 +295,10 @@ export class UiPath implements IUiPath {
    * (browser-only; requires the `openid` scope): the browser is redirected
    * and returns to the configured `redirectUri` (override with
    * `postLogoutRedirectUri`). Already-issued access tokens remain valid
-   * until they expire.
+   * until they expire. The redirect is asynchronous — the page keeps
+   * rendering until the browser navigates, so render a brief signing-out
+   * state (rather than your login view) for that gap to avoid the login
+   * screen flashing twice.
    *
    * @param options - Logout behavior options
    *

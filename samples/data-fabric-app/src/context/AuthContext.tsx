@@ -82,7 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const logout = () => {
     sdk.logout({ endCloudSession: true })
-    // The redirect is asynchronous — clear UI state for the interim tick.
+    // The redirect is asynchronous — the page keeps rendering until the
+    // browser navigates, so this makes the login screen flash briefly before
+    // the post-logout reload shows it again. Apps wanting a steadier UX can
+    // gate the UI behind their own "signing out" state for that gap instead.
     setIsAuthenticated(false)
     setError(null)
   }
