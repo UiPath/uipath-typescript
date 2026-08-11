@@ -6,15 +6,17 @@ import { track } from '../../core/telemetry';
 import { BaseService } from '../base';
 
 import type {
+  CategorySubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionGetPublishersResponse,
   SubscriptionGetResponse,
   SubscriptionGetSupportedChannelsResponse,
+  SubscriptionUpdateCategoriesResponse,
+  SubscriptionUpdateTopicsResponse,
+  TopicSubscriptionUpdate,
 } from '../../models/notification/subscriptions.types';
-import type {
-  SubscriptionServiceModel,
-} from '../../models/notification/subscriptions.models';
+import type { SubscriptionServiceModel } from '../../models/notification/subscriptions.models';
 
 import { SUBSCRIPTION_ENDPOINTS } from '../../utils/constants/endpoints';
 import { TENANT_ID } from '../../utils/constants/headers';
@@ -62,5 +64,21 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
       { headers: createHeaders({ [TENANT_ID]: tenantId }) }
     );
     return response.data;
+  }
+
+  @track('Subscriptions.UpdateTopics')
+  async updateTopics(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicsResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC, {
+      userSubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  @track('Subscriptions.UpdateCategories')
+  async updateCategories(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoriesResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY, {
+      categorySubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
   }
 }

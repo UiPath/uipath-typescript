@@ -27,6 +27,8 @@ import {
   EntityDeleteAttachmentOptions,
   EntityDeleteAttachmentResponse,
   EntityQueryRecordsOptions,
+  EntityJoin,
+  JoinType,
   EntityImportRecordsResponse,
   EntityImportRecordsByIdOptions,
   EntityCreateOptions,
@@ -61,8 +63,33 @@ import {
   ENTITY_TYPE_IDS,
   MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
+
+/** Wire values for join types on the name-based multi-entity query route. */
+const JOIN_TYPE_WIRE: Record<JoinType, EntityJoinPayload['type']> = {
+  [JoinType.LeftJoin]: 'LEFT',
+  [JoinType.InnerJoin]: 'INNER',
+};
+
+/** Qualify `field` with `entityName` unless the caller already qualified it. */
+const qualifyJoinField = (entityName: string, field: string): string =>
+  field.includes('.') ? field : `${entityName}.${field}`;
+
+/**
+ * Translate the public {@link EntityJoin} shape to the multi-entity query wire
+ * contract ({@link EntityJoinPayload}) with entity-qualified join keys.
+ */
+function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload {
+  return {
+    type: JOIN_TYPE_WIRE[join.joinType ?? JoinType.LeftJoin],
+    entity: join.relatedEntityName,
+    on: {
+      left: qualifyJoinField(join.entityName ?? baseEntityName, join.joinFieldName),
+      right: qualifyJoinField(join.relatedEntityName, join.relatedFieldName),
+    },
+  };
+}
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -268,18 +295,40 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
-    // The API accepts oversized join arrays without erroring, so enforce the limit here.
     if (options?.joins && options.joins.length > MAX_QUERY_JOINS) {
       throw new ValidationError({
         message: `A maximum of ${MAX_QUERY_JOINS} joins is supported per query (received ${options.joins.length})`,
       });
     }
+    // The multi-entity query API rejects join queries without a projection;
+    // surface that requirement client-side with an actionable message.
+    if (options?.joins && options.joins.length > 0 && !options.selectedFields?.length && !options.aggregates?.length) {
+      throw new ValidationError({
+        message: 'Join queries require selectedFields or aggregates — reference fields as "<EntityName>.<FieldName>" (e.g. "Customer.name")',
+      });
+    }
+    // The server's aggregates-only HAVING contract requires aggregates + groupBy;
+    // surface that requirement client-side with an actionable message.
+    if (options?.havingFilter && (!options.aggregates?.length || !options.groupBy?.length)) {
+      throw new ValidationError({
+        message: 'havingFilter requires aggregates and groupBy — conditions reference declared aggregate aliases; use filterGroup for row-level conditions',
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
+    // The multi-entity (joins) contract only exists on the name-based query route —
+    // the ID-based route silently drops the `joins` body key. Resolve the entity name
+    // and translate each join to the wire shape ({ type, entity, on: { left, right } }).
+    let getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id);
+    if (options?.joins && options.joins.length > 0) {
+      const baseEntityName = await this.resolveEntityName(id, folderKey);
+      (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));
+      getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(baseEntityName);
+    }
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
+      getEndpoint,
       method: HTTP_METHODS.POST,
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       queryParams: createParams({ expansionLevel }),
@@ -293,7 +342,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins', 'havingFilter']
     }, downstreamOptions);
   }
 
@@ -455,7 +504,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     // Filter out removed fields
     if (options.removeFields?.length) {
-      const removeSet = new Set(options.removeFields.map(r => r.fieldName));
+      const removeSet = new Set(options.removeFields.map(r => r.name));
       fields = fields.filter(f => !removeSet.has(f.name));
     }
 
@@ -511,12 +560,31 @@ export class EntityService extends BaseService implements EntityServiceModel {
           fields: [...fields, ...newFields],
           folderId: raw.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
           isRbacEnabled: raw.isRbacEnabled ?? false,
-          isInsightsEnabled: raw.isInsightsEnabled ?? false,
+          // `raw` is the untransformed GET response, so read the wire key `isInsightsEnabled`
+          // directly (it is not on the public type, which exposes it as `isAnalyticsEnabled`).
+          isInsightsEnabled: (raw as { isInsightsEnabled?: boolean }).isInsightsEnabled ?? false,
           externalFields: raw.externalFields ?? [],
         },
       },
       { headers: folderHeaders },
     );
+  }
+
+  /**
+   * Resolves an entity's name from its ID. Untracked internal helper — calling
+   * the public `getById` from another `@track`-decorated method would emit
+   * double telemetry (see conventions.md, delegation anti-pattern).
+   *
+   * @param id - Entity ID to resolve
+   * @param folderKey - Optional folder key sent as the X-UIPATH-FolderKey header
+   * @private
+   */
+  private async resolveEntityName(id: string, folderKey?: string): Promise<string> {
+    const response = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data, EntityMap).name;
   }
 
   /**
@@ -653,12 +721,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     refMeta?: ResolvedReferenceMeta,
   ): FieldSchemaPayload {
     const fieldType = field.type ?? EntityFieldDataType.STRING;
-    this.validateFieldConstraints(fieldType, field, field.fieldName);
+    this.validateFieldConstraints(fieldType, field, field.name);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
     const isFile = fieldType === EntityFieldDataType.FILE;
     if (isRelationship && (!field.referenceEntityId || !field.referenceFieldId)) {
       throw new ValidationError({
-        message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
+        message: `Field '${field.name}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
       });
     }
     const mapping = EntitySchemaFieldTypeMap[fieldType];
@@ -667,8 +735,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId === undefined ? undefined : { id: field.referenceEntityId });
     const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
     return {
-      name: field.fieldName,
-      displayName: field.displayName ?? field.fieldName,
+      name: field.name,
+      displayName: field.displayName ?? field.name,
       sqlType: {
         name: mapping.sqlTypeName,
         ...this.buildSqlTypeConstraints(fieldType, field),

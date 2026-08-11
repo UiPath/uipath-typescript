@@ -41,6 +41,24 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   casTestAgentId?: string;
   casTestFolderId?: string;
+  functionsTestFolderId?: string;
+  functionsTestFunctionName?: string;
+  /**
+   * Organization (account) GUID of the test organization. Required by the Platform suite:
+   * omitting it on a read makes the API fall back to the host partition rather than the
+   * caller's organization, which an external application is not authorized for.
+   */
+  organizationId?: string;
+  /**
+   * GUID of the user whose platform settings the Platform suite reads and round-trips.
+   * Required: settings are scoped to (organization, user), the user must belong to the
+   * organization the test PAT authenticates against, and the SDK cannot derive the calling
+   * user from a PAT.
+   *
+   * Named for `IDENTITY_TEST_USER_ID` / the `UIPATH_IDENTITY_TEST_USER_ID` repository secret,
+   * which are already provisioned under that name and are not developer-facing.
+   */
+  identityTestUserId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -104,6 +122,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     casTestAgentId: typeof rawConfig.casTestAgentId === 'string' ? rawConfig.casTestAgentId : undefined,
     casTestFolderId: typeof rawConfig.casTestFolderId === 'string' ? rawConfig.casTestFolderId : undefined,
+    functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
+    functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
+    organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
+    identityTestUserId: typeof rawConfig.identityTestUserId === 'string' ? rawConfig.identityTestUserId : undefined,
   };
 }
 
@@ -151,6 +173,10 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     casTestAgentId: process.env.CAS_TEST_AGENT_ID || undefined,
     casTestFolderId: process.env.CAS_TEST_FOLDER_ID || undefined,
+    functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
+    functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
+    organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
+    identityTestUserId: process.env.IDENTITY_TEST_USER_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);

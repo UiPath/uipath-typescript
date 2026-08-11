@@ -122,6 +122,52 @@ describe('ApiClient query param serialization', () => {
   });
 });
 
+describe('ApiClient Content-Type header', () => {
+  it('omits Content-Type on GET (bodyless request)', async () => {
+    const client = createClient();
+    await client.get('/test');
+
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
+  });
+
+  it('sends application/json Content-Type on POST with a JSON body', async () => {
+    const client = createClient();
+    await client.post('/test', { foo: 'bar' });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/json');
+  });
+
+  it('omits Content-Type on POST with a FormData body (browser sets boundary)', async () => {
+    const client = createClient();
+    const form = new FormData();
+    form.append('field', 'value');
+    await client.post('/test', form);
+
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
+  });
+
+  it('lets per-request options.headers override the omitted Content-Type on GET', async () => {
+    const client = createClient();
+    await client.get('/test', { headers: { 'Content-Type': 'application/xml' } });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+
+  it('preserves Content-Type coming from clientConfig.headers on GET', async () => {
+    const client = createClient({ headers: { 'Content-Type': 'application/xml' } });
+    await client.get('/test');
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+
+  it('respects clientConfig.headers Content-Type override on POST', async () => {
+    const client = createClient({ headers: { 'Content-Type': 'application/xml' } });
+    await client.post('/test', { foo: 'bar' });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+});
+
 describe('ApiClient error handling', () => {
   it('throws ServerError when server returns a non-JSON body on a successful response', async () => {
     global.fetch = vi.fn().mockResolvedValue({

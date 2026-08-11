@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateTestResourceName } from '../../utils/helpers';
+import { generateTestResourceName, generateRandomString } from '../../utils/helpers';
 import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -438,3 +438,221 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
     }
   });
 }, 120000);
+
+describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode);
+
+  let folderId: number;
+  let folderKey: string;
+  let folderPath: string;
+  let taskId: number;
+  let taskKey: string;
+
+  beforeAll(async () => {
+    const config = getTestConfig();
+    if (!config.folderId || !config.folderKey || !config.folderPath) {
+      throw new Error('INTEGRATION_TEST_FOLDER_ID, INTEGRATION_TEST_FOLDER_KEY and INTEGRATION_TEST_FOLDER_PATH must all be configured to run tasks-extended integration tests');
+    }
+    folderId = Number(config.folderId);
+    folderKey = config.folderKey;
+    folderPath = config.folderPath;
+
+    const { tasks } = getServices();
+    const created = await tasks.create({ title: `sdk-it-ext-${generateRandomString(8)}` }, folderId);
+    taskId = created.id;
+    taskKey = created.key;
+    registerResource('tasks', { id: taskId, folderId });
+  });
+
+  describe('getDataById', () => {
+    it('should get a task\'s data with transformed fields (folder by id)', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getDataById(taskId, { folderId });
+
+      expect(result.id).toBe(taskId);
+      expect(result.status).toBeDefined();
+      expect(typeof result.status).toBe('string'); // numeric code mapped to enum
+      expect(result.folderId).toBe(folderId);
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+      expect(result.createdTime).toBeDefined();
+      expect((result as any).CreationTime).toBeUndefined();
+    });
+
+    it('should get a task\'s data addressing the folder by key', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getDataById(taskId, { folderKey });
+
+      expect(result.id).toBe(taskId);
+    });
+
+    it('should get a task\'s data addressing the folder by path', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getDataById(taskId, { folderPath });
+
+      expect(result.id).toBe(taskId);
+    });
+  });
+
+  describe('getDataByKey', () => {
+    it('should get a task\'s data by key with transformed fields', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getDataByKey(taskKey, { folderId });
+
+      expect(result.id).toBe(taskId);
+      expect(result.key).toBe(taskKey);
+      expect(result.folderId).toBe(folderId);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.createdTime).toBeDefined();
+    });
+  });
+
+  describe('saveData', () => {
+    it('should save task data (folder by key) and surface it via getDataById, preserving key casing', async () => {
+      const { tasks } = getServices();
+      const marker = `note-${generateRandomString(6)}`;
+
+      // Include a PascalCase key to verify getDataById does not case-convert the user payload.
+      // Pass the task type to exercise type-based endpoint routing (External uses the generic save endpoint).
+      const result = await tasks.saveData(taskId, { InvoiceNumber: marker, note: marker }, { folderKey, type: TaskType.External });
+      expect(result).toBeUndefined();
+
+      const after = await tasks.getDataById(taskId, { folderId });
+      expect((after.data as any)?.InvoiceNumber).toBe(marker);
+      expect((after.data as any)?.note).toBe(marker);
+    });
+
+    it('should save without an explicit type by looking the type up first', async () => {
+      const { tasks } = getServices();
+      const marker = `note-${generateRandomString(6)}`;
+
+      // No type passed: saveData looks up the task type, then routes (External -> generic here).
+      const result = await tasks.saveData(taskId, { note: marker }, { folderKey });
+      expect(result).toBeUndefined();
+
+      const after = await tasks.getDataById(taskId, { folderId });
+      expect((after.data as any)?.note).toBe(marker);
+    });
+  });
+
+  describe('saveTags', () => {
+    it('should save tags and surface them via getData', async () => {
+      const { tasks } = getServices();
+      const tagName = `sdkit${generateRandomString(6)}`;
+
+      const result = await tasks.saveTags(
+        taskId,
+        [{ name: tagName, displayName: tagName, displayValue: 'yes' }],
+        { folderId },
+      );
+      expect(result).toBeUndefined();
+
+      const after = await tasks.getDataById(taskId, { folderId });
+      expect(after.tags?.some((t) => t.name === tagName)).toBe(true);
+    });
+  });
+
+  describe('editMetadata', () => {
+    it('should edit the task title (folder by path) and surface it via getDataById', async () => {
+      const { tasks } = getServices();
+      const newTitle = `sdk-it-edited-${generateRandomString(6)}`;
+
+      const result = await tasks.editMetadata(taskId, { title: newTitle, priority: TaskPriority.High, folderPath });
+      expect(result).toBeUndefined();
+
+      const after = await tasks.getDataById(taskId, { folderId });
+      expect(after.title).toBe(newTitle);
+    });
+  });
+});
+
+describe.each(['v1'] as InitMode[])('Action Center Task Comments - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode);
+
+  let folderId: number;
+  let folderKey: string;
+  let folderPath: string;
+  let taskId: number;
+
+  beforeAll(async () => {
+    const config = getTestConfig();
+    if (!config.folderId || !config.folderKey || !config.folderPath) {
+      throw new Error('INTEGRATION_TEST_FOLDER_ID, INTEGRATION_TEST_FOLDER_KEY and INTEGRATION_TEST_FOLDER_PATH must all be configured to run Task Notes integration tests');
+    }
+    folderId = Number(config.folderId);
+    folderKey = config.folderKey;
+    folderPath = config.folderPath;
+
+    // Create a fresh task to attach comments to, so the suite doesn't depend on
+    // whatever getAll returns first (which can be a completed/deleted task).
+    const { tasks } = getServices();
+    const created = await tasks.create({ title: `sdk-it-notes-${generateRandomString(8)}` }, folderId);
+    taskId = created.id;
+    registerResource('tasks', { id: taskId, folderId });
+  });
+
+  describe('getComments', () => {
+    it('should list comments for a task addressing the folder by id', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getComments(taskId, { folderId, pageSize: 50 });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should list comments addressing the folder by key', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getComments(taskId, { folderKey, pageSize: 50 });
+
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should list comments addressing the folder by path', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.getComments(taskId, { folderPath, pageSize: 50 });
+
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should surface comment items with camelCase fields and no PascalCase leaks', async () => {
+      const { tasks } = getServices();
+      const text = `sdk-it-transform-${generateRandomString(6)}`;
+      await tasks.createComment(taskId, text, { folderId });
+
+      const result = await tasks.getComments(taskId, { folderId, pageSize: 100 });
+      const comment = result.items.find((c) => c.text === text);
+      if (!comment) throw new Error('Created comment not found in getComments list');
+
+      expect(comment.createdTime).toBeDefined();
+      expect((comment as any).CreationTime).toBeUndefined();
+      expect(comment.folderId).toBe(folderId);
+      expect((comment as any).OrganizationUnitId).toBeUndefined();
+      expect(comment.taskId).toBe(taskId);
+    });
+  });
+
+  describe('createComment', () => {
+    it('should create a comment on a task and surface it in the list', async () => {
+      const { tasks } = getServices();
+      const text = `sdk-it note ${generateRandomString(8)}`;
+
+      const created = await tasks.createComment(taskId, text, { folderId });
+
+      expect(created.id).toBeGreaterThan(0);
+      expect(created.text).toBe(text);
+      expect(created.taskId).toBe(taskId);
+      expect(created.createdTime).toBeDefined();
+      expect((created as any).CreationTime).toBeUndefined();
+      expect((created as any).OrganizationUnitId).toBeUndefined();
+
+      const comments = await tasks.getComments(taskId, { folderId, pageSize: 100 });
+      expect(comments.items.some((n) => n.text === text)).toBe(true);
+    });
+  });
+});

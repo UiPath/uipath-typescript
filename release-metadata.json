@@ -1,0 +1,831 @@
+{
+  "schema": 1,
+  "sdkVersion": "1.6.1",
+  "services": [
+    {
+      "name": "AgentMemory",
+      "subpath": "@uipath/uipath-typescript/agent-memory",
+      "since": "1.4.1",
+      "methods": [
+        {
+          "name": "getCallsTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getTopSpaces",
+          "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Agents",
+      "subpath": "@uipath/uipath-typescript/agents",
+      "since": "1.4.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getConsumptionTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getErrors",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getErrorsTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getIncidentDistribution",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getLatencyTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getSummary",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getTopConsumption",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getTopErrorCount",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getUnitConsumptionSummary",
+          "since": "1.5.0"
+        }
+      ]
+    },
+    {
+      "name": "AgentTraces",
+      "subpath": "@uipath/uipath-typescript/traces",
+      "since": "1.4.1",
+      "methods": [
+        {
+          "name": "getErrorsTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getGovernanceDecisions",
+          "since": "1.5.1"
+        },
+        {
+          "name": "getGovernanceSummary",
+          "since": "1.5.1"
+        },
+        {
+          "name": "getLatencyTimeline",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getSpansByReference",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getSpansByTraceId",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getUnitConsumption",
+          "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Assets",
+      "subpath": "@uipath/uipath-typescript/assets",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getByName",
+          "since": null
+        },
+        {
+          "name": "updateValueById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "subpath": "@uipath/uipath-typescript/attachments",
+      "since": null,
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Buckets",
+      "subpath": "@uipath/uipath-typescript/buckets",
+      "since": null,
+      "methods": [
+        {
+          "name": "deleteFile",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getByName",
+          "since": null
+        },
+        {
+          "name": "getFileMetaData",
+          "since": null
+        },
+        {
+          "name": "getFiles",
+          "since": null
+        },
+        {
+          "name": "getReadUri",
+          "since": null
+        },
+        {
+          "name": "uploadFile",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "CaseInstances",
+      "subpath": "@uipath/uipath-typescript/cases",
+      "since": null,
+      "methods": [
+        {
+          "name": "close",
+          "since": null
+        },
+        {
+          "name": "getActionTasks",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getExecutionHistory",
+          "since": null
+        },
+        {
+          "name": "getSlaSummary",
+          "since": null
+        },
+        {
+          "name": "getStages",
+          "since": null
+        },
+        {
+          "name": "getStagesSlaSummary",
+          "since": null
+        },
+        {
+          "name": "getVariables",
+          "since": "1.6.0"
+        },
+        {
+          "name": "pause",
+          "since": null
+        },
+        {
+          "name": "reopen",
+          "since": null
+        },
+        {
+          "name": "resume",
+          "since": null
+        },
+        {
+          "name": "sendMessage",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Cases",
+      "subpath": "@uipath/uipath-typescript/cases",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getElementStats",
+          "since": "1.3.12"
+        },
+        {
+          "name": "getIncidentsTimeline",
+          "since": "1.5.1"
+        },
+        {
+          "name": "getInstanceStats",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getInstanceStatusTimeline",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopElementFailedCount",
+          "since": "1.3.11"
+        },
+        {
+          "name": "getTopExecutionDuration",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopFaultedCount",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopRunCount",
+          "since": "1.3.9"
+        }
+      ]
+    },
+    {
+      "name": "ChoiceSets",
+      "subpath": "@uipath/uipath-typescript/entities",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "ConversationalAgent",
+      "subpath": "@uipath/uipath-typescript/conversational-agent",
+      "since": null,
+      "methods": [
+        {
+          "name": "downloadCitationSource",
+          "since": "1.5.4"
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "onConnectionStatusChanged",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Entities",
+      "subpath": "@uipath/uipath-typescript/entities",
+      "since": null,
+      "methods": [
+        {
+          "name": "batchInsertById",
+          "since": null
+        },
+        {
+          "name": "deleteAttachment",
+          "since": null
+        },
+        {
+          "name": "deleteRecordById",
+          "since": null
+        },
+        {
+          "name": "deleteRecordsById",
+          "since": null
+        },
+        {
+          "name": "downloadAttachment",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getAllRecords",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getRecordById",
+          "since": null
+        },
+        {
+          "name": "getRecordsById",
+          "since": null
+        },
+        {
+          "name": "importRecordsById",
+          "since": null
+        },
+        {
+          "name": "insertById",
+          "since": null
+        },
+        {
+          "name": "insertRecordById",
+          "since": null
+        },
+        {
+          "name": "insertRecordsById",
+          "since": null
+        },
+        {
+          "name": "queryRecordsById",
+          "since": null
+        },
+        {
+          "name": "updateRecordById",
+          "since": null
+        },
+        {
+          "name": "updateRecordsById",
+          "since": null
+        },
+        {
+          "name": "uploadAttachment",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Exchanges",
+      "subpath": "@uipath/uipath-typescript/conversational-agent",
+      "since": null,
+      "methods": [
+        {
+          "name": "createFeedback",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "subpath": "@uipath/uipath-typescript/feedback",
+      "since": null,
+      "methods": [
+        {
+          "name": "createCategory",
+          "since": null
+        },
+        {
+          "name": "deleteById",
+          "since": null
+        },
+        {
+          "name": "deleteCategory",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getCategories",
+          "since": null
+        },
+        {
+          "name": "submit",
+          "since": null
+        },
+        {
+          "name": "updateById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Functions",
+      "subpath": "@uipath/uipath-typescript/functions",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.6.1"
+        },
+        {
+          "name": "invoke",
+          "since": "1.6.1"
+        }
+      ]
+    },
+    {
+      "name": "Governance",
+      "subpath": "@uipath/uipath-typescript/governance",
+      "since": "1.4.1",
+      "methods": [
+        {
+          "name": "getOperationSummary",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getPolicyTraces",
+          "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "subpath": "@uipath/uipath-typescript/jobs",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getAttachments",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getOutput",
+          "since": null
+        },
+        {
+          "name": "linkAttachment",
+          "since": "1.6.1"
+        },
+        {
+          "name": "restart",
+          "since": null
+        },
+        {
+          "name": "resume",
+          "since": null
+        },
+        {
+          "name": "stop",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "MaestroProcesses",
+      "subpath": "@uipath/uipath-typescript/maestro-processes",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getElementStats",
+          "since": "1.3.12"
+        },
+        {
+          "name": "getIncidents",
+          "since": null
+        },
+        {
+          "name": "getIncidentsTimeline",
+          "since": "1.5.1"
+        },
+        {
+          "name": "getInstanceStats",
+          "since": "1.5.0"
+        },
+        {
+          "name": "getInstanceStatusTimeline",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopElementFailedCount",
+          "since": "1.3.11"
+        },
+        {
+          "name": "getTopExecutionDuration",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopFaultedCount",
+          "since": "1.3.9"
+        },
+        {
+          "name": "getTopRunCount",
+          "since": "1.3.9"
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "subpath": "@uipath/uipath-typescript/conversational-agent",
+      "since": null,
+      "methods": [
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getContentPartById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Platform",
+      "subpath": "@uipath/uipath-typescript/platform",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "getUserSettings",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateUserSettings",
+          "since": "1.6.1"
+        }
+      ]
+    },
+    {
+      "name": "Processes",
+      "subpath": "@uipath/uipath-typescript/processes",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getByName",
+          "since": null
+        },
+        {
+          "name": "start",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "ProcessIncidents",
+      "subpath": "@uipath/uipath-typescript/maestro-processes",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "ProcessInstances",
+      "subpath": "@uipath/uipath-typescript/maestro-processes",
+      "since": null,
+      "methods": [
+        {
+          "name": "cancel",
+          "since": null
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getBpmn",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getExecutionHistory",
+          "since": null
+        },
+        {
+          "name": "getIncidents",
+          "since": null
+        },
+        {
+          "name": "getVariables",
+          "since": null
+        },
+        {
+          "name": "pause",
+          "since": null
+        },
+        {
+          "name": "resume",
+          "since": null
+        },
+        {
+          "name": "retry",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Queues",
+      "subpath": "@uipath/uipath-typescript/queues",
+      "since": null,
+      "methods": [
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "TaskCatalogs",
+      "subpath": "@uipath/uipath-typescript/tasks",
+      "since": "1.6.1",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getAll",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getByName",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "updateByName",
+          "since": "1.6.1"
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "subpath": "@uipath/uipath-typescript/tasks",
+      "since": null,
+      "methods": [
+        {
+          "name": "assign",
+          "since": null
+        },
+        {
+          "name": "complete",
+          "since": null
+        },
+        {
+          "name": "create",
+          "since": null
+        },
+        {
+          "name": "createComment",
+          "since": "1.6.1"
+        },
+        {
+          "name": "editMetadata",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getAll",
+          "since": null
+        },
+        {
+          "name": "getById",
+          "since": null
+        },
+        {
+          "name": "getComments",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getDataById",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getDataByKey",
+          "since": "1.6.1"
+        },
+        {
+          "name": "getUsers",
+          "since": null
+        },
+        {
+          "name": "reassign",
+          "since": null
+        },
+        {
+          "name": "saveData",
+          "since": "1.6.1"
+        },
+        {
+          "name": "saveTags",
+          "since": "1.6.1"
+        },
+        {
+          "name": "unassign",
+          "since": null
+        }
+      ]
+    },
+    {
+      "name": "Traces",
+      "subpath": "@uipath/uipath-typescript/traces",
+      "since": "1.4.1",
+      "methods": [
+        {
+          "name": "getById",
+          "since": "1.4.1"
+        },
+        {
+          "name": "getSpansByIds",
+          "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "UserSettings",
+      "subpath": "@uipath/uipath-typescript/conversational-agent",
+      "since": null,
+      "methods": [
+        {
+          "name": "getSettings",
+          "since": null
+        },
+        {
+          "name": "updateSettings",
+          "since": null
+        }
+      ]
+    }
+  ]
+}

@@ -36,13 +36,12 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
   }); })
 }));
 
-// Minimal non-OK Response stub for the error-mapping tests.
-const errorResponse = (status: number, statusText: string) => ({
-  ok: false,
-  status,
-  statusText,
-  json: async () => ({ message: statusText }),
-});
+// Real Response for the error-mapping tests — the parser reads the body via
+// clone(), which a plain object literal cannot model.
+const errorResponse = (status: number, statusText: string) => new Response(
+  JSON.stringify({ message: statusText }),
+  { status, statusText, headers: { 'content-type': 'application/json' } },
+);
 
 // ===== TEST SUITE =====
 describe('ConversationalAgentService Unit Tests', () => {

@@ -4,11 +4,15 @@
  */
 
 import type {
+  CategorySubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
   SubscriptionGetPublishersResponse,
   SubscriptionGetResponse,
   SubscriptionGetSupportedChannelsResponse,
+  SubscriptionUpdateCategoriesResponse,
+  SubscriptionUpdateTopicsResponse,
+  TopicSubscriptionUpdate,
 } from './subscriptions.types';
 
 /**
@@ -101,4 +105,51 @@ export interface SubscriptionServiceModel {
    * @internal
    */
   getSupportedChannels(tenantId: string): Promise<SubscriptionGetSupportedChannelsResponse>;
+
+  /**
+   * Updates topic-level subscription preferences. Each entry sets the subscription state
+   * (`isSubscribed`) for a single (topic, mode) pair.
+   *
+   * @param tenantId - Tenant GUID
+   * @param subscriptions - Topic subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicsResponse}
+   *
+   * @example Unsubscribe a topic from a single channel
+   * ```typescript
+   * import { NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateTopics('<tenantId>', [
+   *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
+   * ]);
+   * ```
+   * @internal
+   */
+  updateTopics(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicsResponse>;
+
+  /**
+   * Updates category-level subscription preferences for a publisher. Each entry sets
+   * the subscription state for all topics of a given category via a given mode.
+   *
+   * @param tenantId - Tenant GUID
+   * @param subscriptions - Category subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateCategoriesResponse}
+   *
+   * @example Unsubscribe from all `Error` topics via email for one publisher
+   * ```typescript
+   * import { NotificationCategory, NotificationMode } from '@uipath/uipath-typescript/notifications';
+   *
+   * await subscriptions.updateCategories('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     category: NotificationCategory.Error,
+   *     isSubscribed: false,
+   *     notificationMode: NotificationMode.Email,
+   *   },
+   * ]);
+   * ```
+   * @internal
+   */
+  updateCategories(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoriesResponse>;
 }

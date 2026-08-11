@@ -35,4 +35,5 @@ export const NOTIFICATION_TEST_CONSTANTS = {
   // Error messages
   ERROR_NOTIFICATION_NOT_FOUND: 'Notification not found',
   ERROR_PUBLISHER_NOT_FOUND: 'Publisher not found',
+  ERROR_SUBSCRIPTION_INVALID: 'Subscription request is invalid',
 } as const;

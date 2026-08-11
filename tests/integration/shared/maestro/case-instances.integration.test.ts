@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -165,6 +165,72 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       } catch (error: any) {
         console.log('Stage validation failed:', error.message);
       }
+    });
+  });
+
+  describe('getVariables', () => {
+    // Well-known subprocess scope present in every case-management model
+    const TASKS_EVENT_SUBPROCESS_ID = 'tasksEventSubProcess';
+
+    let variablesInstanceId!: string;
+    let variablesFolderKey!: string;
+
+    beforeAll(async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getAll();
+      const instance = result.items.find((item) => item.instanceId && item.folderKey);
+      if (!instance) {
+        throw new Error('No case instance with a folder key available for getVariables testing');
+      }
+
+      variablesInstanceId = instance.instanceId;
+      variablesFolderKey = instance.folderKey;
+    });
+
+    it('should retrieve variables for a case instance', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getVariables(variablesInstanceId, variablesFolderKey);
+
+      expect(result).toBeDefined();
+      expect(result.instanceId).toBe(variablesInstanceId);
+      expect(Array.isArray(result.elements)).toBe(true);
+      expect(Array.isArray(result.globalVariables)).toBe(true);
+    });
+
+    it('should reshape raw globals into enriched globalVariables', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getVariables(variablesInstanceId, variablesFolderKey);
+
+      // Transformed field exists
+      expect(Array.isArray(result.globalVariables)).toBe(true);
+
+      // Raw wire fields must not be passed through
+      expect((result as any).globals).toBeUndefined();
+      expect((result as any).workflowId).toBeUndefined();
+      expect((result as any).globalDefinitions).toBeUndefined();
+
+      if (result.globalVariables.length > 0) {
+        const variable = result.globalVariables[0];
+        expect(variable.id).toBeDefined();
+        expect(variable.name).toBeDefined();
+        expect(variable.type).toBeDefined();
+        expect(variable.elementId).toBeDefined();
+      }
+    });
+
+    it('should retrieve variables scoped to a parent element', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getVariables(variablesInstanceId, variablesFolderKey, {
+        parentElementId: TASKS_EVENT_SUBPROCESS_ID
+      });
+
+      expect(result).toBeDefined();
+      expect(result.parentElementId).toBe(TASKS_EVENT_SUBPROCESS_ID);
+      expect(Array.isArray(result.elements)).toBe(true);
     });
   });
 

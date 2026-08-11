@@ -21,12 +21,24 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `stop()` | `OR.Jobs` |
 | `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
 | `restart()` | `OR.Jobs` |
+| `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
+
+## Functions
+
+Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Default` |
+| `invoke()` | `OR.Default`, `OR.Folders` or `OR.Folders.Read` |
 
 ## Attachments
 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `OR.Folders` or `OR.Folders.Read` |
+| `create()` | `OR.Folders` or `OR.Folders.Write` |
 
 ## Buckets
 
@@ -91,7 +103,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getById()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` `Traces.Api` |
 | `getBpmn()` | `OR.Execution.Read` |
-| `getVariables()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getIncidents()` | `PIMS` |
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
@@ -124,6 +136,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `reopen()` | `PIMS` |
 | `sendMessage()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
 | `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
@@ -224,6 +237,13 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Platform
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
+| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
+
 ## Processes
 
 | Method | OAuth Scope |
@@ -253,6 +273,24 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getDataById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getDataByKey()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `saveData()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `saveTags()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `editMetadata()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getComments()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `createComment()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## TaskCatalogs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getByName()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateById()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateByName()` | `OR.Tasks` or `OR.Tasks.Write` |
 
 ## Agents
 
@@ -278,5 +316,5 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getGovernanceDecisions()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getGovernanceSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |

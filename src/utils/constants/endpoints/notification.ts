@@ -29,4 +29,7 @@ export const SUBSCRIPTION_ENDPOINTS = {
   GET_ALL: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription`,
   GET_PUBLISHERS: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/GetPublishers`,
   GET_SUPPORTED_CHANNELS: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/GetSupportedChannelStatus`,
+  // Intentional duplicate URL of GET_ALL: same path, POST vs GET differentiates the operation.
+  UPDATE_TOPIC: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription`,
+  UPDATE_CATEGORY: `${SUBSCRIPTION_API_BASE}/api/v1/UserSubscription/CategorySubscription`,
 } as const;
