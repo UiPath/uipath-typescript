@@ -2793,9 +2793,8 @@ stays active, so the next sign-in completes silently. Pass
 and returns to the configured <code>redirectUri</code> (override with
 <code>postLogoutRedirectUri</code>). Already-issued access tokens remain valid
 until they expire. The redirect is asynchronous — the page keeps
-rendering until the browser navigates, so render a brief signing-out
-state (rather than your login view) for that gap to avoid the login
-screen flashing twice.</p>
+rendering until the browser navigates; handle that interim state to
+prevent your login screen appearing twice.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2844,7 +2843,7 @@ Use this to inject or refresh a token externally.</p>
 <tr>
 <td><code>tokenInfo</code></td>
 <td><code>TokenInfo</code></td>
-<td>The token information containing the access token, type, expiration, and optional refresh token</td>
+<td>The token information containing the access token, type, expiration, and optional refresh/ID tokens</td>
 </tr>
 </tbody>
 </table>
