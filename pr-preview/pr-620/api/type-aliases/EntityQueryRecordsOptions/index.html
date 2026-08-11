@@ -521,6 +521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1103,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/FunctionServiceModel.md" class="md-nav__link">
+      <a href="../../interfaces/FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1324,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1390,7 +1415,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1407,14 +1432,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1480,7 +1505,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1497,14 +1522,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2315,6 +2340,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#havingfilter" class="md-nav__link">
+    <span class="md-ellipsis">
+      havingFilter?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#joins" class="md-nav__link">
     <span class="md-ellipsis">
       joins?
@@ -2368,7 +2402,7 @@
   <h1>EntityQueryRecordsOptions</h1>
 
 <blockquote>
-<p><strong>EntityQueryRecordsOptions</strong> = { <code>aggregates?</code>: <a href="../../interfaces/EntityAggregate/"><code>EntityAggregate</code></a>[]; <code>expansionLevel?</code>: <code>number</code>; <code>filterGroup?</code>: <a href="../../interfaces/EntityQueryFilterGroup/"><code>EntityQueryFilterGroup</code></a>; <code>groupBy?</code>: <code>string</code>[]; <code>joins?</code>: <a href="../../interfaces/EntityJoin/"><code>EntityJoin</code></a>[]; <code>selectedFields?</code>: <code>string</code>[]; <code>sortOptions?</code>: <a href="../../interfaces/EntityQuerySortOption/"><code>EntityQuerySortOption</code></a>[]; } &amp; <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; <a href="../../interfaces/EntityFolderScopedOptions/"><code>EntityFolderScopedOptions</code></a></p>
+<p><strong>EntityQueryRecordsOptions</strong> = { <code>aggregates?</code>: <a href="../../interfaces/EntityAggregate/"><code>EntityAggregate</code></a>[]; <code>expansionLevel?</code>: <code>number</code>; <code>filterGroup?</code>: <a href="../../interfaces/EntityQueryFilterGroup/"><code>EntityQueryFilterGroup</code></a>; <code>groupBy?</code>: <code>string</code>[]; <code>havingFilter?</code>: <a href="../../interfaces/EntityHavingFilter/"><code>EntityHavingFilter</code></a>; <code>joins?</code>: <a href="../../interfaces/EntityJoin/"><code>EntityJoin</code></a>[]; <code>selectedFields?</code>: <code>string</code>[]; <code>sortOptions?</code>: <a href="../../interfaces/EntityQuerySortOption/"><code>EntityQuerySortOption</code></a>[]; } &amp; <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; <a href="../../interfaces/EntityFolderScopedOptions/"><code>EntityFolderScopedOptions</code></a></p>
 </blockquote>
 <p>Options for querying entity records with filters, sorting, aggregates, and pagination.</p>
 <p>Use <code>pageSize</code>, <code>cursor</code>, or <code>jumpToPage</code> for SDK-managed pagination.
@@ -2394,6 +2428,13 @@ The SDK computes and manages offset parameters automatically.</p>
 <p><code>optional</code> <strong>groupBy</strong>: <code>string</code>[]</p>
 </blockquote>
 <p>Field names to group aggregate results by.</p>
+<h3 id="havingfilter">havingFilter?<a class="headerlink" href="#havingfilter" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>havingFilter</strong>: <a href="../../interfaces/EntityHavingFilter/"><code>EntityHavingFilter</code></a></p>
+</blockquote>
+<p>Post-aggregation filter on grouped results (SQL <code>HAVING</code>). Conditions
+reference declared aggregate aliases; requires <code>aggregates</code> and <code>groupBy</code>.
+See <a href="../../interfaces/EntityHavingFilter/">EntityHavingFilter</a> for constraints.</p>
 <h3 id="joins">joins?<a class="headerlink" href="#joins" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>joins</strong>: <a href="../../interfaces/EntityJoin/"><code>EntityJoin</code></a>[]</p>

@@ -628,6 +628,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#processes" class="md-nav__link">
     <span class="md-ellipsis">
       Processes
@@ -800,6 +809,8 @@
   
     
     
+      
+        
       
         
       
@@ -1409,7 +1420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/interfaces/FunctionServiceModel.md" class="md-nav__link">
+      <a href="../api/interfaces/FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1630,6 +1641,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/interfaces/ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1696,7 +1730,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1713,14 +1747,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1786,7 +1820,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1803,14 +1837,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2781,6 +2815,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#processes" class="md-nav__link">
     <span class="md-ellipsis">
       Processes
@@ -2915,6 +2958,14 @@
 <td><code>restart()</code></td>
 <td><code>OR.Jobs</code></td>
 </tr>
+<tr>
+<td><code>getAttachments()</code></td>
+<td><code>OR.Jobs</code> or <code>OR.Jobs.Read</code></td>
+</tr>
+<tr>
+<td><code>linkAttachment()</code></td>
+<td><code>OR.Jobs</code> or <code>OR.Jobs.Write</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
@@ -2949,6 +3000,10 @@
 <tr>
 <td><code>getById()</code></td>
 <td><code>OR.Folders</code> or <code>OR.Folders.Read</code></td>
+</tr>
+<tr>
+<td><code>create()</code></td>
+<td><code>OR.Folders</code> or <code>OR.Folders.Write</code></td>
 </tr>
 </tbody>
 </table>
@@ -3551,6 +3606,25 @@
 <tr>
 <td><code>getOperationSummary()</code></td>
 <td><code>Insights.RealTimeData Insights OR.Folders.Read</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="platform">Platform<a class="headerlink" href="#platform" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>OAuth Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getUserSettings()</code></td>
+<td><code>PM.Setting</code> or <code>PM.Setting.Read</code></td>
+</tr>
+<tr>
+<td><code>updateUserSettings()</code></td>
+<td><code>PM.Setting</code> or <code>PM.Setting.Write</code></td>
 </tr>
 </tbody>
 </table>

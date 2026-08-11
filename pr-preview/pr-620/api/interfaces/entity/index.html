@@ -527,6 +527,8 @@
       
         
       
+        
+      
     
     
     
@@ -1107,7 +1109,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FunctionServiceModel.md" class="md-nav__link">
+      <a href="../FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1328,6 +1330,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1394,7 +1419,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1411,14 +1436,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1484,7 +1509,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1501,14 +1526,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -3161,7 +3186,7 @@ for constraints and the result-row key format.</p>
 <tr>
 <td><code>options?</code></td>
 <td><code>T</code></td>
-<td>Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
@@ -3170,7 +3195,7 @@ for constraints and the result-row key format.</p>
 <p>Promise resolving to <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> without pagination options,
   or <a href="../PaginatedResponse/">PaginatedResponse</a> when <code>pageSize</code>, <code>cursor</code>, or <code>jumpToPage</code> are provided</p>
 <h4 id="example_11">Example<a class="headerlink" href="#example_11" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Entities</span><span class="p">,</span><span class="w"> </span><span class="nx">LogicalOperator</span><span class="p">,</span><span class="w"> </span><span class="nx">QueryFilterOperator</span><span class="p">,</span><span class="w"> </span><span class="nx">EntityAggregateFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">JoinType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Entities</span><span class="p">,</span><span class="w"> </span><span class="nx">LogicalOperator</span><span class="p">,</span><span class="w"> </span><span class="nx">QueryFilterOperator</span><span class="p">,</span><span class="w"> </span><span class="nx">EntityAggregateFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">EntityHavingOperator</span><span class="p">,</span><span class="w"> </span><span class="nx">JoinType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">entities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Entities</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
@@ -3199,41 +3224,53 @@ for constraints and the result-row key format.</p>
 <a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a><span class="w">  </span><span class="p">],</span>
 <a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="p">});</span>
 <a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>
-<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="c1">// Folder-scoped entity: pass the entity&#39;s folder key</span>
+<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="c1">// Post-aggregation filter (HAVING): only statuses with more than 5 records</span>
 <a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="w">  </span><span class="nx">filterGroup</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">queryFilters</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">fieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">operator</span><span class="o">:</span><span class="w"> </span><span class="kt">QueryFilterOperator.Equals</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a><span class="w">  </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a><span class="p">});</span>
-<a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a>
-<a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a><span class="c1">// Aggregate: total sum and average across all records (no grouping)</span>
-<a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a><span class="w">  </span><span class="nx">aggregates</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">function</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityAggregateFunction.Sum</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">alias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;totalAmount&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">function</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityAggregateFunction.Avg</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">alias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;avgAmount&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-12-41" name="__codelineno-12-41" href="#__codelineno-12-41"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a><span class="p">});</span>
-<a id="__codelineno-12-43" name="__codelineno-12-43" href="#__codelineno-12-43"></a>
-<a id="__codelineno-12-44" name="__codelineno-12-44" href="#__codelineno-12-44"></a><span class="c1">// Multi-join: pull fields from related entities into the query</span>
-<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a><span class="c1">// (result rows use entity-qualified keys).</span>
-<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a><span class="w">  </span><span class="nx">selectedFields</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Order.amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Customer.name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Region.name&quot;</span><span class="p">],</span>
-<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a><span class="w">  </span><span class="nx">joins</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Order&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
-<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;customerId&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
-<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;regionId&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Region&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
-<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-12-64" name="__codelineno-12-64" href="#__codelineno-12-64"></a><span class="p">});</span>
+<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="w">  </span><span class="nx">selectedFields</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">],</span>
+<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a><span class="w">  </span><span class="nx">groupBy</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">],</span>
+<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a><span class="w">  </span><span class="nx">aggregates</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">function</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityAggregateFunction.Count</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">alias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;total&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a><span class="w">  </span><span class="nx">havingFilter</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a><span class="w">    </span><span class="nx">aggregateFilters</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">aggregateAlias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">operator</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityHavingOperator.GreaterThan</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;5&quot;</span><span class="w"> </span><span class="p">}],</span>
+<a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a><span class="p">});</span>
+<a id="__codelineno-12-41" name="__codelineno-12-41" href="#__codelineno-12-41"></a>
+<a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a><span class="c1">// Folder-scoped entity: pass the entity&#39;s folder key</span>
+<a id="__codelineno-12-43" name="__codelineno-12-43" href="#__codelineno-12-43"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-44" name="__codelineno-12-44" href="#__codelineno-12-44"></a><span class="w">  </span><span class="nx">filterGroup</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">queryFilters</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">fieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">operator</span><span class="o">:</span><span class="w"> </span><span class="kt">QueryFilterOperator.Equals</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;active&quot;</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a><span class="w">  </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a><span class="p">});</span>
+<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a>
+<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a><span class="c1">// Aggregate: total sum and average across all records (no grouping)</span>
+<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a><span class="w">  </span><span class="nx">aggregates</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">function</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityAggregateFunction.Sum</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">alias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;totalAmount&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">function</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityAggregateFunction.Avg</span><span class="p">,</span><span class="w"> </span><span class="nx">field</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">alias</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;avgAmount&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a><span class="p">});</span>
+<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a>
+<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a><span class="c1">// Multi-join: pull fields from related entities into the query</span>
+<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a><span class="c1">// (result rows use entity-qualified keys).</span>
+<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">queryRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">id</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a><span class="w">  </span><span class="nx">selectedFields</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Order.amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Customer.name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Region.name&quot;</span><span class="p">],</span>
+<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a><span class="w">  </span><span class="nx">joins</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Order&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
+<a id="__codelineno-12-64" name="__codelineno-12-64" href="#__codelineno-12-64"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;customerId&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-65" name="__codelineno-12-65" href="#__codelineno-12-65"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-66" name="__codelineno-12-66" href="#__codelineno-12-66"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-67" name="__codelineno-12-67" href="#__codelineno-12-67"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-12-68" name="__codelineno-12-68" href="#__codelineno-12-68"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-12-69" name="__codelineno-12-69" href="#__codelineno-12-69"></a><span class="w">      </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-70" name="__codelineno-12-70" href="#__codelineno-12-70"></a><span class="w">      </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
+<a id="__codelineno-12-71" name="__codelineno-12-71" href="#__codelineno-12-71"></a><span class="w">      </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;regionId&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-72" name="__codelineno-12-72" href="#__codelineno-12-72"></a><span class="w">      </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Region&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-73" name="__codelineno-12-73" href="#__codelineno-12-73"></a><span class="w">      </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
+<a id="__codelineno-12-74" name="__codelineno-12-74" href="#__codelineno-12-74"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-12-75" name="__codelineno-12-75" href="#__codelineno-12-75"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-12-76" name="__codelineno-12-76" href="#__codelineno-12-76"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="updaterecordbyid">updateRecordById()<a class="headerlink" href="#updaterecordbyid" title="Permanent link">&para;</a></h3>
