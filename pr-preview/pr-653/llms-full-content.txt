@@ -740,6 +740,42 @@ const page5 = await jobs.getAll({
 });
 ```
 
+### getAttachments()
+
+> **getAttachments**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`JobAttachmentGetResponse`[]>
+
+Gets all attachments linked to a job.
+
+#### Parameters
+
+- `jobKey`: `string` — The unique key (GUID) of the job whose attachments to retrieve
+- `folderId`: `number` — The folder ID where the job resides
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`[]>
+
+Promise resolving to an array of [JobAttachmentGetResponse](../JobAttachmentGetResponse/) links, empty when the job has none
+
+#### Examples
+
+```
+const attachments = await jobs.getAttachments(<jobKey>, <folderId>);
+```
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+// Read the underlying file of each attachment linked to a job
+const attachmentsService = new Attachments(sdk);
+const links = await jobs.getAttachments(<jobKey>, <folderId>);
+
+for (const link of links) {
+  const attachment = await attachmentsService.getById(link.attachmentId);
+  console.log(link.category, attachment.blobFileAccess.uri);
+}
+```
+
 ### getById()
 
 > **getById**(`id`: `string`, `folderId`: `number`, `options?`: `JobGetByIdOptions`): `Promise`\<`JobGetResponse`>
@@ -814,6 +850,42 @@ const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
 if (completedJob) {
   const output = await completedJob.getOutput();
 }
+```
+
+### linkAttachment()
+
+> **linkAttachment**(`attachmentId`: `string`, `jobKey`: `string`, `folderId`: `number`, `options?`: `JobLinkAttachmentOptions`): `Promise`\<`JobAttachmentGetResponse`>
+
+Links an existing attachment to a job.
+
+This does not upload a file — it associates an attachment that already exists in Orchestrator with a job.
+
+The returned link does not carry `attachmentName` or `creatorUserId` yet — read them back with [getAttachments](#getattachments).
+
+#### Parameters
+
+- `attachmentId`: `string` — The unique ID (GUID) of the attachment to link
+- `jobKey`: `string` — The unique key (GUID) of the job to link the attachment to
+- `folderId`: `number` — The folder ID where the job resides
+- `options?`: `JobLinkAttachmentOptions` — Optional settings for the link, such as its category
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`>
+
+Promise resolving to the created [JobAttachmentGetResponse](../JobAttachmentGetResponse/) link
+
+#### Examples
+
+```
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>);
+```
+
+```
+// Group the attachment under a category of your choosing
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>, {
+  category: 'Invoice',
+});
 ```
 
 ### restart()
@@ -2350,6 +2422,48 @@ Service for managing UiPath Orchestrator Attachments.
 Attachments are files that can be associated with Orchestrator jobs.
 
 ## Methods
+
+### create()
+
+> **create**(`name`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `AttachmentCreateOptions`): `Promise`\<`AttachmentCreateResponse`>
+
+Creates an attachment and uploads its content.
+
+The upload is handled for you — the attachment record and its file are both in place once this resolves. Returns the stored attachment, whose `id` is the handle to use everywhere else (for example as the value of a `file` field in an action's output data).
+
+Pass `jobKey` to link the attachment to a job as part of the same call; `jobs.linkAttachment()` is only needed to attach it to a further job later.
+
+#### Parameters
+
+- `name`: `string` — File name to store the attachment under, including its extension
+- `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File` — File content to upload
+- `options?`: `AttachmentCreateOptions` — Optional job to link to, its category, and the folder to create the attachment in
+
+#### Returns
+
+`Promise`\<`AttachmentCreateResponse`>
+
+Promise resolving to the created [AttachmentCreateResponse](../AttachmentCreateResponse/)
+
+#### Examples
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+const attachments = new Attachments(sdk);
+
+// Upload a file picked in the browser
+const attachment = await attachments.create(file.name, file);
+console.log(attachment.id);
+```
+
+```
+// Upload and link it to a job in one call
+const attachment = await attachments.create('invoice.pdf', file, {
+  jobKey: <jobKey>,
+  category: 'Invoice',
+});
+```
 
 ### getById()
 
@@ -5128,6 +5242,50 @@ conversation.endSession();
 
 // 7. Retrieve conversation history (offline)
 const exchanges = await conversation.exchanges.getAll();
+```
+
+## Client-side tools
+
+Agents can define tools that execute locally in the client rather than on the server. When starting an exchange, pass `clientSideTools` to declare which tools this client supports. The names must match tools defined in the agent's design-time configuration. Only the declared subset is routed to the client — omitting a tool means the server handles it (or skips it). This lets each client advertise only the tools it can run.
+
+When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with the final input. The client executes the tool locally and returns the result via `sendToolCallEnd`.
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk);
+const agents = await conversationalAgent.getAll();
+const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+const session = conversation.startSession();
+
+// 1. Listen for tool calls and handle client-side tools
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    message.onToolCallStart((toolCall) => {
+      const { isClientSideTool, toolName } = toolCall.startEvent;
+      if (!isClientSideTool) return;
+
+      // 2. Execute when the server signals the tool is ready
+      toolCall.onExecutingToolCall(async (event) => {
+        const result = await runClientTool(toolName, event.input);
+        toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+      });
+    });
+  });
+});
+
+session.onSessionStarted(() => {
+  // 3. Declare the subset of client-side tools this client supports
+  //    The agent may define more tools, but only these will be routed here
+  const exchange = session.startExchange({
+    clientSideTools: [
+      { name: 'get_user_location' },
+      { name: 'get_clipboard_contents' },
+    ],
+  });
+
+  exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+});
 ```
 
 ## App-scoped authentication (anonymous, sign-in-free chat)
@@ -7947,8 +8105,8 @@ message.onToolCallStart((toolCall) => {
   if (!isClientSideTool) return;
 
   toolCall.onExecutingToolCall(async (event) => {
-    const result = await runLocalProcess(toolName, event.input);
-    toolCall.sendToolCallEnd({ output: result });
+    const result = await runClientTool(toolName, event.input);
+    toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
   });
 });
 ```
@@ -7995,6 +8153,29 @@ Cleanup function to remove the handler
 ```
 toolCall.onErrorStart((error) => {
   console.error(`Tool call error: ${error.message}`);
+});
+```
+
+### onExecutingToolCall()
+
+> **onExecutingToolCall**(`cb`: (`event`: `ExecutingToolCallEvent`) => `void`): () => `void`
+
+Registers a handler for executingToolCall events. Fired when the tool is about to be executed. For client-side tools, the client should begin executing its handler upon receiving this event and return the result via `sendToolCallEnd`.
+
+#### Parameters
+
+- `cb`: (`event`: `ExecutingToolCallEvent`) => `void` — Callback receiving the [ExecutingToolCallEvent](../ExecutingToolCallEvent/) with the final input
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+toolCall.onExecutingToolCall(async (event) => {
+  const result = await runClientTool(toolCall.startEvent.toolName, event.input);
+  toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
 });
 ```
 
