@@ -196,15 +196,15 @@ nav:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
+          - Connections:
+            - Connectors: api/interfaces/ConnectorsServiceModel.md
+            - Connections: api/interfaces/ConnectionsServiceModel.md
+            - Elements: api/interfaces/ElementsServiceModel.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Functions: api/interfaces/FunctionServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
-          - Integration Service:
-            - Connectors: api/interfaces/ConnectorsServiceModel.md
-            - Connections: api/interfaces/ConnectionsServiceModel.md
-            - Elements: api/interfaces/ElementsServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
