@@ -22,6 +22,7 @@ import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
+import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
@@ -69,6 +70,7 @@ export interface TestServices {
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
+  conversationalAgent?: ConversationalAgentService;
   functions?: Functions;
   platform?: Platform;
 }
@@ -163,6 +165,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
+    conversationalAgent: new ConversationalAgentService(sdk),
     functions: new Functions(sdk),
     platform: new Platform(sdk),
   };
