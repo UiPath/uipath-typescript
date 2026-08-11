@@ -145,7 +145,7 @@ const item = await queue.insertItem({
 
 Inserts a new item into a queue by queue name
 
-Returns the created queue item including its id, status, and the stored payload. The payload keys are user-defined and are stored and returned exactly as provided.
+Returns the created queue item including its id, status, and the stored payload. Payload keys keep their original casing — the SDK performs no case conversion on them, while method options and response fields still use the SDK's usual camelCase; `Date` values in the payload are serialized to ISO-8601 strings.
 
 The payload must be flat — values are simple scalars (see [QueueItemValue](../../type-aliases/QueueItemValue/)); nested objects and arrays are rejected.
 

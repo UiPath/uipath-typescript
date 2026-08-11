@@ -521,6 +521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1324,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1390,7 +1415,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1407,14 +1432,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1480,7 +1505,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1497,14 +1522,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2279,9 +2304,27 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getattachments" class="md-nav__link">
+    <span class="md-ellipsis">
+      getAttachments()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getoutput" class="md-nav__link">
     <span class="md-ellipsis">
       getOutput()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linkattachment" class="md-nav__link">
+    <span class="md-ellipsis">
+      linkAttachment()
     </span>
   </a>
   
@@ -2343,6 +2386,19 @@
 <p>Methods available on job response objects.
 These are bound to the job data and delegate to the service.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
+<h3 id="getattachments">getAttachments()<a class="headerlink" href="#getattachments" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getAttachments</strong>(): <code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>[]&gt;</p>
+</blockquote>
+<p>Gets all attachments linked to this job.</p>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>[]&gt;</p>
+<p>Promise resolving to an array of <a href="../JobAttachmentGetResponse/">JobAttachmentGetResponse</a> links, empty when the job has none</p>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">job</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">jobKey</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">attachments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">job</span><span class="p">.</span><span class="nx">getAttachments</span><span class="p">();</span>
+</code></pre></div>
+<hr />
 <h3 id="getoutput">getOutput()<a class="headerlink" href="#getoutput" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getOutput</strong>(): <code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
@@ -2351,16 +2407,51 @@ These are bound to the job data and delegate to the service.</p>
 <p>Retrieves the job's output arguments, handling both inline output (stored directly on the job
 as a JSON string in <code>outputArguments</code>) and file-based output (stored as a blob attachment for
 large outputs). Returns the parsed JSON output or <code>null</code> if the job has no output.</p>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;&gt;</p>
 <p>Promise resolving to the parsed output as <code>Record&lt;string, unknown&gt;</code>, or <code>null</code> if no output exists</p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allJobs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">completedJob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allJobs</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">j</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nx">state</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">JobState</span><span class="p">.</span><span class="nx">Successful</span><span class="p">);</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">completedJob</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">completedJob</span><span class="p">.</span><span class="nx">getOutput</span><span class="p">();</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allJobs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">completedJob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allJobs</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">j</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nx">state</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">JobState</span><span class="p">.</span><span class="nx">Successful</span><span class="p">);</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">completedJob</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">completedJob</span><span class="p">.</span><span class="nx">getOutput</span><span class="p">();</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h3 id="linkattachment">linkAttachment()<a class="headerlink" href="#linkattachment" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>linkAttachment</strong>(<code>attachmentId</code>: <code>string</code>, <code>options?</code>: <a href="../JobLinkAttachmentOptions/"><code>JobLinkAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Links an existing attachment to this job.</p>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>attachmentId</code></td>
+<td><code>string</code></td>
+<td>The unique ID (GUID) of the attachment to link</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../JobLinkAttachmentOptions/"><code>JobLinkAttachmentOptions</code></a></td>
+<td>Optional settings for the link, such as its category</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../JobAttachmentGetResponse/"><code>JobAttachmentGetResponse</code></a>&gt;</p>
+<p>Promise resolving to the created <a href="../JobAttachmentGetResponse/">JobAttachmentGetResponse</a> link</p>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">job</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">jobKey</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">job</span><span class="p">.</span><span class="nx">linkAttachment</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">attachmentId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Invoice&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="restart">restart()<a class="headerlink" href="#restart" title="Permanent link">&para;</a></h3>
@@ -2368,7 +2459,7 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 <p><strong>restart</strong>(): <code>Promise</code>&lt;<a href="../../type-aliases/JobGetResponse/"><code>JobGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Restarts this job, creating a new execution with a new key.</p>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/JobGetResponse/"><code>JobGetResponse</code></a>&gt;</p>
 <p>Promise resolving to the new <a href="../../type-aliases/JobGetResponse/">JobGetResponse</a> with full job details</p>
 <hr />
@@ -2377,7 +2468,7 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 <p><strong>resume</strong>(<code>options?</code>: <a href="../JobResumeOptions/"><code>JobResumeOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Resumes this suspended job.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2394,7 +2485,7 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise that resolves when the job is resumed successfully, or rejects on failure</p>
 <hr />
@@ -2404,7 +2495,7 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 </blockquote>
 <p>Stops this job.</p>
 <p>Sends a stop request for this job to the Orchestrator.</p>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2421,16 +2512,16 @@ large outputs). Returns the parsed JSON output or <code>null</code> if the job h
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise that resolves when the jobs are stopped successfully, or rejects on failure</p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allJobs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">runningJob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allJobs</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">j</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nx">state</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">JobState</span><span class="p">.</span><span class="nx">Running</span><span class="p">);</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">runningJob</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">runningJob</span><span class="p">.</span><span class="nx">stop</span><span class="p">();</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allJobs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">jobs</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">runningJob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allJobs</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">j</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">j</span><span class="p">.</span><span class="nx">state</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">JobState</span><span class="p">.</span><span class="nx">Running</span><span class="p">);</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">runningJob</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">runningJob</span><span class="p">.</span><span class="nx">stop</span><span class="p">();</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">}</span>
 </code></pre></div>
 
 
