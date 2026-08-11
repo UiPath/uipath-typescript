@@ -215,7 +215,7 @@
         },
         {
           "name": "getVariables",
-          "since": "1.6.1"
+          "since": "1.6.0"
         },
         {
           "name": "pause",
