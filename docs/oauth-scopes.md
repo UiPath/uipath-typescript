@@ -21,6 +21,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `stop()` | `OR.Jobs` |
 | `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
 | `restart()` | `OR.Jobs` |
+| `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Functions
 
@@ -36,6 +38,7 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `OR.Folders` or `OR.Folders.Read` |
+| `create()` | `OR.Folders` or `OR.Folders.Write` |
 
 ## Buckets
 
