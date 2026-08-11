@@ -186,13 +186,16 @@ export interface QueueItem {
   /** Identifier of the queue that owns the item */
   queueId: number;
   /**
-   * The item's business payload. Keys are user-defined and are returned
-   * exactly as stored — the SDK performs no case conversion on them.
+   * The item's business payload. Unlike API fields (which the SDK converts
+   * to camelCase), user-defined payload keys keep their original casing.
+   * Values are returned as stored: `Date` values provided on insert are
+   * stored and returned as ISO-8601 strings.
    */
   specificData: Record<string, unknown> | null;
   /**
-   * Output payload written back when the item completed. Keys are
-   * user-defined and returned exactly as stored.
+   * Output payload written back when the item completed. Unlike API fields
+   * (which the SDK converts to camelCase), user-defined payload keys keep
+   * their original casing. Values are returned as stored.
    */
   outputData: Record<string, unknown> | null;
   /** Failure details when the item failed processing */
