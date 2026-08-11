@@ -521,6 +521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1103,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FunctionServiceModel.md" class="md-nav__link">
+      <a href="../FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1324,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1390,7 +1415,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1407,14 +1432,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1480,7 +1505,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1497,14 +1522,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2320,9 +2345,19 @@
 <td>JSON schema describing the tool's input parameters. Present when <code>requireConfirmation</code> is true so the client can render an editable form.</td>
 </tr>
 <tr>
+<td><a id="isclientsidetool"></a> <code>isClientSideTool?</code></td>
+<td><code>boolean</code></td>
+<td>When <code>true</code>, this tool call should be executed locally by the client rather than server-side. The client should listen for <a href="../ExecutingToolCallEvent/">ExecutingToolCallEvent</a> via <code>onExecutingToolCall</code>, run the tool, and return the result with <code>sendToolCallEnd</code>.</td>
+</tr>
+<tr>
 <td><a id="metadata"></a> <code>metaData?</code></td>
 <td><a href="../../type-aliases/JSONObject/"><code>JSONObject</code></a></td>
 <td>Optional metadata pertaining to the tool call.</td>
+</tr>
+<tr>
+<td><a id="outputschema"></a> <code>outputSchema?</code></td>
+<td><a href="../../type-aliases/JSONValue/"><code>JSONValue</code></a></td>
+<td>JSON Schema describing the tool's expected output. Present on client-side tool calls so the client can validate or render a form for the result before sending it back via <code>sendToolCallEnd</code>.</td>
 </tr>
 <tr>
 <td><a id="requireconfirmation"></a> <code>requireConfirmation?</code></td>

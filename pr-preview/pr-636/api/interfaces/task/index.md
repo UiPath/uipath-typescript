@@ -459,15 +459,17 @@ const result2 = await tasks.reassign({
 
 ### saveData()
 
-> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `TaskSaveDataOptions`): `Promise`\<`void`>
 
 Saves a task's data (form/task payload), replacing the existing payload.
+
+Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
 
 #### Parameters
 
 - `taskId`: `number` — The task to update
 - `data`: `Record`\<`string`, `unknown`> — The task data to save (replaces the existing payload)
-- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+- `options?`: `TaskSaveDataOptions` — Task type plus folder scope (folderId, folderKey, or folderPath)
 
 #### Returns
 
@@ -475,10 +477,15 @@ Saves a task's data (form/task payload), replacing the existing payload.
 
 Promise resolving once the save completes
 
-#### Example
+#### Examples
 
 ```
 await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
+```
+
+```
+import { TaskType } from '@uipath/uipath-typescript/tasks';
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { type: TaskType.Form, folderId: <folderId> });
 ```
 
 ### saveTags()

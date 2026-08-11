@@ -704,6 +704,8 @@
       
         
       
+        
+      
     
     
     
@@ -1286,7 +1288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/interfaces/FunctionServiceModel.md" class="md-nav__link">
+      <a href="../api/interfaces/FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1507,6 +1509,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/interfaces/ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1573,7 +1598,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1590,14 +1615,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1663,7 +1688,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1680,14 +1705,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2771,7 +2796,7 @@
 <li><code>sdk.isInOAuthCallback()</code> - Check if processing OAuth redirect</li>
 <li><code>sdk.completeOAuth()</code> - Manually complete OAuth (advanced use)</li>
 <li><code>sdk.getToken()</code> - Get the logged-in user's access token</li>
-<li><code>sdk.logout()</code> - Logout and clear all authentication state (requires re-initialization to authenticate again). By default this is local-only: the Automation Cloud session is untouched and a subsequent sign-in completes silently. Pass <code>sdk.logout({ endSession: true })</code> to also terminate the Automation Cloud session — the browser is redirected to the Identity end-session endpoint, so the next sign-in prompts for credentials. <strong>The cloud logout requires the <code>openid</code> scope in your SDK configuration</strong>: the SDK sends the OIDC ID token as <code>id_token_hint</code> to prove the end-session request; without an ID token the SDK clears local state only, logs a warning, and skips the cloud logout. Pass <code>postLogoutRedirectUri</code> to return the user to your app afterwards — e.g. <code>(window.location.origin + window.location.pathname).replace(/\/$/, '')</code>. Identity compares the value by exact string match (a trailing-slash difference is a mismatch); when omitted or mismatched, the user lands on the Automation Cloud portal.</li>
+<li><code>sdk.logout()</code> - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the Automation Cloud session stays active, so the next sign-in completes silently. Pass <code>sdk.logout({ endCloudSession: true })</code> to also sign the user out of Automation Cloud — the browser is redirected to end the session and returns to your configured <code>redirectUri</code> (override with <code>postLogoutRedirectUri</code>).</li>
 <li><code>sdk.updateToken()</code> - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)</li>
 </ul>
 <hr />

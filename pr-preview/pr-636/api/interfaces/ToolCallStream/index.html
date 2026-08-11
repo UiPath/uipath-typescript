@@ -521,6 +521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1103,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FunctionServiceModel.md" class="md-nav__link">
+      <a href="../FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1324,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1390,7 +1415,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1407,14 +1432,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1480,7 +1505,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1497,14 +1522,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2315,6 +2340,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#onexecutingtoolcall" class="md-nav__link">
+    <span class="md-ellipsis">
+      onExecutingToolCall()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ontoolcallconfirm" class="md-nav__link">
     <span class="md-ellipsis">
       onToolCallConfirm()
@@ -2442,8 +2476,8 @@ end event (with the output/result).</p>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">isClientSideTool</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="p">;</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onExecutingToolCall</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runLocalProcess</span><span class="p">(</span><span class="nx">toolName</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallEnd</span><span class="p">({</span><span class="w"> </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">result</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runClientTool</span><span class="p">(</span><span class="nx">toolName</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallEnd</span><span class="p">({</span><span class="w"> </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="p">});</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">});</span>
 </code></pre></div>
@@ -2538,6 +2572,44 @@ end event (with the output/result).</p>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
+<h3 id="onexecutingtoolcall">onExecutingToolCall()<a class="headerlink" href="#onexecutingtoolcall" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>onExecutingToolCall</strong>(<code>cb</code>: (<code>event</code>: <a href="../ExecutingToolCallEvent/"><code>ExecutingToolCallEvent</code></a>) =&gt; <code>void</code>): () =&gt; <code>void</code></p>
+</blockquote>
+<p>Registers a handler for executingToolCall events. Fired when the tool is about
+to be executed. For client-side tools, the client should begin executing its
+handler upon receiving this event and return the result via <code>sendToolCallEnd</code>.</p>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cb</code></td>
+<td>(<code>event</code>: <a href="../ExecutingToolCallEvent/"><code>ExecutingToolCallEvent</code></a>) =&gt; <code>void</code></td>
+<td>Callback receiving the <a href="../ExecutingToolCallEvent/">ExecutingToolCallEvent</a> with the final input</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<p>Cleanup function to remove the handler</p>
+<blockquote>
+<p>(): <code>void</code></p>
+</blockquote>
+<h5 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h5>
+<p><code>void</code></p>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onExecutingToolCall</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runClientTool</span><span class="p">(</span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">startEvent</span><span class="p">.</span><span class="nx">toolName</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="p">.</span><span class="nx">input</span><span class="p">);</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallEnd</span><span class="p">({</span><span class="w"> </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">});</span>
+</code></pre></div>
+<hr />
 <h3 id="ontoolcallconfirm">onToolCallConfirm()<a class="headerlink" href="#ontoolcallconfirm" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>onToolCallConfirm</strong>(<code>callback</code>: (<code>confirmToolCall</code>: <a href="../../type-aliases/ToolCallConfirmationEvent/"><code>ToolCallConfirmationEvent</code></a>) =&gt; <code>void</code>): () =&gt; <code>void</code></p>
@@ -2545,7 +2617,7 @@ end event (with the output/result).</p>
 <p>Registers a handler for tool call confirmation events. Fired when the
 peer responds to a tool call that was emitted with
 <code>requireConfirmation: true</code> on its start event.</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2562,18 +2634,18 @@ peer responds to a tool call that was emitted with
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
 <p>Cleanup function to remove the handler</p>
 <blockquote>
 <p>(): <code>void</code></p>
 </blockquote>
-<h5 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h5>
+<h5 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h5>
 <p><code>void</code></p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onToolCallConfirm</span><span class="p">(({</span><span class="w"> </span><span class="nx">approved</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">approved</span><span class="p">)</span><span class="w"> </span><span class="nx">executeTool</span><span class="p">(</span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">startEvent</span><span class="p">.</span><span class="nx">toolName</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="p">);</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="nx">cancelToolCall</span><span class="p">();</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">});</span>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onToolCallConfirm</span><span class="p">(({</span><span class="w"> </span><span class="nx">approved</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">approved</span><span class="p">)</span><span class="w"> </span><span class="nx">executeTool</span><span class="p">(</span><span class="nx">toolCall</span><span class="p">.</span><span class="nx">startEvent</span><span class="p">.</span><span class="nx">toolName</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="p">);</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="nx">cancelToolCall</span><span class="p">();</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="ontoolcallend">onToolCallEnd()<a class="headerlink" href="#ontoolcallend" title="Permanent link">&para;</a></h3>
@@ -2581,7 +2653,7 @@ peer responds to a tool call that was emitted with
 <p><strong>onToolCallEnd</strong>(<code>cb</code>: (<code>endToolCall</code>: <a href="../ToolCallEndEvent/"><code>ToolCallEndEvent</code></a>) =&gt; <code>void</code>): () =&gt; <code>void</code></p>
 </blockquote>
 <p>Registers a handler for tool call end events</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2598,17 +2670,17 @@ peer responds to a tool call that was emitted with
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p>Cleanup function to remove the handler</p>
 <blockquote>
 <p>(): <code>void</code></p>
 </blockquote>
-<h5 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h5>
+<h5 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h5>
 <p><code>void</code></p>
-<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onToolCallEnd</span><span class="p">((</span><span class="nx">endEvent</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Output:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">endEvent</span><span class="p">.</span><span class="nx">output</span><span class="p">);</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="p">});</span>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">onToolCallEnd</span><span class="p">((</span><span class="nx">endEvent</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Output:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">endEvent</span><span class="p">.</span><span class="nx">output</span><span class="p">);</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="sendtoolcallconfirm">sendToolCallConfirm()<a class="headerlink" href="#sendtoolcallconfirm" title="Permanent link">&para;</a></h3>
@@ -2618,7 +2690,7 @@ peer responds to a tool call that was emitted with
 <p>Sends a tool call confirmation (approve or reject) for a tool call that
 was emitted with <code>requireConfirmation: true</code>. Replaces the legacy
 interrupt-based confirmation flow.</p>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2635,12 +2707,12 @@ interrupt-based confirmation flow.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
+<h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallConfirm</span><span class="p">({</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">editedInput</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallConfirm</span><span class="p">({</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">editedInput</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallConfirm</span><span class="p">({</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallConfirm</span><span class="p">({</span><span class="w"> </span><span class="nx">approved</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="sendtoolcallend">sendToolCallEnd()<a class="headerlink" href="#sendtoolcallend" title="Permanent link">&para;</a></h3>
@@ -2648,7 +2720,7 @@ interrupt-based confirmation flow.</p>
 <p><strong>sendToolCallEnd</strong>(<code>endToolCall?</code>: <a href="../ToolCallEndEvent/"><code>ToolCallEndEvent</code></a>): <code>void</code></p>
 </blockquote>
 <p>Ends the tool call</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2665,12 +2737,12 @@ interrupt-based confirmation flow.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
+<h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
-<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallEnd</span><span class="p">({</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">({</span><span class="w"> </span><span class="nx">temperature</span><span class="o">:</span><span class="w"> </span><span class="kt">18</span><span class="p">,</span><span class="w"> </span><span class="nx">condition</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;cloudy&#39;</span><span class="w"> </span><span class="p">})</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">});</span>
+<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nx">toolCall</span><span class="p">.</span><span class="nx">sendToolCallEnd</span><span class="p">({</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nx">output</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">({</span><span class="w"> </span><span class="nx">temperature</span><span class="o">:</span><span class="w"> </span><span class="kt">18</span><span class="p">,</span><span class="w"> </span><span class="nx">condition</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;cloudy&#39;</span><span class="w"> </span><span class="p">})</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">});</span>
 </code></pre></div>
 
 

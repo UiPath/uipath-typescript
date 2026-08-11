@@ -521,6 +521,8 @@
       
         
       
+        
+      
     
     
     
@@ -1103,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/FunctionServiceModel.md" class="md-nav__link">
+      <a href="../../interfaces/FunctionServiceModel/" class="md-nav__link">
         
   
   
@@ -1324,6 +1326,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Platform
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/ProcessServiceModel/" class="md-nav__link">
         
   
@@ -1390,7 +1415,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1407,14 +1432,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             Tasks
           </label>
@@ -1480,7 +1505,7 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1_14" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1497,14 +1522,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_14">
             <span class="md-nav__icon md-icon"></span>
             Traces
           </label>
@@ -2761,17 +2786,13 @@ If no config was provided in constructor, loads from meta tags.</p>
 </blockquote>
 <p>Logout from the SDK, clearing all authentication state.
 After calling this method, the user will need to re-initialize to authenticate again.</p>
-<p>By default only local authentication state is cleared — the Automation Cloud
-session is untouched, so a subsequent sign-in completes silently without
-showing a login screen. Pass <code>endSession: true</code> to also terminate the
-Automation Cloud session: the browser is redirected to the Identity
-end-session endpoint (invalidating the refresh token as well), so the next
-sign-in prompts for credentials. Note that an already-issued access token
-remains valid until its natural expiry.</p>
-<p>The cloud logout requires the <code>openid</code> scope in your SDK configuration —
-the SDK sends the OIDC ID token as <code>id_token_hint</code> to prove the
-end-session request. Without an ID token the SDK clears local state
-only, logs a warning, and skips the cloud logout.</p>
+<p>By default only local state is cleared — the Automation Cloud session
+stays active, so the next sign-in completes silently. Pass
+<code>endCloudSession: true</code> to also sign the user out of Automation Cloud
+(browser-only; requires the <code>openid</code> scope): the browser is redirected
+and returns to the configured <code>redirectUri</code> (override with
+<code>postLogoutRedirectUri</code>). Already-issued access tokens remain valid
+until they expire.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -2792,18 +2813,11 @@ only, logs a warning, and skips the cloud logout.</p>
 <h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default — previous behavior)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default)</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also log out of Automation Cloud (redirects the browser; without a</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// postLogoutRedirectUri the user lands on the Automation Cloud portal)</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1">// Log out of Automation Cloud and return the user to this app</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nx">postLogoutRedirectUri</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">origin</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">pathname</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="c1">//$/, &#39;&#39;)</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">});</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also sign out of Automation Cloud</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endCloudSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.logout</code></p>
