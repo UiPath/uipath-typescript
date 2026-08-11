@@ -289,35 +289,23 @@ export class UiPath implements IUiPath {
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
    *
-   * By default only local authentication state is cleared — the Automation Cloud
-   * session is untouched, so a subsequent sign-in completes silently without
-   * showing a login screen. Pass `endSession: true` to also terminate the
-   * Automation Cloud session: the browser is redirected to the Identity
-   * end-session endpoint (invalidating the refresh token as well), so the next
-   * sign-in prompts for credentials. Note that an already-issued access token
-   * remains valid until its natural expiry.
-   *
-   * The cloud logout requires the `openid` scope in your SDK configuration —
-   * the SDK sends the OIDC ID token as `id_token_hint` to prove the
-   * end-session request. Without an ID token the SDK clears local state
-   * only, logs a warning, and skips the cloud logout.
+   * By default only local state is cleared — the Automation Cloud session
+   * stays active, so the next sign-in completes silently. Pass
+   * `endCloudSession: true` to also sign the user out of Automation Cloud
+   * (browser-only; requires the `openid` scope): the browser is redirected
+   * and returns to the configured `redirectUri` (override with
+   * `postLogoutRedirectUri`). Already-issued access tokens remain valid
+   * until they expire.
    *
    * @param options - Logout behavior options
    *
    * @example
    * ```typescript
-   * // Local logout only (default — previous behavior)
+   * // Local logout only (default)
    * sdk.logout();
    *
-   * // Also log out of Automation Cloud (redirects the browser; without a
-   * // postLogoutRedirectUri the user lands on the Automation Cloud portal)
-   * sdk.logout({ endSession: true });
-   *
-   * // Log out of Automation Cloud and return the user to this app
-   * sdk.logout({
-   *   endSession: true,
-   *   postLogoutRedirectUri: (window.location.origin + window.location.pathname).replace(/\/$/, '')
-   * });
+   * // Also sign out of Automation Cloud
+   * sdk.logout({ endCloudSession: true });
    * ```
    */
   public logout(options?: LogoutOptions): void {

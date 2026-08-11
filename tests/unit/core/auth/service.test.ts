@@ -85,15 +85,23 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
     it('should not redirect to end-session outside the browser', () => {
       const windowStub = { location: { href: '' } };
       vi.stubGlobal('window', windowStub);
       const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      // With an ID token present, this exact state WOULD redirect in a
+      // browser — only the non-browser environment prevents it here.
+      service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
 
-      service.logout({ endSession: true });
+      service.logout({ endCloudSession: true });
 
       expect(windowStub.location.href).toBe('');
-      vi.unstubAllGlobals();
+      // Local auth state is still cleared even though the redirect is skipped.
+      expect(service.getToken()).toBeUndefined();
     });
 
     it('should clear authentication state without throwing when called with no options', () => {

@@ -254,35 +254,29 @@ export class AuthService {
 
   /**
    * Clears all authentication state including tokens and stored OAuth context.
-   * With `endSession: true`, additionally redirects the browser to the
-   * Identity end-session endpoint so the Automation Cloud session (and
-   * refresh token) are terminated — local cleanup alone cannot reach them,
-   * and without this the next sign-in silently reuses the cloud session.
-   * The end-session redirect requires the OIDC ID token (the `openid`
-   * scope): it is sent as `id_token_hint` to prove the request. Without one
-   * the cloud logout is skipped — only local state is cleared — and a
-   * warning is logged.
+   * With `endCloudSession: true`, additionally redirects the browser to the
+   * Identity end-session endpoint to terminate the Automation Cloud session.
+   * Requires the OIDC ID token (`openid` scope) — without one the cloud
+   * logout is skipped and a warning is logged.
    */
   public logout(options?: LogoutOptions): void {
     // Capture the ID token before clearToken() wipes it.
-    const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
+    const idTokenHint = options?.endCloudSession ? this.tokenManager.getIdToken() : undefined;
 
     // End-session is an unauthenticated Identity endpoint — id_token_hint is
     // what proves the request, so without `openid` there is nothing to send.
-    if (options?.endSession && isBrowser && !idTokenHint) {
+    if (options?.endCloudSession && isBrowser && !idTokenHint) {
       console.warn(
         'Cloud logout skipped: no OIDC ID token is available, so only local ' +
         "authentication state was cleared. Add the 'openid' scope to your " +
-        'SDK configuration to enable endSession.'
+        'SDK configuration to enable endCloudSession.'
       );
     }
 
     this.tokenManager.clearToken();
 
-    // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
-    // token exchange, but if a user calls logout() while an OAuth flow is
-    // mid-redirect (before callback completes), they'd be left behind.
-
+    // Clear stored OAuth context — it would be left behind if logout() is
+    // called mid-OAuth-flow (before the callback completes the cleanup).
     if (isBrowser) {
       try {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
@@ -292,10 +286,12 @@ export class AuthService {
       }
     }
 
-    if (options?.endSession && isBrowser && idTokenHint) {
+    if (options?.endCloudSession && isBrowser && idTokenHint) {
       window.location.href = this._buildEndSessionUrl({
         idTokenHint,
-        postLogoutRedirectUri: options.postLogoutRedirectUri
+        // The configured redirectUri is registered with Identity by
+        // definition, so it passes the exact-match validation — safe default.
+        postLogoutRedirectUri: options.postLogoutRedirectUri ?? this.config.redirectUri
       });
     }
   }
@@ -389,9 +385,7 @@ export class AuthService {
   }
 
   /**
-   * Builds the Identity end-session URL used to terminate the Automation
-   * Cloud session (OIDC RP-initiated logout). `id_token_hint` proves the
-   * request and lets Identity validate `post_logout_redirect_uri`.
+   * Builds the Identity end-session URL (OIDC RP-initiated logout).
    */
   private _buildEndSessionUrl(params: { idTokenHint: string; postLogoutRedirectUri?: string }): string {
     const queryParams = new URLSearchParams();

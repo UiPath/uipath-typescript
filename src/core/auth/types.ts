@@ -18,28 +18,16 @@ export interface TokenInfo {
  */
 export interface LogoutOptions {
   /**
-   * When true, after clearing local authentication state the browser is
-   * redirected to the Identity end-session endpoint, terminating the
-   * Automation Cloud session (and invalidating the refresh token) so the
-   * next sign-in prompts for credentials instead of silently reusing the
-   * still-active cloud session. Browser-only. Defaults to false, which
-   * preserves the previous local-only logout behavior.
-   *
-   * Requires the `openid` scope in your SDK configuration: the SDK captures
-   * the OIDC ID token and sends it as `id_token_hint`, which is what proves
-   * the end-session request. Without an ID token the cloud logout is
-   * skipped — only local state is cleared — and a warning is logged.
+   * When true, also signs the user out of Automation Cloud (browser-only) so
+   * the next sign-in prompts for credentials. Requires the `openid` scope —
+   * without it only local state is cleared and a warning is logged.
+   * Defaults to false (local-only logout).
    */
-  endSession?: boolean;
+  endCloudSession?: boolean;
   /**
-   * URL the user is returned to after the cloud session is terminated — pass
-   * this to bring the user back to your app instead of the Automation Cloud
-   * portal, e.g.
-   * `(window.location.origin + window.location.pathname).replace(/\/$/, '')`.
-   *
-   * Identity compares the value by exact string match, so even a
-   * trailing-slash difference is a mismatch — when omitted or mismatched,
-   * the user lands on the Automation Cloud portal instead.
+   * URL the user returns to after the cloud session ends. Defaults to the
+   * configured `redirectUri`. Must exactly match a redirect URI registered
+   * for the external app.
    */
   postLogoutRedirectUri?: string;
 }
