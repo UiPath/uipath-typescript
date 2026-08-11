@@ -2683,8 +2683,10 @@ item that already reached a terminal status is rejected.</p>
 </blockquote>
 <p>Inserts a new item into a queue by queue name</p>
 <p>Returns the created queue item including its id, status, and the stored
-payload. The payload keys are user-defined and are stored and returned
-exactly as provided.</p>
+payload. Payload keys keep their original casing — the SDK performs no
+case conversion on them, while method options and response fields still
+use the SDK's usual camelCase; <code>Date</code> values in the payload are
+serialized to ISO-8601 strings.</p>
 <p>The payload must be flat — values are simple scalars (see
 <a href="../../type-aliases/QueueItemValue/">QueueItemValue</a>); nested objects and arrays are rejected.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
