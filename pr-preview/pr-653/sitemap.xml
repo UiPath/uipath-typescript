@@ -725,6 +725,10 @@
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityHavingOperator/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityType/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
@@ -750,6 +754,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FieldDisplayType/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FunctionHttpMethod/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
@@ -974,6 +982,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/functions/createEntityWithMethods/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/functions/createFunctionWithMethods/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
@@ -1797,6 +1809,14 @@
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityHavingCondition/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityHavingFilter/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityImportRecordsByIdOptions/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
@@ -2054,6 +2074,22 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderScopedOptions/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionInvokeOptions/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionMethods/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionRef/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionServiceModel/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
@@ -2402,6 +2438,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawEntityGetResponse/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawFunctionGetResponse/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
@@ -2838,6 +2878,14 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FeedbackGetCategoriesOptions/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetAllOptions/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetResponse/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
