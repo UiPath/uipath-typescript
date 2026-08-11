@@ -143,6 +143,13 @@ export interface FunctionServiceModel {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Methods available on function response objects.
  * These are bound to the function data and delegate to the service.
  */
