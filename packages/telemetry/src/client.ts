@@ -99,6 +99,15 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
         return Promise.resolve();
     }
 
+    /**
+     * Required by `LogRecordExporter`. A no-op like `shutdown`: records are
+     * posted fire-and-forget in `sendAsCustomEvent`, so there is no queue of
+     * in-flight requests here to await.
+     */
+    public forceFlush(): Promise<void> {
+        return Promise.resolve();
+    }
+
     private sendAsCustomEvent(logRecord: ReadableLogRecord): void {
         const eventName = String(logRecord.body);
 
