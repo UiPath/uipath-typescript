@@ -2726,7 +2726,7 @@
 <li>Remove the <code>allowed-tools:</code> line from the <code>SKILL.md</code> frontmatter. It whitelists Claude Code tool names; Bolt enforces the list literally against its own (differently named) tools, which blocks every tool call — including the one needed to deactivate the skill — and deadlocks the agent.</li>
 </ul>
 </div>
-<p><img alt="Loading the coded-apps skill in Bolt via npm" src="../../assets/ai-app-builders/bolt-skill.png" /></p>
+<p><img alt="Bolt fetching the skill after the SKILL.md link is pasted into the prompt" src="../../assets/ai-app-builders/bolt-skill.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
 <p>Prompt Bolt to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
@@ -2745,8 +2745,7 @@
 <li>Fill the two values in yourself, <strong>directly in the file</strong> — Bolt's editor masks <code>.env</code> values on screen.</li>
 </ol>
 <p>Never paste the secret into chat: chat is stored with the project (visible to anyone it's shared with), it enters the model's context, and agents have been known to hard-code pasted secrets into generated source. Typing the values into <code>.env</code> yourself keeps them out of both.</p>
-<p><img alt="Entering the confidential secret in the Bolt terminal at deploy time" src="../../assets/ai-app-builders/bolt-secret.png" /></p>
-<p><img alt="Referencing the stored confidential secret during deploy in Bolt" src="../../assets/ai-app-builders/bolt-secret-1.png" /></p>
+<p><img alt="The .env file in Bolt with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET, values masked" src="../../assets/ai-app-builders/bolt-env.png" /></p>
 <hr />
 <h2 id="step-4-deploy">Step 4 — Deploy<a class="headerlink" href="#step-4-deploy" title="Permanent link">&para;</a></h2>
 <p>In the Bolt terminal, load the credentials from the <code>.env</code> you filled in (Step 3), then run the deploy. Bolt's WebContainer can reach npm and <code>*.uipath.com</code> (note: GitHub access is blocked in WebContainer):</p>
