@@ -9,7 +9,7 @@ on:
 
 jobs:
   label:
-    if: ${{ !contains(github.head_ref, 'localization_sync/') }}
+    runs-on: uipath-ubuntu-latest
     runs-on: uipath-ubuntu-latest
     name: Determine PR Labels
     steps:
