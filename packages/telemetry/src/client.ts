@@ -185,8 +185,9 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
  * Action Apps package). Each consumer instantiates its own client so that
  * its identity (`cloudRoleName`, `serviceName`, `sdkVersion`, …) and tenant
  * context flow through to its own `Logger` and exporter pipeline. Two
- * consumers running in the same process emit independent events — they
- * share the Application Insights connection string but nothing else.
+ * consumers running in the same process emit independent events — they share
+ * the Application Insights connection string, unless one supplies its own via
+ * `TelemetryClientInitOptions.connectionString`, but nothing else.
  *
  * Records are emitted via `Logger.emit` and batched by
  * `BatchLogRecordProcessor` before being handed to the Application Insights
@@ -211,11 +212,16 @@ export class TelemetryClient {
         this.telemetryContext = options.context;
 
         try {
-            if (!this.isValidConnectionString(CONNECTION_STRING)) {
+            // A consumer pointing at its own Application Insights resource
+            // supplies its own string; the shared one is the default.
+            const connectionString =
+                options.connectionString ?? CONNECTION_STRING;
+
+            if (!this.isValidConnectionString(connectionString)) {
                 return;
             }
 
-            this.setupTelemetryProvider(CONNECTION_STRING);
+            this.setupTelemetryProvider(connectionString);
         } catch (error) {
             console.debug('Failed to initialize telemetry:', error);
         }

@@ -90,6 +90,52 @@ describe('TelemetryClient.initialize', () => {
         expect(mocks.getLogger).not.toHaveBeenCalled();
     });
 
+    it('prefers a connection string supplied by the consumer over the shared one', async () => {
+        // The point of the option: a consumer reports to its own Application
+        // Insights resource without this package being republished for it.
+        const client = await clientWithConnectionString('');
+
+        client.initialize({
+            ...VALID_OPTIONS,
+            connectionString: VALID_CONNECTION_STRING,
+        });
+
+        // The shared string is empty here, so reaching the provider at all
+        // proves the supplied one was the value used.
+        expect(mocks.LoggerProvider).toHaveBeenCalledTimes(1);
+        expect(mocks.getLogger).toHaveBeenCalledWith('test-logger');
+    });
+
+    it('falls back to the shared connection string when the consumer omits one', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+
+        client.initialize(VALID_OPTIONS);
+
+        expect(mocks.LoggerProvider).toHaveBeenCalledTimes(1);
+    });
+
+    it('no-ops on an empty supplied string rather than falling back to the shared one', async () => {
+        // A consumer whose own value is unset must emit nothing, not report to
+        // the shared resource by accident.
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+
+        client.initialize({ ...VALID_OPTIONS, connectionString: '' });
+
+        expect(mocks.LoggerProvider).not.toHaveBeenCalled();
+        expect(mocks.getLogger).not.toHaveBeenCalled();
+    });
+
+    it('no-ops on a supplied string that is still an unsubstituted placeholder', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+
+        client.initialize({
+            ...VALID_OPTIONS,
+            connectionString: '$MY_CONNECTION_STRING',
+        });
+
+        expect(mocks.LoggerProvider).not.toHaveBeenCalled();
+    });
+
     it('ignores subsequent initialize calls on the same instance — first init wins', async () => {
         const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
 
