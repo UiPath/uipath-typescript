@@ -16,7 +16,7 @@ You build the app in Vercel (v0) with the UiPath coded-apps skill (so it uses `@
 - A UiPath **Automation Cloud** account.
 - Two external OAuth apps (UiPath Admin → **External Applications**):
     - a **non-confidential (public)** app — `clientId` + scopes, used for end-user **sign-in** inside the app (baked into the build; safe to expose in the browser).
-    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it scopes `Apps`, `OR.Folders.Read`, `OR.Execution`, and **assign it to the Orchestrator folder** you will deploy to.
+    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it scopes `OR.Default`, `Apps.Read`, `Apps.Write`, and **assign it to the Orchestrator folder** you will deploy to.
 
 See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the full external-app and `uipath.json` setup.
 
@@ -24,7 +24,7 @@ See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the f
 
 ## Step 1 — Load the UiPath coded-apps skill
 
-v0 offers the UiPath coded-apps skill directly from its **skill marketplace** — select it and it loads into the session. No manual import needed. Then add your build prompt and public config (Step 2).
+v0 offers the UiPath coded-apps skill directly from its **skill marketplace** — in the chat composer, open **+ → Skills**, search for `uipath-coded-apps`, and select it; it lands in the prompt as a chip. No manual import needed. Then add your build prompt and public config (Step 2).
 
 ![The UiPath coded-apps skill in the v0 skill marketplace](../assets/ai-app-builders/vercel-skill.png)
 
@@ -61,7 +61,7 @@ v0 has a usable terminal. Run the deploy there; `uip login` reads the encrypted 
 ```bash
 uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
-  --scope "Apps OR.Folders.Read OR.Execution"
+  --scope "OR.Default Apps.Read Apps.Write"
 npm run build
 uip codedapp pack dist -n <app-name> --version 1.0.0
 uip codedapp publish
@@ -78,11 +78,17 @@ https://<org>.uipath.host/<app-name>
 
 ![The deployed app running at its uipath.host URL](../assets/ai-app-builders/vercel-deploy1.png)
 
+!!! tip "Alternative — run the deploy yourself"
+    You don't have to route credentials through Environment Variables and prompt the agent. If that path gives you trouble (env vars not visible in the terminal, agent stuck mid-deploy), run the same commands yourself in v0's terminal, pasting the confidential app's client id and secret directly into `uip login` in place of the `$UIPATH_*` variables. Same result — you're just the one driving.
+
 ---
 
 ## Troubleshooting
 
 - **Env var not found in terminal** — confirm `UIPATH_CLIENT_ID`/`UIPATH_CLIENT_SECRET` are set for the environment your terminal runs in, then re-open the terminal.
+- **Sign-in fails with `invalid_scope`** — the app is requesting a scope the **public** external app doesn't grant. The `scope` in `uipath.json` must exactly match scopes added on that app's resources. Note `OR.Default` is an Orchestrator scope — a Data Fabric app needs `DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write` instead, both in `uipath.json` and on the external app.
+- **Sign-in fails with `invalid_request` / `Invalid redirect_uri`** — the URL the app runs on isn't registered on the public external app. Matching is **exact** (scheme, host, path, trailing slash): register the current URL with and without a trailing slash. The v0 preview URL (`*.v0.build`) and the deployed `uipath.host` URL are different origins — register each one you sign in from.
+- **Changed `uipath.json` but sign-in still uses old values** — the config is baked into the build. Rebuild and redeploy after editing it, and clear the site's storage before retrying (a cached token from the old scope will otherwise be reused). To see what the app actually requests, check the `scope`/`redirect_uri` params on the `identity_/connect/authorize` request in DevTools → Network.
 
 Common to all builders:
 
@@ -94,6 +100,7 @@ Common to all builders:
 
 ## Related docs
 
+- [AI App Builders → Getting Started](getting-started.md)
 - [Coded Apps → Getting Started](../coded-apps/getting-started.md)
 - [Coded Apps → CLI Reference](../coded-apps/cli-reference.md)
 - [CI/CD: GitHub Actions](../coded-apps/ci-cd-github-actions.md)

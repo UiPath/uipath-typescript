@@ -16,7 +16,7 @@ You build the app in Replit with the UiPath coded-apps skill (so it uses `@uipat
 - A UiPath **Automation Cloud** account.
 - Two external OAuth apps (UiPath Admin → **External Applications**):
     - a **non-confidential (public)** app — `clientId` + scopes, used for end-user **sign-in** inside the app (baked into the build; safe to expose in the browser).
-    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it scopes `Apps`, `OR.Folders.Read`, `OR.Execution`, and **assign it to the Orchestrator folder** you will deploy to.
+    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it scopes `OR.Default`, `Apps.Read`, `Apps.Write`, and **assign it to the Orchestrator folder** you will deploy to.
 
 See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the full external-app and `uipath.json` setup.
 
@@ -69,7 +69,7 @@ In the Replit **Shell**, run the deploy; `uip login` reads the Secrets you set i
 ```bash
 uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
   --organization <org> --tenant <tenant> \
-  --scope "Apps OR.Folders.Read OR.Execution"
+  --scope "OR.Default Apps.Read Apps.Write"
 npm run build
 uip codedapp pack dist -n <app-name> --version 1.0.0
 uip codedapp publish
@@ -84,6 +84,9 @@ https://<org>.uipath.host/<app-name>
 
 ![Replit shell showing a successful deploy and the hosted URL](../assets/ai-app-builders/replit-deploy.png)
 
+!!! tip "Alternative — run the deploy yourself"
+    You don't have to route credentials through Secrets and prompt the agent. If that path gives you trouble (secrets not visible to the shell, agent stuck mid-deploy), open the **Shell** and run the same commands yourself, pasting the confidential app's client id and secret directly into `uip login` in place of the `$UIPATH_*` variables. Same result — you're just the one driving.
+
 ---
 
 ## Troubleshooting
@@ -95,11 +98,13 @@ Common to all builders:
 - **`index.html not found` during `uip codedapp pack`** — the build is SSR or the dist root is nested. Switch to a static SPA build so `index.html` sits at the top of `dist/`.
 - **`401` on publish/deploy** — the deploy identity lacks access. Use a **confidential app** (client id + secret) or a **PAT** with the scopes above, and make sure it is **assigned to the target Orchestrator folder**.
 - **Assets 404 after deploy** — set Vite `base: './'` and use `getAppBase()` as your router basename. See [Coded Apps → Getting Started](../coded-apps/getting-started.md#pre-deployment-checklist).
+- **Sign-in fails (`invalid_scope` / `Invalid redirect_uri`) or deploy behaves oddly** — see [Troubleshooting sign-in](getting-started.md#troubleshooting-sign-in-all-builders) and [Deploy pitfalls](getting-started.md#deploy-pitfalls-all-builders).
 
 ---
 
 ## Related docs
 
+- [AI App Builders → Getting Started](getting-started.md)
 - [Coded Apps → Getting Started](../coded-apps/getting-started.md)
 - [Coded Apps → CLI Reference](../coded-apps/cli-reference.md)
 - [CI/CD: GitHub Actions](../coded-apps/ci-cd-github-actions.md)

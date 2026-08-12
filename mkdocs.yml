@@ -230,7 +230,7 @@ nav:
   - Plugins:
       - Codex: plugins/codex.md
   - AI App Builders:
-      - Overview: ai-app-builders/index.md
+      - Getting Started: ai-app-builders/getting-started.md
       - Vercel (v0): ai-app-builders/vercel.md
       - Replit: ai-app-builders/replit.md
       - Bolt: ai-app-builders/bolt.md
