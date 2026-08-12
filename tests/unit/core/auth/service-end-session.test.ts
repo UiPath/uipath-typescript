@@ -68,10 +68,10 @@ describe('AuthService logout end-session (browser)', () => {
     expect(windowStub.location.href).toBe('');
   });
 
-  it('should not navigate when endCloudSession is false', () => {
+  it('should not navigate when endSession is false', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: false });
+    service.logout({ endSession: false });
 
     expect(windowStub.location.href).toBe('');
   });
@@ -79,7 +79,7 @@ describe('AuthService logout end-session (browser)', () => {
   it('should redirect to the Identity end-session endpoint with the id_token_hint', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     expect(windowStub.location.href.startsWith(TEST_CONSTANTS.BASE_URL)).toBe(true);
     expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
@@ -90,7 +90,7 @@ describe('AuthService logout end-session (browser)', () => {
   it('should never send client_id on the end-session request', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     // The ID token alone proves the request; a client_id alongside it could
     // only agree or mismatch, so it is never sent.
@@ -98,12 +98,12 @@ describe('AuthService logout end-session (browser)', () => {
     expect(params.has('client_id')).toBe(false);
   });
 
-  it('should skip the cloud logout entirely when no ID token is available', () => {
+  it('should skip the session logout entirely when no ID token is available', () => {
     sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT] = '{"codeVerifier":"v"}';
     const service = createService();
     service.updateToken({ token: 'access-token', type: 'oauth' });
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     // Local state is cleared, but no end-session navigation happens —
     // endsession is unauthenticated and id_token_hint is what proves it.
@@ -116,7 +116,7 @@ describe('AuthService logout end-session (browser)', () => {
     sessionStore[AUTH_STORAGE_KEYS.CODE_VERIFIER] = 'v';
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     expect(sessionStore[AUTH_STORAGE_KEYS.OAUTH_CONTEXT]).toBeUndefined();
     expect(sessionStore[AUTH_STORAGE_KEYS.CODE_VERIFIER]).toBeUndefined();
@@ -126,7 +126,7 @@ describe('AuthService logout end-session (browser)', () => {
   it('should default post_logout_redirect_uri to the configured redirectUri', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     const params = new URL(windowStub.location.href).searchParams;
     expect(params.get('post_logout_redirect_uri')).toBe(TEST_CONSTANTS.REDIRECT_URI);
@@ -135,7 +135,7 @@ describe('AuthService logout end-session (browser)', () => {
   it('should use an explicit postLogoutRedirectUri over the configured redirectUri', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
+    service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
 
     const params = new URL(windowStub.location.href).searchParams;
     expect(params.get('post_logout_redirect_uri')).toBe(POST_LOGOUT_REDIRECT_URI);
@@ -155,7 +155,7 @@ describe('AuthService logout end-session (browser)', () => {
   it('should capture the id_token before clearing it, then clear the stored token', () => {
     const service = createServiceWithIdToken();
 
-    service.logout({ endCloudSession: true });
+    service.logout({ endSession: true });
 
     // The hint reached the URL...
     expect(new URL(windowStub.location.href).searchParams.get('id_token_hint')).toBe(TEST_CONSTANTS.ID_TOKEN);
@@ -174,19 +174,19 @@ describe('AuthService logout end-session (browser)', () => {
       warnSpy.mockRestore();
     });
 
-    it('should warn that the cloud logout was skipped when no id_token is available', () => {
+    it('should warn that the session logout was skipped when no id_token is available', () => {
       const service = createService();
 
-      service.logout({ endCloudSession: true });
+      service.logout({ endSession: true });
 
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Cloud logout skipped'));
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('End session skipped'));
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("'openid'"));
     });
 
     it('should not warn when an id_token is available', () => {
       const service = createServiceWithIdToken();
 
-      service.logout({ endCloudSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
+      service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
 
       expect(warnSpy).not.toHaveBeenCalled();
     });

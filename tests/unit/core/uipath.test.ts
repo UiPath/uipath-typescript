@@ -426,7 +426,7 @@ describe('UiPath Core', () => {
         scope: 'offline_access'
       });
 
-      const options = { endCloudSession: true, postLogoutRedirectUri: 'https://myapp.example.com/logged-out' };
+      const options = { endSession: true, postLogoutRedirectUri: 'https://myapp.example.com/logged-out' };
       sdk.logout(options);
 
       expect(mockLogout).toHaveBeenCalledWith(options);

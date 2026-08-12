@@ -61,7 +61,7 @@ export interface IUiPath {
   /**
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
-   * Pass `endCloudSession: true` to also end the Automation Cloud session.
+   * Pass `endSession: true` to also end the UiPath platform session.
    */
   logout(options?: LogoutOptions): void;
 

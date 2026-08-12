@@ -74,14 +74,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   /**
-   * Signs the user out of the app AND Automation Cloud: local tokens are
-   * cleared, then the browser is redirected to end the cloud session and
-   * returned to the configured `redirectUri`. Requires the `openid` scope
-   * (see uipath.json). For an app-only logout — cloud session survives,
+   * Signs the user out of the app AND the UiPath platform: local tokens are
+   * cleared, then the browser is redirected to end the session and returned
+   * to the configured `redirectUri`. Requires the `openid` scope
+   * (see uipath.json). For an app-only logout — platform session survives,
    * next sign-in is silent — call `sdk.logout()` with no options instead.
    */
   const logout = () => {
-    sdk.logout({ endCloudSession: true })
+    sdk.logout({ endSession: true })
     setError(null)
   }
 

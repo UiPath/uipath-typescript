@@ -18,16 +18,17 @@ export interface TokenInfo {
  */
 export interface LogoutOptions {
   /**
-   * When true, also signs the user out of Automation Cloud (browser-only) so
-   * the next sign-in prompts for credentials. Requires the `openid` scope —
-   * without it only local state is cleared and a warning is logged.
-   * Defaults to false (local-only logout).
+   * When true, also signs the user out of the UiPath platform — Automation
+   * Cloud or Automation Suite — so the next sign-in prompts for credentials.
+   * Browser-only; requires the `openid` scope — without it only local state
+   * is cleared and a warning is logged. Defaults to false (local-only
+   * logout).
    */
-  endCloudSession?: boolean;
+  endSession?: boolean;
   /**
-   * URL the user returns to after the cloud session ends. Defaults to the
-   * configured `redirectUri`. Must exactly match a redirect URI registered
-   * for the external app.
+   * URL the user returns to after the platform session ends. Defaults to
+   * the configured `redirectUri`. Must exactly match a redirect URI
+   * registered for the external app.
    */
   postLogoutRedirectUri?: string;
 }

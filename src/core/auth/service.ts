@@ -254,22 +254,23 @@ export class AuthService {
 
   /**
    * Clears all authentication state including tokens and stored OAuth context.
-   * With `endCloudSession: true`, additionally redirects the browser to the
-   * Identity end-session endpoint to terminate the Automation Cloud session.
-   * Requires the OIDC ID token (`openid` scope) — without one the cloud
-   * logout is skipped and a warning is logged.
+   * With `endSession: true`, additionally redirects the browser to the
+   * Identity end-session endpoint to terminate the UiPath platform session
+   * (Automation Cloud or Automation Suite). Requires the OIDC ID token
+   * (`openid` scope) — without one the session logout is skipped and a
+   * warning is logged.
    */
   public logout(options?: LogoutOptions): void {
     // Capture the ID token before clearToken() wipes it.
-    const idTokenHint = options?.endCloudSession ? this.tokenManager.getIdToken() : undefined;
+    const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
 
     // End-session is an unauthenticated Identity endpoint — id_token_hint is
     // what proves the request, so without `openid` there is nothing to send.
-    if (options?.endCloudSession && isBrowser && !idTokenHint) {
+    if (options?.endSession && isBrowser && !idTokenHint) {
       console.warn(
-        'Cloud logout skipped: no OIDC ID token is available, so only local ' +
+        'End session skipped: no OIDC ID token is available, so only local ' +
         "authentication state was cleared. Add the 'openid' scope to your " +
-        'SDK configuration to enable endCloudSession.'
+        'SDK configuration to enable endSession.'
       );
     }
 
@@ -286,7 +287,7 @@ export class AuthService {
       }
     }
 
-    if (options?.endCloudSession && isBrowser && idTokenHint) {
+    if (options?.endSession && isBrowser && idTokenHint) {
       window.location.href = this._buildEndSessionUrl({
         idTokenHint,
         // The configured redirectUri is registered with Identity by

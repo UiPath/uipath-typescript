@@ -97,7 +97,7 @@ describe('AuthService', () => {
       // browser — only the non-browser environment prevents it here.
       service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
 
-      service.logout({ endCloudSession: true });
+      service.logout({ endSession: true });
 
       expect(windowStub.location.href).toBe('');
       // Local auth state is still cleared even though the redirect is skipped.
