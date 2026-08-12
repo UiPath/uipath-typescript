@@ -24,7 +24,7 @@ Every builder follows the same model — only the builder-specific UI differs:
 Two external OAuth apps are always involved. Create both in UiPath Admin → **External Applications**.
 
 - **Public (non-confidential) — for sign-in.** A `clientId` plus scopes, used for end-user **sign-in** inside the app via PKCE. It is baked into the build and safe to expose in the browser.
-- **Confidential — for deploy.** A `clientId` plus `clientSecret`, used **only** at deploy time by `uip login`. Give it scopes `OR.Default`, `Apps.Read`, `Apps.Write`, and **assign it to the Orchestrator folder** you deploy to (Admin → External Applications, and Folder → Manage Access → Assign external app).
+- **Confidential — for deploy.** A `clientId` plus `clientSecret`, used **only** at deploy time by `uip login`. Give it `Apps.Read` and `Apps.Write`, and **assign it to the Orchestrator folder** you deploy to (Admin → External Applications, and Folder → Manage Access → Assign external app).
 
 !!! tip "Deploy credentials: confidential app or PAT"
     Deploy authenticates via `uip login` with the **confidential app**'s client id + secret (shown below). A **personal access token (PAT)** with the required scopes is also accepted — the platform exchanges the reference token server-side — so a PAT can be used as a simpler alternative to a confidential app. Whichever identity you use must be **assigned to the target Orchestrator folder**.
@@ -63,12 +63,6 @@ Your app is live at:
 ```text
 https://<org>.uipath.host/<app-name>
 ```
-
-!!! note "Why these login scopes"
-    All three parts of `--scope` are required, and the failures they prevent are misleading:
-
-    - `Apps.Read Apps.Write` — used by the app-registration half of `uip codedapp publish`. Without them the package upload **succeeds** while registration silently fails with `401`.
-    - `OR.Default` — used by the folder lookup that `deploy` validates `--folder-key` against. Without it, folder listing returns zero folders and deploy fails with a misleading *"folder not found among folders accessible to your account"*. `OR.Default` is auto-grantable and does **not** appear in the portal's selectable scope list — name it in `--scope` explicitly.
 
 ---
 

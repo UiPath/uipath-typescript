@@ -16,7 +16,7 @@ You build the app in Replit with the UiPath coded-apps skill (so it uses `@uipat
 - A UiPath **Automation Cloud** account.
 - Two external OAuth apps (UiPath Admin → **External Applications**):
     - a **non-confidential (public)** app — `clientId` + scopes, used for end-user **sign-in** inside the app (baked into the build; safe to expose in the browser).
-    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it scopes `OR.Default`, `Apps.Read`, `Apps.Write`, and **assign it to the Orchestrator folder** you will deploy to.
+    - a **confidential** app — `clientId` + `clientSecret`, used at **deploy** time by `uip login`. Give it `Apps.Read` and `Apps.Write`, and **assign it to the Orchestrator folder** you will deploy to.
 
 See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the full external-app and `uipath.json` setup.
 
