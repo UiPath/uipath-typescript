@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/QueueMethods/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/QueueCompleteTransactionOptions/">
       
       
       
@@ -20,7 +20,7 @@
     
     
       
-        <title>QueueMethods - UiPath TypeScript SDK</title>
+        <title>QueueCompleteTransactionOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#methods" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              QueueMethods
+              QueueCompleteTransactionOptions
             
           </span>
         </div>
@@ -2202,53 +2202,20 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
+  <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
-      Methods
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#completetransaction" class="md-nav__link">
-    <span class="md-ellipsis">
-      completeTransaction()
+      Extends
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#getallitems" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      getAllItems()
+      Properties
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#insertitem" class="md-nav__link">
-    <span class="md-ellipsis">
-      insertItem()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#starttransaction" class="md-nav__link">
-    <span class="md-ellipsis">
-      startTransaction()
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2271,133 +2238,87 @@
   
 
 
-  <h1>QueueMethods</h1>
+  <h1>QueueCompleteTransactionOptions</h1>
 
-<p>Queue methods interface - operations bound to a queue returned by
-getAll/getById. The queue's own id, name, and folder are filled in
-automatically.</p>
-<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
-<h3 id="completetransaction">completeTransaction()<a class="headerlink" href="#completetransaction" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>isSuccessful</code>: <code>boolean</code>, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, keyof <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>&gt;): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<code>void</code>&gt;&gt;</p>
-</blockquote>
-<p>Reports the processing outcome of one of this queue's items.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<p>Options for completing a transaction — completion details plus folder
+scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>). The success flag is
+passed positionally to <code>completeTransaction</code>.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
+</ul>
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Parameter</th>
+<th>Property</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>itemId</code></td>
+<td><a id="analytics"></a> <code>analytics?</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>Analytics payload to persist on the item. Keys are user-defined and sent exactly as provided.</td>
+</tr>
+<tr>
+<td><a id="deferdate"></a> <code>deferDate?</code></td>
+<td><code>Date</code></td>
+<td>Re-defer the item to this time (used with retry flows).</td>
+</tr>
+<tr>
+<td><a id="duedate"></a> <code>dueDate?</code></td>
+<td><code>Date</code></td>
+<td>Updated due date for the item.</td>
+</tr>
+<tr>
+<td><a id="expand"></a> <code>expand?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
 <td><code>number</code></td>
-<td>Queue item ID of the transaction to complete</td>
+<td>Numeric folder ID.</td>
 </tr>
 <tr>
-<td><code>isSuccessful</code></td>
-<td><code>boolean</code></td>
-<td>The caller's verdict on its own processing of the item: <code>true</code> marks it <code>Successful</code>, <code>false</code> marks it <code>Failed</code> (provide <code>processingError</code> in options). Orchestrator records the reported outcome as-is</td>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Folder key (GUID-formatted string).</td>
 </tr>
 <tr>
-<td><code>options?</code></td>
-<td><code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, keyof <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>&gt;</td>
-<td>Completion details (output data, failure details, new defer/due dates) — folder scoping comes from the queue</td>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
+</tr>
+<tr>
+<td><a id="operationid"></a> <code>operationId?</code></td>
+<td><code>string</code></td>
+<td>Operation identifier associated with the completion.</td>
+</tr>
+<tr>
+<td><a id="outputdata"></a> <code>outputData?</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>Output payload to persist on the item. Keys are user-defined and sent exactly as provided (no case conversion).</td>
+</tr>
+<tr>
+<td><a id="processingerror"></a> <code>processingError?</code></td>
+<td><a href="../QueueItemProcessingError/"><code>QueueItemProcessingError</code></a></td>
+<td>Failure details recorded when the transaction is unsuccessful.</td>
+</tr>
+<tr>
+<td><a id="progress"></a> <code>progress?</code></td>
+<td><code>string</code></td>
+<td>Free-form progress text to persist on the item.</td>
+</tr>
+<tr>
+<td><a id="select"></a> <code>select?</code></td>
+<td><code>string</code></td>
+<td>-</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<code>void</code>&gt;&gt;</p>
-<p>Promise resolving to an operation response confirming the completion was applied</p>
-<hr />
-<h3 id="getallitems">getAllItems()<a class="headerlink" href="#getallitems" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>getAllItems</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
-</blockquote>
-<p>Gets this queue's items with optional filtering and pagination.</p>
-<h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Type Parameter</th>
-<th>Default type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>T</code> <em>extends</em> <a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a></td>
-<td><a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a></td>
-</tr>
-</tbody>
-</table>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>options?</code></td>
-<td><code>T</code></td>
-<td>Query options including filtering and pagination options</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;&gt;</p>
-<p>Promise resolving to the queue's <a href="../QueueItem/">QueueItem</a> entries</p>
-<hr />
-<h3 id="insertitem">insertItem()<a class="headerlink" href="#insertitem" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>insertItem</strong>(<code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;, <code>options?</code>: <a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>): <code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
-</blockquote>
-<p>Inserts a new item into this queue.</p>
-<p>The payload must be flat — nested objects and arrays are rejected.</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>specificData</code></td>
-<td><code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;</td>
-<td>The item's business payload (keys are stored exactly as provided)</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a></td>
-<td>Optional item metadata (priority, reference, defer/due dates)</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
-<p>Promise resolving to the created <a href="../QueueItem/">QueueItem</a></p>
-<hr />
-<h3 id="starttransaction">startTransaction()<a class="headerlink" href="#starttransaction" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>startTransaction</strong>(): <code>Promise</code>&lt;<code>null</code> | <a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
-</blockquote>
-<p>Acquires the next available item from this queue, marking it <code>InProgress</code>.</p>
-<p>Requires a robot session — Orchestrator returns the item to the robot
-that requested it, so user and application identities receive <code>null</code>.
-<code>null</code> means either no eligible items or no allocation target; the API
-does not distinguish them.</p>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>null</code> | <a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
-<p>Promise resolving to the acquired <a href="../QueueItem/">QueueItem</a>, or <code>null</code></p>
 
 
 

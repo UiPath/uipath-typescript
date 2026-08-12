@@ -1124,20 +1124,19 @@ const allQueues = await queues.getAll();
 
 ### completeTransaction()
 
-> **completeTransaction**(`itemId`: `number`, `folderId`: `number`, `isSuccessful`: `boolean`, `options?`: `TransactionCompletionOptions`): `Promise`\<`OperationResponse`\<`void`>>
+> **completeTransaction**(`itemId`: `number`, `isSuccessful`: `boolean`, `options?`: `QueueCompleteTransactionOptions`): `Promise`\<`OperationResponse`\<`void`>>
 
 Completes a transaction: reports the processing outcome of a queue item
 
-Marks the item `Successful` or `Failed` (with the failure details from [TransactionCompletionOptions](../TransactionCompletionOptions/)), and can persist output data alongside the result.
+Marks the item `Successful` or `Failed` (with the failure details from [QueueCompleteTransactionOptions](../QueueCompleteTransactionOptions/)), and can persist output data alongside the result.
 
 Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
 
 #### Parameters
 
 - `itemId`: `number` — Queue item ID of the transaction to complete
-- `folderId`: `number` — Required folder ID
-- `isSuccessful`: `boolean` — True when the item was processed successfully; false records a failure (provide `processingError` in options)
-- `options?`: `TransactionCompletionOptions` — Completion details (output data, failure details, new defer/due dates)
+- `isSuccessful`: `boolean` — The caller's verdict on its own processing of the item: `true` marks it `Successful`, `false` marks it `Failed` (provide `processingError` in options). Orchestrator records the reported outcome as-is
+- `options?`: `QueueCompleteTransactionOptions` — Completion details (output data, failure details, new defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -1151,12 +1150,15 @@ Promise resolving to an operation response confirming the completion was applied
 import { QueueExceptionType } from '@uipath/uipath-typescript/queues';
 
 // Report success with output data
-await queues.completeTransaction(<itemId>, <folderId>, true, {
+await queues.completeTransaction(<itemId>, true, {
+  folderId: <folderId>,
   outputData: { paymentId: 'P-778' }
 });
 
-// Report a business failure (not retried)
-await queues.completeTransaction(<itemId>, <folderId>, false, {
+// Report a business failure (not retried) — folder scoping also
+// accepts a folder key or path
+await queues.completeTransaction(<itemId>, false, {
+  folderKey: '<folderKey>',
   processingError: {
     reason: 'Vendor not found',
     type: QueueExceptionType.BusinessException
@@ -1334,9 +1336,9 @@ const rushItem = await queues.insertItemByName('<queueName>', <folderId>, {
 });
 ```
 
-### startTransactionByName()
+### startTransaction()
 
-> **startTransactionByName**(`queueName`: `string`, `folderId`: `number`): `Promise`\<`null` | `QueueItem`>
+> **startTransaction**(`queue`: `QueueRef`, `options?`: `QueueStartTransactionOptions`): `Promise`\<`null` | `QueueItem`>
 
 Starts a transaction: acquires the next available item from a queue and marks it `InProgress`
 
@@ -1344,10 +1346,12 @@ Requires a robot session. Orchestrator allocates the item to the robot that sent
 
 `null` covers both "no eligible items" and "no allocation target" — the two are not distinguishable.
 
+The queue is selected by exactly one of `name` or `id`. The transaction API identifies queues by name, so an `id` selector is first resolved to the queue's name (one extra lookup).
+
 #### Parameters
 
-- `queueName`: `string` — Name of the queue to take the next item from
-- `folderId`: `number` — Required folder ID
+- `queue`: `QueueRef` — Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
+- `options?`: `QueueStartTransactionOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -1358,7 +1362,13 @@ Promise resolving to the acquired [QueueItem](../QueueItem/) (in `InProgress` st
 #### Example
 
 ```
-const transaction = await queues.startTransactionByName('<queueName>', <folderId>);
+const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
+
+// or select by ID — the SDK first resolves the queue's name (one extra lookup)
+const byId = await queues.startTransaction({ id: <queueId> }, { folderId: <folderId> });
+
+// folder scoping also accepts a folder key or path
+const byPath = await queues.startTransaction({ name: '<queueName>' }, { folderPath: 'Shared/Finance' });
 
 if (transaction) {
   // Running under a robot session: the item is now locked to this caller
