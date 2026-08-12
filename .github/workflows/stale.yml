@@ -11,6 +11,9 @@ jobs:
   label:
     runs-on: uipath-ubuntu-latest
     name: Determine PR Labels
+    permissions:
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/stale@5bef64f19d7facfed25b8b884e6374bb33e9bd7d # v9.1.0
         with:
