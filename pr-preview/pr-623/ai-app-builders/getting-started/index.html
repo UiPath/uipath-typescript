@@ -2688,7 +2688,7 @@
 <p>Two external OAuth apps are always involved. Create both in UiPath Admin → <strong>External Applications</strong>.</p>
 <ul>
 <li><strong>Public (non-confidential) — for sign-in.</strong> A <code>clientId</code> plus scopes, used for end-user <strong>sign-in</strong> inside the app via PKCE. It is baked into the build and safe to expose in the browser.</li>
-<li><strong>Confidential — for deploy.</strong> A <code>clientId</code> plus <code>clientSecret</code>, used <strong>only</strong> at deploy time by <code>uip login</code>. Give it scopes <code>OR.Default</code>, <code>Apps.Read</code>, <code>Apps.Write</code>, and <strong>assign it to the Orchestrator folder</strong> you deploy to (Admin → External Applications, and Folder → Manage Access → Assign external app).</li>
+<li><strong>Confidential — for deploy.</strong> A <code>clientId</code> plus <code>clientSecret</code>, used <strong>only</strong> at deploy time by <code>uip login</code>. Give it <code>Apps.Read</code> and <code>Apps.Write</code>, and <strong>assign it to the Orchestrator folder</strong> you deploy to (Admin → External Applications, and Folder → Manage Access → Assign external app).</li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Deploy credentials: confidential app or PAT</p>
@@ -2747,14 +2747,6 @@
 <p>Your app is live at:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>https://&lt;org&gt;.uipath.host/&lt;app-name&gt;
 </code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Why these login scopes</p>
-<p>All three parts of <code>--scope</code> are required, and the failures they prevent are misleading:</p>
-<ul>
-<li><code>Apps.Read Apps.Write</code> — used by the app-registration half of <code>uip codedapp publish</code>. Without them the package upload <strong>succeeds</strong> while registration silently fails with <code>401</code>.</li>
-<li><code>OR.Default</code> — used by the folder lookup that <code>deploy</code> validates <code>--folder-key</code> against. Without it, folder listing returns zero folders and deploy fails with a misleading <em>"folder not found among folders accessible to your account"</em>. <code>OR.Default</code> is auto-grantable and does <strong>not</strong> appear in the portal's selectable scope list — name it in <code>--scope</code> explicitly.</li>
-</ul>
-</div>
 <hr />
 <h2 id="troubleshooting-sign-in-all-builders">Troubleshooting sign-in (all builders)<a class="headerlink" href="#troubleshooting-sign-in-all-builders" title="Permanent link">&para;</a></h2>
 <p>Sign-in problems land on a UiPath error page (<code>cloud.uipath.com/identity_/web/?errorCode=…</code>) regardless of builder. The two you will actually meet:</p>

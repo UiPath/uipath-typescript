@@ -2699,7 +2699,7 @@
 <li>A UiPath <strong>Automation Cloud</strong> account.</li>
 <li>Two external OAuth apps (UiPath Admin → <strong>External Applications</strong>):<ul>
 <li>a <strong>non-confidential (public)</strong> app — <code>clientId</code> + scopes, used for end-user <strong>sign-in</strong> inside the app (baked into the build; safe to expose in the browser).</li>
-<li>a <strong>confidential</strong> app — <code>clientId</code> + <code>clientSecret</code>, used at <strong>deploy</strong> time by <code>uip login</code>. Give it scopes <code>OR.Default</code>, <code>Apps.Read</code>, <code>Apps.Write</code>, and <strong>assign it to the Orchestrator folder</strong> you will deploy to.</li>
+<li>a <strong>confidential</strong> app — <code>clientId</code> + <code>clientSecret</code>, used at <strong>deploy</strong> time by <code>uip login</code>. Give it <code>Apps.Read</code> and <code>Apps.Write</code>, and <strong>assign it to the Orchestrator folder</strong> you will deploy to.</li>
 </ul>
 </li>
 </ul>
