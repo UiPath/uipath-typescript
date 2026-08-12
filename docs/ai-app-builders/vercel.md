@@ -28,8 +28,6 @@ v0 offers the UiPath coded-apps skill directly from its **skill marketplace** �
 
 ![The UiPath coded-apps skill in the v0 skill marketplace](../assets/ai-app-builders/vercel-skill.png)
 
-![Adding the UiPath coded-apps skill to the v0 session](../assets/ai-app-builders/vercel-skill2.png)
-
 ---
 
 ## Step 2 — Build your app
@@ -40,6 +38,8 @@ Prompt Vercel (v0) to build your app, passing your **public** sign-in config so 
 Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill. Use this config:
 { "clientId": "<public-app-client-id>", "scope": "<scopes>", "orgName": "<org>", "tenantName": "<tenant>", "baseUrl": "https://api.uipath.com" }
 ```
+
+![v0 building the app with the skill attached, using the pasted config](../assets/ai-app-builders/vercel-skill2.png)
 
 !!! warning "Must be a static SPA"
     Coded apps are static sites — the build must emit `index.html` at the **dist root**. The skill scaffolds this for you; if the builder defaults to a server-rendered (SSR) framework, switch it to a static/SPA build.

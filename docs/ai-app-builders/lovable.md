@@ -34,7 +34,7 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
 
 **Option 2 — import it as a workspace skill (zip).** Download **only** the [`skills/uipath-coded-apps`](https://github.com/UiPath/skills/tree/main/skills/uipath-coded-apps) folder from the UiPath skills repo — not the whole repo, which is far too large to load as a skill — zip that folder, and add it as a workspace skill. Importing directly from a git URL is not reliable today because the skills repo uses symlinks, so use a zip of just this folder.
 
-![Adding the coded-apps skill zip as a Lovable workspace skill](../assets/ai-app-builders/lovable-skill.png)
+![Lovable workspace Skills with the Add menu open and the coded-apps skill added](../assets/ai-app-builders/lovable-skill.png)
 
 ---
 

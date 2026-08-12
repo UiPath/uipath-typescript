@@ -32,11 +32,11 @@ Pick one:
 Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 ```
 
+![Replit fetching the skill from the SKILL.md link pasted into the prompt](../assets/ai-app-builders/replit-skill.png)
+
 **Option 2 — install from npm.** Replit has a shell, so run `npm i @uipath/skills` in the **Shell** and point your prompt at the coded-apps skill in that package. This pulls the published skill with no manual download or zip, and always gets the latest version.
 
 **Option 3 — import it as a Replit skill (zip).** For a persistent workspace skill: download **only** the [`skills/uipath-coded-apps`](https://github.com/UiPath/skills/tree/main/skills/uipath-coded-apps) folder from the UiPath skills repo — not the whole repo, which is far too large to load as a skill — zip that folder, and upload it via **Import code or design**. (On paid plans you can install a folder as a skill directly.)
-
-![Importing the coded-apps skill zip into Replit](../assets/ai-app-builders/replit-skill.png)
 
 ---
 
