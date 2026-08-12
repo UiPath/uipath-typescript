@@ -2708,13 +2708,13 @@
 <h2 id="step-1-load-the-uipath-coded-apps-skill">Step 1 — Load the UiPath coded-apps skill<a class="headerlink" href="#step-1-load-the-uipath-coded-apps-skill" title="Permanent link">&para;</a></h2>
 <p>v0 offers the UiPath coded-apps skill directly from its <strong>skill marketplace</strong> — in the chat composer, open <strong>+ → Skills</strong>, search for <code>uipath-coded-apps</code>, and select it; it lands in the prompt as a chip. No manual import needed. Then add your build prompt and public config (Step 2).</p>
 <p><img alt="The UiPath coded-apps skill in the v0 skill marketplace" src="../../assets/ai-app-builders/vercel-skill.png" /></p>
-<p><img alt="Adding the UiPath coded-apps skill to the v0 session" src="../../assets/ai-app-builders/vercel-skill2.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
 <p>Prompt Vercel (v0) to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Build a &lt;describe your app&gt; as a UiPath coded app using the uipath-coded-apps skill. Use this config:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>{ &quot;clientId&quot;: &quot;&lt;public-app-client-id&gt;&quot;, &quot;scope&quot;: &quot;&lt;scopes&gt;&quot;, &quot;orgName&quot;: &quot;&lt;org&gt;&quot;, &quot;tenantName&quot;: &quot;&lt;tenant&gt;&quot;, &quot;baseUrl&quot;: &quot;https://api.uipath.com&quot; }
 </code></pre></div>
+<p><img alt="v0 building the app with the skill attached, using the pasted config" src="../../assets/ai-app-builders/vercel-skill2.png" /></p>
 <div class="admonition warning">
 <p class="admonition-title">Must be a static SPA</p>
 <p>Coded apps are static sites — the build must emit <code>index.html</code> at the <strong>dist root</strong>. The skill scaffolds this for you; if the builder defaults to a server-rendered (SSR) framework, switch it to a static/SPA build.</p>

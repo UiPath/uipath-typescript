@@ -2710,9 +2710,9 @@
 <p><strong>Option 1 — reference the skill in your prompt (simplest).</strong> Add this line to your Step 2 build prompt so Replit's agent loads the skill directly from source:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 </code></pre></div>
+<p><img alt="Replit fetching the skill from the SKILL.md link pasted into the prompt" src="../../assets/ai-app-builders/replit-skill.png" /></p>
 <p><strong>Option 2 — install from npm.</strong> Replit has a shell, so run <code>npm i @uipath/skills</code> in the <strong>Shell</strong> and point your prompt at the coded-apps skill in that package. This pulls the published skill with no manual download or zip, and always gets the latest version.</p>
 <p><strong>Option 3 — import it as a Replit skill (zip).</strong> For a persistent workspace skill: download <strong>only</strong> the <a href="https://github.com/UiPath/skills/tree/main/skills/uipath-coded-apps"><code>skills/uipath-coded-apps</code></a> folder from the UiPath skills repo — not the whole repo, which is far too large to load as a skill — zip that folder, and upload it via <strong>Import code or design</strong>. (On paid plans you can install a folder as a skill directly.)</p>
-<p><img alt="Importing the coded-apps skill zip into Replit" src="../../assets/ai-app-builders/replit-skill.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
 <p>Prompt Replit to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
