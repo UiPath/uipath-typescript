@@ -1,0 +1,28 @@
+# Adds stale labels for PR's with no commits in
+# the past 14 days.
+# Deletes stale PR's
+name: Monitor for stale issues and pull requests.
+on:
+  schedule:
+    - cron: '30 18 * * *' # IST Midnight
+  workflow_dispatch:
+
+jobs:
+  label:
+    if: ${{ !contains(github.head_ref, 'localization_sync/') }}
+    runs-on: uipath-ubuntu-latest
+    name: Determine PR Labels
+    steps:
+      - uses: actions/stale@a20b814fb01b71def3bd6f56e7494d667ddf28da # v4.1.1
+        with:
+          # stale-issue-message not provided so that *issues* do not expire
+          stale-pr-message: >
+            *🤖 Bleep bloop!*
+            This PR has not seen any activity in the last week and will be closed automatically in **14 days**. Please push a commit or leave a comment to keep this PR open.
+          close-pr-message: >
+            *🤖 Bleep bloop!*
+            This PR was closed because it has not seen any activity since the last bi-weekly review.
+          days-before-stale: 5 # once something becomes 'active' (not draft) it should keep progressing
+          days-before-close: 14 # the bi-weekly interval
+          exempt-pr-labels: draft
+          operations-per-run: 100
