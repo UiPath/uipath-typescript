@@ -49,7 +49,7 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
     - Bolt's importer accepts **`.md` files only** — it rejects any other extension (`.css`, `.gz`, `.mjs`, …). Remove or wrap non-markdown assets before zipping.
     - Remove the `allowed-tools:` line from the `SKILL.md` frontmatter. It whitelists Claude Code tool names; Bolt enforces the list literally against its own (differently named) tools, which blocks every tool call — including the one needed to deactivate the skill — and deadlocks the agent.
 
-![Loading the coded-apps skill in Bolt via npm](../assets/ai-app-builders/bolt-skill.png)
+![Bolt fetching the skill after the SKILL.md link is pasted into the prompt](../assets/ai-app-builders/bolt-skill.png)
 
 ---
 
@@ -76,9 +76,7 @@ Bolt's managed secrets are **not exposed to the shell** its agent runs commands 
 
 Never paste the secret into chat: chat is stored with the project (visible to anyone it's shared with), it enters the model's context, and agents have been known to hard-code pasted secrets into generated source. Typing the values into `.env` yourself keeps them out of both.
 
-![Entering the confidential secret in the Bolt terminal at deploy time](../assets/ai-app-builders/bolt-secret.png)
-
-![Referencing the stored confidential secret during deploy in Bolt](../assets/ai-app-builders/bolt-secret-1.png)
+![The .env file in Bolt with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET, values masked](../assets/ai-app-builders/bolt-env.png)
 
 ---
 
