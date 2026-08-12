@@ -34,11 +34,15 @@ https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 
 The skill lands in your workspace library. In the chat composer, attach it from the **+** menu (**+ → Skills → uipath-coded-apps**) or invoke it with `/uipath-coded-apps` — it appears in the prompt as a tag.
 
+![Bolt Skills library: Add skill from GitHub with the SKILL.md URL pasted](../assets/ai-app-builders/bolt-skill-library.png)
+
 **Option 2 — reference the skill in your prompt.** Add the same link as a line in your Step 2 build prompt so Bolt's agent loads the skill directly from source:
 
 ```text
 Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 ```
+
+![Bolt fetching the skill after the SKILL.md link is pasted into the prompt](../assets/ai-app-builders/bolt-skill.png)
 
 !!! warning "Enable the skill for the project"
     A workspace-library skill is not automatically active in a project. Open the project's **Settings → Skills** and enable `uipath-coded-apps` there too — otherwise Bolt reports the skill as unavailable even though it is in your library.
@@ -49,7 +53,6 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
     - Bolt's importer accepts **`.md` files only** — it rejects any other extension (`.css`, `.gz`, `.mjs`, …). Remove or wrap non-markdown assets before zipping.
     - Remove the `allowed-tools:` line from the `SKILL.md` frontmatter. It whitelists Claude Code tool names; Bolt enforces the list literally against its own (differently named) tools, which blocks every tool call — including the one needed to deactivate the skill — and deadlocks the agent.
 
-![Bolt fetching the skill after the SKILL.md link is pasted into the prompt](../assets/ai-app-builders/bolt-skill.png)
 
 ---
 
