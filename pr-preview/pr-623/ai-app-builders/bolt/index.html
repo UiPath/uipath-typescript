@@ -2711,9 +2711,11 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 </code></pre></div>
 <p>The skill lands in your workspace library. In the chat composer, attach it from the <strong>+</strong> menu (<strong>+ → Skills → uipath-coded-apps</strong>) or invoke it with <code>/uipath-coded-apps</code> — it appears in the prompt as a tag.</p>
+<p><img alt="Bolt Skills library: Add skill from GitHub with the SKILL.md URL pasted" src="../../assets/ai-app-builders/bolt-skill-library.png" /></p>
 <p><strong>Option 2 — reference the skill in your prompt.</strong> Add the same link as a line in your Step 2 build prompt so Bolt's agent loads the skill directly from source:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 </code></pre></div>
+<p><img alt="Bolt fetching the skill after the SKILL.md link is pasted into the prompt" src="../../assets/ai-app-builders/bolt-skill.png" /></p>
 <div class="admonition warning">
 <p class="admonition-title">Enable the skill for the project</p>
 <p>A workspace-library skill is not automatically active in a project. Open the project's <strong>Settings → Skills</strong> and enable <code>uipath-coded-apps</code> there too — otherwise Bolt reports the skill as unavailable even though it is in your library.</p>
@@ -2726,7 +2728,6 @@
 <li>Remove the <code>allowed-tools:</code> line from the <code>SKILL.md</code> frontmatter. It whitelists Claude Code tool names; Bolt enforces the list literally against its own (differently named) tools, which blocks every tool call — including the one needed to deactivate the skill — and deadlocks the agent.</li>
 </ul>
 </div>
-<p><img alt="Bolt fetching the skill after the SKILL.md link is pasted into the prompt" src="../../assets/ai-app-builders/bolt-skill.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
 <p>Prompt Bolt to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
