@@ -20,4 +20,10 @@ export enum UiPathMetaTags {
   // Folder context (injected during coded-app deployment)
   FOLDER_KEY = 'uipath:folder-key',
 
+  // Public (anonymous) coded-app runtime mode. Injected at deploy when the app
+  // runs as its own identity (no user login). RUNTIME_AUTH_MODE = 'application'
+  // switches the SDK into public mode; APP_ID keys the Apps-gateway routes.
+  RUNTIME_AUTH_MODE = 'uipath:runtime-auth-mode',
+  APP_ID = 'uipath:app-id',
+
 }
