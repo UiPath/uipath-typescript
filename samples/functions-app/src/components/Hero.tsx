@@ -4,18 +4,18 @@ import { Badge } from '@uipath/apollo-wind/components/ui/badge';
 const STEPS = [
   {
     Icon: EyeOff,
-    title: 'The browser never sees them',
-    body: 'A Secret asset is omitted from the assets API entirely. Not blanked, absent.',
+    title: 'The codes stay on the server',
+    body: 'They live in an Orchestrator Secret asset. This page cannot read it.',
   },
   {
     Icon: Server,
-    title: 'The function reads them',
-    body: 'Only a deployed job carries the robot key that releases a Secret’s value.',
+    title: 'A coded function checks them',
+    body: 'Your code is sent to the function, which compares it and returns the result.',
   },
   {
     Icon: KeyRound,
-    title: 'You get a verdict, not a list',
-    body: 'A rejected code says only that it is invalid, never how close you were.',
+    title: 'You get an answer, not a list',
+    body: 'An invalid code is simply rejected, with no hint about what a valid one looks like.',
   },
 ];
 
