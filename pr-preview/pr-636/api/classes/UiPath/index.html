@@ -2786,9 +2786,9 @@ If no config was provided in constructor, loads from meta tags.</p>
 </blockquote>
 <p>Logout from the SDK, clearing all authentication state.
 After calling this method, the user will need to re-initialize to authenticate again.</p>
-<p>By default only local state is cleared — the Automation Cloud session
-stays active, so the next sign-in completes silently. Pass
-<code>endCloudSession: true</code> to also sign the user out of Automation Cloud
+<p>By default only local state is cleared — the UiPath session (Automation
+Cloud or Automation Suite) stays active, so the next sign-in completes
+silently. Pass <code>endSession: true</code> to also sign the user out of UiPath session
 (browser-only; requires the <code>openid</code> scope): the browser is redirected
 and returns to the configured <code>redirectUri</code> (override with
 <code>postLogoutRedirectUri</code>). Already-issued access tokens remain valid
@@ -2818,8 +2818,8 @@ prevent your login screen appearing twice.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default)</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also sign out of Automation Cloud</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endCloudSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also end the UiPath session</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.logout</code></p>

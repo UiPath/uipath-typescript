@@ -317,7 +317,7 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the Automation Cloud session stays active, so the next sign-in completes silently. Pass `sdk.logout({ endCloudSession: true })` to also sign the user out of Automation Cloud — the browser is redirected to end the session and returns to your configured `redirectUri` (override with `postLogoutRedirectUri`).
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your configured `redirectUri` (override with `postLogoutRedirectUri`).
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 
 ## Quick Test Script
@@ -5362,6 +5362,35 @@ if (isCitationSourceMedia(source)) {
 }
 ```
 
+### getAddConnectionUrl()
+
+> **getAddConnectionUrl**(`item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; }): `Promise`\<`null` | `string`>
+
+Returns the best URL for adding a new connection for a given connector.
+
+Tries to generate a connector-specific auth URL (works when running inside the UiPath platform). If that fails, falls back to the Orchestrator connections page or the connector configuration page.
+
+#### Parameters
+
+- `item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; } — The connector item from [getAvailableConnections](#getavailableconnections)
+- `item.configurationUrl?`: `string` — -
+- `item.connectionsUrl?`: `string` — -
+- `item.connectorKey`: `string` — -
+
+#### Returns
+
+`Promise`\<`null` | `string`>
+
+The URL to open, or `null` if no URL is available
+
+#### Example
+
+```
+const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
+if (url) window.open(url, '_blank');
+```
+
 ### getAll()
 
 > **getAll**(`folderId?`: `number`): `Promise`\<`AgentGetResponse`[]>
@@ -5390,6 +5419,32 @@ const conversation = await agent.conversations.create({ label: 'My Chat' });
 
 ```
 const agents = await conversationalAgent.getAll(folderId);
+```
+
+### getAvailableConnections()
+
+> **getAvailableConnections**(`agentId`: `number`, `folderId`: `number`): `Promise`\<`AvailableConnectionsResponse`>
+
+Gets available connections for each configurable connector binding of an agent. Only returns bindings that are "configurable by users" (not admin-fixed).
+
+#### Parameters
+
+- `agentId`: `number` — ID of the agent release
+- `folderId`: `number` — ID of the folder containing the agent
+
+#### Returns
+
+`Promise`\<`AvailableConnectionsResponse`>
+
+Promise resolving to an array of connector items with their available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
+
+#### Example
+
+```
+const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+for (const item of connections) {
+  console.log(`${item.connectorName}: ${item.connections.length} available`);
+}
 ```
 
 ### getById()
@@ -5444,6 +5499,32 @@ const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) =>
 
 // Later, remove the handler
 cleanup();
+```
+
+### updateConnectionSelections()
+
+> **updateConnectionSelections**(`agentId`: `number`, `folderId`: `number`, `request`: `UpdateConnectionSelectionsRequest`): `Promise`\<`AvailableConnectionsResponse`>
+
+Updates the current user's connection selections for an agent. Only configurable bindings (not admin-fixed) can be updated.
+
+#### Parameters
+
+- `agentId`: `number` — ID of the agent release
+- `folderId`: `number` — ID of the folder containing the agent
+- `request`: `UpdateConnectionSelectionsRequest` — The connection selections to apply
+
+#### Returns
+
+`Promise`\<`AvailableConnectionsResponse`>
+
+Promise resolving to the updated available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
+
+#### Example
+
+```
+const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
+  selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
+});
 ```
 
 Service for creating and managing conversations with UiPath Conversational Agents

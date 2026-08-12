@@ -2397,9 +2397,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#getaddconnectionurl" class="md-nav__link">
+    <span class="md-ellipsis">
+      getAddConnectionUrl()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getall" class="md-nav__link">
     <span class="md-ellipsis">
       getAll()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getavailableconnections" class="md-nav__link">
+    <span class="md-ellipsis">
+      getAvailableConnections()
     </span>
   </a>
   
@@ -2418,6 +2436,15 @@
   <a href="#onconnectionstatuschanged" class="md-nav__link">
     <span class="md-ellipsis">
       onConnectionStatusChanged()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updateconnectionselections" class="md-nav__link">
+    <span class="md-ellipsis">
+      updateConnectionSelections()
     </span>
   </a>
   
@@ -2673,12 +2700,61 @@ rejected before any request is made.</p>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
+<h3 id="getaddconnectionurl">getAddConnectionUrl()<a class="headerlink" href="#getaddconnectionurl" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getAddConnectionUrl</strong>(<code>item</code>: { <code>configurationUrl?</code>: <code>string</code>; <code>connectionsUrl?</code>: <code>string</code>; <code>connectorKey</code>: <code>string</code>; }): <code>Promise</code>&lt;<code>null</code> | <code>string</code>&gt;</p>
+</blockquote>
+<p>Returns the best URL for adding a new connection for a given connector.</p>
+<p>Tries to generate a connector-specific auth URL (works when running inside
+the UiPath platform). If that fails, falls back to the Orchestrator
+connections page or the connector configuration page.</p>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>item</code></td>
+<td>{ <code>configurationUrl?</code>: <code>string</code>; <code>connectionsUrl?</code>: <code>string</code>; <code>connectorKey</code>: <code>string</code>; }</td>
+<td>The connector item from <a href="#getavailableconnections">getAvailableConnections</a></td>
+</tr>
+<tr>
+<td><code>item.configurationUrl?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>item.connectionsUrl?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>item.connectorKey</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>null</code> | <code>string</code>&gt;</p>
+<p>The URL to open, or <code>null</code> if no URL is available</p>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAvailableConnections</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAddConnectionUrl</span><span class="p">(</span><span class="nx">connections</span><span class="p">[</span><span class="mf">0</span><span class="p">]);</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">url</span><span class="p">)</span><span class="w"> </span><span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;_blank&#39;</span><span class="p">);</span>
+</code></pre></div>
+<hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getAll</strong>(<code>folderId?</code>: <code>number</code>): <code>Promise</code>&lt;<a href="../../type-aliases/AgentGetResponse/"><code>AgentGetResponse</code></a>[]&gt;</p>
 </blockquote>
 <p>Gets all available conversational agents</p>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2695,18 +2771,57 @@ rejected before any request is made.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/AgentGetResponse/"><code>AgentGetResponse</code></a>[]&gt;</p>
 <p>Promise resolving to an array of agents
 <a href="../../type-aliases/AgentGetResponse/">AgentGetResponse</a></p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">agents</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">agents</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="nx">folderId</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="nx">folderId</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="getavailableconnections">getAvailableConnections()<a class="headerlink" href="#getavailableconnections" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getAvailableConnections</strong>(<code>agentId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>): <code>Promise</code>&lt;<a href="../../type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
+</blockquote>
+<p>Gets available connections for each configurable connector binding of an agent.
+Only returns bindings that are "configurable by users" (not admin-fixed).</p>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agentId</code></td>
+<td><code>number</code></td>
+<td>ID of the agent release</td>
+</tr>
+<tr>
+<td><code>folderId</code></td>
+<td><code>number</code></td>
+<td>ID of the folder containing the agent</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
+<p>Promise resolving to an array of connector items with their available connections
+<a href="../../type-aliases/AvailableConnectionsResponse/">AvailableConnectionsResponse</a></p>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">connections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getAvailableConnections</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">item</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">connections</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">item</span><span class="p">.</span><span class="nx">connectorName</span><span class="si">}</span><span class="sb">: </span><span class="si">${</span><span class="nx">item</span><span class="p">.</span><span class="nx">connections</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="sb"> available`</span><span class="p">);</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
@@ -2714,7 +2829,7 @@ rejected before any request is made.</p>
 <p><strong>getById</strong>(<code>id</code>: <code>number</code>, <code>folderId</code>: <code>number</code>): <code>Promise</code>&lt;<a href="../../type-aliases/AgentGetByIdResponse/"><code>AgentGetByIdResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a specific agent by ID</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2736,15 +2851,15 @@ rejected before any request is made.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/AgentGetByIdResponse/"><code>AgentGetByIdResponse</code></a>&gt;</p>
 <p>Promise resolving to the agent
 <a href="../../type-aliases/AgentGetByIdResponse/">AgentGetByIdResponse</a></p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1">// Create conversation directly from agent (agentId and folderId are auto-filled)</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">conversation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">conversations</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;My Chat&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="onconnectionstatuschanged">onConnectionStatusChanged()<a class="headerlink" href="#onconnectionstatuschanged" title="Permanent link">&para;</a></h3>
@@ -2752,7 +2867,7 @@ rejected before any request is made.</p>
 <p><strong>onConnectionStatusChanged</strong>(<code>handler</code>: (<code>status</code>: <code>ConnectionStatus</code>, <code>error</code>: <code>null</code> | <code>Error</code>) =&gt; <code>void</code>): () =&gt; <code>void</code></p>
 </blockquote>
 <p>Registers a handler that is called whenever the WebSocket connection status changes.</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -2769,23 +2884,66 @@ rejected before any request is made.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p>Cleanup function to remove the handler</p>
 <blockquote>
 <p>(): <code>void</code></p>
 </blockquote>
-<h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
+<h5 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h5>
 <p><code>void</code></p>
-<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">cleanup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">onConnectionStatusChanged</span><span class="p">((</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Connection status:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="p">);</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="p">});</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1">// Later, remove the handler</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nx">cleanup</span><span class="p">();</span>
+<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">cleanup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">onConnectionStatusChanged</span><span class="p">((</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Connection status:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="p">);</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">});</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1">// Later, remove the handler</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nx">cleanup</span><span class="p">();</span>
+</code></pre></div>
+<hr />
+<h3 id="updateconnectionselections">updateConnectionSelections()<a class="headerlink" href="#updateconnectionselections" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>updateConnectionSelections</strong>(<code>agentId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>request</code>: <a href="../UpdateConnectionSelectionsRequest/"><code>UpdateConnectionSelectionsRequest</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
+</blockquote>
+<p>Updates the current user's connection selections for an agent.
+Only configurable bindings (not admin-fixed) can be updated.</p>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>agentId</code></td>
+<td><code>number</code></td>
+<td>ID of the agent release</td>
+</tr>
+<tr>
+<td><code>folderId</code></td>
+<td><code>number</code></td>
+<td>ID of the folder containing the agent</td>
+</tr>
+<tr>
+<td><code>request</code></td>
+<td><a href="../UpdateConnectionSelectionsRequest/"><code>UpdateConnectionSelectionsRequest</code></a></td>
+<td>The connection selections to apply</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/AvailableConnectionsResponse/"><code>AvailableConnectionsResponse</code></a>&gt;</p>
+<p>Promise resolving to the updated available connections
+<a href="../../type-aliases/AvailableConnectionsResponse/">AvailableConnectionsResponse</a></p>
+<h4 id="example_5">Example<a class="headerlink" href="#example_5" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">conversationalAgent</span><span class="p">.</span><span class="nx">updateConnectionSelections</span><span class="p">(</span><span class="nx">agentId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nx">selections</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">connectorKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;jira&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">connectionId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;conn-123&#39;</span><span class="w"> </span><span class="p">}]</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">});</span>
 </code></pre></div>
 
 

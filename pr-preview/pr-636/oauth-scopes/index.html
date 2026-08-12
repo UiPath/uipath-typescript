@@ -578,6 +578,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connections
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#user-settings" class="md-nav__link">
     <span class="md-ellipsis">
       User Settings
@@ -2765,6 +2774,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connections
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#user-settings" class="md-nav__link">
     <span class="md-ellipsis">
       User Settings
@@ -2912,8 +2930,8 @@
 <td>None — clears local authentication state only (default behavior)</td>
 </tr>
 <tr>
-<td><code>logout({ endCloudSession: true })</code></td>
-<td><code>openid</code> — without it the cloud logout is skipped (local state is still cleared)</td>
+<td><code>logout({ endSession: true })</code></td>
+<td><code>openid</code> — without it the session logout is skipped (local state is still cleared)</td>
 </tr>
 </tbody>
 </table>
@@ -3372,8 +3390,8 @@
 </tbody>
 </table>
 <h2 id="conversational-agent">Conversational Agent<a class="headerlink" href="#conversational-agent" title="Permanent link">&para;</a></h2>
-<p>To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, and retrieve history), your external app needs the following combined scopes:</p>
-<p><code>OR.Execution</code> · <code>OR.Folders</code> · <code>OR.Jobs</code> · <code>ConversationalAgents</code> · <code>Traces.Api</code></p>
+<p>To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:</p>
+<p><code>OR.Execution</code> · <code>OR.Folders</code> · <code>OR.Users</code> · <code>OR.Jobs</code> · <code>ConversationalAgents</code> · <code>Traces.Api</code> · <code>IS.Connections.Read</code> · <code>IS.Connectors.Read</code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code>ConversationalAgents</code> scope is required for real-time WebSocket sessions (<code>startSession()</code>). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.</p>
@@ -3479,6 +3497,29 @@
 <tr>
 <td><code>getContentPartById()</code></td>
 <td><code>OR.Execution</code> or <code>OR.Execution.Read</code>, <code>OR.Jobs</code> or <code>OR.Jobs.Read</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="connections">Connections<a class="headerlink" href="#connections" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>OAuth Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getAvailableConnections()</code></td>
+<td><code>OR.Execution</code> or <code>OR.Execution.Read</code>, <code>IS.Connections.Read</code>, <code>IS.Connectors.Read</code></td>
+</tr>
+<tr>
+<td><code>updateConnectionSelections()</code></td>
+<td><code>OR.Execution</code>, <code>IS.Connections.Read</code></td>
+</tr>
+<tr>
+<td><code>getAddConnectionUrl()</code></td>
+<td><code>OR.Execution</code> or <code>OR.Execution.Read</code></td>
 </tr>
 </tbody>
 </table>
