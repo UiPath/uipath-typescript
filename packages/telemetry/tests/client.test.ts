@@ -134,6 +134,7 @@ describe('TelemetryClient.initialize', () => {
         });
 
         expect(mocks.LoggerProvider).not.toHaveBeenCalled();
+        expect(mocks.getLogger).not.toHaveBeenCalled();
     });
 
     it('ignores subsequent initialize calls on the same instance — first init wins', async () => {
