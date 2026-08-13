@@ -17,6 +17,7 @@ export * from './data-fabric';
 
 // Identity endpoints
 export * from './identity';
+export * from './authorization';
 
 // Platform endpoints
 export * from './platform';

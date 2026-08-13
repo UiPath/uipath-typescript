@@ -270,6 +270,25 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `search()` | `PM.Directory.Read` |
 | `getGroupMembership()` | `PM.Directory.Read` |
 
+## Platform Roles
+
+The Authorization service does not publish dedicated OAuth scopes yet — access is
+governed by the caller's own platform roles (verified with personal access token
+authentication; the caller needs organization-level role management permissions
+for the write operations).
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | — (caller's platform roles apply) |
+| `getById()` | — (caller's platform roles apply) |
+| `upsert()` | — (caller's platform roles apply) |
+| `deleteById()` | — (caller's platform roles apply) |
+| `getAssignments()` | — (caller's platform roles apply) |
+| `updateAssignments()` | — (caller's platform roles apply) |
+| `exportAssignments()` | — (caller's platform roles apply) |
+| `getEffectiveAccess()` | — (caller's platform roles apply) |
+| `getActions()` | — (caller's platform roles apply) |
+
 ## Processes
 
 | Method | OAuth Scope |

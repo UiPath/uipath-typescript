@@ -24,7 +24,7 @@ import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
-import { Platform, Users, Groups, Directory } from '../../../src/services/platform';
+import { Platform, Users, Groups, Directory, Roles } from '../../../src/services/platform';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -76,6 +76,7 @@ export interface TestServices {
   platformUsers?: Users;
   platformGroups?: Groups;
   platformDirectory?: Directory;
+  platformRoles?: Roles;
 }
 
 /**
@@ -174,6 +175,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     platformUsers: new Users(sdk),
     platformGroups: new Groups(sdk),
     platformDirectory: new Directory(sdk),
+    platformRoles: new Roles(sdk),
   };
 }
 
