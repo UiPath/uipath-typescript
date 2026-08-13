@@ -2686,14 +2686,14 @@
 
 
 <h1 id="vercel-v0">Vercel (v0)<a class="headerlink" href="#vercel-v0" title="Permanent link">&para;</a></h1>
-<p>v0 by Vercel generates the app; you deploy it to UiPath from v0's built-in terminal — build a UiPath coded web app in v0 and ship it to UiPath using <code>@uipath/uipath-typescript</code> and the <code>uip</code> CLI.</p>
+<p>v0 by Vercel generates the app and deploys it to UiPath for you — build a UiPath coded web app in v0 and ship it to UiPath using <code>@uipath/uipath-typescript</code> and the <code>uip</code> CLI, without leaving the chat.</p>
 <div class="admonition info">
 <p class="admonition-title">Builds on Coded Apps</p>
 <p>Vercel (v0) apps deploy as standard UiPath <strong>coded apps</strong>. This page covers the Vercel (v0)-specific steps; for platform, SDK, and CLI details see <a href="../../coded-apps/getting-started/">Coded Apps</a>.</p>
 </div>
 <hr />
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<p>You build the app in Vercel (v0) with the UiPath coded-apps skill (so it uses <code>@uipath/uipath-typescript</code> and the correct coded-app structure), then deploy it with the <code>uip</code> CLI — build → pack → publish → deploy — directly from Vercel (v0). The deployed app is served at <code>https://&lt;org&gt;.uipath.host/&lt;app&gt;</code>.</p>
+<p>You build the app in Vercel (v0) with the UiPath coded-apps skill (so it uses <code>@uipath/uipath-typescript</code> and the correct coded-app structure), then ask it to deploy — the skill runs the <code>uip</code> CLI for you (build → pack → publish → deploy) inside Vercel (v0). The deployed app is served at <code>https://&lt;org&gt;.uipath.host/&lt;app&gt;</code>.</p>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <ul>
 <li>A UiPath <strong>Automation Cloud</strong> account.</li>
@@ -2706,15 +2706,15 @@
 <p>See <a href="../../coded-apps/getting-started/">Coded Apps → Getting Started</a> for the full external-app and <code>uipath.json</code> setup.</p>
 <hr />
 <h2 id="step-1-load-the-uipath-coded-apps-skill">Step 1 — Load the UiPath coded-apps skill<a class="headerlink" href="#step-1-load-the-uipath-coded-apps-skill" title="Permanent link">&para;</a></h2>
-<p>v0 offers the UiPath coded-apps skill directly from its <strong>skill marketplace</strong> — in the chat composer, open <strong>+ → Skills</strong>, search for <code>uipath-coded-apps</code>, and select it; it lands in the prompt as a chip. No manual import needed. Then add your build prompt and public config (Step 2).</p>
-<p><img alt="The UiPath coded-apps skill in the v0 skill marketplace" src="../../assets/ai-app-builders/vercel-skill.png" /></p>
+<p>v0 offers the UiPath coded-apps skill directly from its <strong>skill marketplace</strong> — in the chat composer, open <strong>+ → Skills</strong>, search for <code>uipath-coded-apps</code>, and select it; it lands in the prompt as a chip. No manual import needed. Then add your build prompt (Step 2).</p>
+<p><img alt="v0's add menu open on Skills, with uipath-coded-apps selected" src="../../assets/ai-app-builders/vercel-skill.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
-<p>Prompt Vercel (v0) to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Build a &lt;describe your app&gt; as a UiPath coded app using the uipath-coded-apps skill. Use this config:
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>{ &quot;clientId&quot;: &quot;&lt;public-app-client-id&gt;&quot;, &quot;scope&quot;: &quot;&lt;scopes&gt;&quot;, &quot;orgName&quot;: &quot;&lt;org&gt;&quot;, &quot;tenantName&quot;: &quot;&lt;tenant&gt;&quot;, &quot;baseUrl&quot;: &quot;https://api.uipath.com&quot; }
+<p>Prompt Vercel (v0) to build your app — plain language is enough:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Build a &lt;describe your app&gt; as a UiPath coded app using the uipath-coded-apps skill.
 </code></pre></div>
-<p><img alt="v0 building the app with the skill attached, using the pasted config" src="../../assets/ai-app-builders/vercel-skill2.png" /></p>
+<p>The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.</p>
+<p><img alt="The prompt in v0 with the skill chip and the app described in plain language" src="../../assets/ai-app-builders/vercel-prompt.png" /></p>
 <div class="admonition warning">
 <p class="admonition-title">Must be a static SPA</p>
 <p>Coded apps are static sites — the build must emit <code>index.html</code> at the <strong>dist root</strong>. The skill scaffolds this for you; if the builder defaults to a server-rendered (SSR) framework, switch it to a static/SPA build.</p>
@@ -2722,34 +2722,37 @@
 <hr />
 <h2 id="step-3-add-your-deploy-credentials">Step 3 — Add your deploy credentials<a class="headerlink" href="#step-3-add-your-deploy-credentials" title="Permanent link">&para;</a></h2>
 <p>Add your <strong>confidential</strong> app's credentials as <strong>Environment Variables</strong> in your v0 / Vercel project settings — <code>UIPATH_CLIENT_ID</code> and <code>UIPATH_CLIENT_SECRET</code>. Vercel encrypts them and does not bundle them into the client app; they are available to the terminal at deploy time. This is the most private of the four builders — the secret is encrypted, server-side, and never in chat or client code.</p>
-<p><img alt="v0/Vercel Environment Variables with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET" src="../../assets/ai-app-builders/vercel-secret.png" /></p>
+<p><img alt="v0 prompting for UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET as environment variables, both values masked" src="../../assets/ai-app-builders/vercel-secret.png" /></p>
 <hr />
 <h2 id="step-4-deploy">Step 4 — Deploy<a class="headerlink" href="#step-4-deploy" title="Permanent link">&para;</a></h2>
-<p>v0 has a usable terminal. Run the deploy there; <code>uip login</code> reads the encrypted env vars you set in Step 3:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span><span class="nv">$UIPATH_CLIENT_ID</span><span class="w"> </span>--client-secret<span class="w"> </span><span class="nv">$UIPATH_CLIENT_SECRET</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;OR.Default Apps.Read Apps.Write&quot;</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>pack<span class="w"> </span>dist<span class="w"> </span>-n<span class="w"> </span>&lt;app-name&gt;<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>publish
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>deploy<span class="w"> </span>--folder-key<span class="w"> </span>&lt;folder-key&gt;
+<p>Just ask v0 to deploy. Name the Orchestrator folder you want the app in — the skill resolves it and runs the whole <code>uip</code> pipeline in v0's terminal, reading the environment variables you set in Step 3:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Deploy this app to UiPath in the &lt;folder-name&gt; folder, using UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET from the environment variables.
 </code></pre></div>
-<p>Your app is live at:</p>
+<p>The skill signs in, builds, packs, publishes and deploys, then reports the hosted URL:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>https://&lt;org&gt;.uipath.host/&lt;app-name&gt;
 </code></pre></div>
-<p><img alt="v0 terminal showing a successful deploy and the hosted URL" src="../../assets/ai-app-builders/vercel-deploy.png" /></p>
+<p><img alt="v0 confirming the deploy succeeded, listing the published version and the hosted URL" src="../../assets/ai-app-builders/vercel-deploy.png" /></p>
+<p>Open that URL and sign in to see the deployed app:</p>
 <p><img alt="The deployed app running at its uipath.host URL" src="../../assets/ai-app-builders/vercel-deploy1.png" /></p>
 <div class="admonition tip">
 <p class="admonition-title">Alternative — run the deploy yourself</p>
-<p>You don't have to route credentials through Environment Variables and prompt the agent. If that path gives you trouble (env vars not visible in the terminal, agent stuck mid-deploy), run the same commands yourself in v0's terminal, pasting the confidential app's client id and secret directly into <code>uip login</code> in place of the <code>$UIPATH_*</code> variables. Same result — you're just the one driving.</p>
+<p>If prompting gives you trouble (env vars not visible in the terminal, agent stuck mid-deploy), open v0's terminal and run the same steps by hand:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span><span class="nv">$UIPATH_CLIENT_ID</span><span class="w"> </span>--client-secret<span class="w"> </span><span class="nv">$UIPATH_CLIENT_SECRET</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;OR.Default Apps.Read Apps.Write&quot;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>pack<span class="w"> </span>dist<span class="w"> </span>-n<span class="w"> </span>&lt;app-name&gt;<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>publish
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>deploy<span class="w"> </span>--folder-key<span class="w"> </span>&lt;folder-key&gt;<span class="w">   </span><span class="c1"># uip or folders list --output json</span>
+</code></pre></div>
 </div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Env var not found in terminal</strong> — confirm <code>UIPATH_CLIENT_ID</code>/<code>UIPATH_CLIENT_SECRET</code> are set for the environment your terminal runs in, then re-open the terminal.</li>
-<li><strong>Sign-in fails with <code>invalid_scope</code></strong> — the app is requesting a scope the <strong>public</strong> external app doesn't grant. The <code>scope</code> in <code>uipath.json</code> must exactly match scopes added on that app's resources. Note <code>OR.Default</code> is an Orchestrator scope — a Data Fabric app needs <code>DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write</code> instead, both in <code>uipath.json</code> and on the external app.</li>
+<li><strong>Sign-in fails with <code>invalid_scope</code></strong> — the app is requesting a scope the <strong>public</strong> external app doesn't grant. The <code>scope</code> in <code>uipath.json</code> must exactly match scopes added on that app's resources. A Data Fabric app needs <code>DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write</code>, both in <code>uipath.json</code> and on the external app.</li>
 <li><strong>Sign-in fails with <code>invalid_request</code> / <code>Invalid redirect_uri</code></strong> — the URL the app runs on isn't registered on the public external app. Matching is <strong>exact</strong> (scheme, host, path, trailing slash): register the current URL with and without a trailing slash. The v0 preview URL (<code>*.v0.build</code>) and the deployed <code>uipath.host</code> URL are different origins — register each one you sign in from.</li>
-<li><strong>Changed <code>uipath.json</code> but sign-in still uses old values</strong> — the config is baked into the build. Rebuild and redeploy after editing it, and clear the site's storage before retrying (a cached token from the old scope will otherwise be reused). To see what the app actually requests, check the <code>scope</code>/<code>redirect_uri</code> params on the <code>identity_/connect/authorize</code> request in DevTools → Network.</li>
+<li><strong>Changed <code>uipath.json</code> but sign-in still uses old values</strong> — the config is baked into the build. Rebuild and redeploy after editing it, then clear the site's storage before retrying, so a token cached under the old values isn't reused.</li>
 </ul>
 <p>Common to all builders:</p>
 <ul>

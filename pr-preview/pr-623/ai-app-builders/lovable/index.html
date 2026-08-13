@@ -2686,14 +2686,14 @@
 
 
 <h1 id="lovable">Lovable<a class="headerlink" href="#lovable" title="Permanent link">&para;</a></h1>
-<p>Build a UiPath coded web app in Lovable and deploy it to UiPath using <code>@uipath/uipath-typescript</code> and the <code>uip</code> CLI. Lovable generates the app; you deploy it to UiPath from Lovable, which can read secrets stored in Lovable Cloud from its build sandbox.</p>
+<p>Build a UiPath coded web app in Lovable and deploy it to UiPath using <code>@uipath/uipath-typescript</code> and the <code>uip</code> CLI. Lovable generates the app and deploys it for you, running the CLI in its build sandbox, which can read secrets stored in Lovable Cloud.</p>
 <div class="admonition info">
 <p class="admonition-title">Builds on Coded Apps</p>
 <p>Lovable apps deploy as standard UiPath <strong>coded apps</strong>. This page covers the Lovable-specific steps; for platform, SDK, and CLI details see <a href="../../coded-apps/getting-started/">Coded Apps</a>.</p>
 </div>
 <hr />
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<p>You build the app in Lovable with the UiPath coded-apps skill (so it uses <code>@uipath/uipath-typescript</code> and the correct coded-app structure), then deploy it with the <code>uip</code> CLI — build → pack → publish → deploy — directly from Lovable. The deployed app is served at <code>https://&lt;org&gt;.uipath.host/&lt;app&gt;</code>.</p>
+<p>You build the app in Lovable with the UiPath coded-apps skill (so it uses <code>@uipath/uipath-typescript</code> and the correct coded-app structure), then ask it to deploy — the skill runs the <code>uip</code> CLI for you (build → pack → publish → deploy) inside Lovable. The deployed app is served at <code>https://&lt;org&gt;.uipath.host/&lt;app&gt;</code>.</p>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <ul>
 <li>A UiPath <strong>Automation Cloud</strong> account.</li>
@@ -2711,13 +2711,14 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 </code></pre></div>
 <p><strong>Option 2 — import it as a workspace skill (zip).</strong> Download <strong>only</strong> the <a href="https://github.com/UiPath/skills/tree/main/skills/uipath-coded-apps"><code>skills/uipath-coded-apps</code></a> folder from the UiPath skills repo — not the whole repo, which is far too large to load as a skill — zip that folder, and add it as a workspace skill. Importing directly from a git URL is not reliable today because the skills repo uses symlinks, so use a zip of just this folder.</p>
-<p><img alt="Lovable workspace Skills with the Add menu open and the coded-apps skill added" src="../../assets/ai-app-builders/lovable-skill.png" /></p>
+<p><img alt="Lovable's workspace Skills settings after the import, with the UiPath coded-apps skill now listed" src="../../assets/ai-app-builders/lovable-skill.png" /></p>
 <hr />
 <h2 id="step-2-build-your-app">Step 2 — Build your app<a class="headerlink" href="#step-2-build-your-app" title="Permanent link">&para;</a></h2>
-<p>Prompt Lovable to build your app, passing your <strong>public</strong> sign-in config so the generated app can authenticate end users:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Build a &lt;describe your app&gt; as a UiPath coded app using the uipath-coded-apps skill. Use this config:
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>{ &quot;clientId&quot;: &quot;&lt;public-app-client-id&gt;&quot;, &quot;scope&quot;: &quot;&lt;scopes&gt;&quot;, &quot;orgName&quot;: &quot;&lt;org&gt;&quot;, &quot;tenantName&quot;: &quot;&lt;tenant&gt;&quot;, &quot;baseUrl&quot;: &quot;https://api.uipath.com&quot; }
+<p>Prompt Lovable to build your app — plain language is enough:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Build a &lt;describe your app&gt; as a UiPath coded app using the uipath-coded-apps skill.
 </code></pre></div>
+<p>The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.</p>
+<p><img alt="Lovable asking for the UiPath organization slug after the prompt is sent" src="../../assets/ai-app-builders/lovable-prompt.png" /></p>
 <div class="admonition warning">
 <p class="admonition-title">Must be a static SPA</p>
 <p>Coded apps are static sites — the build must emit <code>index.html</code> at the <strong>dist root</strong>. The skill scaffolds this for you. If Lovable defaults to a <strong>server-rendered</strong> app (for example TanStack Start), switch it to a <strong>static SPA</strong> build (enable SPA mode) so <code>npm run build</code> emits <code>index.html</code> at the dist root — otherwise <code>uip codedapp pack</code> will reject it.</p>
@@ -2725,22 +2726,16 @@
 <hr />
 <h2 id="step-3-add-your-deploy-credentials">Step 3 — Add your deploy credentials<a class="headerlink" href="#step-3-add-your-deploy-credentials" title="Permanent link">&para;</a></h2>
 <p>Add your <strong>confidential</strong> app's credentials in <strong>Lovable Cloud → Secrets</strong>: <code>UIPATH_CLIENT_ID</code> and <code>UIPATH_CLIENT_SECRET</code>. These secrets are securely accessible to Lovable's build sandbox, so <code>uip login</code> can read them at deploy time — the secret stays out of chat and code.</p>
-<p><img alt="Lovable Cloud Secrets with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET" src="../../assets/ai-app-builders/lovable-secret.png" /></p>
+<p><img alt="Lovable Cloud Secrets listing UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET by name only, with no values shown" src="../../assets/ai-app-builders/lovable-secret.png" /></p>
 <hr />
 <h2 id="step-4-deploy">Step 4 — Deploy<a class="headerlink" href="#step-4-deploy" title="Permanent link">&para;</a></h2>
-<p>Prompt Lovable to deploy. It runs the CLI in the sandbox, reading the stored secrets (if the CLI is not preinstalled it is invoked via <code>npx @uipath/cli</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span><span class="nv">$UIPATH_CLIENT_ID</span><span class="w"> </span>--client-secret<span class="w"> </span><span class="nv">$UIPATH_CLIENT_SECRET</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;OR.Default Apps.Read Apps.Write&quot;</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>pack<span class="w"> </span>dist<span class="w"> </span>-n<span class="w"> </span>&lt;app-name&gt;<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>publish
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>deploy<span class="w"> </span>--folder-key<span class="w"> </span>&lt;folder-key&gt;
+<p>Just ask Lovable to deploy. Name the Orchestrator folder you want the app in — the skill resolves it and runs the whole <code>uip</code> pipeline in the sandbox, reading the secrets you stored in Step 3:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Deploy this app to UiPath in the &lt;folder-name&gt; folder, using UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET from Lovable Cloud secrets.
 </code></pre></div>
-<p>Your app is live at:</p>
+<p>The skill signs in, builds, packs, publishes and deploys (invoking the CLI via <code>npx @uipath/cli</code> if it isn't preinstalled), then reports the hosted URL:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>https://&lt;org&gt;.uipath.host/&lt;app-name&gt;
 </code></pre></div>
-<p><img alt="Lovable showing the successful deploy and the hosted URL" src="../../assets/ai-app-builders/lovable-deploy.png" /></p>
+<p><img alt="Lovable reporting the app deployed to the Shared folder, with the live URL and each deploy step listed" src="../../assets/ai-app-builders/lovable-deploy.png" /></p>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <ul>

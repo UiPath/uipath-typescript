@@ -2679,7 +2679,7 @@
 <ul>
 <li>You build the app in the builder using the <strong>UiPath coded-apps skill</strong>, so the generated app uses <code>@uipath/uipath-typescript</code> and the correct coded-app structure (static SPA, <code>uipath.json</code>, <code>getAppBase()</code> router base).</li>
 <li>The app uses a <strong>public (non-confidential) OAuth client</strong> for end-user sign-in (PKCE), baked into the build — it is safe to expose in the browser.</li>
-<li>You deploy with the <code>uip</code> CLI (<strong>build → pack → publish → deploy</strong>), authenticated by a <strong>confidential OAuth app</strong>.</li>
+<li>You ask the builder to deploy, and the skill runs the <code>uip</code> CLI for you (<strong>build → pack → publish → deploy</strong>), authenticated by a <strong>confidential OAuth app</strong>.</li>
 <li>The confidential <strong>client secret</strong> lives in the builder's own secret store or terminal session — never in chat, never in committed code.</li>
 <li>The result is served at <code>https://&lt;org&gt;.uipath.host/&lt;app&gt;</code>.</li>
 </ul>
@@ -2735,31 +2735,32 @@
 </table>
 <hr />
 <h2 id="the-deploy-flow">The deploy flow<a class="headerlink" href="#the-deploy-flow" title="Permanent link">&para;</a></h2>
-<p>The CLI flow is identical across builders:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span>&lt;UIPATH_CLIENT_ID&gt;<span class="w"> </span>--client-secret<span class="w"> </span>&lt;UIPATH_CLIENT_SECRET&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;OR.Default Apps.Read Apps.Write&quot;</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>pack<span class="w"> </span>dist<span class="w"> </span>-n<span class="w"> </span>&lt;app-name&gt;<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>publish
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>deploy<span class="w"> </span>--folder-key<span class="w"> </span>&lt;folder-key&gt;
+<p>In every builder you deploy the same way — ask it to, and name the Orchestrator folder you want the app in:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Deploy this app to UiPath in the &lt;folder-name&gt; folder, using the credentials I stored.
+</code></pre></div>
+<p>The skill takes it from there. Under the hood it runs the same CLI flow in each builder, so this is what you would type if you ever ran it by hand:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uip<span class="w"> </span>login<span class="w"> </span>--client-id<span class="w"> </span>&lt;UIPATH_CLIENT_ID&gt;<span class="w"> </span>--client-secret<span class="w"> </span>&lt;UIPATH_CLIENT_SECRET&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--organization<span class="w"> </span>&lt;org&gt;<span class="w"> </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--scope<span class="w"> </span><span class="s2">&quot;OR.Default Apps.Read Apps.Write&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>npm<span class="w"> </span>run<span class="w"> </span>build
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>pack<span class="w"> </span>dist<span class="w"> </span>-n<span class="w"> </span>&lt;app-name&gt;<span class="w"> </span>--version<span class="w"> </span><span class="m">1</span>.0.0
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>publish
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>uip<span class="w"> </span>codedapp<span class="w"> </span>deploy<span class="w"> </span>--folder-key<span class="w"> </span>&lt;folder-key&gt;
 </code></pre></div>
 <p>Your app is live at:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>https://&lt;org&gt;.uipath.host/&lt;app-name&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>https://&lt;org&gt;.uipath.host/&lt;app-name&gt;
 </code></pre></div>
 <hr />
 <h2 id="troubleshooting-sign-in-all-builders">Troubleshooting sign-in (all builders)<a class="headerlink" href="#troubleshooting-sign-in-all-builders" title="Permanent link">&para;</a></h2>
 <p>Sign-in problems land on a UiPath error page (<code>cloud.uipath.com/identity_/web/?errorCode=…</code>) regardless of builder. The two you will actually meet:</p>
 <ul>
-<li><strong><code>invalid_scope</code></strong> — the app requests a scope the <strong>public</strong> external app doesn't grant. The <code>scope</code> in <code>uipath.json</code> must match the scopes added on that app's resources, and both must fit the services the app calls — e.g. a Data Fabric app needs <code>DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write</code>; <code>OR.Default</code> is an Orchestrator scope and grants no Data Fabric access.</li>
+<li><strong><code>invalid_scope</code></strong> — the app requests a scope the <strong>public</strong> external app doesn't grant. The <code>scope</code> in <code>uipath.json</code> must match the scopes added on that app's resources, and both must fit the services the app calls — e.g. a Data Fabric app needs <code>DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write</code>.</li>
 <li><strong><code>invalid_request</code> / <code>Invalid redirect_uri</code></strong> — the URL the app is running on isn't registered as a Redirect URL on the public external app. Matching is <strong>exact</strong> — scheme, host, port, path, and trailing slash — so register the URL both with and without a trailing slash, and register every origin you sign in from (builder preview and deployed <code>uipath.host</code> URL are different origins).</li>
 </ul>
-<p>To see exactly what the app is requesting, open DevTools → Network, click the sign-in button, and read the <code>scope</code> and <code>redirect_uri</code> params on the <code>identity_/connect/authorize</code> request. Remember the config is baked in at build time — after changing <code>uipath.json</code>, rebuild and redeploy, and clear the site's storage so a token cached under the old values isn't reused.</p>
 <h2 id="deploy-pitfalls-all-builders">Deploy pitfalls (all builders)<a class="headerlink" href="#deploy-pitfalls-all-builders" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>App names are org-wide.</strong> If an app with the same name was deployed from a different project, <code>uip codedapp deploy</code> reports it as already deployed and cannot upgrade it — deploy under a new name, or delete the existing deployed app first.</li>
 <li><strong>Omit <code>--version</code> on deploy.</strong> It defaults to Latest; passing a version the catalog hasn't indexed yet yields a misleading <em>"has not been published yet"</em>.</li>
-<li><strong><code>deploy</code> takes a folder key (GUID), not a folder name.</strong> Resolve it first: <code>uip or folders list --output json</code>, match on <code>Name</code>, take <code>Key</code>.</li>
 <li><strong>Keep publish and deploy in one <code>uip login</code> session</strong> with no base-URL overrides — split contexts make deploy unable to see what publish just wrote.</li>
 </ul>
 <hr />
