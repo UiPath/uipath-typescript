@@ -20,6 +20,10 @@ export * from './cases.models';
 export * from './case-instances.types';
 export * from './case-instances.models';
 
+// Business app types and models
+export * from './business-apps.types';
+export * from './business-apps.models';
+
 // Insights types (shared across process and case services)
 export * from './insights.types';
 

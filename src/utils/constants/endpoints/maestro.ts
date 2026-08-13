@@ -32,6 +32,12 @@ export const MAESTRO_ENDPOINTS = {
   TRACES: {
     GET_SPANS: (traceId: string) => `${LLMOPS_BASE}/api/Traces/spans?traceId=${traceId}`,
   },
+  BUSINESS_APPS: {
+    /** Collection route — POST creates, GET lists. */
+    COLLECTION: `${PIMS_BASE}/api/v1/business-apps`,
+    /** Single-app route — GET reads, PUT replaces, DELETE removes. */
+    BY_ID: (businessAppId: string) => `${PIMS_BASE}/api/v1/business-apps/${businessAppId}`,
+  },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/case-json`,
     GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,

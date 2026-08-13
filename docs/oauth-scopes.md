@@ -118,6 +118,19 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `resume()` | `PIMS` |
 | `retry()` | `PIMS` |
 
+## Maestro Business Apps
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `PIMS` |
+| `getAll()` | `PIMS` |
+| `getById()` | `PIMS` |
+| `updateById()` | `PIMS` |
+| `deleteById()` | `PIMS` |
+
+Reads additionally require the tenant-level `APPS.View` permission; `create()` requires
+`APPS.Create`, and `updateById()` / `deleteById()` require `APPS.Edit`.
+
 ## Maestro Cases
 
 | Method | OAuth Scope |
