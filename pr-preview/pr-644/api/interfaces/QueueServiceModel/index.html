@@ -2496,7 +2496,7 @@ item that already reached a terminal status is rejected.</p>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;&gt;</p>
+<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets all queues across folders with optional filtering and folder scoping</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
@@ -2532,8 +2532,8 @@ item that already reached a terminal status is rejected.</p>
 </tbody>
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to either a <a href="../../type-aliases/QueueGetResponse/">QueueGetResponse</a> array (<code>NonPaginatedResponse</code>) or a <code>PaginatedResponse&lt;QueueGetResponse&gt;</code> when pagination options are used. Each queue has methods attached for operating on its items.</p>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;&gt;</p>
+<p>Promise resolving to either a <a href="../../type-aliases/QueueGetWithMethodsResponse/">QueueGetWithMethodsResponse</a> array (<code>NonPaginatedResponse</code>) or a <code>PaginatedResponse&lt;QueueGetWithMethodsResponse&gt;</code> when pagination options are used. Each queue has methods attached for operating on its items.</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Standard array return</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allQueues</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
@@ -2632,7 +2632,7 @@ item that already reached a terminal status is rejected.</p>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getById</strong>(<code>id</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../QueueGetByIdOptions/"><code>QueueGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;</p>
+<p><strong>getById</strong>(<code>id</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../QueueGetByIdOptions/"><code>QueueGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single queue by ID</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
@@ -2663,8 +2663,8 @@ item that already reached a terminal status is rejected.</p>
 </tbody>
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../../type-aliases/QueueGetResponse/"><code>QueueGetResponse</code></a>&gt;</p>
-<p>Promise resolving to a <a href="../../type-aliases/QueueGetResponse/">QueueGetResponse</a> — the queue definition with methods attached for operating on its items</p>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/QueueGetWithMethodsResponse/"><code>QueueGetWithMethodsResponse</code></a>&gt;</p>
+<p>Promise resolving to a <a href="../../type-aliases/QueueGetWithMethodsResponse/">QueueGetWithMethodsResponse</a> — the queue definition with methods attached for operating on its items</p>
 <h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Get queue by ID</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">queues</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">queueId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">);</span>

@@ -59,7 +59,7 @@ await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Failed, {
 
 ### getAll()
 
-> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
 
 Gets all queues across folders with optional filtering and folder scoping
 
@@ -73,9 +73,9 @@ Gets all queues across folders with optional filtering and folder scoping
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
 
-Promise resolving to either a [QueueGetResponse](../../type-aliases/QueueGetResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
+Promise resolving to either a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetWithMethodsResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
 
 #### Example
 
@@ -153,7 +153,7 @@ const items = await queue.getAllItems();
 
 ### getById()
 
-> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetResponse`>
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
 
 Gets a single queue by ID
 
@@ -165,9 +165,9 @@ Gets a single queue by ID
 
 #### Returns
 
-`Promise`\<`QueueGetResponse`>
+`Promise`\<`QueueGetWithMethodsResponse`>
 
-Promise resolving to a [QueueGetResponse](../../type-aliases/QueueGetResponse/) — the queue definition with methods attached for operating on its items
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
 
 #### Example
 
