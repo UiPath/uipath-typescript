@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { generateRandomString } from '../../utils/helpers';
 import { QueueItemReviewStatus, QueueItemStatus, QueuePriority } from '../../../../src/models/orchestrator/queues.types';
-import type { QueueGetResponse } from '../../../../src/models/orchestrator/queues.models';
+import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchestrator/queues.models';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -127,7 +127,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
   // arbitrary queues.
   describe('Queue items and transactions', () => {
     // The queue does not change between tests — resolve it once.
-    let testQueue!: QueueGetResponse;
+    let testQueue!: QueueGetWithMethodsResponse;
 
     beforeAll(async () => {
       const { queues } = getServices();

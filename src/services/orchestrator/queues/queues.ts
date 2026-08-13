@@ -1,6 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
 import {
-  RawQueueGetResponse,
+  QueueGetResponse,
   QueueGetAllOptions,
   QueueGetByIdOptions,
   QueueGetAllItemsOptions,
@@ -12,7 +12,7 @@ import {
 } from '../../../models/orchestrator/queues.types';
 import {
   QueueServiceModel,
-  QueueGetResponse,
+  QueueGetWithMethodsResponse,
   createQueueWithMethods
 } from '../../../models/orchestrator/queues.models';
 import {
@@ -69,11 +69,11 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetResponse>
-      : NonPaginatedResponse<QueueGetResponse>
+      ? PaginatedResponse<QueueGetWithMethodsResponse>
+      : NonPaginatedResponse<QueueGetWithMethodsResponse>
   > {
     const transformQueueResponse = (queue: Record<string, unknown>) => {
-      const rawQueue = transformData(pascalToCamelCaseKeys(queue) as RawQueueGetResponse, QueueMap);
+      const rawQueue = transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
       return createQueueWithMethods(rawQueue, this);
     };
 
@@ -101,13 +101,13 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   @track('Queues.GetById')
-  async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
+  async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetWithMethodsResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const apiFieldOptions = transformOptions(options, QueueMap);
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
-    const response = await this.get<RawQueueGetResponse>(
+    const response = await this.get<QueueGetResponse>(
       QUEUE_ENDPOINTS.GET_BY_ID(id),
       {
         headers,
@@ -115,7 +115,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       }
     );
 
-    const rawQueue = transformData(pascalToCamelCaseKeys(response.data) as RawQueueGetResponse, QueueMap);
+    const rawQueue = transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
     return createQueueWithMethods(rawQueue, this);
   }
 

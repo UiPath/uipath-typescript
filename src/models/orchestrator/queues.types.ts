@@ -2,9 +2,10 @@ import { BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
- * Raw queue shape returned by the API, before bound methods are attached.
+ * A queue definition (data fields only). `getAll`/`getById` return it with
+ * operational methods attached — see `QueueGetWithMethodsResponse`.
  */
-export interface RawQueueGetResponse {
+export interface QueueGetResponse {
   key: string;
   name: string;
   id: number;

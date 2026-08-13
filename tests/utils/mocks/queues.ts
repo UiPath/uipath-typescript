@@ -3,7 +3,7 @@
  * Uses generic utilities from core.ts for base functionality
  */
 import {
-  RawQueueGetResponse,
+  QueueGetResponse,
   QueueItem,
   QueueItemStatus,
   QueueItemReviewStatus,
@@ -53,7 +53,7 @@ export const createMockRawQueue = (overrides: Partial<any> = {}): any => {
  * @param overrides - Optional overrides for specific fields
  * @returns Queue with transformed field names (camelCase)
  */
-export const createBasicQueue = (overrides: Partial<RawQueueGetResponse> = {}): RawQueueGetResponse => {
+export const createBasicQueue = (overrides: Partial<QueueGetResponse> = {}): QueueGetResponse => {
   return createMockBaseResponse({
     id: QUEUE_TEST_CONSTANTS.QUEUE_ID,
     name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,

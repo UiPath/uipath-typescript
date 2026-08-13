@@ -1,7 +1,7 @@
 import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
-  RawQueueGetResponse,
+  QueueGetResponse,
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
   QueueItem,
@@ -9,8 +9,11 @@ import {
 } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
-/** Combined response type for queue data with bound methods. */
-export type QueueGetResponse = RawQueueGetResponse & QueueMethods;
+/**
+ * A queue with its bound methods attached — the shape returned by
+ * `getAll`/`getById`. The data fields alone are {@link QueueGetResponse}.
+ */
+export type QueueGetWithMethodsResponse = QueueGetResponse & QueueMethods;
 
 /**
  * Service for managing UiPath Queues
@@ -33,7 +36,7 @@ export interface QueueServiceModel {
    * Gets all queues across folders with optional filtering and folder scoping
    *
    * @param options Query options including optional folderId and pagination options
-   * @returns Promise resolving to either a {@link QueueGetResponse} array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
+   * @returns Promise resolving to either a {@link QueueGetWithMethodsResponse} array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetWithMethodsResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
    * @example
    * ```typescript
    * // Standard array return
@@ -66,8 +69,8 @@ export interface QueueServiceModel {
    */
   getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetResponse>
-      : NonPaginatedResponse<QueueGetResponse>
+      ? PaginatedResponse<QueueGetWithMethodsResponse>
+      : NonPaginatedResponse<QueueGetWithMethodsResponse>
   >;
 
   /**
@@ -75,7 +78,7 @@ export interface QueueServiceModel {
    *
    * @param id - Queue ID
    * @param folderId - Required folder ID
-   * @returns Promise resolving to a {@link QueueGetResponse} — the queue definition with methods attached for operating on its items
+   * @returns Promise resolving to a {@link QueueGetWithMethodsResponse} — the queue definition with methods attached for operating on its items
    * @example
    * ```typescript
    * // Get queue by ID
@@ -89,7 +92,7 @@ export interface QueueServiceModel {
    * });
    * ```
    */
-  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
+  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetWithMethodsResponse>;
 
   /**
    * Gets the items of a queue with optional filtering and pagination
@@ -213,7 +216,7 @@ export interface QueueMethods {
  * @param service - The queue service instance
  * @returns Object containing queue methods
  */
-function createQueueMethods(queueData: RawQueueGetResponse, service: QueueServiceModel): QueueMethods {
+function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueMethods {
   return {
     async getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(options?: T): Promise<
       T extends HasPaginationOptions<T>
@@ -239,6 +242,6 @@ function createQueueMethods(queueData: RawQueueGetResponse, service: QueueServic
  * @param service - The queue service instance
  * @returns Queue data with bound methods
  */
-export function createQueueWithMethods(queueData: RawQueueGetResponse, service: QueueServiceModel): QueueGetResponse {
+export function createQueueWithMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueGetWithMethodsResponse {
   return Object.assign({}, queueData, createQueueMethods(queueData, service));
 }
