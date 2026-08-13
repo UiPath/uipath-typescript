@@ -81,3 +81,19 @@ export const PLATFORM_GROUP_TEST_CONSTANTS = {
   ERROR_GROUP_NOT_FOUND: 'The entity was not found.',
   ERROR_GROUPS_FORBIDDEN: 'Caller is not authorized to list groups for the organization',
 } as const;
+
+/**
+ * Platform directory test constants.
+ *
+ * Field values mirror a real API response captured during onboarding:
+ * `identifier`/`identityName` wire naming and numeric type codes.
+ */
+export const PLATFORM_DIRECTORY_TEST_CONSTANTS = {
+  SEARCH_PREFIX: 'sar',
+  ENTRY_NAME: 'sarah.c@example.com',
+  ENTRY_DISPLAY_NAME: 'Sarah C',
+  SOURCE_LOCAL: 'local',
+
+  // Error messages
+  ERROR_DIRECTORY_FORBIDDEN: 'Caller is not authorized to search the organization directory',
+} as const;

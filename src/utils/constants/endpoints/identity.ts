@@ -48,3 +48,17 @@ export const IDENTITY_GROUP_ENDPOINTS = {
   MEMBERS: (organizationId: string, groupId: string) =>
     `${IDENTITY_API_BASE}/api/Group/${organizationId}/${groupId}/Members`,
 } as const;
+
+/**
+ * Identity Directory Endpoints
+ *
+ * Principal lookups served by the `identity_` service, routed at the
+ * **organization** level (no tenant segment); see {@link IDENTITY_API_BASE}.
+ */
+export const IDENTITY_DIRECTORY_ENDPOINTS = {
+  /** Principal search across users, groups, and applications */
+  SEARCH: (organizationId: string) => `${IDENTITY_API_BASE}/api/Directory/Search/${organizationId}`,
+  /** Membership check: which of the given groups a user belongs to */
+  GROUP_MEMBERSHIP: (organizationId: string) =>
+    `${IDENTITY_API_BASE}/api/Directory/GroupMembership/${organizationId}`,
+} as const;
