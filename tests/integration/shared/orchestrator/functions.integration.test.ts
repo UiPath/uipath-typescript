@@ -127,5 +127,34 @@ describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
 
       expect(output).toBeDefined();
     });
+
+    it('should invoke with a freshly acquired license', async () => {
+      // Licensing is always applied; refreshLicense forces a new acquisition
+      // rather than reusing the one already held for this user.
+      const output = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId, refreshLicense: true },
+      );
+
+      expect(output).toBeDefined();
+    });
+
+    it('should reuse the acquired license across invocations', async () => {
+      // Second invocation is served from the license cache; both must succeed.
+      const first = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId, refreshLicense: true },
+      );
+      const second = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId },
+      );
+
+      expect(first).toBeDefined();
+      expect(second).toBeDefined();
+    });
   });
 });

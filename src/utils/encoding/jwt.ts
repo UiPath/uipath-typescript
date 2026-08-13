@@ -17,6 +17,27 @@ function base64UrlToBase64(value: string): string {
 }
 
 /**
+ * Decodes a JWT payload without verifying its signature. Returns `undefined`
+ * for opaque (non-JWT) tokens and malformed payloads, so callers reading
+ * informational claims can degrade instead of failing.
+ *
+ * @param token - The token whose payload should be decoded
+ * @returns The decoded claims, or `undefined` if the payload cannot be read
+ */
+export function decodeJwtClaims<T = Record<string, unknown>>(token: string): T | undefined {
+  try {
+    const payload = token?.split('.')[1];
+    if (!payload) {
+      return undefined;
+    }
+
+    return JSON.parse(decodeBase64(base64UrlToBase64(payload))) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Extracts the user id (`sub` claim) from a JWT access token payload.
  * Returns an empty string for opaque (non-JWT) tokens or malformed payloads.
  *
@@ -24,16 +45,6 @@ function base64UrlToBase64(value: string): string {
  * @returns The user id, or an empty string if it cannot be extracted
  */
 export function extractUserIdFromToken(token: string): string {
-  try {
-    const payload = token.split('.')[1];
-    if (!payload) {
-      return '';
-    }
-
-    const claims = JSON.parse(decodeBase64(base64UrlToBase64(payload))) as Record<string, unknown>;
-    const sub = claims['sub'];
-    return typeof sub === 'string' && sub ? sub : '';
-  } catch {
-    return '';
-  }
+  const sub = decodeJwtClaims(token)?.['sub'];
+  return typeof sub === 'string' && sub ? sub : '';
 }
