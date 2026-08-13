@@ -40,15 +40,11 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
 
 ## Step 2 — Build your app
 
-Prompt Lovable to build your app — plain language is enough:
-
-```text
-Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill.
-```
+With the skill loaded, just describe the app you want in plain language — there is no special wording or UiPath boilerplate to add. The skill handles the coded-app scaffolding for you.
 
 The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.
 
-![Lovable asking for the UiPath organization slug after the prompt is sent](../assets/ai-app-builders/lovable-prompt.png)
+![The prompt in Lovable with the skill chip and the app described in plain language](../assets/ai-app-builders/lovable-prompt.png)
 
 !!! warning "Must be a static SPA"
     Coded apps are static sites — the build must emit `index.html` at the **dist root**. The skill scaffolds this for you. If Lovable defaults to a **server-rendered** app (for example TanStack Start), switch it to a **static SPA** build (enable SPA mode) so `npm run build` emits `index.html` at the dist root — otherwise `uip codedapp pack` will reject it.
@@ -78,6 +74,10 @@ https://<org>.uipath.host/<app-name>
 ```
 
 ![Lovable reporting the app deployed to the Shared folder, with the live URL and each deploy step listed](../assets/ai-app-builders/lovable-deploy.png)
+
+Open that URL and sign in to see the finished app:
+
+![The deployed ticketing app running at its uipath.host URL, signed in and listing real tickets](../assets/ai-app-builders/lovable-deploy1.png)
 
 ---
 

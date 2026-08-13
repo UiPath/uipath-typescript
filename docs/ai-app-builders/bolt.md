@@ -56,11 +56,7 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
 
 ## Step 2 — Build your app
 
-Prompt Bolt to build your app — plain language is enough:
-
-```text
-Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill.
-```
+With the skill loaded, just describe the app you want in plain language — there is no special wording or UiPath boilerplate to add. The skill handles the coded-app scaffolding for you.
 
 The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.
 
@@ -99,6 +95,10 @@ https://<org>.uipath.host/<app-name>
 ```
 
 ![Bolt showing every deploy step checked off, the app URL, and the deployed app's sign-in screen](../assets/ai-app-builders/bolt-deploy.png)
+
+Open that URL and sign in to see the finished app:
+
+![The deployed ticketing app running at its uipath.host URL, signed in and listing real tickets](../assets/ai-app-builders/bolt-deploy1.png)
 
 !!! tip "Alternative — run the deploy yourself"
     If prompting gives you trouble (agent stuck mid-deploy, `.env` not picked up), open Bolt's **terminal** and run the same steps by hand:

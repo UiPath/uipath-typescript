@@ -32,11 +32,7 @@ v0 offers the UiPath coded-apps skill directly from its **skill marketplace** �
 
 ## Step 2 — Build your app
 
-Prompt Vercel (v0) to build your app — plain language is enough:
-
-```text
-Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill.
-```
+With the skill loaded, just describe the app you want in plain language — there is no special wording or UiPath boilerplate to add. The skill handles the coded-app scaffolding for you.
 
 The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.
 
@@ -71,9 +67,9 @@ https://<org>.uipath.host/<app-name>
 
 ![v0 confirming the deploy succeeded, listing the published version and the hosted URL](../assets/ai-app-builders/vercel-deploy.png)
 
-Open that URL and sign in to see the deployed app:
+Open that URL and sign in to see the finished app:
 
-![The deployed app running at its uipath.host URL](../assets/ai-app-builders/vercel-deploy1.png)
+![The deployed ticketing app running at its uipath.host URL, signed in and listing real tickets](../assets/ai-app-builders/vercel-deploy1.png)
 
 !!! tip "Alternative — run the deploy yourself"
     If prompting gives you trouble (env vars not visible in the terminal, agent stuck mid-deploy), open v0's terminal and run the same steps by hand:
