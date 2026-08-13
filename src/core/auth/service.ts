@@ -1,7 +1,7 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
-import { AuthToken, TokenInfo, OAuthContext } from './types';
+import { AuthToken, TokenInfo, OAuthContext, LogoutOptions } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
@@ -227,7 +227,7 @@ export class AuthService {
 
   /**
    * Updates the access token used for API requests
-   * @param tokenInfo The token information containing the access token, type, expiration, and refresh token
+   * @param tokenInfo The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.tokenManager.setToken(tokenInfo);
@@ -242,14 +242,30 @@ export class AuthService {
 
   /**
    * Clears all authentication state including tokens and stored OAuth context.
+   * With `endSession: true`, additionally redirects the browser to the
+   * Identity end-session endpoint to terminate the UiPath platform session
+   * (Automation Cloud or Automation Suite). Requires the OIDC ID token
+   * (`openid` scope) — without one the session logout is skipped and a
+   * warning is logged.
    */
-  public logout(): void {
+  public logout(options?: LogoutOptions): void {
+    // Capture the ID token before clearToken() wipes it.
+    const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
+
+    // End-session is an unauthenticated Identity endpoint — id_token_hint is
+    // what proves the request, so without `openid` there is nothing to send.
+    if (options?.endSession && isBrowser && !idTokenHint) {
+      console.warn(
+        'End session skipped: no OIDC ID token is available, so only local ' +
+        "authentication state was cleared. Add the 'openid' scope to your " +
+        'SDK configuration to enable endSession.'
+      );
+    }
+
     this.tokenManager.clearToken();
 
-    // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
-    // token exchange, but if a user calls logout() while an OAuth flow is
-    // mid-redirect (before callback completes), they'd be left behind.
-
+    // Clear stored OAuth context — it would be left behind if logout() is
+    // called mid-OAuth-flow (before the callback completes the cleanup).
     if (isBrowser) {
       try {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
@@ -257,6 +273,15 @@ export class AuthService {
       } catch (error) {
         console.warn('Failed to clear OAuth context from session storage', error);
       }
+    }
+
+    if (options?.endSession && isBrowser && idTokenHint) {
+      window.location.href = this._buildEndSessionUrl({
+        idTokenHint,
+        // The configured redirectUri is registered with Identity by
+        // definition, so it passes the exact-match validation — safe default.
+        postLogoutRedirectUri: options.postLogoutRedirectUri ?? this.config.redirectUri
+      });
     }
   }
 
@@ -345,6 +370,18 @@ export class AuthService {
   }
 
   /**
+   * Builds the Identity end-session URL (OIDC RP-initiated logout).
+   */
+  private _buildEndSessionUrl(params: { idTokenHint: string; postLogoutRedirectUri?: string }): string {
+    const queryParams = new URLSearchParams();
+    queryParams.set('id_token_hint', params.idTokenHint);
+    if (params.postLogoutRedirectUri) {
+      queryParams.set('post_logout_redirect_uri', params.postLogoutRedirectUri);
+    }
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.END_SESSION}?${queryParams.toString()}`;
+  }
+
+  /**
    * Exchanges the authorization code for an access token and automatically updates the current token
    */
   private async _getAccessToken(params: {
@@ -380,7 +417,8 @@ export class AuthService {
       token: token.access_token,
       type: 'oauth',
       expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : undefined,
-      refreshToken: token.refresh_token
+      refreshToken: token.refresh_token,
+      idToken: token.id_token
     });
 
     return token;

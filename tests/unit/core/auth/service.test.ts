@@ -68,14 +68,42 @@ describe('AuthService', () => {
     });
   });
 
+  describe('logout', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should not redirect to end-session outside the browser', () => {
+      const windowStub = { location: { href: '' } };
+      vi.stubGlobal('window', windowStub);
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      // With an ID token present, this exact state WOULD redirect in a
+      // browser — only the non-browser environment prevents it here.
+      service.updateToken({ token: 'access-token', type: 'oauth', idToken: TEST_CONSTANTS.ID_TOKEN });
+
+      service.logout({ endSession: true });
+
+      expect(windowStub.location.href).toBe('');
+      // Local auth state is still cleared even though the redirect is skipped.
+      expect(service.getToken()).toBeUndefined();
+    });
+
+    it('should clear authentication state without throwing when called with no options', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(() => service.logout()).not.toThrow();
+    });
+  });
+
   describe('exchangeCode', () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
 
-    it('should call the token endpoint without orgName in the path', async () => {
+    it('should exchange the code at the token endpoint (no orgName in path) and capture the id_token', async () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify({ access_token: 'token', token_type: 'Bearer', expires_in: 360 }))
+        new Response(JSON.stringify({
+          access_token: 'token', token_type: 'Bearer', expires_in: 360, id_token: TEST_CONSTANTS.ID_TOKEN
+        }))
       );
       const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
       await (service as any)._getAccessToken({
@@ -87,6 +115,7 @@ describe('AuthService', () => {
       const calledUrl = fetchSpy.mock.calls[0][0] as string;
       expect(calledUrl).toContain(IDENTITY_ENDPOINTS.TOKEN);
       expect(calledUrl).not.toContain(TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(service.getTokenManager().getIdToken()).toBe(TEST_CONSTANTS.ID_TOKEN);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { TokenInfo } from './auth/types';
+import { TokenInfo, LogoutOptions } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -274,13 +274,34 @@ export class UiPath implements IUiPath {
   /**
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
+   *
+   * By default only local state is cleared — the UiPath session (Automation
+   * Cloud or Automation Suite) stays active, so the next sign-in completes
+   * silently. Pass `endSession: true` to also sign the user out of UiPath session
+   * (browser-only; requires the `openid` scope): the browser is redirected
+   * and returns to the configured `redirectUri` (override with
+   * `postLogoutRedirectUri`). Already-issued access tokens remain valid
+   * until they expire. The redirect is asynchronous — the page keeps
+   * rendering until the browser navigates; handle that interim state to
+   * prevent your login screen appearing twice.
+   *
+   * @param options - Logout behavior options
+   *
+   * @example
+   * ```typescript
+   * // Local logout only (default)
+   * sdk.logout();
+   *
+   * // Also end the UiPath session
+   * sdk.logout({ endSession: true });
+   * ```
    */
-  public logout(): void {
+  public logout(options?: LogoutOptions): void {
     // Secret-based auth has no session to end — skip silently
     if (this.#config && hasSecretConfig(this.#config)) {
       return;
     }
-    this.#authService?.logout();
+    this.#authService?.logout(options);
     this.#initialized = false;
   }
 
@@ -288,7 +309,7 @@ export class UiPath implements IUiPath {
    * Updates the access token used for API requests.
    * Use this to inject or refresh a token externally.
    *
-   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.#authService?.updateToken(tokenInfo);
