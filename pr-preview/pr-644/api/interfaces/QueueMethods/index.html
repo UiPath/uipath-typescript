@@ -2279,7 +2279,7 @@ automatically.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="completetransaction">completeTransaction()<a class="headerlink" href="#completetransaction" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>isSuccessful</code>: <code>boolean</code>, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, keyof <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>&gt;): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<code>void</code>&gt;&gt;</p>
+<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>outcome</code>: <a href="../../enumerations/QueueTransactionOutcome/"><code>QueueTransactionOutcome</code></a>, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, keyof <a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>&gt;): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Reports the processing outcome of one of this queue's items.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -2298,9 +2298,9 @@ automatically.</p>
 <td>Queue item ID of the transaction to complete</td>
 </tr>
 <tr>
-<td><code>isSuccessful</code></td>
-<td><code>boolean</code></td>
-<td>The caller's verdict on its own processing of the item: <code>true</code> marks it <code>Successful</code>, <code>false</code> marks it <code>Failed</code> (provide <code>processingError</code> in options). Orchestrator records the reported outcome as-is</td>
+<td><code>outcome</code></td>
+<td><a href="../../enumerations/QueueTransactionOutcome/"><code>QueueTransactionOutcome</code></a></td>
+<td>The caller's verdict on its own processing of the item; Orchestrator records it as-is</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
@@ -2310,8 +2310,8 @@ automatically.</p>
 </tbody>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<code>void</code>&gt;&gt;</p>
-<p>Promise resolving to an operation response confirming the completion was applied</p>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise that resolves once the outcome is recorded</p>
 <hr />
 <h3 id="getallitems">getAllItems()<a class="headerlink" href="#getallitems" title="Permanent link">&para;</a></h3>
 <blockquote>

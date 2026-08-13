@@ -15,40 +15,40 @@ const allQueues = await queues.getAll();
 
 ### completeTransaction()
 
-> **completeTransaction**(`itemId`: `number`, `isSuccessful`: `boolean`, `options?`: `QueueCompleteTransactionOptions`): `Promise`\<`OperationResponse`\<`void`>>
+> **completeTransaction**(`itemId`: `number`, `outcome`: `QueueTransactionOutcome`, `options?`: `QueueCompleteTransactionOptions`): `Promise`\<`void`>
 
 Completes a transaction: reports the processing outcome of a queue item
 
-Marks the item `Successful` or `Failed` (with the failure details from [QueueCompleteTransactionOptions](../QueueCompleteTransactionOptions/)), and can persist output data alongside the result.
+Marks the item `Successful` or `Failed`, and can persist output data alongside the result. On failure, `processingError` is optional — without it the item is marked `Failed` with no error details; the error `type` decides retry behavior (an `ApplicationException` failure is retried per the queue's retry settings, a `BusinessException` is not).
 
 Applies to items with an active transaction. Changing the outcome of an item that already reached a terminal status is rejected.
 
 #### Parameters
 
 - `itemId`: `number` — Queue item ID of the transaction to complete
-- `isSuccessful`: `boolean` — The caller's verdict on its own processing of the item: `true` marks it `Successful`, `false` marks it `Failed` (provide `processingError` in options). Orchestrator records the reported outcome as-is
+- `outcome`: `QueueTransactionOutcome` — The caller's verdict on its own processing of the item; Orchestrator records it as-is
 - `options?`: `QueueCompleteTransactionOptions` — Completion details (output data, failure details, new defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
-`Promise`\<`OperationResponse`\<`void`>>
+`Promise`\<`void`>
 
-Promise resolving to an operation response confirming the completion was applied
+Promise that resolves once the outcome is recorded
 
 #### Example
 
 ```
-import { QueueExceptionType } from '@uipath/uipath-typescript/queues';
+import { QueueTransactionOutcome, QueueExceptionType } from '@uipath/uipath-typescript/queues';
 
 // Report success with output data
-await queues.completeTransaction(<itemId>, true, {
+await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Successful, {
   folderId: <folderId>,
   outputData: { paymentId: 'P-778' }
 });
 
 // Report a business failure (not retried) — folder scoping also
 // accepts a folder key or path
-await queues.completeTransaction(<itemId>, false, {
+await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Failed, {
   folderKey: '<folderKey>',
   processingError: {
     reason: 'Vendor not found',
