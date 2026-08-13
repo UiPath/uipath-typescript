@@ -26,6 +26,7 @@ import { ConversationalAgentService } from '../../../src/services/conversational
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
+export { hasUserToken } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
 
@@ -82,19 +83,51 @@ export interface TestServices {
  */
 export type InitMode = 'v0' | 'v1';
 
+/**
+ * Credential the SDK authenticates with:
+ * - 'pat': the external-application Personal Access Token (`UIPATH_SECRET`). Default.
+ * - 'user': a user access token (`UIPATH_USER_TOKEN`), for services that reject
+ *   PAT and client-credentials tokens — `insightsrtm_` and the notification service.
+ *
+ * Both are sent as bearer tokens; the SDK's `secret` config takes either.
+ */
+export type AuthMode = 'pat' | 'user';
+
 let servicesInstance: TestServices | null = null;
 let testConfig: IntegrationConfig | null = null;
 let currentMode: InitMode | null = null;
+let currentAuthMode: AuthMode | null = null;
+
+/**
+ * Picks the bearer token for the requested auth mode.
+ *
+ * @throws {Error} If user-token auth is requested but no token is configured
+ */
+function resolveToken(config: IntegrationConfig, authMode: AuthMode): string {
+  if (authMode === 'pat') {
+    return config.secret;
+  }
+
+  if (!config.userToken) {
+    throw new Error(
+      'User-token auth was requested but UIPATH_USER_TOKEN is not set. Suites that ' +
+      'require it must guard with `describe.skipIf(!hasUserToken())` so they skip ' +
+      'instead of failing when the token is unavailable.'
+    );
+  }
+
+  return config.userToken;
+}
 
 /**
  * Creates services using V0 pattern (legacy SDK property access)
  */
-function createV0Services(config: IntegrationConfig): TestServices {
+function createV0Services(config: IntegrationConfig, token: string): TestServices {
   const sdk = new LegacyUiPath({
     baseUrl: config.baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
-    secret: config.secret,
+    secret: token,
   });
 
   if (!sdk.isAuthenticated()) {
@@ -125,12 +158,12 @@ function createV0Services(config: IntegrationConfig): TestServices {
 /**
  * Creates services using V1 pattern (modular instantiation)
  */
-function createV1Services(config: IntegrationConfig): TestServices {
+function createV1Services(config: IntegrationConfig, token: string): TestServices {
   const sdk = new UiPath({
     baseUrl: config.baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
-    secret: config.secret,
+    secret: token,
   });
 
   if (!sdk.isAuthenticated()) {
@@ -172,20 +205,29 @@ function createV1Services(config: IntegrationConfig): TestServices {
 }
 
 /**
- * Initialize services in the specified mode
+ * Initialize services in the specified init mode and auth mode.
+ *
+ * The cached instance is keyed on both — a suite running under one credential
+ * must never be handed the SDK built for the other.
  */
-export async function initializeServices(mode: InitMode): Promise<TestServices> {
-  if (servicesInstance && currentMode === mode) {
+export async function initializeServices(
+  mode: InitMode,
+  authMode: AuthMode = 'pat'
+): Promise<TestServices> {
+  if (servicesInstance && currentMode === mode && currentAuthMode === authMode) {
     return servicesInstance;
   }
 
   testConfig = loadIntegrationConfig();
   currentMode = mode;
+  currentAuthMode = authMode;
+
+  const token = resolveToken(testConfig, authMode);
 
   if (mode === 'v0') {
-    servicesInstance = createV0Services(testConfig);
+    servicesInstance = createV0Services(testConfig, token);
   } else {
-    servicesInstance = createV1Services(testConfig);
+    servicesInstance = createV1Services(testConfig, token);
   }
 
   return servicesInstance;
@@ -221,19 +263,30 @@ export function getCurrentMode(): InitMode | null {
 }
 
 /**
+ * Get the credential the current services instance authenticates with
+ */
+export function getCurrentAuthMode(): AuthMode | null {
+  return currentAuthMode;
+}
+
+/**
  * Cleanup services
  */
 export function cleanupServices(): void {
   servicesInstance = null;
   currentMode = null;
+  currentAuthMode = null;
 }
 
 /**
- * Setup hooks for unified tests with a specific mode
+ * Setup hooks for unified tests with a specific init mode and auth mode.
+ *
+ * Suites passing `'user'` must be gated on `hasUserToken()` — initialization
+ * throws when the token is missing.
  */
-export function setupUnifiedTests(mode: InitMode): void {
+export function setupUnifiedTests(mode: InitMode, authMode: AuthMode = 'pat'): void {
   beforeAll(async () => {
-    await initializeServices(mode);
+    await initializeServices(mode, authMode);
   });
 
   afterAll(() => {

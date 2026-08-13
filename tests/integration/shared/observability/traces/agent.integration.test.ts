@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
+import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
 import { AgentTraces } from '../../../../../src/services/observability/traces/agent';
 import {
   AgentTraceExecutionType,
@@ -19,15 +19,14 @@ import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: every method here requires OAuth and rejects PAT (401 regardless of scopes).
-// The Traceview methods reject PAT directly; the governance methods sit on the
-// llmopstenant_ facade which forwards to InsightsRTM (also PAT-rejecting), so PAT
-// still can't reach them. Skipped at the outer level so the live-auth setup
-// (setupUnifiedTests + beforeAll) does not run.
-describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// Every method here rejects PAT (401 regardless of scopes): Traceview rejects it
+// directly, and the governance methods sit on the llmopstenant_ facade that forwards
+// to InsightsRTM. This suite authenticates with a user token and skips without one.
+describe.skipIf(!hasUserToken()).each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let trace!: AgentTraces;
+  let folderKey!: string;
 
   beforeAll(() => {
     const service = getServices().agentTraces;
@@ -35,6 +34,15 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       throw new Error('Agent Traces service is not registered for this init mode');
     }
     trace = service;
+
+    const configuredFolderKey = getTestConfig().folderKey;
+    if (!configuredFolderKey) {
+      throw new Error(
+        'INTEGRATION_TEST_FOLDER_KEY is not configured. The folder filter tests need a ' +
+        'folder the caller can access — an inaccessible folder key returns 403.',
+      );
+    }
+    folderKey = configuredFolderKey;
   });
 
   describe('getErrorsTimeline', () => {
@@ -57,7 +65,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getErrorsTimeline({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
@@ -87,7 +95,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getLatencyTimeline({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
@@ -119,7 +127,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getUnitConsumption({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,

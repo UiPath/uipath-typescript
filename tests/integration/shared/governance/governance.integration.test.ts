@@ -1,16 +1,15 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Governance } from '../../../../src/services/governance';
 import { PolicyEvaluationResult } from '../../../../src/models/governance/governance.types';
 
 const modes: InitMode[] = ['v1'];
 
-// Skipped: the governance API is served by insightsrtm_, which rejects PAT tokens
-// with 401 regardless of scopes and requires OAuth. Integration tests in CI
-// authenticate with a PAT, so these would fail unconditionally. Re-enable by
-// removing `.skip` once OAuth support is wired into the integration test harness.
-describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// The governance API is served by insightsrtm_, which rejects PAT tokens with 401
+// regardless of scopes. This suite authenticates with a user token and skips when
+// one is not configured. Endpoints also require an organization-admin caller.
+describe.skipIf(!hasUserToken()).each(modes)('Governance - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let governance!: Governance;
   // Start time wide enough to cover historical traces in the test tenant.
