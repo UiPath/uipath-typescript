@@ -19,11 +19,21 @@ import type {
   RawPlatformDirectoryEntry,
   RawPlatformDirectoryGroup,
 } from '../../../src/models/platform/directory.internal-types';
+import type {
+  RawPlatformRole,
+  RawPlatformRoleAction,
+  RawPlatformRoleListResponse,
+  RawPlatformRoleAssignment,
+  RawPlatformPrincipalRoleAssignments,
+  RawPlatformRoleAssignmentListResponse,
+  RawPlatformEffectiveAccessResponse,
+} from '../../../src/models/platform/roles.internal-types';
 import {
   PLATFORM_TEST_CONSTANTS,
   PLATFORM_USER_TEST_CONSTANTS,
   PLATFORM_GROUP_TEST_CONSTANTS,
   PLATFORM_DIRECTORY_TEST_CONSTANTS,
+  PLATFORM_ROLE_TEST_CONSTANTS,
 } from '../constants/platform';
 
 /**
@@ -179,5 +189,142 @@ export const createBasicRawPlatformDirectoryGroup = (
   name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
   email: null,
   displayName: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  ...overrides,
+});
+
+/**
+ * Builds an action definition in the raw wire shape, including the internal
+ * `originalResourceAction` the service drops.
+ */
+export const createBasicRawPlatformRoleAction = (
+  overrides?: Partial<RawPlatformRoleAction>
+): RawPlatformRoleAction => ({
+  id: PLATFORM_ROLE_TEST_CONSTANTS.ACTION_ID,
+  name: PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME,
+  namespace: 'AUTHZ',
+  serviceDisplayName: 'Authorization',
+  resourceType: 'Action',
+  resourceAction: 'Read',
+  resourceGroup: 'Action',
+  description: 'Read all Actions',
+  scopeType: 'ANY',
+  originalResourceAction: null,
+  ...overrides,
+});
+
+/**
+ * Builds a role in the raw wire shape: `createdOn` naming and UPPER-case type.
+ */
+export const createBasicRawPlatformRole = (
+  overrides?: Partial<RawPlatformRole>
+): RawPlatformRole => ({
+  id: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID,
+  name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+  description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+  type: 'BUILTIN',
+  scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+  createdBy: PLATFORM_ROLE_TEST_CONSTANTS.CREATED_BY,
+  createdOn: PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON,
+  tenantId: PLATFORM_ROLE_TEST_CONSTANTS.EMPTY_GUID,
+  ownerServiceId: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_ID,
+  ownerServiceName: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_NAME,
+  actionDetails: [createBasicRawPlatformRoleAction()],
+  ...overrides,
+});
+
+/**
+ * Builds the paged role list response in the raw wire shape. `totalCount`
+ * defaults to the number of roles so single-page mocks satisfy the service's
+ * fetch-all loop; pass it explicitly to simulate further pages.
+ */
+export const createRawPlatformRoleListResponse = (
+  roles: RawPlatformRole[] = [createBasicRawPlatformRole()],
+  totalCount: number = roles.length
+): RawPlatformRoleListResponse => ({
+  totalCount,
+  results: roles,
+});
+
+/**
+ * Builds a role assignment in the raw wire shape.
+ */
+export const createBasicRawPlatformRoleAssignment = (
+  overrides?: Partial<RawPlatformRoleAssignment>
+): RawPlatformRoleAssignment => ({
+  id: PLATFORM_ROLE_TEST_CONSTANTS.ASSIGNMENT_ID,
+  securityPrincipalId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  securityPrincipalType: 'User',
+  type: 'Custom',
+  scope: PLATFORM_ROLE_TEST_CONSTANTS.ASSIGNMENT_SCOPE,
+  roleId: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID,
+  roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+  roleType: 'BUILTIN',
+  createdBy: PLATFORM_ROLE_TEST_CONSTANTS.CREATED_BY,
+  createdOn: PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON,
+  inherited: false,
+  mutable: true,
+  ...overrides,
+});
+
+/**
+ * Builds one principal's assignment group in the raw wire shape — the service
+ * renames `roleAssignmentDtos` to `roleAssignments`.
+ */
+export const createBasicRawPlatformPrincipalRoleAssignments = (
+  overrides?: Partial<RawPlatformPrincipalRoleAssignments>
+): RawPlatformPrincipalRoleAssignments => ({
+  securityPrincipalId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  roleAssignmentDtos: [createBasicRawPlatformRoleAssignment()],
+  displayName: PLATFORM_ROLE_TEST_CONSTANTS.PRINCIPAL_DISPLAY_NAME,
+  email: PLATFORM_USER_TEST_CONSTANTS.EMAIL,
+  type: 'DirectoryUser',
+  source: 'local',
+  ...overrides,
+});
+
+/**
+ * Builds the paged role assignments response in the raw wire shape.
+ */
+export const createRawPlatformRoleAssignmentListResponse = (
+  groups: RawPlatformPrincipalRoleAssignments[] = [createBasicRawPlatformPrincipalRoleAssignments()],
+  totalCount: number = groups.length
+): RawPlatformRoleAssignmentListResponse => ({
+  totalCount,
+  results: groups,
+});
+
+/**
+ * Builds the effective-access response envelope in the raw wire shape.
+ */
+export const createRawPlatformEffectiveAccessResponse = (
+  overrides?: Partial<RawPlatformEffectiveAccessResponse>
+): RawPlatformEffectiveAccessResponse => ({
+  roleAssignments: {
+    totalCount: 1,
+    results: [{
+      roleId: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID,
+      tenantId: null,
+      roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+      serviceName: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_NAME,
+      serviceId: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_ID,
+      roleType: 'BUILTIN',
+      roleAssignments: [{
+        roleId: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID,
+        securityPrincipalId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+        organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantId: null,
+        createdOn: PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON,
+        roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+        securityPrincipalType: 'User',
+        roleType: 'BUILTIN',
+        serviceName: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_NAME,
+        serviceId: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_ID,
+        scope: PLATFORM_ROLE_TEST_CONSTANTS.ASSIGNMENT_SCOPE,
+        folderName: null,
+      }],
+    }],
+  },
+  grantedServicesMetadata: [],
+  grantedRolesMetadata: [{ id: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID, roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME }],
   ...overrides,
 });

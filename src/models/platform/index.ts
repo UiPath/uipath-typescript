@@ -10,3 +10,5 @@ export * from './groups.types';
 export * from './groups.models';
 export * from './directory.types';
 export * from './directory.models';
+export * from './roles.types';
+export * from './roles.models';
