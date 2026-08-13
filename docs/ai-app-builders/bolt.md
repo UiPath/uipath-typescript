@@ -1,6 +1,6 @@
 # Bolt
 
-Build a UiPath coded web app in Bolt and deploy it to UiPath using `@uipath/uipath-typescript` and the `uip` CLI. Bolt generates the app in an in-browser WebContainer; you deploy it to UiPath from Bolt's terminal.
+Build a UiPath coded web app in Bolt and deploy it to UiPath using `@uipath/uipath-typescript` and the `uip` CLI. Bolt generates the app in an in-browser WebContainer and deploys it for you, running the CLI in that same container.
 
 !!! info "Builds on Coded Apps"
     Bolt apps deploy as standard UiPath **coded apps**. This page covers the Bolt-specific steps; for platform, SDK, and CLI details see [Coded Apps](../coded-apps/getting-started.md).
@@ -9,7 +9,7 @@ Build a UiPath coded web app in Bolt and deploy it to UiPath using `@uipath/uipa
 
 ## How it works
 
-You build the app in Bolt with the UiPath coded-apps skill (so it uses `@uipath/uipath-typescript` and the correct coded-app structure), then deploy it with the `uip` CLI — build → pack → publish → deploy — directly from Bolt. The deployed app is served at `https://<org>.uipath.host/<app>`.
+You build the app in Bolt with the UiPath coded-apps skill (so it uses `@uipath/uipath-typescript` and the correct coded-app structure), then ask it to deploy — the skill runs the `uip` CLI for you (build → pack → publish → deploy) inside Bolt. The deployed app is served at `https://<org>.uipath.host/<app>`.
 
 ## Prerequisites
 
@@ -42,8 +42,6 @@ The skill lands in your workspace library. In the chat composer, attach it from 
 Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 ```
 
-![Bolt fetching the skill after the SKILL.md link is pasted into the prompt](../assets/ai-app-builders/bolt-skill.png)
-
 !!! warning "Enable the skill for the project"
     A workspace-library skill is not automatically active in a project. Open the project's **Settings → Skills** and enable `uipath-coded-apps` there too — otherwise Bolt reports the skill as unavailable even though it is in your library.
 
@@ -58,12 +56,15 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
 
 ## Step 2 — Build your app
 
-Prompt Bolt to build your app, passing your **public** sign-in config so the generated app can authenticate end users:
+Prompt Bolt to build your app — plain language is enough:
 
 ```text
-Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill. Use this config:
-{ "clientId": "<public-app-client-id>", "scope": "<scopes>", "orgName": "<org>", "tenantName": "<tenant>", "baseUrl": "https://api.uipath.com" }
+Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill.
 ```
+
+The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.
+
+![The prompt in Bolt with the skill attached and the app described in plain language](../assets/ai-app-builders/bolt-prompt.png)
 
 !!! warning "Must be a static SPA"
     Coded apps are static sites — the build must emit `index.html` at the **dist root**. The skill scaffolds this for you; if the builder defaults to a server-rendered (SSR) framework, switch it to a static/SPA build. Bolt commonly scaffolds Vite apps — keep `base: './'` so assets resolve under the deployed base path.
@@ -85,29 +86,33 @@ Never paste the secret into chat: chat is stored with the project (visible to an
 
 ## Step 4 — Deploy
 
-In the Bolt terminal, load the credentials from the `.env` you filled in (Step 3), then run the deploy. Bolt's WebContainer can reach npm and `*.uipath.com` (note: GitHub access is blocked in WebContainer):
+Just ask Bolt to deploy. Name the Orchestrator folder you want the app in — the skill resolves it and runs the whole `uip` pipeline in Bolt's terminal, reading the `.env` you filled in (Step 3):
 
-```bash
-set -a; source .env; set +a   # .env is not auto-loaded into the shell
-uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
-  --organization <org> --tenant <tenant> \
-  --scope "OR.Default Apps.Read Apps.Write"
-npm run build
-uip codedapp pack dist -n <app-name> --version 1.0.0
-uip codedapp publish
-uip codedapp deploy --folder-key <folder-key>
+```text
+Deploy this app to UiPath in the <folder-name> folder, using the credentials in .env.
 ```
 
-Your app is live at:
+Bolt's WebContainer can reach npm and `*.uipath.com`, so the whole pipeline runs in place (note: GitHub access is blocked in WebContainer). The skill signs in, builds, packs, publishes and deploys, then reports the hosted URL:
 
 ```text
 https://<org>.uipath.host/<app-name>
 ```
 
-![Bolt terminal showing a successful deploy and the hosted URL](../assets/ai-app-builders/bolt-deploy.png)
+![Bolt showing every deploy step checked off, the app URL, and the deployed app's sign-in screen](../assets/ai-app-builders/bolt-deploy.png)
 
 !!! tip "Alternative — run the deploy yourself"
-    You don't have to route credentials through `.env` and prompt the agent. If that path gives you trouble (agent stuck mid-deploy, `.env` not picked up), open Bolt's **terminal** and run the same commands yourself, pasting the confidential app's client id and secret directly into `uip login` in place of the `$UIPATH_*` variables. Same result — you're just the one driving.
+    If prompting gives you trouble (agent stuck mid-deploy, `.env` not picked up), open Bolt's **terminal** and run the same steps by hand:
+
+    ```bash
+    set -a; source .env; set +a   # .env is not auto-loaded into the shell
+    uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
+      --organization <org> --tenant <tenant> \
+      --scope "OR.Default Apps.Read Apps.Write"
+    npm run build
+    uip codedapp pack dist -n <app-name> --version 1.0.0
+    uip codedapp publish
+    uip codedapp deploy --folder-key <folder-key>   # uip or folders list --output json
+    ```
 
 ---
 

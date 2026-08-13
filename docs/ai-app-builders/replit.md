@@ -1,6 +1,6 @@
 # Replit
 
-Build a UiPath coded web app in Replit and deploy it to UiPath using `@uipath/uipath-typescript` + the `uip` CLI. Replit generates the app; you deploy it to UiPath from the Replit shell, which can read your stored Secrets.
+Build a UiPath coded web app in Replit and deploy it to UiPath using `@uipath/uipath-typescript` + the `uip` CLI. Replit generates the app and deploys it for you, running the CLI in its own shell, which can read your stored Secrets.
 
 !!! info "Builds on Coded Apps"
     Replit apps deploy as standard UiPath **coded apps**. This page covers the Replit-specific steps; for platform, SDK, and CLI details see [Coded Apps](../coded-apps/getting-started.md).
@@ -9,7 +9,7 @@ Build a UiPath coded web app in Replit and deploy it to UiPath using `@uipath/ui
 
 ## How it works
 
-You build the app in Replit with the UiPath coded-apps skill (so it uses `@uipath/uipath-typescript` and the correct coded-app structure), then deploy it with the `uip` CLI — build → pack → publish → deploy — directly from Replit. The deployed app is served at `https://<org>.uipath.host/<app>`.
+You build the app in Replit with the UiPath coded-apps skill (so it uses `@uipath/uipath-typescript` and the correct coded-app structure), then ask it to deploy — the skill runs the `uip` CLI for you (build → pack → publish → deploy) inside Replit. The deployed app is served at `https://<org>.uipath.host/<app>`.
 
 ## Prerequisites
 
@@ -32,8 +32,6 @@ Pick one:
 Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md
 ```
 
-![Replit fetching the skill from the SKILL.md link pasted into the prompt](../assets/ai-app-builders/replit-skill.png)
-
 **Option 2 — install from npm.** Replit has a shell, so run `npm i @uipath/skills` in the **Shell** and point your prompt at the coded-apps skill in that package. This pulls the published skill with no manual download or zip, and always gets the latest version.
 
 **Option 3 — import it as a Replit skill (zip).** For a persistent workspace skill: download **only** the [`skills/uipath-coded-apps`](https://github.com/UiPath/skills/tree/main/skills/uipath-coded-apps) folder from the UiPath skills repo — not the whole repo, which is far too large to load as a skill — zip that folder, and upload it via **Import code or design**. (On paid plans you can install a folder as a skill directly.)
@@ -42,12 +40,15 @@ Use the UiPath coded-apps skill at https://github.com/UiPath/skills/blob/main/sk
 
 ## Step 2 — Build your app
 
-Prompt Replit to build your app, passing your **public** sign-in config so the generated app can authenticate end users:
+Prompt Replit to build your app — plain language is enough:
 
 ```text
-Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill. Use this config:
-{ "clientId": "<public-app-client-id>", "scope": "<scopes>", "orgName": "<org>", "tenantName": "<tenant>", "baseUrl": "https://api.uipath.com" }
+Build a <describe your app> as a UiPath coded app using the uipath-coded-apps skill.
 ```
+
+The builder asks for the connection details it needs — organization, tenant, Data Fabric entity, and the public app's client ID — as it goes, so you don't supply them up front.
+
+![The prompt in Replit with the skill link and the app described in plain language](../assets/ai-app-builders/replit-prompt.png)
 
 !!! warning "Must be a static SPA"
     Coded apps are static sites — the build must emit `index.html` at the **dist root**. The skill scaffolds this for you; if the builder defaults to a server-rendered (SSR) framework, switch it to a static/SPA build.
@@ -58,34 +59,38 @@ Build a <describe your app> as a UiPath coded app using the uipath-coded-apps sk
 
 Add your **confidential** app's credentials in Replit's built-in **Secrets** (Tools → Secrets): `UIPATH_CLIENT_ID` and `UIPATH_CLIENT_SECRET`. Replit exposes Secrets as environment variables **in the shell**, so `uip login` can read them at deploy time — no secret in chat or code.
 
-![Replit Secrets with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET](../assets/ai-app-builders/replit-secret.png)
+![Replit's Secrets pane with UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET added, their values hidden](../assets/ai-app-builders/replit-secret.png)
 
 ---
 
 ## Step 4 — Deploy
 
-In the Replit **Shell**, run the deploy; `uip login` reads the Secrets you set in Step 3:
+Just ask Replit to deploy. Name the Orchestrator folder you want the app in — the skill resolves it and runs the whole `uip` pipeline in the Shell, reading the Secrets you set in Step 3:
 
-```bash
-uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
-  --organization <org> --tenant <tenant> \
-  --scope "OR.Default Apps.Read Apps.Write"
-npm run build
-uip codedapp pack dist -n <app-name> --version 1.0.0
-uip codedapp publish
-uip codedapp deploy --folder-key <folder-key>
+```text
+Deploy this app to UiPath in the <folder-name> folder, using UIPATH_CLIENT_ID and UIPATH_CLIENT_SECRET from Secrets.
 ```
 
-Your app is live at:
+The skill signs in, builds, packs, publishes and deploys, then reports the hosted URL:
 
 ```text
 https://<org>.uipath.host/<app-name>
 ```
 
-![Replit shell showing a successful deploy and the hosted URL](../assets/ai-app-builders/replit-deploy.png)
+![Replit reporting pack, publish and deploy all succeeded, with the deployed portal running alongside it](../assets/ai-app-builders/replit-deploy.png)
 
 !!! tip "Alternative — run the deploy yourself"
-    You don't have to route credentials through Secrets and prompt the agent. If that path gives you trouble (secrets not visible to the shell, agent stuck mid-deploy), open the **Shell** and run the same commands yourself, pasting the confidential app's client id and secret directly into `uip login` in place of the `$UIPATH_*` variables. Same result — you're just the one driving.
+    If prompting gives you trouble (secrets not visible to the shell, agent stuck mid-deploy), open the **Shell** and run the same steps by hand:
+
+    ```bash
+    uip login --client-id $UIPATH_CLIENT_ID --client-secret $UIPATH_CLIENT_SECRET \
+      --organization <org> --tenant <tenant> \
+      --scope "OR.Default Apps.Read Apps.Write"
+    npm run build
+    uip codedapp pack dist -n <app-name> --version 1.0.0
+    uip codedapp publish
+    uip codedapp deploy --folder-key <folder-key>   # uip or folders list --output json
+    ```
 
 ---
 
