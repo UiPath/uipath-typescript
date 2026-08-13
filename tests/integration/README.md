@@ -217,6 +217,64 @@ Tests skip gracefully when:
 - PAT token lacks necessary permissions (e.g., Maestro scope)
 - Pre-existing resources don't exist in tenant
 - Prerequisites aren't met
+- A suite needs a user token and `UIPATH_USER_TOKEN` is not set (see below)
+
+## Authentication modes
+
+The harness can authenticate with either of two credentials, selected per suite:
+
+| Mode | Env var | Used by |
+|------|---------|---------|
+| `pat` (default) | `UIPATH_SECRET` | Every suite unless noted below |
+| `user` | `UIPATH_USER_TOKEN` | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions |
+
+The `user` suites exist because their APIs reject PAT and client-credentials tokens
+outright — `insightsrtm_` returns 401 regardless of which scopes the external
+application holds, and the required scopes are not available to external apps at
+all. A user access token carries the signed-in user's permissions instead, which
+those services do accept.
+
+Both credentials are sent as plain bearer tokens; the SDK's `secret` config field
+takes either. The PAT mode is deliberately retained rather than replaced — it is
+the credential most SDK consumers use, and keeping it exercised preserves that
+coverage.
+
+### Getting a user token
+
+The token comes from [Minter](https://uipath.atlassian.net/wiki/spaces/CLD/pages/87134404744),
+a Portal-team tool that performs a headless browser login and exports the resulting
+tokens:
+
+```bash
+az acr login -n pltnonprodacr
+docker run --rm -v "$PWD/out:/out" pltnonprodacr.azurecr.io/uipath-minter:latest \
+  npm run generate -- -u <email> -p <password> -n <org> -t <tenant> -e <env> -v basic -o /out/tokens.json
+```
+
+Copy the `accessToken` field from `out/tokens.json` into `UIPATH_USER_TOKEN`.
+
+Two caveats. The account must sign in with an email and password — federated (SSO)
+and Google accounts cannot be driven by Minter. And the token is short-lived: the
+SDK treats a token supplied as `secret` as non-expiring and never refreshes it, so
+a run that outlives the token will start failing with 401s partway through.
+
+### Writing a suite that needs a user token
+
+Gate the suite on `hasUserToken()` and pass `'user'` to the setup helper:
+
+```typescript
+import { hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+
+const modes: InitMode[] = ['v1'];
+
+describe.skipIf(!hasUserToken()).each(modes)('My Suite [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
+  // ...
+});
+```
+
+The guard is required: `setupUnifiedTests(mode, 'user')` throws when no token is
+configured, so an unguarded suite fails the run on any machine without one.
 
 ## Environment Variables Reference
 
@@ -233,6 +291,7 @@ Tests skip gracefully when:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `UIPATH_USER_TOKEN` | User access token for services that reject PATs — see [Authentication modes](#authentication-modes) | (those suites skip) |
 | `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |

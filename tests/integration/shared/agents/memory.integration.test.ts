@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { AgentMemory } from '../../../../src/services/agents/memory';
 import { AgentMemoryExecutionType } from '../../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../../../utils/constants';
@@ -11,17 +11,19 @@ const WINDOW = {
   endTime: new Date(MEMORY_TEST_CONSTANTS.END_TIME),
 };
 
-// The filter tests pass arbitrary well-formed identifiers (AGENT_ID / FOLDER_KEY)
-// only to exercise the filter body-building path against the live API. Filters
-// narrow results, so unmatched values simply yield empty/zero buckets (still HTTP 200).
+// The filter tests exercise the filter body-building path against the live API.
+// An unmatched AGENT_ID simply narrows the result to empty/zero buckets (still
+// HTTP 200), but `folderKeys` is authorized before it is applied — a folder the
+// caller cannot access returns 403 — so the folder filter uses the configured
+// INTEGRATION_TEST_FOLDER_KEY rather than an arbitrary GUID.
 
-// skip: insightsrtm_ endpoints do not support PAT auth — they reject PAT tokens
-// with 401 regardless of scopes and require OAuth. Test bodies are kept intact
-// so they run once the integration harness supports OAuth for this service.
-describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// insightsrtm_ rejects PAT tokens entirely (401 regardless of scopes), so this
+// suite authenticates with a user token and skips when one is not configured.
+describe.skipIf(!hasUserToken()).each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let memory!: AgentMemory;
+  let folderKey!: string;
 
   beforeAll(() => {
     const service = getServices().memory;
@@ -29,6 +31,15 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       throw new Error('Memory service is not registered for this init mode');
     }
     memory = service;
+
+    const configuredFolderKey = getTestConfig().folderKey;
+    if (!configuredFolderKey) {
+      throw new Error(
+        'INTEGRATION_TEST_FOLDER_KEY is not configured. The folder filter tests need a ' +
+        'folder the caller can access — an inaccessible folder key returns 403.',
+      );
+    }
+    folderKey = configuredFolderKey;
   });
 
   describe('getTimeline', () => {
@@ -50,7 +61,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getTimeline({
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
-        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
+        folderKeys: [folderKey],
         executionType: AgentMemoryExecutionType.Runtime,
       });
 
@@ -94,7 +105,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getCallsTimeline({
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
-        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
+        folderKeys: [folderKey],
         executionType: AgentMemoryExecutionType.Runtime,
       });
 
@@ -135,7 +146,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getTopSpaces({
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
-        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
+        folderKeys: [folderKey],
         executionType: AgentMemoryExecutionType.Runtime,
       });
 

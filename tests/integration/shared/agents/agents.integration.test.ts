@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
 import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { JobState } from '../../../../src/models/common/types';
@@ -14,12 +14,13 @@ import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: insightsrtm_ endpoints reject PAT tokens entirely (401 regardless of scopes) and require OAuth.
-// Skipped at the outer level so the live-auth setup (setupUnifiedTests + beforeAll) does not run.
-describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// insightsrtm_ rejects PAT tokens entirely (401 regardless of scopes), so this
+// suite authenticates with a user token and skips when one is not configured.
+describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let agents!: Agents;
+  let folderKey!: string;
 
   beforeAll(() => {
     const services = getServices();
@@ -27,6 +28,15 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       throw new Error('Agents service not initialized');
     }
     agents = services.agents;
+
+    const configuredFolderKey = getTestConfig().folderKey;
+    if (!configuredFolderKey) {
+      throw new Error(
+        'INTEGRATION_TEST_FOLDER_KEY is not configured. The folder filter tests need a ' +
+        'folder the caller can access — an inaccessible folder key returns 403.',
+      );
+    }
+    folderKey = configuredFolderKey;
   });
 
   describe('getAll', () => {
@@ -200,7 +210,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
     it('should scope to a single folder', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime, {
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
       });
 
       expect(Array.isArray(result)).toBe(true);
@@ -335,7 +345,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
     it('should scope to a single folder', async () => {
       const result = await agents.getIncidentDistribution(startTime, endTime, {
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
       });
 
       expect(result).toBeDefined();

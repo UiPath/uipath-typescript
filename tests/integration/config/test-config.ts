@@ -10,6 +10,14 @@ export interface IntegrationConfig {
   tenantName: string;
   tenantId?: string;
   secret: string;
+  /**
+   * User access token, minted by a browser login (Minter) rather than issued to
+   * an external application. Required by services that reject PAT and
+   * client-credentials tokens outright: everything under `insightsrtm_` (Agents,
+   * Agent Memory, Agent Traces, Governance) and the notification service.
+   * Unset by default — suites that need it skip rather than fail.
+   */
+  userToken?: string;
   timeout: number;
   skipCleanup: boolean;
   /**
@@ -119,6 +127,9 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     secret: rawConfig.secret as string,
+    userToken: typeof rawConfig.userToken === 'string' && rawConfig.userToken.length > 0
+      ? rawConfig.userToken
+      : undefined,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     schemaWriteScopeAvailable: rawConfig.schemaWriteScopeAvailable === true,
@@ -171,6 +182,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tenantName: process.env.UIPATH_TENANT_NAME,
     tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
     secret: process.env.UIPATH_SECRET,
+    userToken: process.env.UIPATH_USER_TOKEN || undefined,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
       : 30000,
@@ -206,6 +218,18 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
   cachedConfig = validateConfig(rawConfig);
   return cachedConfig;
+}
+
+/**
+ * Whether a user access token is configured.
+ *
+ * Reads the environment directly rather than going through
+ * {@link loadIntegrationConfig} so it can be evaluated at module scope by
+ * `describe.skipIf(...)` without throwing when the rest of the integration
+ * config is absent — a suite gated on this must skip, never fail to collect.
+ */
+export function hasUserToken(): boolean {
+  return Boolean(process.env.UIPATH_USER_TOKEN);
 }
 
 /**
