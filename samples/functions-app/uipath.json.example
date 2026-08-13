@@ -1,6 +1,6 @@
 {
   "clientId": "<your-oauth-external-app-client-id>",
-  "scope": "openid profile email offline_access OR.Default OR.Execution OR.Folders.Read",
+  "scope": "OR.Default OR.Execution OR.Folders.Read",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
   "baseUrl": "https://api.uipath.com",
