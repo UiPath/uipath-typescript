@@ -245,6 +245,16 @@
                 "types": "./dist/platform/index.d.ts",
                 "default": "./dist/platform/index.cjs"
             }
+        },
+        "./business-apps": {
+            "import": {
+                "types": "./dist/business-apps/index.d.ts",
+                "default": "./dist/business-apps/index.mjs"
+            },
+            "require": {
+                "types": "./dist/business-apps/index.d.ts",
+                "default": "./dist/business-apps/index.cjs"
+            }
         }
     },
     "files": [

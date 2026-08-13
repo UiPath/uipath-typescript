@@ -100,6 +100,7 @@ plugins:
           - api/interfaces/ProcessInstancesServiceModel.md: Process instance methods
           - api/interfaces/CasesServiceModel.md: Maestro Case methods
           - api/interfaces/CaseInstancesServiceModel.md: Maestro Case instance methods
+          - api/interfaces/BusinessAppsServiceModel.md: Maestro Business App methods
           - api/interfaces/ConversationalAgentServiceModel.md: Conversational Agent main service
           - api/interfaces/ConversationServiceModel.md: Conversation service methods
           - api/interfaces/ExchangeServiceModel.md: Exchange service methods
@@ -206,6 +207,7 @@ nav:
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
+            - Business Apps: api/interfaces/BusinessAppsServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
           - Platform: api/interfaces/PlatformServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md

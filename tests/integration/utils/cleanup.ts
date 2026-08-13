@@ -15,6 +15,7 @@ interface ResourceRegistry {
   feedbackEntries: Array<{ id: string; folderKey?: string }>;
   feedbackCategories: Array<{ id: string }>;
   bucketFiles: Array<{ bucketId: number; path: string; folderId?: number }>;
+  businessApps: Array<{ id: string }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -25,6 +26,7 @@ const resourceRegistry: ResourceRegistry = {
   feedbackEntries: [],
   feedbackCategories: [],
   bucketFiles: [],
+  businessApps: [],
 };
 
 /**

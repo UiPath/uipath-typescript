@@ -243,6 +243,11 @@ const serviceEntries = [
     name: 'platform',
     input: 'src/services/platform/index.ts',
     output: 'platform/index'
+  },
+  {
+    name: 'business-apps',
+    input: 'src/services/maestro/business-apps/index.ts',
+    output: 'business-apps/index'
   }
 ];
 

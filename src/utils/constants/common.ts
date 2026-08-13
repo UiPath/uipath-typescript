@@ -253,6 +253,20 @@ export const BUCKET_TOKEN_PARAMS = {
 };
 
 /**
+ * Business App pagination response shape constants.
+ *
+ * Request params reuse {@link PROCESS_INSTANCE_TOKEN_PARAMS} — the business-apps list
+ * takes the same `pageSize` + `nextPage` pair.
+ */
+export const BUSINESS_APP_PAGINATION = {
+  /** Field name for items in business app response */
+  ITEMS_FIELD: 'businessApps',
+
+  /** Field name for continuation token in business app response */
+  CONTINUATION_TOKEN_FIELD: 'nextPage'
+};
+
+/**
  * Process Instance TOKEN pagination parameter names
  */
 export const PROCESS_INSTANCE_TOKEN_PARAMS = {
