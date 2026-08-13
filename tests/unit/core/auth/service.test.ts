@@ -74,6 +74,13 @@ describe('AuthService', () => {
       expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`);
     });
 
+    it('should always request the openid scope automatically', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      const params = new URLSearchParams(url.split('?')[1]);
+      expect(params.get('scope')!.split(' ')).toContain('openid');
+    });
+
     it('should omit acr_values when multi-login is enabled', () => {
       const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
       service.setMultiLogin();

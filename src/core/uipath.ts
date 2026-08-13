@@ -286,18 +286,13 @@ export class UiPath implements IUiPath {
   }
 
   /**
-   * Logout from the SDK, clearing all authentication state.
-   * After calling this method, the user will need to re-initialize to authenticate again.
-   *
    * By default only local state is cleared — the UiPath session (Automation
    * Cloud or Automation Suite) stays active, so the next sign-in completes
-   * silently. Pass `endSession: true` to also sign the user out of UiPath session
-   * (browser-only; requires the `openid` scope): the browser is redirected
-   * and returns to the configured `redirectUri` (override with
-   * `postLogoutRedirectUri`). Already-issued access tokens remain valid
-   * until they expire. The redirect is asynchronous — the page keeps
-   * rendering until the browser navigates; handle that interim state to
-   * prevent your login screen appearing twice.
+   * silently. Pass `endSession: true` (browser-only) to also sign the user
+   * out of the UiPath session: the browser is redirected and returns to the
+   * configured `redirectUri`. The redirect is asynchronous — the page keeps rendering
+   * until the browser navigates; handle that interim state to prevent your
+   * login screen appearing twice.
    *
    * @param options - Logout behavior options
    *

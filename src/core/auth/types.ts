@@ -7,8 +7,8 @@ export interface TokenInfo {
   expiresAt?: Date;
   refreshToken?: string;
   /**
-   * OIDC ID token, present only when the `openid` scope was requested.
-   * Used as `id_token_hint` for RP-initiated logout.
+   * OIDC ID token, used as `id_token_hint` for RP-initiated logout. Absent
+   * for sessions signed in before the SDK auto-requested `openid`.
    */
   idToken?: string;
 }
@@ -19,18 +19,13 @@ export interface TokenInfo {
 export interface LogoutOptions {
   /**
    * When true, also signs the user out of the UiPath platform — Automation
-   * Cloud or Automation Suite — so the next sign-in prompts for credentials.
-   * Browser-only; requires the `openid` scope — without it only local state
-   * is cleared and a warning is logged. Defaults to false (local-only
-   * logout).
+   * Cloud or Automation Suite — so the next sign-in prompts for credentials;
+   * the browser returns to the configured `redirectUri` afterwards.
+   * Browser-only. The SDK requests the `openid` scope automatically; a
+   * session signed in without it falls back to local-only logout with a
+   * warning. Defaults to false (local-only logout).
    */
   endSession?: boolean;
-  /**
-   * URL the user returns to after the platform session ends. Defaults to
-   * the configured `redirectUri`. Must exactly match a redirect URI
-   * registered for the external app.
-   */
-  postLogoutRedirectUri?: string;
 }
 
 /**

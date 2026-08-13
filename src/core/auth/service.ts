@@ -253,24 +253,21 @@ export class AuthService {
   }
 
   /**
-   * Clears all authentication state including tokens and stored OAuth context.
-   * With `endSession: true`, additionally redirects the browser to the
-   * Identity end-session endpoint to terminate the UiPath platform session
-   * (Automation Cloud or Automation Suite). Requires the OIDC ID token
-   * (`openid` scope) — without one the session logout is skipped and a
-   * warning is logged.
+   * Clears all authentication state. With `endSession: true`, also redirects
+   * the browser to end the UiPath platform session (skipped with a warning
+   * when the session has no OIDC ID token).
    */
   public logout(options?: LogoutOptions): void {
     // Capture the ID token before clearToken() wipes it.
     const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
 
     // End-session is an unauthenticated Identity endpoint — id_token_hint is
-    // what proves the request, so without `openid` there is nothing to send.
+    // what proves the request, so without an ID token there is nothing to send.
     if (options?.endSession && isBrowser && !idTokenHint) {
       console.warn(
-        'End session skipped: no OIDC ID token is available, so only local ' +
-        "authentication state was cleared. Add the 'openid' scope to your " +
-        'SDK configuration to enable endSession.'
+        'endSession skipped — no OIDC ID token is available for this ' +
+        'session. Sign in again to enable it; only local authentication ' +
+        'state was cleared.'
       );
     }
 
@@ -291,8 +288,8 @@ export class AuthService {
       window.location.href = this._buildEndSessionUrl({
         idTokenHint,
         // The configured redirectUri is registered with Identity by
-        // definition, so it passes the exact-match validation — safe default.
-        postLogoutRedirectUri: options.postLogoutRedirectUri ?? this.config.redirectUri
+        // definition, so it passes the exact-match validation.
+        postLogoutRedirectUri: this.config.redirectUri
       });
     }
   }
@@ -375,7 +372,9 @@ export class AuthService {
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
-      scope: params.scope + ' offline_access',
+      // `offline_access` (refresh token) and `openid` (ID token for
+      // endSession) are required by the SDK itself.
+      scope: params.scope + ' offline_access openid',
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 

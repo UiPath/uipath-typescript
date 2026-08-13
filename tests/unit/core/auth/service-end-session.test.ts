@@ -25,8 +25,6 @@ describe('AuthService logout end-session (browser)', () => {
     scope: TEST_CONSTANTS.OAUTH_SCOPE
   };
 
-  const POST_LOGOUT_REDIRECT_URI = 'https://myapp.example.com/logged-out';
-
   let sessionStore: Record<string, string>;
   let windowStub: { location: { href: string }; document: object };
 
@@ -132,15 +130,6 @@ describe('AuthService logout end-session (browser)', () => {
     expect(params.get('post_logout_redirect_uri')).toBe(TEST_CONSTANTS.REDIRECT_URI);
   });
 
-  it('should use an explicit postLogoutRedirectUri over the configured redirectUri', () => {
-    const service = createServiceWithIdToken();
-
-    service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
-
-    const params = new URL(windowStub.location.href).searchParams;
-    expect(params.get('post_logout_redirect_uri')).toBe(POST_LOGOUT_REDIRECT_URI);
-  });
-
   it('should preserve the id_token across a storage save/load round-trip', () => {
     // OAuth tokens persist to sessionStorage; a page reload restores them via
     // loadFromStorage — the id_token must survive it for cloud logout to work.
@@ -179,14 +168,14 @@ describe('AuthService logout end-session (browser)', () => {
 
       service.logout({ endSession: true });
 
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('End session skipped'));
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("'openid'"));
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('endSession skipped'));
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Sign in again'));
     });
 
     it('should not warn when an id_token is available', () => {
       const service = createServiceWithIdToken();
 
-      service.logout({ endSession: true, postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI });
+      service.logout({ endSession: true });
 
       expect(warnSpy).not.toHaveBeenCalled();
     });

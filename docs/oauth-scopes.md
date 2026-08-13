@@ -7,7 +7,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Method | OAuth Scope |
 |--------|-------------|
 | `logout()` | None — clears local authentication state only (default behavior) |
-| `logout({ endSession: true })` | `openid` — without it the session logout is skipped (local state is still cleared) |
+| `logout({ endSession: true })` | `openid` — requested automatically by the SDK; no configuration needed |
 
 ## Assets
 
