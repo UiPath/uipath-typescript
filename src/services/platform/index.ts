@@ -4,6 +4,7 @@
  * Provides access to UiPath platform settings:
  * - `Platform` — bulk read and bulk create/update of a user's setting key/value pairs
  * - `Groups` — manage an organization's groups and their members
+ * - `Directory` — search principals and check group membership
  *
  * Every operation is user-scoped — see {@link PlatformSettingKey}.
  *
@@ -34,9 +35,12 @@
 
 export { PlatformService as Platform } from './platform';
 export { PlatformGroupService as Groups } from './groups';
+export { PlatformDirectoryService as Directory } from './directory';
 
 // Models (types, response shapes)
 export * from '../../models/platform/platform.types';
 export * from '../../models/platform/platform.models';
 export * from '../../models/platform/groups.types';
 export * from '../../models/platform/groups.models';
+export * from '../../models/platform/directory.types';
+export * from '../../models/platform/directory.models';
