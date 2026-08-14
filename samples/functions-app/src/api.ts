@@ -33,8 +33,8 @@ if (!Number.isFinite(FOLDER_ID) || FOLDER_ID <= 0) {
  * runtime not-found.
  */
 const FUNCTION_NAMES: typeof ContractFunctionNames = {
-  listProducts: 'promo-shop-fn_list-products',
-  quote: 'promo-shop-fn_quote',
+  listProducts: 'functions-app-fn_list-products',
+  quote: 'functions-app-fn_quote',
 };
 
 export interface Api {

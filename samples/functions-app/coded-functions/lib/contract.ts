@@ -77,11 +77,11 @@ export interface QuoteInput {
 
 /**
  * Deployed function names are package-prefixed by Orchestrator, so the `quote`
- * function inside the `promo-shop-fn` package registers as `promo-shop-fn_quote`.
+ * function inside the `functions-app-fn` package registers as `functions-app-fn_quote`.
  */
 export const FUNCTION_NAMES = {
-  listProducts: 'promo-shop-fn_list-products',
-  quote: 'promo-shop-fn_quote',
+  listProducts: 'functions-app-fn_list-products',
+  quote: 'functions-app-fn_quote',
 } as const;
 
 /**

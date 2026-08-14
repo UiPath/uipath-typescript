@@ -1,5 +1,5 @@
 {
-  "name": "promo-shop",
+  "name": "functions-app",
   "private": true,
   "version": "1.7.0",
   "description": "Sample app for the Functions service — promo codes validated against an Orchestrator Secret asset",
