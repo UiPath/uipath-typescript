@@ -268,7 +268,7 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 ## Write request body hygiene
 
-**Destructure `expand`, `select`, and folder fields out of write bodies** — options extending `BaseOptions` or `FolderScopedOptions` carry query/header-only fields; spreading `...options` into a create/update payload leaks them as body params. Pull them out first:
+**Destructure `expand`, `select`, and folder fields out of write bodies** — same principle as the header-destructuring rule for reads, applied to the write path: options extending `BaseOptions`/`FolderScopedOptions` carry query/header-only fields that leak into a create/update payload when spread with `...options`. Pull them out first:
 ```typescript
 const { expand, select, folderId, folderKey, folderPath, ...writeBody } = options ?? {};
 await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: folderKey }) });
@@ -276,7 +276,7 @@ await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: fo
 
 ## Read-modify-write for replace-style updates
 
-When a backend update does a full replace (not PATCH), read current state, merge the caller's options over it, then send the merged object — otherwise any field the caller omits is wiped. Read through an untracked helper (no `@track`) to avoid double telemetry, and add a **merge-preservation test** asserting omitted fields keep their prior values.
+When a backend update does a full replace (not PATCH), read current state, merge the caller's options over it, then send the merged object — otherwise any field the caller omits is wiped. Add a **merge-preservation test** asserting omitted fields keep their prior values.
 ```typescript
 const current = await this.fetchById(id);
 await this.put(ENDPOINTS.UPDATE(id), { ...current, ...options }, { headers });
