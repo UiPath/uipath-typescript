@@ -279,7 +279,8 @@ await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: fo
 When a backend update does a full replace (not PATCH), read current state, merge the caller's options over it, then send the merged object — otherwise any field the caller omits is wiped. Add a **merge-preservation test** asserting omitted fields keep their prior values.
 ```typescript
 const current = await this.fetchById(id);
-await this.put(ENDPOINTS.UPDATE(id), { ...current, ...options }, { headers });
+const { expand, select, folderId, folderKey, folderPath, ...writeOptions } = options ?? {};
+await this.put(ENDPOINTS.UPDATE(id), { ...current, ...writeOptions }, { headers });
 ```
 Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None` returned only on reads); remap them (typically → `null`) before sending.
 
