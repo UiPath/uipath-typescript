@@ -113,12 +113,11 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
 
-**User-defined nested payloads:** When a response contains a nested payload whose keys are user-defined (e.g., task custom data, entity record schema columns), do NOT pass the whole response through `pascalToCamelCaseKeys()`. Because `pascalToCamelCaseKeys()` always recurses, it will corrupt user-defined keys inside the nested payload. Instead, manually transform only the wrapper/envelope fields and pass the nested payload through verbatim (substitute `Data` with the actual API field name):
+**User-defined nested payloads:** If a response field is typed as an open map (`Record<string, unknown>` / `unknown`) or the contract calls it custom/schema data, split it out and pass it verbatim — `pascalToCamelCaseKeys()` recurses and would rewrite its keys. Transform only the named envelope fields (same principle as the Data Fabric exception above):
 ```typescript
-const { Data: data, ...envelope } = response.data;  // 'Data' is the API's nested payload field
-return { ...pascalToCamelCaseKeys(envelope), data };
+const { data: userPayload, ...envelope } = response.data;
+return { ...pascalToCamelCaseKeys(envelope), data: userPayload };
 ```
-If the endpoint already returns camelCase, do not apply `pascalToCamelCaseKeys()` at all.
 
 ## Endpoint constants
 
@@ -255,7 +254,7 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
-**`FolderScopedOptions` for folder-aware services** — when a service's options type needs to accept any folder identifier, use `FolderScopedOptions` from `src/models/common/types.ts` instead of declaring a custom folder field. `FolderScopedOptions` extends `BaseOptions` and bundles all three forms (`folderId: number`, `folderKey: string`, `folderPath: string`) in a single, consistent interface used across Orchestrator, Maestro, and Action Center. Extend it in the service's options type: `export interface MyGetAllOptions extends FolderScopedOptions { ... }`.
+**Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center.
 
 ## OperationResponse pattern
 
@@ -269,35 +268,20 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 ## Write request body hygiene
 
-**Strip `expand`, `select`, and header-only fields from write request bodies** — when a write method (create, update) accepts an options type that extends `BaseOptions` (which includes `expand` and `select`) or `FolderScopedOptions` (which adds `folderId`, `folderKey`, `folderPath`), those fields must be explicitly destructured out before building the request body. Failing to do so silently injects OData query params or folder identifiers into the write payload. Pattern:
+**Destructure `expand`, `select`, and folder fields out of write bodies** — options extending `BaseOptions` or `FolderScopedOptions` carry query/header-only fields; spreading `...options` into a create/update payload leaks them as body params. Pull them out first:
 ```typescript
 const { expand, select, folderId, folderKey, folderPath, ...writeBody } = options ?? {};
 await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: folderKey }) });
 ```
-Strip all fields that belong in headers or query params — not in the body — before forwarding the remainder as the request payload.
 
 ## Read-modify-write for replace-style updates
 
-When a backend update endpoint performs a full replace (not a PATCH), implement read-modify-write in the SDK — read the current entity state, merge the caller's options over it, then send the merged object. Failing to do so wipes any field the caller did not explicitly pass, even if they had no intent to change it.
-
-Pattern:
-```typescript
-const current = await this.fetchById(id);  // untracked helper, no @track
-const updated = { ...current, ...options };
-await this.put(ENDPOINTS.UPDATE(id), updated, { headers });
-```
-
-**NEVER** send a read-only sentinel enum value to a write endpoint — when the API returns a sentinel like `RetentionAction.None` on reads but forbids it on writes, remap it before forwarding. Pattern:
+When a backend update does a full replace (not PATCH), read current state, merge the caller's options over it, then send the merged object — otherwise any field the caller omits is wiped. Read through an untracked helper (no `@track`) to avoid double telemetry, and add a **merge-preservation test** asserting omitted fields keep their prior values.
 ```typescript
 const current = await this.fetchById(id);
-const updated = { ...current, ...options };
-// Remap read-only sentinel: API rejects RetentionAction.None on writes
-if (updated.retentionAction === RetentionAction.None) updated.retentionAction = null;
-await this.put(ENDPOINTS.UPDATE(id), updated, { headers });
+await this.put(ENDPOINTS.UPDATE(id), { ...current, ...options }, { headers });
 ```
-Add a unit test asserting the sentinel is absent from the write body when the current entity has it set.
-
-Add a **merge-preservation unit test** for every read-modify-write update method: verify that fields NOT included in the update options retain their values from the current entity state.
+Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None` returned only on reads); remap them (typically → `null`) before sending.
 
 ## Code hygiene
 
