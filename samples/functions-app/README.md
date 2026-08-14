@@ -29,14 +29,14 @@ await sdk.initialize();
 const functions = new Functions(sdk);
 
 const quote = await functions.invoke<QuoteInput, Quote>(
-  { name: 'promo-shop-fn_quote' },
+  { name: 'functions-app-fn_quote' },
   { items: [{ productId: 'p-1001', quantity: 2 }], promoCode: 'SPRING25' },
   { folderId },
 );
 ```
 
 A deployed function's registered name is **package-prefixed**: `quote` inside the
-`promo-shop-fn` package registers as `promo-shop-fn_quote`. Passing the bare name returns a
+`functions-app-fn` package registers as `functions-app-fn_quote`. Passing the bare name returns a
 not-found error listing what the folder actually exposes.
 
 `coded-functions/lib/contract.ts` is the single source of truth for every input and output type.
@@ -78,15 +78,11 @@ uip tools install @uipath/orchestrator-tool   # uip or ...
 uip login
 ```
 
-For a non-production environment, point the login at that authority:
-
-```bash
-uip login --authority https://alpha.uipath.com
-```
-
 ## 2. Collect the values you will need
 
 You need three things, and two of them are easy to confuse.
+
+`uip or` comes from `@uipath/orchestrator-tool`, installed in step 1.
 
 ```bash
 uip or folders list --output table
@@ -96,19 +92,14 @@ uip or folders list --output table
 |---|---|---|
 | folder **key** | a GUID, `717ede25-...` | `uip functions publish --feed-id`, `uip codedapp deploy --folder-key` |
 | folder **numeric id** | `1543099` | the app, via `VITE_UIPATH_FOLDER_ID` |
-| base URL | see below | `uipath.json` |
+| base URL | `https://api.uipath.com` | `uipath.json` |
 
 If `folders list` does not show the numeric id, read it from
 `GET {baseUrl}/{org}/{tenant}/orchestrator_/odata/Folders` and take the `Id` field.
 
-**The base URL must be the API subdomain, not the portal domain.** The portal domain sends no CORS
-headers and the browser will block every call.
-
-| environment | base URL |
-|---|---|
-| Production | `https://api.uipath.com` |
-| Alpha | `https://alpha.api.uipath.com` |
-| Staging | `https://staging.api.uipath.com` |
+**The base URL must be the API subdomain, not the portal domain.** `https://api.uipath.com`, not
+`https://cloud.uipath.com`. The portal domain sends no CORS headers and the browser will block
+every call.
 
 ## 3. Create your own Secret asset
 
@@ -147,8 +138,8 @@ uip functions pack
 uip functions publish --feed-id <folder-key>
 
 uip or processes create \
-  --name promo-shop-fn \
-  --package-key promo-shop-fn --package-version 1.2.0 \
+  --name functions-app-fn \
+  --package-key functions-app-fn --package-version 1.2.0 \
   --folder-key <folder-key> \
   --auto-create-triggers
 ```
@@ -163,7 +154,7 @@ Confirm the two triggers exist:
 uip or triggers list --folder-key <folder-key> --output table
 ```
 
-You should see `promo-shop-fn_list-products` and `promo-shop-fn_quote`.
+You should see `functions-app-fn_list-products` and `functions-app-fn_quote`.
 
 Schema bounds in `defineFunction` must be literal numbers, not identifiers, or the extractor
 silently drops the whole schema. To check after a pack:
@@ -178,7 +169,7 @@ A Coded App signs users in with a **non-confidential** (public) OAuth app, becau
 cannot keep a client secret.
 
 ```bash
-uip admin external-apps create "promo-shop" \
+uip admin external-apps create "functions-app" \
   --non-confidential \
   --redirect-uri "http://localhost:5173" \
   --user-scope "OR.Execution,OR.Folders.Read"
@@ -189,7 +180,7 @@ redirect URI:
 
 ```bash
 uip admin external-apps update <client-id> \
-  --redirect-uri "http://localhost:5173,https://<org>.uipath.host/promo-shop" \
+  --redirect-uri "http://localhost:5173,https://<org>.uipath.host/functions-app" \
   --user-scope "OR.Execution,OR.Folders.Read"
 ```
 
@@ -219,9 +210,9 @@ Open `http://localhost:5173`, sign in, add something to the basket, and try one 
 ```bash
 npm run build            # produces dist/
 
-uip codedapp pack dist -n promo-shop --version 1.0.0 --content-type webapp
-uip codedapp publish --name promo-shop --version 1.0.0 --type Web
-uip codedapp deploy  --name promo-shop --version 1.0.0 \
+uip codedapp pack dist -n functions-app --version 1.0.0 --content-type webapp
+uip codedapp publish --name functions-app --version 1.0.0 --type Web
+uip codedapp deploy  --name functions-app --version 1.0.0 \
   --folder-key <folder-key> \
   --client-id <your-oauth-client-id>
 ```
@@ -234,7 +225,7 @@ fails. Bump the version to re-publish, and keep `.uipath/` between publish and d
 Check every asset serves, since a deploy can succeed while a file fails to upload:
 
 ```bash
-BASE="https://<org>.uipath.host/promo-shop"
+BASE="https://<org>.uipath.host/functions-app"
 for a in $(curl -s "$BASE" | grep -oE '\./assets/[^"]+' | sed 's|^\./||'); do
   echo "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$a")  $a"
 done
@@ -245,7 +236,7 @@ Every line should read `200`.
 To exercise the functions directly, without the UI:
 
 ```bash
-TRIGGER="{baseUrl}/{org}/{tenant}/orchestrator_/t/<folder-key>/promo-shop-fn"
+TRIGGER="{baseUrl}/{org}/{tenant}/orchestrator_/t/<folder-key>/functions-app-fn"
 
 curl -s "$TRIGGER/products" -H "Authorization: Bearer <token>"
 
@@ -302,7 +293,7 @@ functions-app/
 ## Troubleshooting
 
 **`Function '<name>' not found in folder`.** The registered name is package-prefixed
-(`promo-shop-fn_quote`, not `quote`). The error lists what the folder actually exposes.
+(`functions-app-fn_quote`, not `quote`). The error lists what the folder actually exposes.
 
 **403 from the HTTP trigger.** `OR.Default` is missing from the scope string in `uipath.json`.
 
