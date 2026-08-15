@@ -131,7 +131,7 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
       // apps than one page holds can push a newly created one past the first page.
       let page = await businessApps.getAll({ pageSize: 100 });
       let found = page.items.some(app => app.id === created.id);
-      while (!found && page.hasNextPage) {
+      while (!found && page.hasNextPage && page.nextCursor) {
         page = await businessApps.getAll({ cursor: page.nextCursor });
         found = page.items.some(app => app.id === created.id);
       }
