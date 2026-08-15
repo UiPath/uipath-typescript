@@ -21,6 +21,13 @@ import type {
 export type BusinessAppGetResponse = RawBusinessAppGetResponse & BusinessAppMethods;
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Public surface of the Business Apps service. JSDoc on this interface drives
  * the generated API reference documentation.
  *
@@ -34,6 +41,12 @@ export type BusinessAppGetResponse = RawBusinessAppGetResponse & BusinessAppMeth
 export interface BusinessAppsServiceModel {
   /**
    * Creates a business app.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * The name must be unique within the tenant, compared case-insensitively — creating a
    * second app whose name differs only by case is rejected as a conflict. Returns the
@@ -79,6 +92,12 @@ export interface BusinessAppsServiceModel {
   /**
    * Gets the tenant's business apps, ordered by name.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * Apps are visible to anyone who can read them — there is no per-caller filtering. The
    * results are paged: calling without options returns the first page at the service's
    * default page size, so pass `pageSize` and follow `nextCursor` to walk a tenant that
@@ -115,6 +134,12 @@ export interface BusinessAppsServiceModel {
   /**
    * Gets a business app by id.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * Apps are addressable by id only — names are mutable, so resolve a name through
    * `getAll()` first if that is all you have.
    *
@@ -130,6 +155,12 @@ export interface BusinessAppsServiceModel {
 
   /**
    * Replaces a business app.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * This is a full replace, not a partial update: every editable field is overwritten, so
    * an omitted `icon` or `color` is cleared rather than left alone. The name must stay
@@ -176,6 +207,12 @@ export interface BusinessAppsServiceModel {
 
   /**
    * Deletes a business app.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Only the definition is removed — the processes it referenced are left untouched.
    *
