@@ -1,3 +1,9 @@
+**`Experimental`**
+
+Warning
+
+Preview: This service is experimental and may change or be removed in future releases.
+
 Public surface of the Business Apps service. JSDoc on this interface drives the generated API reference documentation.
 
 A business app is the tenant-level definition behind a workspace in Maestro — its name, description, icon, color, and the Orchestrator processes it surfaces. Definitions are scoped to the tenant, so no folder is involved.
@@ -10,7 +16,13 @@ Reads require the tenant-level `APPS.View` permission; `create` requires `APPS.C
 
 > **create**(`name`: `string`, `description`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppCreateOptions`): `Promise`\<`BusinessAppGetResponse`>
 
+**`Experimental`**
+
 Creates a business app.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
 
 The name must be unique within the tenant, compared case-insensitively — creating a second app whose name differs only by case is rejected as a conflict. Returns the stored app including its generated `id` and audit fields.
 
@@ -55,7 +67,13 @@ const app = await businessApps.create(
 
 > **deleteById**(`businessAppId`: `string`): `Promise`\<`void`>
 
+**`Experimental`**
+
 Deletes a business app.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
 
 Only the definition is removed — the processes it referenced are left untouched.
 
@@ -77,7 +95,13 @@ await businessApps.deleteById('<businessAppId>');
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BusinessAppGetResponse`> : `NonPaginatedResponse`\<`BusinessAppGetResponse`>>
 
+**`Experimental`**
+
 Gets the tenant's business apps, ordered by name.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
 
 Apps are visible to anyone who can read them — there is no per-caller filtering. The results are paged: calling without options returns the first page at the service's default page size, so pass `pageSize` and follow `nextCursor` to walk a tenant that has more apps than one page holds.
 
@@ -116,7 +140,13 @@ while (page.hasNextPage) {
 
 > **getById**(`businessAppId`: `string`): `Promise`\<`BusinessAppGetResponse`>
 
+**`Experimental`**
+
 Gets a business app by id.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
 
 Apps are addressable by id only — names are mutable, so resolve a name through `getAll()` first if that is all you have.
 
@@ -140,7 +170,13 @@ const app = await businessApps.getById('<businessAppId>');
 
 > **updateById**(`businessAppId`: `string`, `name`: `string`, `description`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppUpdateOptions`): `Promise`\<`BusinessAppGetResponse`>
 
+**`Experimental`**
+
 Replaces a business app.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
 
 This is a full replace, not a partial update: every editable field is overwritten, so an omitted `icon` or `color` is cleared rather than left alone. The name must stay unique within the tenant. Writes are last-write-wins — concurrent updates do not conflict, the later one simply survives.
 

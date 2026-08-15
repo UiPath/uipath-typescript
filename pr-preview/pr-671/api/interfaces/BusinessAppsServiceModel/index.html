@@ -2898,6 +2898,11 @@
 
   <h1>Business Apps</h1>
 
+<p><strong><code>Experimental</code></strong></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This service is experimental and may change or be removed in future releases.</p>
+</div>
 <p>Public surface of the Business Apps service. JSDoc on this interface drives
 the generated API reference documentation.</p>
 <p>A business app is the tenant-level definition behind a workspace in Maestro — its name,
@@ -2910,7 +2915,12 @@ and both <code>updateById</code> and <code>deleteById</code> require <code>APPS.
 <blockquote>
 <p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppCreateOptions/"><code>BusinessAppCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Creates a business app.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
 <p>The name must be unique within the tenant, compared case-insensitively — creating a
 second app whose name differs only by case is rejected as a conflict. Returns the
 stored app including its generated <code>id</code> and audit fields.</p>
@@ -2973,7 +2983,12 @@ stored app including its generated <code>id</code> and audit fields.</p>
 <blockquote>
 <p><strong>deleteById</strong>(<code>businessAppId</code>: <code>string</code>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Deletes a business app.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
 <p>Only the definition is removed — the processes it referenced are left untouched.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
@@ -3002,7 +3017,12 @@ stored app including its generated <code>id</code> and audit fields.</p>
 <blockquote>
 <p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Gets the tenant's business apps, ordered by name.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
 <p>Apps are visible to anyone who can read them — there is no per-caller filtering. The
 results are paged: calling without options returns the first page at the service's
 default page size, so pass <code>pageSize</code> and follow <code>nextCursor</code> to walk a tenant that
@@ -3059,7 +3079,12 @@ has more apps than one page holds.</p>
 <blockquote>
 <p><strong>getById</strong>(<code>businessAppId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Gets a business app by id.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
 <p>Apps are addressable by id only — names are mutable, so resolve a name through
 <code>getAll()</code> first if that is all you have.</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
@@ -3090,7 +3115,12 @@ has more apps than one page holds.</p>
 <blockquote>
 <p><strong>updateById</strong>(<code>businessAppId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
+<p><strong><code>Experimental</code></strong></p>
 <p>Replaces a business app.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: This method is experimental and may change or be removed in future releases.</p>
+</div>
 <p>This is a full replace, not a partial update: every editable field is overwritten, so
 an omitted <code>icon</code> or <code>color</code> is cleared rather than left alone. The name must stay
 unique within the tenant. Writes are last-write-wins — concurrent updates do not
