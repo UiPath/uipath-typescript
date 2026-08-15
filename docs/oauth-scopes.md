@@ -120,9 +120,6 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `updateById()` | `PIMS` |
 | `deleteById()` | `PIMS` |
 
-Reads additionally require the tenant-level `APPS.View` permission; `create()` requires
-`APPS.Create`, and `updateById()` / `deleteById()` require `APPS.Edit`.
-
 ## Maestro Cases
 
 | Method | OAuth Scope |
