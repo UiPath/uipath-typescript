@@ -254,14 +254,24 @@ function createBusinessAppMethods(
   service: BusinessAppsServiceModel
 ): BusinessAppMethods {
   return {
-    update: (
+    // `async` so a missing id rejects rather than throwing synchronously out of a
+    // method the interface types as returning a promise.
+    async update(
       name: string,
       description: string,
       processKeys: string[],
       options?: BusinessAppUpdateOptions
-    ) => service.updateById(data.id, name, description, processKeys, options),
+    ): Promise<BusinessAppGetResponse> {
+      if (!data.id) throw new Error('Business app ID is undefined');
 
-    delete: () => service.deleteById(data.id),
+      return service.updateById(data.id, name, description, processKeys, options);
+    },
+
+    async delete(): Promise<void> {
+      if (!data.id) throw new Error('Business app ID is undefined');
+
+      return service.deleteById(data.id);
+    },
   };
 }
 
