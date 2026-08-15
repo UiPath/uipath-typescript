@@ -318,6 +318,30 @@ describe('BusinessApps Service Unit Tests', () => {
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
+    it('should reject an empty name before calling the API', async () => {
+      await expect(
+        businessAppsService.updateById(
+          BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
+          '',
+          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
+          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should reject an empty description before calling the API', async () => {
+      await expect(
+        businessAppsService.updateById(
+          BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
+          BUSINESS_APP_TEST_CONSTANTS.NAME,
+          '',
+          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
     it('should reject an empty processKeys list before calling the API', async () => {
       await expect(
         businessAppsService.updateById(
