@@ -1,6 +1,12 @@
 /**
  * Business Apps Module
  *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This module is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Provides access to Maestro business app definitions:
  * - `BusinessApps` — create, read, update and delete the tenant's business apps
  *
