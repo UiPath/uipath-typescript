@@ -117,7 +117,7 @@ export interface BusinessAppsServiceModel {
    * let page = await businessApps.getAll({ pageSize: 50 });
    * const allApps = [...page.items];
    *
-   * while (page.hasNextPage) {
+   * while (page.hasNextPage && page.nextCursor) {
    *   page = await businessApps.getAll({ cursor: page.nextCursor });
    *   allApps.push(...page.items);
    * }
