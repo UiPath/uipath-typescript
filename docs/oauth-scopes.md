@@ -128,9 +128,6 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `updateById()` | `PIMS` |
 | `deleteById()` | `PIMS` |
 
-Reads additionally require the tenant-level `APPS.View` permission; `create()` requires
-`APPS.Create`, and `updateById()` / `deleteById()` require `APPS.Edit`.
-
 ## Maestro Cases
 
 | Method | OAuth Scope |
