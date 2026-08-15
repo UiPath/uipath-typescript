@@ -123,4 +123,26 @@ describe('Business App Model Unit Tests', () => {
       );
     });
   });
+
+  describe('missing id guard', () => {
+    // A malformed payload would otherwise reach the service and surface as a
+    // ValidationError naming businessAppId, hiding that the entity itself was bad.
+    it('should throw from update rather than delegating when the app has no id', async () => {
+      const idless = createBusinessAppWithMethods(createRawBusinessApp({ id: '' }), mockService);
+
+      await expect(
+        idless.update(BUSINESS_APP_TEST_CONSTANTS.NAME, BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION, [
+          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+        ])
+      ).rejects.toThrow(/Business app ID/);
+      expect(mockService.updateById).not.toHaveBeenCalled();
+    });
+
+    it('should throw from delete rather than delegating when the app has no id', async () => {
+      const idless = createBusinessAppWithMethods(createRawBusinessApp({ id: '' }), mockService);
+
+      await expect(idless.delete()).rejects.toThrow(/Business app ID/);
+      expect(mockService.deleteById).not.toHaveBeenCalled();
+    });
+  });
 });
