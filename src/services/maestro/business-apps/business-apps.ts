@@ -31,6 +31,17 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { BUSINESS_APP_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
 
+/**
+ * Tenant-scoped CRUD for Maestro business app definitions.
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
+ * Method documentation lives on {@link BusinessAppsServiceModel}, which this class implements.
+ */
 export class BusinessAppsService extends BaseService implements BusinessAppsServiceModel {
   @track('BusinessApps.Create')
   async create(
