@@ -72,7 +72,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getInstanceStatusTimeline', () => {
+  describe('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
       await testGetInstanceStatusTimeline(cases);
@@ -129,14 +129,14 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getTopRunCount', () => {
+  describe('getTopRunCount', () => {
     it('should retrieve top case processes by run count', async () => {
       const { cases } = getServices();
       await testGetTopRunCount(cases);
     });
   });
 
-  describe.skip('getTopFaultedCount', () => {
+  describe('getTopFaultedCount', () => {
     it('should retrieve top case processes by failure count', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -159,7 +159,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getTopElementFailedCount', () => {
+  describe('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count for cases', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -182,7 +182,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getTopExecutionDuration', () => {
+  describe('getTopExecutionDuration', () => {
     it('should retrieve top case processes by duration', async () => {
       const { cases } = getServices();
       const now = new Date();
