@@ -22,7 +22,7 @@
 - Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
 - Every public service method that makes an HTTP API call must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive. **Both segments must be PascalCase**: `@track('ConversationalAgent.DownloadCitationSource')`, not `@track('ConversationalAgent.downloadCitationSource')`. Using camelCase for the method name breaks dashboard queries that pattern-match on `ServiceName.*`. **Exception**: methods that are event handlers, window/DOM interactions, or UI-only operations (no HTTP calls) must NOT be tracked — tracking non-API methods causes excessive log ingestion with no diagnostic value. **Delegation anti-pattern**: when a public service method delegates to another service's public `@track`-decorated method, both `@track` decorators fire, causing double telemetry. Fix: extract the shared logic into an internal helper function (no `@track`) and have both public service methods call the helper directly.
-- **Service methods that bypass `ApiClient.request()` and use raw `fetch()` must manually add distributed-tracing headers** — `ApiClient` normally injects `traceparent` and `x-uipath-traceparent-id` on every request; raw `fetch()` callers are invisible to the platform's tracing infrastructure without them. Pattern: generate trace IDs with `crypto.randomUUID()` and set both `TRACEPARENT` and `UIPATH_TRACEPARENT_ID` headers (constants already exported from `src/utils/constants/headers.ts`).
+- **Service methods that bypass `ApiClient.request()` and use raw `fetch()` must manually add distributed-tracing headers** — `ApiClient` normally injects `traceparent` and `x-uipath-traceparent-id` on every request; raw `fetch()` callers are invisible to the platform's tracing infrastructure without them. Pattern: generate trace IDs with `crypto.randomUUID()` and set both `TRACEPARENT` and `UIPATH_TRACEPARENT_ID` headers (constants already exported from `src/utils/constants/headers.ts`). **Exception: do NOT add tracing headers to `fetch()` calls targeting third-party services** (e.g., Azure Blob Storage via SAS URLs) — third-party services never forward these headers to UiPath's tracing infrastructure, and doing so leaks internal correlation IDs to an external party. This convention applies only to UiPath service endpoints.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type *` silently drops runtime values (classes, enums), causing `undefined` errors for SDK consumers. Note: individual `export type { Name }` for specific type-only re-exports is fine — the prohibition is on the wildcard form.
 - When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily. **Use `Promise.allSettled` instead of `Promise.all` when calls are best-effort and partial success is acceptable** — `Promise.all` rejects if any call fails, which is too strict when one result can be returned in a degraded state while the other still provides value (e.g., returning variables without BPMN enrichment when the BPMN fetch fails).
@@ -46,7 +46,7 @@
   - **The same ≤3 / 4+ rule applies to bound entity methods independently.** Bound methods often have fewer required params than their service-level counterparts because the entity auto-fills some fields (e.g., `processKey`, `packageId`). Count what's left after the entity-supplied fields. E.g., service-level `getElementStats` has 5 required → uses `ProcessStatsRequest`. Bound `process.getElementStats(packageVersion, startTime, endTime)` has 3 required → stays positional. The factory delegate constructs the `Request` from the positional args plus the entity's fields before calling the service.
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
 - **Use `Omit` only when a field must not appear in a type at all.** When a field has a server-side default and is simply not required by callers, mark it `?` optional instead. Using `Omit` implies the field would cause an error if included — it misleads callers into thinking they cannot pass the field. Example: if `assignmentCriteria` defaults to `SingleUser` on the server, the options type should declare it as `assignmentCriteria?: TaskAssignmentCriteria`, not `Omit<BaseOptions, 'assignmentCriteria'>`.
-- **Always use `type` for response types** (intersections, unions, composed types). The only place `interface extends` is required is single-type aliases (`type X = Y`), which break TypeDoc — use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
+- **Always use `type` for response types** (intersections, unions, composed types). The `interface extends` form is required in two cases that break TypeDoc: (a) single-type aliases (`type X = Y`), and (b) `Omit<>` derived types — `type X = Omit<Y, 'field'>` renders as an unexpanded alias in TypeDoc with no property table, while `interface X extends Omit<Y, 'field'> {}` renders the full property table. Use `interface extends Omit<>` for any public response type derived by excluding fields. Example: `export interface AttachmentCreateResponse extends Omit<AttachmentResponse, 'blobFileAccess'> {}`.
 
 **ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
 
@@ -105,6 +105,10 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Timestamp field naming**: All timestamp fields exposed in SDK response types must use the `*Time` suffix (e.g., `endedTime`, `createdTime`). **NEVER** introduce `*At` suffixes (e.g., `endedAt`) — this breaks consistency with every other timestamp across the SDK and makes the API surface feel unpolished.
 
+**`transformData` handles arrays natively** — `transformData(data, EntityMap)` accepts `T | T[]` and maps element-wise automatically. **NEVER** create a custom helper that wraps it with `.map()` — pass the array directly to `transformData`.
+
+**Write input types must use SDK field names, not wire field names** — when the SDK transforms a response field (e.g., `IsUserOptin` → `isUserOptin`), the corresponding write/update input type must expose the SDK name (`isUserOptin`), not the raw wire name. The service maps the SDK name back to the wire name internally (same pattern as `transformRequest`). This ensures callers can round-trip values without observing casing discrepancies between reads and writes.
+
 **Outbound requests** (SDK → API): use `transformRequest(data, {Entity}Map)` (auto-reverses field map) and `camelToPascalCaseKeys()`.
 
 **Multi-domain responses:** When a `getById` response includes fields from multiple entity domains (e.g., an attachment response that also contains bucket fields), merge multiple field maps in step 2: `transformData(data, { ...PrimaryEntityMap, ...SecondaryEntityMap })`. Using only the primary entity's map silently skips rename entries from the secondary domain.
@@ -112,6 +116,12 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 **Field maps vs case conversion:** `{Entity}Map` is for semantic renames only. Case conversion is handled by `pascalToCamelCaseKeys()`. **NEVER** add case-only entries to a field map — mixing them causes double-conversion bugs.
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
+
+**User-defined nested payloads:** If a response field is typed as an open map (`Record<string, unknown>` / `unknown`) or the contract calls it custom/schema data, split it out and pass it verbatim — `pascalToCamelCaseKeys()` recurses and would rewrite its keys. Transform only the named envelope fields (same principle as the Data Fabric exception above):
+```typescript
+const { data: userPayload, ...envelope } = response.data;
+return { ...pascalToCamelCaseKeys(envelope), data: userPayload };
+```
 
 ## Endpoint constants
 
@@ -230,7 +240,7 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 
 ## Error types
 
-- **`ValidationError`** — for **user input validation only**: missing required params, invalid option values, malformed user-provided data. Example: `if (!jobKey) throw new ValidationError(...)`. **NEVER** use for server-side issues like failed JSON parsing — use `ServerError` instead. Misusing it misrepresents the error source.
+- **`ValidationError`** — for **user input validation only**: missing required params, invalid option values, malformed user-provided data. Example: `if (!jobKey) throw new ValidationError(...)`. **NEVER** use for server-side issues like failed JSON parsing — use `ServerError` instead. Misusing it misrepresents the error source. **When validating optional string parameters, distinguish "omitted" from "explicitly empty"** — `if (options?.param)` silently drops empty strings, which are then forwarded to the API as if the param were absent, producing a confusing 403. Use `if (options?.param !== undefined && !options.param) throw new ValidationError(...)` so empty strings are rejected at the call site while a truly absent option (`undefined`) is allowed.
 - **`ServerError`** — for server-side issues: failed JSON parsing of API responses, unexpected response formats, API returning unparseable data. Example: `catch { throw new ServerError({ message: 'Failed to parse output as JSON' }) }`. When constructing a `ServerError` for an unexpected HTTP response (e.g., non-JSON body), always pass `statusCode: response.status` — without it, `error.statusCode` defaults to `500` even when the server returned `200`, misleading callers who inspect the status code programmatically.
 - **`ErrorFactory.createFromHttpStatus()`** — for HTTP error responses from external calls (blob downloads, etc.). Maps status codes to typed errors automatically.
 - **NEVER** add unnecessary type casts on already-typed values — if `blobAccess.headers` is already `Record<string, string>`, use a simple spread `{ ...blobAccess.headers }` instead of `arrayDictionaryToRecord()` with `as unknown as` casts.
@@ -248,6 +258,8 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
+**Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center.
+
 ## OperationResponse pattern
 
 ```typescript
@@ -257,6 +269,24 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 **Use for:** Lifecycle operations (cancel, pause, resume), bulk operations with error checking via `processODataArrayResponse()`.
 
 **DO NOT use for:** `getAll()`, `getById()`, `create()`, methods returning entity data directly.
+
+## Write request body hygiene
+
+**Destructure `expand`, `select`, and folder fields out of write bodies** — same principle as the header-destructuring rule for reads, applied to the write path: options extending `BaseOptions`/`FolderScopedOptions` carry query/header-only fields that leak into a create/update payload when spread with `...options`. Pull them out first:
+```typescript
+const { expand, select, folderId, folderKey, folderPath, ...writeBody } = options ?? {};
+await this.post(endpoint, writeBody, { headers: createHeaders({ [FOLDER_KEY]: folderKey }) });
+```
+
+## Read-modify-write for replace-style updates
+
+When a backend update does a full replace (not PATCH), read current state, merge the caller's options over it, then send the merged object — otherwise any field the caller omits is wiped. Add a **merge-preservation test** asserting omitted fields keep their prior values.
+```typescript
+const current = await this.fetchById(id);
+const { expand, select, folderId, folderKey, folderPath, ...writeOptions } = options ?? {};
+await this.put(ENDPOINTS.UPDATE(id), { ...current, ...writeOptions }, { headers });
+```
+Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None` returned only on reads); remap them (typically → `null`) before sending.
 
 ## Code hygiene
 
