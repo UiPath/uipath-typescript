@@ -12,7 +12,7 @@ Build a UiPath coded web app in Replit and deploy it to UiPath using `@uipath/ui
 The full build, start to finish — prompt to a live app on a UiPath tenant.
 
 <div class="yt-embed">
-  <iframe src="https://www.youtube-nocookie.com/embed/hqdR4Pur2F8"
+  <iframe src="https://www.youtube-nocookie.com/embed/hqdR4Pur2F8?rel=0"
           title="Building and deploying a UiPath coded app with Replit"
           loading="lazy" allowfullscreen
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>

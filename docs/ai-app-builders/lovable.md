@@ -12,7 +12,7 @@ Build a UiPath coded web app in Lovable and deploy it to UiPath using `@uipath/u
 The full build, start to finish — prompt to a live app on a UiPath tenant.
 
 <div class="yt-embed">
-  <iframe src="https://www.youtube-nocookie.com/embed/nqDI5v1z3hs"
+  <iframe src="https://www.youtube-nocookie.com/embed/nqDI5v1z3hs?rel=0"
           title="Building and deploying a UiPath coded app with Lovable"
           loading="lazy" allowfullscreen
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
