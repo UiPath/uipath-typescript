@@ -3,12 +3,13 @@ import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
+import { validateConfig, normalizeBaseUrl, isCompleteConfig, normalizeConfigAliases, compactConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
+import { loadFromEnvironment } from './config/environment';
 import type { IUiPath } from './types';
-import { isInActionCenter } from '../utils/platform';
+import { isInActionCenter, isBrowser } from '../utils/platform';
 import { trustedEmbeddingOrigin } from './auth/host-token-request';
 
 /**
@@ -70,8 +71,9 @@ export class UiPath implements IUiPath {
     this.#metaOrgId = configFromMetaTags?.orgName;
     this.#metaTenantId = configFromMetaTags?.tenantName;
 
-    // Merge configuration: constructor config overrides meta tags
-    const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
+    // Merge configuration: constructor config overrides meta tags, which
+    // override the ambient execution-context environment contract.
+    const mergedConfig = UiPath.#mergeConfigSources(configFromMetaTags, config);
 
     if (mergedConfig && isCompleteConfig(mergedConfig)) {
       this.#initializeWithConfig(mergedConfig);
@@ -144,6 +146,38 @@ export class UiPath implements IUiPath {
     }
   }
 
+  /**
+   * Merge every configuration source in precedence order: constructor config,
+   * then meta tags, then the environment contract.
+   *
+   * Each layer is normalized and compacted before merging so that an alias
+   * (`orgId`/`tenantId`/`accessToken`) supplied by a higher-precedence layer
+   * still beats the canonical field from a lower one, and so a sparse layer
+   * never blanks out values from the layer beneath it.
+   */
+  static #mergeConfigSources(
+    metaConfig?: PartialUiPathConfig | null,
+    config?: PartialUiPathConfig | null,
+  ): PartialUiPathConfig | undefined {
+    const layers = [loadFromEnvironment(), metaConfig, config]
+      .filter((layer): layer is PartialUiPathConfig => Boolean(layer))
+      .map((layer) => compactConfig(normalizeConfigAliases(layer)));
+
+    return layers.length > 0 ? Object.assign({}, ...layers) : undefined;
+  }
+
+  /** Configuration-not-found guidance, matched to where the SDK is running. */
+  static #missingConfigMessage(): string {
+    if (isBrowser) {
+      return 'UiPath SDK configuration not found. ' +
+        'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.';
+    }
+
+    return 'UiPath SDK configuration not found. ' +
+      'Set the execution-context environment variables (UIPATH_URL, UIPATH_ORGANIZATION_ID, UIPATH_TENANT_ID, UIPATH_ACCESS_TOKEN), ' +
+      'or pass { baseUrl, orgId, tenantId, accessToken } to the UiPath constructor.';
+  }
+
   #loadConfig(): UiPathSDKConfig {
     // Load from meta tags
     const metaConfig = loadFromMetaTags();
@@ -151,14 +185,12 @@ export class UiPath implements IUiPath {
     this.#metaOrgId = metaConfig?.orgName;
     this.#metaTenantId = metaConfig?.tenantName;
 
-    // Merge with any partial config from constructor (constructor overrides meta tags)
-    const merged = { ...metaConfig, ...this.#partialConfig };
+    // Merge with any partial config from constructor (constructor overrides
+    // meta tags, which override the environment contract)
+    const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
-    if (!isCompleteConfig(merged)) {
-      throw new Error(
-        'UiPath SDK configuration not found. ' +
-        'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.'
-      );
+    if (!merged || !isCompleteConfig(merged)) {
+      throw new Error(UiPath.#missingConfigMessage());
     }
 
     return merged;

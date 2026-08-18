@@ -18,9 +18,19 @@ export type UiPathSDKConfig = BaseConfig & (
   | ({ secret?: never } & OAuthFields)
 );
 
+// Identifier/token aliases accepted by the constructor.
+// `orgId`/`tenantId` address org and tenant by id rather than logical name;
+// `accessToken` supplies an already-issued bearer token. Each is normalized
+// onto its canonical field (orgName/tenantName/secret) before validation.
+export interface ConfigAliases {
+  orgId: string;
+  tenantId: string;
+  accessToken: string;
+}
+
 // Flexible partial type for constructor input (allows any combination of fields)
 // The isCompleteConfig function validates the final merged config
-export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string }>;
+export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & ConfigAliases>;
 
 // Type guard to check if config has OAuth credentials
 export function hasOAuthConfig(config: { clientId?: string; redirectUri?: string; scope?: string }): config is { clientId: string; redirectUri: string; scope: string } {
