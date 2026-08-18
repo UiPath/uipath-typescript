@@ -2231,8 +2231,10 @@
 
   <h1>QueueGetResponse</h1>
 
-<p>A queue definition (data fields only). <code>getAll</code>/<code>getById</code> return it with
-operational methods attached — see <code>QueueGetWithMethodsResponse</code>.</p>
+<p>A queue definition (data fields only) — the shape returned by <code>getAll</code> and
+<code>getById</code>. The method-attached counterpart returned by <code>getAllWithMethods</code>,
+<code>getByIdWithMethods</code>, <code>getByName</code>, and <code>getByKey</code> is
+<code>QueueGetWithMethodsResponse</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
