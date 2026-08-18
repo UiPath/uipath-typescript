@@ -253,17 +253,23 @@ docker run --rm -v "$PWD/out:/out" pltnonprodacr.azurecr.io/uipath-minter:latest
 
 Copy the `accessToken` field from `out/tokens.json` into `UIPATH_USER_TOKEN`.
 
-In CI this is automated: `coverage.yml` authenticates to Azure via OIDC, pulls the
-Minter image, and appends the minted token to `tests/.env.integration` before the
-integration run. The step is gated on `MINTER_ENABLED` and marked
+In CI this is automated: `coverage.yml` logs in to the registry with a scoped pull
+token, pulls the Minter image, and appends the minted token to
+`tests/.env.integration` before the integration run. The step is gated on `MINTER_ENABLED` and marked
 `continue-on-error`, so a Minter outage, a fork PR, or absent secrets all degrade to
 "user-token suites skip" rather than a failed build. It requires these repository
 secrets:
 
 | Secret | Purpose |
 |--------|---------|
-| `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | OIDC federated identity holding `AcrPull` on `pltnonprodacr` |
+| `ACR_USERNAME`, `ACR_PASSWORD` | ACR scoped token with pull-only access to the `uipath-minter` repository on `pltnonprodacr` |
 | `MINTER_USERNAME`, `MINTER_PASSWORD` | The test account Minter signs in as — must use email/password auth, not SSO |
+
+The registry credential is a scoped token rather than a federated Azure identity
+because granting `AcrPull` requires role-assignment rights on `pltnonprodacr`, which
+lives in a subscription where the SDK team only has Contributor. Federation is the
+better long-term shape — no stored password to rotate — and the swap is a small one
+once that role assignment can be made.
 
 Two caveats. The account must sign in with an email and password — federated (SSO)
 and Google accounts cannot be driven by Minter. And the token is short-lived: the
