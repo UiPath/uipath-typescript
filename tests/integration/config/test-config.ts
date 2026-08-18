@@ -68,6 +68,11 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   casTestAgentId?: string;
   casTestFolderId?: string;
+  /**
+   * Trace GUID used by the Agent Traces span tests. The trace must exist in the
+   * test tenant and have at least one span; suites guard on it and throw when unset.
+   */
+  tracesTestTraceId?: string;
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
@@ -155,6 +160,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     casTestAgentId: typeof rawConfig.casTestAgentId === 'string' ? rawConfig.casTestAgentId : undefined,
     casTestFolderId: typeof rawConfig.casTestFolderId === 'string' ? rawConfig.casTestFolderId : undefined,
+    tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
     organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
@@ -210,6 +216,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     casTestAgentId: process.env.CAS_TEST_AGENT_ID || undefined,
     casTestFolderId: process.env.CAS_TEST_FOLDER_ID || undefined,
+    tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
     organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,

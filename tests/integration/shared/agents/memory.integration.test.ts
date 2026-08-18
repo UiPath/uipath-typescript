@@ -3,13 +3,11 @@ import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode }
 import { AgentMemory } from '../../../../src/services/agents/memory';
 import { AgentMemoryExecutionType } from '../../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../../../utils/constants';
+import { recentWindow } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-const WINDOW = {
-  startTime: new Date(MEMORY_TEST_CONSTANTS.START_TIME),
-  endTime: new Date(MEMORY_TEST_CONSTANTS.END_TIME),
-};
+const WINDOW = recentWindow();
 
 // The filter tests exercise the filter body-building path against the live API.
 // An unmatched AGENT_ID simply narrows the result to empty/zero buckets (still

@@ -4,6 +4,30 @@ import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStat
 import type { IncidentTimelineResponse, InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
+ * Default lookback for Insights-style suites that aggregate over a time range.
+ *
+ * A year is wide enough to include data seeded long ago while still bounding the
+ * query. Narrower windows have found nothing in the dev tenant.
+ */
+export const INTEGRATION_LOOKBACK_DAYS = 365;
+
+/**
+ * Builds a time range ending now, for suites that query aggregated activity.
+ *
+ * Fixed date literals go stale silently: the window drifts into the past, every
+ * newly created fixture falls outside it, and the suite fails with a message
+ * about missing data rather than an expired window. Anchoring the end to "now"
+ * keeps the range meaningful without anyone maintaining it.
+ *
+ * @param days - Lookback in days. Defaults to {@link INTEGRATION_LOOKBACK_DAYS}.
+ * @returns Start and end of the window
+ */
+export function recentWindow(days: number = INTEGRATION_LOOKBACK_DAYS): { startTime: Date; endTime: Date } {
+  const endTime = new Date();
+  return { startTime: new Date(endTime.getTime() - days * 24 * 60 * 60 * 1000), endTime };
+}
+
+/**
  * Generates a unique test resource name with timestamp and random ID.
  *
  * @param serviceName - The name of the service (e.g., 'Queue', 'Asset', 'Bucket')
