@@ -18,7 +18,7 @@ The full build, start to finish — prompt to a live app on a UiPath tenant.
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
 </div>
 
-The other builders are in the [demo gallery](videos.md).
+The other builders are in the [walkthrough gallery](videos.md).
 
 ---
 

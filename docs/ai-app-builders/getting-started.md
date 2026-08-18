@@ -35,7 +35,7 @@ See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the f
 
 ## Choose your builder
 
-Each one has a full walkthrough in the [demo gallery](videos.md).
+Each one has a full video walkthrough in the [walkthrough gallery](videos.md).
 
 | Builder | Load the skill | Deploy secret | Deploy runs in |
 |---------|----------------|---------------|----------------|
