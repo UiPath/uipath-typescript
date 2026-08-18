@@ -3,6 +3,10 @@ import {
   QueueGetResponse,
   QueueGetAllOptions,
   QueueGetByIdOptions,
+  QueueGetAllWithMethodsOptions,
+  QueueGetByIdWithMethodsOptions,
+  QueueGetByNameOptions,
+  QueueGetByKeyOptions,
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
   QueueItem,
@@ -21,9 +25,11 @@ import {
   transformData,
   transformOptions
 } from '../../../utils/transform';
-import { ValidationError } from '../../../core/errors';
+import { NotFoundError, ValidationError } from '../../../core/errors';
+import { CollectionResponse } from '../../../models/common/types';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
+import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { QUEUE_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -31,6 +37,8 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { QueueMap, QueueItemMap, QueueItemProcessingErrorMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
+
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Transforms a raw API queue item into the SDK shape. `SpecificContent` and
@@ -69,13 +77,12 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetWithMethodsResponse>
-      : NonPaginatedResponse<QueueGetWithMethodsResponse>
+      ? PaginatedResponse<QueueGetResponse>
+      : NonPaginatedResponse<QueueGetResponse>
   > {
-    const transformQueueResponse = (queue: Record<string, unknown>) => {
-      const rawQueue = transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
-      return createQueueWithMethods(rawQueue, this);
-    };
+    // Transformation function for queues
+    const transformQueueResponse = (queue: any) =>
+      transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
     // Rewrite renamed SDK field names → API names inside OData strings
     // before delegating, mirroring the transformRequest pattern used for
@@ -92,6 +99,62 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+        }
+      }
+    }, apiOptions) as any;
+  }
+
+  @track('Queues.GetById')
+  async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const apiFieldOptions = transformOptions(options, QueueMap);
+    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
+    
+    const response = await this.get<QueueGetResponse>(
+      QUEUE_ENDPOINTS.GET_BY_ID(id),
+      { 
+        headers,
+        params: apiOptions
+      }
+    );
+
+    return transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
+  }
+
+  @track('Queues.GetAllWithMethods')
+  async getAllWithMethods<T extends QueueGetAllWithMethodsOptions = QueueGetAllWithMethodsOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueGetWithMethodsResponse>
+      : NonPaginatedResponse<QueueGetWithMethodsResponse>
+  > {
+    const { folderId, folderKey, folderPath, ...queryOptions } = options ?? {};
+    const hasFolderScope = folderId !== undefined || !!folderKey?.trim() || !!folderPath?.trim();
+    const headers = hasFolderScope
+      ? resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Queues.getAllWithMethods' })
+      : undefined;
+    const apiOptions = transformOptions(queryOptions, QueueMap);
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => hasFolderScope ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
+      headers,
+      transformFn: (queue: Record<string, unknown>) =>
+        createQueueWithMethods(
+          transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap),
+          this
+        ),
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
           pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
           offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
@@ -100,11 +163,19 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     }, apiOptions) as any;
   }
 
-  @track('Queues.GetById')
-  async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetWithMethodsResponse> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
+  @track('Queues.GetByIdWithMethods')
+  async getByIdWithMethods(id: number, options: QueueGetByIdWithMethodsOptions = {}): Promise<QueueGetWithMethodsResponse> {
+    const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
-    const apiFieldOptions = transformOptions(options, QueueMap);
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Queues.getByIdWithMethods',
+      fallbackFolderKey: this.config.folderKey
+    });
+
+    const apiFieldOptions = transformOptions(queryOptions, QueueMap);
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.get<QueueGetResponse>(
@@ -119,10 +190,63 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     return createQueueWithMethods(rawQueue, this);
   }
 
+  @track('Queues.GetByName')
+  async getByName(name: string, options: QueueGetByNameOptions = {}): Promise<QueueGetWithMethodsResponse> {
+    return this.getByNameLookup<Record<string, unknown>, QueueGetWithMethodsResponse>(
+      'Queue',
+      QUEUE_ENDPOINTS.GET_BY_FOLDER,
+      name,
+      options,
+      (raw) => createQueueWithMethods(
+        transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
+        this
+      ),
+      QueueMap,
+    );
+  }
+
+  @track('Queues.GetByKey')
+  async getByKey(key: string, options: QueueGetByKeyOptions = {}): Promise<QueueGetWithMethodsResponse> {
+    const trimmedKey = key?.trim();
+    if (!trimmedKey || !GUID_REGEX.test(trimmedKey)) {
+      throw new ValidationError({ message: 'key must be a GUID for getByKey' });
+    }
+
+    const { folderId, folderKey, folderPath, ...queryOptions } = options;
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Queues.getByKey',
+      fallbackFolderKey: this.config.folderKey
+    });
+
+    const apiFieldOptions = transformOptions(queryOptions, QueueMap);
+    const apiOptions = {
+      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
+      '$filter': `Key eq ${trimmedKey}`,
+      '$top': '1'
+    };
+
+    const response = await this.get<CollectionResponse<Record<string, unknown>>>(
+      QUEUE_ENDPOINTS.GET_BY_FOLDER,
+      { headers, params: apiOptions }
+    );
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      throw new NotFoundError({ message: `Queue with key '${trimmedKey}' not found.` });
+    }
+
+    return createQueueWithMethods(
+      transformData(pascalToCamelCaseKeys(items[0]) as QueueGetResponse, QueueMap),
+      this
+    );
+  }
+
   @track('Queues.GetAllItems')
   async getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueId: number,
-    folderId: number,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -132,23 +256,30 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     if (!queueId) {
       throw new ValidationError({ message: 'queueId is required for getAllItems' });
     }
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for getAllItems' });
-    }
+
+    const { folderId, folderKey, folderPath, filter, ...restOptions } = options ?? {};
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Queues.getAllItems',
+      fallbackFolderKey: this.config.folderKey
+    });
 
     // Scope the listing to the queue; a caller-provided filter is merged in.
-    const filter = options?.filter
-      ? `(${options.filter}) and queueId eq ${queueId}`
+    const mergedFilter = filter
+      ? `(${filter}) and queueId eq ${queueId}`
       : `queueId eq ${queueId}`;
 
     // Rewrite renamed SDK field names → API names inside OData strings
     // (e.g. queueId → queueDefinitionId, createdTime → creationTime).
-    const apiOptions = transformOptions({ ...options, filter }, QueueItemMap);
+    const apiOptions = transformOptions({ ...restOptions, filter: mergedFilter }, QueueItemMap);
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => QUEUE_ENDPOINTS.GET_ITEMS,
       getByFolderEndpoint: QUEUE_ENDPOINTS.GET_ITEMS,
+      headers,
       transformFn: transformQueueItem,
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -160,22 +291,26 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, { ...apiOptions, folderId }) as any;
+    }, apiOptions) as any;
   }
 
   @track('Queues.InsertItemByName')
   async insertItemByName(
     queueName: string,
-    folderId: number,
     specificData: Record<string, QueueItemValue>,
     options: QueueInsertItemOptions = {}
   ): Promise<QueueItem> {
     if (!queueName) {
       throw new ValidationError({ message: 'queueName is required for insertItemByName' });
     }
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for insertItemByName' });
-    }
+
+    const headers = resolveFolderHeaders({
+      folderId: options.folderId,
+      folderKey: options.folderKey,
+      folderPath: options.folderPath,
+      resourceType: 'Queues.insertItemByName',
+      fallbackFolderKey: this.config.folderKey
+    });
 
     const response = await this.post<Record<string, unknown>>(
       QUEUE_ENDPOINTS.ADD_ITEM,
@@ -192,9 +327,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
           SpecificContent: specificData
         }
       },
-      {
-        headers: createHeaders({ [FOLDER_ID]: folderId })
-      }
+      { headers }
     );
 
     return transformQueueItem(response.data);

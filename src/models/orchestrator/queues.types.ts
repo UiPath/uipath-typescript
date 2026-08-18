@@ -1,9 +1,11 @@
-import { BaseOptions, RequestOptions } from '../common/types';
+import { BaseOptions, FolderScopedOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
- * A queue definition (data fields only). `getAll`/`getById` return it with
- * operational methods attached — see `QueueGetWithMethodsResponse`.
+ * A queue definition (data fields only) — the shape returned by `getAll` and
+ * `getById`. The method-attached counterpart returned by `getAllWithMethods`,
+ * `getByIdWithMethods`, `getByName`, and `getByKey` is
+ * `QueueGetWithMethodsResponse`.
  */
 export interface QueueGetResponse {
   key: string;
@@ -42,10 +44,36 @@ export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
 export interface QueueGetByIdOptions extends BaseOptions {}
 
 /**
- * Options for retrieving queue items. Queue and folder scoping are passed
- * as explicit method arguments.
+ * Options for getting queues with methods attached. Folder scoping
+ * (`folderId` / `folderKey` / `folderPath`) is optional — without it,
+ * queues across all folders are returned.
  */
-export type QueueGetAllItemsOptions = RequestOptions & PaginationOptions;
+export type QueueGetAllWithMethodsOptions = RequestOptions & PaginationOptions & FolderScopedOptions;
+
+/**
+ * Options for getting a queue by ID with methods attached — query options
+ * plus folder scoping (`folderId` / `folderKey` / `folderPath`).
+ */
+export interface QueueGetByIdWithMethodsOptions extends FolderScopedOptions {}
+
+/**
+ * Options for getting a queue by name — query options plus folder scoping
+ * (`folderId` / `folderKey` / `folderPath`).
+ */
+export interface QueueGetByNameOptions extends FolderScopedOptions {}
+
+/**
+ * Options for getting a queue by key — query options plus folder scoping
+ * (`folderId` / `folderKey` / `folderPath`).
+ */
+export interface QueueGetByKeyOptions extends FolderScopedOptions {}
+
+/**
+ * Options for retrieving queue items — filtering, pagination, and folder
+ * scoping (`folderId` / `folderKey` / `folderPath`). The queue is passed as
+ * an explicit method argument.
+ */
+export type QueueGetAllItemsOptions = RequestOptions & PaginationOptions & FolderScopedOptions;
 
 /**
  * Processing priority of a queue item. Higher-priority items are handed out
@@ -85,9 +113,10 @@ export enum QueueItemStatus {
 export type QueueItemValue = string | number | boolean | Date | null | undefined;
 
 /**
- * Optional settings for inserting a queue item.
+ * Optional settings for inserting a queue item, plus folder scoping
+ * (`folderId` / `folderKey` / `folderPath`).
  */
-export interface QueueInsertItemOptions {
+export interface QueueInsertItemOptions extends FolderScopedOptions {
   /**
    * Processing priority used when the item is picked up by a consumer.
    * Defaults to {@link QueuePriority.Normal}.

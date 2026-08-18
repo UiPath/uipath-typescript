@@ -81,6 +81,71 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getByIdWithMethods', () => {
+    it('should retrieve a queue by ID with methods attached via options-based folder scoping', async () => {
+      const { queues } = getServices();
+      const config = getTestConfig();
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
+
+      const allQueues = await queues.getAll({ folderId, pageSize: 1 });
+      expect(allQueues.items.length, 'No queues available to test getByIdWithMethods').toBeGreaterThan(0);
+      const reference = allQueues.items[0];
+
+      const result = await queues.getByIdWithMethods(reference.id, { folderId });
+
+      expect(result.id).toBe(reference.id);
+      expect(result.name).toBe(reference.name);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+  });
+
+  describe('getByName', () => {
+    it('should retrieve a specific queue by name with methods attached', async () => {
+      const { queues } = getServices();
+      const config = getTestConfig();
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
+
+      const allQueues = await queues.getAll({ folderId, pageSize: 1 });
+      expect(allQueues.items.length, 'No queues available to test getByName').toBeGreaterThan(0);
+      const reference = allQueues.items[0];
+
+      const result = await queues.getByName(reference.name, { folderId });
+
+      expect(result.id).toBe(reference.id);
+      expect(result.name).toBe(reference.name);
+      expect(result.key).toBe(reference.key);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+  });
+
+  describe('getByKey', () => {
+    it('should retrieve a specific queue by key with methods attached', async () => {
+      const { queues } = getServices();
+      const config = getTestConfig();
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
+
+      const allQueues = await queues.getAll({ folderId, pageSize: 1 });
+      expect(allQueues.items.length, 'No queues available to test getByKey').toBeGreaterThan(0);
+      const reference = allQueues.items[0];
+
+      const result = await queues.getByKey(reference.key, { folderId });
+
+      expect(result.id).toBe(reference.id);
+      expect(result.key).toBe(reference.key);
+      expect(result.name).toBe(reference.name);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+  });
+
   describe('Queue structure validation', () => {
     it('should have expected fields in queue objects', async () => {
       const { queues } = getServices();
@@ -104,11 +169,11 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       expect(typeof queue.key).toBe('string');
     });
 
-    it('should attach queue methods to returned queues', async () => {
+    it('should attach queue methods to queues returned by getAllWithMethods', async () => {
       const { queues } = getServices();
       const config = getTestConfig();
 
-      const result = await queues.getAll({
+      const result = await queues.getAllWithMethods({
         folderId: config.folderId ? Number(config.folderId) : undefined,
         pageSize: 1,
       });
@@ -141,7 +206,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       }
 
       const folderId = Number(config.folderId);
-      const result = await queues.getAll({
+      const result = await queues.getAllWithMethods({
         folderId,
         filter: `name eq '${config.queuesTestQueueName}'`,
       });

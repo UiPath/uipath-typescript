@@ -25,6 +25,10 @@ describe('Queue Models', () => {
     mockService = {
       getAll: vi.fn(),
       getById: vi.fn(),
+      getAllWithMethods: vi.fn(),
+      getByIdWithMethods: vi.fn(),
+      getByName: vi.fn(),
+      getByKey: vi.fn(),
       getAllItems: vi.fn(),
       insertItemByName: vi.fn()
     };
@@ -48,8 +52,7 @@ describe('Queue Models', () => {
 
         expect(mockService.getAllItems).toHaveBeenCalledWith(
           queueData.id,
-          queueData.folderId,
-          options
+          { ...options, folderId: queueData.folderId }
         );
         expect(result).toEqual(mockResponse);
       });
@@ -90,9 +93,8 @@ describe('Queue Models', () => {
 
         expect(mockService.insertItemByName).toHaveBeenCalledWith(
           queueData.name,
-          queueData.folderId,
           QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
-          options
+          { ...options, folderId: queueData.folderId }
         );
         expect(result).toEqual(createdItem);
       });

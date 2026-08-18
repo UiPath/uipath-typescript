@@ -19,11 +19,11 @@ import {
   QueueItemStatus,
   QueuePriority
 } from '../../../../src/models/orchestrator/queues.types';
-import { ValidationError } from '../../../../src/core/errors';
+import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { QUEUE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -143,6 +143,71 @@ describe('QueueService Unit Tests', () => {
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
         TEST_CONSTANTS.FOLDER_ID
       )).rejects.toThrow(QUEUE_TEST_CONSTANTS.ERROR_QUEUE_NOT_FOUND);
+    });
+
+    it('should keep returning plain queue data without attached methods', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+
+      const result = await queueService.getById(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      // The deprecated method's contract: pure data — safe to enumerate,
+      // structuredClone, and postMessage.
+      expect((result as any).getAllItems).toBeUndefined();
+      expect((result as any).insertItem).toBeUndefined();
+    });
+  });
+
+  describe('getByIdWithMethods', () => {
+    it('should retrieve the queue with folder scoping via options and attach methods', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+
+      const result = await queueService.getByIdWithMethods(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      expect(result.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
+      expect(result.name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          }),
+          // The folder fields go into headers only — never into OData params.
+          params: expect.not.objectContaining({ '$folderId': expect.anything() })
+        })
+      );
+    });
+
+    it('should scope by folder key through options', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+
+      await queueService.getByIdWithMethods(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        { folderKey: TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          })
+        })
+      );
+    });
+
+    it('should throw a ValidationError when no folder scoping is provided', async () => {
+      await expect(queueService.getByIdWithMethods(QUEUE_TEST_CONSTANTS.QUEUE_ID))
+        .rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 
@@ -277,25 +342,21 @@ describe('QueueService Unit Tests', () => {
     });
   });
 
-  describe('bound queue methods', () => {
-    it('should attach queue methods to the queue returned by getById', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawQueue());
-
-      const queue = await queueService.getById(
-        QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID
-      );
-
-      expect(typeof queue.getAllItems).toBe('function');
-      expect(typeof queue.insertItem).toBe('function');
-    });
-
-    it('should attach queue methods to queues returned via the getAll transform', async () => {
+  describe('getAllWithMethods', () => {
+    it('should list queues across folders by default and attach methods via the transform', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedQueueCollection()
       );
 
-      await queueService.getAll();
+      await queueService.getAllWithMethods();
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ALL),
+          transformFn: expect.any(Function)
+        }),
+        {}
+      );
 
       // Run the transformFn the service handed to PaginationHelpers on a raw
       // queue and verify it produces a queue with bound methods.
@@ -307,6 +368,59 @@ describe('QueueService Unit Tests', () => {
       expect(typeof transformed.getAllItems).toBe('function');
       expect(typeof transformed.insertItem).toBe('function');
     });
+
+    it('should move folder scoping into headers and switch to the folder endpoint', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueCollection()
+      );
+
+      await queueService.getAllWithMethods({ folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          })
+        }),
+        expect.not.objectContaining({ folderId: expect.anything() })
+      );
+    });
+
+    it('should scope by folder key through the request headers', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueCollection()
+      );
+
+      await queueService.getAllWithMethods({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          })
+        }),
+        expect.not.objectContaining({ folderKey: expect.anything() })
+      );
+    });
+
+    it('should keep the deprecated getAll transform free of attached methods', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueCollection()
+      );
+
+      await queueService.getAll();
+
+      // The deprecated method's contract: pure data — safe to enumerate,
+      // structuredClone, and postMessage.
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const transformed = (config as any).transformFn(createMockRawQueue());
+
+      expect(transformed.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
+      expect(transformed.getAllItems).toBeUndefined();
+      expect(transformed.insertItem).toBeUndefined();
+    });
   });
 
   describe('getAllItems', () => {
@@ -317,23 +431,48 @@ describe('QueueService Unit Tests', () => {
 
       const result = await queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
 
       // The queue scoping filter is written with SDK field names and rewritten
-      // to API names (queueId → queueDefinitionId) before delegating.
+      // to API names (queueId → queueDefinitionId) before delegating; the
+      // folder moves into headers and must not leak into the query options.
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ITEMS),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          }),
           transformFn: expect.any(Function)
         }),
         expect.objectContaining({
-          filter: `queueDefinitionId eq ${QUEUE_TEST_CONSTANTS.QUEUE_ID}`,
-          folderId: TEST_CONSTANTS.FOLDER_ID
+          filter: `queueDefinitionId eq ${QUEUE_TEST_CONSTANTS.QUEUE_ID}`
         })
       );
+      const [, passedOptions] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(passedOptions).not.toHaveProperty('folderId');
 
       expect(result).toBeDefined();
+    });
+
+    it('should scope by folder key through the request headers', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
+        createMockTransformedQueueItemCollection()
+      );
+
+      await queueService.getAllItems(
+        QUEUE_TEST_CONSTANTS.QUEUE_ID,
+        { folderKey: TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          })
+        }),
+        expect.not.objectContaining({ folderKey: expect.anything() })
+      );
     });
 
     it('should merge a caller filter with the queue filter and rewrite field names', async () => {
@@ -343,8 +482,8 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID,
         {
+          folderId: TEST_CONSTANTS.FOLDER_ID,
           filter: "status eq 'Failed'",
           orderby: 'createdTime desc'
         }
@@ -354,8 +493,7 @@ describe('QueueService Unit Tests', () => {
         expect.any(Object),
         expect.objectContaining({
           filter: `(status eq 'Failed') and queueDefinitionId eq ${QUEUE_TEST_CONSTANTS.QUEUE_ID}`,
-          orderby: 'creationTime desc',
-          folderId: TEST_CONSTANTS.FOLDER_ID
+          orderby: 'creationTime desc'
         })
       );
     });
@@ -367,8 +505,7 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID,
-        { pageSize: TEST_CONSTANTS.PAGE_SIZE }
+        { folderId: TEST_CONSTANTS.FOLDER_ID, pageSize: TEST_CONSTANTS.PAGE_SIZE }
       );
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
@@ -386,7 +523,7 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
 
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
@@ -431,7 +568,7 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
 
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
@@ -460,16 +597,15 @@ describe('QueueService Unit Tests', () => {
     it('should throw a ValidationError when queueId is missing', async () => {
       await expect(queueService.getAllItems(
         undefined as unknown as number,
-        TEST_CONSTANTS.FOLDER_ID
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       )).rejects.toBeInstanceOf(ValidationError);
 
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
-    it('should throw a ValidationError when folderId is missing', async () => {
+    it('should throw a ValidationError when no folder scoping is provided', async () => {
       await expect(queueService.getAllItems(
-        QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        undefined as unknown as number
+        QUEUE_TEST_CONSTANTS.QUEUE_ID
       )).rejects.toBeInstanceOf(ValidationError);
 
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
@@ -481,7 +617,7 @@ describe('QueueService Unit Tests', () => {
 
       await expect(queueService.getAllItems(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -492,8 +628,8 @@ describe('QueueService Unit Tests', () => {
 
       const result = await queueService.insertItemByName(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        TEST_CONSTANTS.FOLDER_ID,
-        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -529,9 +665,9 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.insertItemByName(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
         {
+          folderId: TEST_CONSTANTS.FOLDER_ID,
           priority: QueuePriority.High,
           reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE,
           progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS,
@@ -555,29 +691,169 @@ describe('QueueService Unit Tests', () => {
 
       await expect(queueService.insertItemByName(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        TEST_CONSTANTS.FOLDER_ID,
-        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
     it('should throw a ValidationError when queueName is missing', async () => {
       await expect(queueService.insertItemByName(
         undefined as unknown as string,
-        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      )).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw a ValidationError when no folder scoping is provided', async () => {
+      await expect(queueService.insertItemByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
         QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
       )).rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw a ValidationError when folderId is missing', async () => {
-      await expect(queueService.insertItemByName(
+    it('should scope by folder key through the request headers', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+
+      await queueService.insertItemByName(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        undefined as unknown as number,
-        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT
+        QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+        { folderKey: TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.ADD_ITEM,
+        expect.any(Object),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          })
+        })
+      );
+    });
+  });
+  describe('getByName', () => {
+    it('should look up the queue by exact name and attach methods', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawQueue()] });
+
+      const result = await queueService.getByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          }),
+          params: expect.objectContaining({
+            '$filter': `Name eq '${QUEUE_TEST_CONSTANTS.QUEUE_NAME}'`,
+            '$top': '1'
+          })
+        })
+      );
+
+      expect(result.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
+      expect(result.name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(result.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+
+    it('should scope by folder key through the request headers', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawQueue()] });
+
+      await queueService.getByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        { folderKey: TEST_CONSTANTS.FOLDER_KEY }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          })
+        })
+      );
+    });
+
+    it('should throw a NotFoundError when no queue matches the name', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(queueService.getByName(
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      )).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should throw a ValidationError when the name is missing', async () => {
+      await expect(queueService.getByName(
+        undefined as unknown as string,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
       )).rejects.toBeInstanceOf(ValidationError);
 
-      expect(mockApiClient.post).not.toHaveBeenCalled();
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getByKey', () => {
+    it('should look up the queue by key with an unquoted GUID literal and attach methods', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawQueue()] });
+
+      const result = await queueService.getByKey(
+        QUEUE_TEST_CONSTANTS.QUEUE_KEY,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      // Key is Edm.Guid — the OData literal must be unquoted.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          }),
+          params: expect.objectContaining({
+            '$filter': `Key eq ${QUEUE_TEST_CONSTANTS.QUEUE_KEY}`,
+            '$top': '1'
+          })
+        })
+      );
+
+      expect(result.key).toBe(QUEUE_TEST_CONSTANTS.QUEUE_KEY);
+      expect(result.name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+
+    it('should throw a ValidationError when the key is not a GUID', async () => {
+      await expect(queueService.getByKey(
+        'not-a-guid',
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      )).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw a NotFoundError when no queue matches the key', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(queueService.getByKey(
+        QUEUE_TEST_CONSTANTS.QUEUE_KEY,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      )).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should throw a ValidationError when no folder scoping is provided', async () => {
+      await expect(queueService.getByKey(QUEUE_TEST_CONSTANTS.QUEUE_KEY))
+        .rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 });
