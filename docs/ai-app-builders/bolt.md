@@ -7,6 +7,21 @@ Build a UiPath coded web app in Bolt and deploy it to UiPath using `@uipath/uipa
 
 ---
 
+## Watch the walkthrough
+
+The full build, start to finish — prompt to a live app on a UiPath tenant.
+
+<div class="yt-embed">
+  <iframe src="https://www.youtube-nocookie.com/embed/YOUTUBE_ID_BOLT"
+          title="Building and deploying a UiPath coded app with Bolt"
+          loading="lazy" allowfullscreen
+          allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+</div>
+
+The other builders are in the [demo gallery](videos.md).
+
+---
+
 ## How it works
 
 You build the app in Bolt with the UiPath coded-apps skill (so it uses `@uipath/uipath-typescript` and the correct coded-app structure), then ask it to deploy — the skill runs the `uip` CLI for you (build → pack → publish → deploy) inside Bolt. The deployed app is served at `https://<org>.uipath.host/<app>`.

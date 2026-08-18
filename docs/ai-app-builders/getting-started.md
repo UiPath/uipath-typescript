@@ -35,6 +35,8 @@ See [Coded Apps → Getting Started](../coded-apps/getting-started.md) for the f
 
 ## Choose your builder
 
+Each one has a full walkthrough in the [demo gallery](videos.md).
+
 | Builder | Load the skill | Deploy secret | Deploy runs in |
 |---------|----------------|---------------|----------------|
 | [Vercel (v0)](vercel.md) | Skill marketplace | Encrypted env vars | Built-in terminal |
