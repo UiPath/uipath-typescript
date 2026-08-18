@@ -2210,10 +2210,11 @@
   <h1>QueueGetAllItemsOptions</h1>
 
 <blockquote>
-<p><strong>QueueGetAllItemsOptions</strong> = <a href="../../interfaces/RequestOptions/"><code>RequestOptions</code></a> &amp; <a href="../PaginationOptions/"><code>PaginationOptions</code></a></p>
+<p><strong>QueueGetAllItemsOptions</strong> = <a href="../../interfaces/RequestOptions/"><code>RequestOptions</code></a> &amp; <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; <a href="../../interfaces/FolderScopedOptions/"><code>FolderScopedOptions</code></a></p>
 </blockquote>
-<p>Options for retrieving queue items. Queue and folder scoping are passed
-as explicit method arguments.</p>
+<p>Options for retrieving queue items — filtering, pagination, and folder
+scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>). The queue is passed as
+an explicit method argument.</p>
 
 
 

@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -2202,6 +2202,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Extends
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       Properties
@@ -2231,7 +2240,12 @@
 
   <h1>QueueInsertItemOptions</h1>
 
-<p>Optional settings for inserting a queue item.</p>
+<p>Optional settings for inserting a queue item, plus folder scoping
+(<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>).</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2253,6 +2267,26 @@
 <td>The time by which the item should be processed (drives queue SLA tracking).</td>
 </tr>
 <tr>
+<td><a id="expand"></a> <code>expand?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="folderid"></a> <code>folderId?</code></td>
+<td><code>number</code></td>
+<td>Numeric folder ID.</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Folder key (GUID-formatted string).</td>
+</tr>
+<tr>
+<td><a id="folderpath"></a> <code>folderPath?</code></td>
+<td><code>string</code></td>
+<td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
+</tr>
+<tr>
 <td><a id="priority"></a> <code>priority?</code></td>
 <td><a href="../../enumerations/QueuePriority/"><code>QueuePriority</code></a></td>
 <td>Processing priority used when the item is picked up by a consumer. Defaults to <a href="../../enumerations/QueuePriority/#normal">QueuePriority.Normal</a>.</td>
@@ -2271,6 +2305,11 @@
 <td><a id="risksladate"></a> <code>riskSlaDate?</code></td>
 <td><code>Date</code></td>
 <td>The time after which unprocessed items are considered at risk of breaching the SLA.</td>
+</tr>
+<tr>
+<td><a id="select"></a> <code>select?</code></td>
+<td><code>string</code></td>
+<td>-</td>
 </tr>
 </tbody>
 </table>

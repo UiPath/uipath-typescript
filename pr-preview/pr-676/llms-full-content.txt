@@ -502,6 +502,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
 | CaseInstances                     | `getSlaSummary()`          | ✅ Yes                 |
 | Queues                            | `getAll()`                 | ✅ Yes                 |
+| Queues                            | `getAllWithMethods()`      | ✅ Yes                 |
 | Queues                            | `getAllItems()`            | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
@@ -1117,7 +1118,7 @@ Queues are a fundamental component of UiPath automation that enable distributed 
 import { Queues } from '@uipath/uipath-typescript/queues';
 
 const queues = new Queues(sdk);
-const allQueues = await queues.getAll();
+const allQueues = await queues.getAllWithMethods();
 ```
 
 ## Methods
@@ -1166,9 +1167,9 @@ await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Failed, {
 });
 ```
 
-### getAll()
+### ~~getAll()~~
 
-> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
 Gets all queues across folders with optional filtering and folder scoping
 
@@ -1182,9 +1183,13 @@ Gets all queues across folders with optional filtering and folder scoping
 
 #### Returns
 
-`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetResponse`> : `NonPaginatedResponse`\<`QueueGetResponse`>>
 
-Promise resolving to either a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetWithMethodsResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
+Promise resolving to either a [QueueGetResponse](../QueueGetResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetResponse>` when pagination options are used.
+
+#### Deprecated
+
+Use [getAllWithMethods](#getallwithmethods) — it additionally attaches the operational methods to each queue and supports folder scoping via `folderKey` / `folderPath`. This method keeps returning plain queue data.
 
 #### Example
 
@@ -1196,30 +1201,11 @@ const allQueues = await queues.getAll();
 const folderQueues = await queues.getAll({
   folderId: <folderId>
 });
-
-// Get queues with filtering
-const filteredQueues = await queues.getAll({
-  filter: "name eq 'MyQueue'"
-});
-
-// First page with pagination
-const page1 = await queues.getAll({ pageSize: 10 });
-
-// Navigate using cursor
-if (page1.hasNextPage) {
-  const page2 = await queues.getAll({ cursor: page1.nextCursor });
-}
-
-// Jump to specific page
-const page5 = await queues.getAll({
-  jumpToPage: 5,
-  pageSize: 10
-});
 ```
 
 ### getAllItems()
 
-> **getAllItems**\<`T`>(`queueId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
+> **getAllItems**\<`T`>(`queueId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueItem`> : `NonPaginatedResponse`\<`QueueItem`>>
 
 Gets the items of a queue with optional filtering and pagination
 
@@ -1232,8 +1218,7 @@ Returns the queue's work items including their status, business payload (`specif
 #### Parameters
 
 - `queueId`: `number` — Queue ID
-- `folderId`: `number` — Required folder ID
-- `options?`: `T` — Query options including filtering and pagination options
+- `options?`: `T` — Query options including filtering, pagination, and folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -1244,10 +1229,12 @@ Promise resolving to either a [QueueItem](../QueueItem/) array (`NonPaginatedRes
 #### Examples
 
 ```
-const items = await queues.getAllItems(<queueId>, <folderId>);
+const items = await queues.getAllItems(<queueId>, { folderId: <folderId> });
 
-// Failed items only, newest first
-const failed = await queues.getAllItems(<queueId>, <folderId>, {
+// Failed items only, newest first — folder scoping also accepts a
+// folder key or path
+const failed = await queues.getAllItems(<queueId>, {
+  folderPath: 'Shared/Finance',
   filter: "status eq 'Failed'",
   orderby: 'createdTime desc',
   pageSize: 25
@@ -1255,14 +1242,62 @@ const failed = await queues.getAllItems(<queueId>, <folderId>, {
 ```
 
 ```
-// Or operate on a queue returned by getById/getAll
-const queue = await queues.getById(<queueId>, <folderId>);
+// Or operate on a queue returned by getByIdWithMethods/getAllWithMethods
+const queue = await queues.getByIdWithMethods(<queueId>, { folderId: <folderId> });
 const items = await queue.getAllItems();
 ```
 
-### getById()
+### getAllWithMethods()
 
-> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+> **getAllWithMethods**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
+
+Gets all queues with the operational methods attached, with optional filtering and folder scoping
+
+#### Type Parameters
+
+- `T` *extends* `QueueGetAllWithMethodsOptions` = `QueueGetAllWithMethodsOptions`
+
+#### Parameters
+
+- `options?`: `T` — Query options including folder scoping (`folderId` / `folderKey` / `folderPath`) and pagination options; without folder scoping, queues across all folders are returned
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`QueueGetWithMethodsResponse`> : `NonPaginatedResponse`\<`QueueGetWithMethodsResponse`>>
+
+Promise resolving to either a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) array (`NonPaginatedResponse`) or a `PaginatedResponse<QueueGetWithMethodsResponse>` when pagination options are used. Each queue has methods attached for operating on its items.
+
+#### Example
+
+```
+// Standard array return
+const allQueues = await queues.getAllWithMethods();
+
+// Get queues within a specific folder — also accepts folderKey / folderPath
+const folderQueues = await queues.getAllWithMethods({
+  folderId: <folderId>
+});
+
+// Get queues with filtering
+const filteredQueues = await queues.getAllWithMethods({
+  filter: "name eq 'MyQueue'"
+});
+
+// First page with pagination
+const page1 = await queues.getAllWithMethods({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await queues.getAllWithMethods({ cursor: page1.nextCursor });
+}
+
+// Operate on a result directly via the attached methods
+const item = await page1.items[0].insertItem({ invoiceId: 'INV-1001' });
+```
+
+### ~~getById()~~
+
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: `QueueGetByIdOptions`): `Promise`\<`QueueGetResponse`>
 
 Gets a single queue by ID
 
@@ -1274,6 +1309,33 @@ Gets a single queue by ID
 
 #### Returns
 
+`Promise`\<`QueueGetResponse`>
+
+Promise resolving to a [QueueGetResponse](../QueueGetResponse/) — the queue definition
+
+#### Deprecated
+
+Use [getByIdWithMethods](#getbyidwithmethods) — it additionally attaches the operational methods to the queue and supports folder scoping via `folderKey` / `folderPath`. This method keeps returning plain queue data.
+
+#### Example
+
+```
+const queue = await queues.getById(<queueId>, <folderId>);
+```
+
+### getByIdWithMethods()
+
+> **getByIdWithMethods**(`id`: `number`, `options?`: `QueueGetByIdWithMethodsOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by ID with the operational methods attached
+
+#### Parameters
+
+- `id`: `number` — Queue ID
+- `options?`: `QueueGetByIdWithMethodsOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+
+#### Returns
+
 `Promise`\<`QueueGetWithMethodsResponse`>
 
 Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
@@ -1282,7 +1344,10 @@ Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGet
 
 ```
 // Get queue by ID
-const queue = await queues.getById(<queueId>, <folderId>);
+const queue = await queues.getByIdWithMethods(<queueId>, { folderId: <folderId> });
+
+// Folder scoping also accepts a folder key or path
+const byPath = await queues.getByIdWithMethods(<queueId>, { folderPath: 'Shared/Finance' });
 
 // Operate on the queue directly via the attached methods
 const items = await queue.getAllItems();
@@ -1292,9 +1357,58 @@ const item = await queue.insertItem({
 });
 ```
 
+### getByKey()
+
+> **getByKey**(`key`: `string`, `options?`: `QueueGetByKeyOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by key (the queue's GUID identifier)
+
+#### Parameters
+
+- `key`: `string` — Queue key (GUID)
+- `options?`: `QueueGetByKeyOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+
+#### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
+
+#### Example
+
+```
+const queue = await queues.getByKey('<queueKey>', { folderId: <folderId> });
+```
+
+### getByName()
+
+> **getByName**(`name`: `string`, `options?`: `QueueGetByNameOptions`): `Promise`\<`QueueGetWithMethodsResponse`>
+
+Gets a single queue by name
+
+#### Parameters
+
+- `name`: `string` — Queue name (exact match)
+- `options?`: `QueueGetByNameOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and query options
+
+#### Returns
+
+`Promise`\<`QueueGetWithMethodsResponse`>
+
+Promise resolving to a [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/) — the queue definition with methods attached for operating on its items
+
+#### Example
+
+```
+const queue = await queues.getByName('<queueName>', { folderId: <folderId> });
+
+// Folder scoping also accepts a folder key or path
+const byKey = await queues.getByName('<queueName>', { folderKey: '<folderKey>' });
+```
+
 ### insertItemByName()
 
-> **insertItemByName**(`queueName`: `string`, `folderId`: `number`, `specificData`: `Record`\<`string`, `QueueItemValue`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItem`>
+> **insertItemByName**(`queueName`: `string`, `specificData`: `Record`\<`string`, `QueueItemValue`>, `options?`: `QueueInsertItemOptions`): `Promise`\<`QueueItem`>
 
 Inserts a new item into a queue by queue name
 
@@ -1305,9 +1419,8 @@ The payload must be flat — values are simple scalars (see [QueueItemValue](../
 #### Parameters
 
 - `queueName`: `string` — Name of the queue to insert into
-- `folderId`: `number` — Required folder ID
 - `specificData`: `Record`\<`string`, `QueueItemValue`> — The item's business payload (stored as the queue item's specific content)
-- `options?`: `QueueInsertItemOptions` — Optional item metadata (priority, reference, defer/due dates)
+- `options?`: `QueueInsertItemOptions` — Item metadata (priority, reference, defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
 
 #### Returns
 
@@ -1321,15 +1434,16 @@ Promise resolving to the created [QueueItem](../QueueItem/)
 import { QueuePriority } from '@uipath/uipath-typescript/queues';
 
 // Minimal insert
-const item = await queues.insertItemByName('<queueName>', <folderId>, {
+const item = await queues.insertItemByName('<queueName>', {
   invoiceId: 'INV-1001',
   amount: 1520
-});
+}, { folderId: <folderId> });
 
-// With metadata
-const rushItem = await queues.insertItemByName('<queueName>', <folderId>, {
+// With metadata — folder scoping also accepts a folder key or path
+const rushItem = await queues.insertItemByName('<queueName>', {
   invoiceId: 'INV-1002'
 }, {
+  folderKey: '<folderKey>',
   priority: QueuePriority.High,
   reference: 'INV-1002',
   dueDate: new Date('2026-08-15')

@@ -2357,6 +2357,18 @@
          <lastmod>2026-08-18</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/QueueGetByIdWithMethodsOptions/</loc>
+         <lastmod>2026-08-18</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/QueueGetByKeyOptions/</loc>
+         <lastmod>2026-08-18</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/QueueGetByNameOptions/</loc>
+         <lastmod>2026-08-18</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/QueueGetResponse/</loc>
          <lastmod>2026-08-18</lastmod>
     </url>
@@ -2894,6 +2906,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/QueueGetAllOptions/</loc>
+         <lastmod>2026-08-18</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/QueueGetAllWithMethodsOptions/</loc>
          <lastmod>2026-08-18</lastmod>
     </url>
     <url>
