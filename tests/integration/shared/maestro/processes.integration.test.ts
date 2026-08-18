@@ -41,8 +41,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
 
         const process = result[0];
         expect(process).toBeDefined();
-        expect(process.key).toBeDefined();
-        expect(typeof process.key).toBe('string');
+        expect(process.processKey).toBeDefined();
+        expect(typeof process.processKey).toBe('string');
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -125,7 +125,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         return;
       }
 
-      const result = await maestroProcesses.getIncidents(processKey, config.folderId);
+      const result = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -144,10 +144,10 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
           return;
         }
 
-        const processKey = processes[0].key;
+        const { processKey, folderKey } = processes[0];
 
         try {
-          const result = await maestroProcesses.getIncidents(processKey);
+          const result = await maestroProcesses.getIncidents(processKey, folderKey);
           expect(result).toBeDefined();
           expect(Array.isArray(result)).toBe(true);
         } catch (error: any) {
@@ -166,14 +166,16 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopRunCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopRunCount', () => {
     it('should retrieve top processes by run count', async () => {
       const { maestroProcesses } = getServices();
       await testGetTopRunCount(maestroProcesses);
     });
   });
 
-  describe('getInstanceStatusTimeline', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date', async () => {
       const { maestroProcesses } = getServices();
       await testGetInstanceStatusTimeline(maestroProcesses);
@@ -188,7 +190,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopFaultedCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopFaultedCount', () => {
     it('should retrieve top processes by failure count', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -210,7 +213,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopElementFailedCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -233,7 +237,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopExecutionDuration', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopExecutionDuration', () => {
     it('should retrieve top processes by duration', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -276,8 +281,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
 
         const process = result[0];
 
-        expect(process.key).toBeDefined();
-        expect(typeof process.key).toBe('string');
+        expect(process.processKey).toBeDefined();
+        expect(typeof process.processKey).toBe('string');
 
         if (process.name) {
           expect(typeof process.name).toBe('string');

@@ -1,7 +1,6 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
-  getTestConfig,
   setupUnifiedTests,
   InitMode,
 } from '../../config/unified-setup';
@@ -14,6 +13,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   setupUnifiedTests(mode);
 
   let testInstanceId: string | null = null;
+  let testFolderKey: string | null = null;
 
   describe('getAll', () => {
     it('should retrieve all process instances', async () => {
@@ -26,8 +26,10 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         expect(result.items).toBeDefined();
         expect(Array.isArray(result.items)).toBe(true);
 
-        if (result.items.length > 0) {
-          testInstanceId = result.items[0].instanceId;
+        const instance = result.items.find((item) => item.instanceId && item.folderKey);
+        if (instance) {
+          testInstanceId = instance.instanceId;
+          testFolderKey = instance.folderKey;
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -99,15 +101,14 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
   describe('getById', () => {
     it('should retrieve a specific process instance by ID', async () => {
-      if (!testInstanceId) {
-        console.log('No instance ID available for testing');
+      if (!testInstanceId || !testFolderKey) {
+        console.log('No instance available for testing');
         return;
       }
 
       const { processInstances } = getServices();
-      const config = getTestConfig();
 
-      const result = await processInstances.getById(testInstanceId, config.folderId || '');
+      const result = await processInstances.getById(testInstanceId, testFolderKey);
 
       expect(result).toBeDefined();
       expect(result.instanceId).toBe(testInstanceId);
@@ -116,21 +117,20 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
   describe('Instance lifecycle operations', () => {
     it('should pause a process instance', async () => {
-      if (!testInstanceId) {
-        console.log('No instance ID available for testing');
+      if (!testInstanceId || !testFolderKey) {
+        console.log('No instance available for testing');
         return;
       }
 
       const { processInstances } = getServices();
-      const config = getTestConfig();
 
       try {
-        const result = await processInstances.pause(testInstanceId, config.folderId || '');
+        const result = await processInstances.pause(testInstanceId, testFolderKey);
 
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const instance = await processInstances.getById(testInstanceId, config.folderId || '');
+        const instance = await processInstances.getById(testInstanceId, testFolderKey);
         expect(instance.latestRunStatus).toMatch(/paused|suspended/i);
       } catch (error: any) {
         console.log(
@@ -141,21 +141,20 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
     });
 
     it('should resume a paused process instance', async () => {
-      if (!testInstanceId) {
-        console.log('No instance ID available for testing');
+      if (!testInstanceId || !testFolderKey) {
+        console.log('No instance available for testing');
         return;
       }
 
       const { processInstances } = getServices();
-      const config = getTestConfig();
 
       try {
-        const result = await processInstances.resume(testInstanceId, config.folderId || '');
+        const result = await processInstances.resume(testInstanceId, testFolderKey);
 
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const instance = await processInstances.getById(testInstanceId, config.folderId || '');
+        const instance = await processInstances.getById(testInstanceId, testFolderKey);
         expect(instance.latestRunStatus).toMatch(/running|active|resumed/i);
       } catch (error: any) {
         console.log(
@@ -167,7 +166,6 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
     it('should cancel a process instance', async () => {
       const { processInstances } = getServices();
-      const config = getTestConfig();
 
       try {
         const instances = await processInstances.getAll({
@@ -175,7 +173,8 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         });
 
         const runnableInstance = instances.items.find(
-          (inst: any) =>
+          (inst) =>
+            inst.folderKey &&
             inst.latestRunStatus &&
             inst.latestRunStatus.toLowerCase().match(/running|active|pending/)
         );
@@ -188,7 +187,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         try {
           const result = await processInstances.cancel(
             runnableInstance.instanceId,
-            config.folderId || ''
+            runnableInstance.folderKey
           );
 
           expect(result).toBeDefined();
@@ -196,13 +195,13 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
           const instance = await processInstances.getById(
             runnableInstance.instanceId,
-            config.folderId || ''
+            runnableInstance.folderKey
           );
           expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
 
           registerResource('processInstances', {
             id: runnableInstance.instanceId,
-            folderKey: config.folderId,
+            folderKey: runnableInstance.folderKey,
           });
         } catch (error: any) {
           console.log('Cancel test failed:', error.message);
@@ -257,16 +256,15 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
   describe('Instance details', () => {
     it('should retrieve process variables', async () => {
-      if (!testInstanceId) {
-        console.log('No instance ID available for testing');
+      if (!testInstanceId || !testFolderKey) {
+        console.log('No instance available for testing');
         return;
       }
 
       const { processInstances } = getServices();
-      const config = getTestConfig();
 
       try {
-        const result = await processInstances.getVariables(testInstanceId, config.folderId || '');
+        const result = await processInstances.getVariables(testInstanceId, testFolderKey);
 
         expect(result).toBeDefined();
         expect(result.instanceId).toBe(testInstanceId);
@@ -280,18 +278,13 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       let executionHistory!: ProcessInstanceExecutionHistoryResponse[];
 
       beforeAll(async () => {
-        if (!testInstanceId) {
-          throw new Error('No instance ID available for testing');
+        if (!testInstanceId || !testFolderKey) {
+          throw new Error('No instance available for testing');
         }
 
         const { processInstances } = getServices();
-        const config = getTestConfig();
 
-        if (!config.folderKey) {
-          throw new Error('No folderKey configured for testing');
-        }
-
-        executionHistory = await processInstances.getExecutionHistory(testInstanceId, config.folderKey);
+        executionHistory = await processInstances.getExecutionHistory(testInstanceId, testFolderKey);
       });
 
       it('should retrieve execution history', () => {

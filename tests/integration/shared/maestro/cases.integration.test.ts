@@ -72,7 +72,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getInstanceStatusTimeline', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
       await testGetInstanceStatusTimeline(cases);
@@ -129,14 +130,16 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopRunCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopRunCount', () => {
     it('should retrieve top case processes by run count', async () => {
       const { cases } = getServices();
       await testGetTopRunCount(cases);
     });
   });
 
-  describe('getTopFaultedCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopFaultedCount', () => {
     it('should retrieve top case processes by failure count', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -159,7 +162,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopElementFailedCount', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count for cases', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -182,7 +186,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopExecutionDuration', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getTopExecutionDuration', () => {
     it('should retrieve top case processes by duration', async () => {
       const { cases } = getServices();
       const now = new Date();

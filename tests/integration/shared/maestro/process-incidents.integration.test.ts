@@ -15,7 +15,6 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
 
     it('should retrieve incidents through process context', async () => {
       const { maestroProcesses } = getServices();
-      const config = getTestConfig();
 
       try {
         const processes = await maestroProcesses.getAll({
@@ -27,10 +26,10 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
           return;
         }
 
-        const processKey = processes[0].key;
+        const { processKey, folderKey } = processes[0];
 
         try {
-          const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+          const incidents = await maestroProcesses.getIncidents(processKey, folderKey);
 
           expect(incidents).toBeDefined();
           expect(Array.isArray(incidents)).toBe(true);
@@ -69,7 +68,7 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       }
 
       try {
-        const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+        const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
         expect(incidents).toBeDefined();
         expect(Array.isArray(incidents)).toBe(true);
@@ -112,7 +111,7 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
 
         for (const process of processes) {
           try {
-            const incidents = await maestroProcesses.getIncidents(process.key);
+            const incidents = await maestroProcesses.getIncidents(process.processKey, process.folderKey);
 
             if (incidents.length === 0) {
               foundEmptyIncidents = true;
@@ -150,7 +149,7 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       }
 
       try {
-        const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+        const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
         if (incidents.length === 0) {
           console.log('No incidents available for the configured process');

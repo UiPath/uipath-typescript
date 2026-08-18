@@ -1,11 +1,9 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
-  getTestConfig,
   setupUnifiedTests,
   InitMode,
 } from '../../config/unified-setup';
-import { registerResource } from '../../utils/cleanup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
 import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/maestro';
 
@@ -15,6 +13,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   setupUnifiedTests(mode);
 
   let testCaseInstanceId: string | null = null;
+  let testCaseFolderKey: string | null = null;
 
   describe('getAll', () => {
     it('should retrieve all case instances', async () => {
@@ -27,8 +26,10 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         expect(hasValidPagination(result)).toBe(true);
         expect(Array.isArray(result.items)).toBe(true);
 
-        if (result.items.length > 0) {
-          testCaseInstanceId = result.items[0].id;
+        const instance = result.items.find((item) => item.instanceId && item.folderKey);
+        if (instance) {
+          testCaseInstanceId = instance.instanceId;
+          testCaseFolderKey = instance.folderKey;
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -47,7 +48,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
       try {
         const result = await caseInstances.getAll({
-          limit: 5,
+          pageSize: 5,
         });
 
         expect(result).toBeDefined();
@@ -70,7 +71,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
       try {
         const firstPage = await caseInstances.getAll({
-          limit: 2,
+          pageSize: 2,
         });
 
         expect(firstPage).toBeDefined();
@@ -78,7 +79,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         if (firstPage.hasNextPage && firstPage.nextCursor) {
           const secondPage = await caseInstances.getAll({
-            limit: 2,
+            pageSize: 2,
             cursor: firstPage.nextCursor,
           });
 
@@ -100,70 +101,55 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
   describe('getById', () => {
     it('should retrieve a specific case instance by ID', async () => {
-      if (!testCaseInstanceId) {
-        console.log('No case instance ID available for testing');
+      if (!testCaseInstanceId || !testCaseFolderKey) {
+        console.log('No case instance available for testing');
         return;
       }
 
       const { caseInstances } = getServices();
-      const config = getTestConfig();
 
-      try {
-        const result = await caseInstances.getById(testCaseInstanceId, config.folderId);
+      const result = await caseInstances.getById(testCaseInstanceId, testCaseFolderKey);
 
-        expect(result).toBeDefined();
-        expect(result.id).toBe(testCaseInstanceId);
-      } catch (error: any) {
-        console.log('Get case instance by ID failed:', error.message);
-      }
+      expect(result).toBeDefined();
+      expect(result.instanceId).toBe(testCaseInstanceId);
     });
   });
 
   describe('getStages', () => {
     it('should retrieve stages for a case instance', async () => {
-      if (!testCaseInstanceId) {
-        console.log('No case instance ID available for testing');
+      if (!testCaseInstanceId || !testCaseFolderKey) {
+        console.log('No case instance available for testing');
         return;
       }
 
       const { caseInstances } = getServices();
-      const config = getTestConfig();
 
-      try {
-        const result = await caseInstances.getStages(testCaseInstanceId, config.folderId);
+      const result = await caseInstances.getStages(testCaseInstanceId, testCaseFolderKey);
 
-        expect(result).toBeDefined();
-        expect(Array.isArray(result) || typeof result === 'object').toBe(true);
+      expect(result).toBeDefined();
+      expect(Array.isArray(result) || typeof result === 'object').toBe(true);
 
-        if (Array.isArray(result) && result.length > 0) {
-          const stage = result[0];
-          expect(stage).toBeDefined();
-          expect(typeof stage).toBe('object');
-        }
-      } catch (error: any) {
-        console.log('Get case stages failed:', error.message);
+      if (Array.isArray(result) && result.length > 0) {
+        const stage = result[0];
+        expect(stage).toBeDefined();
+        expect(typeof stage).toBe('object');
       }
     });
 
     it('should validate stage structure', async () => {
-      if (!testCaseInstanceId) {
-        console.log('No case instance ID available for testing');
+      if (!testCaseInstanceId || !testCaseFolderKey) {
+        console.log('No case instance available for testing');
         return;
       }
 
       const { caseInstances } = getServices();
-      const config = getTestConfig();
 
-      try {
-        const stages = await caseInstances.getStages(testCaseInstanceId, config.folderId);
+      const stages = await caseInstances.getStages(testCaseInstanceId, testCaseFolderKey);
 
-        if (Array.isArray(stages) && stages.length > 0) {
-          const stage = stages[0];
-          expect(stage).toBeDefined();
-          console.log('Stage fields:', Object.keys(stage));
-        }
-      } catch (error: any) {
-        console.log('Stage validation failed:', error.message);
+      if (Array.isArray(stages) && stages.length > 0) {
+        const stage = stages[0];
+        expect(stage).toBeDefined();
+        console.log('Stage fields:', Object.keys(stage));
       }
     });
   });
@@ -234,50 +220,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe('close', () => {
-    it('should close a case instance', async () => {
-      const { caseInstances } = getServices();
-      const config = getTestConfig();
-
-      try {
-        const instances = await caseInstances.getAll({
-          limit: 10,
-        });
-
-        const openInstance = instances.data.find(
-          (inst: any) =>
-            inst.status && inst.status.toLowerCase().match(/open|active|in progress/)
-        );
-
-        if (!openInstance) {
-          console.log('No open case instance available to test closure');
-          return;
-        }
-
-        const result = await caseInstances.close(openInstance.id, config.folderId);
-
-        expect(result).toBeDefined();
-
-        const closedInstance = await caseInstances.getById(openInstance.id, config.folderId);
-        expect(closedInstance.status).toMatch(/closed|completed/i);
-
-        registerResource('caseInstances', {
-          id: openInstance.id,
-          folderKey: config.folderId,
-        });
-      } catch (error: any) {
-        if (error.message?.includes('Forbidden') || error.statusCode === 403) {
-          console.log(
-            'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
-          );
-          return;
-        }
-        console.log('Close case instance test failed:', error.message);
-      }
-    });
-  });
-
+  // sendMessage runs before close: it needs a running instance but does not alter case
+  // state, while close consumes one. Order matters when few running instances exist.
   describe('sendMessage', () => {
     it('should send a message to a running case instance', async () => {
       const { caseInstances } = getServices();
@@ -304,13 +248,53 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
+  // Snapshot+restore: closing consumes a shared running instance, so the test reopens the
+  // same instance afterwards. This keeps the suite re-runnable against a fixed set of
+  // seeded running instances instead of draining one per run.
+  describe('close and reopen', () => {
+    it('should close a case instance and reopen it from its active stage', async () => {
+      const { caseInstances } = getServices();
+
+      const instances = await caseInstances.getAll({ pageSize: 50 });
+
+      const openInstance = instances.items.find(
+        (inst) => inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey
+      );
+
+      if (!openInstance) {
+        throw new Error('No running case instance available — cannot test close/reopen');
+      }
+
+      // Snapshot the stage to restore from before mutating state
+      const stages = await caseInstances.getStages(openInstance.instanceId, openInstance.folderKey);
+      const activeStage = stages.find((stage) => /progress|active|running/i.test(stage.status)) ?? stages[0];
+      if (!activeStage) {
+        throw new Error('Case instance has no stages — cannot determine reopen target');
+      }
+
+      const closeResult = await caseInstances.close(openInstance.instanceId, openInstance.folderKey);
+
+      expect(closeResult).toBeDefined();
+      expect(closeResult.success).toBe(true);
+
+      // Restore: reopen the same instance from the stage that was active at close
+      const reopenResult = await caseInstances.reopen(openInstance.instanceId, openInstance.folderKey, {
+        stageId: activeStage.id,
+        comment: 'Reopened by the SDK integration suite after close test',
+      });
+
+      expect(reopenResult).toBeDefined();
+      expect(reopenResult.success).toBe(true);
+    });
+  });
+
   describe('Case instance structure validation', () => {
     it('should have expected fields in case instance objects', async () => {
       const { caseInstances } = getServices();
 
       try {
         const result = await caseInstances.getAll({
-          limit: 1,
+          pageSize: 1,
         });
 
         if (result.items.length === 0) {
@@ -320,15 +304,15 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         const instance = result.items[0];
 
-        expect(instance.id).toBeDefined();
-        expect(typeof instance.id).toBe('string');
+        expect(instance.instanceId).toBeDefined();
+        expect(typeof instance.instanceId).toBe('string');
 
-        if (instance.status) {
-          expect(typeof instance.status).toBe('string');
+        if (instance.latestRunStatus) {
+          expect(typeof instance.latestRunStatus).toBe('string');
         }
 
-        if (instance.caseDefinitionId || instance.caseKey) {
-          expect(typeof (instance.caseDefinitionId || instance.caseKey)).toBe('string');
+        if (instance.processKey) {
+          expect(typeof instance.processKey).toBe('string');
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -343,7 +327,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe.skipIf(mode === 'v0')('getSlaSummary', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getSlaSummary', () => {
     it('should retrieve SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
@@ -378,7 +363,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe.skipIf(mode === 'v0')('getStagesSlaSummary', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getStagesSlaSummary', () => {
     it('should retrieve stages SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
