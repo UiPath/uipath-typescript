@@ -6,7 +6,7 @@ hide:
 
 # AI App Builders Video Gallery
 
-Each walkthrough takes the same IT ticketing app from a plain-language prompt to a live app on a UiPath tenant. Only the builder changes — the skill, the SDK and the deploy pipeline are the same every time.
+Every video builds the same app — an IT ticketing portal backed by a Data Fabric entity — starting from a plain-language prompt and ending with the app live on a UiPath tenant. Each one points its builder at the UiPath Coded Apps skill, so only the builder changes: the skill, the SDK and the deploy pipeline are identical every time.
 
 <div class="vg">
 
