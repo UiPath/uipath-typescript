@@ -66,6 +66,7 @@ jobs:
           echo "base_url=${{ secrets.UIPATH_BASE_URL_DEV || secrets.UIPATH_BASE_URL }}" >> $GITHUB_OUTPUT
           echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
           echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
+          echo "tenant_id=${{ secrets.UIPATH_TENANT_ID_DEV || secrets.UIPATH_TENANT_ID }}" >> $GITHUB_OUTPUT
           echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
           echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
           echo "integration_test_folder_key=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY }}" >> $GITHUB_OUTPUT
@@ -101,6 +102,7 @@ jobs:
           UIPATH_BASE_URL=${{ steps.config.outputs.base_url }}
           UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
           UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
+          UIPATH_TENANT_ID_DEV=${{ steps.config.outputs.tenant_id }}
           UIPATH_SECRET=${{ steps.config.outputs.secret }}
           INTEGRATION_TEST_TIMEOUT=30000
           INTEGRATION_TEST_SKIP_CLEANUP=false
