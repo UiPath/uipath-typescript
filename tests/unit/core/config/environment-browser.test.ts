@@ -5,32 +5,16 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 vi.mock('@/utils/platform', () => ({ isBrowser: true }));
 
 import { loadFromEnvironment } from '@/core/config/environment';
+import { clearContractEnv } from '../../../utils/env-contract';
 
-const CONTRACT_VARS = [
-  'UIPATH_URL',
-  'UIPATH_BASE_URL',
-  'UIPATH_ORGANIZATION_ID',
-  'UIPATH_ORG_ID',
-  'UIPATH_TENANT_ID',
-  'UIPATH_TENANT_NAME',
-  'UIPATH_ACCESS_TOKEN',
-];
-
-let saved: Record<string, string | undefined>;
+let restoreEnv: () => void;
 
 beforeEach(() => {
-  saved = {};
-  for (const key of CONTRACT_VARS) {
-    saved[key] = process.env[key];
-    delete process.env[key];
-  }
+  restoreEnv = clearContractEnv();
 });
 
 afterEach(() => {
-  for (const [key, value] of Object.entries(saved)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
+  restoreEnv();
 });
 
 describe('loadFromEnvironment in the browser', () => {

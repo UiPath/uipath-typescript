@@ -8,16 +8,20 @@ vi.mock('@/utils/platform', () => ({
 }));
 
 vi.mock('@/core/auth/service', () => {
-  const AuthService: any = vi.fn().mockImplementation(function () {
-    return {
-      getTokenManager: () => ({ getToken: () => 'token', hasValidToken: () => true, destroy: vi.fn() }),
-      hasValidToken: () => true,
-      authenticateWithSecret: vi.fn(),
-      authenticate: vi.fn().mockResolvedValue(true),
-      logout: vi.fn(),
-    };
-  });
-  AuthService.isInOAuthCallback = vi.fn(() => false);
+  // Object.assign intersects both argument types, so the static property is
+  // typed without resorting to `any`.
+  const AuthService = Object.assign(
+    vi.fn().mockImplementation(function () {
+      return {
+        getTokenManager: () => ({ getToken: () => 'token', hasValidToken: () => true, destroy: vi.fn() }),
+        hasValidToken: () => true,
+        authenticateWithSecret: vi.fn(),
+        authenticate: vi.fn().mockResolvedValue(true),
+        logout: vi.fn(),
+      };
+    }),
+    { isInOAuthCallback: vi.fn(() => false) },
+  );
   return { AuthService };
 });
 
@@ -27,38 +31,26 @@ vi.mock('@/core/config/runtime', () => ({ loadFromMetaTags: vi.fn(() => null) })
 
 import { UiPath } from '@/core/uipath';
 import { loadFromMetaTags } from '@/core/config/runtime';
-
-const CONTRACT_VARS = [
-  'UIPATH_URL', 'UIPATH_BASE_URL', 'UIPATH_ORGANIZATION_ID', 'UIPATH_ORG_ID',
-  'UIPATH_ORGANIZATION_NAME', 'UIPATH_ORG_NAME', 'UIPATH_TENANT_ID',
-  'UIPATH_TENANT_NAME', 'UIPATH_ACCESS_TOKEN', 'UIPATH_SECRET',
-];
+import { clearContractEnv } from '../../utils/env-contract';
 
 const BASE_URL = 'https://alpha.uipath.com';
 const ORG_ID = 'org-guid';
 const TENANT_ID = 'tenant-guid';
 const TOKEN = 'workload-token';
 
-let saved: Record<string, string | undefined>;
+let restoreEnv: () => void;
 
 function setContract(vars: Record<string, string>): void {
   Object.assign(process.env, vars);
 }
 
 beforeEach(() => {
-  saved = {};
-  for (const key of CONTRACT_VARS) {
-    saved[key] = process.env[key];
-    delete process.env[key];
-  }
+  restoreEnv = clearContractEnv();
 });
 
 afterEach(() => {
   vi.mocked(loadFromMetaTags).mockReturnValue(null);
-  for (const [key, value] of Object.entries(saved)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
+  restoreEnv();
 });
 
 describe('UiPath zero-config from the execution-context contract', () => {

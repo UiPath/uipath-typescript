@@ -4,35 +4,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 vi.mock('@/utils/platform', () => ({ isBrowser: false }));
 
 import { loadFromEnvironment, readEnv } from '@/core/config/environment';
+import { clearContractEnv } from '../../../utils/env-contract';
 
-const CONTRACT_VARS = [
-  'UIPATH_URL',
-  'UIPATH_BASE_URL',
-  'UIPATH_ORGANIZATION_ID',
-  'UIPATH_ORG_ID',
-  'UIPATH_ORGANIZATION_NAME',
-  'UIPATH_ORG_NAME',
-  'UIPATH_TENANT_ID',
-  'UIPATH_TENANT_NAME',
-  'UIPATH_ACCESS_TOKEN',
-  'UIPATH_SECRET',
-];
-
-let saved: Record<string, string | undefined>;
+let restoreEnv: () => void;
 
 beforeEach(() => {
-  saved = {};
-  for (const key of CONTRACT_VARS) {
-    saved[key] = process.env[key];
-    delete process.env[key];
-  }
+  restoreEnv = clearContractEnv();
 });
 
 afterEach(() => {
-  for (const [key, value] of Object.entries(saved)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
+  restoreEnv();
   vi.unstubAllGlobals();
 });
 
