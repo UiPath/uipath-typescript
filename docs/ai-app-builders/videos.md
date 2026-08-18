@@ -83,10 +83,10 @@ Every video builds the same app — an IT ticketing portal backed by a Data Fabr
 }
 .md-typeset .vg-card:hover {
   transform: translateY(-2px);
-  border-color: var(--md-primary-fg-color);
+  border-color: var(--md-typeset-a-color);
   box-shadow: 0 4px 14px rgba(0,0,0,.13);
 }
-.md-typeset .vg-card:focus-visible { outline: 2px solid var(--md-primary-fg-color); outline-offset: 2px; }
+.md-typeset .vg-card:focus-visible { outline: 2px solid var(--md-typeset-a-color); outline-offset: 2px; }
 
 .md-typeset .vg-thumb {
   position: relative;
@@ -130,7 +130,7 @@ Every video builds the same app — an IT ticketing portal backed by a Data Fabr
 .md-typeset .vg-title { font-size: 1rem; font-weight: 600; }
 .md-typeset .vg-desc { font-size: 0.76rem; color: var(--md-default-fg-color--light); flex: 1; line-height: 1.55; }
 .md-typeset .vg-desc code { font-size: 0.9em; }
-.md-typeset .vg-cta { font-size: 0.76rem; font-weight: 600; color: var(--md-primary-fg-color); }
+.md-typeset .vg-cta { font-size: 0.76rem; font-weight: 600; color: var(--md-typeset-a-color); }
 .md-typeset .vg-cta::after { content: " \2192"; }
 </style>
 
