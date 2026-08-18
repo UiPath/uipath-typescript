@@ -12,7 +12,7 @@ v0 by Vercel generates the app and deploys it to UiPath for you — build a UiPa
 The full build, start to finish — prompt to a live app on a UiPath tenant.
 
 <div class="yt-embed">
-  <iframe src="https://www.youtube-nocookie.com/embed/YOUTUBE_ID_VERCEL"
+  <iframe src="https://www.youtube-nocookie.com/embed/OHB_w6uEasA"
           title="Building and deploying a UiPath coded app with Vercel (v0)"
           loading="lazy" allowfullscreen
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
