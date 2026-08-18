@@ -6,7 +6,7 @@ hide:
 
 # AI App Builders Video Gallery
 
-Every video builds the same app — an IT ticketing portal backed by a Data Fabric entity — starting from a plain-language prompt and ending with the app live on a UiPath tenant. Each one points its builder at the UiPath Coded Apps skill, so only the builder changes: the skill, the SDK and the deploy pipeline are identical every time.
+The four builder walkthroughs each build the same app — an IT ticketing portal backed by a Data Fabric entity — starting from a plain-language prompt and ending with the app live on a UiPath tenant. Only the builder changes: the UiPath Coded Apps skill, the SDK and the deploy pipeline are identical every time. The Codex clip is a short overview of the UiPath Sites plugin rather than a full build.
 
 <div class="vg">
 
@@ -58,6 +58,18 @@ Every video builds the same app — an IT ticketing portal backed by a Data Fabr
     </span>
   </a>
 
+  <a class="vg-card" href="../../plugins/codex/#watch-the-overview">
+    <span class="vg-thumb vg-codex">
+      <span class="vg-play" aria-hidden="true"></span>
+      <span class="vg-dur">0:38</span>
+    </span>
+    <span class="vg-body">
+      <span class="vg-head"><span class="vg-mono" style="background:#0f9d77">Cx</span><span class="vg-title">Codex</span></span>
+      <span class="vg-desc">A short overview of the UiPath Sites plugin, which builds and deploys coded apps from Codex with no CLI or skill setup of your own.</span>
+      <span class="vg-cta">Watch and read the guide</span>
+    </span>
+  </a>
+
 </div>
 
 <style>
@@ -99,6 +111,7 @@ Every video builds the same app — an IT ticketing portal backed by a Data Fabr
 .md-typeset .vg-replit  { background: linear-gradient(135deg,#e8632b,#f2a33c); }
 .md-typeset .vg-vercel  { background: linear-gradient(135deg,#111,#444); }
 .md-typeset .vg-bolt    { background: linear-gradient(135deg,#1a6cf5,#12b8ff); }
+.md-typeset .vg-codex   { background: linear-gradient(135deg,#0f9d77,#054d3d); }
 
 .md-typeset .vg-play {
   width: 3rem; height: 3rem; border-radius: 50%;
