@@ -40,6 +40,56 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+## Zero-config (execution context)
+
+Outside the browser the SDK configures itself from the execution-context
+environment contract, so `new UiPath()` needs no arguments and no credential
+code:
+
+```typescript
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+await sdk.initialize();
+```
+
+On a UiPath runner the contract is already populated. Off-runner — a script, a
+test, a local `uip functions serve` — set the variables yourself:
+
+```bash
+UIPATH_URL=https://cloud.uipath.com
+UIPATH_ORGANIZATION_ID=<organizationId>   # a logical org name also works
+UIPATH_TENANT_ID=<tenantId>               # a logical tenant name also works
+UIPATH_ACCESS_TOKEN=<accessToken>         # PAT or bearer token
+```
+
+| Variable | Also accepted |
+|----------|---------------|
+| `UIPATH_URL` | `UIPATH_BASE_URL` |
+| `UIPATH_ORGANIZATION_ID` | `UIPATH_ORG_ID`, `UIPATH_ORGANIZATION_NAME`, `UIPATH_ORG_NAME` |
+| `UIPATH_TENANT_ID` | `UIPATH_TENANT_NAME` |
+| `UIPATH_ACCESS_TOKEN` | `UIPATH_SECRET` |
+
+To state the context explicitly instead, pass it to the constructor — this
+takes precedence over the environment:
+
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgId: '<organizationId>',
+  tenantId: '<tenantId>',
+  accessToken: '<accessToken>'
+});
+await sdk.initialize();
+```
+
+The access token is consumed internally and is never exposed on `sdk.config`.
+
+!!! info "Precedence"
+    Constructor config wins over meta tags, which win over the environment.
+    Meta tags apply in the browser only; the environment contract applies
+    outside it.
+
 ## Secret-based Authentication
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
@@ -188,13 +238,13 @@ useEffect(() => {
 
 ## Quick Test Script
 
-Create `.env` file:
+Create `.env` file — the SDK reads these itself:
 ```bash
 # .env
-UIPATH_BASE_URL=https://api.uipath.com
-UIPATH_ORG_NAME=your-organization-name
-UIPATH_TENANT_NAME=your-tenant-name
-UIPATH_SECRET=your-pat-token
+UIPATH_URL=https://cloud.uipath.com
+UIPATH_ORGANIZATION_ID=your-organization
+UIPATH_TENANT_ID=your-tenant
+UIPATH_ACCESS_TOKEN=your-pat-token
 ```
 
 Verify your authentication setup:
@@ -206,19 +256,15 @@ import { UiPath } from '@uipath/uipath-typescript/core';
 import { Assets } from '@uipath/uipath-typescript/assets';
 
 async function testAuthentication() {
-  const sdk = new UiPath({
-    baseUrl: process.env.UIPATH_BASE_URL!,
-    orgName: process.env.UIPATH_ORG_NAME!,
-    tenantName: process.env.UIPATH_TENANT_NAME!,
-    secret: process.env.UIPATH_SECRET!
-  });
+  const sdk = new UiPath();
+  await sdk.initialize();
 
   try {
     // Test with a simple API call
     const assets = new Assets(sdk);
     const allAssets = await assets.getAll();
     console.log('Authentication successful!');
-    console.log(`Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
+    console.log(`Connected to ${sdk.config.orgName}/${sdk.config.tenantName}`);
     console.log(`Found ${allAssets.items.length} assets`);
 
   } catch (error) {

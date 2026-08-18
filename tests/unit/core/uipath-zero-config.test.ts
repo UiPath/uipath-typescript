@@ -23,7 +23,10 @@ vi.mock('@/core/auth/service', () => {
 
 vi.mock('@/core/http/api-client');
 
+vi.mock('@/core/config/runtime', () => ({ loadFromMetaTags: vi.fn(() => null) }));
+
 import { UiPath } from '@/core/uipath';
+import { loadFromMetaTags } from '@/core/config/runtime';
 
 const CONTRACT_VARS = [
   'UIPATH_URL', 'UIPATH_BASE_URL', 'UIPATH_ORGANIZATION_ID', 'UIPATH_ORG_ID',
@@ -51,6 +54,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.mocked(loadFromMetaTags).mockReturnValue(null);
   for (const [key, value] of Object.entries(saved)) {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
@@ -141,6 +145,48 @@ describe('UiPath explicit id/token constructor override', () => {
 
     expect(sdk.config.orgName).toBe('my-org');
     expect(sdk.isInitialized()).toBe(true);
+  });
+});
+
+describe('UiPath auth-method precedence across sources', () => {
+  const OAUTH = { clientId: 'client-abc', redirectUri: 'http://localhost:5173', scope: 'OR.Assets' };
+
+  it('keeps an explicit OAuth config usable when the environment supplies a token', () => {
+    setContract({ UIPATH_ACCESS_TOKEN: TOKEN });
+
+    const sdk = new UiPath({ baseUrl: BASE_URL, orgName: 'my-org', tenantName: 'my-tenant', ...OAUTH });
+
+    expect(sdk.config.orgName).toBe('my-org');
+    expect(sdk.isInitialized()).toBe(false); // OAuth defers to initialize(), not secret auto-init
+  });
+
+  it('keeps an explicit secret config usable when meta tags supply OAuth fields', () => {
+    // Meta tags are the only layer that can carry OAuth, so this is the other
+    // reachable cross-layer conflict.
+    vi.mocked(loadFromMetaTags).mockReturnValue({
+      baseUrl: BASE_URL,
+      orgName: 'meta-org',
+      tenantName: 'meta-tenant',
+      ...OAUTH,
+    });
+
+    const sdk = new UiPath({ secret: 'ctor-secret' });
+
+    expect(sdk.isInitialized()).toBe(true); // secret wins, OAuth fields dropped
+  });
+
+  it('leaves a single layer carrying both auth methods for validation to reject', async () => {
+    const sdk = new UiPath({
+      baseUrl: BASE_URL,
+      orgName: 'my-org',
+      tenantName: 'my-tenant',
+      secret: 'ctor-secret',
+      ...OAUTH,
+    });
+
+    // Contradictory input is not a precedence question — it must not be
+    // silently resolved by dropping one of the two.
+    await expect(sdk.initialize()).rejects.toThrow();
   });
 });
 
