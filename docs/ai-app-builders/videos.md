@@ -1,10 +1,10 @@
 ---
-title: Walkthrough Gallery
+title: AI Builders Walkthrough Gallery
 hide:
   - toc
 ---
 
-# Walkthrough Gallery
+# AI Builders Walkthrough Gallery
 
 Each walkthrough takes the same IT ticketing app from a plain-language prompt to a live app on a UiPath tenant. Only the builder changes — the skill, the SDK and the deploy pipeline are the same every time.
 
