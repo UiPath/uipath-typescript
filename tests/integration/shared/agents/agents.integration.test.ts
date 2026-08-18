@@ -4,6 +4,7 @@ import { Agents } from '../../../../src/services/agents';
 import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
+import { recentWindow } from '../../utils/helpers';
 
 /**
  * Integration tests for Agents (`/insightsrtm_/Agents/*`).
@@ -40,8 +41,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getAll', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the agent list with aggregate totals', async () => {
       const result = await agents.getAll(startTime, endTime);
@@ -100,8 +100,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getErrors', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve a non-paginated list of errors', async () => {
       const result = await agents.getErrors(startTime, endTime);
@@ -160,8 +159,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getErrorsTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the errors timeline', async () => {
       const result = await agents.getErrorsTimeline(startTime, endTime);
@@ -190,8 +188,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getConsumptionTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the Agent Units consumption timeline', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime);
@@ -218,8 +215,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getLatencyTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the per-percentile latency timeline', async () => {
       const result = await agents.getLatencyTimeline(startTime, endTime);
@@ -248,8 +244,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getTopErrorCount', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve top-N agents ranked by error count', async () => {
       const result = await agents.getTopErrorCount(startTime, endTime);
@@ -287,8 +282,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getTopConsumption', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve top-N consuming agents with aggregate totals', async () => {
       const result = await agents.getTopConsumption(startTime, endTime);
@@ -326,8 +320,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getIncidentDistribution', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve incident counts across categories without a pagination field', async () => {
       const result = await agents.getIncidentDistribution(startTime, endTime);
@@ -353,8 +346,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getSummary', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve an aggregate summary with a per-agent breakdown', async () => {
       const result = await agents.getSummary(startTime, endTime);
@@ -386,8 +378,7 @@ describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', 
   });
 
   describe('getUnitConsumptionSummary', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve an aggregate Agent Units and Platform Units summary with a per-agent breakdown', async () => {
       const result = await agents.getUnitConsumptionSummary(startTime, endTime);
