@@ -1,4 +1,4 @@
-import { BaseOptions, FolderScopedOptions, RequestOptions } from '../common/types';
+import { BaseOptions, FolderScopedOptions, RequestOptions, ResourceRef } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -252,4 +252,63 @@ export interface QueueItem {
   folderId: number;
   /** Folder display path — populated when listing items; `null` on insert responses */
   folderName: string | null;
+}
+
+/**
+ * Selects a queue by exactly one of `id` or `name`.
+ */
+export type QueueRef = ResourceRef<number>;
+
+/**
+ * Options for starting a transaction — folder scoping
+ * (`folderId` / `folderKey` / `folderPath`).
+ */
+export interface QueueStartTransactionOptions extends FolderScopedOptions {}
+
+/**
+ * The processing outcome reported when completing a queue item transaction.
+ */
+export enum QueueTransactionOutcome {
+  /** Processing succeeded — the item is marked `Successful`. */
+  Successful = 'Successful',
+  /** Processing failed — the item is marked `Failed`; describe the failure via `processingError`. */
+  Failed = 'Failed'
+}
+
+/**
+ * Options for completing a transaction — completion details plus folder
+ * scoping (`folderId` / `folderKey` / `folderPath`). The outcome itself is
+ * passed positionally to `completeTransaction`.
+ */
+export interface QueueCompleteTransactionOptions extends FolderScopedOptions {
+  /**
+   * Failure details recorded when the transaction is unsuccessful.
+   */
+  processingError?: QueueItemProcessingError;
+  /**
+   * Re-defer the item to this time (used with retry flows).
+   */
+  deferDate?: Date;
+  /**
+   * Updated due date for the item.
+   */
+  dueDate?: Date;
+  /**
+   * Output payload to persist on the item. Keys are user-defined and sent
+   * exactly as provided (no case conversion).
+   */
+  outputData?: Record<string, unknown>;
+  /**
+   * Analytics payload to persist on the item. Keys are user-defined and sent
+   * exactly as provided.
+   */
+  analytics?: Record<string, unknown>;
+  /**
+   * Free-form progress text to persist on the item.
+   */
+  progress?: string;
+  /**
+   * Operation identifier associated with the completion.
+   */
+  operationId?: string;
 }

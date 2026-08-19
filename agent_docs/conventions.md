@@ -81,7 +81,7 @@ The method attachment pattern:
 
 - **Not every service method gets bound.** Only bind methods that operate ON a specific entity after retrieval — state-changing operations (assign, cancel, complete, insert, update, delete) and contextual reads that need the entity's ID.
 - **NEVER** bind `getAll()`, `getById()`, `create()`, or cross-entity queries — these are service-level entry points. Binding them creates circular nonsense (an entity that retrieves itself).
-- **Read-only services don't bind at all** — Assets, Buckets, Processes, ChoiceSets, Cases, and ProcessIncidents have no `{Entity}Methods` interface. (Queues binds `getAllItems`/`insertItem` since queue-item support landed.)
+- **Read-only services don't bind at all** — Assets, Buckets, Processes, ChoiceSets, Cases, and ProcessIncidents have no `{Entity}Methods` interface.
 
 ## Response transformation pipeline
 

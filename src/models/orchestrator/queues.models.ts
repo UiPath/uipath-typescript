@@ -9,7 +9,11 @@ import {
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
   QueueItem,
-  QueueItemValue
+  QueueItemValue,
+  QueueRef,
+  QueueStartTransactionOptions,
+  QueueCompleteTransactionOptions,
+  QueueTransactionOutcome
 } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { ValidationError } from '../../core/errors/validation';
@@ -197,7 +201,7 @@ export interface QueueServiceModel {
    * ```
    * @example
    * ```typescript
-   * // Or operate on a queue returned by getById/getAll
+   * // Or operate on a queue returned by getByIdWithMethods/getAllWithMethods
    * const queue = await queues.getByIdWithMethods(<queueId>, { folderId: <folderId> });
    * const items = await queue.getAllItems();
    * ```
@@ -253,6 +257,94 @@ export interface QueueServiceModel {
     specificData: Record<string, QueueItemValue>,
     options?: QueueInsertItemOptions
   ): Promise<QueueItem>;
+
+  /**
+   * Starts a transaction: acquires the next available item from a queue and
+   * marks it `InProgress`
+   *
+   * Requires a robot session. Orchestrator allocates the item to the robot
+   * that sent the request, so user and application identities always receive
+   * `null`, however many items are waiting. Queue items are normally consumed
+   * by a robot running a process — apps produce with `insertItemByName` and
+   * observe with `getAllItems`, leaving acquisition to the robot.
+   *
+   * `null` covers both "no eligible items" and "no allocation target" — the
+   * two are not distinguishable.
+   *
+   * The queue is selected by exactly one of `name` or `id`. The transaction
+   * API identifies queues by name, so an `id` selector is first resolved to
+   * the queue's name (one extra lookup).
+   *
+   * @param queue - Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise resolving to the acquired {@link QueueItem} (in `InProgress` status with `processingStartTime` set), or `null` when no item is available
+   * @example
+   * ```typescript
+   * const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
+   *
+   * // or select by ID — the SDK first resolves the queue's name (one extra lookup)
+   * const byId = await queues.startTransaction({ id: <queueId> }, { folderId: <folderId> });
+   *
+   * // folder scoping also accepts a folder key or path
+   * const byPath = await queues.startTransaction({ name: '<queueName>' }, { folderPath: 'Shared/Finance' });
+   *
+   * if (transaction) {
+   *   // Running under a robot session: the item is now locked to this caller
+   *   console.log(transaction.status);        // 'InProgress'
+   *   console.log(transaction.specificData);  // the item's business payload
+   * } else {
+   *   // No item was acquired. This happens when the queue has no eligible
+   *   // items — and always for user/application identities (e.g. a coded app
+   *   // signed in with OAuth), which have no robot session for Orchestrator
+   *   // to allocate the item to.
+   *   console.log('Nothing to process');
+   * }
+   * ```
+   */
+  startTransaction(queue: QueueRef, options?: QueueStartTransactionOptions): Promise<QueueItem | null>;
+
+  /**
+   * Completes a transaction: reports the processing outcome of a queue item
+   *
+   * Marks the item `Successful` or `Failed`, and can persist output data
+   * alongside the result. On failure, `processingError` is optional — without
+   * it the item is marked `Failed` with no error details; the error `type`
+   * decides retry behavior (an `ApplicationException` failure is retried per
+   * the queue's retry settings, a `BusinessException` is not).
+   *
+   * Applies to items with an active transaction. Changing the outcome of an
+   * item that already reached a terminal status is rejected.
+   *
+   * @param itemId - Queue item ID of the transaction to complete
+   * @param outcome - The caller's verdict on its own processing of the item; Orchestrator records it as-is
+   * @param options - Completion details (output data, failure details, new defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise that resolves once the outcome is recorded
+   * @example
+   * ```typescript
+   * import { QueueTransactionOutcome, QueueExceptionType } from '@uipath/uipath-typescript/queues';
+   *
+   * // Report success with output data
+   * await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Successful, {
+   *   folderId: <folderId>,
+   *   outputData: { paymentId: 'P-778' }
+   * });
+   *
+   * // Report a business failure (not retried) — folder scoping also
+   * // accepts a folder key or path
+   * await queues.completeTransaction(<itemId>, QueueTransactionOutcome.Failed, {
+   *   folderKey: '<folderKey>',
+   *   processingError: {
+   *     reason: 'Vendor not found',
+   *     type: QueueExceptionType.BusinessException
+   *   }
+   * });
+   * ```
+   */
+  completeTransaction(
+    itemId: number,
+    outcome: QueueTransactionOutcome,
+    options?: QueueCompleteTransactionOptions
+  ): Promise<void>;
 }
 
 /**
@@ -286,6 +378,32 @@ export interface QueueMethods {
     specificData: Record<string, QueueItemValue>,
     options?: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'>
   ): Promise<QueueItem>;
+
+  /**
+   * Acquires the next available item from this queue, marking it `InProgress`.
+   *
+   * Requires a robot session — Orchestrator returns the item to the robot
+   * that requested it, so user and application identities receive `null`.
+   * `null` means either no eligible items or no allocation target; the API
+   * does not distinguish them.
+   *
+   * @returns Promise resolving to the acquired {@link QueueItem}, or `null`
+   */
+  startTransaction(): Promise<QueueItem | null>;
+
+  /**
+   * Reports the processing outcome of one of this queue's items.
+   *
+   * @param itemId - Queue item ID of the transaction to complete
+   * @param outcome - The caller's verdict on its own processing of the item; Orchestrator records it as-is
+   * @param options Completion details (output data, failure details, new defer/due dates) — folder scoping comes from the queue
+   * @returns Promise that resolves once the outcome is recorded
+   */
+  completeTransaction(
+    itemId: number,
+    outcome: QueueTransactionOutcome,
+    options?: Omit<QueueCompleteTransactionOptions, 'folderId' | 'folderKey' | 'folderPath'>
+  ): Promise<void>;
 }
 
 /**
@@ -317,6 +435,17 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
       if (!queueData.name) throw new ValidationError({ message: 'Queue name is undefined' });
       if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
       return service.insertItemByName(queueData.name, specificData, { ...options, folderId: queueData.folderId });
+    },
+
+    async startTransaction(): Promise<QueueItem | null> {
+      if (!queueData.name) throw new ValidationError({ message: 'Queue name is undefined' });
+      if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
+      return service.startTransaction({ name: queueData.name }, { folderId: queueData.folderId });
+    },
+
+    async completeTransaction(itemId: number, outcome: QueueTransactionOutcome, options?: Omit<QueueCompleteTransactionOptions, 'folderId' | 'folderKey' | 'folderPath'>): Promise<void> {
+      if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
+      return service.completeTransaction(itemId, outcome, { ...options, folderId: queueData.folderId });
     }
   };
 }
