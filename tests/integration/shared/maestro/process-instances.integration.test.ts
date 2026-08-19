@@ -121,8 +121,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   describe('getById', () => {
     it('should retrieve a specific process instance by ID', async () => {
       if (!testInstanceId || !testFolderKey) {
-        console.log('No instance available for testing');
-        return;
+        throw new Error('No process instance with a folder key available — cannot test getById');
       }
 
       const { processInstances } = getServices();
@@ -137,8 +136,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   describe('Instance lifecycle operations', () => {
     it('should pause a process instance', async () => {
       if (!testInstanceId || !testFolderKey) {
-        console.log('No instance available for testing');
-        return;
+        throw new Error('No process instance with a folder key available — cannot test pause');
       }
 
       const { processInstances } = getServices();
@@ -161,8 +159,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
     it('should resume a paused process instance', async () => {
       if (!testInstanceId || !testFolderKey) {
-        console.log('No instance available for testing');
-        return;
+        throw new Error('No process instance with a folder key available — cannot test resume');
       }
 
       const { processInstances } = getServices();

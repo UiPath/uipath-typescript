@@ -187,8 +187,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   describe('getById', () => {
     it('should retrieve a specific case instance by ID', async () => {
       if (!testCaseInstanceId || !testCaseFolderKey) {
-        console.log('No case instance available for testing');
-        return;
+        throw new Error('No case instance with a folder key available — cannot test getById');
       }
 
       const { caseInstances } = getServices();
@@ -203,8 +202,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   describe('getStages', () => {
     it('should retrieve stages for a case instance', async () => {
       if (!testCaseInstanceId || !testCaseFolderKey) {
-        console.log('No case instance available for testing');
-        return;
+        throw new Error('No case instance with a folder key available — cannot test getStages');
       }
 
       const { caseInstances } = getServices();
@@ -223,8 +221,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
     it('should validate stage structure', async () => {
       if (!testCaseInstanceId || !testCaseFolderKey) {
-        console.log('No case instance available for testing');
-        return;
+        throw new Error('No case instance with a folder key available — cannot validate stage structure');
       }
 
       const { caseInstances } = getServices();
