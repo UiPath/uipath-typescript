@@ -12,6 +12,7 @@ import {
   QueueItemValue
 } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { ValidationError } from '../../core/errors/validation';
 
 /**
  * A queue with its bound methods attached — the shape returned by
@@ -300,8 +301,8 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
         ? PaginatedResponse<QueueItem>
         : NonPaginatedResponse<QueueItem>
     > {
-      if (!queueData.id) throw new Error('Queue ID is undefined');
-      if (!queueData.folderId) throw new Error('Folder ID is undefined');
+      if (!queueData.id) throw new ValidationError({ message: 'Queue ID is undefined' });
+      if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
       return service.getAllItems(
         queueData.id,
         { ...options, folderId: queueData.folderId } as QueueGetAllItemsOptions
@@ -313,8 +314,8 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
     },
 
     async insertItem(specificData: Record<string, QueueItemValue>, options?: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'>): Promise<QueueItem> {
-      if (!queueData.name) throw new Error('Queue name is undefined');
-      if (!queueData.folderId) throw new Error('Folder ID is undefined');
+      if (!queueData.name) throw new ValidationError({ message: 'Queue name is undefined' });
+      if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
       return service.insertItemByName(queueData.name, specificData, { ...options, folderId: queueData.folderId });
     }
   };

@@ -10,6 +10,7 @@ import {
 } from '../../../utils/mocks/queues';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { ValidationError } from '../../../../src/core/errors/validation';
 import {
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
@@ -61,7 +62,9 @@ describe('Queue Models', () => {
         const queueData = createBasicQueue({ id: undefined as unknown as number });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        await expect(queue.getAllItems()).rejects.toThrow('Queue ID is undefined');
+        const promise = queue.getAllItems();
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Queue ID is undefined');
         expect(mockService.getAllItems).not.toHaveBeenCalled();
       });
 
@@ -69,7 +72,9 @@ describe('Queue Models', () => {
         const queueData = createBasicQueue({ folderId: undefined as unknown as number });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        await expect(queue.getAllItems()).rejects.toThrow('Folder ID is undefined');
+        const promise = queue.getAllItems();
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Folder ID is undefined');
         expect(mockService.getAllItems).not.toHaveBeenCalled();
       });
     });
@@ -103,8 +108,9 @@ describe('Queue Models', () => {
         const queueData = createBasicQueue({ name: undefined as unknown as string });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        await expect(queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
-          .rejects.toThrow('Queue name is undefined');
+        const promise = queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Queue name is undefined');
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
 
@@ -112,8 +118,9 @@ describe('Queue Models', () => {
         const queueData = createBasicQueue({ folderId: undefined as unknown as number });
         const queue = createQueueWithMethods(queueData, mockService);
 
-        await expect(queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT))
-          .rejects.toThrow('Folder ID is undefined');
+        const promise = queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Folder ID is undefined');
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
     });
