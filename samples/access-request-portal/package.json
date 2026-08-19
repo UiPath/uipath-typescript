@@ -1,0 +1,25 @@
+{
+  "name": "access-request-portal",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Coded app demonstrating the platform RBAC services: self-service access requests with admin approval, effective-access view, role assignment audit, and access cloning",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@uipath/uipath-typescript": "file:../..",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@uipath/coded-apps-dev": "^1.0.0-beta.1",
+    "@vitejs/plugin-react": "^5.2.0",
+    "typescript": "~5.8.3",
+    "vite": "^8.1.0"
+  }
+}
