@@ -221,12 +221,23 @@ Tests skip gracefully when:
 
 ## Authentication modes
 
-The harness can authenticate with either of two credentials, selected per suite:
+A suite declares what it *needs* from a credential, and the harness picks one:
 
-| Mode | Env var | Used by |
-|------|---------|---------|
-| `pat` (default) | `UIPATH_SECRET` | Every suite unless noted below |
-| `user` | `UIPATH_USER_TOKEN` | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions |
+| Requirement | Meaning | Declared by |
+|-------------|---------|-------------|
+| `any` (default) | Either credential works | Every suite unless noted below |
+| `user` | Needs a user access token | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions |
+| `pat` | Needs the external-application identity | None currently — `auth-errors` builds its own SDK instances directly |
+
+For `any`, resolution prefers **`UIPATH_USER_TOKEN`** when configured and falls back to
+`UIPATH_SECRET`. A user token carries the signed-in user's own permissions rather than
+an external app's granted scopes, so it reaches strictly more of the API — which is why
+it wins by default. Set `INTEGRATION_AUTH_MODE=pat` (or `=user`) to force one credential
+for a whole run; that is how the PAT path stays covered once a user token is available
+everywhere.
+
+Resolution is a pure function of the environment (`resolveAuthMode`), so
+`describe.skipIf(...)` at collection time and the `beforeAll` setup always agree.
 
 The `user` suites exist because their APIs reject PAT and client-credentials tokens
 outright — `insightsrtm_` returns 401 regardless of which scopes the external
@@ -290,6 +301,9 @@ describe.skipIf(!hasUserToken()).each(modes)('My Suite [%s]', (mode) => {
   // ...
 });
 ```
+
+A suite that works with either credential needs no argument — `setupUnifiedTests(mode)`
+resolves to whatever is configured, preferring the user token.
 
 The guard is required: `setupUnifiedTests(mode, 'user')` throws when no token is
 configured, so an unguarded suite fails the run on any machine without one.

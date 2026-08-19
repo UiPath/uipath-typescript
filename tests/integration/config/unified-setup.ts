@@ -25,8 +25,9 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
-import { loadIntegrationConfig, IntegrationConfig } from './test-config';
-export { hasUserToken } from './test-config';
+import { loadIntegrationConfig, IntegrationConfig, resolveAuthMode, AuthRequirement, AuthMode } from './test-config';
+export { hasUserToken, canAuthenticate, resolveAuthMode } from './test-config';
+export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
 
@@ -83,15 +84,6 @@ export interface TestServices {
  */
 export type InitMode = 'v0' | 'v1';
 
-/**
- * Credential the SDK authenticates with:
- * - 'pat': the external-application Personal Access Token (`UIPATH_SECRET`). Default.
- * - 'user': a user access token (`UIPATH_USER_TOKEN`), for services that reject
- *   PAT and client-credentials tokens — `insightsrtm_` and the notification service.
- *
- * Both are sent as bearer tokens; the SDK's `secret` config takes either.
- */
-export type AuthMode = 'pat' | 'user';
 
 let servicesInstance: TestServices | null = null;
 let testConfig: IntegrationConfig | null = null;
@@ -279,13 +271,27 @@ export function cleanupServices(): void {
 }
 
 /**
- * Setup hooks for unified tests with a specific init mode and auth mode.
+ * Setup hooks for unified tests with a specific init mode and auth requirement.
  *
- * Suites passing `'user'` must be gated on `hasUserToken()` — initialization
- * throws when the token is missing.
+ * The requirement defaults to `'any'`, which prefers the user token when one is
+ * configured — a user token carries the caller's own permissions and so reaches
+ * more of the API than an external app's granted scopes. Suites that genuinely
+ * need one credential declare it explicitly.
+ *
+ * Suites declaring `'user'` must be gated on `hasUserToken()` (or
+ * `canAuthenticate('user')`) — setup throws when nothing can satisfy the
+ * requirement, so an unguarded suite fails the run rather than skipping.
  */
-export function setupUnifiedTests(mode: InitMode, authMode: AuthMode = 'pat'): void {
+export function setupUnifiedTests(mode: InitMode, requirement: AuthRequirement = 'any'): void {
   beforeAll(async () => {
+    const authMode = resolveAuthMode(requirement);
+    if (!authMode) {
+      throw new Error(
+        `No configured credential satisfies the '${requirement}' auth requirement. ` +
+        'Set UIPATH_SECRET and/or UIPATH_USER_TOKEN, and guard the suite with ' +
+        '`describe.skipIf(!canAuthenticate(...))` so it skips instead of failing.'
+      );
+    }
     await initializeServices(mode, authMode);
   });
 

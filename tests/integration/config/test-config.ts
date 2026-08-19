@@ -203,6 +203,51 @@ export function loadIntegrationConfig(): IntegrationConfig {
 }
 
 /**
+ * What a suite needs from its credential:
+ * - 'pat'  — the external-application identity specifically
+ * - 'user' — a user access token specifically (insightsrtm_, notification service)
+ * - 'any'  — either works; the harness picks the best available
+ */
+export type AuthRequirement = 'pat' | 'user' | 'any';
+
+/** The credential actually used for a run. */
+export type AuthMode = 'pat' | 'user';
+
+/**
+ * Resolves a requirement to the credential to authenticate with, or null when
+ * nothing configured can satisfy it.
+ *
+ * Reads `process.env` directly and stays free of side effects so it can be
+ * evaluated at collection time by `describe.skipIf(...)`, which runs long before
+ * any `beforeAll`. Resolution must agree between the guard and the setup helper,
+ * so both call this.
+ *
+ * `'any'` prefers the user token: it carries the signed-in user's permissions
+ * rather than an external app's granted scopes, so it reaches strictly more of
+ * the API. Set `INTEGRATION_AUTH_MODE=pat` to force the PAT path instead — used
+ * to keep that path covered even once a user token is available everywhere.
+ */
+export function resolveAuthMode(requirement: AuthRequirement): AuthMode | null {
+  const hasUser = Boolean(process.env.UIPATH_USER_TOKEN);
+  const hasPat = Boolean(process.env.UIPATH_SECRET);
+
+  if (requirement === 'user') return hasUser ? 'user' : null;
+  if (requirement === 'pat') return hasPat ? 'pat' : null;
+
+  const forced = process.env.INTEGRATION_AUTH_MODE;
+  if (forced === 'pat') return hasPat ? 'pat' : null;
+  if (forced === 'user') return hasUser ? 'user' : null;
+
+  if (hasUser) return 'user';
+  return hasPat ? 'pat' : null;
+}
+
+/** Whether any configured credential can satisfy the requirement. */
+export function canAuthenticate(requirement: AuthRequirement): boolean {
+  return resolveAuthMode(requirement) !== null;
+}
+
+/**
  * Whether a user access token is configured.
  *
  * Reads the environment directly rather than going through
@@ -211,7 +256,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
  * config is absent — a suite gated on this must skip, never fail to collect.
  */
 export function hasUserToken(): boolean {
-  return Boolean(process.env.UIPATH_USER_TOKEN);
+  return canAuthenticate('user');
 }
 
 /**
