@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.1",
+  "sdkVersion": "1.6.2",
   "services": [
     {
       "name": "AgentMemory",
@@ -307,8 +307,16 @@
           "since": "1.5.4"
         },
         {
+          "name": "getAddConnectionUrl",
+          "since": "1.6.2"
+        },
+        {
           "name": "getAll",
           "since": null
+        },
+        {
+          "name": "getAvailableConnections",
+          "since": "1.6.2"
         },
         {
           "name": "getById",
@@ -317,6 +325,10 @@
         {
           "name": "onConnectionStatusChanged",
           "since": null
+        },
+        {
+          "name": "updateConnectionSelections",
+          "since": "1.6.2"
         }
       ]
     },
@@ -690,12 +702,44 @@
       "since": null,
       "methods": [
         {
+          "name": "completeTransaction",
+          "since": "1.6.2"
+        },
+        {
           "name": "getAll",
           "since": null
         },
         {
+          "name": "getAllItems",
+          "since": "1.6.2"
+        },
+        {
+          "name": "getAllWithMethods",
+          "since": "1.6.2"
+        },
+        {
           "name": "getById",
           "since": null
+        },
+        {
+          "name": "getByIdWithMethods",
+          "since": "1.6.2"
+        },
+        {
+          "name": "getByKey",
+          "since": "1.6.2"
+        },
+        {
+          "name": "getByName",
+          "since": "1.6.2"
+        },
+        {
+          "name": "insertItemByName",
+          "since": "1.6.2"
+        },
+        {
+          "name": "startTransaction",
+          "since": "1.6.2"
         }
       ]
     },
