@@ -9,6 +9,21 @@ Install the plugin once, then start building with `@uipath-sites` or with an `@S
 
 ---
 
+## Watch the overview
+
+A short, silent tour of installing the plugin and what it does once it's in place.
+
+<div class="yt-embed">
+  <iframe src="https://www.youtube-nocookie.com/embed/lcFeLwBets0?rel=0"
+          title="Introducing UiPath Sites, the Codex plugin for UiPath Coded Apps"
+          loading="lazy" allowfullscreen
+          allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+</div>
+
+More videos in the [AI App Builders video gallery](../ai-app-builders/videos.md).
+
+---
+
 ## Get started
 
 1. Add [`UiPath/uipath-typescript`](https://github.com/UiPath/uipath-typescript) as a Codex plugin marketplace source.
