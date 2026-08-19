@@ -1,10 +1,12 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
+  getTestConfig,
   setupUnifiedTests,
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
+import { InstanceStatus } from '../../../../src/models/maestro';
 import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/models/maestro/process-instances.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -14,6 +16,23 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
+
+  // Faulting-process instance started at suite start for the retry test. It faults in the
+  // background (~15s idle, minutes under full-suite load) while earlier tests run.
+  let seededFaultedJobKey: string | null = null;
+
+  beforeAll(async () => {
+    const { processes } = getServices();
+    const config = getTestConfig();
+
+    if (config.maestroTestProcessKey && config.folderId) {
+      const [job] = await processes.start(
+        { processKey: config.maestroTestProcessKey },
+        { folderId: Number(config.folderId) }
+      );
+      seededFaultedJobKey = job.key;
+    }
+  }, 60_000);
 
   describe('getAll', () => {
     it('should retrieve all process instances', async () => {
@@ -172,9 +191,12 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
           pageSize: 10,
         });
 
+        // Never cancel the faulting-process instance seeded for the retry test — it is
+        // briefly Running before it faults
         const runnableInstance = instances.items.find(
           (inst) =>
             inst.folderKey &&
+            inst.instanceId !== seededFaultedJobKey &&
             inst.latestRunStatus &&
             inst.latestRunStatus.toLowerCase().match(/running|active|pending/)
         );
@@ -219,39 +241,74 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
     });
   });
 
+  // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in
+  // ~15s), retries it, then cancels it so nothing keeps executing. Operating only on our
+  // own instance makes the test safe when multiple runs execute in parallel.
   describe('retry', () => {
-    let faultedInstanceId!: string;
-    let faultedFolderKey!: string;
+    it('should retry a faulted process instance', async () => {
+      const { processes, processInstances } = getServices();
+      const config = getTestConfig();
 
-    beforeAll(async () => {
-      const { processInstances } = getServices();
-
-      const instances = await processInstances.getAll({ pageSize: 50 });
-      const faulted = instances.items.find((inst) =>
-        /fault|fail/i.test(inst.latestRunStatus ?? '')
-      );
-
-      if (!faulted) {
+      if (!config.maestroTestProcessKey || !config.folderId || !config.folderKey) {
         throw new Error(
-          'No faulted process instance available in the test tenant to exercise retry. ' +
-            'Seed one by running a deliberately-faulting Maestro process.'
+          'MAESTRO_TEST_PROCESS_KEY / folder config not set — cannot seed a faulted instance for retry'
         );
       }
-      faultedInstanceId = faulted.instanceId;
-      faultedFolderKey = faulted.folderKey;
-    });
 
-    it('should retry a faulted process instance', async () => {
-      const { processInstances } = getServices();
+      // Use the instance started in beforeAll — it has been faulting in the background
+      // while the earlier tests ran. Fall back to seeding one here if the hook could not.
+      let instanceId = seededFaultedJobKey;
+      if (!instanceId) {
+        const [job] = await processes.start(
+          { processKey: config.maestroTestProcessKey },
+          { folderId: Number(config.folderId) }
+        );
+        instanceId = job.key;
+      }
 
-      const result = await processInstances.retry(faultedInstanceId, faultedFolderKey, {
+      // Check immediately, then poll: faulting takes ~15s on an idle tenant but can take
+      // minutes when the full integration suite loads the tenant (e.g. the CI PR gate)
+      let faulted = false;
+      for (let attempt = 0; attempt < 36; attempt++) {
+        try {
+          const instance = await processInstances.getById(instanceId, config.folderKey);
+          if (instance.latestRunStatus === InstanceStatus.FAULTED) {
+            faulted = true;
+            break;
+          }
+        } catch {
+          // not yet visible in PIMS
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+      if (!faulted) {
+        throw new Error('Seeded instance of the faulting process did not fault within 180s');
+      }
+
+      const result = await processInstances.retry(instanceId, config.folderKey, {
         comment: 'Integration test retry',
       });
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
-    });
+
+      // Cleanup: cancel the retried (re-running) instance so it does not keep executing.
+      // The Retrying→Canceling transition can be briefly invalid, so allow a few attempts.
+      let cancelled = false;
+      for (let attempt = 0; attempt < 10 && !cancelled; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        try {
+          await processInstances.cancel(instanceId, config.folderKey);
+          cancelled = true;
+        } catch {
+          // transition not yet valid
+        }
+      }
+      if (!cancelled) {
+        console.log(`Could not cancel retried instance ${instanceId} — it will fault again on its own`);
+      }
+    }, 180_000);
   });
 
   describe('Instance details', () => {

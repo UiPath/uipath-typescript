@@ -23,6 +23,19 @@ export interface IntegrationConfig {
   folderKey?: string;
   folderPath?: string;
   maestroTestProcessKey?: string;
+  /**
+   * Release key of a deployed case-management process used to self-seed a running case
+   * instance via Orchestrator jobs. Must be a case process that stays Running after start
+   * (e.g. one with a human task). The release key doubles as the Maestro processKey.
+   */
+  maestroCaseProcessKey?: string;
+  /**
+   * Release key of a deployed case-management process that runs to Completed without
+   * human interaction (e.g. timer-driven). Used to seed reopenable instances — reopen
+   * requires Completed status. Reopened instances do not re-complete on their own, so
+   * tests must close them afterwards.
+   */
+  maestroCompletedCaseProcessKey?: string;
   orchestratorTestProcessKey?: string;
   dataFabricTestEntityId?: string;
   dataFabricTestFolderEntityId?: string;
@@ -107,6 +120,8 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
     folderPath: typeof rawConfig.folderPath === 'string' ? rawConfig.folderPath : undefined,
     maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
+    maestroCaseProcessKey: typeof rawConfig.maestroCaseProcessKey === 'string' ? rawConfig.maestroCaseProcessKey : undefined,
+    maestroCompletedCaseProcessKey: typeof rawConfig.maestroCompletedCaseProcessKey === 'string' ? rawConfig.maestroCompletedCaseProcessKey : undefined,
     orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
     dataFabricTestEntityId: typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
     dataFabricTestFolderEntityId: typeof rawConfig.dataFabricTestFolderEntityId === 'string' ? rawConfig.dataFabricTestFolderEntityId : undefined,
@@ -158,6 +173,8 @@ export function loadIntegrationConfig(): IntegrationConfig {
     folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
     folderPath: process.env.INTEGRATION_TEST_FOLDER_PATH || undefined,
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,
+    maestroCaseProcessKey: process.env.MAESTRO_TEST_CASE_PROCESS_KEY || undefined,
+    maestroCompletedCaseProcessKey: process.env.MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY || undefined,
     orchestratorTestProcessKey: process.env.ORCHESTRATOR_TEST_PROCESS_KEY || undefined,
     dataFabricTestEntityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || undefined,
     dataFabricTestFolderEntityId: process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || undefined,
