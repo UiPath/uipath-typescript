@@ -506,6 +506,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Queues                            | `getAllItems()`            | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
+| Tasks                             | `getComments()`            | ✅ Yes                 |
+| TaskCatalogs                      | `getAll()`                 | ✅ Yes                 |
 | ConversationalAgent.conversations | `getAll()`                 | ❌ No                  |
 | ConversationalAgent.exchanges     | `getAll()`                 | ❌ No                  |
 | Feedback                          | `getAll()`                 | ✅ Yes                 |
@@ -740,6 +742,42 @@ const page5 = await jobs.getAll({
 });
 ```
 
+### getAttachments()
+
+> **getAttachments**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`JobAttachmentGetResponse`[]>
+
+Gets all attachments linked to a job.
+
+#### Parameters
+
+- `jobKey`: `string` — The unique key (GUID) of the job whose attachments to retrieve
+- `folderId`: `number` — The folder ID where the job resides
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`[]>
+
+Promise resolving to an array of [JobAttachmentGetResponse](../JobAttachmentGetResponse/) links, empty when the job has none
+
+#### Examples
+
+```
+const attachments = await jobs.getAttachments(<jobKey>, <folderId>);
+```
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+// Read the underlying file of each attachment linked to a job
+const attachmentsService = new Attachments(sdk);
+const links = await jobs.getAttachments(<jobKey>, <folderId>);
+
+for (const link of links) {
+  const attachment = await attachmentsService.getById(link.attachmentId);
+  console.log(link.category, attachment.blobFileAccess.uri);
+}
+```
+
 ### getById()
 
 > **getById**(`id`: `string`, `folderId`: `number`, `options?`: `JobGetByIdOptions`): `Promise`\<`JobGetResponse`>
@@ -814,6 +852,42 @@ const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
 if (completedJob) {
   const output = await completedJob.getOutput();
 }
+```
+
+### linkAttachment()
+
+> **linkAttachment**(`attachmentId`: `string`, `jobKey`: `string`, `folderId`: `number`, `options?`: `JobLinkAttachmentOptions`): `Promise`\<`JobAttachmentGetResponse`>
+
+Links an existing attachment to a job.
+
+This does not upload a file — it associates an attachment that already exists in Orchestrator with a job.
+
+The returned link does not carry `attachmentName` or `creatorUserId` yet — read them back with [getAttachments](#getattachments).
+
+#### Parameters
+
+- `attachmentId`: `string` — The unique ID (GUID) of the attachment to link
+- `jobKey`: `string` — The unique key (GUID) of the job to link the attachment to
+- `folderId`: `number` — The folder ID where the job resides
+- `options?`: `JobLinkAttachmentOptions` — Optional settings for the link, such as its category
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`>
+
+Promise resolving to the created [JobAttachmentGetResponse](../JobAttachmentGetResponse/) link
+
+#### Examples
+
+```
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>);
+```
+
+```
+// Group the attachment under a category of your choosing
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>, {
+  category: 'Invoice',
+});
 ```
 
 ### restart()
@@ -2056,6 +2130,54 @@ const task = await tasks.create({
 }, <folderId>); // folderId is required
 ```
 
+### createComment()
+
+> **createComment**(`taskId`: `number`, `text`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskCommentGetResponse`>
+
+Creates a comment on a task.
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task the comment belongs to
+- `text`: `string` — Comment text (max 512 characters)
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCommentGetResponse`>
+
+Promise resolving to [TaskCommentGetResponse](../TaskCommentGetResponse/)
+
+#### Example
+
+```
+const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <folderId> });
+```
+
+### editMetadata()
+
+> **editMetadata**(`taskId`: `number`, `options?`: `TaskEditMetadataOptions`): `Promise`\<`void`>
+
+Edits a task's metadata (title, priority, catalog association, etc.).
+
+#### Parameters
+
+- `taskId`: `number` — Id of the task to edit
+- `options?`: `TaskEditMetadataOptions` — Fields to change plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the edit completes
+
+#### Example
+
+```
+import { TaskPriority } from '@uipath/uipath-typescript/tasks';
+await tasks.editMetadata(<taskId>, { title: "Review invoice", priority: TaskPriority.High, folderId: <folderId> });
+```
+
 ### getAll()
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskGetResponse`> : `NonPaginatedResponse`\<`TaskGetResponse`>>
@@ -2146,6 +2268,91 @@ console.log(formTask.formLayout);
 
 // Get a document validation task by ID (faster with taskType provided in the options)
 const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
+```
+
+### getComments()
+
+> **getComments**\<`T`>(`taskId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Gets the comments for a task.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCommentGetByTaskIdOptions` = `TaskCommentGetByTaskIdOptions`
+
+#### Parameters
+
+- `taskId`: `number` — The task to list comments for
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCommentGetResponse`> : `NonPaginatedResponse`\<`TaskCommentGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCommentGetResponse](../TaskCommentGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
+
+// Paginated
+const page1 = await tasks.getComments(<taskId>, { folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await tasks.getComments(<taskId>, { folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getDataById()
+
+> **getDataById**(`id`: `number`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task id.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `id`: `number` — The task id to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+console.log(task.data);
+```
+
+### getDataByKey()
+
+> **getDataByKey**(`key`: `string`, `options?`: `FolderScopedOptions`): `Promise`\<`TaskDataGetResponse`>
+
+Gets a task's data (form/task payload) and core metadata, by task key.
+
+Works for any task type (Form, App, External, etc.).
+
+#### Parameters
+
+- `key`: `string` — The task key (GUID) to fetch data for
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskDataGetResponse`>
+
+Promise resolving to [TaskDataGetResponse](../TaskDataGetResponse/)
+
+#### Example
+
+```
+const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
+console.log(task.data);
 ```
 
 ### getUsers()
@@ -2242,6 +2449,61 @@ const result2 = await tasks.reassign({
 });
 ```
 
+### saveData()
+
+> **saveData**(`taskId`: `number`, `data`: `Record`\<`string`, `unknown`>, `options?`: `TaskSaveDataOptions`): `Promise`\<`void`>
+
+Saves a task's data (form/task payload), replacing the existing payload.
+
+Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
+
+#### Parameters
+
+- `taskId`: `number` — The task to update
+- `data`: `Record`\<`string`, `unknown`> — The task data to save (replaces the existing payload)
+- `options?`: `TaskSaveDataOptions` — Task type plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Examples
+
+```
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
+```
+
+```
+import { TaskType } from '@uipath/uipath-typescript/tasks';
+await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { type: TaskType.Form, folderId: <folderId> });
+```
+
+### saveTags()
+
+> **saveTags**(`taskId`: `number`, `tags`: `Tag`[], `options?`: `FolderScopedOptions`): `Promise`\<`void`>
+
+Saves the tags on a task, replacing any existing tags.
+
+#### Parameters
+
+- `taskId`: `number` — The task to tag
+- `tags`: `Tag`[] — The tags to set
+- `options?`: `FolderScopedOptions` — Folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the save completes
+
+#### Example
+
+```
+await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], { folderId: <folderId> });
+```
+
 ### unassign()
 
 > **unassign**(`taskId`: `number` | `number`[]): `Promise`\<`OperationResponse`\<`TaskAssignmentResponse`[] | { `taskId`: `number`; }[]>>
@@ -2272,11 +2534,232 @@ const result = await task.unassign();
 const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
 ```
 
+Service for managing UiPath Action Center task catalogs.
+
+A task catalog is a reusable, folder-scoped definition that groups related tasks and configures how they behave: data retention (delete or archive the tasks after a retention period), encryption of task data, and tags. A task is linked to a catalog through its metadata (see `editMetadata`) to inherit that configuration. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+
+### Usage
+
+```
+import { TaskCatalogs } from '@uipath/uipath-typescript/tasks';
+
+const taskCatalogs = new TaskCatalogs(sdk);
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+```
+
+## Methods
+
+### create()
+
+> **create**(`name`: `string`, `options?`: `TaskCatalogCreateOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Creates a task catalog.
+
+#### Parameters
+
+- `name`: `string` — Name of the task catalog (max 50 characters)
+- `options?`: `TaskCatalogCreateOptions` — Optional fields (description, tags, retention, ...) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the created task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Examples
+
+```
+const catalog = await taskCatalogs.create("Invoices", { description: "Invoice tasks", folderId: <folderId> });
+```
+
+```
+import { TaskCatalogRetentionAction } from '@uipath/uipath-typescript/tasks';
+const catalog = await taskCatalogs.create("Invoices", {
+  retentionAction: TaskCatalogRetentionAction.Delete,
+  retentionPeriod: 30,
+  folderId: <folderId>
+});
+```
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Gets task catalogs in a folder.
+
+#### Type Parameters
+
+- `T` *extends* `TaskCatalogGetAllOptions` = `TaskCatalogGetAllOptions`
+
+#### Parameters
+
+- `options?`: `T` — Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+
+#### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`TaskCatalogGetResponse`> : `NonPaginatedResponse`\<`TaskCatalogGetResponse`>>
+
+Promise resolving to either a [NonPaginatedResponse](../NonPaginatedResponse/) or [PaginatedResponse](../PaginatedResponse/) of [TaskCatalogGetResponse](../TaskCatalogGetResponse/) items, paginated when pagination options are used.
+
+#### Example
+
+```
+const catalogs = await taskCatalogs.getAll({ folderId: <folderId> });
+
+// Paginated
+const page1 = await taskCatalogs.getAll({ folderId: <folderId>, pageSize: 20 });
+if (page1.hasNextPage) {
+  const page2 = await taskCatalogs.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+}
+```
+
+### getById()
+
+> **getById**(`id`: `number`, `options?`: `TaskCatalogGetByIdOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by id.
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogGetByIdOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getById(<catalogId>, { folderId: <folderId> });
+```
+
+### getByName()
+
+> **getByName**(`name`: `string`, `options?`: `TaskCatalogGetByNameOptions`): `Promise`\<`TaskCatalogGetResponse`>
+
+Gets a task catalog by name within a folder.
+
+#### Parameters
+
+- `name`: `string` — The task catalog name
+- `options?`: `TaskCatalogGetByNameOptions` — Folder scope (folderId, folderKey, or folderPath) plus expand/select
+
+#### Returns
+
+`Promise`\<`TaskCatalogGetResponse`>
+
+Promise resolving to the matching task catalog [TaskCatalogGetResponse](../TaskCatalogGetResponse/)
+
+#### Example
+
+```
+const catalog = await taskCatalogs.getByName("Invoices", { folderId: <folderId> });
+```
+
+### updateById()
+
+> **updateById**(`id`: `number`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by id. Name, description and retention are preserved when not passed; tags are replaced only when provided (the catalog is not returned with its tags, so they cannot be auto preserved).
+
+#### Parameters
+
+- `id`: `number` — The task catalog id
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description, keep everything else
+await taskCatalogs.updateById(<catalogId>, { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateById(<catalogId>, { name: "Invoices 2025", folderId: <folderId> });
+```
+
+### updateByName()
+
+> **updateByName**(`name`: `string`, `options?`: `TaskCatalogUpdateOptions`): `Promise`\<`void`>
+
+Updates a task catalog by name, resolving the id internally. Name, description and retention are preserved when not passed; tags are replaced only when provided.
+
+#### Parameters
+
+- `name`: `string` — The current name of the task catalog to update
+- `options?`: `TaskCatalogUpdateOptions` — Fields to change (including an optional new name) plus folder scope (folderId, folderKey, or folderPath)
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving once the update completes
+
+#### Example
+
+```
+// Change only the description
+await taskCatalogs.updateByName("Invoices", { description: "Updated", folderId: <folderId> });
+
+// Rename the catalog
+await taskCatalogs.updateByName("Invoices", { name: "Invoices 2025", folderId: <folderId> });
+```
+
 Service for managing UiPath Orchestrator Attachments.
 
 Attachments are files that can be associated with Orchestrator jobs.
 
 ## Methods
+
+### create()
+
+> **create**(`name`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `AttachmentCreateOptions`): `Promise`\<`AttachmentCreateResponse`>
+
+Creates an attachment and uploads its content.
+
+The upload is handled for you — the attachment record and its file are both in place once this resolves. Returns the stored attachment, whose `id` is the handle to use everywhere else (for example as the value of a `file` field in an action's output data).
+
+Pass `jobKey` to link the attachment to a job as part of the same call; `jobs.linkAttachment()` is only needed to attach it to a further job later.
+
+#### Parameters
+
+- `name`: `string` — File name to store the attachment under, including its extension
+- `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File` — File content to upload
+- `options?`: `AttachmentCreateOptions` — Optional job to link to, its category, and the folder to create the attachment in
+
+#### Returns
+
+`Promise`\<`AttachmentCreateResponse`>
+
+Promise resolving to the created [AttachmentCreateResponse](../AttachmentCreateResponse/)
+
+#### Examples
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+const attachments = new Attachments(sdk);
+
+// Upload a file picked in the browser
+const attachment = await attachments.create(file.name, file);
+console.log(attachment.id);
+```
+
+```
+// Upload and link it to a job in one call
+const attachment = await attachments.create('invoice.pdf', file, {
+  jobKey: <jobKey>,
+  category: 'Invoice',
+});
+```
 
 ### getById()
 
@@ -2822,7 +3305,7 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 #### Parameters
 
 - `id`: `string` — UUID of the entity
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2833,7 +3316,7 @@ Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pa
 #### Example
 
 ```
-import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -2860,6 +3343,18 @@ await entities.queryRecordsById(<id>, {
   aggregates: [
     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
   ],
+});
+
+// Post-aggregation filter (HAVING): only statuses with more than 5 records
+await entities.queryRecordsById(<id>, {
+  selectedFields: ["status"],
+  groupBy: ["status"],
+  aggregates: [
+    { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+  ],
+  havingFilter: {
+    aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+  },
 });
 
 // Folder-scoped entity: pass the entity's folder key
@@ -5057,6 +5552,50 @@ conversation.endSession();
 const exchanges = await conversation.exchanges.getAll();
 ```
 
+## Client-side tools
+
+Agents can define tools that execute locally in the client rather than on the server. When starting an exchange, pass `clientSideTools` to declare which tools this client supports. The names must match tools defined in the agent's design-time configuration. Only the declared subset is routed to the client — omitting a tool means the server handles it (or skips it). This lets each client advertise only the tools it can run.
+
+When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with the final input. The client executes the tool locally and returns the result via `sendToolCallEnd`.
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk);
+const agents = await conversationalAgent.getAll();
+const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+const session = conversation.startSession();
+
+// 1. Listen for tool calls and handle client-side tools
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    message.onToolCallStart((toolCall) => {
+      const { isClientSideTool, toolName } = toolCall.startEvent;
+      if (!isClientSideTool) return;
+
+      // 2. Execute when the server signals the tool is ready
+      toolCall.onExecutingToolCall(async (event) => {
+        const result = await runClientTool(toolName, event.input);
+        toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+      });
+    });
+  });
+});
+
+session.onSessionStarted(() => {
+  // 3. Declare the subset of client-side tools this client supports
+  //    The agent may define more tools, but only these will be routed here
+  const exchange = session.startExchange({
+    clientSideTools: [
+      { name: 'get_user_location' },
+      { name: 'get_clipboard_contents' },
+    ],
+  });
+
+  exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+});
+```
+
 ## App-scoped authentication (anonymous, sign-in-free chat)
 
 Conversational Agents can be driven with an **app-scoped token** — one issued to an External App via the client-credentials grant, which carries no end-user identity. This lets an application offer chat without requiring each of its users to sign in to UiPath. For more information on creating External Apps, see the official UiPath documentation on [managing external OAuth applications](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications); for details on how to request client-credentials tokens, see the official UiPath documentation on [the OAuth bearer token types](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) issued to an External App.
@@ -5119,6 +5658,35 @@ if (isCitationSourceMedia(source)) {
 }
 ```
 
+### getAddConnectionUrl()
+
+> **getAddConnectionUrl**(`item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; }): `Promise`\<`null` | `string`>
+
+Returns the best URL for adding a new connection for a given connector.
+
+Tries to generate a connector-specific auth URL (works when running inside the UiPath platform). If that fails, falls back to the Orchestrator connections page or the connector configuration page.
+
+#### Parameters
+
+- `item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; } — The connector item from [getAvailableConnections](#getavailableconnections)
+- `item.configurationUrl?`: `string` — -
+- `item.connectionsUrl?`: `string` — -
+- `item.connectorKey`: `string` — -
+
+#### Returns
+
+`Promise`\<`null` | `string`>
+
+The URL to open, or `null` if no URL is available
+
+#### Example
+
+```
+const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
+if (url) window.open(url, '_blank');
+```
+
 ### getAll()
 
 > **getAll**(`folderId?`: `number`): `Promise`\<`AgentGetResponse`[]>
@@ -5147,6 +5715,32 @@ const conversation = await agent.conversations.create({ label: 'My Chat' });
 
 ```
 const agents = await conversationalAgent.getAll(folderId);
+```
+
+### getAvailableConnections()
+
+> **getAvailableConnections**(`agentId`: `number`, `folderId`: `number`): `Promise`\<`AvailableConnectionsResponse`>
+
+Gets available connections for each configurable connector binding of an agent. Only returns bindings that are "configurable by users" (not admin-fixed).
+
+#### Parameters
+
+- `agentId`: `number` — ID of the agent release
+- `folderId`: `number` — ID of the folder containing the agent
+
+#### Returns
+
+`Promise`\<`AvailableConnectionsResponse`>
+
+Promise resolving to an array of connector items with their available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
+
+#### Example
+
+```
+const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+for (const item of connections) {
+  console.log(`${item.connectorName}: ${item.connections.length} available`);
+}
 ```
 
 ### getById()
@@ -5201,6 +5795,32 @@ const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) =>
 
 // Later, remove the handler
 cleanup();
+```
+
+### updateConnectionSelections()
+
+> **updateConnectionSelections**(`agentId`: `number`, `folderId`: `number`, `request`: `UpdateConnectionSelectionsRequest`): `Promise`\<`AvailableConnectionsResponse`>
+
+Updates the current user's connection selections for an agent. Only configurable bindings (not admin-fixed) can be updated.
+
+#### Parameters
+
+- `agentId`: `number` — ID of the agent release
+- `folderId`: `number` — ID of the folder containing the agent
+- `request`: `UpdateConnectionSelectionsRequest` — The connection selections to apply
+
+#### Returns
+
+`Promise`\<`AvailableConnectionsResponse`>
+
+Promise resolving to the updated available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
+
+#### Example
+
+```
+const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
+  selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
+});
 ```
 
 Service for creating and managing conversations with UiPath Conversational Agents
@@ -7874,8 +8494,8 @@ message.onToolCallStart((toolCall) => {
   if (!isClientSideTool) return;
 
   toolCall.onExecutingToolCall(async (event) => {
-    const result = await runLocalProcess(toolName, event.input);
-    toolCall.sendToolCallEnd({ output: result });
+    const result = await runClientTool(toolName, event.input);
+    toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
   });
 });
 ```
@@ -7922,6 +8542,29 @@ Cleanup function to remove the handler
 ```
 toolCall.onErrorStart((error) => {
   console.error(`Tool call error: ${error.message}`);
+});
+```
+
+### onExecutingToolCall()
+
+> **onExecutingToolCall**(`cb`: (`event`: `ExecutingToolCallEvent`) => `void`): () => `void`
+
+Registers a handler for executingToolCall events. Fired when the tool is about to be executed. For client-side tools, the client should begin executing its handler upon receiving this event and return the result via `sendToolCallEnd`.
+
+#### Parameters
+
+- `cb`: (`event`: `ExecutingToolCallEvent`) => `void` — Callback receiving the [ExecutingToolCallEvent](../ExecutingToolCallEvent/) with the final input
+
+#### Returns
+
+Cleanup function to remove the handler
+
+#### Example
+
+```
+toolCall.onExecutingToolCall(async (event) => {
+  const result = await runClientTool(toolCall.startEvent.toolName, event.input);
+  toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
 });
 ```
 

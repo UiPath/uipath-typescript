@@ -709,6 +709,10 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/ConnectionState/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/DataDirectionType/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -722,6 +726,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityFieldDataType/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityHavingOperator/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -750,6 +758,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FieldDisplayType/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FunctionHttpMethod/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -806,6 +818,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PackageType/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformSettingKey/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -933,6 +949,10 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/TaskCatalogRetentionAction/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/TaskPriority/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -986,6 +1006,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/functions/createEntityWithMethods/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/functions/createFunctionWithMethods/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -1333,11 +1357,27 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AttachmentCreateOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AttachmentCreateResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AttachmentGetByIdOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AttachmentResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AvailableConnection/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/AvailableConnectionsItem/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -1597,7 +1637,23 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ClientSideTool/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CollectionResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ConnectionAuthRequest/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ConnectionAuthResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ConnectionSelection/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -1801,6 +1857,14 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityHavingCondition/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityHavingFilter/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityImportRecordsByIdOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -1957,6 +2021,10 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExecutingToolCallEvent/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/ExternalConnection/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -2057,6 +2125,22 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionInvokeOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionMethods/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionRef/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FunctionServiceModel/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/GenericInterruptStartEvent/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -2133,11 +2217,19 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/JobAttachmentGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/JobError/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/JobGetByIdOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/JobLinkAttachmentOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2234,6 +2326,22 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PaginationMetadata/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformServiceModel/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformSetting/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformSettingGetOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformSettingUpsert/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2417,6 +2525,10 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawFunctionGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawJobGetResponse/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -2429,7 +2541,19 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskCatalogGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskCommentGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskCreateResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawTaskDataGetResponse/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2541,7 +2665,43 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogCreateOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogGetByIdOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogGetByNameOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogServiceModel/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCatalogUpdateOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCommentGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskCreateOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskDataGetResponse/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskEditMetadataOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2553,7 +2713,7 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/TaskSaveDataOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2621,6 +2781,10 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/UpdateConnectionSelectionsRequest/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/UserLoginInfo/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -2646,6 +2810,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/entity/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/task/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2686,6 +2854,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/AssetNewValue/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/AvailableConnectionsResponse/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2798,6 +2970,14 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FeedbackGetCategoriesOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetAllOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FunctionGetResponse/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
@@ -2949,6 +3129,18 @@
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCatalogGetAllOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCatalogRetentionActionInput/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCommentGetByTaskIdOptions/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/TaskCompleteOptions/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
@@ -2990,6 +3182,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/variables/AgentMap/</loc>
+         <lastmod>2026-08-19</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/variables/ConnectionAuthMap/</loc>
          <lastmod>2026-08-19</lastmod>
     </url>
     <url>
