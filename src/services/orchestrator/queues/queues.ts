@@ -12,7 +12,11 @@ import {
   QueueItem,
   QueueItemValue,
   QueuePriority,
-  QueueItemProcessingError
+  QueueItemProcessingError,
+  QueueRef,
+  QueueStartTransactionOptions,
+  QueueCompleteTransactionOptions,
+  QueueTransactionOutcome
 } from '../../../models/orchestrator/queues.types';
 import {
   QueueServiceModel,
@@ -331,5 +335,100 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     );
 
     return transformQueueItem(response.data);
+  }
+
+  @track('Queues.StartTransaction')
+  async startTransaction(queue: QueueRef, options: QueueStartTransactionOptions = {}): Promise<QueueItem | null> {
+    const headers = resolveFolderHeaders({
+      folderId: options.folderId,
+      folderKey: options.folderKey,
+      folderPath: options.folderPath,
+      resourceType: 'Queues.startTransaction',
+      fallbackFolderKey: this.config.folderKey
+    });
+
+    // The transaction API identifies the queue by name on the wire — an `id`
+    // selector is resolved to the queue's name first (one extra lookup).
+    let queueName: string;
+    if (queue?.name) {
+      queueName = queue.name;
+    } else if (queue?.id != null) {
+      queueName = await this.resolveQueueName(queue.id, headers);
+    } else {
+      throw new ValidationError({ message: 'queue id or name is required for startTransaction' });
+    }
+
+    // RobotIdentifier is deliberately not exposed: the API defines it as the key
+    // of the robot that sent the request, so only a robot can supply one, and a
+    // robot session already identifies itself through its token.
+    const response = await this.post<Record<string, unknown> | undefined>(
+      QUEUE_ENDPOINTS.START_TRANSACTION,
+      {
+        transactionData: { Name: queueName }
+      },
+      { headers }
+    );
+
+    // Orchestrator returns 204 (empty body) when no item is available.
+    if (!response.data || typeof response.data !== 'object') {
+      return null;
+    }
+
+    return transformQueueItem(response.data);
+  }
+
+  @track('Queues.CompleteTransaction')
+  async completeTransaction(
+    itemId: number,
+    outcome: QueueTransactionOutcome,
+    options: QueueCompleteTransactionOptions = {}
+  ): Promise<void> {
+    if (!itemId) {
+      throw new ValidationError({ message: 'itemId is required for completeTransaction' });
+    }
+
+    const headers = resolveFolderHeaders({
+      folderId: options.folderId,
+      folderKey: options.folderKey,
+      folderPath: options.folderPath,
+      resourceType: 'Queues.completeTransaction',
+      fallbackFolderKey: this.config.folderKey
+    });
+
+    const transactionResult: Record<string, unknown> = {
+      IsSuccessful: outcome === QueueTransactionOutcome.Successful,
+      ProcessingException: options.processingError && {
+        Reason: options.processingError.reason,
+        Details: options.processingError.details,
+        Type: options.processingError.type,
+        AssociatedImageFilePath: options.processingError.associatedImageFilePath
+      },
+      DeferDate: options.deferDate?.toISOString(),
+      DueDate: options.dueDate?.toISOString(),
+      Progress: options.progress,
+      OperationId: options.operationId,
+      // User-defined keys — attached unchanged (no case conversion);
+      // undefined fields are dropped during serialization like the rest.
+      Output: options.outputData,
+      Analytics: options.analytics
+    };
+
+    // SetTransactionResult returns no content.
+    await this.post<void>(
+      QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(itemId),
+      { transactionResult },
+      { headers }
+    );
+  }
+
+  /**
+   * Resolves a queue ID to the queue's name.
+   */
+  private async resolveQueueName(queueId: number, headers: Record<string, string>): Promise<string> {
+    const response = await this.get<{ Name: string }>(
+      QUEUE_ENDPOINTS.GET_BY_ID(queueId),
+      { headers, params: { '$select': 'Name' } }
+    );
+    return response.data.Name;
   }
 }

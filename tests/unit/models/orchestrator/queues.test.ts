@@ -14,7 +14,9 @@ import { ValidationError } from '../../../../src/core/errors/validation';
 import {
   QueueGetAllItemsOptions,
   QueueInsertItemOptions,
-  QueuePriority
+  QueuePriority,
+  QueueCompleteTransactionOptions,
+  QueueTransactionOutcome
 } from '../../../../src/models/orchestrator/queues.types';
 
 // ===== TEST SUITE =====
@@ -31,7 +33,9 @@ describe('Queue Models', () => {
       getByName: vi.fn(),
       getByKey: vi.fn(),
       getAllItems: vi.fn(),
-      insertItemByName: vi.fn()
+      insertItemByName: vi.fn(),
+      startTransaction: vi.fn(),
+      completeTransaction: vi.fn()
     };
   });
 
@@ -124,10 +128,92 @@ describe('Queue Models', () => {
         expect(mockService.insertItemByName).not.toHaveBeenCalled();
       });
     });
+
+    describe('queue.startTransaction()', () => {
+      it('should delegate to service.startTransaction with the bound queue name and folder ID', async () => {
+        const queueData = createBasicQueue();
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const transactionItem = createBasicQueueItem();
+        vi.mocked(mockService.startTransaction).mockResolvedValue(transactionItem);
+
+        const result = await queue.startTransaction();
+
+        expect(mockService.startTransaction).toHaveBeenCalledWith(
+          { name: queueData.name },
+          { folderId: queueData.folderId }
+        );
+        expect(result).toEqual(transactionItem);
+      });
+
+      it('should pass through null when no item is available', async () => {
+        const queue = createQueueWithMethods(createBasicQueue(), mockService);
+        vi.mocked(mockService.startTransaction).mockResolvedValue(null);
+
+        const result = await queue.startTransaction();
+
+        expect(result).toBeNull();
+      });
+
+      it('should reject when the queue name is undefined', async () => {
+        const queueData = createBasicQueue({ name: undefined as unknown as string });
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const promise = queue.startTransaction();
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Queue name is undefined');
+        expect(mockService.startTransaction).not.toHaveBeenCalled();
+      });
+
+      it('should reject when the folder ID is undefined', async () => {
+        const queueData = createBasicQueue({ folderId: undefined as unknown as number });
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const promise = queue.startTransaction();
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Folder ID is undefined');
+        expect(mockService.startTransaction).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('queue.completeTransaction()', () => {
+      it('should delegate to service.completeTransaction with the bound folder ID', async () => {
+        const queueData = createBasicQueue();
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const options: QueueCompleteTransactionOptions = {
+          outputData: QUEUE_TEST_CONSTANTS.ITEM_OUTPUT_CONTENT
+        };
+        vi.mocked(mockService.completeTransaction).mockResolvedValue(undefined);
+
+        const result = await queue.completeTransaction(
+          QUEUE_TEST_CONSTANTS.ITEM_ID,
+          QueueTransactionOutcome.Successful,
+          options
+        );
+
+        expect(mockService.completeTransaction).toHaveBeenCalledWith(
+          QUEUE_TEST_CONSTANTS.ITEM_ID,
+          QueueTransactionOutcome.Successful,
+          { ...options, folderId: queueData.folderId }
+        );
+        expect(result).toBeUndefined();
+      });
+
+      it('should reject when the folder ID is undefined', async () => {
+        const queueData = createBasicQueue({ folderId: undefined as unknown as number });
+        const queue = createQueueWithMethods(queueData, mockService);
+
+        const promise = queue.completeTransaction(QUEUE_TEST_CONSTANTS.ITEM_ID, QueueTransactionOutcome.Successful);
+        await expect(promise).rejects.toBeInstanceOf(ValidationError);
+        await expect(promise).rejects.toThrow('Folder ID is undefined');
+        expect(mockService.completeTransaction).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('createQueueWithMethods', () => {
-    it('should preserve all queue fields and attach the bound methods', () => {
+    it('should preserve all queue fields and attach the four bound methods', () => {
       const queueData = createBasicQueue();
       const queue = createQueueWithMethods(queueData, mockService);
 
@@ -140,6 +226,8 @@ describe('Queue Models', () => {
       // Methods attached
       expect(typeof queue.getAllItems).toBe('function');
       expect(typeof queue.insertItem).toBe('function');
+      expect(typeof queue.startTransaction).toBe('function');
+      expect(typeof queue.completeTransaction).toBe('function');
     });
   });
 });

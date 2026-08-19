@@ -56,6 +56,8 @@ export const QUEUE_ENDPOINTS = {
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/QueueDefinitions(${id})`,
   GET_ITEMS: `${ORCHESTRATOR_BASE}/odata/QueueItems`,
   ADD_ITEM: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.AddQueueItem`,
+  START_TRANSACTION: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.StartTransaction`,
+  SET_TRANSACTION_RESULT: (itemId: number) => `${ORCHESTRATOR_BASE}/odata/Queues(${itemId})/UiPathODataSvc.SetTransactionResult`,
 } as const;
 
 /**
