@@ -191,7 +191,6 @@ uip admin external-apps update <client-id> \
 ## 6. Configure and run locally
 
 ```bash
-cp uipath.json.example uipath.json
 cp .env.example .env
 ```
 

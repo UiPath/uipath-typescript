@@ -5,10 +5,6 @@ dist-ssr
 .uipath
 *.nupkg
 
-# Only the app's own OAuth config — copy uipath.json.example to uipath.json.
-# Anchored, so it does not swallow coded-functions/uipath.json (the functions map).
-/uipath.json
-
 # The repo root ignores `lib/` as an SDK build output; here it is hand-written source.
 !coded-functions/lib/
 !coded-functions/lib/**
