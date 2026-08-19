@@ -33,6 +33,7 @@
 - **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopRunCountResponse` for `getTopRunCount()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`. **NEVER** create a named wrapper type that contains only `items: T[]` — when a method returns a plain collection with no pagination metadata or additional fields, return `T[]` directly.
 - **Raw types**: `Raw{Entity}GetResponse` for the internal shape before method attachment — these live in `*.types.ts`.
 - **Final response type**: `type {Entity}GetResponse = Raw{Entity}GetResponse & {Entity}Methods` — defined in `*.models.ts`, combining raw data with bound methods.
+- **When an already-released data-response type later gains bound methods, do NOT rename it to `Raw*`** — that turns the released name into an intersection and breaks consumers who construct it as a literal (`const q: QueueGetResponse = { ... }`). Keep the released interface intact and introduce `{ReleasedName minus Response}WithMethodsResponse = {ReleasedName} & {Entity}Methods` as the new return type — a narrowed return is non-breaking for callers. Precedent: `CaseGetAllWithMethodsResponse` (#416), `QueueGetWithMethodsResponse`. The `Raw*` + composed pattern above applies only to types that have never shipped.
 - **Options types**: `{Entity}GetAllOptions`, `{Entity}GetByIdOptions`, `{Entity}{Operation}Options` (e.g., `TaskAssignmentOptions`, `ProcessInstanceOperationOptions`). Compose with `RequestOptions & PaginationOptions & { ... }` for list methods.
 - **Common base types**: `BaseOptions` (expand, select), `RequestOptions` (extends BaseOptions with filter, orderby), `OperationResponse<TData>` (success + data) — all from `src/models/common/types.ts`.
 - **Parameter type naming — two parallel suffixes:**
@@ -80,7 +81,7 @@ The method attachment pattern:
 
 - **Not every service method gets bound.** Only bind methods that operate ON a specific entity after retrieval — state-changing operations (assign, cancel, complete, insert, update, delete) and contextual reads that need the entity's ID.
 - **NEVER** bind `getAll()`, `getById()`, `create()`, or cross-entity queries — these are service-level entry points. Binding them creates circular nonsense (an entity that retrieves itself).
-- **Read-only services don't bind at all** — Assets, Buckets, Queues, Processes, ChoiceSets, Cases, and ProcessIncidents have no `{Entity}Methods` interface.
+- **Read-only services don't bind at all** — Assets, Buckets, Processes, ChoiceSets, Cases, and ProcessIncidents have no `{Entity}Methods` interface. (Queues binds `getAllItems`/`insertItem` since queue-item support landed.)
 
 ## Response transformation pipeline
 
