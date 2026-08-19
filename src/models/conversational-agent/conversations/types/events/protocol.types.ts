@@ -90,13 +90,17 @@ export interface SessionEndingEvent {
 }
 
 /**
- * A client-side tool that the client supports, declared during exchange start
- * so the server knows which tools to route client-side.
- * @internal
+ * A client-side tool declaration passed to {@link ExchangeStartEvent.clientSideTools}
+ * so the server knows which tools to route back to the client for local execution.
+ *
+ * The `name` must match a tool defined in the agent's design-time configuration.
  */
 export interface ClientSideTool {
+  /** Tool name — must match the agent's design-time tool definition */
   name: string;
+  /** JSON Schema describing the tool's expected input */
   inputSchema?: JSONValue;
+  /** JSON Schema describing the tool's expected output */
   outputSchema?: JSONValue;
 }
 
@@ -117,9 +121,10 @@ export interface ExchangeStartEvent {
    */
   timestamp?: string;
   /**
-   * Optional list of client-side tools the client supports. The server validates these against the agent's
-   * design-time definitions and forwards them to the runtime so it knows which tools to route client-side.
-   * @internal
+   * Optional list of client-side tools the client supports. Pass these when calling
+   * `session.startExchange({ clientSideTools: [...] })` so the server routes matching
+   * tool calls back to the client via {@link ToolCallStartEvent.isClientSideTool}.
+   * The server validates names against the agent's design-time tool definitions.
    */
   clientSideTools?: ClientSideTool[];
 }
@@ -391,13 +396,15 @@ export interface ToolCallStartEvent {
    */
   inputSchema?: JSONValue;
   /**
-   * Output schema — used by the client to render the result form for client-side tools.
-   * @internal
+   * JSON Schema describing the tool's expected output. Present on client-side tool calls
+   * so the client can validate or render a form for the result before sending it back
+   * via `sendToolCallEnd`.
    */
   outputSchema?: JSONValue;
   /**
-   * Indicates this tool call should be executed client-side rather than server-side.
-   * @internal
+   * When `true`, this tool call should be executed locally by the client rather than
+   * server-side. The client should listen for {@link ExecutingToolCallEvent} via
+   * `onExecutingToolCall`, run the tool, and return the result with `sendToolCallEnd`.
    */
   isClientSideTool?: boolean;
 }
@@ -442,10 +449,9 @@ export interface ToolCallEndEvent {
 }
 
 /**
- * Signals to the client that the tool is about to be executed. Emitted in all scenarios
- * (server-side and client-side tools). For client-side tools, the client should begin
- * executing its registered handler upon receiving this event.
- * @internal
+ * Signals that the tool is about to be executed. Emitted for both server-side and
+ * client-side tools. For client-side tools, the client should begin executing its
+ * handler upon receiving this event and return the result via `sendToolCallEnd`.
  */
 export interface ExecutingToolCallEvent {
   /**
@@ -501,7 +507,6 @@ export interface ToolCallEvent {
   /**
    * Signals that the tool is about to be executed. For client-side tools,
    * the client should begin executing its handler upon receiving this event.
-   * @internal
    */
   executingToolCall?: ExecutingToolCallEvent;
   /**

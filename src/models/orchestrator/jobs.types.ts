@@ -194,3 +194,69 @@ export interface JobStopOptions {
   strategy?: StopStrategy;
 }
 
+
+/**
+ * Interface for an attachment linked to a job
+ */
+export interface JobAttachmentGetResponse {
+  /**
+   * Unique identifier of the link between the job and the attachment
+   */
+  id: string;
+
+  /**
+   * Identifier of the linked attachment. Pass this to `attachments.getById()`
+   * to read the attachment's metadata and download URI.
+   */
+  attachmentId: string;
+
+  /**
+   * Key of the job the attachment is linked to
+   */
+  jobKey: string;
+
+  /**
+   * Caller-defined label that groups attachments within a job. Attachments
+   * uploaded by a running automation carry the category `JobAttachment`.
+   * Null when the link was created without a category.
+   */
+  category: string | null;
+
+  /**
+   * File name of the linked attachment. Null on the response returned when the
+   * link is first created — read it back with {@link JobServiceModel.getAttachments}.
+   */
+  attachmentName: string | null;
+
+  /**
+   * When the link was last modified
+   */
+  lastModifiedTime: string | null;
+
+  /**
+   * ID of the user who last modified the link
+   */
+  lastModifierUserId: number | null;
+
+  /**
+   * When the link was created
+   */
+  createdTime: string;
+
+  /**
+   * ID of the user who created the link
+   */
+  creatorUserId: number | null;
+}
+
+/**
+ * Options for linking an attachment to a job
+ */
+export interface JobLinkAttachmentOptions {
+  /**
+   * Label that groups the attachment within the job. Free-form — any string the
+   * calling application uses to distinguish attachments (e.g. `Input`,
+   * `Output`, `Invoice`). Defaults to null when omitted.
+   */
+  category?: string;
+}

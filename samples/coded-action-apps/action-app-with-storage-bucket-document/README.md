@@ -4,6 +4,10 @@ A UiPath Coded Action App template for **Loan Application Review** that loads it
 
 This template demonstrates how to load a document from a Storage Bucket by bucket name and file path, as opposed to receiving a direct file attachment.
 
+## Preview
+
+![Loan application review loading its document from a Storage Bucket: review details, view document, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites
@@ -125,10 +129,3 @@ When the app loads inside Action Center:
 3. **Theme** — The app initializes in light or dark mode based on the Action Center theme preference and supports toggling via the button in the top-right corner.
 
 4. **Read-only mode** — If the task is already completed or the current user does not have edit access, all input fields are disabled and the Approve / Reject buttons are greyed out.
-
-
-
-
-https://github.com/user-attachments/assets/a59df1cc-70a1-4f2a-92f1-64812580ca85
-
-

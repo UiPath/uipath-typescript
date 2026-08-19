@@ -13,6 +13,9 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  AvailableConnectionsResponse,
+  ConnectionAuthRequest,
+  ConnectionAuthResponse,
   ConversationalAgentOptions,
   ConversationalAgentServiceModel,
   CitationSourceMedia,
@@ -20,10 +23,12 @@ import type {
   RawAgentGetResponse,
   RawAgentGetByIdResponse,
   AgentGetResponse,
-  AgentGetByIdResponse
+  AgentGetByIdResponse,
+  UpdateConnectionSelectionsRequest
 } from '@/models/conversational-agent';
 import {
   AgentMap,
+  ConnectionAuthMap,
   createAgentWithMethods
 } from '@/models/conversational-agent';
 
@@ -145,6 +150,48 @@ export class ConversationalAgentService extends BaseService implements Conversat
     return mimeType && mimeType !== blob.type
       ? blob.slice(0, blob.size, mimeType)
       : blob;
+  }
+
+  @track('ConversationalAgent.GetAvailableConnections')
+  async getAvailableConnections(agentId: number, folderId: number): Promise<AvailableConnectionsResponse> {
+    const response = await this.get<AvailableConnectionsResponse>(AGENT_ENDPOINTS.CONNECTIONS(folderId, agentId));
+    return response.data;
+  }
+
+  @track('ConversationalAgent.UpdateConnectionSelections')
+  async updateConnectionSelections(
+    agentId: number,
+    folderId: number,
+    request: UpdateConnectionSelectionsRequest
+  ): Promise<AvailableConnectionsResponse> {
+    const response = await this.put<AvailableConnectionsResponse>(
+      AGENT_ENDPOINTS.CONNECTIONS(folderId, agentId),
+      request
+    );
+    return response.data;
+  }
+
+  @track('ConversationalAgent.GetAddConnectionUrl')
+  async getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null> {
+    try {
+      const { authUrl } = await this.fetchConnectionAuthUrl(item.connectorKey);
+      return authUrl;
+    } catch {
+      return item.connectionsUrl ?? item.configurationUrl ?? null;
+    }
+  }
+
+  @track('ConversationalAgent.GetConnectionAuthUrl')
+  async getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse> {
+    return this.fetchConnectionAuthUrl(connectorKey);
+  }
+
+  private async fetchConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse> {
+    const response = await this.post<ConnectionAuthResponse>(
+      AGENT_ENDPOINTS.CONNECTION_AUTH,
+      { connectorKey } as ConnectionAuthRequest
+    );
+    return transformData(response.data, ConnectionAuthMap) as ConnectionAuthResponse;
   }
 
   async getFeatureFlags(): Promise<FeatureFlags> {

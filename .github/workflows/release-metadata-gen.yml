@@ -20,21 +20,24 @@ jobs:
   regen:
     # Only same-repo PRs get a writable token; fork PRs cannot push back.
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     permissions:
       contents: write
     env:
       BASE_REF: ${{ github.base_ref }}
       HEAD_REF: ${{ github.head_ref }}
+      # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
+      # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
+      NODE_OPTIONS: --max-old-space-size=6144
     steps:
       - name: Checkout PR head
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
