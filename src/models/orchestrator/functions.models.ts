@@ -6,6 +6,13 @@ import { ValidationError } from '../../core/errors/validation';
 export type FunctionGetResponse = RawFunctionGetResponse & FunctionMethods;
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for invoking UiPath Coded Functions.
  *
  * Coded functions are lightweight units of TypeScript/JavaScript or Python code
@@ -28,6 +35,12 @@ export type FunctionGetResponse = RawFunctionGetResponse & FunctionMethods;
 export interface FunctionServiceModel {
   /**
    * Gets all functions in a folder with optional filtering and pagination.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Returns each function's identity (name, slug, HTTP method), state, and
    * packaging details, with an {@link FunctionMethods.invoke | invoke} method
@@ -81,6 +94,12 @@ export interface FunctionServiceModel {
   /**
    * Invokes a function and returns its output.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * The call is synchronous — it resolves with the function's output.
    *
    * Type the input and output by supplying the generics — they should match the
@@ -124,12 +143,25 @@ export interface FunctionServiceModel {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Methods available on function response objects.
  * These are bound to the function data and delegate to the service.
  */
 export interface FunctionMethods {
   /**
    * Invokes this function and returns its output.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.

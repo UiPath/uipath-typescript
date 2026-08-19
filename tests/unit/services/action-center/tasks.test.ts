@@ -4,6 +4,7 @@ import { TaskService } from '../../../../src/services/action-center/tasks';
 import {
   TaskType,
   TaskPriority,
+  TaskStatus,
   TaskAssignmentCriteria,
   TaskAssignmentOptions,
   TaskCompletionOptions,
@@ -20,13 +21,13 @@ import {
   createMockTasks, 
   createMockUsers 
 } from '../../../utils/mocks/tasks';
-import { createMockError } from '../../../utils/mocks/core';
+import { createMockError, createMockBaseResponse, createMockCollection } from '../../../utils/mocks/core';
 import { DEFAULT_TASK_EXPAND, TaskMap } from '../../../../src/models/action-center/tasks.constants';
-import { transformOptions } from '../../../../src/utils/transform';
+import { transformOptions, transformData, pascalToCamelCaseKeys, camelToPascalCaseKeys, addPrefixToKeys, applyDataTransforms } from '../../../../src/utils/transform';
 import { TASK_TEST_CONSTANTS } from '../../../utils/constants/tasks';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { TASK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { TASK_ENDPOINTS, TASK_NOTE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
@@ -1240,6 +1241,469 @@ describe('TaskService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(taskService.getUsers(TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+});
+
+// ===== Extended + comment method suites =====
+// These suites exercise the real transform pipeline, so they swap the module-level
+// identity transform mocks for the real implementations, and restore identity afterwards
+// so the suites above (which rely on identity transforms) remain unaffected.
+async function useRealTransforms() {
+  const actual = await vi.importActual<typeof import('../../../../src/utils/transform')>('../../../../src/utils/transform');
+  vi.mocked(transformData).mockImplementation(actual.transformData);
+  vi.mocked(pascalToCamelCaseKeys).mockImplementation(actual.pascalToCamelCaseKeys);
+  vi.mocked(camelToPascalCaseKeys).mockImplementation(actual.camelToPascalCaseKeys);
+  vi.mocked(addPrefixToKeys).mockImplementation(actual.addPrefixToKeys);
+  vi.mocked(applyDataTransforms).mockImplementation(actual.applyDataTransforms);
+  vi.mocked(transformOptions).mockImplementation(actual.transformOptions);
+}
+
+const identityTransform = (value: any) => value;
+
+function useIdentityTransforms() {
+  const identity = identityTransform;
+  vi.mocked(transformData).mockImplementation(identity);
+  vi.mocked(pascalToCamelCaseKeys).mockImplementation(identity);
+  vi.mocked(camelToPascalCaseKeys).mockImplementation(identity);
+  vi.mocked(addPrefixToKeys).mockImplementation(identity);
+  vi.mocked(applyDataTransforms).mockImplementation(identity);
+  vi.mocked(transformOptions).mockImplementation(identity);
+}
+
+const EXT_TASK = { ID: 5001, FOLDER: TEST_CONSTANTS.FOLDER_ID, CREATED: '2026-04-01T00:00:00.000Z' };
+
+// The GenericTasks getData endpoint returns camelCase, with the user payload under `data`.
+const createMockRawTaskData = (overrides: Partial<any> = {}): any =>
+  createMockBaseResponse({
+    id: EXT_TASK.ID,
+    key: '33333333-3333-3333-3333-333333333333',
+    title: 'Approve invoice',
+    type: TaskType.External,
+    status: 1, // numeric -> TaskStatus.Pending
+    priority: TaskPriority.Medium,
+    organizationUnitId: EXT_TASK.FOLDER,
+    data: { amount: 1200 },
+    action: null,
+    creationTime: EXT_TASK.CREATED,
+    lastModificationTime: null,
+    tags: [],
+  }, overrides);
+
+const NOTE = {
+  ID: 900,
+  KEY: '22222222-2222-2222-2222-222222222222',
+  TASK_ID: 5001,
+  TEXT: 'Escalated to finance',
+  CREATED_TIME: '2026-03-01T00:00:00.000Z',
+};
+
+const createMockRawNote = (overrides: Partial<any> = {}): any =>
+  createMockBaseResponse({
+    Id: NOTE.ID,
+    Key: NOTE.KEY,
+    TaskId: NOTE.TASK_ID,
+    OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
+    Text: NOTE.TEXT,
+    CreatorUserId: TEST_CONSTANTS.USER_ID,
+    CreationTime: NOTE.CREATED_TIME,
+  }, overrides);
+
+const createMockNoteCollection = (count = 1): any => {
+  const items = createMockCollection(count, (index) => ({
+    id: NOTE.ID + index,
+    key: `${index}-${NOTE.KEY}`,
+    taskId: NOTE.TASK_ID,
+    folderId: TEST_CONSTANTS.FOLDER_ID,
+    text: `${NOTE.TEXT} ${index}`,
+    createdTime: NOTE.CREATED_TIME,
+  }));
+  return createMockBaseResponse({ items, totalCount: count });
+};
+
+describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/editMetadata)', () => {
+  let service: TaskService;
+  let mockApiClient: any;
+
+  beforeEach(async () => {
+    const { instance } = createServiceTestDependencies();
+    mockApiClient = createMockApiClient();
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    await useRealTransforms();
+    service = new TaskService(instance);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    useIdentityTransforms();
+  });
+
+  describe('getDataById', () => {
+    it('should throw ValidationError when taskId or folder is missing', async () => {
+      await expect(service.getDataById(0, { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.getDataById(EXT_TASK.ID)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should GET by id with folder header and transform the response', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData());
+
+      const result = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({ taskId: EXT_TASK.ID }),
+          headers: expect.objectContaining({ [FOLDER_ID]: EXT_TASK.FOLDER.toString() }),
+        }),
+      );
+
+      expect(result.id).toBe(EXT_TASK.ID);
+      expect(result.status).toBe(TaskStatus.Pending); // numeric 1 -> enum
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+      expect((result as any).organizationUnitId).toBeUndefined(); // renamed to folderId
+      expect(result.createdTime).toBe(EXT_TASK.CREATED);
+      expect((result as any).creationTime).toBeUndefined(); // renamed to createdTime
+      expect(result.data).toEqual({ amount: 1200 });
+    });
+
+    it('should route folderKey to the folder-key header', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData());
+
+      await service.getDataById(EXT_TASK.ID, { folderKey: 'my-folder-key' });
+
+      const [, spec] = mockApiClient.get.mock.calls[0];
+      expect(spec.headers[FOLDER_KEY]).toBe('my-folder-key');
+      expect(spec.headers[FOLDER_ID]).toBeUndefined();
+    });
+
+    it('should route folderPath to the encoded folder-path header', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData());
+
+      await service.getDataById(EXT_TASK.ID, { folderPath: 'Shared' });
+
+      const [, spec] = mockApiClient.get.mock.calls[0];
+      expect(spec.headers[FOLDER_PATH_ENCODED]).toBeDefined();
+      expect(spec.headers[FOLDER_ID]).toBeUndefined();
+    });
+
+    it('should preserve user-defined Data payload keys verbatim (no case conversion)', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ data: { InvoiceNumber: '123', VendorName: 'Acme', nested: { LineTotal: 5 } } }));
+
+      const result = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+      expect(result.data).toEqual({ InvoiceNumber: '123', VendorName: 'Acme', nested: { LineTotal: 5 } });
+    });
+
+    it('should return data as null when the task has no Data payload', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ data: null }));
+
+      const result = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+
+      expect(result.data).toBeNull();
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getDataByKey', () => {
+    const TASK_KEY = '11111111-1111-1111-1111-111111111111';
+
+    it('should throw ValidationError when key or folder is missing', async () => {
+      await expect(service.getDataByKey('', { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.getDataByKey(TASK_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should GET by key with folder header and transform the response', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData());
+
+      const result = await service.getDataByKey(TASK_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY,
+        expect.objectContaining({
+          params: expect.objectContaining({ taskKey: TASK_KEY }),
+          headers: expect.objectContaining({ [FOLDER_ID]: EXT_TASK.FOLDER.toString() }),
+        }),
+      );
+
+      expect(result.id).toBe(EXT_TASK.ID);
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+      expect((result as any).organizationUnitId).toBeUndefined();
+      expect(result.createdTime).toBe(EXT_TASK.CREATED);
+      expect((result as any).creationTime).toBeUndefined(); // renamed to createdTime
+      expect(result.data).toEqual({ amount: 1200 });
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getDataByKey(TASK_KEY, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('saveData', () => {
+    it('should throw ValidationError when taskId or folder is missing', async () => {
+      await expect(service.saveData(0, {}, { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.saveData(EXT_TASK.ID, {})).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should PUT { TaskId, Data } with the folder header and leave data keys untouched', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+
+      const data = { line_total: 5, isApproved: true };
+      const result = await service.saveData(EXT_TASK.ID, data, { folderId: EXT_TASK.FOLDER, type: TaskType.External });
+
+      expect(result).toBeUndefined();
+      const [url, body, spec] = mockApiClient.put.mock.calls[0];
+      expect(url).toBe(TASK_ENDPOINTS.SAVE_TASK_DATA);
+      expect(body.TaskId).toBe(EXT_TASK.ID);
+      expect(body.Data).toEqual({ line_total: 5, isApproved: true }); // keys not case-converted
+      expect(spec.headers[FOLDER_ID]).toBe(EXT_TASK.FOLDER.toString());
+    });
+
+    it('should route Form tasks to the form save endpoint', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.Form });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_FORM_TASK_DATA);
+    });
+
+    it('should route App tasks to the app save endpoint and not look up the type', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.App });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_APP_TASK_DATA);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should route other task types to the generic save endpoint', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER, type: TaskType.External });
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_TASK_DATA);
+    });
+
+    it('should look up the type when not passed and route Form/App to their endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.App }));
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER });
+      expect(mockApiClient.get).toHaveBeenCalled();
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_APP_TASK_DATA);
+    });
+
+    it('should look up the type when not passed and route other types to the generic endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawTaskData({ type: TaskType.External }));
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+      await service.saveData(EXT_TASK.ID, { a: 1 }, { folderId: EXT_TASK.FOLDER });
+      expect(mockApiClient.get).toHaveBeenCalled();
+      expect(mockApiClient.put.mock.calls[0][0]).toBe(TASK_ENDPOINTS.SAVE_TASK_DATA);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.put.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.saveData(EXT_TASK.ID, {}, { folderId: EXT_TASK.FOLDER, type: TaskType.External })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should propagate errors from the type lookup when no type is passed', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.saveData(EXT_TASK.ID, {}, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saveTags', () => {
+    it('should throw ValidationError when taskId or folder is missing', async () => {
+      await expect(service.saveTags(0, [], { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.saveTags(EXT_TASK.ID, [])).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should PUT { TaskId, Tags } in PascalCase with the folder header', async () => {
+      mockApiClient.put.mockResolvedValue(createMockBaseResponse({}));
+
+      await service.saveTags(EXT_TASK.ID, [{ name: 'priority', displayName: 'Priority', displayValue: 'High' }], { folderId: EXT_TASK.FOLDER });
+
+      const [url, body, spec] = mockApiClient.put.mock.calls[0];
+      expect(url).toBe(TASK_ENDPOINTS.SAVE_TASK_TAGS);
+      expect(body.TaskId).toBe(EXT_TASK.ID);
+      expect(body.Tags).toEqual([{ Name: 'priority', DisplayName: 'Priority', DisplayValue: 'High' }]);
+      expect(spec.headers[FOLDER_ID]).toBe(EXT_TASK.FOLDER.toString());
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.put.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.saveTags(EXT_TASK.ID, [], { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('editMetadata', () => {
+    it('should throw ValidationError when taskId or folder is missing', async () => {
+      await expect(service.editMetadata(0, { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.editMetadata(EXT_TASK.ID)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should POST the metadata edit in PascalCase with the folder header', async () => {
+      mockApiClient.post.mockResolvedValue(createMockBaseResponse({}));
+
+      await service.editMetadata(EXT_TASK.ID, { title: 'Review invoice', priority: TaskPriority.High, folderId: EXT_TASK.FOLDER });
+
+      const [url, body, spec] = mockApiClient.post.mock.calls[0];
+      expect(url).toBe(TASK_ENDPOINTS.EDIT_TASK_METADATA);
+      expect(body).toEqual(expect.objectContaining({ TaskId: EXT_TASK.ID, Title: 'Review invoice', Priority: TaskPriority.High }));
+      expect(body.FolderId).toBeUndefined();
+      expect(spec.headers[FOLDER_ID]).toBe(EXT_TASK.FOLDER.toString());
+    });
+
+    it('should include UnsetTaskCatalog in body when unlinkTaskCatalog is true', async () => {
+      mockApiClient.post.mockResolvedValue(createMockBaseResponse({}));
+      await service.editMetadata(EXT_TASK.ID, { unlinkTaskCatalog: true, folderId: EXT_TASK.FOLDER });
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.UnsetTaskCatalog).toBe(true);
+    });
+
+    it('should include UnsetTaskCatalog: false in body when unlinkTaskCatalog is false', async () => {
+      mockApiClient.post.mockResolvedValue(createMockBaseResponse({}));
+      await service.editMetadata(EXT_TASK.ID, { unlinkTaskCatalog: false, folderId: EXT_TASK.FOLDER });
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.UnsetTaskCatalog).toBe(false);
+    });
+
+    it('should omit UnsetTaskCatalog from body when unlinkTaskCatalog is undefined', async () => {
+      mockApiClient.post.mockResolvedValue(createMockBaseResponse({}));
+      await service.editMetadata(EXT_TASK.ID, { title: 'x', folderId: EXT_TASK.FOLDER });
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.UnsetTaskCatalog).toBeUndefined();
+    });
+
+    it('should not leak expand/select into the request body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockBaseResponse({}));
+      await service.editMetadata(EXT_TASK.ID, { title: 'x', folderId: EXT_TASK.FOLDER, expand: 'Tags', select: 'title' });
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.Expand).toBeUndefined();
+      expect(body.Select).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.editMetadata(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+});
+
+describe('TaskService - Task Comment methods', () => {
+  let service: TaskService;
+  let mockApiClient: any;
+
+  beforeEach(async () => {
+    const { instance } = createServiceTestDependencies();
+    mockApiClient = createMockApiClient();
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    vi.mocked(PaginationHelpers.getAll).mockReset();
+    await useRealTransforms();
+    service = new TaskService(instance);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    useIdentityTransforms();
+  });
+
+  describe('getComments', () => {
+    it('should throw ValidationError when taskId is missing', async () => {
+      await expect(service.getComments(0, { folderId: TEST_CONSTANTS.FOLDER_ID })).rejects.toBeInstanceOf(ValidationError);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when no folder is provided', async () => {
+      await expect(service.getComments(NOTE.TASK_ID)).rejects.toBeInstanceOf(ValidationError);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should list comments for a task (folderId routed to org-unit header)', async () => {
+      const mockResponse = createMockNoteCollection(2);
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await service.getComments(NOTE.TASK_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === TASK_NOTE_ENDPOINTS.GET_BY_TASK_ID(NOTE.TASK_ID)),
+          headers: expect.objectContaining({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() }),
+          transformFn: expect.any(Function),
+          pagination: expect.any(Object),
+        }),
+        expect.not.objectContaining({ folderId: TEST_CONSTANTS.FOLDER_ID }),
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should route folderKey to the folder-key header', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(createMockNoteCollection());
+
+      await service.getComments(NOTE.TASK_ID, { folderKey: 'my-folder-key' });
+
+      const [[config]] = vi.mocked(PaginationHelpers.getAll).mock.calls;
+      expect(config.headers).toMatchObject({ [FOLDER_KEY]: 'my-folder-key' });
+      expect(config.headers[FOLDER_ID]).toBeUndefined();
+    });
+
+    it('should transform items returned by getComments (camelCase, no PascalCase leaks)', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(createMockNoteCollection());
+      await service.getComments(NOTE.TASK_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [[config]] = vi.mocked(PaginationHelpers.getAll).mock.calls;
+      const result = config.transformFn(createMockRawNote());
+
+      expect(result.createdTime).toBe(NOTE.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getComments(NOTE.TASK_ID, { folderId: TEST_CONSTANTS.FOLDER_ID })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('createComment', () => {
+    it('should throw ValidationError when taskId, text, or folder is missing', async () => {
+      await expect(service.createComment(0, NOTE.TEXT, { folderId: TEST_CONSTANTS.FOLDER_ID })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.createComment(NOTE.TASK_ID, '', { folderId: TEST_CONSTANTS.FOLDER_ID })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.createComment(NOTE.TASK_ID, NOTE.TEXT)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should POST a PascalCase body to the create action and transform the response', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawNote());
+
+      const result = await service.createComment(NOTE.TASK_ID, NOTE.TEXT, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        TASK_NOTE_ENDPOINTS.CREATE,
+        expect.objectContaining({ TaskId: NOTE.TASK_ID, Text: NOTE.TEXT }),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() }),
+        }),
+      );
+
+      expect(result.id).toBe(NOTE.ID);
+      expect(result.text).toBe(NOTE.TEXT);
+      expect(result.taskId).toBe(NOTE.TASK_ID);
+      expect(result.createdTime).toBe(NOTE.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.createComment(NOTE.TASK_ID, NOTE.TEXT, { folderId: TEST_CONSTANTS.FOLDER_ID })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

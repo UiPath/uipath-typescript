@@ -20,10 +20,15 @@ on:
 
 permissions: {}
 
+env:
+  # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
+  # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
+  NODE_OPTIONS: --max-old-space-size=6144
+
 jobs:
   publish-sdk:
     if: github.event.inputs.package == 'ts-sdk'
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
@@ -31,12 +36,12 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -66,7 +71,7 @@ jobs:
         run: npm run build
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
@@ -122,7 +127,7 @@ jobs:
   trigger-cf-worker:
     if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     permissions: {}
     steps:
       - name: Trigger API CORS Worker deploy (staging + production)
@@ -140,7 +145,7 @@ jobs:
           
   publish-coded-action-app-sdk:
     if: github.event.inputs.package == 'coded-action-app-sdk'
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
@@ -151,12 +156,12 @@ jobs:
         working-directory: packages/coded-action-app
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -186,7 +191,7 @@ jobs:
         run: npm run build
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
@@ -231,7 +236,7 @@ jobs:
 
   publish-telemetry:
     if: github.event.inputs.package == 'telemetry'
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
@@ -242,12 +247,12 @@ jobs:
         working-directory: packages/telemetry
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -279,7 +284,7 @@ jobs:
         run: npm test
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'

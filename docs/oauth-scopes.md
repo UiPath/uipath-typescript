@@ -21,6 +21,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `stop()` | `OR.Jobs` |
 | `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
 | `restart()` | `OR.Jobs` |
+| `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Functions
 
@@ -36,6 +38,7 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `OR.Folders` or `OR.Folders.Read` |
+| `create()` | `OR.Folders` or `OR.Folders.Write` |
 
 ## Buckets
 
@@ -141,9 +144,9 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 
 ## Conversational Agent
 
-To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, and retrieve history), your external app needs the following combined scopes:
+To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:
 
-`OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api`
+`OR.Execution` · `OR.Folders` · `OR.Users` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api` · `IS.Connections.Read` · `IS.Connectors.Read`
 
 /// note
 The `ConversationalAgents` scope is required for real-time WebSocket sessions (`startSession()`). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.
@@ -183,6 +186,14 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+
+### Connections
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
+| `updateConnectionSelections()` | `OR.Execution`, `IS.Connections.Read` |
+| `getAddConnectionUrl()` | `OR.Execution` or `OR.Execution.Read` |
 
 ### User Settings
 
@@ -226,6 +237,13 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Platform
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
+| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
+
 ## Processes
 
 | Method | OAuth Scope |
@@ -261,6 +279,24 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getDataById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getDataByKey()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `saveData()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `saveTags()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `editMetadata()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `getComments()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `createComment()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## TaskCatalogs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getByName()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateById()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateByName()` | `OR.Tasks` or `OR.Tasks.Write` |
 
 ## Agents
 

@@ -429,12 +429,12 @@ export interface EntityServiceModel {
    * for constraints and the result-row key format.
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -461,6 +461,18 @@ export interface EntityServiceModel {
    *   aggregates: [
    *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
    *   ],
+   * });
+   *
+   * // Post-aggregation filter (HAVING): only statuses with more than 5 records
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   *   havingFilter: {
+   *     aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+   *   },
    * });
    *
    * // Folder-scoped entity: pass the entity's folder key
@@ -920,12 +932,12 @@ export interface EntityMethods {
    * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
    * for constraints and the result-row key format.
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -946,6 +958,18 @@ export interface EntityMethods {
    *   aggregates: [
    *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
    *   ],
+   * });
+   *
+   * // Post-aggregation filter (HAVING): only statuses with more than 5 records
+   * await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   *   havingFilter: {
+   *     aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+   *   },
    * });
    *
    * // Aggregate: total sum and average across all records (no grouping)

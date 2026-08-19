@@ -1,18 +1,24 @@
-import type { 
+import type {
   RawTaskCreateResponse,
-  RawTaskGetResponse, 
+  RawTaskDataGetResponse,
+  RawTaskGetResponse,
+  RawTaskCommentGetResponse,
+  Tag,
   TaskAssignmentOptions,
   TaskAssignmentResponse,
   TaskCompletionOptions,
   TaskCompleteOptions,
   TaskAssignOptions,
+  TaskEditMetadataOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
   TaskCreateOptions,
   TaskGetUsersOptions,
+  TaskCommentGetByTaskIdOptions,
+  TaskSaveDataOptions,
   UserLoginInfo
 } from './tasks.types';
-import { OperationResponse } from '../common/types';
+import { FolderScopedOptions, OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -311,6 +317,128 @@ export interface TaskServiceModel {
       ? PaginatedResponse<UserLoginInfo>
       : NonPaginatedResponse<UserLoginInfo>
   >;
+
+  /**
+   * Gets a task's data (form/task payload) and core metadata, by task id.
+   *
+   * Works for any task type (Form, App, External, etc.).
+   *
+   * @param id - The task id to fetch data for
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to {@link TaskDataGetResponse}
+   * @example
+   * ```typescript
+   * const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+   * console.log(task.data);
+   * ```
+   */
+  getDataById(id: number, options?: FolderScopedOptions): Promise<TaskDataGetResponse>;
+
+  /**
+   * Gets a task's data (form/task payload) and core metadata, by task key.
+   *
+   * Works for any task type (Form, App, External, etc.).
+   *
+   * @param key - The task key (GUID) to fetch data for
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to {@link TaskDataGetResponse}
+   * @example
+   * ```typescript
+   * const task = await tasks.getDataByKey("<taskKey>", { folderId: <folderId> });
+   * console.log(task.data);
+   * ```
+   */
+  getDataByKey(key: string, options?: FolderScopedOptions): Promise<TaskDataGetResponse>;
+
+  /**
+   * Saves a task's data (form/task payload), replacing the existing payload.
+   *
+   * Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
+   *
+   * @param taskId - The task to update
+   * @param data - The task data to save (replaces the existing payload)
+   * @param options - Task type plus folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving once the save completes
+   * @example
+   * ```typescript
+   * await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { folderId: <folderId> });
+   * ```
+   *
+   * @example With an explicit task type (routes to the type-specific endpoint)
+   * ```typescript
+   * import { TaskType } from '@uipath/uipath-typescript/tasks';
+   * await tasks.saveData(<taskId>, { amount: 1200, approved: true }, { type: TaskType.Form, folderId: <folderId> });
+   * ```
+   */
+  saveData(taskId: number, data: Record<string, unknown>, options?: TaskSaveDataOptions): Promise<void>;
+
+  /**
+   * Saves the tags on a task, replacing any existing tags.
+   *
+   * @param taskId - The task to tag
+   * @param tags - The tags to set
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving once the save completes
+   * @example
+   * ```typescript
+   * await tasks.saveTags(<taskId>, [{ name: "priority", displayName: "Priority", displayValue: "High" }], { folderId: <folderId> });
+   * ```
+   */
+  saveTags(taskId: number, tags: Tag[], options?: FolderScopedOptions): Promise<void>;
+
+  /**
+   * Edits a task's metadata (title, priority, catalog association, etc.).
+   *
+   * @param taskId - Id of the task to edit
+   * @param options - Fields to change plus folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving once the edit completes
+   * @example
+   * ```typescript
+   * import { TaskPriority } from '@uipath/uipath-typescript/tasks';
+   * await tasks.editMetadata(<taskId>, { title: "Review invoice", priority: TaskPriority.High, folderId: <folderId> });
+   * ```
+   */
+  editMetadata(taskId: number, options?: TaskEditMetadataOptions): Promise<void>;
+
+  /**
+   * Gets the comments for a task.
+   *
+   * @param taskId - The task to list comments for
+   * @param options - Folder scope (folderId, folderKey, or folderPath) plus query and pagination options
+   * @returns Promise resolving to either a {@link NonPaginatedResponse} or {@link PaginatedResponse} of {@link TaskCommentGetResponse} items, paginated when pagination options are used.
+   * @example
+   * ```typescript
+   * const comments = await tasks.getComments(<taskId>, { folderId: <folderId> });
+   *
+   * // Paginated
+   * const page1 = await tasks.getComments(<taskId>, { folderId: <folderId>, pageSize: 20 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await tasks.getComments(<taskId>, { folderId: <folderId>, cursor: page1.nextCursor });
+   * }
+   * ```
+   */
+  getComments<T extends TaskCommentGetByTaskIdOptions = TaskCommentGetByTaskIdOptions>(
+    taskId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskCommentGetResponse>
+      : NonPaginatedResponse<TaskCommentGetResponse>
+  >;
+
+  /**
+   * Creates a comment on a task.
+   *
+   * @param taskId - Id of the task the comment belongs to
+   * @param text - Comment text (max 512 characters)
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to {@link TaskCommentGetResponse}
+   * @example
+   * ```typescript
+   * const comment = await tasks.createComment(<taskId>, "Escalated", { folderId: <folderId> });
+   * ```
+   */
+  createComment(taskId: number, text: string, options?: FolderScopedOptions): Promise<TaskCommentGetResponse>;
 }
 
 // Method interface that will be added to task objects
@@ -340,16 +468,75 @@ export interface TaskMethods {
 
   /**
    * Completes this task with optional data and action
-   * 
+   *
    * @param options - Completion options
    * @returns Promise resolving to completion result
    */
   complete(options: TaskCompleteOptions): Promise<OperationResponse<TaskCompletionOptions>>;
+
+  /**
+   * Saves this task's data (form/task payload), replacing the existing payload.
+   *
+   * @param data - The task data to save
+   * @param options - Optional folder scope override (defaults to this task's folder)
+   * @returns Promise resolving once the save completes
+   */
+  saveData(data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void>;
+
+  /**
+   * Saves the tags on this task, replacing any existing tags.
+   *
+   * @param tags - The tags to set
+   * @param options - Optional folder scope override (defaults to this task's folder)
+   * @returns Promise resolving once the save completes
+   */
+  saveTags(tags: Tag[], options?: FolderScopedOptions): Promise<void>;
+
+  /**
+   * Edits this task's metadata (title, priority, catalog association, etc.).
+   *
+   * @param options - Fields to change plus optional folder scope override (defaults to this task's folder)
+   * @returns Promise resolving once the edit completes
+   */
+  editMetadata(options?: TaskEditMetadataOptions): Promise<void>;
+
+  /**
+   * Gets the comments on this task.
+   *
+   * @param options - Optional folder scope override (defaults to this task's folder) plus query and pagination options
+   * @returns Promise resolving to either a {@link NonPaginatedResponse} or {@link PaginatedResponse} of {@link TaskCommentGetResponse} items, paginated when pagination options are used.
+   */
+  getComments<T extends TaskCommentGetByTaskIdOptions = TaskCommentGetByTaskIdOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskCommentGetResponse>
+      : NonPaginatedResponse<TaskCommentGetResponse>
+  >;
+
+  /**
+   * Creates a comment on this task.
+   *
+   * @param text - Comment text (max 512 characters)
+   * @param options - Optional folder scope override (defaults to this task's folder)
+   * @returns Promise resolving to the created comment {@link TaskCommentGetResponse}
+   */
+  createComment(text: string, options?: FolderScopedOptions): Promise<TaskCommentGetResponse>;
 }
 
 // Combined types for task data with methods
 export type TaskGetResponse = RawTaskGetResponse & TaskMethods;
 export type TaskCreateResponse = RawTaskCreateResponse & TaskMethods;
+
+/**
+ * A task's data payload + core metadata, as returned by `getDataById` / `getDataByKey`.
+ */
+export interface TaskDataGetResponse extends RawTaskDataGetResponse {}
+
+/**
+ * A task comment as returned by the service.
+ */
+export interface TaskCommentGetResponse extends RawTaskCommentGetResponse {}
 
 /**
  * Creates methods for a task
@@ -392,7 +579,7 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
       if (!taskData.id) throw new Error('Task ID is undefined');
       const folderId = taskData.folderId;
       if (!folderId) throw new Error('Folder ID is required');
-      
+
       return service.complete(
         {
           type: options.type,
@@ -402,8 +589,50 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
         } as TaskCompletionOptions,
         folderId
       );
+    },
+
+    async saveData(data: Record<string, unknown>, options?: FolderScopedOptions): Promise<void> {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      // Route by the task's own type so Form/App tasks hit their save endpoints.
+      return service.saveData(taskData.id, data, resolveTaskFolder({ ...options, type: taskData.type }, taskData.folderId));
+    },
+
+    async saveTags(tags: Tag[], options?: FolderScopedOptions): Promise<void> {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      return service.saveTags(taskData.id, tags, resolveTaskFolder(options, taskData.folderId));
+    },
+
+    async editMetadata(options?: TaskEditMetadataOptions): Promise<void> {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      return service.editMetadata(taskData.id, resolveTaskFolder(options, taskData.folderId));
+    },
+
+    getComments<T extends TaskCommentGetByTaskIdOptions = TaskCommentGetByTaskIdOptions>(
+      options?: T
+    ): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<TaskCommentGetResponse>
+        : NonPaginatedResponse<TaskCommentGetResponse>
+    > {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      return service.getComments(taskData.id, resolveTaskFolder(options, taskData.folderId));
+    },
+
+    async createComment(text: string, options?: FolderScopedOptions): Promise<TaskCommentGetResponse> {
+      if (!taskData.id) throw new Error('Task ID is undefined');
+      return service.createComment(taskData.id, text, resolveTaskFolder(options, taskData.folderId));
     }
   };
+}
+
+/**
+ * Defaults folder scope to the task's own folder when the caller did not specify one.
+ */
+function resolveTaskFolder<T extends FolderScopedOptions>(options: T | undefined, folderId: number): T {
+  if (options && (options.folderId !== undefined || options.folderKey !== undefined || options.folderPath !== undefined)) {
+    return options;
+  }
+  return { ...options, folderId } as T;
 }
 
 /**

@@ -30,4 +30,13 @@ export const ATTACHMENT_TEST_CONSTANTS = {
 
   // OData Parameters
   ODATA_SELECT_FIELDS: 'id,name,blobFileAccess',
+
+  // Create
+  UPLOAD_CONTENT: 'file body',
+  ERROR_NAME_REQUIRED: 'name is required for create',
+  ERROR_CONTENT_REQUIRED: 'content is required for create',
+  ERROR_UPLOAD_FAILED: 'Server failed to authenticate the request.',
+  // Blob storage answers in XML, not JSON — the upload failure path must cope.
+  XML_UPLOAD_ERROR_BODY:
+    '<?xml version=\'1.0\' encoding=\'utf-8\'?><Error><Code>AuthenticationFailed</Code></Error>',
 } as const;

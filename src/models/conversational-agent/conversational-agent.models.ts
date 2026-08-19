@@ -3,6 +3,7 @@ import type {
   AgentGetByIdResponse
 } from './agents';
 import type { CitationSourceMedia, ConversationServiceModel } from './conversations';
+import type { AvailableConnectionsResponse, ConnectionAuthResponse, UpdateConnectionSelectionsRequest } from './connections';
 import type { FeatureFlags } from './feature-flags.types';
 import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -97,6 +98,56 @@ import type { ConnectionStatus } from '@/core/websocket';
  *
  * // 7. Retrieve conversation history (offline)
  * const exchanges = await conversation.exchanges.getAll();
+ * ```
+ *
+ * ## Client-side tools
+ *
+ * Agents can define tools that execute locally in the client rather than on the server.
+ * When starting an exchange, pass `clientSideTools` to declare which tools this client
+ * supports. The names must match tools defined in the agent's design-time configuration.
+ * Only the declared subset is routed to the client — omitting a tool means the server
+ * handles it (or skips it). This lets each client advertise only the tools it can run.
+ *
+ * When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with
+ * the final input. The client executes the tool locally and returns the result via
+ * `sendToolCallEnd`.
+ *
+ * ```typescript
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const conversationalAgent = new ConversationalAgent(sdk);
+ * const agents = await conversationalAgent.getAll();
+ * const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+ * const session = conversation.startSession();
+ *
+ * // 1. Listen for tool calls and handle client-side tools
+ * session.onExchangeStart((exchange) => {
+ *   exchange.onMessageStart((message) => {
+ *     message.onToolCallStart((toolCall) => {
+ *       const { isClientSideTool, toolName } = toolCall.startEvent;
+ *       if (!isClientSideTool) return;
+ *
+ *       // 2. Execute when the server signals the tool is ready
+ *       toolCall.onExecutingToolCall(async (event) => {
+ *         const result = await runClientTool(toolName, event.input);
+ *         toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+ *       });
+ *     });
+ *   });
+ * });
+ *
+ * session.onSessionStarted(() => {
+ *   // 3. Declare the subset of client-side tools this client supports
+ *   //    The agent may define more tools, but only these will be routed here
+ *   const exchange = session.startExchange({
+ *     clientSideTools: [
+ *       { name: 'get_user_location' },
+ *       { name: 'get_clipboard_contents' },
+ *     ],
+ *   });
+ *
+ *   exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+ * });
  * ```
  *
  * ## App-scoped authentication (anonymous, sign-in-free chat)
@@ -235,6 +286,79 @@ export interface ConversationalAgentServiceModel {
 
   /** Service for reading and updating the current user's profile/context settings. See {@link UserSettingsServiceModel}. */
   readonly user: UserSettingsServiceModel;
+
+  /**
+   * Gets available connections for each configurable connector binding of an agent.
+   * Only returns bindings that are "configurable by users" (not admin-fixed).
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to an array of connector items with their available connections
+   * {@link AvailableConnectionsResponse}
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * for (const item of connections) {
+   *   console.log(`${item.connectorName}: ${item.connections.length} available`);
+   * }
+   * ```
+   */
+  getAvailableConnections(agentId: number, folderId: number): Promise<AvailableConnectionsResponse>;
+
+  /**
+   * Updates the current user's connection selections for an agent.
+   * Only configurable bindings (not admin-fixed) can be updated.
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @param request - The connection selections to apply
+   * @returns Promise resolving to the updated available connections
+   * {@link AvailableConnectionsResponse}
+   *
+   * @example
+   * ```typescript
+   * const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
+   *   selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
+   * });
+   * ```
+   */
+  updateConnectionSelections(
+    agentId: number,
+    folderId: number,
+    request: UpdateConnectionSelectionsRequest
+  ): Promise<AvailableConnectionsResponse>;
+
+  /**
+   * Returns the best URL for adding a new connection for a given connector.
+   *
+   * Tries to generate a connector-specific auth URL (works when running inside
+   * the UiPath platform). If that fails, falls back to the Orchestrator
+   * connections page or the connector configuration page.
+   *
+   * @param item - The connector item from {@link getAvailableConnections}
+   * @returns The URL to open, or `null` if no URL is available
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
+   * if (url) window.open(url, '_blank');
+   * ```
+   */
+  getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null>;
+
+  /**
+   * Generates a connector-specific auth URL for adding a new connection.
+   * Only works when running inside the UiPath platform (Studio Web / portal shell).
+   * For a method that handles fallbacks automatically, use {@link getAddConnectionUrl}.
+   *
+   * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
+   * @returns Promise resolving to the auth URL and its expiration
+   * {@link ConnectionAuthResponse}
+   * @internal
+   */
+  getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
 
   /**
    * Gets feature flags for the current tenant
