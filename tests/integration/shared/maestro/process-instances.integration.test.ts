@@ -5,7 +5,6 @@ import {
   setupUnifiedTests,
   InitMode,
 } from '../../config/unified-setup';
-import { registerResource } from '../../utils/cleanup';
 import { InstanceStatus } from '../../../../src/models/maestro';
 import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/models/maestro/process-instances.types';
 
@@ -183,59 +182,55 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
     it('should cancel a process instance', async () => {
       const { processInstances } = getServices();
 
-      try {
-        const instances = await processInstances.getAll({
-          pageSize: 10,
-        });
+      const { processes } = getServices();
+      const config = getTestConfig();
 
-        // Never cancel the faulting-process instance seeded for the retry test — it is
-        // briefly Running before it faults
-        const runnableInstance = instances.items.find(
-          (inst) =>
-            inst.folderKey &&
-            inst.instanceId !== seededFaultedJobKey &&
-            inst.latestRunStatus &&
-            inst.latestRunStatus.toLowerCase().match(/running|active|pending/)
+      if (!config.maestroTestProcessKey || !config.folderId || !config.folderKey) {
+        throw new Error(
+          'MAESTRO_TEST_PROCESS_KEY / folder config not set — cannot seed an instance for cancel'
         );
-
-        if (!runnableInstance) {
-          console.log('No running instance available to test cancellation');
-          return;
-        }
-
-        try {
-          const result = await processInstances.cancel(
-            runnableInstance.instanceId,
-            runnableInstance.folderKey
-          );
-
-          expect(result).toBeDefined();
-          expect(result.success).toBe(true);
-
-          const instance = await processInstances.getById(
-            runnableInstance.instanceId,
-            runnableInstance.folderKey
-          );
-          expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
-
-          registerResource('processInstances', {
-            id: runnableInstance.instanceId,
-            folderKey: runnableInstance.folderKey,
-          });
-        } catch (error: any) {
-          console.log('Cancel test failed:', error.message);
-        }
-      } catch (error: any) {
-        if (error.message?.includes('Forbidden') || error.statusCode === 403) {
-          console.log(
-            'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
-          );
-          return;
-        }
-        throw error;
       }
-    });
+
+      // Seed our own instance and cancel it during its Pending/Running window (the
+      // faulting process runs ~15s before it faults). Operating only on our own
+      // instance keeps the test safe under parallel runs.
+      const [job] = await processes.start(
+        { processKey: config.maestroTestProcessKey },
+        { folderId: Number(config.folderId) }
+      );
+
+      // Wait for Running specifically — cancelling while still Pending is rejected
+      let running = false;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try {
+          const instance = await processInstances.getById(job.key, config.folderKey);
+          if (instance.latestRunStatus === InstanceStatus.RUNNING) {
+            running = true;
+            break;
+          }
+          if (instance.latestRunStatus === InstanceStatus.FAULTED) {
+            throw new Error('Seeded instance faulted before it could be cancelled — cannot test cancel');
+          }
+        } catch (error: any) {
+          if (error.message?.includes('cannot test cancel')) {
+            throw error;
+          }
+          // not yet visible in PIMS
+        }
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      if (!running) {
+        throw new Error('Seeded instance did not reach Running within 60s — cannot test cancel');
+      }
+
+      const result = await processInstances.cancel(job.key, config.folderKey);
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+
+      const instance = await processInstances.getById(job.key, config.folderKey);
+      expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
+    }, 60_000);
   });
 
   // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in
@@ -311,21 +306,16 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   describe('Instance details', () => {
     it('should retrieve process variables', async () => {
       if (!testInstanceId || !testFolderKey) {
-        console.log('No instance available for testing');
-        return;
+        throw new Error('No process instance with a folder key available — cannot test getVariables');
       }
 
       const { processInstances } = getServices();
 
-      try {
-        const result = await processInstances.getVariables(testInstanceId, testFolderKey);
+      const result = await processInstances.getVariables(testInstanceId, testFolderKey);
 
-        expect(result).toBeDefined();
-        expect(result.instanceId).toBe(testInstanceId);
-        expect(Array.isArray(result.globalVariables)).toBe(true);
-      } catch (error: any) {
-        console.log('Get variables test failed:', error.message);
-      }
+      expect(result).toBeDefined();
+      expect(result.instanceId).toBe(testInstanceId);
+      expect(Array.isArray(result.globalVariables)).toBe(true);
     });
 
     describe('execution history', () => {
@@ -390,8 +380,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         });
 
         if (result.items.length === 0) {
-          console.log('No instances available to validate structure');
-          return;
+          throw new Error('No process instances available — cannot validate instance structure');
         }
 
         const instance = result.items[0];

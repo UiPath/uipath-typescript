@@ -124,7 +124,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           );
           return;
         }
-        console.log('Case instances retrieval failed:', error.message);
+        throw error;
       }
     });
 
@@ -147,7 +147,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           );
           return;
         }
-        console.log('Case instances with limit failed:', error.message);
+        throw error;
       }
     });
 
@@ -179,7 +179,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           );
           return;
         }
-        console.log('Case instances pagination failed:', error.message);
+        throw error;
       }
     });
   });
@@ -302,42 +302,49 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  // pause must target a FRESHLY started instance: once the human task fully activates,
-  // PIMS keeps the instance in Pausing until the task settles (observed 90s+), while a
-  // fresh instance pauses within seconds. So this test seeds and cleans up its own
-  // instance instead of sharing the run's seeded one.
+  // pause → resume is self-restoring: the instance ends Running again for later tests.
+  // Resume is valid from both Pausing and Paused (verified against the live API), so the
+  // test does not wait for the Pausing→Paused transition — that transition is
+  // load-dependent and can hang while the case's human task is active.
   describe('pause and resume', () => {
     it('should pause a running case instance and resume it', async () => {
       const { caseInstances } = getServices();
 
-      const target = await seedRunningInstance();
+      const target = await resolveRunningInstance();
       if (!target) {
-        throw new Error(
-          'MAESTRO_TEST_CASE_PROCESS_KEY / folder config not set — cannot seed an instance for pause/resume'
-        );
+        throw new Error('No running case instance available — cannot test pause/resume');
       }
 
       const pauseResult = await caseInstances.pause(target.instanceId, target.folderKey);
       expect(pauseResult.success).toBe(true);
 
-      // Pausing is asynchronous; wait for the Paused state before resuming
-      let lastStatus = '';
+      // The pause takes effect asynchronously: status leaves Running for Pausing/Paused
+      let pausedStatus = '';
       for (let attempt = 0; attempt < 10; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
         const current = await caseInstances.getById(target.instanceId, target.folderKey);
-        lastStatus = current.latestRunStatus;
-        if (lastStatus === InstanceStatus.PAUSED) {
+        pausedStatus = current.latestRunStatus;
+        if (pausedStatus === InstanceStatus.PAUSED || pausedStatus === InstanceStatus.PAUSING) {
           break;
         }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-      expect(lastStatus).toBe(InstanceStatus.PAUSED);
+      expect([InstanceStatus.PAUSED, InstanceStatus.PAUSING]).toContain(pausedStatus);
 
       const resumeResult = await caseInstances.resume(target.instanceId, target.folderKey);
       expect(resumeResult.success).toBe(true);
 
-      // Cleanup: this test seeded its own instance
-      await caseInstances.close(target.instanceId, target.folderKey);
-    }, 180_000);
+      // The instance must return to Running so later tests can keep using it
+      let resumedStatus = '';
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const current = await caseInstances.getById(target.instanceId, target.folderKey);
+        resumedStatus = current.latestRunStatus;
+        if (resumedStatus === InstanceStatus.RUNNING) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+      expect(resumedStatus).toBe(InstanceStatus.RUNNING);
+    }, 60_000);
   });
 
   // Runs after pause/resume (see note there): the ad-hoc trigger spawns an in-flight task
@@ -457,8 +464,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         });
 
         if (result.items.length === 0) {
-          console.log('No case instances available to validate structure');
-          return;
+          throw new Error('No case instances available — cannot validate instance structure');
         }
 
         const instance = result.items[0];
@@ -481,7 +487,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           );
           return;
         }
-        console.log('Case instance structure validation failed:', error.message);
+        throw error;
       }
     });
   });

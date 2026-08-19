@@ -35,8 +35,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         const result = await maestroProcesses.getAll();
 
         if (result.length === 0) {
-          console.log('No Maestro processes available to validate structure');
-          return;
+          throw new Error('No Maestro processes available — cannot validate process structure');
         }
 
         const process = result[0];
@@ -118,11 +117,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       const processKey = config.maestroTestProcessKey;
 
       if (!processKey) {
-        console.log(
-          'Skipping incidents test: MAESTRO_TEST_PROCESS_KEY not configured. ' +
-            'Set this environment variable to test incident retrieval.'
-        );
-        return;
+        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot test incident retrieval');
       }
 
       const result = await maestroProcesses.getIncidents(processKey, config.folderKey);
@@ -140,19 +135,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         });
 
         if (processes.length === 0) {
-          console.log('No Maestro processes available to test incidents');
-          return;
+          throw new Error('No Maestro processes available — cannot test incident retrieval');
         }
 
         const { processKey, folderKey } = processes[0];
 
-        try {
-          const result = await maestroProcesses.getIncidents(processKey, folderKey);
-          expect(result).toBeDefined();
-          expect(Array.isArray(result)).toBe(true);
-        } catch (error: any) {
-          console.log(`Could not retrieve incidents for process ${processKey}:`, error.message);
-        }
+        const result = await maestroProcesses.getIncidents(processKey, folderKey);
+        expect(result).toBeDefined();
+        expect(Array.isArray(result)).toBe(true);
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -275,8 +265,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         });
 
         if (result.length === 0) {
-          console.log('No processes available to validate metadata');
-          return;
+          throw new Error('No Maestro processes available — cannot validate process metadata');
         }
 
         const process = result[0];

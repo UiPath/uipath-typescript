@@ -36,7 +36,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
           );
           return;
         }
-        console.log('Case retrieval test:', error.message);
+        throw error;
       }
     });
   });
