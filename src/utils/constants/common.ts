@@ -315,3 +315,40 @@ export const IDENTITY_OFFSET_PARAMS = {
  * (non-paginated) path pages in chunks of this size.
  */
 export const IDENTITY_MAX_PAGE_SIZE = 1000;
+
+/**
+ * Authorization service pagination response shape constants (roles, role assignments)
+ */
+export const AUTHORIZATION_PAGINATION = {
+  /** Field name for items in authorization list responses */
+  ITEMS_FIELD: 'results',
+
+  /** Field name for total count in authorization list responses */
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/**
+ * Authorization OFFSET pagination parameter names (skip-based, non-OData)
+ */
+export const AUTHORIZATION_OFFSET_PARAMS = {
+  /** Authorization page size parameter name */
+  PAGE_SIZE_PARAM: 'top',
+
+  /** Authorization offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** No count param — the response always carries totalCount */
+  COUNT_PARAM: undefined
+};
+
+/**
+ * Authorization roles maximum page size — the `roles` endpoint accepts `top`
+ * up to 1000. The fetch-all (non-paginated) path pages in chunks of this size.
+ */
+export const AUTHORIZATION_ROLES_MAX_PAGE_SIZE = 1000;
+
+/**
+ * Authorization role-assignments maximum page size — the API rejects `top`
+ * above 10 on `userroleassignments` (unlike `roles`, which allows 1000).
+ */
+export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 10;

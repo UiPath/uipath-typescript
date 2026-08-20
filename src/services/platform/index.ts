@@ -6,6 +6,7 @@
  * - `Users` — list, read, and update an organization's users, including group membership
  * - `Groups` — manage an organization's groups and their members
  * - `Directory` — search principals and check group membership
+ * - `Roles` — manage roles and role assignments, compute effective access
  *
  * Settings operations are user-scoped — see {@link PlatformSettingKey}. Settings require
  * the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
@@ -34,6 +35,7 @@ export { PlatformService as Platform } from './platform';
 export { PlatformUserService as Users } from './users';
 export { PlatformGroupService as Groups } from './groups';
 export { PlatformDirectoryService as Directory } from './directory';
+export { PlatformRoleService as Roles } from './roles';
 
 // Models (types, response shapes)
 export * from '../../models/platform';

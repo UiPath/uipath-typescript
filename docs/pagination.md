@@ -126,6 +126,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Jobs | `getAll()` | ✅ Yes |
 | Platform Users | `getAll()` | ✅ Yes |
 | Platform Groups | `getMembers()` | ✅ Yes |
+| Platform Roles | `getAll()` | ✅ Yes |
+| Platform Roles | `getAssignments()` | ✅ Yes |
 | Entities | `getAllRecords()` | ✅ Yes |
 | Entities | `queryRecordsById()` | ✅ Yes |
 | ChoiceSets | `getById()` | ✅ Yes |

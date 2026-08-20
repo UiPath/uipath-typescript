@@ -176,7 +176,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     baseUrl: process.env.UIPATH_BASE_URL,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
-    tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
+    tenantId: process.env.UIPATH_TENANT_ID_DEV || process.env.UIPATH_TENANT_ID || undefined,
     secret: process.env.UIPATH_SECRET,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
