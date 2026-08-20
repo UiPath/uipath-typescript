@@ -125,39 +125,82 @@ describe('Platform Users Service Unit Tests', () => {
     });
 
     it('should fetch every page when no pagination options are given', async () => {
-      const firstPageUsers = Array.from({ length: 3 }, (_, i) =>
+      const fullPageUsers = Array.from({ length: 1000 }, (_, i) =>
         createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
       );
       mockApiClient.get
-        .mockResolvedValueOnce(createRawPlatformUserListResponse(firstPageUsers, 4))
-        .mockResolvedValueOnce(createRawPlatformUserListResponse([createBasicRawPlatformUser()], 4));
+        .mockResolvedValueOnce(createRawPlatformUserListResponse(fullPageUsers, 1002))
+        .mockResolvedValueOnce(createRawPlatformUserListResponse([
+          createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-1000` }),
+          createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-1001` }),
+        ], 1002));
 
       const result = await usersService.getAll(organizationId);
 
-      expect(result.items).toHaveLength(4);
-      expect(result.totalCount).toBe(4);
+      expect(result.items).toHaveLength(1002);
+      expect(result.totalCount).toBe(1002);
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
       const firstCall = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
       expect(firstCall.params.top).toBe(1000);
       expect(firstCall.params.skip).toBe(0);
-      // Advances by returned count, not requested page size — short pages must not skip records
-      expect(secondCall.params.skip).toBe(3);
+      // Offsets are page-aligned: advance by the requested page size, not the returned count
+      expect(secondCall.params.skip).toBe(1000);
+      // A stable default sort keeps record offsets consistent across pages
+      expect(firstCall.params.sortBy).toBe('Id');
     });
 
-    it('should send search options without an OData prefix on the paginated path too', async () => {
+    it('should stop after a short page and not refetch', async () => {
+      const shortPage = Array.from({ length: 3 }, (_, i) =>
+        createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
+      );
+      // totalCount overcounts (e.g. stale index) — a short page must still be terminal
+      mockApiClient.get.mockResolvedValueOnce(createRawPlatformUserListResponse(shortPage, 5));
+
+      const result = await usersService.getAll(organizationId);
+
+      expect(result.items).toHaveLength(3);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('should dedupe users that appear on two pages', async () => {
+      const straddler = `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-999`;
+      const fullPageUsers = Array.from({ length: 1000 }, (_, i) =>
+        createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
+      );
+      mockApiClient.get
+        .mockResolvedValueOnce(createRawPlatformUserListResponse(fullPageUsers, 1001))
+        // The last user of page 1 straddles the boundary and appears again on page 2
+        .mockResolvedValueOnce(createRawPlatformUserListResponse([
+          createBasicRawPlatformUser({ id: straddler }),
+          createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-1000` }),
+        ], 1001));
+
+      const result = await usersService.getAll(organizationId);
+
+      expect(result.items).toHaveLength(1001);
+      expect(result.items.filter(u => u.id === straddler)).toHaveLength(1);
+    });
+
+    it('should send search and sort options without an OData prefix on the paginated path too', async () => {
       mockApiClient.get.mockResolvedValue(
         createRawPlatformUserListResponse([createBasicRawPlatformUser()], PLATFORM_USER_TEST_CONSTANTS.TOTAL_COUNT)
       );
 
       await usersService.getAll(organizationId, {
         searchTerm: PLATFORM_USER_TEST_CONSTANTS.SEARCH_TERM,
+        sortBy: PlatformUserSortField.Email,
+        sortOrder: PlatformUserSortOrder.Descending,
         pageSize: 5,
       });
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params.searchTerm).toBe(PLATFORM_USER_TEST_CONSTANTS.SEARCH_TERM);
+      expect(spec.params.sortBy).toBe('Email');
+      expect(spec.params.sortOrder).toBe('desc');
       expect(spec.params).not.toHaveProperty('$searchTerm');
+      expect(spec.params).not.toHaveProperty('$sortBy');
+      expect(spec.params).not.toHaveProperty('$sortOrder');
       expect(spec.params.top).toBe(5);
     });
 
