@@ -12,6 +12,7 @@ import type {
   PlatformUserUpdateOptions,
   PlatformUserUpdateResponse,
 } from '../../models/platform/users.types';
+import { PlatformUserSortField } from '../../models/platform/users.types';
 import type {
   RawPlatformUser,
   RawPlatformUserListResponse,
@@ -110,7 +111,7 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
     if (!userId) {
       throw new ValidationError({ message: 'userId is required for updateById' });
     }
-    if (!update || Object.keys(update).length === 0) {
+    if (Object.keys(update).length === 0) {
       throw new ValidationError({ message: 'update must contain at least one field to change' });
     }
 
@@ -129,8 +130,10 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
     organizationId: string,
     opts: PlatformUserGetAllOptions
   ): Promise<NonPaginatedResponse<PlatformUserGetResponse>> {
-    const { searchTerm, sortBy, sortOrder } = opts;
-    const items: PlatformUserGetResponse[] = [];
+    const { searchTerm, sortOrder } = opts;
+    // Stable sort keeps record offsets consistent across pages so users are not skipped or duplicated.
+    const sortBy = opts.sortBy ?? PlatformUserSortField.Id;
+    const usersById = new Map<string, PlatformUserGetResponse>();
     let totalCount = 0;
     let skip = 0;
 
@@ -141,16 +144,20 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
       );
       const { results, totalCount: reportedTotal } = response.data;
       totalCount = reportedTotal;
-      items.push(...results.map(user => this.toUser(user)));
+      for (const raw of results) {
+        const user = this.toUser(raw);
+        // Dedupe by id — a record straddling a page boundary must not count twice or hide a real user.
+        usersById.set(user.id, user);
+      }
 
-      if (results.length === 0 || items.length >= totalCount) {
+      // A short page is terminal for a record offset; the count check stops a full final page early.
+      if (results.length < IDENTITY_MAX_PAGE_SIZE || usersById.size >= totalCount) {
         break;
       }
-      // Advance by what was actually returned — a short non-final page must not skip records
-      skip += results.length;
+      skip += IDENTITY_MAX_PAGE_SIZE;
     }
 
-    return { items, totalCount };
+    return { items: [...usersById.values()], totalCount };
   }
 
   /**
