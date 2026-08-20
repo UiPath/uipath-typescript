@@ -32,7 +32,11 @@ function readFromDocument(): ResourceOverrides | undefined {
 
   try {
     return asResourceOverrides(JSON.parse(text));
-  } catch {
+  } catch (error) {
+    console.warn(
+      `[UiPath SDK] Failed to parse <script id="${UiPathElementIds.RESOURCE_OVERRIDES}"> as JSON — proceeding without overrides:`,
+      error,
+    );
     return undefined;
   }
 }

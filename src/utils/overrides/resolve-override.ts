@@ -15,7 +15,8 @@ function readOverrides(): ResourceOverrides | undefined {
     typeof slot === 'function' ? (slot as () => ResourceOverrides | undefined) : pageOverrides;
   try {
     return source();
-  } catch {
+  } catch (error) {
+    console.warn('[UiPath SDK] Override source threw — proceeding without overrides:', error);
     return undefined;
   }
 }
