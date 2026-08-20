@@ -709,6 +709,26 @@ export interface EntityServiceModel {
    *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
    *   },
    * ], { folderKey: "<sourceFolderKey>" });
+   *
+   * // Federated entity — a read-only view over external and/or native sources.
+   * // Native columns stay empty ([]); the schema comes from `externalFields`.
+   * await entities.create("<entityName>", [], {
+   *   entityClass: EntityClass.Federated,
+   *   externalFields: [{
+   *     externalConnectionDetail: {
+   *       connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
+   *       elementInstanceId: <elementInstanceId>, folderKey: "<folderKey>",
+   *     },
+   *     externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
+   *     fields: [{
+   *       field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING },
+   *       externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly },
+   *     }],
+   *   }],
+   *   // Multi-source: add more entries to `externalFields` and join them:
+   *   // sourceJoinConditionDetails: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>",
+   *   //   joinType: JoinType.LeftJoin, relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>" }],
+   * });
    * ```
    * @internal
    */
@@ -737,6 +757,12 @@ export interface EntityServiceModel {
    * Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
    * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
    * only when the corresponding fields are provided.
+   *
+   * For **Federated** entities, pass source/join deltas instead: `addExternalSources`,
+   * `removeExternalSources` (also removes that source's joins), `addFieldsToSource`,
+   * `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, and
+   * `updateSourceJoin`. `addFieldsToSource` maps a field that already exists on the source
+   * (a native entity's column or a connector field); it does not create the underlying field.
    *
    * @param id - UUID of the entity to update
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions}) The `folderKey` property is **experimental**.
@@ -778,6 +804,29 @@ export interface EntityServiceModel {
    *   folderKey: "<folderKey>",
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
+   *
+   * // Federated: add a source joined to the existing graph
+   * await entities.updateById(<id>, {
+   *   addExternalSources: [{
+   *     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: <elementInstanceId>, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+   *     externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
+   *     fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
+   *   }],
+   *   addSourceJoins: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+   * });
+   *
+   * // Federated: add a field to an existing source (maps a field that already exists on it)
+   * await entities.updateById(<id>, {
+   *   addFieldsToSource: [{ sourceObjectName: "<objectName>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+   * });
+   *
+   * // Federated: change an existing join in place
+   * await entities.updateById(<id>, {
+   *   updateSourceJoin: [{ sourceObjectName: "<objectName>", relatedSourceObjectName: "<relatedObjectName>", sourceJoinField: "<externalFieldName>" }],
+   * });
+   *
+   * // Federated: remove a source (its joins are removed automatically)
+   * await entities.updateById(<id>, { removeExternalSources: ["<relatedObjectName>"] });
    * ```
    * @internal
    */

@@ -1,5 +1,6 @@
-import { EntityFieldDataType, EntityType, FieldDisplayType } from "./entities.types";
+import { EntityClass, EntityFieldDataType, EntityType, FieldDisplayType } from "./entities.types";
 import {
+  EntityClassId,
   EntitySchemaFieldMapping,
   SqlFieldType,
   EntityFieldConstraint,
@@ -161,4 +162,14 @@ export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
   [SqlFieldType.DECIMAL]:          EntityFieldDataType.DECIMAL,
   [SqlFieldType.MULTILINE]:        EntityFieldDataType.MULTILINE_TEXT,
   [SqlFieldType.MULTILINE_MAX]:    EntityFieldDataType.MULTILINE_MAX,
+};
+
+/**
+ * Maps the user-facing {@link EntityClass} to the numeric `entityClassId` the v3
+ * create endpoint expects. Only the two user-creatable classes are listed; any other
+ * value is rejected by `create()`.
+ */
+export const EntityClassToIdMap: Partial<Record<EntityClass, EntityClassId>> = {
+  [EntityClass.Native]:    EntityClassId.Native,
+  [EntityClass.Federated]: EntityClassId.Federated,
 };

@@ -459,8 +459,29 @@ export interface EntityCreateOptions extends EntityFolderScopedOptions {
    * @experimental Analytics integration is in preview — the contract may change.
    */
   isAnalyticsEnabled?: boolean;
-  /** External field source definitions (default: empty) */
-  externalFields?: ExternalField[];
+  /**
+   * Product class of the entity (default: `Native`). Set to `Federated` to create a
+   * federated entity — a read-only view over one or more external/native sources.
+   * A Federated entity requires at least one source in `externalFields`.
+   *
+   * @experimental
+   */
+  entityClass?: EntityClass;
+  /**
+   * External source definitions — the connections, objects, and field mappings a
+   * Federated entity reads from. Required when `entityClass` is `Federated`; ignored
+   * for Native entities.
+   *
+   * @experimental
+   */
+  externalFields?: EntityCreateExternalSource[];
+  /**
+   * Cross-source joins for a multi-source Federated entity. Each entry joins two
+   * sources by object + field name; omit for a single-source Federated entity.
+   *
+   * @experimental
+   */
+  sourceJoinConditionDetails?: SourceJoinConditionDetail[];
 }
 
 /**
@@ -499,6 +520,61 @@ export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
   description?: string;
   /** Whether role-based access control is enabled for this entity */
   isRbacEnabled?: boolean;
+  /**
+   * Whether Analytics integration is enabled for this entity.
+   *
+   * @experimental Analytics integration is in preview — the contract may change.
+   */
+  isAnalyticsEnabled?: boolean;
+
+  // ── Federated source/join deltas ──
+
+  /** External sources to add to a Federated entity (same shape as create's `externalFields`). @experimental */
+  addExternalSources?: EntityCreateExternalSource[];
+  /** External sources to remove, by `externalObjectName`. @experimental */
+  removeExternalSources?: string[];
+  /** Fields to add to an existing source, keyed by the source's `externalObjectName`. @experimental */
+  addFieldsToSource?: EntityAddFieldsToSource[];
+  /** Fields to remove from an existing source, keyed by the source's `externalObjectName`. @experimental */
+  removeFieldsFromSource?: EntityRemoveFieldsFromSource[];
+  /** Field-mapping updates (searchability/direction/sortable) on an existing external field. @experimental */
+  updateExternalFieldMapping?: EntityUpdateExternalFieldMapping[];
+  /** Cross-source joins to add (typically paired with `addExternalSources` — a new
+   * non-primary source must be connected to the graph by a join). @experimental */
+  addSourceJoins?: SourceJoinConditionDetail[];
+  /** Update an existing join in place — change its join fields and/or type. Identified by
+   * source + related object names. (There is no standalone remove-join: a join can't
+   * outlive its source, so `removeExternalSources` cascades its joins automatically.) @experimental */
+  updateSourceJoin?: EntityUpdateSourceJoin[];
+}
+
+/** Fields to add to a Federated source, identified by the source object name. */
+export interface EntityAddFieldsToSource {
+  sourceObjectName: string;
+  fields: EntityCreateExternalField[];
+}
+
+/** Fields to remove from a Federated source, identified by the source object name. */
+export interface EntityRemoveFieldsFromSource {
+  sourceObjectName: string;
+  fieldNames: string[];
+}
+
+/** A mapping update for one external field on a Federated source. */
+export interface EntityUpdateExternalFieldMapping {
+  sourceObjectName: string;
+  fieldName: string;
+  mapping: Partial<EntityCreateExternalFieldMapping>;
+}
+
+/** Updates an existing Federated cross-source join in place, identified by the two object
+ * names. Only the supplied fields change; the others are kept. */
+export interface EntityUpdateSourceJoin {
+  sourceObjectName: string;
+  relatedSourceObjectName: string;
+  sourceJoinField?: string;
+  relatedSourceJoinField?: string;
+  joinType?: JoinType;
 }
 
 /**
@@ -604,6 +680,22 @@ export enum EntityType {
 }
 
 /**
+ * Product classification of an entity.
+ */
+export enum EntityClass {
+  /** Native entity — data fully stored and managed within UiPath */
+  Native = "Native",
+  /**
+   * Federated entity — unified read-only view across UiPath and external sources.
+   *
+   * @experimental
+   */
+  Federated = "Federated",
+  /** Case-family entity — read-only: returned by `getById`, not a valid value for `create`. */
+  Case = "Case",
+}
+
+/**
  * Field type metadata
  */
 export interface FieldDataType {
@@ -634,11 +726,11 @@ export enum FieldDisplayType {
 }
 
 /**
- * Data direction type for external fields
+ * Read/write direction for an external field.
  */
 export enum DataDirectionType {
-  ReadOnly = "ReadOnly",
-  ReadAndWrite = "ReadAndWrite",
+  ReadOnly = 0,
+  ReadAndWrite = 1,
 }
 
 /**
@@ -721,6 +813,8 @@ export interface ExternalObject {
   externalConnectionId: string;
   entityId?: string;
   isPrimarySource: boolean;
+  /** External access method for the object */
+  method?: string;
 }
 
 /**
@@ -737,6 +831,29 @@ export interface ExternalConnection {
 }
 
 /**
+ * Operator-level searchability metadata
+ */
+export interface SearchabilityOperator {
+  searchableOperators?: string[];
+}
+
+/**
+ * Named-search searchability metadata
+ */
+export interface SearchabilityNamedSearch {
+  searchableNames?: string[];
+}
+
+/**
+ * Field searchability metadata
+ */
+export interface Searchability {
+  searchable: boolean;
+  supportsOperators?: SearchabilityOperator;
+  supportsNamedSearch?: SearchabilityNamedSearch;
+}
+
+/**
  * External field mapping
  */
 export interface ExternalFieldMapping {
@@ -747,6 +864,12 @@ export interface ExternalFieldMapping {
   externalFieldType?: string;
   internalFieldId: string;
   directionType: DataDirectionType;
+  /** Field searchability metadata */
+  searchability?: Searchability;
+  /** Whether this external field is required for read operations */
+  isRequiredForRead?: boolean;
+  /** Whether this external field can be used for sorting */
+  sortable?: boolean;
 }
 
 /**
@@ -758,12 +881,25 @@ export interface ExternalField {
 }
 
 /**
+ * Native connection detail — set for a Native source referencing another UiPath entity
+ * (Federated entities with Native sources). When present, `externalConnectionDetail` may be empty.
+ */
+export interface NativeConnectionDetail {
+  /** Id of the referenced native UiPath entity (the source to read from) */
+  entityId: string;
+  /** Folder that owns the referenced native entity */
+  folderKey: string;
+}
+
+/**
  * External source fields
  */
 export interface ExternalSourceFields {
   fields?: ExternalField[];
   externalObjectDetail?: ExternalObject;
   externalConnectionDetail?: ExternalConnection;
+  /** Set for a Native source (referencing another UiPath entity); see {@link NativeConnectionDetail} */
+  nativeConnectionDetail?: NativeConnectionDetail;
 }
 
 /**
@@ -772,10 +908,115 @@ export interface ExternalSourceFields {
 export interface SourceJoinCriteria {
   id: string;
   entityId: string;
+  /** Id of the source object on the owning side of the join */
+  sourceObjectId?: string;
   joinFieldName?: string;
   joinType: JoinType;
   relatedSourceObjectId?: string;
   relatedSourceFieldName?: string;
+}
+
+/**
+ * A join between two sources of a Federated entity, expressed by source object and field names.
+ */
+export interface SourceJoinConditionDetail {
+  /** Name of the object on the owning side of the join. */
+  sourceObjectName: string;
+  /** Field on the source object used to match. */
+  sourceJoinField: string;
+  /** Connection id of the source object (the external connection this object belongs to). */
+  sourceObjectConnectionId?: string;
+  /** How records are matched across the two sources. */
+  joinType: JoinType;
+  /** Name of the object on the related side of the join. */
+  relatedSourceObjectName: string;
+  /** Field on the related source object used to match. */
+  relatedSourceJoinField: string;
+  /** Connection id of the related source object. */
+  relatedSourceObjectConnectionId?: string;
+}
+
+/**
+ * Connection an external source reads from.
+ */
+export interface EntityCreateExternalConnection {
+  /** Integration Service connection id. */
+  connectionId: string;
+  /** Element instance id of the connection. */
+  elementInstanceId?: number;
+  /** Folder that owns the connection. */
+  folderKey?: string;
+  /** Connector key (e.g. `uipath-salesforce`). */
+  connectorKey: string;
+  /** Connector display name. */
+  connectorName: string;
+  /** Connection display name. */
+  connectionName?: string;
+}
+
+/**
+ * External object (table) a source reads from.
+ */
+export interface EntityCreateExternalObject {
+  /** Name of the object on the external system (e.g. `Account`). */
+  externalObjectName: string;
+  /** Display name of the external object. */
+  externalObjectDisplayName?: string;
+  /** Primary key field on the external object. */
+  primaryKey?: string;
+  /** Whether this is the primary source of the federated entity. */
+  isPrimarySource?: boolean;
+  /** External access method for the object. */
+  method?: string;
+}
+
+/**
+ * Maps an external source field to its internal column.
+ */
+export interface EntityCreateExternalFieldMapping {
+  /** Name of the field on the external source. */
+  externalFieldName: string;
+  /** Display name of the external source field. */
+  externalFieldDisplayName?: string;
+  /** Type of the field on the external source. */
+  externalFieldType?: string;
+  /** Read-only vs read/write direction for this field. */
+  directionType: DataDirectionType;
+  /** Field searchability metadata. */
+  searchability?: Searchability;
+  /** Whether this external field is required for read operations. */
+  isRequiredForRead?: boolean;
+  /** Whether this external field can be used for sorting. */
+  sortable?: boolean;
+}
+
+/**
+ * A single field contributed by an external source on create: an internal column
+ * (defined exactly like a native field via {@link EntityCreateFieldOptions}) plus the
+ * mapping back to the external source field.
+ */
+export interface EntityCreateExternalField {
+  /** Internal column definition — same shape as a native create field. */
+  field: EntityCreateFieldOptions;
+  /** Mapping from the external source field to this internal column. */
+  externalFieldMappingDetail: EntityCreateExternalFieldMapping;
+}
+
+/**
+ * One source of a Federated entity on create — the connection and object it reads
+ * from, and the fields it contributes. Supply `externalConnectionDetail` for a truly
+ * external source, or `nativeConnectionDetail` for a source backed by another UiPath
+ * entity.
+ */
+export interface EntityCreateExternalSource {
+  /** Fields this source contributes to the federated entity. */
+  fields?: EntityCreateExternalField[];
+  /** The external object (table) this source reads from. Required — identifies the source table; no server default. */
+  externalObjectDetail: EntityCreateExternalObject;
+  /** Connection for a truly external source (Salesforce, SAP, ServiceNow, …). */
+  externalConnectionDetail?: EntityCreateExternalConnection;
+  /** Connection for a Native source referencing another UiPath entity. */
+  nativeConnectionDetail?: NativeConnectionDetail;
 }
 
 /**
@@ -785,10 +1026,18 @@ export interface RawEntityGetResponse {
   name: string;
   displayName: string;
   entityType: EntityType;
+  /** Numeric entity type identifier */
+  entityTypeId?: number;
+  /** Template discriminator — null for non-templated entities, set for templated ones */
+  templateName?: string;
+  /** Product classification: Native, Federated, or Case. @experimental */
+  entityClass?: EntityClass;
   description?: string;
   fields: FieldMetaData[];
   folderId?: string;
+  /** External source definitions — present only on Federated entities. @experimental */
   externalFields?: ExternalSourceFields[];
+  /** Cross-source join criteria — present only on Federated entities. @experimental */
   sourceJoinCriterias?: SourceJoinCriteria[];
   recordCount?: number;
   storageSizeInMB?: number;
