@@ -209,6 +209,7 @@ nav:
           - Jobs: api/interfaces/JobServiceModel.md
           - Platform: api/interfaces/PlatformServiceModel.md
           - Platform Users: api/interfaces/PlatformUserServiceModel.md
+          - Platform Groups: api/interfaces/PlatformGroupServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks:

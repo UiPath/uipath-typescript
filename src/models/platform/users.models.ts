@@ -98,7 +98,7 @@ export interface PlatformUserServiceModel {
    * `groupIdsToAdd` / `groupIdsToRemove`, which makes this the call for granting or
    * revoking a user's access ("add user to the Administrators group").
    *
-   * Group IDs can be read from any user's `groupIds` (e.g. via `users.getById()`).
+   * First, get group IDs with `groups.getAll()` (from `@uipath/uipath-typescript/platform`).
    *
    * @param userId - GUID of the user to update
    * @param update - The fields to change

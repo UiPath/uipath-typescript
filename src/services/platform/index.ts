@@ -4,6 +4,7 @@
  * Provides access to UiPath platform administration:
  * - `Platform` — bulk read and bulk create/update of a user's setting key/value pairs
  * - `Users` — list, read, and update an organization's users, including group membership
+ * - `Groups` — manage an organization's groups and their members
  *
  * Settings operations are user-scoped — see {@link PlatformSettingKey}. Settings require
  * the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
@@ -30,6 +31,7 @@
 
 export { PlatformService as Platform } from './platform';
 export { PlatformUserService as Users } from './users';
+export { PlatformGroupService as Groups } from './groups';
 
 // Models (types, response shapes)
 export * from '../../models/platform';

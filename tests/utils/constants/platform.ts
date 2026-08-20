@@ -60,3 +60,24 @@ export const PLATFORM_USER_TEST_CONSTANTS = {
   ERROR_USER_NOT_FOUND: 'The entity was not found.',
   ERROR_USERS_FORBIDDEN: 'Caller is not authorized to list users for the organization',
 } as const;
+
+/**
+ * Platform group test constants.
+ *
+ * Field values mirror a real API response captured during onboarding: camelCase wire
+ * fields and numeric type codes (0 = built-in, 1 = custom).
+ */
+export const PLATFORM_GROUP_TEST_CONSTANTS = {
+  GROUP_ID: 'ce684f6f-5af3-4e43-8516-1adad6e98fc9',
+  GROUP_ID_ALT: '9e18c49b-92ea-4407-969e-b32422717a6c',
+  GROUP_NAME: 'Everyone',
+  GROUP_NAME_ALT: 'IntegrationTestGroup',
+  // Distinctive values so rename tests verify value preservation, not just field presence
+  CREATION_TIME: '2025-08-04T06:05:21.8464663',
+  LAST_MODIFICATION_TIME: '2025-08-04T06:05:21.8464664',
+  MEMBERS_TOTAL_COUNT: 12,
+
+  // Error messages
+  ERROR_GROUP_NOT_FOUND: 'The entity was not found.',
+  ERROR_GROUPS_FORBIDDEN: 'Caller is not authorized to list groups for the organization',
+} as const;
