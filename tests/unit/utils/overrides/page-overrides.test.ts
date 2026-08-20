@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { UiPathElementIds } from '../../../../src/utils/runtime/constants';
 
-const ELEMENT_ID = 'uipath-overrides';
+const ELEMENT_ID = UiPathElementIds.RESOURCE_OVERRIDES;
 
 const originalDocument = global.document;
 

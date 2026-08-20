@@ -1,8 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { resolveOverride } from '../../../../src/utils/overrides/resolve-override';
 import type { ResourceOverrides } from '../../../../src/utils/overrides/overrides.types';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 
-const KEY = Symbol.for('uipath.resourceOverwrites.v1');
+const KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
 
 // Keys are the publisher's: `asset` is Orchestrator's type prefix, `MyAsset` the design-time name.
 const ASSET: ResourceOverrides = {
