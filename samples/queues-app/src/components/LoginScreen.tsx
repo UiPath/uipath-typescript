@@ -1,0 +1,37 @@
+import { ListChecks } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@uipath/apollo-wind/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@uipath/apollo-wind/components/ui/alert'
+
+export function LoginScreen() {
+  const { login, error, isLoading } = useAuth()
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+            <ListChecks className="h-5 w-5 text-primary" />
+          </div>
+          <CardTitle>Queue Explorer</CardTitle>
+          <CardDescription>
+            Browse your UiPath Orchestrator queues, inspect and insert queue
+            items, and run transactions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertTitle>Login failed</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <Button onClick={login} disabled={isLoading} className="w-full">
+            {isLoading ? 'Signing in…' : 'Sign in with UiPath'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

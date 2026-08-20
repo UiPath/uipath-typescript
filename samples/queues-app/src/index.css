@@ -1,0 +1,16 @@
+/*
+ * Apollo Vertex design system.
+ *
+ * Importing apollo-wind's Tailwind source (not the pre-compiled styles.css) so
+ * this app compiles its own utility classes — the pre-compiled bundle only
+ * contains the classes apollo-wind's components use, which misses anything
+ * this app composes inline. `tailwind.css` pulls in Tailwind v4 base/utilities
+ * plus Apollo's design tokens (semantic colours, typography, radii) and
+ * `.dark` overrides (toggled by next-themes).
+ */
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind v4 skips node_modules — scan apollo-wind so its component classes
+   (e.g. Dialog's p-6 / gap-4) regenerate; the second line scans this app. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';
