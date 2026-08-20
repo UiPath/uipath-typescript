@@ -78,6 +78,12 @@ export interface IntegrationConfig {
    * which are already provisioned under that name and are not developer-facing.
    */
   identityTestUserId?: string;
+  /**
+   * GUID of a user account the Users suite MAY mutate — it is added to and removed
+   * from throwaway test groups and has profile fields round-tripped (snapshot +
+   * restore). Must be a non-critical account. `identityTestUserId` stays read-only.
+   */
+  identityMutableTestUserId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -148,6 +154,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
     organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
     identityTestUserId: typeof rawConfig.identityTestUserId === 'string' ? rawConfig.identityTestUserId : undefined,
+    identityMutableTestUserId: typeof rawConfig.identityMutableTestUserId === 'string' ? rawConfig.identityMutableTestUserId : undefined,
   };
 }
 
@@ -202,6 +209,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
     organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
     identityTestUserId: process.env.IDENTITY_TEST_USER_ID || undefined,
+    identityMutableTestUserId: process.env.IDENTITY_MUTABLE_TEST_USER_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
