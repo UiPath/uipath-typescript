@@ -44,9 +44,13 @@ describe('resolveOverride', () => {
     expect(resolveOverride('Asset', 'a')?.name).toBe('lower');
   });
 
-  it('leaves a resource the publisher does not describe alone', () => {
-    install(() => ({ 'taskcatalog.Catalog': { name: 'X' }, 'TaskCatalog.Catalog': { name: 'Y' } }));
-    expect(resolveOverride('TaskCatalog', 'Catalog')).toBeUndefined();
+  it('lowercases the SDK label so publisher keys with the raw prefix still match', () => {
+    install(() => ({ 'taskcatalog.Catalog': { name: 'X' } }));
+    expect(resolveOverride('TaskCatalog', 'Catalog')?.name).toBe('X');
+  });
+
+  it('misses when no key matches the lowercase resource-type prefix', () => {
+    install(() => ({ 'taskcatalog.Catalog': { name: 'X' } }));
     expect(resolveOverride('Function', 'Catalog')).toBeUndefined();
   });
 

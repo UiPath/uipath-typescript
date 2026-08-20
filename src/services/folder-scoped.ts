@@ -97,13 +97,10 @@ export class FolderScopedService extends BaseService {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
-    // Always consulted, whatever folder context the caller supplied: an override redirects the
-    // design-time name an admin configured, and that holds however the call names its folder.
-    // `folderPath` also scopes the lookup, for publishers that key entries by design-time folder.
+    // Admin-configured override redirects the design-time identity before header resolution.
     const override = resolveOverride(resourceType, validatedName, folderPath);
     const resolvedName = override?.name ?? validatedName;
-    // The override's folder describes where its target lives, so it replaces the caller's path.
-    // `folderId`/`folderKey` still ride along; the server applies folderPath > folderKey > folderId.
+    // Override's folderPath supersedes; folderId/folderKey ride along — server picks path first.
     const resolvedFolderPath = override?.folderPath ?? folderPath;
 
     const headers = resolveFolderHeaders({

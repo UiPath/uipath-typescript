@@ -1,6 +1,5 @@
 import { isBrowser } from '../platform';
 import { UiPathElementIds } from '../runtime/constants';
-import type { ChannelSource } from '../ambient/channel';
 import type { ResourceOverrides } from './overrides.types';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -41,8 +40,8 @@ function readFromDocument(): ResourceOverrides | undefined {
 let table: ResourceOverrides | undefined;
 let loaded = false;
 
-/** The page as a channel source: read from the DOM on first use, then held. */
-export const pageOverrides: ChannelSource<ResourceOverrides> = () => {
+/** The page as an override source: read from the DOM on first use, then held. */
+export const pageOverrides = (): ResourceOverrides | undefined => {
   if (!loaded) {
     loaded = true;
     table = readFromDocument();

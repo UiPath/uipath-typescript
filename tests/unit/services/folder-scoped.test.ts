@@ -31,12 +31,12 @@ const SCOPED_KEY = `${UNSCOPED_KEY}.${ASSET_TEST_CONSTANTS.FOLDER_PATH}`;
 // ===== TEST SUITE =====
 describe('FolderScopedService getByName override resolution', () => {
   let assetService: AssetService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
     mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
 
     assetService = new AssetService(instance);
