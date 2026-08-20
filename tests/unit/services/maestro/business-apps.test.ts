@@ -151,6 +151,21 @@ describe('BusinessApps Service Unit Tests', () => {
       expect(result.items[1].name).toBe(BUSINESS_APP_TEST_CONSTANTS.NAME_ALT);
     });
 
+    // getAll has its own transformFn closure, so getById's completeness test does not cover it.
+    it('should rename the timestamp and modifier fields and drop the wire names on listed apps', async () => {
+      mockApiClient.get.mockResolvedValue(createBusinessAppListResponse());
+
+      const result = await businessAppsService.getAll();
+      const [app] = result.items;
+
+      expect(app.createdTime).toBe(BUSINESS_APP_TEST_CONSTANTS.CREATED_TIME);
+      expect(app.lastModifiedTime).toBe(BUSINESS_APP_TEST_CONSTANTS.MODIFIED_TIME);
+      expect(app.lastModifiedBy).toBe(BUSINESS_APP_TEST_CONSTANTS.USER_ID);
+      expect((app as Record<string, unknown>).createdTimeUtc).toBeUndefined();
+      expect((app as Record<string, unknown>).modifiedTimeUtc).toBeUndefined();
+      expect((app as Record<string, unknown>).modifiedBy).toBeUndefined();
+    });
+
     it('should attach update and delete to every listed app', async () => {
       mockApiClient.get.mockResolvedValue(createBusinessAppListResponse());
 

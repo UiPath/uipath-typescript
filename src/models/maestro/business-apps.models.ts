@@ -228,6 +228,12 @@ export interface BusinessAppsServiceModel {
 
 /**
  * Methods attached to each business app returned by the service.
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: These methods are experimental and may change or be removed in future releases.
+ * ///
  */
 export interface BusinessAppMethods {
   /**
