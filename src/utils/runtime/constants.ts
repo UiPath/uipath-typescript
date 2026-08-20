@@ -21,3 +21,13 @@ export enum UiPathMetaTags {
   FOLDER_KEY = 'uipath:folder-key',
 
 }
+
+/**
+ * Ids of page elements carrying runtime configuration
+ *
+ * Injected at deployment time, same producers as {@link UiPathMetaTags}.
+ */
+export enum UiPathElementIds {
+  /** `<script type="application/json">` holding this app's resource overrides. */
+  RESOURCE_OVERRIDES = 'uipath-overrides',
+}
