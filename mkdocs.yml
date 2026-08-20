@@ -210,6 +210,7 @@ nav:
           - Platform: api/interfaces/PlatformServiceModel.md
           - Platform Users: api/interfaces/PlatformUserServiceModel.md
           - Platform Groups: api/interfaces/PlatformGroupServiceModel.md
+          - Platform Directory: api/interfaces/PlatformDirectoryServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks:
