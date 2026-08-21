@@ -27,9 +27,9 @@
  *
  * const businessApps = new BusinessApps(sdk);
  *
- * const app = await businessApps.create('Claims Intake', 'Handles inbound claims', [
- *   '<processKey>',
- * ]);
+ * const app = await businessApps.create('Claims Intake', ['<processKey>'], {
+ *   description: 'Handles inbound claims',
+ * });
  *
  * const all = await businessApps.getAll();
  *

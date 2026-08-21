@@ -13,8 +13,8 @@ export interface RawBusinessAppGetResponse {
   id: string;
   /** Display name, unique within the tenant (compared case-insensitively). */
   name: string;
-  /** Human description of what the app is for. */
-  description: string;
+  /** Human description of what the app is for, or `null` if none was set. */
+  description: string | null;
   /** Icon identifier, or `null` to use the default icon. */
   icon: string | null;
   /** Hex color code including the leading `#`, or `null` to use the default color. */
@@ -35,6 +35,8 @@ export interface RawBusinessAppGetResponse {
  * Optional display fields accepted when creating a business app.
  */
 export interface BusinessAppCreateOptions {
+  /** Human description of what the app is for. Omit, or pass blank, to store none. */
+  description?: string;
   /** Icon identifier. Omit to use the default icon. */
   icon?: string;
   /** Hex color code including the leading `#`, e.g. `'#1F6FEB'`. Omit to use the default color. */

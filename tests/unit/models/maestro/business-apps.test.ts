@@ -60,35 +60,36 @@ describe('Business App Model Unit Tests', () => {
 
   describe('update', () => {
     it("should delegate to updateById with the app's own id", async () => {
-      await businessApp.update(
-        BUSINESS_APP_TEST_CONSTANTS.NAME_ALT,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION_UPDATED,
-        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY_ALT]
-      );
+      await businessApp.update(BUSINESS_APP_TEST_CONSTANTS.NAME_ALT, [
+        BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY_ALT,
+      ]);
 
       expect(mockService.updateById).toHaveBeenCalledWith(
         BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
         BUSINESS_APP_TEST_CONSTANTS.NAME_ALT,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION_UPDATED,
         [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY_ALT],
         undefined
       );
     });
 
-    it('should forward icon and color options', async () => {
+    it('should forward description, icon and color options', async () => {
+      const options = {
+        description: BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
+        icon: BUSINESS_APP_TEST_CONSTANTS.ICON,
+        color: BUSINESS_APP_TEST_CONSTANTS.COLOR,
+      };
+
       await businessApp.update(
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
         [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY],
-        { icon: BUSINESS_APP_TEST_CONSTANTS.ICON, color: BUSINESS_APP_TEST_CONSTANTS.COLOR }
+        options
       );
 
       expect(mockService.updateById).toHaveBeenCalledWith(
         BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
         [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY],
-        { icon: BUSINESS_APP_TEST_CONSTANTS.ICON, color: BUSINESS_APP_TEST_CONSTANTS.COLOR }
+        options
       );
     });
 
@@ -98,15 +99,12 @@ describe('Business App Model Unit Tests', () => {
         mockService
       );
 
-      await other.update(
-        BUSINESS_APP_TEST_CONSTANTS.NAME_ALT,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-      );
+      await other.update(BUSINESS_APP_TEST_CONSTANTS.NAME_ALT, [
+        BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+      ]);
 
       expect(mockService.updateById).toHaveBeenCalledWith(
         BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID_ALT,
-        expect.anything(),
         expect.anything(),
         expect.anything(),
         undefined
@@ -131,7 +129,7 @@ describe('Business App Model Unit Tests', () => {
       const idless = createBusinessAppWithMethods(createRawBusinessApp({ id: '' }), mockService);
 
       await expect(
-        idless.update(BUSINESS_APP_TEST_CONSTANTS.NAME, BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION, [
+        idless.update(BUSINESS_APP_TEST_CONSTANTS.NAME, [
           BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
         ])
       ).rejects.toThrow(/Business app ID/);
