@@ -110,6 +110,16 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `resume()` | `PIMS` |
 | `retry()` | `PIMS` |
 
+## Maestro Business Apps
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `PIMS` |
+| `getAll()` | `PIMS` |
+| `getById()` | `PIMS` |
+| `updateById()` | `PIMS` |
+| `deleteById()` | `PIMS` |
+
 ## Maestro Cases
 
 | Method | OAuth Scope |

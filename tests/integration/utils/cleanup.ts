@@ -15,6 +15,7 @@ interface ResourceRegistry {
   feedbackEntries: Array<{ id: string; folderKey?: string }>;
   feedbackCategories: Array<{ id: string }>;
   bucketFiles: Array<{ bucketId: number; path: string; folderId?: number }>;
+  businessApps: Array<{ id: string }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -25,6 +26,7 @@ const resourceRegistry: ResourceRegistry = {
   feedbackEntries: [],
   feedbackCategories: [],
   bucketFiles: [],
+  businessApps: [],
 };
 
 /**
@@ -201,6 +203,24 @@ export async function cleanupTestFeedbackCategory(id: string): Promise<void> {
 }
 
 /**
+ * Deletes a test business app.
+ *
+ * @param id - GUID of the business app
+ */
+export async function cleanupTestBusinessApp(id: string): Promise<void> {
+  try {
+    const { businessApps } = getServices();
+    if (!businessApps) return;
+    await retryWithBackoff(async () => {
+      await businessApps.deleteById(id);
+    });
+    console.log(`Cleaned up test business app: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup business app ${id}:`, error);
+  }
+}
+
+/**
  * Emergency cleanup function that attempts to delete all registered resources.
  * Should be called as a last resort in afterAll hooks.
  */
@@ -242,6 +262,11 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestBucketFile(file.bucketId, file.path, file.folderId);
   }
 
+  // Cleanup business apps
+  for (const app of resourceRegistry.businessApps) {
+    await cleanupTestBusinessApp(app.id);
+  }
+
   // Clear registry
   resourceRegistry.tasks = [];
   resourceRegistry.entityRecords = [];
@@ -250,6 +275,7 @@ export async function cleanupAllTestResources(): Promise<void> {
   resourceRegistry.feedbackEntries = [];
   resourceRegistry.feedbackCategories = [];
   resourceRegistry.bucketFiles = [];
+  resourceRegistry.businessApps = [];
 
   console.log('Emergency cleanup completed');
 }
