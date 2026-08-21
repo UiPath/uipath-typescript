@@ -2,6 +2,13 @@ export const  FOLDER_KEY = 'X-UIPATH-FolderKey';
 export const  FOLDER_PATH_ENCODED = 'X-UIPATH-FolderPath-Encoded';
 export const  USER_AGENT = 'X-UIPATH-UserAgent';
 export const  TENANT_ID = 'X-UIPATH-Internal-TenantId';
+/**
+ * Tenant header accepted by the notification inbox API (`NotificationEntry`).
+ * That endpoint rejects {@link TENANT_ID} — it spends ~30s server-side and then
+ * returns 500 — while this variant answers normally. The subscription service
+ * accepts either, so it stays on {@link TENANT_ID}.
+ */
+export const  NOTIFICATION_TENANT_ID = 'X-UIPATH-TenantId';
 export const  ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
 export const  CORRELATION_ID = 'X-UIPATH-Correlation-Id';
 export const  JOB_KEY = 'X-UIPATH-JobKey';

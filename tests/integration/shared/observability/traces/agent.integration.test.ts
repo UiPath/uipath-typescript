@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
+import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
+import { recentWindow } from '../../../utils/helpers';
 import { AgentTraces } from '../../../../../src/services/observability/traces/agent';
 import {
   AgentTraceExecutionType,
@@ -19,15 +20,15 @@ import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: every method here requires OAuth and rejects PAT (401 regardless of scopes).
-// The Traceview methods reject PAT directly; the governance methods sit on the
-// llmopstenant_ facade which forwards to InsightsRTM (also PAT-rejecting), so PAT
-// still can't reach them. Skipped at the outer level so the live-auth setup
-// (setupUnifiedTests + beforeAll) does not run.
-describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// Every method here rejects PAT (401 regardless of scopes): Traceview rejects it
+// directly, and the governance methods sit on the llmopstenant_ facade that forwards
+// to InsightsRTM. This suite authenticates with a user token and skips without one.
+describe.skipIf(!hasUserToken()).each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let trace!: AgentTraces;
+  let folderKey!: string;
+  let traceId!: string;
 
   beforeAll(() => {
     const service = getServices().agentTraces;
@@ -35,11 +36,28 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       throw new Error('Agent Traces service is not registered for this init mode');
     }
     trace = service;
+
+    const configuredFolderKey = getTestConfig().folderKey;
+    if (!configuredFolderKey) {
+      throw new Error(
+        'INTEGRATION_TEST_FOLDER_KEY is not configured. The folder filter tests need a ' +
+        'folder the caller can access — an inaccessible folder key returns 403.',
+      );
+    }
+    folderKey = configuredFolderKey;
+
+    const configuredTraceId = getTestConfig().tracesTestTraceId;
+    if (!configuredTraceId) {
+      throw new Error(
+        'TRACES_TEST_TRACE_ID is not configured. Point it at a trace in the test tenant ' +
+        'that has at least one span.',
+      );
+    }
+    traceId = configuredTraceId;
   });
 
   describe('getErrorsTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve a trace-level timeline of error counts grouped by error name', async () => {
       const result = await trace.getErrorsTimeline({ startTime, endTime });
@@ -57,7 +75,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getErrorsTimeline({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
@@ -68,8 +86,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   });
 
   describe('getLatencyTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve a trace-level latency timeline grouped by series', async () => {
       const result = await trace.getLatencyTimeline({ startTime, endTime });
@@ -87,7 +104,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getLatencyTimeline({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
@@ -98,8 +115,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   });
 
   describe('getUnitConsumption', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve per-agent trace-level unit consumption totals', async () => {
       const result = await trace.getUnitConsumption({ startTime, endTime });
@@ -119,7 +135,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getUnitConsumption({
         startTime,
         endTime,
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
@@ -131,18 +147,18 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
 
   describe('getSpansByTraceId', () => {
     it('should retrieve the flat span array for a trace', async () => {
-      const result = await trace.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID);
+      const result = await trace.getSpansByTraceId(traceId);
 
       expect(Array.isArray(result)).toBe(true);
       if (result.length === 0) {
         throw new Error(
-          'No spans for the configured TRACE_ID — cannot verify span shape. ' +
-          'Point TRACE_ID at a trace that exists in the test tenant.',
+          'No spans for the configured TRACES_TEST_TRACE_ID — cannot verify span shape. ' +
+          'Point it at a trace that exists in the test tenant and has spans.',
         );
       }
       const span = result[0];
       expect(typeof span.id).toBe('string');
-      expect(span.traceId).toBe(AGENT_TEST_CONSTANTS.TRACE_ID);
+      expect(span.traceId).toBe(traceId);
       expect(typeof span.name).toBe('string');
       expect(typeof span.startTime).toBe('string');
       expect(typeof span.attributes).toBe('string');
@@ -150,8 +166,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   });
 
   describe('getSpansByReference', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve spans matching a reference id in the hierarchy', async () => {
       const result = await trace.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID);
@@ -168,7 +183,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
 
     it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
       const result = await trace.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, {
-        traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+        traceId: traceId,
         startTime,
         endTime,
         executionType: AgentTraceExecutionType.Runtime,
@@ -185,8 +200,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   });
 
   describe('getGovernanceDecisions', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
     const validModes = new Set<string>(Object.values(AgentGovernanceMode));
     const validVerdicts = new Set<string>(Object.values(AgentGovernanceVerdict));
 
@@ -222,8 +236,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
   });
 
   describe('getGovernanceSummary', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the aggregated posture with default breakdowns present', async () => {
       const result = await trace.getGovernanceSummary(startTime, { endTime });

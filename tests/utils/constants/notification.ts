@@ -4,7 +4,7 @@
 
 export const NOTIFICATION_TEST_CONSTANTS = {
   // Tenant GUID — passed as the first arg to every Notifications method
-  // (sent to the API via the X-UIPATH-Internal-TenantId header)
+  // (sent to the API via the X-UIPATH-TenantId header)
   TENANT_ID: '99999999-9999-4999-8999-999999999999',
 
   // Notification entry identifiers

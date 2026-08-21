@@ -10,6 +10,14 @@ export interface IntegrationConfig {
   tenantName: string;
   tenantId?: string;
   secret: string;
+  /**
+   * User access token, minted by a browser login (Minter) rather than issued to
+   * an external application. Required by services that reject PAT and
+   * client-credentials tokens outright: everything under `insightsrtm_` (Agents,
+   * Agent Memory, Agent Traces, Governance) and the notification service.
+   * Unset by default — suites that need it skip rather than fail.
+   */
+  userToken?: string;
   timeout: number;
   skipCleanup: boolean;
   /**
@@ -60,6 +68,11 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   casTestAgentId?: string;
   casTestFolderId?: string;
+  /**
+   * Trace GUID used by the Agent Traces span tests. The trace must exist in the
+   * test tenant and have at least one span; suites guard on it and throw when unset.
+   */
+  tracesTestTraceId?: string;
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
@@ -119,6 +132,9 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     secret: rawConfig.secret as string,
+    userToken: typeof rawConfig.userToken === 'string' && rawConfig.userToken.length > 0
+      ? rawConfig.userToken
+      : undefined,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     schemaWriteScopeAvailable: rawConfig.schemaWriteScopeAvailable === true,
@@ -144,6 +160,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     casTestAgentId: typeof rawConfig.casTestAgentId === 'string' ? rawConfig.casTestAgentId : undefined,
     casTestFolderId: typeof rawConfig.casTestFolderId === 'string' ? rawConfig.casTestFolderId : undefined,
+    tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
     organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
@@ -171,6 +188,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tenantName: process.env.UIPATH_TENANT_NAME,
     tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
     secret: process.env.UIPATH_SECRET,
+    userToken: process.env.UIPATH_USER_TOKEN || undefined,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
       : 30000,
@@ -198,6 +216,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     casTestAgentId: process.env.CAS_TEST_AGENT_ID || undefined,
     casTestFolderId: process.env.CAS_TEST_FOLDER_ID || undefined,
+    tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
     organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
@@ -206,6 +225,63 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
   cachedConfig = validateConfig(rawConfig);
   return cachedConfig;
+}
+
+/**
+ * What a suite needs from its credential:
+ * - 'pat'  — the external-application identity specifically
+ * - 'user' — a user access token specifically (insightsrtm_, notification service)
+ * - 'any'  — either works; the harness picks the best available
+ */
+export type AuthRequirement = 'pat' | 'user' | 'any';
+
+/** The credential actually used for a run. */
+export type AuthMode = 'pat' | 'user';
+
+/**
+ * Resolves a requirement to the credential to authenticate with, or null when
+ * nothing configured can satisfy it.
+ *
+ * Reads `process.env` directly and stays free of side effects so it can be
+ * evaluated at collection time by `describe.skipIf(...)`, which runs long before
+ * any `beforeAll`. Resolution must agree between the guard and the setup helper,
+ * so both call this.
+ *
+ * `'any'` prefers the user token: it carries the signed-in user's permissions
+ * rather than an external app's granted scopes, so it reaches strictly more of
+ * the API. Set `INTEGRATION_AUTH_MODE=pat` to force the PAT path instead — used
+ * to keep that path covered even once a user token is available everywhere.
+ */
+export function resolveAuthMode(requirement: AuthRequirement): AuthMode | null {
+  const hasUser = Boolean(process.env.UIPATH_USER_TOKEN);
+  const hasPat = Boolean(process.env.UIPATH_SECRET);
+
+  if (requirement === 'user') return hasUser ? 'user' : null;
+  if (requirement === 'pat') return hasPat ? 'pat' : null;
+
+  const forced = process.env.INTEGRATION_AUTH_MODE;
+  if (forced === 'pat') return hasPat ? 'pat' : null;
+  if (forced === 'user') return hasUser ? 'user' : null;
+
+  if (hasUser) return 'user';
+  return hasPat ? 'pat' : null;
+}
+
+/** Whether any configured credential can satisfy the requirement. */
+export function canAuthenticate(requirement: AuthRequirement): boolean {
+  return resolveAuthMode(requirement) !== null;
+}
+
+/**
+ * Whether a user access token is configured.
+ *
+ * Reads the environment directly rather than going through
+ * {@link loadIntegrationConfig} so it can be evaluated at module scope by
+ * `describe.skipIf(...)` without throwing when the rest of the integration
+ * config is absent — a suite gated on this must skip, never fail to collect.
+ */
+export function hasUserToken(): boolean {
+  return canAuthenticate('user');
 }
 
 /**

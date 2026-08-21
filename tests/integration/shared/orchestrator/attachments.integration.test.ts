@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { AttachmentService } from '../../../../src/services/orchestrator/attachments';
 import { generateRandomString } from '../../utils/helpers';
@@ -15,10 +15,33 @@ describe.each(modes)(
     setupUnifiedTests(mode);
 
     describe('getById', () => {
+      // The configured ORCHESTRATOR_ATTACHMENT_ID may point at an attachment in a
+      // folder the caller cannot reach (getById is folder-authorized, and a user
+      // token is bounded by folder membership where an external app's scopes are
+      // not). Create our own so the block does not depend on tenant state.
+      let attachmentId!: string;
+
+      beforeAll(async () => {
+        const { sdk } = getServices();
+        const attachments = new AttachmentService(sdk);
+        const created = await attachments.create(
+          `IntegrationTest_Attachment_${generateRandomString()}.txt`,
+          new Blob([`getById fixture ${new Date().toISOString()}`]),
+        );
+        attachmentId = created.id;
+      });
+
+      afterAll(async () => {
+        const config = getTestConfig();
+        const base = `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_`;
+        await fetch(`${base}/odata/Attachments(${attachmentId})`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${config.userToken ?? config.secret}` },
+        });
+      });
+
       it('should retrieve an attachment by ID', async () => {
         const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
         const attachments = new AttachmentService(sdk);
 
         const result = await attachments.getById(attachmentId);
@@ -31,8 +54,6 @@ describe.each(modes)(
 
       it('should include blobFileAccess in the response', async () => {
         const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
         const attachments = new AttachmentService(sdk);
 
         const result = await attachments.getById(attachmentId);
@@ -45,8 +66,6 @@ describe.each(modes)(
 
       it('should validate transform: camelCase fields present, PascalCase absent', async () => {
         const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
         const attachments = new AttachmentService(sdk);
 
         const result = await attachments.getById(attachmentId);
@@ -74,8 +93,6 @@ describe.each(modes)(
 
       it('should retrieve an attachment with select option', async () => {
         const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
         const attachments = new AttachmentService(sdk);
 
         const result = await attachments.getById(attachmentId, {
@@ -109,7 +126,7 @@ describe.each(modes)(
         for (const id of createdAttachmentIds) {
           await fetch(`${base}/odata/Attachments(${id})`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${config.secret}` },
+            headers: { Authorization: `Bearer ${config.userToken ?? config.secret}` },
           });
         }
       });

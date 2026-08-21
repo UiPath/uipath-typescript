@@ -23,6 +23,10 @@ jobs:
       # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
       # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
       NODE_OPTIONS: --max-old-space-size=6144
+      # Gates the Minter steps. Fork PRs and repos without the Minter secrets
+      # configured evaluate this to false and skip straight to the tests, where
+      # the user-token suites skip themselves.
+      MINTER_ENABLED: ${{ secrets.MINTER_USERNAME != '' && secrets.ACR_USERNAME != '' }}
 
     steps:
       - name: Checkout
@@ -62,6 +66,7 @@ jobs:
           echo "base_url=${{ secrets.UIPATH_BASE_URL_DEV || secrets.UIPATH_BASE_URL }}" >> $GITHUB_OUTPUT
           echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
           echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
+          echo "tenant_id=${{ secrets.UIPATH_TENANT_ID_DEV || secrets.UIPATH_TENANT_ID }}" >> $GITHUB_OUTPUT
           echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
           echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
           echo "integration_test_folder_key=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER_KEY }}" >> $GITHUB_OUTPUT
@@ -97,6 +102,7 @@ jobs:
           UIPATH_BASE_URL=${{ steps.config.outputs.base_url }}
           UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
           UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
+          UIPATH_TENANT_ID_DEV=${{ steps.config.outputs.tenant_id }}
           UIPATH_SECRET=${{ steps.config.outputs.secret }}
           INTEGRATION_TEST_TIMEOUT=30000
           INTEGRATION_TEST_SKIP_CLEANUP=false
@@ -126,6 +132,69 @@ jobs:
           MAESTRO_TEST_CASE_PROCESS_KEY=${{ steps.config.outputs.maestro_test_case_process_key }}
           MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY=${{ steps.config.outputs.maestro_test_completed_case_process_key }}
           EOF
+
+      # Suites whose APIs reject PAT and client-credentials tokens (insightsrtm_
+      # and the notification service) need a user access token. Minter performs a
+      # headless browser login and exports one. Non-blocking by design: if any of
+      # this fails, UIPATH_USER_TOKEN is simply absent and those suites skip, which
+      # is exactly the pre-Minter behaviour. Fork PRs receive no secrets and take
+      # the same path.
+      #
+      # Registry access uses an ACR scoped token rather than a federated Azure
+      # identity: granting AcrPull to an identity needs role-assignment rights on
+      # pltnonprodacr, which lives in another subscription. Swap to federation once
+      # that assignment can be made — it removes the stored password.
+      - name: Mint user access token
+        if: env.MINTER_ENABLED == 'true'
+        continue-on-error: true
+        env:
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+          MINTER_USERNAME: ${{ secrets.MINTER_USERNAME }}
+          MINTER_PASSWORD: ${{ secrets.MINTER_PASSWORD }}
+          ORG_NAME: ${{ steps.config.outputs.org_name }}
+          TENANT_NAME: ${{ steps.config.outputs.tenant_name }}
+          BASE_URL: ${{ steps.config.outputs.base_url }}
+        run: |
+          set -euo pipefail
+          # cloud.uipath.com -> prd, alpha.uipath.com -> alpha, staging -> stg
+          case "$BASE_URL" in
+            *alpha*)   MINTER_ENV=alpha ;;
+            *staging*) MINTER_ENV=stg ;;
+            *)         MINTER_ENV=prd ;;
+          esac
+
+          # A registry-scoped token (pull-only on the uipath-minter repository), not an
+          # Azure AD identity — the runner needs Docker but no Azure CLI.
+          echo "$ACR_PASSWORD" | docker login pltnonprodacr.azurecr.io -u "$ACR_USERNAME" --password-stdin
+          docker pull pltnonprodacr.azurecr.io/uipath-minter:latest
+
+          mkdir -p "$RUNNER_TEMP/minter"
+          docker run --rm \
+            -v "$RUNNER_TEMP/minter:/out" \
+            -e MINTER_PASSWORD \
+            pltnonprodacr.azurecr.io/uipath-minter:latest \
+            sh -c "npm run generate -- \
+              -u '$MINTER_USERNAME' \
+              -p \"\$MINTER_PASSWORD\" \
+              -n '$ORG_NAME' \
+              -t '$TENANT_NAME' \
+              -e '$MINTER_ENV' \
+              -v basic \
+              -o /out/tokens.json"
+
+          TOKEN=$(python3 -c "import json;print(json.load(open('$RUNNER_TEMP/minter/tokens.json'))['accessToken'])")
+          if [ -z "$TOKEN" ]; then
+            echo "Minter produced no accessToken" >&2
+            exit 1
+          fi
+          # Mask before the value can reach any later log line, then write it
+          # straight into the env file. Deliberately NOT routed through
+          # $GITHUB_OUTPUT, which persists values in job metadata.
+          echo "::add-mask::$TOKEN"
+          echo "UIPATH_USER_TOKEN=$TOKEN" >> tests/.env.integration
+          rm -f "$RUNNER_TEMP/minter/tokens.json"
+          echo "Minted a user access token; user-token suites will run."
 
       - name: Run Integration Tests
         run: npm run test:integration:coverage -- --run

@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import type { Subscriptions } from '../../../../src/services/notification';
 import { NotificationCategory, NotificationMode, type SubscriptionEntity, type SubscriptionPublisher } from '../../../../src/models/notification';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: the subscription API requires OAuth and the current integration test
-// framework only authenticates with a PAT token. Re-enable by removing `.skip`
-// once OAuth support is wired into the integration test harness.
-describe.skip.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// The subscription API rejects PAT tokens, so this suite authenticates with a user
+// token and skips when one is not configured.
+describe.skipIf(!hasUserToken()).each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'user');
 
   let subscriptions!: Subscriptions;
   let tenantId!: string;
