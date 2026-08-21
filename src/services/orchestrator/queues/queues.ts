@@ -3,8 +3,7 @@ import {
   QueueGetResponse,
   QueueGetAllOptions,
   QueueGetByIdOptions,
-  QueueGetAllWithMethodsOptions,
-  QueueGetByIdWithMethodsOptions,
+  QueueGetByIdScopedOptions,
   QueueGetByNameOptions,
   QueueGetByKeyOptions,
   QueueGetAllItemsOptions,
@@ -81,66 +80,13 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetResponse>
-      : NonPaginatedResponse<QueueGetResponse>
-  > {
-    // Transformation function for queues
-    const transformQueueResponse = (queue: any) =>
-      transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
-
-    // Rewrite renamed SDK field names → API names inside OData strings
-    // before delegating, mirroring the transformRequest pattern used for
-    // request bodies.
-    const apiOptions = options ? transformOptions(options, QueueMap) : options;
-
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: (folderId) => folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformQueueResponse,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
-        }
-      }
-    }, apiOptions) as any;
-  }
-
-  @track('Queues.GetById')
-  async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    const apiFieldOptions = transformOptions(options, QueueMap);
-    const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
-    
-    const response = await this.get<QueueGetResponse>(
-      QUEUE_ENDPOINTS.GET_BY_ID(id),
-      { 
-        headers,
-        params: apiOptions
-      }
-    );
-
-    return transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
-  }
-
-  @track('Queues.GetAllWithMethods')
-  async getAllWithMethods<T extends QueueGetAllWithMethodsOptions = QueueGetAllWithMethodsOptions>(
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
       ? PaginatedResponse<QueueGetWithMethodsResponse>
       : NonPaginatedResponse<QueueGetWithMethodsResponse>
   > {
     const { folderId, folderKey, folderPath, ...queryOptions } = options ?? {};
-    const hasFolderScope = folderId !== undefined || !!folderKey?.trim() || !!folderPath?.trim();
+    const hasFolderScope = folderId !== undefined || folderKey !== undefined || folderPath !== undefined;
     const headers = hasFolderScope
-      ? resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Queues.getAllWithMethods' })
+      ? resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Queues.getAll' })
       : undefined;
     const apiOptions = transformOptions(queryOptions, QueueMap);
 
@@ -167,15 +113,37 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     }, apiOptions) as any;
   }
 
-  @track('Queues.GetByIdWithMethods')
-  async getByIdWithMethods(id: number, options: QueueGetByIdWithMethodsOptions = {}): Promise<QueueGetWithMethodsResponse> {
-    const { folderId, folderKey, folderPath, ...queryOptions } = options;
+  getById(id: number, options?: QueueGetByIdScopedOptions): Promise<QueueGetWithMethodsResponse>;
+  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
+  @track('Queues.GetById')
+  async getById(
+    id: number,
+    folderIdOrOptions?: number | QueueGetByIdScopedOptions,
+    options: QueueGetByIdOptions = {}
+  ): Promise<QueueGetResponse | QueueGetWithMethodsResponse> {
+    if (typeof folderIdOrOptions === 'number') {
+      const headers = createHeaders({ [FOLDER_ID]: folderIdOrOptions });
+
+      const apiFieldOptions = transformOptions(options, QueueMap);
+      const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
+
+      const response = await this.get<QueueGetResponse>(
+        QUEUE_ENDPOINTS.GET_BY_ID(id),
+        {
+          headers,
+          params: apiOptions
+        }
+      );
+
+      return transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
+    }
+    const { folderId, folderKey, folderPath, ...queryOptions } = folderIdOrOptions ?? {};
 
     const headers = resolveFolderHeaders({
       folderId,
       folderKey,
       folderPath,
-      resourceType: 'Queues.getByIdWithMethods',
+      resourceType: 'Queues.getById',
       fallbackFolderKey: this.config.folderKey
     });
 

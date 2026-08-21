@@ -81,7 +81,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getByIdWithMethods', () => {
+  describe('getById — options-object overload', () => {
     it('should retrieve a queue by ID with methods attached via options-based folder scoping', async () => {
       const { queues } = getServices();
       const config = getTestConfig();
@@ -90,10 +90,10 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
       const allQueues = await queues.getAll({ folderId, pageSize: 1 });
-      expect(allQueues.items.length, 'No queues available to test getByIdWithMethods').toBeGreaterThan(0);
+      expect(allQueues.items.length, 'No queues available to test the getById overload').toBeGreaterThan(0);
       const reference = allQueues.items[0];
 
-      const result = await queues.getByIdWithMethods(reference.id, { folderId });
+      const result = await queues.getById(reference.id, { folderId });
 
       expect(result.id).toBe(reference.id);
       expect(result.name).toBe(reference.name);
@@ -169,12 +169,14 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       expect(typeof queue.key).toBe('string');
     });
 
-    it('should attach queue methods to queues returned by getAllWithMethods', async () => {
+    it('should attach queue methods to queues returned by the folder-scoped getAll', async () => {
       const { queues } = getServices();
       const config = getTestConfig();
 
-      const result = await queues.getAllWithMethods({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured').toBeDefined();
+
+      const result = await queues.getAll({
+        folderKey: config.folderKey!,
         pageSize: 1,
       });
 
@@ -206,18 +208,9 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
       }
 
       const folderId = Number(config.folderId);
-      const result = await queues.getAllWithMethods({
-        folderId,
-        filter: `name eq '${config.queuesTestQueueName}'`,
-      });
-
-      if (result.items.length === 0) {
-        throw new Error(
-          `Queue "${config.queuesTestQueueName}" was not found in folder ${folderId} — create it before running queue item tests`
-        );
-      }
-
-      testQueue = result.items[0];
+      // getByName throws NotFoundError when the queue is missing — create
+      // QUEUES_TEST_QUEUE_NAME in the folder before running queue item tests.
+      testQueue = await queues.getByName(config.queuesTestQueueName, { folderId });
     });
 
     it('should insert an item and return it with payload keys preserved exactly', async () => {

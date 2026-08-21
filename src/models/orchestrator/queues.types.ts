@@ -2,10 +2,10 @@ import { BaseOptions, FolderScopedOptions, RequestOptions, ResourceRef } from '.
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
- * A queue definition (data fields only) — the shape returned by `getAll` and
- * `getById`. The method-attached counterpart returned by `getAllWithMethods`,
- * `getByIdWithMethods`, `getByName`, and `getByKey` is
- * `QueueGetWithMethodsResponse`.
+ * A queue definition (data fields only) — the shape returned by the
+ * deprecated positional `getById` form. The method-attached counterpart
+ * returned by `getAll`, the options-object `getById`, `getByName`, and
+ * `getByKey` is `QueueGetWithMethodsResponse`.
  */
 export interface QueueGetResponse {
   key: string;
@@ -32,29 +32,20 @@ export interface QueueGetResponse {
 }
 
 /**
- * Options for getting queues across folders
+ * Options for getting queues — filtering, pagination, and folder scoping
+ * (`folderId` / `folderKey` / `folderPath`). Without folder scoping, queues
+ * across all folders are returned.
  */
-export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter queues by folder
-   */
-  folderId?: number;
-}
+export type QueueGetAllOptions = RequestOptions & PaginationOptions & FolderScopedOptions;
 
 export interface QueueGetByIdOptions extends BaseOptions {}
 
 /**
- * Options for getting queues with methods attached. Folder scoping
- * (`folderId` / `folderKey` / `folderPath`) is optional — without it,
- * queues across all folders are returned.
+ * Options for the options-object `getById` overload — query options plus
+ * folder scoping (`folderId` / `folderKey` / `folderPath`). This overload
+ * returns the queue with the operational methods attached.
  */
-export type QueueGetAllWithMethodsOptions = RequestOptions & PaginationOptions & FolderScopedOptions;
-
-/**
- * Options for getting a queue by ID with methods attached — query options
- * plus folder scoping (`folderId` / `folderKey` / `folderPath`).
- */
-export interface QueueGetByIdWithMethodsOptions extends FolderScopedOptions {}
+export interface QueueGetByIdScopedOptions extends FolderScopedOptions {}
 
 /**
  * Options for getting a queue by name — query options plus folder scoping
