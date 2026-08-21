@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, setupUnifiedTests, InitMode, getTestConfig } from '../../config/unified-setup';
 import { Feedback } from '../../../../src/services/agents/feedback';
 import { FeedbackStatus, FeedbackResponse } from '../../../../src/models/agents/feedback/feedback.types';
 import { registerResource } from '../../utils/cleanup';
@@ -67,18 +67,47 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   describe('getById', () => {
     let existingFeedbackId!: string;
     let existingFolderKey!: string;
+    let createdForGetById: string | undefined;
 
     beforeAll(async () => {
       feedback = getServices().feedback!;
-      const result = await feedback.getAll({ pageSize: 1 });
+      const configuredFolderKey = getTestConfig().folderKey;
+      if (!configuredFolderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is not configured — cannot run getById tests.');
+      }
+
+      // getAll is tenant-wide, but getById is folder-authorized. Records created
+      // elsewhere (a personal workspace, another team's folder) return 403, so
+      // pick one that lives in the folder these tests own rather than whichever
+      // record happens to sort first.
+      const result = await feedback.getAll({ pageSize: 100 });
       if (result.items.length === 0) {
-        throw new Error('No feedback available for getById tests — create at least one feedback entry first');
+        throw new Error('No feedback in the tenant — cannot obtain a traceId for getById tests.');
       }
-      existingFeedbackId = result.items[0].id;
-      if (!result.items[0].folderKey) {
-        throw new Error('Feedback entry missing folderKey — cannot run getById tests');
+
+      existingFolderKey = configuredFolderKey;
+
+      // Reuse an entry from the test folder when one exists; otherwise create one,
+      // so the suite does not depend on another test having run first.
+      const accessible = result.items.find((item) => item.folderKey === configuredFolderKey);
+      if (accessible) {
+        existingFeedbackId = accessible.id;
+        return;
       }
-      existingFolderKey = result.items[0].folderKey;
+
+      const created = await feedback.submit(result.items[0].traceId, true, {
+        comment: 'getById fixture',
+        folderKey: configuredFolderKey,
+      });
+      existingFeedbackId = created.id;
+      createdForGetById = created.id;
+      registerResource('feedbackEntries', { id: created.id, folderKey: configuredFolderKey });
+    });
+
+    afterAll(async () => {
+      if (createdForGetById) {
+        await feedback.deleteById(createdForGetById, { folderKey: existingFolderKey });
+      }
     });
 
     it('should retrieve feedback by ID', async () => {
@@ -214,15 +243,20 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
 
     beforeAll(async () => {
       feedback = getServices().feedback!;
+      const configuredFolderKey = getTestConfig().folderKey;
+      if (!configuredFolderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is not configured — cannot run submit/update/delete tests.');
+      }
+
       const result = await feedback.getAll({ pageSize: 1 });
       if (result.items.length === 0) {
-        throw new Error('No existing feedback — need at least one entry to obtain a valid traceId and folderKey');
+        throw new Error('No existing feedback — need at least one entry to obtain a valid traceId');
       }
-      if (!result.items[0].folderKey) {
-        throw new Error('Feedback entry missing folderKey — cannot run submit/update/delete tests');
-      }
+
+      // Only the traceId has to come from an existing entry; write the new ones
+      // into the folder these tests own, so they stay accessible afterwards.
       traceId = result.items[0].traceId;
-      folderKey = result.items[0].folderKey;
+      folderKey = configuredFolderKey;
     });
 
     afterAll(async () => {
