@@ -38,6 +38,7 @@ import {
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
+  EntityGetByNameOptions,
   SqlType,
   FieldDisplayType,
   ReferenceType,
@@ -65,6 +66,14 @@ import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedRefere
 import { track } from '../../core/telemetry';
 
 /**
+ * Matches a canonical GUID. Entity records/attachments can be addressed by entity id
+ * (a GUID) or entity name; names are restricted to letters/numbers/underscores (no
+ * hyphens), so a value matching this pattern is unambiguously an id and routes to the
+ * by-id endpoint, otherwise to the by-name endpoint.
+ */
+const ENTITY_IDENTIFIER_GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
@@ -88,20 +97,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAllRecords')
   async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
-    entityId: string,
+    idOrName: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     // folderKey is header-only — destructure it out so PaginationHelpers doesn't serialise it
     // into the query string as $folderKey.
     const { folderKey, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
+      getEndpoint: () => byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(idOrName),
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -117,32 +129,32 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  @track('Entities.GetRecordById')
-  async getRecordById(
-    entityId: string,
-    recordId: string,
-    options: EntityGetRecordByIdOptions = {}
-  ): Promise<EntityRecord> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel
-    });
-
+  @track('Entities.GetRecord')
+  async getRecord(idOrName: string, recordId: string, options: EntityGetRecordByIdOptions = {}): Promise<EntityRecord> {
+    const params = createParams({ expansionLevel: options.expansionLevel });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.get<EntityRecord>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(idOrName, recordId)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(idOrName, recordId),
       { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );
 
     return response.data;
   }
 
-  @track('Entities.InsertRecordById')
-  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel
-    });
+  async getRecordById(entityId: string, recordId: string, options: EntityGetRecordByIdOptions = {}): Promise<EntityRecord> {
+    return this.getRecord(entityId, recordId, options);
+  }
 
+  @track('Entities.InsertRecord')
+  async insertRecord(idOrName: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+    const params = createParams({ expansionLevel: options.expansionLevel });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(idOrName),
       data,
       {
         params,
@@ -153,15 +165,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
-    });
+  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+    return this.insertRecord(id, data, options);
+  }
 
+  @track('Entities.InsertRecords')
+  async insertRecords(idOrName: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
+    const params = createParams({ expansionLevel: options.expansionLevel, failOnFirst: options.failOnFirst });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityBatchInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(id),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_NAME(idOrName),
       data,
       {
         params,
@@ -172,14 +187,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  @track('Entities.UpdateRecordById')
-  async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel
-    });
+  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
+    return this.insertRecords(id, data, options);
+  }
 
+  @track('Entities.UpdateRecord')
+  async updateRecord(idOrName: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
+    const params = createParams({ expansionLevel: options.expansionLevel });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityUpdateRecordResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(entityId, recordId),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(idOrName, recordId)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_NAME(idOrName, recordId),
       data,
       {
         params,
@@ -190,15 +209,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  @track('Entities.UpdateRecordsById')
-  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
-    });
+  async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
+    return this.updateRecord(entityId, recordId, data, options);
+  }
 
+  @track('Entities.UpdateRecords')
+  async updateRecords(idOrName: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
+    const params = createParams({ expansionLevel: options.expansionLevel, failOnFirst: options.failOnFirst });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityUpdateResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(id),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_NAME(idOrName),
       data,
       {
         params,
@@ -209,14 +231,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  @track('Entities.DeleteRecordsById')
-  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
-    const params = createParams({
-      failOnFirst: options.failOnFirst
-    });
+  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
+    return this.updateRecords(id, data, options);
+  }
 
+  @track('Entities.DeleteRecords')
+  async deleteRecords(idOrName: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
+    const params = createParams({ failOnFirst: options.failOnFirst });
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityDeleteResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(id),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_NAME(idOrName),
       recordIds,
       {
         params,
@@ -227,12 +253,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
-  @track('Entities.DeleteRecordById')
-  async deleteRecordById(entityId: string, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
+  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
+    return this.deleteRecords(id, recordIds, options);
+  }
+
+  @track('Entities.DeleteRecord')
+  async deleteRecord(idOrName: string, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     await this.delete(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId, recordId),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(idOrName, recordId)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_NAME(idOrName, recordId),
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
+  }
+
+  async deleteRecordById(entityId: string, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
+    return this.deleteRecord(entityId, recordId, options);
   }
 
   @track('Entities.GetAll')
@@ -263,9 +300,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return entities;
   }
 
-  @track('Entities.QueryRecordsById')
-  async queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
-    id: string,
+  @track('Entities.QueryRecords')
+  async queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
+    idOrName: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
     // The API accepts oversized join arrays without erroring, so enforce the limit here.
@@ -274,12 +311,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
         message: `A maximum of ${MAX_QUERY_JOINS} joins is supported per query (received ${options.joins.length})`,
       });
     }
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
+      getEndpoint: () => byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(idOrName),
       method: HTTP_METHODS.POST,
       headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       queryParams: createParams({ expansionLevel }),
@@ -297,8 +337,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, downstreamOptions);
   }
 
-  @track('Entities.ImportRecordsById')
-  async importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
+  async queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
+    id: string,
+    options?: T
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    return this.queryRecords<T>(id, options);
+  }
+
+  @track('Entities.ImportRecords')
+  async importRecords(idOrName: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -306,8 +353,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
       formData.append('file', file);
     }
 
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityImportRecordsResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(id),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(idOrName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_NAME(idOrName),
       formData,
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
@@ -315,10 +365,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return response.data;
   }
 
+  async importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
+    return this.importRecords(id, file, options);
+  }
+
   @track('Entities.DownloadAttachment')
-  async downloadAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
+  async downloadAttachment(idOrName: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.get<Blob>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityId, recordId, fieldName),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(idOrName, recordId, fieldName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(idOrName, recordId, fieldName),
       {
         responseType: RESPONSE_TYPES.BLOB,
         headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }),
@@ -329,7 +386,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.UploadAttachment')
-  async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+  async uploadAttachment(idOrName: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -339,8 +396,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     const params = createParams({ expansionLevel: options?.expansionLevel });
 
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.post<EntityUploadAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityId, recordId, fieldName),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(idOrName, recordId, fieldName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(idOrName, recordId, fieldName),
       formData,
       {
         params,
@@ -352,13 +412,34 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.DeleteAttachment')
-  async deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
+  async deleteAttachment(idOrName: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
+    const byId = ENTITY_IDENTIFIER_GUID_REGEX.test(idOrName);
     const response = await this.delete<EntityDeleteAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(entityId, recordId, fieldName),
+      byId
+        ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(idOrName, recordId, fieldName)
+        : DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(idOrName, recordId, fieldName),
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
 
     return response.data;
+  }
+
+  // ---- By-name methods ----
+  // Sibling variants that address an entity by name instead of id, hitting the
+  // Data Fabric API's parallel `{entityName}/...` routes. Used by solution binding
+  // overrides, which resolve resources by name + folderKey at deploy time.
+
+  @track('Entities.GetByName')
+  async getByName(name: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
+    const response = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(name),
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+    );
+
+    const metadata = transformData(response.data as RawEntityGetResponse, EntityMap);
+    this.applyFieldMappings(metadata);
+
+    return createEntityWithMethods(metadata, this);
   }
 
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(

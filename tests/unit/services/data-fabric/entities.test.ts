@@ -32,6 +32,7 @@ import type {
   EntityRecord,
   EntityGetAllRecordsOptions,
   EntityUpdateByIdOptions,
+  EntityGetRecordByNameOptions,
 } from "../../../../src/models/data-fabric/entities.types";
 import {
   EntityFieldDataType,
@@ -1921,6 +1922,870 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.importRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, file),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  // ===== By-name method tests =====
+
+  describe("getByName", () => {
+    it("should get entity by name with fields transformed and methods attached", async () => {
+      const mockResponse = createMockEntityResponse();
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await entityService.getByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.ENTITY_NAME);
+      expect(result.fields.length).toBe(3);
+
+      // Transform validation: camelCase present, raw PascalCase/API names absent
+      expect(result.createdTime).toBe(ENTITY_TEST_CONSTANTS.CREATED_TIME);
+      expect(result).not.toHaveProperty("createTime");
+      expect(result.fields[0].fieldDataType.name).toBe(
+        ENTITY_TEST_CONSTANTS.FIELD_TYPE_UUID,
+      );
+      expect(result.fields[0]).not.toHaveProperty("sqlType");
+
+      // Bound methods attached (same as getById)
+      expect(typeof result.insertRecord).toBe("function");
+      expect(typeof result.getAllRecords).toBe("function");
+      expect(typeof result.deleteRecord).toBe("function");
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      const mockResponse = createMockEntityResponse();
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      await entityService.getByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.getByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("getRecordsByName", () => {
+    beforeEach(() => {
+      vi.mocked(PaginationHelpers.getAll).mockReset();
+    });
+
+    it("should delegate to PaginationHelpers.getAll with the by-name read endpoint", async () => {
+      const mockResponse = { items: createMockEntityRecords(5), totalCount: 5 };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await entityService.getRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as any).getEndpoint()).toBe(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+      );
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.any(Function),
+          pagination: expect.any(Object),
+          excludeFromPrefix: ["expansionLevel"],
+        }),
+        undefined,
+      );
+      expect(result.items).toHaveLength(5);
+    });
+
+    it("should forward folderKey as header but strip it from PaginationHelpers options", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.getRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID },
+        }),
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+      );
+    });
+
+    it("should return paginated records when pagination options provided", async () => {
+      const mockResponse = {
+        items: createMockEntityRecords(10),
+        totalCount: 100,
+        hasNextPage: true,
+        nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
+      };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = (await entityService.getRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE } as EntityGetAllRecordsOptions,
+      )) as any;
+
+      expect(result.hasNextPage).toBe(true);
+      expect(result.items).toHaveLength(10);
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+
+      await expect(
+        entityService.getRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("getRecordByName", () => {
+    it("should get a single record by entity name and record ID successfully", async () => {
+      const mockRecord = {
+        Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+      };
+      mockApiClient.get.mockResolvedValue(mockRecord);
+
+      const result = await entityService.getRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+      );
+
+      expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should send expansionLevel query param and folderKey header when provided", async () => {
+      mockApiClient.get.mockResolvedValue({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID });
+
+      const options: EntityGetRecordByNameOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      };
+
+      await entityService.getRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        options,
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+        {
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+          headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID },
+        },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.getRecordByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("insertRecordByName", () => {
+    it("should insert a single record successfully", async () => {
+      const response = createMockSingleInsertResponse(
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+      );
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await entityService.insertRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+      );
+
+      expect(result).toEqual(response);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should send expansionLevel param and folderKey header when provided", async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockSingleInsertResponse(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+      );
+
+      const options: EntityInsertRecordOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      };
+
+      await entityService.insertRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        options,
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        {
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+          headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID },
+        },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.insertRecordByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("insertRecordsByName", () => {
+    it("should insert records successfully", async () => {
+      const data = [
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2,
+      ];
+      const response = createMockInsertResponse(data);
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await entityService.insertRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        data,
+      );
+
+      expect(result.successRecords).toHaveLength(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        data,
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should send failOnFirst param when provided and handle partial failures", async () => {
+      const data = [
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2,
+      ];
+      mockApiClient.post.mockResolvedValue(
+        createMockInsertResponse(data, { successCount: 1 }),
+      );
+
+      const options: EntityInsertRecordsOptions = {
+        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
+      };
+
+      const result = await entityService.insertRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        data,
+        options,
+      );
+
+      expect(result.successRecords).toHaveLength(1);
+      expect(result.failureRecords).toHaveLength(1);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        data,
+        {
+          params: expect.objectContaining({
+            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
+          }),
+          headers: {},
+        },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.insertRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, [
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("updateRecordByName", () => {
+    it("should update a single record successfully", async () => {
+      const updateData = {
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+      };
+      mockApiClient.post.mockResolvedValue(
+        createMockSingleUpdateResponse({
+          Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ...updateData,
+        }),
+      );
+
+      const result = await entityService.updateRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        updateData,
+      );
+
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+        updateData,
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.updateRecordByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME },
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("updateRecordsByName", () => {
+    it("should update records successfully", async () => {
+      const data: EntityRecord[] = [
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME },
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME },
+      ];
+      mockApiClient.post.mockResolvedValue(createMockUpdateResponse(data));
+
+      const result = await entityService.updateRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        data,
+      );
+
+      expect(result.successRecords).toHaveLength(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        data,
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should handle partial update failures", async () => {
+      const data: EntityRecord[] = [
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME },
+      ];
+      mockApiClient.post.mockResolvedValue(
+        createMockUpdateResponse(data, { successCount: 1 }),
+      );
+
+      const result = await entityService.updateRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        data,
+      );
+
+      expect(result.successRecords).toHaveLength(1);
+      expect(result.failureRecords).toHaveLength(1);
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.updateRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, [
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID },
+        ]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("deleteRecordsByName", () => {
+    it("should delete records successfully", async () => {
+      const ids = [
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID_2,
+      ];
+      mockApiClient.post.mockResolvedValue(createMockDeleteResponse(ids));
+
+      const result = await entityService.deleteRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ids,
+      );
+
+      expect(result.successRecords).toHaveLength(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        ids,
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should handle partial delete failures", async () => {
+      const ids = [
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID_2,
+      ];
+      mockApiClient.post.mockResolvedValue(
+        createMockDeleteResponse(ids, { successCount: 1 }),
+      );
+
+      const result = await entityService.deleteRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ids,
+      );
+
+      expect(result.successRecords).toHaveLength(1);
+      expect(result.failureRecords).toHaveLength(1);
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.deleteRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, [
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("deleteRecordByName", () => {
+    it("should delete a single record successfully", async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteRecordByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(
+        entityService.deleteRecordByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("queryRecordsByName", () => {
+    beforeEach(() => {
+      vi.mocked(PaginationHelpers.getAll).mockReset();
+    });
+
+    it("should delegate to PaginationHelpers.getAll with POST and the by-name query endpoint", async () => {
+      const mockResponse = { items: createMockEntityRecords(2), totalCount: 2 };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await entityService.queryRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as any).getEndpoint()).toBe(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+      );
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: "POST",
+          excludeFromPrefix: expect.arrayContaining(["filterGroup", "sortOptions"]),
+        }),
+        undefined,
+      );
+      expect(result.items).toHaveLength(2);
+    });
+
+    it("should forward folderKey as header and strip it from the POST body", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
+        filterGroup: {
+          logicalOperator: 0 as const,
+          queryFilters: [{ fieldName: "isActive", operator: QueryFilterOperator.Equals, value: "true" }],
+        },
+      });
+
+      const [config, downstreamOptions] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect((config as { headers: Record<string, string> }).headers).toEqual({
+        "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID,
+      });
+      expect(downstreamOptions).not.toHaveProperty("folderKey");
+      expect(downstreamOptions).toHaveProperty("filterGroup");
+    });
+
+    it("should route expansionLevel to queryParams and strip it from the body options", async () => {
+      let capturedConfig: any;
+      let capturedDownstream: any;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config, downstream) => {
+        capturedConfig = config;
+        capturedDownstream = downstream;
+        return { items: [], totalCount: 0 };
+      });
+
+      await entityService.queryRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+      });
+
+      expect(capturedConfig.queryParams).toEqual({
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+      });
+      expect(capturedDownstream).not.toHaveProperty("expansionLevel");
+    });
+
+    it("should throw ValidationError when more than 3 joins are supplied", async () => {
+      const joins = Array.from({ length: 4 }, () => ({
+        joinFieldName: "customerId",
+        relatedEntityName: "Customer",
+        relatedFieldName: "Id",
+        joinType: JoinType.LeftJoin,
+      }));
+
+      await expect(
+        entityService.queryRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME, { joins }),
+      ).rejects.toThrow(/A maximum of 3 joins is supported per query \(received 4\)/);
+
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+
+      await expect(
+        entityService.queryRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("importRecordsByName", () => {
+    it.each([
+      { type: "Blob", file: new Blob(["a,b\n1,2"], { type: "text/csv" }) },
+      { type: "Uint8Array", file: new Uint8Array([97, 44, 98]) },
+    ])("should import records successfully with $type", async ({ file }) => {
+      const response = { totalRecords: 1, insertedRecords: 1, errorFileLink: null };
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await entityService.importRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        file,
+      );
+
+      expect(result).toEqual(response);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        expect.any(FormData),
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.post.mockResolvedValue({ totalRecords: 0, insertedRecords: 0 });
+
+      await entityService.importRecordsByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        new Blob(["a,b\n1,2"], { type: "text/csv" }),
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ),
+        expect.any(FormData),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.importRecordsByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          new Blob(["a,b\n1,2"], { type: "text/csv" }),
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("downloadAttachmentByName", () => {
+    it("should download attachment successfully", async () => {
+      const mockBlob = new Blob(["test content"], { type: "application/pdf" });
+      mockApiClient.get.mockResolvedValue(mockBlob);
+
+      const result = await entityService.downloadAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+      );
+
+      expect(result).toBeInstanceOf(Blob);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { responseType: "blob", headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.get.mockResolvedValue(new Blob(["x"]));
+
+      await entityService.downloadAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { responseType: "blob", headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.downloadAttachmentByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("uploadAttachmentByName", () => {
+    it.each([
+      { type: "Blob", file: new Blob(["test file content"], { type: "application/pdf" }) },
+      { type: "Uint8Array", file: new Uint8Array([72, 101, 108, 108, 111]) },
+    ])("should upload attachment successfully with $type", async ({ file }) => {
+      const response = { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: "uploaded" };
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await entityService.uploadAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+      );
+
+      expect(result).toEqual(response);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        expect.any(FormData),
+        { params: {}, headers: {} },
+      );
+    });
+
+    it("should include expansionLevel query parameter when provided", async () => {
+      mockApiClient.post.mockResolvedValue({ id: ENTITY_TEST_CONSTANTS.RECORD_ID });
+
+      await entityService.uploadAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        new Blob(["test"]),
+        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        expect.any(FormData),
+        {
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+          headers: {},
+        },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.uploadAttachmentByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+          new Blob(["test"]),
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("deleteAttachmentByName", () => {
+    it("should delete attachment successfully", async () => {
+      const response = { status: "deleted" };
+      mockApiClient.delete.mockResolvedValue(response);
+
+      const result = await entityService.deleteAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+      );
+
+      expect(result).toEqual(response);
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { headers: {} },
+      );
+    });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.delete.mockResolvedValue({ status: "deleted" });
+
+      await entityService.deleteAttachmentByName(
+        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(
+        entityService.deleteAttachmentByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

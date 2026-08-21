@@ -32,6 +32,7 @@ import {
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
+  EntityGetByNameOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -649,6 +650,31 @@ export interface EntityServiceModel {
    * ```
    */
   deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse>;
+
+  /**
+   * Gets entity metadata by entity name with attached operation methods.
+   *
+   * Sibling of {@link getById} that addresses the entity by name — useful when
+   * you only have the resource name (e.g. solution binding overrides that resolve
+   * resources by name and `folderKey`), avoiding a lookup to resolve the entity ID.
+   *
+   * @param name - Name of the entity
+   * @param options - Optional {@link EntityGetByNameOptions} (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+   * @returns Promise resolving to entity metadata with operation methods
+   * {@link EntityGetResponse}
+   * @example
+   * ```typescript
+   * // Get entity metadata by name
+   * const entity = await entities.getByName("Customer");
+   *
+   * // Folder-scoped: pass the entity's folder key
+   * const folderEntity = await entities.getByName("Customer", { folderKey: "<folderKey>" });
+   *
+   * // Call operations directly on the entity
+   * const records = await entity.getAllRecords();
+   * ```
+   */
+  getByName(name: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse>;
 
   /**
    * Creates a new Data Fabric entity with the given schema

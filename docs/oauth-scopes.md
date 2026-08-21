@@ -47,19 +47,33 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
 | `getById()` | `DataFabric.Schema.Read` |
+| `getByName()` | `DataFabric.Data.Read` |
 | `getAllRecords()` | `DataFabric.Data.Read` |
+| `getRecordsByName()` | `DataFabric.Data.Read` |
 | `getRecordById()` / `getRecord()`  | `DataFabric.Data.Read` |
+| `getRecordByName()` | `DataFabric.Data.Read` |
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
+| `insertRecordByName()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
+| `insertRecordsByName()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |
+| `deleteRecordsByName()` | `DataFabric.Data.Write` |
 | `deleteRecordById()` / `deleteRecord()` | `DataFabric.Data.Write` |
+| `deleteRecordByName()` | `DataFabric.Data.Write` |
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
+| `updateRecordByName()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
+| `updateRecordsByName()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
+| `downloadAttachmentByName()` | `DataFabric.Data.Read` |
 | `uploadAttachment()` | `DataFabric.Data.Write` |
+| `uploadAttachmentByName()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |
+| `deleteAttachmentByName()` | `DataFabric.Data.Write` |
 | `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
+| `queryRecordsByName()` | `DataFabric.Data.Read` |
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
+| `importRecordsByName()` | `DataFabric.Data.Write` |
 
 ## ChoiceSets
 

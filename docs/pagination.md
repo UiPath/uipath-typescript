@@ -125,7 +125,9 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Jobs | `getAll()` | ✅ Yes |
 | Entities | `getAll()` | ✅ Yes |
 | Entities | `getAllRecords()` | ✅ Yes |
+| Entities | `getRecordsByName()` | ✅ Yes |
 | Entities | `queryRecordsById()` | ✅ Yes |
+| Entities | `queryRecordsByName()` | ✅ Yes |
 | Processes | `getAll()` | ✅ Yes |
 | ProcessInstances | `getAll()` | ❌ No |
 | CaseInstances | `getAll()` | ❌ No |

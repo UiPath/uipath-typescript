@@ -34,9 +34,14 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
     setupUnifiedTests(mode);
 
     let recordId!: string;
+    let entityName!: string;
 
     beforeAll(async () => {
       const { entities } = getServices();
+
+      // Resolve the entity name once so by-name attachment tests can address it.
+      const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+      entityName = entity.name;
 
       const inserted = await entities.insertRecordById(ATTACHMENT_CONFIG.entityId, {});
 
@@ -173,6 +178,36 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(downloadedFile).toBeDefined();
+      });
+    });
+
+    describe('attachment by name', () => {
+      it('should upload, download, and delete an attachment addressing the entity by name', async () => {
+        const { entities } = getServices();
+
+        const file = new Blob(['Attachment by-name round-trip test'], { type: 'text/plain' });
+
+        const uploadResult = await entities.uploadAttachmentByName(
+          entityName,
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+          file,
+        );
+        expect(uploadResult).toBeDefined();
+
+        const downloadedFile = await entities.downloadAttachmentByName(
+          entityName,
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+        expect(downloadedFile).toBeDefined();
+
+        const deleteResult = await entities.deleteAttachmentByName(
+          entityName,
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+        expect(deleteResult).toBeDefined();
       });
     });
   }
