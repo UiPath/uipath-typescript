@@ -44,6 +44,32 @@ export function isCompleteConfig(config: PartialUiPathConfig): config is UiPathS
   return hasRequiredBaseFields(config) && hasValidAuthConfig(config);
 }
 
+/**
+ * Fold the `orgId` / `tenantId` / `accessToken` aliases onto their canonical
+ * fields. The canonical field wins when both are supplied, and the alias keys
+ * are stripped so downstream consumers only ever see one spelling.
+ */
+export function normalizeConfigAliases(config: PartialUiPathConfig): PartialUiPathConfig {
+  const { orgId, tenantId, accessToken, ...rest } = config;
+
+  return {
+    ...rest,
+    orgName: rest.orgName ?? orgId,
+    tenantName: rest.tenantName ?? tenantId,
+    secret: rest.secret ?? accessToken,
+  };
+}
+
+/**
+ * Drop keys whose value is undefined so a sparse higher-precedence layer never
+ * blanks out a value supplied by a lower-precedence one during a merge.
+ */
+export function compactConfig(config: PartialUiPathConfig): PartialUiPathConfig {
+  return Object.fromEntries(
+    Object.entries(config).filter(([, value]) => value !== undefined),
+  );
+}
+
 export function normalizeBaseUrl(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 } 
