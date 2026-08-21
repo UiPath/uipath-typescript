@@ -3156,7 +3156,7 @@ and both <code>updateById</code> and <code>deleteById</code> require <code>APPS.
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppCreateOptions/"><code>BusinessAppCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
+<p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppCreateOptions/"><code>BusinessAppCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
 <p>Creates a business app.</p>
@@ -3183,11 +3183,6 @@ stored app including its generated <code>id</code> and audit fields.</p>
 <td>Display name, unique within the tenant</td>
 </tr>
 <tr>
-<td><code>description</code></td>
-<td><code>string</code></td>
-<td>Human description of what the app is for</td>
-</tr>
-<tr>
 <td><code>processKeys</code></td>
 <td><code>string</code>[]</td>
 <td>Orchestrator process (release) keys the app surfaces; at least one</td>
@@ -3195,7 +3190,7 @@ stored app including its generated <code>id</code> and audit fields.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../BusinessAppCreateOptions/"><code>BusinessAppCreateOptions</code></a></td>
-<td>Optional icon and color</td>
+<td>Optional description, icon and color</td>
 </tr>
 </tbody>
 </table>
@@ -3210,16 +3205,13 @@ stored app including its generated <code>id</code> and audit fields.</p>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">businessApps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">BusinessApps</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Handles inbound claims&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">]);</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">]);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="s1">&#39;Handles inbound claims&#39;</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="p">[</span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;claims-icon&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#1F6FEB&#39;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">],</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Handles inbound claims&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;claims-icon&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#1F6FEB&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="deletebyid">deleteById()<a class="headerlink" href="#deletebyid" title="Permanent link">&para;</a></h3>
@@ -3356,7 +3348,7 @@ has more apps than one page holds.</p>
 <hr />
 <h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateById</strong>(<code>businessAppId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
+<p><strong>updateById</strong>(<code>businessAppId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
 <p>Replaces a business app.</p>
@@ -3365,9 +3357,9 @@ has more apps than one page holds.</p>
 <p>Preview: This method is experimental and may change or be removed in future releases.</p>
 </div>
 <p>This is a full replace, not a partial update: every editable field is overwritten, so
-an omitted <code>icon</code> or <code>color</code> is cleared rather than left alone. The name must stay
-unique within the tenant. Writes are last-write-wins — concurrent updates do not
-conflict, the later one simply survives.</p>
+an omitted <code>description</code>, <code>icon</code> or <code>color</code> is cleared rather than left alone. The name
+must stay unique within the tenant. Writes are last-write-wins — concurrent updates do
+not conflict, the later one simply survives.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3389,11 +3381,6 @@ conflict, the later one simply survives.</p>
 <td>New display name, unique within the tenant</td>
 </tr>
 <tr>
-<td><code>description</code></td>
-<td><code>string</code></td>
-<td>New description</td>
-</tr>
-<tr>
 <td><code>processKeys</code></td>
 <td><code>string</code>[]</td>
 <td>The full set of Orchestrator process (release) keys the app surfaces</td>
@@ -3401,7 +3388,7 @@ conflict, the later one simply survives.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a></td>
-<td>Optional icon and color; omitting one clears it</td>
+<td>Optional description, icon and color; omitting one clears it</td>
 </tr>
 </tbody>
 </table>
@@ -3409,22 +3396,17 @@ conflict, the later one simply survives.</p>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 <p>The app as stored after the write, as a <a href="../../type-aliases/BusinessAppGetResponse/">BusinessAppGetResponse</a></p>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="s1">&#39;&lt;businessAppId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="s1">&#39;Handles inbound and renewal claims&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">[</span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">]</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;businessAppId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Claims Intake&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">]);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;businessAppId&gt;&#39;</span><span class="p">);</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nx">app</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nx">app</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="s1">&#39;An updated description&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nx">app</span><span class="p">.</span><span class="nx">processKeys</span><span class="p">,</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="kt">app.icon</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">undefined</span><span class="p">,</span><span class="w"> </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="kt">app.color</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">undefined</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">);</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">businessApps</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">app</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">app</span><span class="p">.</span><span class="nx">processKeys</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;An updated description&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nx">icon</span><span class="o">:</span><span class="w"> </span><span class="kt">app.icon</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">undefined</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="kt">app.color</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">undefined</span><span class="p">,</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">});</span>
 </code></pre></div>
 
 

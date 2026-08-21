@@ -3005,10 +3005,11 @@
 <hr />
 <h3 id="update">update()<a class="headerlink" href="#update" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>update</strong>(<code>name</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
+<p><strong>update</strong>(<code>name</code>: <code>string</code>, <code>processKeys</code>: <code>string</code>[], <code>options?</code>: <a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
-<p>Replaces this business app. A full replace — an omitted <code>icon</code> or <code>color</code> is cleared.</p>
+<p>Replaces this business app. A full replace — an omitted <code>description</code>, <code>icon</code> or
+<code>color</code> is cleared.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3020,10 +3021,6 @@
 <tbody>
 <tr>
 <td><code>name</code></td>
-<td><code>string</code></td>
-</tr>
-<tr>
-<td><code>description</code></td>
 <td><code>string</code></td>
 </tr>
 <tr>

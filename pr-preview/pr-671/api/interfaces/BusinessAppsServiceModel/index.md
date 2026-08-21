@@ -14,7 +14,7 @@ Reads require the tenant-level `APPS.View` permission; `create` requires `APPS.C
 
 ### create()
 
-> **create**(`name`: `string`, `description`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppCreateOptions`): `Promise`\<`BusinessAppGetResponse`>
+> **create**(`name`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppCreateOptions`): `Promise`\<`BusinessAppGetResponse`>
 
 **`Experimental`**
 
@@ -29,9 +29,8 @@ The name must be unique within the tenant, compared case-insensitively — creat
 #### Parameters
 
 - `name`: `string` — Display name, unique within the tenant
-- `description`: `string` — Human description of what the app is for
 - `processKeys`: `string`[] — Orchestrator process (release) keys the app surfaces; at least one
-- `options?`: `BusinessAppCreateOptions` — Optional icon and color
+- `options?`: `BusinessAppCreateOptions` — Optional description, icon and color
 
 #### Returns
 
@@ -49,18 +48,15 @@ const sdk = new UiPath(config);
 await sdk.initialize();
 
 const businessApps = new BusinessApps(sdk);
-const app = await businessApps.create('Claims Intake', 'Handles inbound claims', [
-  '<processKey>',
-]);
+const app = await businessApps.create('Claims Intake', ['<processKey>']);
 ```
 
 ```
-const app = await businessApps.create(
-  'Claims Intake',
-  'Handles inbound claims',
-  ['<processKey>'],
-  { icon: 'claims-icon', color: '#1F6FEB' }
-);
+const app = await businessApps.create('Claims Intake', ['<processKey>'], {
+  description: 'Handles inbound claims',
+  icon: 'claims-icon',
+  color: '#1F6FEB',
+});
 ```
 
 ### deleteById()
@@ -168,7 +164,7 @@ const app = await businessApps.getById('<businessAppId>');
 
 ### updateById()
 
-> **updateById**(`businessAppId`: `string`, `name`: `string`, `description`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppUpdateOptions`): `Promise`\<`BusinessAppGetResponse`>
+> **updateById**(`businessAppId`: `string`, `name`: `string`, `processKeys`: `string`[], `options?`: `BusinessAppUpdateOptions`): `Promise`\<`BusinessAppGetResponse`>
 
 **`Experimental`**
 
@@ -178,15 +174,14 @@ Warning
 
 Preview: This method is experimental and may change or be removed in future releases.
 
-This is a full replace, not a partial update: every editable field is overwritten, so an omitted `icon` or `color` is cleared rather than left alone. The name must stay unique within the tenant. Writes are last-write-wins — concurrent updates do not conflict, the later one simply survives.
+This is a full replace, not a partial update: every editable field is overwritten, so an omitted `description`, `icon` or `color` is cleared rather than left alone. The name must stay unique within the tenant. Writes are last-write-wins — concurrent updates do not conflict, the later one simply survives.
 
 #### Parameters
 
 - `businessAppId`: `string` — GUID of the business app
 - `name`: `string` — New display name, unique within the tenant
-- `description`: `string` — New description
 - `processKeys`: `string`[] — The full set of Orchestrator process (release) keys the app surfaces
-- `options?`: `BusinessAppUpdateOptions` — Optional icon and color; omitting one clears it
+- `options?`: `BusinessAppUpdateOptions` — Optional description, icon and color; omitting one clears it
 
 #### Returns
 
@@ -197,22 +192,17 @@ The app as stored after the write, as a [BusinessAppGetResponse](../../type-alia
 #### Examples
 
 ```
-const updated = await businessApps.updateById(
-  '<businessAppId>',
-  'Claims Intake',
-  'Handles inbound and renewal claims',
-  ['<processKey>']
-);
+const updated = await businessApps.updateById('<businessAppId>', 'Claims Intake', [
+  '<processKey>',
+]);
 ```
 
 ```
 const app = await businessApps.getById('<businessAppId>');
 
-const updated = await businessApps.updateById(
-  app.id,
-  app.name,
-  'An updated description',
-  app.processKeys,
-  { icon: app.icon ?? undefined, color: app.color ?? undefined }
-);
+const updated = await businessApps.updateById(app.id, app.name, app.processKeys, {
+  description: 'An updated description',
+  icon: app.icon ?? undefined,
+  color: app.color ?? undefined,
+});
 ```
