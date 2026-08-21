@@ -10,7 +10,7 @@ import {
   createMockError,
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import { TENANT_ID } from '../../../../src/utils/constants/headers';
+import { NOTIFICATION_TENANT_ID } from '../../../../src/utils/constants/headers';
 import { NOTIFICATION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { createHeaders } from '../../../../src/utils/http/headers';
 import { NotificationCategory, NotificationPriority } from '../../../../src/models/notification';
@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => import('../../../utils/mocks/core'));
 vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
 
 // Shorthand for asserting the tenant header is forwarded on each call
-const TENANT_HEADER = { [TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID };
+const TENANT_HEADER = { [NOTIFICATION_TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID };
 
 // ===== TEST SUITE =====
 describe('NotificationService Unit Tests', () => {
@@ -359,15 +359,15 @@ describe('Notification org-level URL routing', () => {
     expect(capturedUrl).toContain(`/${TEST_CONSTANTS.ORGANIZATION_ID}/`);
   });
 
-  it('forwards the acting tenant via the X-UIPATH-Internal-TenantId header, not the URL', async () => {
+  it('forwards the acting tenant via the X-UIPATH-TenantId header, not the URL', async () => {
     const client = createClient();
 
     await client.get(NOTIFICATION_ENDPOINTS.GET_ALL, {
-      headers: createHeaders({ [TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID }),
+      headers: createHeaders({ [NOTIFICATION_TENANT_ID]: NOTIFICATION_TEST_CONSTANTS.TENANT_ID }),
     });
 
     // The tenant GUID identifies the acting tenant via the header...
-    expect(capturedHeaders[TENANT_ID]).toBe(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
+    expect(capturedHeaders[NOTIFICATION_TENANT_ID]).toBe(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
     // ...and must never appear in the org-level URL path.
     expect(capturedUrl).not.toContain(NOTIFICATION_TEST_CONSTANTS.TENANT_ID);
   });
