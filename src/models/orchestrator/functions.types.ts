@@ -69,7 +69,9 @@ export interface FunctionInvokeOptions extends FolderScopedOptions {
    *
    * A license is reused for as long as it says it is valid, read from the
    * license rather than assumed, so a burst of invocations costs one
-   * acquisition. A license that states no validity window is held only briefly.
+   * acquisition. A license that states no validity window — as the free tier's
+   * does not — is reused for five minutes and then re-acquired.
+   *
    * Set this when the user's licensing may have changed and the invocation must
    * reflect it before that lapses.
    */

@@ -43,12 +43,16 @@ import type { IUiPath } from '../../../core/types';
 const MAX_SUGGESTED_NAMES = 20;
 
 /**
- * How long a license is reused when it states no expiry of its own — not every
- * grant carries a token to read one from. Short, so a license the SDK cannot
- * reason about is re-checked soon; long enough that a burst still costs one
- * acquisition.
+ * How long a license is reused when it states no expiry of its own — the free
+ * grant carries no token to read one from.
+ *
+ * Deliberately short. Where a license states a window the SDK follows it; where
+ * the platform states none, re-checking soon keeps the SDK from honouring a
+ * licensing change later than it happens. Re-checking costs almost nothing: the
+ * acquisition runs in parallel with the name lookup, so it hides inside a leg
+ * the invocation already pays for.
  */
-const DEFAULT_LICENSE_TTL_MS = 5 * 60 * 1000;
+const FALLBACK_LICENSE_TTL_MS = 5 * 60 * 1000;
 
 /** Renew slightly early so an invoke never races the expiry boundary. */
 const LICENSE_EXPIRY_SKEW_MS = 30 * 1000;
@@ -228,9 +232,12 @@ export class FunctionService extends FolderScopedService implements FunctionServ
 
     const entry: LicenseCacheEntry = {
       acquisition: this.requestLicense(),
-      // Optimistic until the real expiry arrives, so a pending entry is never
-      // read as stale by a concurrent caller.
-      expiresAtMs: now + DEFAULT_LICENSE_TTL_MS,
+      // Stands in until the real expiry arrives, and earns its keep twice: a
+      // pending entry is never read as stale by a concurrent caller, and an
+      // acquisition that never settles stops capturing new callers once this
+      // lapses. Eviction reads the expiry synchronously, so it lives on the
+      // entry rather than inside the promise.
+      expiresAtMs: now + FALLBACK_LICENSE_TTL_MS,
     };
     // Replacing an existing key does not grow the map, so no room is needed —
     // evicting there would drop another caller's license for nothing.
@@ -239,7 +246,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
 
     try {
       const license = await entry.acquisition;
-      entry.expiresAtMs = licenseExpiryMs(license.expiresTime) ?? now + DEFAULT_LICENSE_TTL_MS;
+      entry.expiresAtMs = licenseExpiryMs(license.expiresTime) ?? now + FALLBACK_LICENSE_TTL_MS;
       return license;
     } catch (error) {
       // Never cache a rejection — the next call must retry, not replay it.
