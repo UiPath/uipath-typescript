@@ -1,13 +1,17 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, canAuthenticate, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Functions } from '../../../../src/services/orchestrator/functions';
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
 
 // New modular service — v1 init only.
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+// Invoking a function executes in the caller's own robot context, so a user
+// token needs a personal robot provisioned for that account — an external
+// application already has a runtime. This suite therefore declares 'pat'; flip
+// it back to the default once the test account has a personal workspace.
+describe.skipIf(!canAuthenticate('pat')).each(modes)('Functions - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode, 'pat');
 
   let functions!: Functions;
   let folderId!: number;
