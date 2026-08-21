@@ -396,12 +396,6 @@ describe('QueueService Unit Tests', () => {
       );
     });
 
-    it('should throw a ValidationError when the folder scoping is blank', async () => {
-      await expect(queueService.getAll({ folderKey: '   ' })).rejects.toBeInstanceOf(ValidationError);
-
-      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
-    });
-
     it('should list queues across folders by default and attach methods via the transform', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedQueueCollection()

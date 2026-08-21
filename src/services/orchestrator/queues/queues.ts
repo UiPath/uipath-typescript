@@ -84,7 +84,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       : NonPaginatedResponse<QueueGetWithMethodsResponse>
   > {
     const { folderId, folderKey, folderPath, ...queryOptions } = options ?? {};
-    const hasFolderScope = folderId !== undefined || folderKey !== undefined || folderPath !== undefined;
+    const hasFolderScope = folderId !== undefined || !!folderKey?.trim() || !!folderPath?.trim();
     const headers = hasFolderScope
       ? resolveFolderHeaders({ folderId, folderKey, folderPath, resourceType: 'Queues.getAll' })
       : undefined;
