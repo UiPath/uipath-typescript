@@ -24,7 +24,7 @@ function base64UrlToBase64(value: string): string {
  * @param token - The token whose payload should be decoded
  * @returns The decoded claims, or `undefined` if the payload cannot be read
  */
-export function decodeJwtClaims<T = Record<string, unknown>>(token: string): T | undefined {
+export function decodeJwtClaims<T = Record<string, unknown>>(token?: string | null): T | undefined {
   try {
     const payload = token?.split('.')[1];
     if (!payload) {

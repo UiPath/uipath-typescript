@@ -765,6 +765,53 @@ describe('FunctionService Unit Tests', () => {
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
     });
 
+    it('should still invoke when the platform issues no license token', async () => {
+      mockApiClient.post.mockImplementation((endpoint: string) =>
+        Promise.resolve(
+          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
+            ? createMockRawStudioWebLicense({ licenseToken: null })
+            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
+        )
+      );
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
+
+      await expect(invoke()).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      // No token means no expiry to read, so the fallback lifetime applies and a
+      // second invocation still reuses the license rather than re-acquiring
+      await invoke();
+      expect(licenseCalls()).toHaveLength(1);
+    });
+
+    it('should return the license with wire fields renamed to the SDK shape', async () => {
+      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
+
+      const license = await functionService.acquireLicense();
+
+      expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
+      expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
+      expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
+      expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
+
+      // The wire names must not survive the transform, and the token itself is
+      // credential-shaped, so it must not reach the SDK shape at all
+      expect('started' in license).toBe(false);
+      expect('ubl' in license).toBe(false);
+      expect('lu' in license).toBe(false);
+      expect('licenseToken' in license).toBe(false);
+    });
+
+    it('should report no tier or expiry when the platform issues no token', async () => {
+      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense({ licenseToken: null }));
+
+      const license = await functionService.acquireLicense();
+
+      expect(license.isLicensed).toBe(true);
+      expect(license.expiresTime).toBeUndefined();
+      expect(license.licenseTier).toBeUndefined();
+      expect(license.licensedUnits).toBeUndefined();
+    });
+
     it('should evict the oldest entry once the cache is full', async () => {
       mockDistinctCallers();
       await fillCache();

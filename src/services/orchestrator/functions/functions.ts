@@ -42,7 +42,12 @@ import type { IUiPath } from '../../../core/types';
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
 
-/** Fallback TTL when a license token carries no readable `exp`. */
+/**
+ * How long a license is reused when it states no expiry of its own — not every
+ * grant carries a token to read one from. Short, so a license the SDK cannot
+ * reason about is re-checked soon; long enough that a burst still costs one
+ * acquisition.
+ */
 const DEFAULT_LICENSE_TTL_MS = 5 * 60 * 1000;
 
 /** Renew slightly early so an invoke never races the expiry boundary. */
@@ -202,8 +207,6 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     return this.invokeFunction<TOutput>(fn, folderKey, input ?? {}, jobKey);
   }
 
-
-
   /**
    * Returns a license for the caller, reusing a cached one when still fresh.
    *
@@ -229,7 +232,9 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       // read as stale by a concurrent caller.
       expiresAtMs: now + DEFAULT_LICENSE_TTL_MS,
     };
-    evictIfFull(cache);
+    // Replacing an existing key does not grow the map, so no room is needed —
+    // evicting there would drop another caller's license for nothing.
+    if (!cache.has(cacheKey)) evictIfFull(cache);
     cache.set(cacheKey, entry);
 
     try {
@@ -399,7 +404,6 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     };
   }
 }
-
 
 /**
  * Maps the raw acquisition response to the SDK shape, folding in the token's

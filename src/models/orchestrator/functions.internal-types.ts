@@ -64,10 +64,12 @@ export interface RawStudioWebLicenseResponse {
   /** Last update of the licensed user session (ISO 8601). */
   lastUpdated: string;
   /**
-   * Unsigned JWT carrying the granted licence units and its own validity
-   * window. Its `exp` claim drives the SDK's cache TTL.
+   * Unsigned JWT carrying the granted license units and its own validity
+   * window; its `exp` claim is what the SDK reuses the license against. Null
+   * when the platform issues no token, in which case the SDK holds the license
+   * only for the fallback lifetime.
    */
-  licenseToken: string;
+  licenseToken: string | null;
 }
 
 /** Claims the SDK reads from the unsigned license token. Never verified. */
