@@ -46,15 +46,14 @@ export class BusinessAppsService extends BaseService implements BusinessAppsServ
   @track('BusinessApps.Create')
   async create(
     name: string,
-    description: string,
     processKeys: string[],
     options?: BusinessAppCreateOptions
   ): Promise<BusinessAppGetResponse> {
-    this.assertWritableFields(name, description, processKeys);
+    this.assertWritableFields(name, processKeys);
 
     const response = await this.post<BusinessAppApiResponse>(
       MAESTRO_ENDPOINTS.BUSINESS_APPS.COLLECTION,
-      { name, description, processKeys, ...options }
+      { name, processKeys, ...options }
     );
 
     return this.toBusinessApp(response.data);
@@ -104,18 +103,17 @@ export class BusinessAppsService extends BaseService implements BusinessAppsServ
   async updateById(
     businessAppId: string,
     name: string,
-    description: string,
     processKeys: string[],
     options?: BusinessAppUpdateOptions
   ): Promise<BusinessAppGetResponse> {
     if (!businessAppId) {
       throw new ValidationError({ message: 'businessAppId is required for updateById' });
     }
-    this.assertWritableFields(name, description, processKeys);
+    this.assertWritableFields(name, processKeys);
 
     const response = await this.put<BusinessAppApiResponse>(
       MAESTRO_ENDPOINTS.BUSINESS_APPS.BY_ID(businessAppId),
-      { name, description, processKeys, ...options }
+      { name, processKeys, ...options }
     );
 
     return this.toBusinessApp(response.data);
@@ -134,12 +132,9 @@ export class BusinessAppsService extends BaseService implements BusinessAppsServ
    * Guards the fields the API requires on both create and update. Length, charset and
    * name-uniqueness rules stay server-side so the SDK cannot drift from them.
    */
-  private assertWritableFields(name: string, description: string, processKeys: string[]): void {
+  private assertWritableFields(name: string, processKeys: string[]): void {
     if (!name) {
       throw new ValidationError({ message: 'name is required' });
-    }
-    if (!description) {
-      throw new ValidationError({ message: 'description is required' });
     }
     if (!processKeys?.length) {
       throw new ValidationError({ message: 'processKeys must contain at least one process key' });

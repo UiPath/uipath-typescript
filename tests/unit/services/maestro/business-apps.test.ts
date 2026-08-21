@@ -45,8 +45,8 @@ describe('BusinessApps Service Unit Tests', () => {
 
       const result = await businessAppsService.create(
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
+        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY],
+        { description: BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION }
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -67,7 +67,6 @@ describe('BusinessApps Service Unit Tests', () => {
 
       await businessAppsService.create(
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
         [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY],
         { icon: BUSINESS_APP_TEST_CONSTANTS.ICON, color: BUSINESS_APP_TEST_CONSTANTS.COLOR }
       );
@@ -85,41 +84,45 @@ describe('BusinessApps Service Unit Tests', () => {
     it('should attach update and delete to the created app', async () => {
       mockApiClient.post.mockResolvedValue(createBasicBusinessApp());
 
-      const result = await businessAppsService.create(
-        BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-      );
+      const result = await businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, [
+        BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+      ]);
 
       expect(typeof result.update).toBe('function');
       expect(typeof result.delete).toBe('function');
     });
 
-    it('should reject a missing name before calling the API', async () => {
-      await expect(
-        businessAppsService.create('', BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION, [
-          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
-        ])
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
+    it('should omit description from the body when not supplied', async () => {
+      mockApiClient.post.mockResolvedValue(createBasicBusinessApp({ description: null }));
+
+      await businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, [
+        BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+      ]);
+
+      const body = mockApiClient.post.mock.calls[0][1] as Record<string, unknown>;
+      expect(body).not.toHaveProperty('description');
     });
 
-    it('should reject a missing description before calling the API', async () => {
+    it('should preserve a null description returned by the API', async () => {
+      mockApiClient.post.mockResolvedValue(createBasicBusinessApp({ description: null }));
+
+      const result = await businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, [
+        BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+      ]);
+
+      expect(result.description).toBeNull();
+    });
+
+    it('should reject a missing name before calling the API', async () => {
       await expect(
-        businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, '', [
-          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
-        ])
+        businessAppsService.create('', [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should reject an empty processKeys list before calling the API', async () => {
       await expect(
-        businessAppsService.create(
-          BUSINESS_APP_TEST_CONSTANTS.NAME,
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-          []
-        )
+        businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, [])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -130,11 +133,9 @@ describe('BusinessApps Service Unit Tests', () => {
       );
 
       await expect(
-        businessAppsService.create(
-          BUSINESS_APP_TEST_CONSTANTS.NAME,
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-        )
+        businessAppsService.create(BUSINESS_APP_TEST_CONSTANTS.NAME, [
+          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+        ])
       ).rejects.toThrow(BUSINESS_APP_TEST_CONSTANTS.ERROR_BUSINESS_APP_NAME_EXISTS);
     });
   });
@@ -161,9 +162,9 @@ describe('BusinessApps Service Unit Tests', () => {
       expect(app.createdTime).toBe(BUSINESS_APP_TEST_CONSTANTS.CREATED_TIME);
       expect(app.lastModifiedTime).toBe(BUSINESS_APP_TEST_CONSTANTS.MODIFIED_TIME);
       expect(app.lastModifiedBy).toBe(BUSINESS_APP_TEST_CONSTANTS.USER_ID);
-      expect((app as Record<string, unknown>).createdTimeUtc).toBeUndefined();
-      expect((app as Record<string, unknown>).modifiedTimeUtc).toBeUndefined();
-      expect((app as Record<string, unknown>).modifiedBy).toBeUndefined();
+      expect((app as unknown as Record<string, unknown>).createdTimeUtc).toBeUndefined();
+      expect((app as unknown as Record<string, unknown>).modifiedTimeUtc).toBeUndefined();
+      expect((app as unknown as Record<string, unknown>).modifiedBy).toBeUndefined();
     });
 
     it('should attach update and delete to every listed app', async () => {
@@ -248,9 +249,9 @@ describe('BusinessApps Service Unit Tests', () => {
       expect(result.createdTime).toBe(BUSINESS_APP_TEST_CONSTANTS.CREATED_TIME);
       expect(result.lastModifiedTime).toBe(BUSINESS_APP_TEST_CONSTANTS.MODIFIED_TIME);
       expect(result.lastModifiedBy).toBe(BUSINESS_APP_TEST_CONSTANTS.USER_ID);
-      expect((result as Record<string, unknown>).createdTimeUtc).toBeUndefined();
-      expect((result as Record<string, unknown>).modifiedTimeUtc).toBeUndefined();
-      expect((result as Record<string, unknown>).modifiedBy).toBeUndefined();
+      expect((result as unknown as Record<string, unknown>).createdTimeUtc).toBeUndefined();
+      expect((result as unknown as Record<string, unknown>).modifiedTimeUtc).toBeUndefined();
+      expect((result as unknown as Record<string, unknown>).modifiedBy).toBeUndefined();
     });
 
     it('should preserve a null icon and color', async () => {
@@ -287,8 +288,8 @@ describe('BusinessApps Service Unit Tests', () => {
       const result = await businessAppsService.updateById(
         BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION_UPDATED,
-        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY, BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY_ALT]
+        [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY, BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY_ALT],
+        { description: BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION_UPDATED }
       );
 
       expect(mockApiClient.put).toHaveBeenCalledWith(
@@ -312,47 +313,30 @@ describe('BusinessApps Service Unit Tests', () => {
       await businessAppsService.updateById(
         BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
         BUSINESS_APP_TEST_CONSTANTS.NAME,
-        BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
         [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
       );
 
       const body = mockApiClient.put.mock.calls[0][1] as Record<string, unknown>;
       expect(body).not.toHaveProperty('icon');
       expect(body).not.toHaveProperty('color');
+      // description is optional too, so an omitted one is likewise absent and cleared
+      expect(body).not.toHaveProperty('description');
     });
 
     it('should reject an empty id before calling the API', async () => {
       await expect(
-        businessAppsService.updateById(
-          '',
-          BUSINESS_APP_TEST_CONSTANTS.NAME,
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-        )
+        businessAppsService.updateById('', BUSINESS_APP_TEST_CONSTANTS.NAME, [
+          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+        ])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should reject an empty name before calling the API', async () => {
       await expect(
-        businessAppsService.updateById(
-          BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
-          '',
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
-          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-        )
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
-    });
-
-    it('should reject an empty description before calling the API', async () => {
-      await expect(
-        businessAppsService.updateById(
-          BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
-          BUSINESS_APP_TEST_CONSTANTS.NAME,
-          '',
-          [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
-        )
+        businessAppsService.updateById(BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID, '', [
+          BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY,
+        ])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
@@ -362,7 +346,6 @@ describe('BusinessApps Service Unit Tests', () => {
         businessAppsService.updateById(
           BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
           BUSINESS_APP_TEST_CONSTANTS.NAME,
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
           []
         )
       ).rejects.toBeInstanceOf(ValidationError);
@@ -378,7 +361,6 @@ describe('BusinessApps Service Unit Tests', () => {
         businessAppsService.updateById(
           BUSINESS_APP_TEST_CONSTANTS.BUSINESS_APP_ID,
           BUSINESS_APP_TEST_CONSTANTS.NAME_ALT,
-          BUSINESS_APP_TEST_CONSTANTS.DESCRIPTION,
           [BUSINESS_APP_TEST_CONSTANTS.PROCESS_KEY]
         )
       ).rejects.toThrow(BUSINESS_APP_TEST_CONSTANTS.ERROR_BUSINESS_APP_NAME_EXISTS);

@@ -11,7 +11,7 @@
 export interface BusinessAppApiResponse {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   icon: string | null;
   color: string | null;
   processKeys: string[];

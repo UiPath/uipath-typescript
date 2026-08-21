@@ -53,9 +53,8 @@ export interface BusinessAppsServiceModel {
    * stored app including its generated `id` and audit fields.
    *
    * @param name - Display name, unique within the tenant
-   * @param description - Human description of what the app is for
    * @param processKeys - Orchestrator process (release) keys the app surfaces; at least one
-   * @param options - Optional icon and color
+   * @param options - Optional description, icon and color
    * @returns The created app as a {@link BusinessAppGetResponse}, with `update` and `delete` attached
    *
    * @example Basic usage
@@ -67,24 +66,20 @@ export interface BusinessAppsServiceModel {
    * await sdk.initialize();
    *
    * const businessApps = new BusinessApps(sdk);
-   * const app = await businessApps.create('Claims Intake', 'Handles inbound claims', [
-   *   '<processKey>',
-   * ]);
+   * const app = await businessApps.create('Claims Intake', ['<processKey>']);
    * ```
    *
-   * @example With an icon and color
+   * @example With a description, icon and color
    * ```typescript
-   * const app = await businessApps.create(
-   *   'Claims Intake',
-   *   'Handles inbound claims',
-   *   ['<processKey>'],
-   *   { icon: 'claims-icon', color: '#1F6FEB' }
-   * );
+   * const app = await businessApps.create('Claims Intake', ['<processKey>'], {
+   *   description: 'Handles inbound claims',
+   *   icon: 'claims-icon',
+   *   color: '#1F6FEB',
+   * });
    * ```
    */
   create(
     name: string,
-    description: string,
     processKeys: string[],
     options?: BusinessAppCreateOptions
   ): Promise<BusinessAppGetResponse>;
@@ -163,44 +158,37 @@ export interface BusinessAppsServiceModel {
    * ///
    *
    * This is a full replace, not a partial update: every editable field is overwritten, so
-   * an omitted `icon` or `color` is cleared rather than left alone. The name must stay
-   * unique within the tenant. Writes are last-write-wins — concurrent updates do not
-   * conflict, the later one simply survives.
+   * an omitted `description`, `icon` or `color` is cleared rather than left alone. The name
+   * must stay unique within the tenant. Writes are last-write-wins — concurrent updates do
+   * not conflict, the later one simply survives.
    *
    * @param businessAppId - GUID of the business app
    * @param name - New display name, unique within the tenant
-   * @param description - New description
    * @param processKeys - The full set of Orchestrator process (release) keys the app surfaces
-   * @param options - Optional icon and color; omitting one clears it
+   * @param options - Optional description, icon and color; omitting one clears it
    * @returns The app as stored after the write, as a {@link BusinessAppGetResponse}
    *
    * @example Basic usage
    * ```typescript
-   * const updated = await businessApps.updateById(
-   *   '<businessAppId>',
-   *   'Claims Intake',
-   *   'Handles inbound and renewal claims',
-   *   ['<processKey>']
-   * );
+   * const updated = await businessApps.updateById('<businessAppId>', 'Claims Intake', [
+   *   '<processKey>',
+   * ]);
    * ```
    *
-   * @example Keeping the existing icon and color
+   * @example Keeping the existing optional fields
    * ```typescript
    * const app = await businessApps.getById('<businessAppId>');
    *
-   * const updated = await businessApps.updateById(
-   *   app.id,
-   *   app.name,
-   *   'An updated description',
-   *   app.processKeys,
-   *   { icon: app.icon ?? undefined, color: app.color ?? undefined }
-   * );
+   * const updated = await businessApps.updateById(app.id, app.name, app.processKeys, {
+   *   description: 'An updated description',
+   *   icon: app.icon ?? undefined,
+   *   color: app.color ?? undefined,
+   * });
    * ```
    */
   updateById(
     businessAppId: string,
     name: string,
-    description: string,
     processKeys: string[],
     options?: BusinessAppUpdateOptions
   ): Promise<BusinessAppGetResponse>;
@@ -237,11 +225,11 @@ export interface BusinessAppsServiceModel {
  */
 export interface BusinessAppMethods {
   /**
-   * Replaces this business app. A full replace — an omitted `icon` or `color` is cleared.
+   * Replaces this business app. A full replace — an omitted `description`, `icon` or
+   * `color` is cleared.
    */
   update(
     name: string,
-    description: string,
     processKeys: string[],
     options?: BusinessAppUpdateOptions
   ): Promise<BusinessAppGetResponse>;
@@ -264,13 +252,12 @@ function createBusinessAppMethods(
     // method the interface types as returning a promise.
     async update(
       name: string,
-      description: string,
       processKeys: string[],
       options?: BusinessAppUpdateOptions
     ): Promise<BusinessAppGetResponse> {
       if (!data.id) throw new Error('Business app ID is undefined');
 
-      return service.updateById(data.id, name, description, processKeys, options);
+      return service.updateById(data.id, name, processKeys, options);
     },
 
     async delete(): Promise<void> {

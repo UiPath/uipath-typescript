@@ -52,38 +52,38 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
       const name = newAppName();
       const processKey = newProcessKey();
 
-      const app = trackApp(
-        await businessApps.create(name, 'Created by the SDK integration suite', [processKey])
-      );
+      const app = trackApp(await businessApps.create(name, [processKey]));
 
       expect(app.id).toBeTruthy();
       expect(app.name).toBe(name);
-      expect(app.description).toBe('Created by the SDK integration suite');
       expect(app.processKeys).toEqual([processKey]);
-      // Optional fields are stored as null when not supplied
+      // Every optional field, description included, is stored as null when not supplied
+      expect(app.description).toBeNull();
       expect(app.icon).toBeNull();
       expect(app.color).toBeNull();
     });
 
     it('should create an app with an icon and color', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Has display metadata', [newProcessKey()], {
+        await businessApps.create(newAppName(), [newProcessKey()], {
+          description: 'Has display metadata',
           icon: 'claims-icon',
           color: '#1F6FEB',
         })
       );
 
+      expect(app.description).toBe('Has display metadata');
       expect(app.icon).toBe('claims-icon');
       expect(app.color).toBe('#1F6FEB');
     });
 
     it('should reject a duplicate name within the tenant', async () => {
       const name = newAppName();
-      trackApp(await businessApps.create(name, 'The original', [newProcessKey()]));
+      trackApp(await businessApps.create(name, [newProcessKey()], { description: 'The original' }));
 
       // Uniqueness is case-insensitive, so this differs only in case and must still conflict
       await expect(
-        businessApps.create(name.toUpperCase(), 'The duplicate', [newProcessKey()])
+        businessApps.create(name.toUpperCase(), [newProcessKey()], { description: 'The duplicate' })
       ).rejects.toThrow();
     });
   });
@@ -93,7 +93,8 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
 
     beforeAll(async () => {
       existing = trackApp(
-        await businessApps.create(newAppName(), 'Read back by getById', [newProcessKey()], {
+        await businessApps.create(newAppName(), [newProcessKey()], {
+          description: 'Read back by getById',
           icon: 'read-icon',
           color: '#ABCDEF',
         })
@@ -124,7 +125,7 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
   describe('getAll', () => {
     it('should list the tenant apps including one just created', async () => {
       const created = trackApp(
-        await businessApps.create(newAppName(), 'Listed by getAll', [newProcessKey()])
+        await businessApps.create(newAppName(), [newProcessKey()], { description: 'Listed by getAll' })
       );
 
       // getAll() returns a single page, and apps are ordered by name, so a tenant with more
@@ -142,8 +143,8 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
 
     it('should honour pageSize and expose a cursor for the following page', async () => {
       // Two apps guarantee more than one page at pageSize 1
-      trackApp(await businessApps.create(newAppName(), 'Paging fixture one', [newProcessKey()]));
-      trackApp(await businessApps.create(newAppName(), 'Paging fixture two', [newProcessKey()]));
+      trackApp(await businessApps.create(newAppName(), [newProcessKey()], { description: 'Paging fixture one' }));
+      trackApp(await businessApps.create(newAppName(), [newProcessKey()], { description: 'Paging fixture two' }));
 
       const firstPage = await businessApps.getAll({ pageSize: 1 });
 
@@ -161,18 +162,16 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
   describe('updateById', () => {
     it('should replace the editable fields', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Before the update', [newProcessKey()])
+        await businessApps.create(newAppName(), [newProcessKey()], { description: 'Before the update' })
       );
       const newName = newAppName();
       const replacementKeys = [newProcessKey(), newProcessKey()];
 
-      const updated = await businessApps.updateById(
-        app.id,
-        newName,
-        'After the update',
-        replacementKeys,
-        { icon: 'updated-icon', color: '#123456' }
-      );
+      const updated = await businessApps.updateById(app.id, newName, replacementKeys, {
+        description: 'After the update',
+        icon: 'updated-icon',
+        color: '#123456',
+      });
 
       expect(updated.id).toBe(app.id);
       expect(updated.name).toBe(newName);
@@ -183,26 +182,31 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
 
     it('should clear an omitted optional field, since the update is a full replace', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Starts with an icon', [newProcessKey()], {
+        await businessApps.create(newAppName(), [newProcessKey()], {
+          description: 'Starts with an icon',
           icon: 'will-be-cleared',
           color: '#FFFFFF',
         })
       );
 
-      const updated = await businessApps.updateById(app.id, app.name, app.description, app.processKeys);
+      const updated = await businessApps.updateById(app.id, app.name, app.processKeys);
 
       expect(updated.icon).toBeNull();
       expect(updated.color).toBeNull();
+      // description is optional now, so an omitted one is cleared alongside icon and color
+      expect(updated.description).toBeNull();
     });
   });
 
   describe('bound entity methods', () => {
     it('should update the app through the method attached to it', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Updated via bound method', [newProcessKey()])
+        await businessApps.create(newAppName(), [newProcessKey()], { description: 'Updated via bound method' })
       );
 
-      const updated = await app.update(app.name, 'Changed by app.update()', app.processKeys);
+      const updated = await app.update(app.name, app.processKeys, {
+        description: 'Changed by app.update()',
+      });
 
       expect(updated.id).toBe(app.id);
       expect(updated.description).toBe('Changed by app.update()');
@@ -210,7 +214,7 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
 
     it('should delete the app through the method attached to it', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Deleted via bound method', [newProcessKey()])
+        await businessApps.create(newAppName(), [newProcessKey()], { description: 'Deleted via bound method' })
       );
 
       await app.delete();
@@ -223,7 +227,7 @@ describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
   describe('deleteById', () => {
     it('should delete the app and make it unreadable afterwards', async () => {
       const app = trackApp(
-        await businessApps.create(newAppName(), 'Deleted by deleteById', [newProcessKey()])
+        await businessApps.create(newAppName(), [newProcessKey()], { description: 'Deleted by deleteById' })
       );
 
       await businessApps.deleteById(app.id);
