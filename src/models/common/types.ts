@@ -53,10 +53,14 @@ export interface RequestOptions extends BaseOptions {
  * Selects a resource by exactly one identifier. Operational methods accept a
  * `ResourceRef` and resolve it internally to the canonical identifier the
  * API expects before executing the operation.
+ *
+ * Three variants — id (numeric), name (folder-scoped), or key (GUID). The
+ * `?: never` markers reject supplying more than one at compile time.
  */
 export type ResourceRef<TId> =
-  | { id: TId; name?: never }
-  | { name: string; id?: never };
+  | { id: TId; name?: never; key?: never }
+  | { name: string; id?: never; key?: never }
+  | { key: string; id?: never; name?: never };
 
 /**
  * Options that scope a name-based lookup (e.g. `getByName`) to a folder.
