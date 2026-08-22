@@ -1,6 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByKeyOptions, AssetGetByNameOptions, AssetNewValue, AssetRef, AssetUpdateValueByIdOptions, AssetUpdateValueOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
+import { resolveRefToId } from '../../../utils/refs/resolve-ref';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -13,7 +14,16 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
-import { ValidationError } from '../../../core/errors';
+import { CollectionResponse } from '../../../models/common/types';
+import { NotFoundError, ValidationError } from '../../../core/errors';
+
+/**
+ * Matches a canonical GUID; used to reject non-GUID keys on `getByKey` before hitting the API.
+ */
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Matches single-quote characters in OData string literals — escaped to `''` in `$filter`. */
+const SINGLE_QUOTE_RE = /'/g;
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -86,6 +96,62 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
     );
   }
 
+  @track('Assets.GetByKey')
+  async getByKey(key: string, options: AssetGetByKeyOptions = {}): Promise<AssetGetResponse> {
+    return this.findAssetByKey(key, options, 'Assets.getByKey');
+  }
+
+  @track('Assets.UpdateValue')
+  async updateValue(ref: AssetRef, newValue: AssetNewValue, options?: AssetUpdateValueOptions): Promise<void> {
+    if (newValue === null || newValue === undefined) {
+      throw new ValidationError({ message: 'newValue is required for updateValue' });
+    }
+
+    // Resolve the ref via the shared framework helper. Name-lookup goes through the protected
+    // `getByNameLookup` (which applies runtime resource overrides); key-lookup goes through the
+    // private `findAssetByKey` helper. Both return `{ id }` — Assets' OData response does not
+    // carry the folder id, so `effectiveFolder.folderId` stays undefined and the update falls
+    // back to the caller's folder options.
+    const { id } = await resolveRefToId<number>(
+      ref,
+      {
+        byName: async (name) => {
+          const asset = await this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
+            'Asset',
+            ASSET_ENDPOINTS.GET_BY_FOLDER,
+            name,
+            options ?? {},
+            (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+            AssetMap,
+          );
+          return { id: asset.id };
+        },
+        byKey: async (key) => {
+          const asset = await this.findAssetByKey(key, options ?? {}, 'Assets.updateValue');
+          return { id: asset.id };
+        },
+      },
+      'Assets.updateValue',
+    );
+
+    // Assets' name/key lookups do not return the folder id, so the caller's folder options
+    // remain authoritative for the update. Runtime override redirects that cross folders are
+    // confirmed by the successful lookup itself.
+    const headers = resolveFolderHeaders({
+      folderId: options?.folderId,
+      folderKey: options?.folderKey,
+      folderPath: options?.folderPath,
+      resourceType: 'Assets.updateValue',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    await this.updateValueByResolvedId(id, newValue, headers);
+  }
+
+  /**
+   * @deprecated Use {@link AssetService.updateValue} with `{ id }` or `{ name }` instead. This
+   * method will be removed in the next major version.
+   */
   @track('Assets.UpdateValueById')
   async updateValueById(id: number, newValue: AssetNewValue, options?: AssetUpdateValueByIdOptions): Promise<void> {
     if (!id) {
@@ -103,6 +169,19 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       fallbackFolderKey: this.config.folderKey,
     });
 
+    await this.updateValueByResolvedId(id, newValue, headers);
+  }
+
+  /**
+   * Reads the asset shape, then puts it back with only the value field changed. Split out so
+   * both `updateValue` and the deprecated `updateValueById` share the same wire behaviour
+   * without either firing the other's `@track` decorator.
+   */
+  private async updateValueByResolvedId(
+    id: number,
+    newValue: AssetNewValue,
+    headers: Record<string, string>,
+  ): Promise<void> {
     const existingResponse = await this.get<{
       Name: string;
       ValueScope: AssetValueScope;
@@ -130,6 +209,50 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       body,
       { headers },
     );
+  }
+
+  /**
+   * Looks up a single asset by its GUID key on the folder-scoped OData collection. Shared by
+   * public `getByKey` and the byKey branch of `updateValue` — no `@track` here so calling from
+   * within another `@track`-decorated method does not double-fire telemetry.
+   */
+  private async findAssetByKey(
+    key: string,
+    options: AssetGetByKeyOptions,
+    callerLabel: string,
+  ): Promise<AssetGetResponse> {
+    const trimmedKey = key?.trim();
+    if (!trimmedKey || !GUID_REGEX.test(trimmedKey)) {
+      throw new ValidationError({ message: `${callerLabel}: key must be a GUID.` });
+    }
+
+    const { folderId, folderKey, folderPath, ...queryOptions } = options;
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: callerLabel,
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    const apiFieldOptions = transformOptions(queryOptions, AssetMap);
+    const apiOptions = {
+      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
+      '$filter': `Key eq ${trimmedKey.replace(SINGLE_QUOTE_RE, "''")}`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<AssetGetResponse>>(
+      ASSET_ENDPOINTS.GET_BY_FOLDER,
+      { headers, params: apiOptions },
+    );
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      throw new NotFoundError({ message: `Asset with key '${trimmedKey}' not found.` });
+    }
+
+    return transformData(pascalToCamelCaseKeys(items[0]), AssetMap);
   }
 }
 
