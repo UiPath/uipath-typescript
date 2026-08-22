@@ -1,0 +1,98 @@
+import { ValidationError } from '../../core/errors';
+import type { ResourceRef } from '../../models/common/types';
+
+/**
+ * The folder a resolved resource actually lives in, when the ref branch was `{name}` or `{key}`.
+ * Populated from the lookup response so operational methods (updates, deletes) target the correct
+ * folder even when a runtime override redirects the lookup across folders.
+ *
+ * For the `{id}` branch, `folderId` is `undefined` — the caller's folder options remain
+ * authoritative because no lookup ran.
+ */
+export interface EffectiveFolder {
+  folderId?: number;
+}
+
+/**
+ * The canonical id from a `ResourceRef`, plus the folder the resolved resource actually lives in
+ * when the ref carried a name or key. Operational methods should prefer `effectiveFolder.folderId`
+ * over caller-supplied folder options when it is set — otherwise a name/key lookup that got
+ * redirected by a runtime override would produce a folder mismatch on the follow-up call.
+ */
+export interface ResolvedRef<TId> {
+  id: TId;
+  effectiveFolder: EffectiveFolder;
+}
+
+/**
+ * Service-supplied lookup that turns a name or key into `{ id, folderId? }`. The folder id is
+ * optional — non-folder-scoped services (Data Fabric) can omit it — but folder-scoped services
+ * should carry it through so downstream operational calls use the actual folder of record.
+ */
+export type RefLookup<TId> = (identifier: string) => Promise<{ id: TId; folderId?: number }>;
+
+/**
+ * The set of lookups a service supports. Only variants for which a lookup is supplied are
+ * legal — e.g., a service without a name endpoint declares `{ byKey }`, and callers supplying
+ * `{ name: ... }` receive a `ValidationError` naming both the method and the unsupported variant.
+ */
+export interface RefResolvers<TId> {
+  byName?: RefLookup<TId>;
+  byKey?: RefLookup<TId>;
+}
+
+/**
+ * Selects the API's canonical id from a `ResourceRef<TId>` and reports the folder the resolved
+ * resource actually lives in. When the caller supplied `{id}`, returns it directly with an
+ * empty `effectiveFolder` — no lookup runs. When `{name}` or `{key}`, invokes the matching
+ * service-supplied lookup; the returned folder id (when the lookup carries one) supersedes any
+ * caller-supplied folder options for the operational call that follows.
+ *
+ * Throws `ValidationError` when the ref is missing, empty, or names a variant the service does
+ * not declare a resolver for. The discriminated union on `ResourceRef` rejects the
+ * `{ id, name }` / `{ id, key }` / `{ name, key }` shapes at compile time, so those combinations
+ * are not defended against here.
+ *
+ * @param ref - Identifier the caller supplied
+ * @param resolvers - Bag of service-supplied lookups for the variants this service supports
+ * @param callerLabel - `ServiceName.methodName` label included in every error message
+ */
+export async function resolveRefToId<TId>(
+  ref: ResourceRef<TId> | undefined,
+  resolvers: RefResolvers<TId>,
+  callerLabel: string,
+): Promise<ResolvedRef<TId>> {
+  if (!ref) {
+    throw new ValidationError({
+      message: `${callerLabel}: ref must supply exactly one of 'id', 'name', or 'key'.`,
+    });
+  }
+
+  if ('id' in ref && ref.id != null) {
+    return { id: ref.id, effectiveFolder: {} };
+  }
+
+  if ('name' in ref && ref.name) {
+    if (!resolvers.byName) {
+      throw new ValidationError({
+        message: `${callerLabel}: this method does not support lookup by 'name'.`,
+      });
+    }
+    const { id, folderId } = await resolvers.byName(ref.name);
+    return { id, effectiveFolder: { folderId } };
+  }
+
+  if ('key' in ref && ref.key) {
+    if (!resolvers.byKey) {
+      throw new ValidationError({
+        message: `${callerLabel}: this method does not support lookup by 'key'.`,
+      });
+    }
+    const { id, folderId } = await resolvers.byKey(ref.key);
+    return { id, effectiveFolder: { folderId } };
+  }
+
+  throw new ValidationError({
+    message: `${callerLabel}: ref must supply exactly one of 'id', 'name', or 'key'.`,
+  });
+}
