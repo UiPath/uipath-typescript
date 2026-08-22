@@ -463,6 +463,47 @@ describe('AssetService Unit Tests', () => {
     });
   });
 
+  describe('getByKey', () => {
+    const TEST_KEY = '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba';
+
+    it('issues the folder-scoped OData Key filter and returns the resolved asset', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+      const result = await assetService.getByKey(TEST_KEY, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      expect(result.id).toBe(ASSET_TEST_CONSTANTS.ASSET_ID);
+      expect(result.name).toBe(ASSET_TEST_CONSTANTS.ASSET_NAME);
+
+      const [endpoint, opts] = mockApiClient.get.mock.calls[0];
+      expect(endpoint).toBe(ASSET_ENDPOINTS.GET_BY_FOLDER);
+      expect(opts?.params?.$filter).toBe(`Key eq ${TEST_KEY}`);
+      expect(opts?.params?.$top).toBe('1');
+      expect(opts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+    });
+
+    it('throws NotFoundError when no asset matches the key', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(
+        assetService.getByKey(TEST_KEY, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('rejects a non-GUID key with ValidationError before hitting the API', async () => {
+      await expect(
+        assetService.getByKey('not-a-guid', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('rejects an empty key with ValidationError', async () => {
+      await expect(
+        assetService.getByKey('', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+  });
+
   describe('updateValueById', () => {
     const mockExistingAsset = (overrides: Record<string, unknown> = {}) =>
       createMockRawAsset({
@@ -653,6 +694,133 @@ describe('AssetService Unit Tests', () => {
       await expect(
         assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
       ).rejects.toThrow(ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND);
+    });
+  });
+
+  describe('updateValue (ref-based)', () => {
+    const mockExistingAsset = (overrides: Record<string, unknown> = {}) =>
+      createMockRawAsset({
+        ValueType: AssetValueType.Text,
+        ValueScope: AssetValueScope.Global,
+        Value: 'old-value',
+        StringValue: 'old-value',
+        ...overrides,
+      });
+
+    it('takes the id branch and updates without a name lookup when ref is {id}', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValue(
+        { id: ASSET_TEST_CONSTANTS.ASSET_ID },
+        'new-value',
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // Only the byId GET + the PUT — no OData $filter lookup.
+      expect(mockApiClient.get).toHaveBeenCalledExactlyOnceWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.anything(),
+      );
+      expect(mockApiClient.put).toHaveBeenCalledExactlyOnceWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({ StringValue: 'new-value' }),
+        expect.anything(),
+      );
+    });
+
+    it('resolves {name} to id via the folder-scoped OData collection before updating', async () => {
+      // Name lookup: the base getByNameLookup issues a GET against GET_BY_FOLDER with $filter.
+      mockApiClient.get
+        .mockResolvedValueOnce({ value: [createMockRawAsset()] })
+        .mockResolvedValueOnce(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValue(
+        { name: ASSET_TEST_CONSTANTS.ASSET_NAME },
+        'new-value',
+        { folderPath: 'Shared/Apps' },
+      );
+
+      // First GET is the OData $filter lookup for the id.
+      const [firstEndpoint, firstOpts] = mockApiClient.get.mock.calls[0];
+      expect(firstEndpoint).toBe(ASSET_ENDPOINTS.GET_BY_FOLDER);
+      expect(firstOpts?.params?.$filter).toBe(`Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME}'`);
+      expect(firstOpts?.headers?.[FOLDER_PATH_ENCODED]).toBeDefined();
+
+      // Second GET is the id-based fetch preceding the PUT.
+      const [secondEndpoint] = mockApiClient.get.mock.calls[1];
+      expect(secondEndpoint).toBe(ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID));
+
+      expect(mockApiClient.put).toHaveBeenCalledExactlyOnceWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({ StringValue: 'new-value' }),
+        expect.anything(),
+      );
+    });
+
+    it('rejects an empty ref with ValidationError before hitting the API', async () => {
+      await expect(
+        assetService.updateValue({} as never, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('resolves {key} to id via the folder-scoped OData Key filter before updating', async () => {
+      const testKey = '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba';
+      mockApiClient.get
+        .mockResolvedValueOnce({ value: [createMockRawAsset()] })
+        .mockResolvedValueOnce(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValue({ key: testKey }, 'new-value', { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [firstEndpoint, firstOpts] = mockApiClient.get.mock.calls[0];
+      expect(firstEndpoint).toBe(ASSET_ENDPOINTS.GET_BY_FOLDER);
+      expect(firstOpts?.params?.$filter).toBe(`Key eq ${testKey}`);
+      expect(firstOpts?.params?.$top).toBe('1');
+
+      expect(mockApiClient.put).toHaveBeenCalledExactlyOnceWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({ StringValue: 'new-value' }),
+        expect.anything(),
+      );
+    });
+
+    it('rejects a {key} ref that is not a valid GUID', async () => {
+      await expect(
+        assetService.updateValue({ key: 'not-a-guid' }, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('rejects a missing newValue with ValidationError before resolving the ref', async () => {
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- exercising a missing arg
+        assetService.updateValue({ id: ASSET_TEST_CONSTANTS.ASSET_ID }, undefined as any, {
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('propagates the caller\'s folderId + folderKey onto the update call', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValue(
+        { id: ASSET_TEST_CONSTANTS.ASSET_ID },
+        'v',
+        { folderId: TEST_CONSTANTS.FOLDER_ID, folderKey: 'k' },
+      );
+
+      const [, , putOpts] = mockApiClient.put.mock.calls[0];
+      expect(putOpts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+      expect(putOpts?.headers?.[FOLDER_KEY]).toBe('k');
     });
   });
 });
