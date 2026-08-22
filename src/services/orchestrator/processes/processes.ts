@@ -147,7 +147,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
 
   @track('Processes.GetByName')
   async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
-    return this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
+    const { result } = await this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
       'Process',
       PROCESS_ENDPOINTS.GET_ALL,
       name,
@@ -155,5 +155,6 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
       ProcessMap,
     );
+    return result;
   }
 }

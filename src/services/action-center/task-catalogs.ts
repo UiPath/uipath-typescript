@@ -80,7 +80,7 @@ export class TaskCatalogService extends FolderScopedService implements TaskCatal
 
   @track('TaskCatalogs.GetByName')
   async getByName(name: string, options: TaskCatalogGetByNameOptions = {}): Promise<TaskCatalogGetResponse> {
-    return this.getByNameLookup<TaskCatalogGetResponse, TaskCatalogGetResponse>(
+    const { result } = await this.getByNameLookup<TaskCatalogGetResponse, TaskCatalogGetResponse>(
       'TaskCatalog',
       TASK_CATALOG_ENDPOINTS.GET_ALL,
       name,
@@ -88,6 +88,7 @@ export class TaskCatalogService extends FolderScopedService implements TaskCatal
       (raw) => transformData(pascalToCamelCaseKeys(raw), TaskCatalogMap),
       TaskCatalogMap,
     );
+    return result;
   }
 
   @track('TaskCatalogs.Create')
@@ -124,7 +125,7 @@ export class TaskCatalogService extends FolderScopedService implements TaskCatal
     }
 
     const { folderId, folderKey, folderPath } = options;
-    const current = await this.getByNameLookup<TaskCatalogGetResponse, TaskCatalogGetResponse>(
+    const { result: current } = await this.getByNameLookup<TaskCatalogGetResponse, TaskCatalogGetResponse>(
       'TaskCatalog',
       TASK_CATALOG_ENDPOINTS.GET_ALL,
       name,

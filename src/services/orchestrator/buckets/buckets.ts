@@ -64,13 +64,14 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
   @track('Buckets.GetByName')
   async getByName(name: string, options: BucketGetByNameOptions = {}): Promise<BucketGetResponse> {
-    return this.getByNameLookup<BucketGetResponse, BucketGetResponse>(
+    const { result } = await this.getByNameLookup<BucketGetResponse, BucketGetResponse>(
       'Bucket',
       BUCKET_ENDPOINTS.GET_BY_FOLDER,
       name,
       options,
       (raw) => pascalToCamelCaseKeys(raw) as BucketGetResponse,
     );
+    return result;
   }
 
   @track('Buckets.GetAll')

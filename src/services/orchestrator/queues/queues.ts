@@ -40,8 +40,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { QueueMap, QueueItemMap, QueueItemProcessingErrorMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
-
-const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { GUID_REGEX } from '../../../utils/validation/guid';
 
 /**
  * Transforms a raw API queue item into the SDK shape. `SpecificContent` and
@@ -164,7 +163,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
 
   @track('Queues.GetByName')
   async getByName(name: string, options: QueueGetByNameOptions = {}): Promise<QueueGetWithMethodsResponse> {
-    return this.getByNameLookup<Record<string, unknown>, QueueGetWithMethodsResponse>(
+    const { result } = await this.getByNameLookup<Record<string, unknown>, QueueGetWithMethodsResponse>(
       'Queue',
       QUEUE_ENDPOINTS.GET_BY_FOLDER,
       name,
@@ -175,6 +174,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       ),
       QueueMap,
     );
+    return result;
   }
 
   @track('Queues.GetByKey')

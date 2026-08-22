@@ -63,12 +63,16 @@ export type ResourceRef<TId> =
   | { key: string; id?: never; name?: never };
 
 /**
- * Options that scope a name-based lookup (e.g. `getByName`) to a folder.
- * Provide one of `folderId`, `folderKey`, or `folderPath`. When more than
- * one is supplied, all are forwarded; the server applies precedence
+ * Folder-scoping fields only — the shared vocabulary for identifying an Orchestrator folder
+ * without any OData query-shape options. Provide one of `folderId`, `folderKey`, or `folderPath`.
+ * When more than one is supplied, all are forwarded; the server applies precedence
  * `folderPath` > `folderKey` > `folderId`.
+ *
+ * Use this as the base for **mutation** options (e.g. `updateValue`) where `expand`/`select`
+ * carry no meaning. Read methods (`getByName`, `getById`) should extend `FolderScopedOptions`
+ * instead so callers can shape the response via `$expand`/`$select`.
  */
-export interface FolderScopedOptions extends BaseOptions {
+export interface FolderScopingOnly {
   /** Numeric folder ID. */
   folderId?: number;
   /** Folder key (GUID-formatted string). */
@@ -76,3 +80,10 @@ export interface FolderScopedOptions extends BaseOptions {
   /** Slash-delimited folder path, e.g. `'Shared/Finance'`. */
   folderPath?: string;
 }
+
+/**
+ * Options that scope a name-based lookup (e.g. `getByName`) to a folder and let the caller
+ * shape the OData response via `expand`/`select`. Adds the query-shape fields to
+ * {@link FolderScopingOnly}.
+ */
+export interface FolderScopedOptions extends BaseOptions, FolderScopingOnly {}

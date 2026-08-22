@@ -4,10 +4,12 @@ import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
 import { ODATA_PREFIX } from '../utils/constants/common';
 import { addPrefixToKeys, transformOptions, FieldMapping } from '../utils/transform';
-import { NotFoundError } from '../core/errors';
+import { NotFoundError, ValidationError } from '../core/errors';
 import { validateName } from '../utils/validation/name-validator';
+import { GUID_REGEX } from '../utils/validation/guid';
 import { resolveFolderHeaders } from '../utils/folder/folder-headers';
 import { resolveOverride } from '../utils/overrides/resolve-override';
+import type { EffectiveFolder } from '../utils/validation/resolve-ref';
 
 /**
  * Matches single-quote characters in OData string literals — escaped to `''`
@@ -76,6 +78,11 @@ export class FolderScopedService extends BaseService {
    * The transform step is caller-provided because each resource has its own
    * PascalCase → camelCase field mapping.
    *
+   * Returns `{ result, effectiveFolder }` — `effectiveFolder` carries the folder the lookup
+   * actually ran against so ref-based mutations can forward it to their follow-up call without
+   * duplicating the override resolution. `folderPath` reflects an override redirect if one
+   * applied; `folderId`/`folderKey` are echoed back unchanged.
+   *
    * @param resourceType - Resource label used in validation + error messages (e.g. 'Asset', 'Process')
    * @param endpoint - Folder-scoped OData collection endpoint
    * @param name - Resource name to search for
@@ -84,6 +91,9 @@ export class FolderScopedService extends BaseService {
    * @param responseFieldMap - Optional response field map (API → SDK), reversed internally by
    *   `transformOptions` to rewrite SDK field names back to API names in user-supplied
    *   `expand` / `select` (symmetric counterpart to `transform`)
+   * @param callerLabel - Optional `ServiceName.methodName` label surfaced in `ValidationError`
+   *   messages when the folder context is missing. Defaults to `${resourceType}.getByName`;
+   *   ref-based mutations pass their own method label so the error blames the actual caller.
    * @throws ValidationError when inputs are malformed; NotFoundError when no match
    */
   protected async getByNameLookup<TRaw extends object, T>(
@@ -93,7 +103,8 @@ export class FolderScopedService extends BaseService {
     options: FolderScopedOptions,
     transform: (raw: TRaw) => T,
     responseFieldMap?: FieldMapping,
-  ): Promise<T> {
+    callerLabel?: string,
+  ): Promise<{ result: T; effectiveFolder: EffectiveFolder }> {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
@@ -107,7 +118,7 @@ export class FolderScopedService extends BaseService {
       folderId,
       folderKey,
       folderPath: resolvedFolderPath,
-      resourceType: `${resourceType}.getByName`,
+      resourceType: callerLabel ?? `${resourceType}.getByName`,
       fallbackFolderKey: this.config.folderKey,
     });
 
@@ -134,7 +145,78 @@ export class FolderScopedService extends BaseService {
       });
     }
 
-    return transform(items[0]);
+    return {
+      result: transform(items[0]),
+      effectiveFolder: { folderId, folderKey, folderPath: resolvedFolderPath },
+    };
+  }
+
+  /**
+   * Look up a single resource by GUID key on a folder-scoped OData collection. Parallel to
+   * {@link getByNameLookup} — same folder-scoping / transform / effectiveFolder contract.
+   *
+   * Overrides don't apply to keys (they're stable IDs, not user-facing names), so `effectiveFolder`
+   * just echoes the caller's folder options back for symmetry with the name variant.
+   *
+   * @param resourceType - Resource label used in error messages (e.g. 'Asset', 'Bucket')
+   * @param endpoint - Folder-scoped OData collection endpoint
+   * @param key - GUID key to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) + OData query options (`expand`, `select`)
+   * @param transform - Maps a raw OData item to the typed response (e.g. PascalCase → camelCase via field map)
+   * @param responseFieldMap - Optional response field map (API → SDK); used by `transformOptions` to
+   *   rewrite SDK field names back to API names in `expand` / `select`
+   * @param callerLabel - Optional `ServiceName.methodName` label surfaced in `ValidationError`
+   *   messages. Defaults to `${resourceType}.getByKey`.
+   * @throws ValidationError when `key` is missing or not a GUID; NotFoundError when no match
+   */
+  protected async getByKeyLookup<TRaw extends object, T>(
+    resourceType: string,
+    endpoint: string,
+    key: string,
+    options: FolderScopedOptions,
+    transform: (raw: TRaw) => T,
+    responseFieldMap?: FieldMapping,
+    callerLabel?: string,
+  ): Promise<{ result: T; effectiveFolder: EffectiveFolder }> {
+    const label = callerLabel ?? `${resourceType}.getByKey`;
+    const trimmedKey = key?.trim();
+    if (!trimmedKey || !GUID_REGEX.test(trimmedKey)) {
+      throw new ValidationError({ message: `${label}: key must be a GUID.` });
+    }
+
+    const { folderId, folderKey, folderPath, ...queryOptions } = options;
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: label,
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    const apiFieldOptions = responseFieldMap
+      ? transformOptions(queryOptions, responseFieldMap)
+      : queryOptions;
+
+    const apiOptions = {
+      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
+      '$filter': `Key eq ${trimmedKey}`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<TRaw>>(endpoint, {
+      headers,
+      params: apiOptions,
+    });
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      throw new NotFoundError({ message: `${resourceType} with key '${trimmedKey}' not found.` });
+    }
+
+    return {
+      result: transform(items[0]),
+      effectiveFolder: { folderId, folderKey, folderPath },
+    };
   }
 }
 

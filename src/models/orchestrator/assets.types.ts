@@ -1,4 +1,4 @@
-import { BaseOptions, FolderScopedOptions, RequestOptions } from '../common/types';
+import { BaseOptions, FolderScopedOptions, FolderScopingOnly, RequestOptions, ResourceRef } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -71,7 +71,13 @@ export interface AssetGetByIdOptions extends BaseOptions {}
 export interface AssetGetByNameOptions extends FolderScopedOptions {}
 
 /**
- * New value accepted by {@link AssetServiceModel.updateValueById}.
+ * Options for getting a single asset by key (GUID)
+ */
+export interface AssetGetByKeyOptions extends FolderScopedOptions {}
+
+/**
+ * New value for {@link AssetServiceModel.updateValue} (and the deprecated
+ * {@link AssetServiceModel.updateValueById}).
  *
  * The runtime type must match the asset's `valueType`:
  * - `Text` → `string`
@@ -82,5 +88,22 @@ export type AssetNewValue = string | number | boolean;
 
 /**
  * Options for updating an asset value by ID
+ * @deprecated Use {@link AssetUpdateValueOptions} with the ref-based `updateValue` method instead.
  */
 export interface AssetUpdateValueByIdOptions extends FolderScopedOptions {}
+
+/**
+ * Options for {@link AssetServiceModel.updateValue}. Folder scoping applies to both
+ * the ref's name/key lookup and the update — the same folder options drive both calls.
+ *
+ * Only folder-scoping fields are accepted; `expand` / `select` are intentionally absent because
+ * the internal lookup needs the full asset shape (name, valueType, valueScope, description) to
+ * round-trip the update body without a redundant follow-up GET.
+ */
+export interface AssetUpdateValueOptions extends FolderScopingOnly {}
+
+/**
+ * Selects an asset by exactly one identifier — `{ id }`, `{ name }`, or `{ key }` (GUID).
+ * See {@link ResourceRef}.
+ */
+export type AssetRef = ResourceRef<number>;
