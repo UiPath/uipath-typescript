@@ -39,14 +39,14 @@ await sdk.initialize();
 
 const queues = new Queues(sdk);
 
-// Queues returned by getAllWithMethods / getByIdWithMethods / getByName /
-// getByKey carry their own folder and come with the operational methods
-// bound — no folder threading needed:
-const all = await queues.getAllWithMethods();
+// Queues returned by getAll / getById / getByName / getByKey carry their
+// own folder and come with the operational methods bound — no folder
+// threading needed:
+const all = await queues.getAll();
 const queue = all.items[0];
 
 // Folder scoping — every method accepts folderId, folderKey, or folderPath:
-const scoped = await queues.getAllWithMethods({ folderId: 756377 });
+const scoped = await queues.getAll({ folderId: 756377 });
 const byName = await queues.getByName('Invoices', { folderPath: 'Shared/Finance' });
 const byKey = await queues.getByKey('<queue-key-guid>', { folderKey: '<folder-key>' });
 
@@ -66,8 +66,8 @@ if (transaction) {
 
 | Service | Method | Where it's used |
 | ------- | ------ | --------------- |
-| `Queues` | `getAllWithMethods` | Sidebar queue list — across folders by default, folder-scoped via the folder dropdown (`useQueues`) |
-| `Queues` | `getByIdWithMethods` | "Refresh" on the queue detail header (`QueueDetail`) |
+| `Queues` | `getAll` | Sidebar queue list — across folders by default, folder-scoped via the folder dropdown (`useQueues`) |
+| `Queues` | `getById` | "Refresh" on the queue detail header (`QueueDetail`) |
 | `Queues` | `getByName` | Sidebar search — press Enter on a non-GUID term (`QueuesList`) |
 | `Queues` | `getByKey` | Sidebar search — press Enter on a GUID (`QueuesList`) |
 | `Queues` | `getAllItems` (bound `queue.getAllItems`) | Items table with status filter + pagination (`useQueueItems`) |
@@ -75,8 +75,10 @@ if (transaction) {
 | `Queues` | `startTransaction` (bound `queue.startTransaction`) | "Start transaction" button (`QueueDetail`) |
 | `Queues` | `completeTransaction` (bound `queue.completeTransaction`) | "Complete transaction" dialog on InProgress items (`CompleteTransactionDialog`) |
 
-> The deprecated `getAll`/`getById` are intentionally not used — they return
-> plain queue data without the bound methods this app relies on.
+> The deprecated positional form `getById(id, folderId)` is intentionally not
+> used — it returns plain queue data without the bound methods this app
+> relies on. The options-object form used here (`getById(id, { folderId })`)
+> returns the queue with the methods attached.
 
 > **`startTransaction` requires a robot session.** Orchestrator allocates the
 > next item to the robot that sent the request, so user and application
@@ -165,7 +167,7 @@ src/
 ├── context/
 │   └── AuthContext.tsx               # UiPath SDK init + OAuth lifecycle
 ├── hooks/
-│   ├── useQueues.ts                  # Queues.getAllWithMethods()
+│   ├── useQueues.ts                  # Queues.getAll()
 │   └── useQueueItems.ts              # queue.getAllItems() with filter + cursors
 ├── lib/
 │   └── format.ts                     # Date + JSON formatting helpers

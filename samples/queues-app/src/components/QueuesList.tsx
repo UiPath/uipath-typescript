@@ -22,8 +22,8 @@ const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 /**
  * Sidebar listing the queues visible to the signed-in user.
  *
- * - `Queues.getAllWithMethods()` — across all folders by default; picking a
- *   folder in the dropdown re-fetches with `{ folderId }` (folder scoping).
+ * - `Queues.getAll()` — across all folders by default; picking a folder in
+ *   the dropdown re-fetches with `{ folderId }` (folder scoping).
  * - Typing filters the loaded list client-side (by name, key, or folder);
  *   pressing Enter looks the term up on the server instead — `getByKey` when
  *   it's a GUID, otherwise `getByName`. Server lookups are folder-scoped, so

@@ -15,8 +15,8 @@ function AppContent() {
   // The whole selected queue object is kept (not just its id) because the
   // SDK attaches the operational methods — getAllItems / insertItem /
   // startTransaction / completeTransaction — to the queue returned by
-  // getAllWithMethods / getByIdWithMethods / getByName / getByKey, with the
-  // queue's own folder filled in automatically.
+  // getAll / getById / getByName / getByKey, with the queue's own folder
+  // filled in automatically.
   const [selectedQueue, setSelectedQueue] =
     useState<QueueGetWithMethodsResponse | null>(null)
 

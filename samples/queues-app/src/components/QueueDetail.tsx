@@ -45,7 +45,7 @@ interface Props {
 export function QueueDetail({ queue: initialQueue }: Props) {
   const { sdk } = useAuth()
   // Local copy so "Refresh" can swap in the latest definition from
-  // `Queues.getByIdWithMethods` without round-tripping through the sidebar list.
+  // `Queues.getById` without round-tripping through the sidebar list.
   const [queue, setQueue] = useState(initialQueue)
   const [refreshingQueue, setRefreshingQueue] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All')
@@ -60,9 +60,9 @@ export function QueueDetail({ queue: initialQueue }: Props) {
   const refreshQueue = async () => {
     setRefreshingQueue(true)
     try {
-      // The queue object carries its own folder; getByIdWithMethods returns
-      // the definition with the operational methods re-attached.
-      const fresh = await new Queues(sdk).getByIdWithMethods(queue.id, { folderId: queue.folderId })
+      // The queue object carries its own folder; the options-object form of
+      // getById returns the definition with the operational methods re-attached.
+      const fresh = await new Queues(sdk).getById(queue.id, { folderId: queue.folderId })
       setQueue(fresh)
       await refresh()
     } catch (err) {

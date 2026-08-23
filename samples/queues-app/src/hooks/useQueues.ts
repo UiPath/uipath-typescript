@@ -16,10 +16,9 @@ export interface UseQueuesResult {
  * Lists the queues the user can see — across all folders by default, or
  * scoped to one folder when `folderId` is given.
  *
- * SDK call: `Queues.getAllWithMethods()` — the successor of the deprecated
- * `getAll()`. It supports folder scoping (`folderId` / `folderKey` /
- * `folderPath`) and each returned queue comes with the operational methods
- * bound (`getAllItems`, `insertItem`, `startTransaction`,
+ * SDK call: `Queues.getAll()` — supports folder scoping (`folderId` /
+ * `folderKey` / `folderPath`) and each returned queue comes with the
+ * operational methods bound (`getAllItems`, `insertItem`, `startTransaction`,
  * `completeTransaction`), so the rest of the app never has to thread folder
  * scoping around.
  *
@@ -45,7 +44,7 @@ export function useQueues(folderId?: number): UseQueuesResult {
       // every queue in one `items` array. Passing `folderId` switches the
       // request to the folder-scoped endpoint (also accepts `folderKey` /
       // `folderPath`).
-      const response = await queueService.getAllWithMethods(
+      const response = await queueService.getAll(
         folderId !== undefined ? { folderId } : undefined
       )
       setQueues(response.items)
