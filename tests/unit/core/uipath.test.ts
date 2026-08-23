@@ -17,7 +17,6 @@ const mockTokenManager = {
 };
 
 const mockLogout = vi.fn();
-const mockSetMultiLogin = vi.fn();
 
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(function () { return ({
@@ -26,7 +25,6 @@ vi.mock('../../../src/core/auth/service', () => {
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
     authenticate: vi.fn().mockResolvedValue(true),
-    setMultiLogin: mockSetMultiLogin,
     logout: mockLogout
   }); });
 
@@ -102,30 +100,6 @@ describe('UiPath Core', () => {
 
       expect(sdk).toBeInstanceOf(UiPath);
       expect(sdk.isInitialized()).toBe(false); // OAuth requires initialize()
-    });
-
-    it('should enable multi-login on OAuth config', () => {
-      mockSetMultiLogin.mockClear();
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        clientId: TEST_CONSTANTS.CLIENT_ID,
-        redirectUri: 'http://localhost:3000/callback',
-        scope: 'offline_access'
-      });
-
-      sdk.setMultiLogin();
-
-      expect(mockSetMultiLogin).toHaveBeenCalledOnce();
-    });
-
-    it('should allow multi-login before config is loaded', () => {
-      mockSetMultiLogin.mockClear();
-      const sdk = new UiPath();
-
-      expect(() => sdk.setMultiLogin()).not.toThrow();
-      expect(mockSetMultiLogin).not.toHaveBeenCalled();
     });
 
     it('should validate required config fields', async () => {

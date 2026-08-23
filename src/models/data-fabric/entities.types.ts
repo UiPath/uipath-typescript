@@ -237,6 +237,50 @@ export interface EntityAggregate {
   alias?: string;
 }
 
+/** Comparison operators supported in a {@link EntityHavingFilter} condition. */
+export enum EntityHavingOperator {
+  Equals = '=',
+  NotEquals = '!=',
+  GreaterThan = '>',
+  GreaterThanOrEqual = '>=',
+  LessThan = '<',
+  LessThanOrEqual = '<=',
+}
+
+/**
+ * One `HAVING` condition over a declared aggregate's result.
+ *
+ * Conditions reference aggregates by alias (aggregates-only): `aggregateAlias`
+ * must match the `alias` of an entry in
+ * {@link EntityQueryRecordsOptions.aggregates}. Row-level conditions belong in
+ * `filterGroup`, which filters before grouping.
+ */
+export interface EntityHavingCondition {
+  /** Alias of the declared aggregate this condition applies to. */
+  aggregateAlias: string;
+  /** Comparison operator. */
+  operator: EntityHavingOperator;
+  /**
+   * Comparison value, as a string. Must parse as an integer for `COUNT` and as
+   * a number for `SUM`/`AVG`; `MIN`/`MAX` values follow the aggregated field's type.
+   */
+  value: string;
+}
+
+/**
+ * Post-aggregation filter (SQL `HAVING`) applied to grouped aggregate results.
+ *
+ * Requires `aggregates` and `groupBy` on the query. Supported for native entities
+ * only; gated by the tenant's `enable-having-on-query` feature
+ * flag — the server responds 400 when either doesn't hold. Maximum 5 conditions.
+ */
+export interface EntityHavingFilter {
+  /** Logical operator between conditions (default: {@link LogicalOperator.And}). */
+  logicalOperator?: LogicalOperator;
+  /** Conditions over declared aggregate aliases. */
+  aggregateFilters: EntityHavingCondition[];
+}
+
 /**
  * A single cross-entity JOIN clause for a structured query.
  *
@@ -301,6 +345,12 @@ export type EntityQueryRecordsOptions = {
   /** Field names to group aggregate results by. */
   groupBy?: string[];
   /**
+   * Post-aggregation filter on grouped results (SQL `HAVING`). Conditions
+   * reference declared aggregate aliases; requires `aggregates` and `groupBy`.
+   * See {@link EntityHavingFilter} for constraints.
+   */
+  havingFilter?: EntityHavingFilter;
+  /**
    * Cross-entity joins. Each entry joins one related entity into the query;
    * supply several for a multi-join query. Requires `selectedFields` or
    * `aggregates` to be set. See {@link EntityJoin} for constraints and the
@@ -356,8 +406,9 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   /**
    * Field name — must start with a letter and contain only
    * letters, numbers, and underscores (e.g., `"productName"`).
+   * Matches the `name` field returned by `getById`.
    */
-  fieldName: string;
+  name: string;
   /** Field data type — one of the {@link EntityFieldDataType} values (default: STRING) */
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
@@ -401,7 +452,12 @@ export interface EntityCreateOptions extends EntityFolderScopedOptions {
   description?: string;
   /** Whether role-based access control is enabled for this entity (default: false) */
   isRbacEnabled?: boolean;
-  /** Whether Analytics integration is enabled for this entity (default: false) */
+  /**
+   * Whether Analytics integration is enabled for this entity (default: false).
+   * Surfaced by `getById` as `isAnalyticsEnabled`.
+   *
+   * @experimental Analytics integration is in preview — the contract may change.
+   */
   isAnalyticsEnabled?: boolean;
   /** External field source definitions (default: empty) */
   externalFields?: ExternalField[];
@@ -420,7 +476,7 @@ export interface EntityFieldUpdateOptions extends EntityFieldBase {
  */
 export interface EntityRemoveFieldOptions {
   /** Name of the field to remove */
-  fieldName: string;
+  name: string;
 }
 
 /**
@@ -739,7 +795,12 @@ export interface RawEntityGetResponse {
   usedStorageSizeInMB?: number;
   attachmentSizeInByte?: number;
   isRbacEnabled: boolean;
-  isInsightsEnabled?: boolean;
+  /**
+   * Whether Analytics integration is enabled for this entity.
+   *
+   * @experimental Analytics integration is in preview — the contract may change.
+   */
+  isAnalyticsEnabled?: boolean;
   id: string;
   createdBy: string;
   createdTime: string;

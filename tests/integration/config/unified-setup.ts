@@ -5,7 +5,7 @@ import {
   DataFabricRoleService,
   Entities,
 } from '../../../src/services/data-fabric';
-import { Tasks } from '../../../src/services/action-center';
+import { Tasks, TaskCatalogs } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
 import {
@@ -22,6 +22,9 @@ import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
+import { ConversationalAgentService } from '../../../src/services/conversational-agent';
+import { Functions } from '../../../src/services/orchestrator/functions';
+import { Platform } from '../../../src/services/platform';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -47,6 +50,7 @@ export interface TestServices {
   dataFabricRoles: DataFabricRoleService;
   dataFabricDirectory: DataFabricDirectoryService;
   tasks: Tasks;
+  taskCatalogs?: TaskCatalogs;
   assets: Assets;
   buckets: Buckets;
   queues: Queues;
@@ -66,6 +70,9 @@ export interface TestServices {
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
+  conversationalAgent?: ConversationalAgentService;
+  functions?: Functions;
+  platform?: Platform;
 }
 
 /**
@@ -138,6 +145,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     dataFabricRoles: new DataFabricRoleService(sdk),
     dataFabricDirectory: new DataFabricDirectoryService(sdk),
     tasks: new Tasks(sdk),
+    taskCatalogs: new TaskCatalogs(sdk),
     assets: new Assets(sdk),
     buckets: new Buckets(sdk),
     queues: new Queues(sdk),
@@ -157,6 +165,9 @@ function createV1Services(config: IntegrationConfig): TestServices {
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
+    conversationalAgent: new ConversationalAgentService(sdk),
+    functions: new Functions(sdk),
+    platform: new Platform(sdk),
   };
 }
 

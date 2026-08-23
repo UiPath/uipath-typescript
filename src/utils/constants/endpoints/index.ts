@@ -18,6 +18,9 @@ export * from './data-fabric';
 // Identity endpoints
 export * from './identity';
 
+// Platform endpoints
+export * from './platform';
+
 // Conversational Agent endpoints
 export * from './conversational-agent';
 

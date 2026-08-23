@@ -12,26 +12,36 @@ on:
           - ts-sdk
           - coded-action-app-sdk
           - telemetry
+      github_packages_only:
+        description: 'Publish only to GitHub Packages (skip npm, docs deploy, and CF worker)'
+        required: false
+        default: false
+        type: boolean
 
 permissions: {}
+
+env:
+  # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
+  # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
+  NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
   publish-sdk:
     if: github.event.inputs.package == 'ts-sdk'
-    runs-on: ubuntu-latest
-    environment: production
+    runs-on: uipath-ubuntu-latest
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -48,16 +58,26 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- SDK_VERSION (from root package): $SDK_VERSION"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public
@@ -66,11 +86,14 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
           echo "## SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -80,7 +103,11 @@ jobs:
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
           echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
@@ -88,6 +115,7 @@ jobs:
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
 
   deploy-docs:
+    if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
     uses: ./.github/workflows/docs.yml
     permissions:
@@ -97,8 +125,9 @@ jobs:
       deployments: write
 
   trigger-cf-worker:
+    if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     permissions: {}
     steps:
       - name: Trigger API CORS Worker deploy (staging + production)
@@ -116,8 +145,8 @@ jobs:
           
   publish-coded-action-app-sdk:
     if: github.event.inputs.package == 'coded-action-app-sdk'
-    runs-on: ubuntu-latest
-    environment: production
+    runs-on: uipath-ubuntu-latest
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
@@ -127,12 +156,12 @@ jobs:
         working-directory: packages/coded-action-app
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -149,16 +178,26 @@ jobs:
           echo "Updated telemetry constants with:"
           echo "- CODED_ACTION_APP_SDK_VERSION: $SDK_VERSION"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public --tag latest
@@ -167,11 +206,14 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag latest
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
           echo "## Coded Action Apps SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -181,7 +223,11 @@ jobs:
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
           echo "- Built coded-action-app package" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
@@ -190,8 +236,8 @@ jobs:
 
   publish-telemetry:
     if: github.event.inputs.package == 'telemetry'
-    runs-on: ubuntu-latest
-    environment: production
+    runs-on: uipath-ubuntu-latest
+    environment: ${{ inputs.github_packages_only && 'github-packages-dev' || 'production' }}
     permissions:
       contents: read
       packages: write
@@ -201,12 +247,12 @@ jobs:
         working-directory: packages/telemetry
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
 
@@ -222,6 +268,15 @@ jobs:
 
           echo "Replaced connection string"
 
+      - name: Validate prerelease version
+        if: ${{ inputs.github_packages_only }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" != *-* ]]; then
+            echo "::error::github_packages_only=true requires a prerelease version (e.g. 1.2.3-dev.0), but package.json version is $VERSION"
+            exit 1
+          fi
+
       - name: Build
         run: npm run build
 
@@ -229,12 +284,13 @@ jobs:
         run: npm test
 
       - name: Setup registry for npm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
+        if: ${{ !inputs.github_packages_only }}
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
           npm publish --provenance --access public --tag latest
@@ -243,11 +299,14 @@ jobs:
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish --tag latest
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TAG: ${{ inputs.github_packages_only && 'dev' || 'latest' }}
 
       - name: Generate Summary
+        env:
+          GITHUB_PACKAGES_ONLY: ${{ inputs.github_packages_only }}
         run: |
           TELEMETRY_VERSION=$(node -p "require('./package.json').version")
           echo "## Telemetry Published Successfully" >> $GITHUB_STEP_SUMMARY
@@ -258,7 +317,11 @@ jobs:
           echo "- Replaced connection string" >> $GITHUB_STEP_SUMMARY
           echo "- Built telemetry package" >> $GITHUB_STEP_SUMMARY
           echo "- Ran unit tests" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          if [ "$GITHUB_PACKAGES_ONLY" = "true" ]; then
+            echo "- Skipped npm registry (GitHub Packages only)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY

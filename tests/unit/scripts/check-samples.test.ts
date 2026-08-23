@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 // The sample-app gate rules. Imported directly (the script only runs its CLI
 // when executed as main), so we exercise the pure rule engine here.
-import { checkApp } from '../../../scripts/check-samples.mjs';
+import { checkApp, topLevelApps } from '../../../scripts/check-samples.mjs';
 
 type Files = Record<string, string>;
 const fake = (files: Files, viteConfig?: string) => ({
@@ -77,5 +77,27 @@ describe('check-samples rules', () => {
 
   it('flags a coded web app missing the coded-apps harness', () => {
     expect(rules({ ...clean, 'package.json': '{}' }, 'vite.config.ts')).toContain('coded-apps-dev');
+  });
+});
+
+describe('check-samples app discovery', () => {
+  it('drops a package.json nested inside another app', () => {
+    expect(topLevelApps(['samples/functions-app', 'samples/functions-app/coded-functions'])).toEqual([
+      'samples/functions-app',
+    ]);
+  });
+
+  it('keeps sibling apps under a shared grouping directory', () => {
+    const dirs = [
+      'samples/coded-action-apps/action-app-with-document',
+      'samples/coded-action-apps/action-app-with-image',
+      'samples/process-app-v1',
+    ];
+    expect(topLevelApps(dirs)).toEqual(dirs);
+  });
+
+  it('does not treat a name prefix as nesting', () => {
+    const dirs = ['samples/process-app-v0', 'samples/process-app-v0-extras'];
+    expect(topLevelApps(dirs)).toEqual(dirs);
   });
 });

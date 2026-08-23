@@ -4,18 +4,6 @@
  */
 
 /**
- * Interface for BPMN variable metadata extracted from BPMN XML
- * @internal
- */
-export interface BpmnVariableMetadata {
-  id: string;
-  name: string;
-  type: string;
-  elementId: string;
-  source: string;
-}
-
-/**
  * Element run from the element-executions API response
  * @internal
  */

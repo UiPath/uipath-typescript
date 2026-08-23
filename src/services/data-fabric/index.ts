@@ -37,3 +37,7 @@ export { LogicalOperator, QueryFilterOperator } from '../../models/data-fabric/e
 export * from '../../models/data-fabric/entities.models';
 export * from '../../models/data-fabric/choicesets.types';
 export * from '../../models/data-fabric/choicesets.models';
+export * from '../../models/data-fabric/roles.types';
+export * from '../../models/data-fabric/roles.models';
+export * from '../../models/data-fabric/directory.types';
+export * from '../../models/data-fabric/directory.models';

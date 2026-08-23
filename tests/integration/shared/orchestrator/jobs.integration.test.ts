@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { generateRandomString } from '../../utils/helpers';
 import type { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 
 const modes: InitMode[] = ['v1'];
@@ -338,6 +339,186 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       expect(typeof job.id).toBe('number');
       expect(typeof job.key).toBe('string');
       expect(typeof job.state).toBe('string');
+    });
+  });
+
+  /**
+   * Orchestrator exposes no endpoint for unlinking a job attachment, so each
+   * test links a throwaway attachment created for the purpose and deletes that
+   * attachment afterwards — removing the link with it. Creating and deleting
+   * the attachment itself is not part of the SDK surface, so those two calls
+   * go straight to the API.
+   */
+  describe('job attachments', () => {
+    /** How many jobs to check when looking for one without attachments. */
+    const MAX_EMPTY_JOB_SCAN = 10;
+
+    let jobKey!: string;
+    let attachmentFolderId!: number;
+    let seededAttachmentId!: string;
+
+    /** Attachment IDs to delete once the suite finishes. */
+    const createdAttachmentIds: string[] = [];
+
+    function orchestratorBaseUrl(): string {
+      const config = getTestConfig();
+      return `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_`;
+    }
+
+    function apiHeaders(): Record<string, string> {
+      const config = getTestConfig();
+      return {
+        Authorization: `Bearer ${config.secret}`,
+        'Content-Type': 'application/json',
+        'X-UIPATH-OrganizationUnitId': String(attachmentFolderId),
+      };
+    }
+
+    /** Creates an empty attachment to link, and registers it for cleanup. */
+    async function createThrowawayAttachment(): Promise<string> {
+      const response = await fetch(`${orchestratorBaseUrl()}/odata/Attachments`, {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({ Name: `IntegrationTest_JobAttachment_${generateRandomString()}.txt` }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create test attachment: ${response.status} ${await response.text()}`);
+      }
+
+      const attachment = await response.json() as { Id: string };
+      createdAttachmentIds.push(attachment.Id);
+      return attachment.Id;
+    }
+
+    beforeAll(async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for job attachment tests');
+      }
+      attachmentFolderId = folderId;
+
+      // Any job in the folder will do — the link is what the tests exercise.
+      const result = await jobs.getAll({ folderId, pageSize: 1 });
+      if (!result.items.length) {
+        throw new Error(`No jobs found in folder ${folderId} to attach test attachments to`);
+      }
+      jobKey = result.items[0].key;
+
+      // Seed one link so getAttachments always has something to return.
+      seededAttachmentId = await createThrowawayAttachment();
+      await jobs.linkAttachment(seededAttachmentId, jobKey, folderId, { category: 'IntegrationTest' });
+    });
+
+    afterAll(async () => {
+      // Deleting the attachment removes the job link along with it.
+      for (const attachmentId of createdAttachmentIds) {
+        await fetch(`${orchestratorBaseUrl()}/odata/Attachments(${attachmentId})`, {
+          method: 'DELETE',
+          headers: apiHeaders(),
+        });
+      }
+    });
+
+    it('should retrieve the attachments linked to a job', async () => {
+      const { jobs } = getJobsService();
+
+      const result = await jobs.getAttachments(jobKey, attachmentFolderId);
+
+      expect(Array.isArray(result)).toBe(true);
+
+      const seeded = result.find(link => link.attachmentId === seededAttachmentId);
+      expect(seeded).toBeDefined();
+      expect(seeded!.jobKey).toBe(jobKey);
+      expect(seeded!.category).toBe('IntegrationTest');
+      expect(typeof seeded!.id).toBe('string');
+      expect(typeof seeded!.attachmentName).toBe('string');
+    });
+
+    it('should validate transform: renamed fields present, raw API names absent', async () => {
+      const { jobs } = getJobsService();
+
+      const result = await jobs.getAttachments(jobKey, attachmentFolderId);
+      const seeded = result.find(link => link.attachmentId === seededAttachmentId);
+
+      expect(seeded).toBeDefined();
+
+      // creationTime -> createdTime
+      expect(typeof seeded!.createdTime).toBe('string');
+      expect((seeded as any).creationTime).toBeUndefined();
+
+      // lastModificationTime -> lastModifiedTime
+      expect((seeded as any).lastModificationTime).toBeUndefined();
+    });
+
+    it('should return an empty array for a job with no attachments', async () => {
+      const { jobs } = getJobsService();
+
+      // Bounded scan — most jobs carry no attachments, so a short sweep suffices
+      // and keeps the suite from firing one request per job in the folder.
+      const candidates = await jobs.getAll({ folderId: attachmentFolderId, pageSize: MAX_EMPTY_JOB_SCAN });
+
+      let jobWithoutAttachments: string | undefined;
+      for (const job of candidates.items) {
+        if (job.key === jobKey) continue;
+        const links = await jobs.getAttachments(job.key, attachmentFolderId);
+        if (!links.length) {
+          jobWithoutAttachments = job.key;
+          break;
+        }
+      }
+
+      if (!jobWithoutAttachments) {
+        throw new Error(
+          `All ${MAX_EMPTY_JOB_SCAN} scanned jobs in folder ${attachmentFolderId} have attachments; cannot verify the empty case`
+        );
+      }
+
+      const result = await jobs.getAttachments(jobWithoutAttachments, attachmentFolderId);
+      expect(result).toEqual([]);
+    });
+
+    it('should link an attachment to a job with a category', async () => {
+      const { jobs } = getJobsService();
+      const attachmentId = await createThrowawayAttachment();
+
+      const result = await jobs.linkAttachment(attachmentId, jobKey, attachmentFolderId, {
+        category: 'IntegrationTestCategory',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.attachmentId).toBe(attachmentId);
+      expect(result.jobKey).toBe(jobKey);
+      expect(result.category).toBe('IntegrationTestCategory');
+      expect(typeof result.id).toBe('string');
+      expect(typeof result.createdTime).toBe('string');
+      expect((result as any).creationTime).toBeUndefined();
+    });
+
+    it('should link an attachment without a category', async () => {
+      const { jobs } = getJobsService();
+      const attachmentId = await createThrowawayAttachment();
+
+      const result = await jobs.linkAttachment(attachmentId, jobKey, attachmentFolderId);
+
+      expect(result.attachmentId).toBe(attachmentId);
+      expect(result.category).toBeNull();
+    });
+
+    it('should make the new link visible to getAttachments', async () => {
+      const { jobs } = getJobsService();
+      const attachmentId = await createThrowawayAttachment();
+
+      await jobs.linkAttachment(attachmentId, jobKey, attachmentFolderId, { category: 'RoundTrip' });
+
+      const links = await jobs.getAttachments(jobKey, attachmentFolderId);
+      const created = links.find(link => link.attachmentId === attachmentId);
+
+      expect(created).toBeDefined();
+      expect(created!.category).toBe('RoundTrip');
+      // The name is absent on the link response but populated when read back.
+      expect(typeof created!.attachmentName).toBe('string');
     });
   });
 });

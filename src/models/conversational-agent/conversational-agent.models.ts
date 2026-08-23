@@ -3,6 +3,7 @@ import type {
   AgentGetByIdResponse
 } from './agents';
 import type { CitationSourceMedia, ConversationServiceModel } from './conversations';
+import type { AvailableConnectionsResponse, ConnectionAuthResponse, UpdateConnectionSelectionsRequest } from './connections';
 import type { FeatureFlags } from './feature-flags.types';
 import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -98,6 +99,96 @@ import type { ConnectionStatus } from '@/core/websocket';
  * // 7. Retrieve conversation history (offline)
  * const exchanges = await conversation.exchanges.getAll();
  * ```
+ *
+ * ## Client-side tools
+ *
+ * Agents can define tools that execute locally in the client rather than on the server.
+ * When starting an exchange, pass `clientSideTools` to declare which tools this client
+ * supports. The names must match tools defined in the agent's design-time configuration.
+ * Only the declared subset is routed to the client — omitting a tool means the server
+ * handles it (or skips it). This lets each client advertise only the tools it can run.
+ *
+ * When the agent invokes a client-side tool, the SDK fires `onExecutingToolCall` with
+ * the final input. The client executes the tool locally and returns the result via
+ * `sendToolCallEnd`.
+ *
+ * ```typescript
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const conversationalAgent = new ConversationalAgent(sdk);
+ * const agents = await conversationalAgent.getAll();
+ * const conversation = await agents[0].conversations.create({ label: 'Client Tools Demo' });
+ * const session = conversation.startSession();
+ *
+ * // 1. Listen for tool calls and handle client-side tools
+ * session.onExchangeStart((exchange) => {
+ *   exchange.onMessageStart((message) => {
+ *     message.onToolCallStart((toolCall) => {
+ *       const { isClientSideTool, toolName } = toolCall.startEvent;
+ *       if (!isClientSideTool) return;
+ *
+ *       // 2. Execute when the server signals the tool is ready
+ *       toolCall.onExecutingToolCall(async (event) => {
+ *         const result = await runClientTool(toolName, event.input);
+ *         toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
+ *       });
+ *     });
+ *   });
+ * });
+ *
+ * session.onSessionStarted(() => {
+ *   // 3. Declare the subset of client-side tools this client supports
+ *   //    The agent may define more tools, but only these will be routed here
+ *   const exchange = session.startExchange({
+ *     clientSideTools: [
+ *       { name: 'get_user_location' },
+ *       { name: 'get_clipboard_contents' },
+ *     ],
+ *   });
+ *
+ *   exchange.sendMessageWithContentPart({ data: 'What is the weather near me?' });
+ * });
+ * ```
+ *
+ * ## App-scoped authentication (anonymous, sign-in-free chat)
+ *
+ * Conversational Agents can be driven with an **app-scoped token** — one issued to an
+ * External App via the client-credentials grant, which carries no end-user identity.
+ * This lets an application offer chat without requiring each of its users to sign in to UiPath.
+ * For more information on creating External Apps, see the official UiPath documentation on
+ * [managing external OAuth applications](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications);
+ * for details on how to request client-credentials tokens, see the official UiPath documentation on
+ * [the OAuth bearer token types](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications)
+ * issued to an External App.
+ *
+ * To use it, pass an `externalUserId` — your application's own identifier for the end user —
+ * when constructing the service:
+ *
+ * ```typescript
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const conversationalAgent = new ConversationalAgent(sdk, {
+ *   externalUserId: 'app-user-42'
+ * });
+ * ```
+ *
+ * The SDK forwards this identifier on every HTTP request and real-time WebSocket session. Each distinct
+ * `externalUserId` — scoped to the client ID of the External App the token was issued for — gets its own
+ * conversation history and user settings, and the same value always maps back to the same user.
+ *
+ * ### Limitations
+ *
+ * - **App-scoped tokens only.** `externalUserId` takes effect only when the SDK is authenticated
+ *   with an app-scoped External App token. With a standard UiPath user token the server ignores it
+ *   and uses the token's own user identity — so omit it in that case.
+ * - **Required with an app-scoped token.** When the token is app-scoped, `externalUserId` is
+ *   mandatory; requests without it are rejected with a `401`. It is set once at construction and
+ *   applies to all calls made through that service instance (including `conversations`, `exchanges`,
+ *   `messages`, `user`, and WebSocket sessions).
+ * - **Value constraints.** May contain only letters, digits, dot (`.`), underscore (`_`), and
+ *   hyphen (`-`), and must be at most 255 characters. Other characters are rejected with a `400`.
+ * - **Identity scope.** The derived identity is scoped per application: the same `externalUserId`
+ *   under a different app is a different user.
  */
 export interface ConversationalAgentServiceModel {
   /**
@@ -195,6 +286,79 @@ export interface ConversationalAgentServiceModel {
 
   /** Service for reading and updating the current user's profile/context settings. See {@link UserSettingsServiceModel}. */
   readonly user: UserSettingsServiceModel;
+
+  /**
+   * Gets available connections for each configurable connector binding of an agent.
+   * Only returns bindings that are "configurable by users" (not admin-fixed).
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to an array of connector items with their available connections
+   * {@link AvailableConnectionsResponse}
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * for (const item of connections) {
+   *   console.log(`${item.connectorName}: ${item.connections.length} available`);
+   * }
+   * ```
+   */
+  getAvailableConnections(agentId: number, folderId: number): Promise<AvailableConnectionsResponse>;
+
+  /**
+   * Updates the current user's connection selections for an agent.
+   * Only configurable bindings (not admin-fixed) can be updated.
+   *
+   * @param agentId - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @param request - The connection selections to apply
+   * @returns Promise resolving to the updated available connections
+   * {@link AvailableConnectionsResponse}
+   *
+   * @example
+   * ```typescript
+   * const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
+   *   selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
+   * });
+   * ```
+   */
+  updateConnectionSelections(
+    agentId: number,
+    folderId: number,
+    request: UpdateConnectionSelectionsRequest
+  ): Promise<AvailableConnectionsResponse>;
+
+  /**
+   * Returns the best URL for adding a new connection for a given connector.
+   *
+   * Tries to generate a connector-specific auth URL (works when running inside
+   * the UiPath platform). If that fails, falls back to the Orchestrator
+   * connections page or the connector configuration page.
+   *
+   * @param item - The connector item from {@link getAvailableConnections}
+   * @returns The URL to open, or `null` if no URL is available
+   *
+   * @example
+   * ```typescript
+   * const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
+   * const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
+   * if (url) window.open(url, '_blank');
+   * ```
+   */
+  getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null>;
+
+  /**
+   * Generates a connector-specific auth URL for adding a new connection.
+   * Only works when running inside the UiPath platform (Studio Web / portal shell).
+   * For a method that handles fallbacks automatically, use {@link getAddConnectionUrl}.
+   *
+   * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
+   * @returns Promise resolving to the auth URL and its expiration
+   * {@link ConnectionAuthResponse}
+   * @internal
+   */
+  getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
 
   /**
    * Gets feature flags for the current tenant

@@ -11,6 +11,7 @@ import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidP
 import {
   EntityAggregateFunction,
   EntityFieldDataType,
+  EntityHavingOperator,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -833,6 +834,53 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(row.total).toBeGreaterThanOrEqual(0);
     });
 
+    // The tenant must have the `enable-having-on-query` feature flag; without it the
+    // server rejects havingFilter with a 400 naming the flag, which fails this test
+    // loudly rather than letting the coverage be silently absent.
+    it('should filter grouped results with havingFilter (HAVING)', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      // Group by Id: always present on every entity, no fixture coupling — one
+      // group per record, each with cnt = 1, which keeps both assertions meaningful.
+      const base = {
+        selectedFields: ['Id'],
+        groupBy: ['Id'],
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: 'Id', alias: 'cnt' },
+        ],
+      };
+
+      // Every group has at least one record, so `cnt >= 1` must return every group.
+      const all = await entities.queryRecordsById(entityId, {
+        ...base,
+        havingFilter: {
+          aggregateFilters: [
+            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThanOrEqual, value: '1' },
+          ],
+        },
+      });
+      expect(all.items.length).toBeGreaterThan(0);
+      all.items.forEach(item => {
+        expect((item as Record<string, unknown>).cnt).toBeGreaterThanOrEqual(1);
+      });
+
+      // An unsatisfiable threshold must return no groups. A backend that ignores
+      // havingFilter returns every group here — that is the failing signal.
+      const none = await entities.queryRecordsById(entityId, {
+        ...base,
+        havingFilter: {
+          aggregateFilters: [
+            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThan, value: '1000000000' },
+          ],
+        },
+      });
+      expect(none.items).toHaveLength(0);
+    });
+
     // Regression guard: DF reads `expansionLevel` only from the URL on POST record endpoints.
     // If the SDK sends it in the body, DF silently ignores it and every level collapses to L0.
     it('should expand reference fields at each expansionLevel (0-3)', async () => {
@@ -894,7 +942,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
         // 1. Target entity with a user-defined string field we can assert on at L2+.
         const targetId = await entities.create(`sdk_target_${stamp}`, [
-          { fieldName: 'label', type: EntityFieldDataType.STRING, isRequired: true },
+          { name: 'label', type: EntityFieldDataType.STRING, isRequired: true },
         ]);
         createdEntityIds.push(targetId);
 
@@ -906,9 +954,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
         // 2. Source entity with a RELATIONSHIP field bound to target.Id.
         const sourceId = await entities.create(`sdk_source_${stamp}`, [
-          { fieldName: 'name', type: EntityFieldDataType.STRING },
+          { name: 'name', type: EntityFieldDataType.STRING },
           {
-            fieldName: 'parent',
+            name: 'parent',
             type: EntityFieldDataType.RELATIONSHIP,
             referenceEntityId: targetId,
             referenceFieldId: targetPk.id,
@@ -1140,8 +1188,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
       const entityId = await entities.create(name, [
-        { fieldName: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
-        { fieldName: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
+        { name: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
+        { name: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
       ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
 
       expect(typeof entityId).toBe('string');
@@ -1157,7 +1205,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       //    field we'll use as the FK target.
       const targetName = `sdk_target_${stamp}`;
       const targetId = await entities.create(targetName, [
-        { fieldName: 'label', type: EntityFieldDataType.STRING },
+        { name: 'label', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(targetId);
 
@@ -1171,14 +1219,14 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // 3. Create the source entity with a RELATIONSHIP field bound to target.Id
       const sourceName = `sdk_source_${stamp}`;
       const sourceId = await entities.create(sourceName, [
-        { fieldName: 'name', type: EntityFieldDataType.STRING },
+        { name: 'name', type: EntityFieldDataType.STRING },
         {
-          fieldName: 'parent',
+          name: 'parent',
           type: EntityFieldDataType.RELATIONSHIP,
           referenceEntityId: targetId,
           referenceFieldId: pkField.id,
         },
-        { fieldName: 'attachfile', type: EntityFieldDataType.FILE },
+        { name: 'attachfile', type: EntityFieldDataType.FILE },
       ]);
       createdEntityIds.push(sourceId);
 
@@ -1222,12 +1270,12 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'base_field', type: EntityFieldDataType.STRING },
+        { name: 'base_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
       await entities.updateById(entityId, {
-        addFields: [{ fieldName: 'new_field', type: EntityFieldDataType.INTEGER }],
+        addFields: [{ name: 'new_field', type: EntityFieldDataType.INTEGER }],
       });
 
       const updated = await entities.getById(entityId);
@@ -1239,13 +1287,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'keep_field', type: EntityFieldDataType.STRING },
-        { fieldName: 'remove_me', type: EntityFieldDataType.INTEGER },
+        { name: 'keep_field', type: EntityFieldDataType.STRING },
+        { name: 'remove_me', type: EntityFieldDataType.INTEGER },
       ]);
       createdEntityIds.push(entityId);
 
       await entities.updateById(entityId, {
-        removeFields: [{ fieldName: 'remove_me' }],
+        removeFields: [{ name: 'remove_me' }],
       });
 
       const updated = await entities.getById(entityId);
@@ -1258,7 +1306,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
+        { name: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1284,8 +1332,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
-        { fieldName: 'to_remove', type: EntityFieldDataType.INTEGER },
+        { name: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
+        { name: 'to_remove', type: EntityFieldDataType.INTEGER },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1296,9 +1344,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
 
       await entities.updateById(entityId, {
-        addFields: [{ fieldName: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
+        addFields: [{ name: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
         updateFields: [{ id: fieldToUpdate.id, displayName: 'After Update' }],
-        removeFields: [{ fieldName: 'to_remove' }],
+        removeFields: [{ name: 'to_remove' }],
       });
 
       const after = await entities.getById(entityId);
@@ -1320,7 +1368,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+        { name: 'str_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1334,7 +1382,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 500 },
+        { name: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 500 },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1347,7 +1395,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT },
+        { name: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1360,7 +1408,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_mlmax_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'mlmax_field', type: EntityFieldDataType.MULTILINE_MAX },
+        { name: 'mlmax_field', type: EntityFieldDataType.MULTILINE_MAX },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1374,7 +1422,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+        { name: 'dec_field', type: EntityFieldDataType.DECIMAL },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1391,7 +1439,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
         {
-          fieldName: 'dec_field',
+          name: 'dec_field',
           type: EntityFieldDataType.DECIMAL,
           decimalPrecision: 4,
           maxValue: 99999,
@@ -1411,7 +1459,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'bool_field', type: EntityFieldDataType.BOOLEAN },
+        { name: 'bool_field', type: EntityFieldDataType.BOOLEAN },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1424,7 +1472,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'date_field', type: EntityFieldDataType.DATE },
+        { name: 'date_field', type: EntityFieldDataType.DATE },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1437,7 +1485,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'dtz_field', type: EntityFieldDataType.DATETIME_WITH_TZ },
+        { name: 'dtz_field', type: EntityFieldDataType.DATETIME_WITH_TZ },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1450,7 +1498,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_upd_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+        { name: 'str_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1474,7 +1522,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_upddec_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+        { name: 'dec_field', type: EntityFieldDataType.DECIMAL },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1502,7 +1550,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // SDK validation must throw before any API call is made.
       await expect(
         entities.create(name, [
-          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 5000 },
+          { name: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 5000 },
         ]),
       ).rejects.toThrow(/lengthLimit 5000 out of range \[1, 4000\]/);
 
@@ -1517,7 +1565,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       await expect(
         entities.create(name, [
-          { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 15000 },
+          { name: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 15000 },
         ]),
       ).rejects.toThrow(/lengthLimit 15000 out of range \[1, 10000\]/);
 
@@ -1531,7 +1579,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       await expect(
         entities.create(name, [
-          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 0 },
+          { name: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 0 },
         ]),
       ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
 
@@ -1544,7 +1592,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
 
       const entityId = await entities.create(name, [
-        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+        { name: 'str_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
@@ -1560,7 +1608,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       await expect(
         entities.create(name, [
-          { fieldName: 'int_field', type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
+          { name: 'int_field', type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
         ]),
       ).rejects.toThrow(/minValue 100 >= maxValue 50/);
 
@@ -1581,7 +1629,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       // Create an entity with a MULTILINE_MAX field, then insert a large value.
       const entityId = await entities.create(name, [
-        { fieldName: 'body', type: EntityFieldDataType.MULTILINE_MAX },
+        { name: 'body', type: EntityFieldDataType.MULTILINE_MAX },
       ]);
       createdEntityIds.push(entityId);
 

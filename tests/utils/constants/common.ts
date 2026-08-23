@@ -7,6 +7,7 @@ export const TEST_CONSTANTS = {
   USER_ID: 123,
   FOLDER_ID: 123,
   FOLDER_NAME: 'Test Folder',
+  FOLDER_KEY: 'f0ldabcd-1234-4321-9876-abcdef123456',
   // Common status values
   RUNNING: 'Running',
   CANCELLED: 'Cancelled',

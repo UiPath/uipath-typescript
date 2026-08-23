@@ -4,6 +4,8 @@ export * from './assets.types';
 export * from './assets.models';
 export * from './buckets.types';
 export * from './buckets.models';
+export * from './functions.types';
+export * from './functions.models';
 // export * from './folder';
 export * from './jobs.types';
 export * from './jobs.models';

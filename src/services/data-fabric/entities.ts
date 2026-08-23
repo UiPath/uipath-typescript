@@ -307,6 +307,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
         message: 'Join queries require selectedFields or aggregates — reference fields as "<EntityName>.<FieldName>" (e.g. "Customer.name")',
       });
     }
+    // The server's aggregates-only HAVING contract requires aggregates + groupBy;
+    // surface that requirement client-side with an actionable message.
+    if (options?.havingFilter && (!options.aggregates?.length || !options.groupBy?.length)) {
+      throw new ValidationError({
+        message: 'havingFilter requires aggregates and groupBy — conditions reference declared aggregate aliases; use filterGroup for row-level conditions',
+      });
+    }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
     // The multi-entity (joins) contract only exists on the name-based query route —
@@ -335,7 +342,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins']
+      excludeFromPrefix: ['filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy', 'joins', 'havingFilter']
     }, downstreamOptions);
   }
 
@@ -497,7 +504,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     // Filter out removed fields
     if (options.removeFields?.length) {
-      const removeSet = new Set(options.removeFields.map(r => r.fieldName));
+      const removeSet = new Set(options.removeFields.map(r => r.name));
       fields = fields.filter(f => !removeSet.has(f.name));
     }
 
@@ -553,7 +560,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
           fields: [...fields, ...newFields],
           folderId: raw.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
           isRbacEnabled: raw.isRbacEnabled ?? false,
-          isInsightsEnabled: raw.isInsightsEnabled ?? false,
+          // `raw` is the untransformed GET response, so read the wire key `isInsightsEnabled`
+          // directly (it is not on the public type, which exposes it as `isAnalyticsEnabled`).
+          isInsightsEnabled: (raw as { isInsightsEnabled?: boolean }).isInsightsEnabled ?? false,
           externalFields: raw.externalFields ?? [],
         },
       },
@@ -712,12 +721,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     refMeta?: ResolvedReferenceMeta,
   ): FieldSchemaPayload {
     const fieldType = field.type ?? EntityFieldDataType.STRING;
-    this.validateFieldConstraints(fieldType, field, field.fieldName);
+    this.validateFieldConstraints(fieldType, field, field.name);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
     const isFile = fieldType === EntityFieldDataType.FILE;
     if (isRelationship && (!field.referenceEntityId || !field.referenceFieldId)) {
       throw new ValidationError({
-        message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
+        message: `Field '${field.name}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
       });
     }
     const mapping = EntitySchemaFieldTypeMap[fieldType];
@@ -726,8 +735,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId === undefined ? undefined : { id: field.referenceEntityId });
     const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
     return {
-      name: field.fieldName,
-      displayName: field.displayName ?? field.fieldName,
+      name: field.name,
+      displayName: field.displayName ?? field.name,
       sqlType: {
         name: mapping.sqlTypeName,
         ...this.buildSqlTypeConstraints(fieldType, field),

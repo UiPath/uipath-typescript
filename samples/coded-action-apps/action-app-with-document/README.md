@@ -2,6 +2,10 @@
 
 A UiPath Coded Action App template for **Loan Application Review**. Reviewers can assess an applicant's details and view a bundled sample PDF document, then complete the task with an Approve or Reject decision.
 
+## Preview
+
+![Loan application review with a bundled PDF document: review details, view document, approve or reject](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites
@@ -104,11 +108,3 @@ When the app loads inside Action Center:
 3. **Theme** — The app initializes in light or dark mode based on the Action Center theme preference and supports toggling via the button in the top-right corner.
 
 4. **Read-only mode** — If the task is already completed or the current user does not have edit access, all input fields are disabled and the Approve / Reject buttons are greyed out.
-
-
-
-
-https://github.com/user-attachments/assets/afbfdbfe-d049-4309-bd21-3ae71a4c59e5
-
-
-

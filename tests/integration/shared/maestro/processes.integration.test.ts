@@ -35,14 +35,13 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         const result = await maestroProcesses.getAll();
 
         if (result.length === 0) {
-          console.log('No Maestro processes available to validate structure');
-          return;
+          throw new Error('No Maestro processes available — cannot validate process structure');
         }
 
         const process = result[0];
         expect(process).toBeDefined();
-        expect(process.key).toBeDefined();
-        expect(typeof process.key).toBe('string');
+        expect(process.processKey).toBeDefined();
+        expect(typeof process.processKey).toBe('string');
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -118,14 +117,10 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       const processKey = config.maestroTestProcessKey;
 
       if (!processKey) {
-        console.log(
-          'Skipping incidents test: MAESTRO_TEST_PROCESS_KEY not configured. ' +
-            'Set this environment variable to test incident retrieval.'
-        );
-        return;
+        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot test incident retrieval');
       }
 
-      const result = await maestroProcesses.getIncidents(processKey, config.folderId);
+      const result = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -140,19 +135,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         });
 
         if (processes.length === 0) {
-          console.log('No Maestro processes available to test incidents');
-          return;
+          throw new Error('No Maestro processes available — cannot test incident retrieval');
         }
 
-        const processKey = processes[0].key;
+        const { processKey, folderKey } = processes[0];
 
-        try {
-          const result = await maestroProcesses.getIncidents(processKey);
-          expect(result).toBeDefined();
-          expect(Array.isArray(result)).toBe(true);
-        } catch (error: any) {
-          console.log(`Could not retrieve incidents for process ${processKey}:`, error.message);
-        }
+        const result = await maestroProcesses.getIncidents(processKey, folderKey);
+        expect(result).toBeDefined();
+        expect(Array.isArray(result)).toBe(true);
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -166,6 +156,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopRunCount', () => {
     it('should retrieve top processes by run count', async () => {
       const { maestroProcesses } = getServices();
@@ -173,6 +164,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date', async () => {
       const { maestroProcesses } = getServices();
@@ -188,6 +180,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopFaultedCount', () => {
     it('should retrieve top processes by failure count', async () => {
       const { maestroProcesses } = getServices();
@@ -210,6 +203,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count', async () => {
       const { maestroProcesses } = getServices();
@@ -233,6 +227,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopExecutionDuration', () => {
     it('should retrieve top processes by duration', async () => {
       const { maestroProcesses } = getServices();
@@ -270,14 +265,13 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         });
 
         if (result.length === 0) {
-          console.log('No processes available to validate metadata');
-          return;
+          throw new Error('No Maestro processes available — cannot validate process metadata');
         }
 
         const process = result[0];
 
-        expect(process.key).toBeDefined();
-        expect(typeof process.key).toBe('string');
+        expect(process.processKey).toBeDefined();
+        expect(typeof process.processKey).toBe('string');
 
         if (process.name) {
           expect(typeof process.name).toBe('string');
