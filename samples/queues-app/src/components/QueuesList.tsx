@@ -89,7 +89,7 @@ export function QueuesList({ selectedQueueId, onSelectQueue }: Props) {
     const term = search.trim()
     if (!term || lookingUp) return
     if (folderScope === 'all') {
-      toast.info('Pick a folder first — getByName/getByKey are folder-scoped lookups.')
+      toast.info('Select a folder first to search on the server.')
       return
     }
     const byKey = GUID_REGEX.test(term)
@@ -99,7 +99,7 @@ export function QueuesList({ selectedQueueId, onSelectQueue }: Props) {
       const queue = byKey
         ? await queueService.getByKey(term, { folderId: folderScope })
         : await queueService.getByName(term, { folderId: folderScope })
-      toast.success(`Resolved via ${byKey ? 'getByKey' : 'getByName'}: ${queue.name}`)
+      toast.success(`Found queue "${queue.name}"`)
       onSelectQueue(queue)
     } catch (err) {
       toast.error(err instanceof UiPathError ? err.message : 'Lookup failed')

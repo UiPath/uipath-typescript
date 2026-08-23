@@ -90,7 +90,7 @@ export function QueueDetail({ queue: initialQueue }: Props) {
         await refresh()
       } else {
         toast.info(
-          'No item acquired. startTransaction requires a robot session — user and application identities always receive null.',
+          'No item was acquired — the queue only hands out items to robot sessions, not signed-in users.',
           { duration: 8000 },
         )
       }

@@ -24,7 +24,7 @@ export interface UseQueuesResult {
  *
  * @example
  *   const { queues, loading, error, refresh } = useQueues()          // all folders
- *   const scoped = useQueues(756377)                                 // one folder
+ *   const scoped = useQueues(<folderId>)                             // one folder
  */
 export function useQueues(folderId?: number): UseQueuesResult {
   const { sdk } = useAuth()

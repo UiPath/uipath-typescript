@@ -46,7 +46,7 @@ const all = await queues.getAll();
 const queue = all.items[0];
 
 // Folder scoping — every method accepts folderId, folderKey, or folderPath:
-const scoped = await queues.getAll({ folderId: 756377 });
+const scoped = await queues.getAll({ folderId: <folderId> });
 const byName = await queues.getByName('Invoices', { folderPath: 'Shared/Finance' });
 const byKey = await queues.getByKey('<queue-key-guid>', { folderKey: '<folder-key>' });
 
@@ -113,13 +113,7 @@ npm install
 
 ### 3. Local Configuration
 
-Copy the template and fill in your tenant values:
-
-```bash
-cp uipath.json.example uipath.json
-```
-
-Edit `uipath.json`:
+Edit `uipath.json` and fill in your tenant values:
 
 ```json
 {
@@ -132,7 +126,7 @@ Edit `uipath.json`:
 }
 ```
 
-> `uipath.json` is `.gitignore`d on purpose — it carries tenant-specific credentials. Only `uipath.json.example` is committed.
+> `uipath.json` holds no secrets — the client ID of a non-confidential external app and your org/tenant names are safe to share. Just avoid committing your own values back.
 
 ### 4. Run
 
