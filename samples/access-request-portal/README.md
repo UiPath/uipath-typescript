@@ -20,7 +20,7 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 ## Run it locally
 
-1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI `http://localhost:5173` and scopes `PM.User.Read PM.Group PM.Directory.Read`. The Roles service endpoints are governed by the caller's platform roles rather than OAuth scopes, and the SDK requests `offline_access` (refresh tokens) automatically — neither needs to be configured.
+1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI `http://localhost:5173` and scopes `PM.User.Read PM.Group PM.Directory`. The Roles service endpoints are governed by the caller's platform roles rather than OAuth scopes, and the SDK requests `offline_access` (refresh tokens) automatically — neither needs to be configured.
 2. Copy `uipath.json.example` to `uipath.json` and fill in your `clientId`, `baseUrl`, `orgName`, and `tenantName`.
 3. Install and start:
 
