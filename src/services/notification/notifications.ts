@@ -24,7 +24,7 @@ import {
 import { NotificationMap } from '../../models/notification/notifications.constants';
 import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION } from '../../utils/constants/common';
 import { NOTIFICATION_ENDPOINTS } from '../../utils/constants/endpoints';
-import { NOTIFICATION_TENANT_ID } from '../../utils/constants/headers';
+import { TENANT_ID } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
 import { transformData, transformOptions } from '../../utils/transform';
 import {
@@ -42,7 +42,7 @@ import { PaginationType } from '../../utils/pagination/internal-types';
  * `/odata/v1/NotificationEntry` API).
  *
  * Every public method takes the acting tenant GUID as the first argument — the
- * notification API identifies the tenant via the `X-UIPATH-TenantId`
+ * notification API identifies the tenant via the `X-UIPATH-Internal-TenantId`
  * header and the SDK forwards `tenantId` into that header on each call.
  */
 export class NotificationService extends BaseService implements NotificationServiceModel {
@@ -74,7 +74,7 @@ export class NotificationService extends BaseService implements NotificationServ
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => NOTIFICATION_ENDPOINTS.GET_ALL,
-      headers: createHeaders({ [NOTIFICATION_TENANT_ID]: tenantId }),
+      headers: createHeaders({ [TENANT_ID]: tenantId }),
       transformFn: transformNotificationResponse,
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -108,7 +108,7 @@ export class NotificationService extends BaseService implements NotificationServ
     await this.post(NOTIFICATION_ENDPOINTS.UPDATE_READ, {
       notifications: [],
       forceAllRead: true,
-    }, { headers: createHeaders({ [NOTIFICATION_TENANT_ID]: tenantId }) });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { all: true, read: true } };
   }
 
@@ -118,7 +118,7 @@ export class NotificationService extends BaseService implements NotificationServ
       // API spec misspells the key as `notifcationIds` — preserve it.
       notifcationIds: notificationIds,
       deleteAll: false,
-    }, { headers: createHeaders({ [NOTIFICATION_TENANT_ID]: tenantId }) });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { notificationIds } };
   }
 
@@ -128,7 +128,7 @@ export class NotificationService extends BaseService implements NotificationServ
       // API spec misspells the key as `notifcationIds` — preserve it.
       notifcationIds: [],
       deleteAll: true,
-    }, { headers: createHeaders({ [NOTIFICATION_TENANT_ID]: tenantId }) });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { all: true } };
   }
 
@@ -140,7 +140,7 @@ export class NotificationService extends BaseService implements NotificationServ
     await this.post(NOTIFICATION_ENDPOINTS.UPDATE_READ, {
       notifications: notificationIds.map((notificationId) => ({ notificationId, read })),
       forceAllRead: false,
-    }, { headers: createHeaders({ [NOTIFICATION_TENANT_ID]: tenantId }) });
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { notificationIds, read } };
   }
 }

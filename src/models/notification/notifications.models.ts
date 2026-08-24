@@ -23,7 +23,7 @@ import type {
  * the generated API reference documentation.
  *
  * Every method takes the tenant GUID as the first argument — the notification
- * API identifies the acting tenant via the `X-UIPATH-TenantId` header
+ * API identifies the acting tenant via the `X-UIPATH-Internal-TenantId` header
  * and the SDK forwards `tenantId` into that header on each call.
  */
 export interface NotificationServiceModel {
