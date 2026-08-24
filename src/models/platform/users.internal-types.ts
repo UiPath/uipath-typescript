@@ -18,7 +18,7 @@ export interface RawPlatformUser {
   creationTime: string;
   lastModificationTime: string | null;
   lastLoginTime: string | null;
-  groupIDs: string[];
+  groupIDs: string[] | null;
   legacyId: number;
   isActive: boolean;
   bypassBasicAuthRestriction: boolean;
@@ -45,9 +45,9 @@ export interface RawPlatformUserUpdateError {
 }
 
 /**
- * Wire shape of the user update result.
+ * Wire shape of the user update result. `errors` is nullable in the API spec.
  */
 export interface RawPlatformUserUpdateResult {
   succeeded: boolean;
-  errors: RawPlatformUserUpdateError[];
+  errors: RawPlatformUserUpdateError[] | null;
 }

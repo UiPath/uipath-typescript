@@ -17,11 +17,21 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export type PlatformUserGetResponse = RawPlatformUserGetResponse & PlatformUserMethods;
 
 /**
- * Public surface of the platform Users service. JSDoc on this interface drives
- * the generated API reference documentation.
+ * Public surface of the platform Users service.
  *
  * Users are organization-scoped accounts. Together with groups they form the basis of
  * access management: put users in groups, then grant roles to the groups.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Users } from '@uipath/uipath-typescript/platform';
+ *
+ * const users = new Users(sdk);
+ * const allUsers = await users.getAll('<organizationId>');
+ * ```
  */
 export interface PlatformUserServiceModel {
   /**

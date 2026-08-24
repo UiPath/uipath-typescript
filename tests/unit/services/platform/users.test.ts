@@ -239,6 +239,14 @@ describe('Platform Users Service Unit Tests', () => {
   });
 
   describe('getById', () => {
+    it('should normalize null groupIDs to an empty array', async () => {
+      mockApiClient.get.mockResolvedValue(createBasicRawPlatformUser({ groupIDs: null }));
+
+      const user = await usersService.getById(userId);
+
+      expect(user.groupIds).toEqual([]);
+    });
+
     it('should retrieve a user by ID with the transform pipeline applied', async () => {
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformUser());
 
@@ -314,6 +322,15 @@ describe('Platform Users Service Unit Tests', () => {
 
       expect(result.success).toBe(false);
       expect(result.errors).toEqual([{ code: 'DuplicateEmail', description: 'Email is already taken.' }]);
+    });
+
+    it('should normalize a null errors field to an empty array', async () => {
+      mockApiClient.put.mockResolvedValue(createRawPlatformUserUpdateResult({ errors: null }));
+
+      const result = await usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME });
+
+      expect(result.success).toBe(true);
+      expect(result.errors).toEqual([]);
     });
 
     it('should throw ValidationError when userId is empty', async () => {

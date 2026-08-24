@@ -5,20 +5,15 @@
 import { PlatformUserType, PlatformUserCategory } from './users.types';
 
 /**
- * Semantic renames applied to user rows: standard `*Time` names and
- * `groupIDs` → `groupIds` casing.
+ * Semantic renames between wire and SDK user fields: standard `*Time` names and
+ * `groupIDs` → `groupIds` casing. Used for responses with `transformData()` and
+ * for `users.updateById()` bodies with `transformRequest()`, which reverses the
+ * map (SDK name → wire name).
  */
 export const PlatformUserMap = {
   creationTime: 'createdTime',
   lastModificationTime: 'lastModifiedTime',
   groupIDs: 'groupIds',
-} as const;
-
-/**
- * Outbound renames for `users.updateById()` — the API expects `groupIDs` casing.
- * Used with `transformRequest()`, which reverses the map (SDK name → wire name).
- */
-export const PlatformUserUpdateMap = {
   groupIDsToAdd: 'groupIdsToAdd',
   groupIDsToRemove: 'groupIdsToRemove',
 } as const;
