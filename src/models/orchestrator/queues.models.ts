@@ -195,7 +195,7 @@ export interface QueueServiceModel {
    * const failed = await queues.getAllItems(<queueId>, {
    *   folderPath: 'Shared/Finance',
    *   filter: "status eq 'Failed'",
-   *   orderby: 'createdTime desc',
+   *   orderby: 'id desc',
    *   pageSize: 25
    * });
    * ```

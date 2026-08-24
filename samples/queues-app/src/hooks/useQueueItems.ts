@@ -54,7 +54,7 @@ export function useQueueItems(
           pageSize: PAGE_SIZE,
           cursor,
           filter: status === 'All' ? undefined : `status eq '${status}'`,
-          orderby: 'createdTime desc',
+          orderby: 'id desc',
         })
         setPage(response)
       } catch (err) {

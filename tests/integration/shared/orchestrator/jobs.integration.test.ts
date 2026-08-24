@@ -69,10 +69,12 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       // Uses SDK names that the field map renames:
       //   processName → releaseName, createdTime → creationTime.
       // If the rewriter doesn't translate these, the API returns 400.
+      // The rename coverage rides on $select — $orderby sticks to `id`,
+      // which every Orchestrator build allows sorting by.
       const result = await jobs.getAll({
         folderId,
         pageSize: 5,
-        orderby: 'createdTime desc',
+        orderby: 'id desc',
         select: 'key,processName,state,createdTime',
       });
 
