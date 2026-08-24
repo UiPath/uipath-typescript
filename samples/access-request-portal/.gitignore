@@ -1,3 +1,5 @@
 uipath.json
 node_modules
 dist
+# repo-root ignores lib/ (build outputs); this src/lib is real source
+!src/lib/
