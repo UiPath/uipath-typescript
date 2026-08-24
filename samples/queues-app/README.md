@@ -75,11 +75,6 @@ if (transaction) {
 | `Queues` | `startTransaction` (bound `queue.startTransaction`) | "Start transaction" button (`QueueDetail`) |
 | `Queues` | `completeTransaction` (bound `queue.completeTransaction`) | "Complete transaction" dialog on InProgress items (`CompleteTransactionDialog`) |
 
-> The deprecated positional form `getById(id, folderId)` is intentionally not
-> used — it returns plain queue data without the bound methods this app
-> relies on. The options-object form used here (`getById(id, { folderId })`)
-> returns the queue with the methods attached.
-
 > **`startTransaction` requires a robot session.** Orchestrator allocates the
 > next item to the robot that sent the request, so user and application
 > identities (like this app's OAuth sign-in) always receive `null`, however
@@ -113,7 +108,11 @@ npm install
 
 ### 3. Local Configuration
 
-Edit `uipath.json` and fill in your tenant values:
+Copy the template and fill in your tenant values:
+
+```bash
+cp uipath.json.example uipath.json
+```
 
 ```json
 {

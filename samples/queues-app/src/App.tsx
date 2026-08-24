@@ -12,11 +12,8 @@ import { TooltipProvider } from '@uipath/apollo-wind/components/ui/tooltip'
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
-  // The whole selected queue object is kept (not just its id) because the
-  // SDK attaches the operational methods — getAllItems / insertItem /
-  // startTransaction / completeTransaction — to the queue returned by
-  // getAll / getById / getByName / getByKey, with the queue's own folder
-  // filled in automatically.
+  // Keep the whole queue object — the SDK returns it with the operational
+  // methods (getAllItems, insertItem, …) already bound.
   const [selectedQueue, setSelectedQueue] =
     useState<QueueGetWithMethodsResponse | null>(null)
 

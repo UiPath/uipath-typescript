@@ -40,6 +40,11 @@ export function useQueueItems(
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // First page on mount and whenever the queue or status filter changes.
+  useEffect(() => {
+    load()
+  }, [queue, status])
+
   const load = useCallback(
     async (cursor?: PaginationCursor) => {
       setLoading(true)
@@ -62,11 +67,6 @@ export function useQueueItems(
     },
     [queue, status],
   )
-
-  // First page on mount and whenever the status filter changes.
-  useEffect(() => {
-    load()
-  }, [load])
 
   return {
     page,
