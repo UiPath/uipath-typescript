@@ -204,6 +204,34 @@ jobs:
           json.dump(out, open('$RUNNER_TEMP/minter_alt_tokens.json', 'w'))
           print('stashed alt tokens:', ', '.join(out) or 'none')
           "
+          # TEMPORARY DIAGNOSTIC: also mint a 1P service token for the
+          # notification service (-f, no trailing underscore) — the default
+          # token's scope list carries no notification audience, so the
+          # gateway refuses to route it ("This API endpoint is not
+          # authorized"). If this token probes 200, it becomes the fix.
+          docker run --rm \
+            -v "$RUNNER_TEMP/minter:/out" \
+            -e MINTER_PASSWORD \
+            pltnonprodacr.azurecr.io/uipath-minter:latest \
+            sh -c "npm run generate -- \
+              -u '$MINTER_USERNAME' \
+              -p \"\$MINTER_PASSWORD\" \
+              -n '$ORG_NAME' \
+              -t '$TENANT_NAME' \
+              -f notificationservice \
+              -e '$MINTER_ENV' \
+              -v basic \
+              -o /out/tokens-notif.json" \
+            && python3 -c "
+          import json
+          t = json.load(open('$RUNNER_TEMP/minter/tokens-notif.json'))
+          alt = json.load(open('$RUNNER_TEMP/minter_alt_tokens.json'))
+          if t.get('accessToken'):
+              alt['serviceToken(notificationservice)'] = t['accessToken']
+          json.dump(alt, open('$RUNNER_TEMP/minter_alt_tokens.json', 'w'))
+          print('service token minted:', bool(t.get('accessToken')))
+          " || echo "notification service-token mint failed (non-fatal, diagnostic only)"
+          rm -f "$RUNNER_TEMP/minter/tokens-notif.json"
           if [ -s "$RUNNER_TEMP/minter_alt_tokens.json" ]; then
             python3 -c "import json;[print(v) for v in json.load(open('$RUNNER_TEMP/minter_alt_tokens.json')).values()]" \
               | while IFS= read -r ALT; do echo "::add-mask::$ALT"; done
@@ -254,6 +282,18 @@ jobs:
             grep -i 'request-id' /tmp/nhdr || echo "   (no request-id header)"
             head -c 300 /tmp/nbody; echo
           done
+          # The external-application PAT: if the gateway routes it, the clean
+          # fix is declaring the notification suites 'pat' in the harness.
+          PAT=$(sed -n 's/^UIPATH_SECRET=//p' tests/.env.integration)
+          if [ -n "$PAT" ]; then
+            CODE=$(curl -s -o /tmp/nbody -w '%{http_code}' \
+              "$BASE_URL/$ORG_NAME/notificationservice_/usersubscriptionservice/api/v1/UserSubscription" \
+              -H "Authorization: Bearer $PAT" \
+              -H "X-UIPATH-Internal-TenantId: $TENANT_ID" \
+              -H "Accept: application/json")
+            echo "== PAT -> HTTP $CODE"
+            head -c 300 /tmp/nbody; echo
+          fi
           # Same probe with each sibling token, Internal header only.
           if [ -s "$RUNNER_TEMP/minter_alt_tokens.json" ]; then
             python3 -c "import json;[print(k+chr(9)+v) for k,v in json.load(open('$RUNNER_TEMP/minter_alt_tokens.json')).items()]" \
