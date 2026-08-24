@@ -176,6 +176,14 @@ describe('QueueService Unit Tests', () => {
       expect(result.name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
       expect(typeof result.getAllItems).toBe('function');
       expect(typeof result.insertItem).toBe('function');
+
+      // Transform completeness for this overload's own pipeline: renamed
+      // camelCase fields carry the values, raw API fields are removed.
+      expect(result.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+      expect((result as any).OrganizationUnitFullyQualifiedName).toBeUndefined();
+
       expect(mockApiClient.get).toHaveBeenCalledWith(
         QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
         expect.objectContaining({
@@ -419,6 +427,13 @@ describe('QueueService Unit Tests', () => {
       expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
       expect(typeof transformed.getAllItems).toBe('function');
       expect(typeof transformed.insertItem).toBe('function');
+
+      // Transform completeness for this closure: renamed camelCase fields
+      // carry the values, raw API fields are removed.
+      expect(transformed.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect(transformed.CreationTime).toBeUndefined();
+      expect(transformed.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+      expect(transformed.OrganizationUnitFullyQualifiedName).toBeUndefined();
     });
   });
 
