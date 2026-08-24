@@ -36,8 +36,11 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       processKey: config.maestroTestProcessKey,
       pageSize: 20,
     });
+    // The folder must match the configured one — the retry test reads the instance with
+    // config.folderKey, so an orphan from another folder would 404 there
     const orphan = existing.items.find(
-      (inst) => inst.latestRunStatus === InstanceStatus.FAULTED && inst.folderKey
+      (inst) =>
+        inst.latestRunStatus === InstanceStatus.FAULTED && inst.folderKey === config.folderKey
     );
     if (orphan) {
       seededFaultedJobKey = orphan.instanceId;
@@ -223,29 +226,31 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
       // Wait for Running specifically — cancelling while still Pending is rejected.
       // If the instance faults before the poll catches the brief Running window, retry
-      // it once: the retried run re-enters Running, which is cancellable.
+      // it once: the retried run re-enters Running, which is cancellable. The status may
+      // keep reading Faulted for a few polls after the retry (propagation lag), so a
+      // repeat Faulted reading is not treated as a second fault — the attempt cap bounds
+      // a genuinely stuck instance instead.
       let running = false;
       let faultRetried = false;
       for (let attempt = 0; attempt < 20; attempt++) {
+        let status: string | null = null;
         try {
-          const instance = await processInstances.getById(job.key, config.folderKey);
-          if (instance.latestRunStatus === InstanceStatus.RUNNING) {
-            running = true;
-            break;
-          }
-          if (instance.latestRunStatus === InstanceStatus.FAULTED) {
-            if (faultRetried) {
-              throw new Error('Seeded instance faulted twice before it could be cancelled — cannot test cancel');
-            }
-            await processInstances.retry(job.key, config.folderKey);
-            faultRetried = true;
-          }
-        } catch (error: any) {
-          if (error.message?.includes('cannot test cancel')) {
-            throw error;
-          }
+          status = (await processInstances.getById(job.key, config.folderKey)).latestRunStatus;
+        } catch {
           // not yet visible in PIMS
         }
+
+        if (status === InstanceStatus.RUNNING) {
+          running = true;
+          break;
+        }
+        if (status === InstanceStatus.FAULTED && !faultRetried) {
+          // Outside the visibility catch: a failing retry() must propagate, not be
+          // silently swallowed and re-attempted every poll
+          faultRetried = true;
+          await processInstances.retry(job.key, config.folderKey);
+        }
+
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       if (!running) {
