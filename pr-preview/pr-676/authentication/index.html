@@ -3457,7 +3457,7 @@
 <li><code>sdk.isInOAuthCallback()</code> - Check if processing OAuth redirect</li>
 <li><code>sdk.completeOAuth()</code> - Manually complete OAuth (advanced use)</li>
 <li><code>sdk.getToken()</code> - Get the logged-in user's access token</li>
-<li><code>sdk.logout()</code> - Logout and clear all authentication state (requires re-initialization to authenticate again)</li>
+<li><code>sdk.logout()</code> - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass <code>sdk.logout({ endSession: true })</code> to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.</li>
 <li><code>sdk.updateToken()</code> - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)</li>
 </ul>
 <hr />

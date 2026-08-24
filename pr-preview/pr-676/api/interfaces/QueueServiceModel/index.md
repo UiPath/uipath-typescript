@@ -195,7 +195,7 @@ Gets a single queue by ID
 
 - `id`: `number` — Queue ID
 - `folderId`: `number` — Required folder ID
-- `options?`: `QueueGetByIdOptions` — -
+- `options?`: `QueueGetByIdOptions` — Optional query options
 
 #### Returns
 
