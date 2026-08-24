@@ -3,7 +3,7 @@ import { ConnectorsService } from '../../../../src/services/integration-service/
 import { CONNECTOR_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
-import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import {
   IS_TEST_CONSTANTS,
@@ -127,14 +127,42 @@ describe('ConnectorsService', () => {
       );
     });
 
-    it('should pass allFolders as a query param', async () => {
+    it('should route folderId to the folder ID header', async () => {
       mockApiClient.get.mockResolvedValue(createMockConnection());
 
-      await service.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY, { allFolders: true });
+      await service.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY, {
+        folderId: IS_TEST_CONSTANTS.FOLDER_ID,
+      });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(IS_TEST_CONSTANTS.CONNECTOR_KEY),
-        { headers: {}, params: { allFolders: true } },
+        { headers: { [FOLDER_ID]: String(IS_TEST_CONSTANTS.FOLDER_ID) }, params: {} },
+      );
+    });
+
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+
+      await service.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
+      );
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectorsService(instance);
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+
+      await scopedService.getDefaultConnection(IS_TEST_CONSTANTS.CONNECTOR_KEY);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
       );
     });
 
@@ -181,6 +209,36 @@ describe('ConnectorsService', () => {
       mockApiClient.get.mockResolvedValue(null);
       const result = await service.getConnections(IS_TEST_CONSTANTS.CONNECTOR_KEY);
       expect(result).toEqual([]);
+    });
+
+    it('should route folderPath to the encoded folder path header', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      await service.getConnections(IS_TEST_CONSTANTS.CONNECTOR_KEY, {
+        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+        pageSize: 25,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_CONNECTIONS(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        {
+          headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE },
+          params: { pageSize: 25 },
+        },
+      );
+    });
+
+    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectorsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getConnections(IS_TEST_CONSTANTS.CONNECTOR_KEY);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTOR_ENDPOINTS.GET_CONNECTIONS(IS_TEST_CONSTANTS.CONNECTOR_KEY),
+        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
     });
 
     it('should throw ValidationError when keyOrId is empty', async () => {

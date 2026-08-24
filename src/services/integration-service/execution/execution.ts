@@ -3,7 +3,8 @@ import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
 import { SDKInternalsRegistry } from '../../../core/internals';
 import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { FOLDER_KEY, CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
+import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
+import { resolveFolderScope } from '../folder-scope';
 import type { IUiPath } from '../../../core/types';
 import type { UiPathConfig } from '../../../core/config/config';
 import {
@@ -66,14 +67,18 @@ class Execution extends BaseService {
     const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
     const traceparentValue = `00-${traceId}-${spanId}-01`;
 
+    const { headers: folderHeaders } = resolveFolderScope(
+      options,
+      'Execution.execute',
+      this.config.folderKey,
+    );
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
       [TRACEPARENT]: traceparentValue,
       [UIPATH_TRACEPARENT_ID]: traceparentValue,
+      ...folderHeaders,
     };
-    if (options.folderKey) {
-      headers[FOLDER_KEY] = options.folderKey;
-    }
 
     const hasBody = options.body !== undefined && BODY_METHODS.has(method);
     if (hasBody) {
@@ -127,7 +132,7 @@ class Execution extends BaseService {
  * @param connectionId - Connection GUID
  * @param objectName - Connector object name (e.g. `tickets`, `messages`)
  * @param method - HTTP method (defaults to `GET`)
- * @param options - Body, query params, and folder scoping
+ * @param options - Body, query params, and folder scoping (`folderId` / `folderKey` / `folderPath`)
  * @returns Promise resolving to an {@link ExecuteResult}
  *
  * @example
@@ -157,10 +162,10 @@ class Execution extends BaseService {
  *
  * @example
  * ```typescript
- * // GET with query params and folder scoping
+ * // GET with query params and folder scoping — folderId and folderPath work too
  * const result = await execute(sdk, '<connectionId>', 'tickets', 'GET', {
  *   queryParams: { limit: '10', status: 'open' },
- *   folderKey: '<folderKey>',
+ *   folderPath: 'Shared/Finance',
  * });
  * ```
  */
