@@ -21,16 +21,34 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   let seededFaultedJobKey: string | null = null;
 
   beforeAll(async () => {
-    const { processes } = getServices();
+    const { processes, processInstances } = getServices();
     const config = getTestConfig();
 
-    if (config.maestroTestProcessKey && config.folderId) {
-      const [job] = await processes.start(
-        { processKey: config.maestroTestProcessKey },
-        { folderId: Number(config.folderId) }
-      );
-      seededFaultedJobKey = job.key;
+    if (!config.maestroTestProcessKey || !config.folderId) {
+      return;
     }
+
+    // Reuse an existing Faulted instance when one exists — the retry test consumes its
+    // fixture, so a Faulted leftover can only come from an interrupted run, and
+    // scavenging it keeps the tenant clean (instances cannot be deleted via API).
+    // Only when none exists is a fresh instance seeded.
+    const existing = await processInstances.getAll({
+      processKey: config.maestroTestProcessKey,
+      pageSize: 20,
+    });
+    const orphan = existing.items.find(
+      (inst) => inst.latestRunStatus === InstanceStatus.FAULTED && inst.folderKey
+    );
+    if (orphan) {
+      seededFaultedJobKey = orphan.instanceId;
+      return;
+    }
+
+    const [job] = await processes.start(
+      { processKey: config.maestroTestProcessKey },
+      { folderId: Number(config.folderId) }
+    );
+    seededFaultedJobKey = job.key;
   }, 60_000);
 
   describe('getAll', () => {
