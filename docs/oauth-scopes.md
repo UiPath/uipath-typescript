@@ -28,6 +28,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
 
+Before running the function, `invoke()` also acquires a Studio Web license for the calling user. That call requires a valid Orchestrator token but no scope of its own, so it adds nothing to the table below.
+
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `OR.Default` |
