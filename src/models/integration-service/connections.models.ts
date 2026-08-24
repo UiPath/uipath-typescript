@@ -49,7 +49,11 @@ export interface ConnectionsServiceModel {
    * via `pageIndex`/`pageSize`; there is no continuation cursor, so callers
    * paginate by incrementing `pageIndex` until a short page is returned.
    *
-   * @param options - Folder scoping, paging, sorting, and filter options
+   * Folder scoping is optional — pass `folderId`, `folderKey`, or `folderPath`
+   * to narrow the query. When none is supplied, the folder context the SDK was
+   * initialized with is used.
+   *
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, sorting, and filter options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -77,6 +81,13 @@ export interface ConnectionsServiceModel {
    *   mostRecentFirst: true,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Scope by folder path or numeric folder ID instead of a key
+   * const byPath = await connections.getAll({ folderPath: 'Shared/Finance' });
+   * const byId = await connections.getAll({ folderId: 123 });
+   * ```
    */
   getAll(options?: ConnectionGetAllOptions): Promise<ConnectionGetResponse[]>;
 
@@ -84,7 +95,7 @@ export interface ConnectionsServiceModel {
    * Get a single connection by ID.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping and optional `includeConfigs` flag
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -105,6 +116,12 @@ export interface ConnectionsServiceModel {
    * // Include the full configuration blob
    * const conn = await connections.getById('<connectionId>', { includeConfigs: true });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Scope the lookup to a folder path
+   * const conn = await connections.getById('<connectionId>', { folderPath: 'Shared/Finance' });
+   * ```
    */
   getById(connectionId: string, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
 
@@ -116,7 +133,7 @@ export interface ConnectionsServiceModel {
    * expired or been disabled.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping and `forceRefresh` flag
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and `forceRefresh` flag
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    * @example
    * ```typescript
@@ -145,7 +162,7 @@ export interface ConnectionsServiceModel {
    * refresh consent. The session expires at {@link ConnectionReauthenticateResponse.expiresAt}.
    *
    * @param connectionId - Connection GUID
-   * @param options - Folder scoping options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionReauthenticateResponse}
    * @example
    * ```typescript
@@ -174,7 +191,7 @@ export interface ConnectionMethods {
   /**
    * Check whether this connection is currently active.
    *
-   * @param options - Optional `forceRefresh` flag and folder scoping
+   * @param options - Optional `forceRefresh` flag and folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    */
   ping(options?: ConnectionPingOptions): Promise<ConnectionPingResponse>;
@@ -182,7 +199,7 @@ export interface ConnectionMethods {
   /**
    * Start an OAuth re-authentication session for this connection.
    *
-   * @param options - Optional folder scoping
+   * @param options - Optional folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionReauthenticateResponse}
    */
   reauthenticate(options?: ConnectionReauthenticateOptions): Promise<ConnectionReauthenticateResponse>;
