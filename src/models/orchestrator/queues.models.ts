@@ -116,6 +116,7 @@ export interface QueueServiceModel {
    *
    * @param id - Queue ID
    * @param folderId - Required folder ID
+   * @param options - Optional query options
    * @returns Promise resolving to a {@link QueueGetResponse} — the queue definition
    * @example
    * ```typescript
