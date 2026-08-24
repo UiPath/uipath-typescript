@@ -114,10 +114,12 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       const { maestroProcesses } = getServices();
       const config = getTestConfig();
 
-      const processKey = config.maestroTestProcessKey;
+      // The statically-faulted process, never run by the suite: its incident aggregation
+      // is never recomputed mid-run, so this read cannot race an incident write
+      const processKey = config.maestroIncidentsProcessKey;
 
       if (!processKey) {
-        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot test incident retrieval');
+        throw new Error('MAESTRO_TEST_INCIDENTS_PROCESS_KEY not configured — cannot test incident retrieval');
       }
 
       const result = await maestroProcesses.getIncidents(processKey, config.folderKey);

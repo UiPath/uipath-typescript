@@ -24,6 +24,13 @@ export interface IntegrationConfig {
   folderPath?: string;
   maestroTestProcessKey?: string;
   /**
+   * Process key of a statically-faulted Maestro process (faulted once ever, never run by
+   * the suite). The incident read tests target it instead of the actively-faulting retry
+   * fixture, so their reads never race an incident write — the first incidents read after
+   * a write triggers a server-side re-aggregation that can exceed the test timeout.
+   */
+  maestroIncidentsProcessKey?: string;
+  /**
    * Release key of a deployed case-management process used to self-seed a running case
    * instance via Orchestrator jobs. Must be a case process that stays Running after start
    * (e.g. one with a human task). The release key doubles as the Maestro processKey.
@@ -126,6 +133,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
     folderPath: typeof rawConfig.folderPath === 'string' ? rawConfig.folderPath : undefined,
     maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
+    maestroIncidentsProcessKey: typeof rawConfig.maestroIncidentsProcessKey === 'string' ? rawConfig.maestroIncidentsProcessKey : undefined,
     maestroCaseProcessKey: typeof rawConfig.maestroCaseProcessKey === 'string' ? rawConfig.maestroCaseProcessKey : undefined,
     maestroCompletedCaseProcessKey: typeof rawConfig.maestroCompletedCaseProcessKey === 'string' ? rawConfig.maestroCompletedCaseProcessKey : undefined,
     orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
@@ -180,6 +188,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
     folderPath: process.env.INTEGRATION_TEST_FOLDER_PATH || undefined,
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,
+    maestroIncidentsProcessKey: process.env.MAESTRO_TEST_INCIDENTS_PROCESS_KEY || undefined,
     maestroCaseProcessKey: process.env.MAESTRO_TEST_CASE_PROCESS_KEY || undefined,
     maestroCompletedCaseProcessKey: process.env.MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY || undefined,
     orchestratorTestProcessKey: process.env.ORCHESTRATOR_TEST_PROCESS_KEY || undefined,
