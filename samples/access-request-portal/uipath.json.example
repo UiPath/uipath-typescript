@@ -1,6 +1,6 @@
 {
   "clientId": "<external-app-client-id>",
-  "baseUrl": "https://alpha.uipath.com",
+  "baseUrl": "https://api.uipath.com",
   "orgName": "<org-name>",
   "tenantName": "<tenant-name>",
   "redirectUri": "http://localhost:5173",
