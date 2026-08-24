@@ -3,7 +3,13 @@ import { execute } from '../../../../src/services/integration-service/execution/
 import { ValidationError } from '../../../../src/core/errors';
 import { createServiceTestDependencies } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS } from '../../../utils/mocks';
-import { FOLDER_KEY, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../../src/utils/constants/headers';
+import {
+  FOLDER_ID,
+  FOLDER_KEY,
+  FOLDER_PATH_ENCODED,
+  TRACEPARENT,
+  UIPATH_TRACEPARENT_ID,
+} from '../../../../src/utils/constants/headers';
 
 const OBJECT_NAME = 'tickets';
 
@@ -88,6 +94,66 @@ describe('execute', () => {
 
     const [, init] = fetchSpy.mock.calls[0];
     expect(init.headers[FOLDER_KEY]).toBe(IS_TEST_CONSTANTS.FOLDER_KEY);
+  });
+
+  it('sends the folder ID header when folderId is provided', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+      folderId: IS_TEST_CONSTANTS.FOLDER_ID,
+    });
+
+    const [, init] = fetchSpy.mock.calls[0];
+    expect(init.headers[FOLDER_ID]).toBe(String(IS_TEST_CONSTANTS.FOLDER_ID));
+  });
+
+  it('sends the encoded folder path header when folderPath is provided', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+      folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+    });
+
+    const [, init] = fetchSpy.mock.calls[0];
+    expect(init.headers[FOLDER_PATH_ENCODED]).toBe(IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE);
+  });
+
+  it('falls back to the init-time folder key when no folder context is provided', async () => {
+    const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
+
+    const [, init] = fetchSpy.mock.calls[0];
+    expect(init.headers[FOLDER_KEY]).toBe(IS_TEST_CONSTANTS.FOLDER_KEY);
+  });
+
+  it('sends no folder header when neither options nor init supply folder context', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
+
+    const [, init] = fetchSpy.mock.calls[0];
+    expect(init.headers[FOLDER_KEY]).toBeUndefined();
+    expect(init.headers[FOLDER_ID]).toBeUndefined();
+    expect(init.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+  });
+
+  it('does not leak folder context into the query string', async () => {
+    const { instance } = createServiceTestDependencies();
+    fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+    await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+      folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
+      queryParams: { limit: '10' },
+    });
+
+    const [url] = fetchSpy.mock.calls[0];
+    expect(url).toContain('limit=10');
+    expect(url).not.toContain('folderPath');
   });
 
   it('sends distributed-tracing headers on every request', async () => {

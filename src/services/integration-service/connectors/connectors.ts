@@ -1,8 +1,7 @@
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
-import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { resolveFolderScope } from '../folder-scope';
 import { CONNECTOR_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { QueryParams } from '../../../models/common/request-spec';
 import {
@@ -121,7 +120,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * paging through the full list.
    *
    * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -130,7 +129,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * const connectors = new Connectors(sdk);
    *
    * const defaultSlack = await connectors.getDefaultConnection('uipath-slack', {
-   *   folderKey: '<folderKey>',
+   *   folderPath: 'Shared/Finance',
    * });
    *
    * // Use bound methods directly on the entity
@@ -146,11 +145,15 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     if (!keyOrId) {
       throw new ValidationError({ message: 'keyOrId is required for getDefaultConnection' });
     }
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connectors.getDefaultConnection',
+      this.config.folderKey,
+    );
     const response = await this.get<RawConnectionGetResponse>(
       CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(keyOrId),
       {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+        headers,
         params: queryOptions as QueryParams,
       },
     );
@@ -164,7 +167,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * pagination (no continuation cursor). Increment `pageIndex` to walk pages.
    *
    * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping, paging, and sorting options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, and sorting options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -188,7 +191,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * ```typescript
    * // Walk subsequent pages
    * const page2 = await connectors.getConnections('uipath-slack', {
-   *   folderKey: '<folderKey>',
+   *   folderId: 123,
    *   pageSize: 25,
    *   pageIndex: 2,
    * });
@@ -202,11 +205,15 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     if (!keyOrId) {
       throw new ValidationError({ message: 'keyOrId is required for getConnections' });
     }
-    const { folderKey, ...queryOptions } = options ?? {};
+    const { headers, queryOptions } = resolveFolderScope(
+      options ?? {},
+      'Connectors.getConnections',
+      this.config.folderKey,
+    );
     const response = await this.get<RawConnectionGetResponse[]>(
       CONNECTOR_ENDPOINTS.GET_CONNECTIONS(keyOrId),
       {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+        headers,
         params: queryOptions as QueryParams,
       },
     );

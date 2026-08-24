@@ -18,6 +18,7 @@
 
 export { ConnectorsService as Connectors, ConnectorsService } from './connectors';
 
+export * from '../../../models/integration-service/integration-service.types';
 export * from '../../../models/integration-service/connectors.types';
 export * from '../../../models/integration-service/connectors.models';
 

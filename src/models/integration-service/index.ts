@@ -4,6 +4,7 @@
  * Internal-types files are intentionally not re-exported.
  */
 
+export * from './integration-service.types';
 export * from './connectors.types';
 export * from './connectors.models';
 export * from './connections.types';

@@ -2,6 +2,8 @@
  * Integration Service — Execution passthrough types.
  */
 
+import { IntegrationServiceFolderContextOptions } from './integration-service.types';
+
 /**
  * HTTP method for an execute call.
  */
@@ -32,11 +34,9 @@ export interface ExecuteResult {
 /**
  * Options accepted by {@link execute}.
  */
-export interface ExecuteOptions {
+export interface ExecuteOptions extends IntegrationServiceFolderContextOptions {
   /** Body to send for POST/PUT/PATCH. Serialized as JSON. */
   body?: unknown;
   /** Query string parameters. */
   queryParams?: Record<string, string>;
-  /** Folder key (GUID) to scope the call via `x-uipath-folderkey`. */
-  folderKey?: string;
 }

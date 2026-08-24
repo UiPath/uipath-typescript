@@ -10,7 +10,7 @@
  * await sdk.initialize();
  *
  * const connections = new Connections(sdk);
- * const all = await connections.getAll({ folderKey: '<folderKey>' });
+ * const all = await connections.getAll({ folderPath: 'Shared/Finance' });
  * ```
  *
  * @module
@@ -18,5 +18,6 @@
 
 export { ConnectionsService as Connections, ConnectionsService } from './connections';
 
+export * from '../../../models/integration-service/integration-service.types';
 export * from '../../../models/integration-service/connections.types';
 export * from '../../../models/integration-service/connections.models';

@@ -90,7 +90,7 @@ export interface ConnectorsServiceModel {
    * paging through the full list.
    *
    * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -99,7 +99,7 @@ export interface ConnectorsServiceModel {
    * const connectors = new Connectors(sdk);
    *
    * const defaultSlack = await connectors.getDefaultConnection('uipath-slack', {
-   *   folderKey: '<folderKey>',
+   *   folderPath: 'Shared/Finance',
    * });
    *
    * // Use bound methods directly on the entity
@@ -119,7 +119,7 @@ export interface ConnectorsServiceModel {
    * pagination (no continuation cursor). Increment `pageIndex` to walk pages.
    *
    * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping, paging, and sorting options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, and sorting options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
@@ -143,7 +143,7 @@ export interface ConnectorsServiceModel {
    * ```typescript
    * // Walk subsequent pages
    * const page2 = await connectors.getConnections('uipath-slack', {
-   *   folderKey: '<folderKey>',
+   *   folderId: 123,
    *   pageSize: 25,
    *   pageIndex: 2,
    * });

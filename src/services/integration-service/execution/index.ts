@@ -16,4 +16,5 @@
  */
 
 export { execute } from './execution';
+export * from '../../../models/integration-service/integration-service.types';
 export * from '../../../models/integration-service/execution.types';
