@@ -44,7 +44,7 @@ export interface JobServiceModel {
    * // With filtering
    * const recentInvoiceJobs = await jobs.getAll({
    *   filter: "processName eq 'InvoiceBot'",
-   *   orderby: 'id desc',
+   *   orderby: 'createdTime desc',
    * });
    *
    * // First page with pagination
