@@ -4,5 +4,5 @@
   "orgName": "<org-name>",
   "tenantName": "<tenant-name>",
   "redirectUri": "http://localhost:5173",
-  "scope": "PM.User PM.Group PM.Directory.Read offline_access"
+  "scope": "PM.User.Read PM.Group PM.Directory.Read"
 }
