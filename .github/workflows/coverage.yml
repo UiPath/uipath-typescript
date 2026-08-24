@@ -193,8 +193,81 @@ jobs:
           # $GITHUB_OUTPUT, which persists values in job metadata.
           echo "::add-mask::$TOKEN"
           echo "UIPATH_USER_TOKEN=$TOKEN" >> tests/.env.integration
+          # TEMPORARY DIAGNOSTIC (remove with the probe step below): stash the
+          # sibling tokens Minter emits so the probe can test whether one of
+          # them satisfies the notification service's auth policy. Masked, kept
+          # outside the workspace, deleted by the probe step.
+          python3 -c "
+          import json
+          t = json.load(open('$RUNNER_TEMP/minter/tokens.json'))
+          out = {k: t[k] for k in ('idToken', 'auth0AccessToken') if t.get(k)}
+          json.dump(out, open('$RUNNER_TEMP/minter_alt_tokens.json', 'w'))
+          print('stashed alt tokens:', ', '.join(out) or 'none')
+          "
+          if [ -s "$RUNNER_TEMP/minter_alt_tokens.json" ]; then
+            python3 -c "import json;[print(v) for v in json.load(open('$RUNNER_TEMP/minter_alt_tokens.json')).values()]" \
+              | while IFS= read -r ALT; do echo "::add-mask::$ALT"; done
+          fi
           rm -f "$RUNNER_TEMP/minter/tokens.json"
           echo "Minted a user access token; user-token suites will run."
+
+      # TEMPORARY DIAGNOSTIC — remove once the notification 403 is root-caused.
+      # The notification endpoints are gated by an authorization policy
+      # (Policies.UserContext) that rejects the minted token with a bare 403,
+      # while a browser-session token passes. This step prints the non-secret
+      # JWT claims (aud/scope/sub presence) of the minted token and probes the
+      # subscription endpoint directly, so one run tells us which claim is
+      # missing. Never prints the token itself; the mask above also covers it.
+      - name: Probe notification API (diagnostic)
+        if: env.MINTER_ENABLED == 'true'
+        continue-on-error: true
+        env:
+          BASE_URL: ${{ steps.config.outputs.base_url }}
+          ORG_NAME: ${{ steps.config.outputs.org_name }}
+          TENANT_ID: ${{ steps.config.outputs.tenant_id }}
+        run: |
+          set -uo pipefail
+          TOKEN=$(sed -n 's/^UIPATH_USER_TOKEN=//p' tests/.env.integration)
+          python3 - "$TOKEN" <<'EOF'
+          import base64, json, sys
+          payload = sys.argv[1].split('.')[1]
+          payload += '=' * (-len(payload) % 4)
+          c = json.loads(base64.urlsafe_b64decode(payload))
+          safe = {}
+          for k in sorted(c):
+              if k in ('aud', 'iss', 'azp', 'client_id', 'scope', 'scp', 'exp', 'iat', 'amr', 'idp', 'auth_time'):
+                  safe[k] = c[k]
+              else:
+                  v = c[k]
+                  safe[k] = f'<present:{type(v).__name__}>'
+          print(json.dumps(safe, indent=2))
+          EOF
+          echo "tenant_id length: ${#TENANT_ID}"
+          printf %s "$TENANT_ID" | sha256sum
+          for HDR in "X-UIPATH-Internal-TenantId" "X-UIPATH-TenantId"; do
+            CODE=$(curl -s -o /tmp/nbody -D /tmp/nhdr -w '%{http_code}' \
+              "$BASE_URL/$ORG_NAME/notificationservice_/usersubscriptionservice/api/v1/UserSubscription" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "$HDR: $TENANT_ID" \
+              -H "Accept: application/json")
+            echo "== $HDR -> HTTP $CODE"
+            grep -i 'request-id' /tmp/nhdr || echo "   (no request-id header)"
+            head -c 300 /tmp/nbody; echo
+          done
+          # Same probe with each sibling token, Internal header only.
+          if [ -s "$RUNNER_TEMP/minter_alt_tokens.json" ]; then
+            python3 -c "import json;[print(k+chr(9)+v) for k,v in json.load(open('$RUNNER_TEMP/minter_alt_tokens.json')).items()]" \
+              | while IFS=$'\t' read -r NAME ALT; do
+                CODE=$(curl -s -o /tmp/nbody -w '%{http_code}' \
+                  "$BASE_URL/$ORG_NAME/notificationservice_/usersubscriptionservice/api/v1/UserSubscription" \
+                  -H "Authorization: Bearer $ALT" \
+                  -H "X-UIPATH-Internal-TenantId: $TENANT_ID" \
+                  -H "Accept: application/json")
+                echo "== $NAME -> HTTP $CODE"
+                head -c 300 /tmp/nbody; echo
+              done
+          fi
+          rm -f "$RUNNER_TEMP/minter_alt_tokens.json"
 
       - name: Run Integration Tests
         run: npm run test:integration:coverage -- --run
