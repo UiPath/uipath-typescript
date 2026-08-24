@@ -32,6 +32,23 @@ export enum NotificationCategory {
 }
 
 /**
+ * Notification delivery channel.
+ *
+ * `InApp` is always implicitly enabled (it is not returned by `getSupportedChannels()`);
+ * the others must be checked via `Subscriptions.getSupportedChannels()`.
+ */
+export enum NotificationMode {
+  /** Real-time in-app push. Always available. */
+  InApp = 'InApp',
+  /** Email delivery. */
+  Email = 'Email',
+  /** Slack delivery. */
+  Slack = 'Slack',
+  /** Microsoft Teams delivery. */
+  Teams = 'Teams',
+}
+
+/**
  * Notification entry as returned by `GET /odata/v1/NotificationEntry`.
  *
  * Field selection: many internal/transport-layer fields (`partitionKey`, `correlationId`,

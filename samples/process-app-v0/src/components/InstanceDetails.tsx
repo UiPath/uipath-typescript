@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ProcessInstanceGetResponse } from '@uipath/uipath-typescript';
 import { getStatusColor, formatDuration, formatProcessName, getEmbedTaskUrl } from '../utils/formatters';
+import { useAuth } from '../hooks/useAuth';
 
 interface InstanceDetailsProps {
   selectedInstance: ProcessInstanceGetResponse | null;
@@ -19,6 +20,8 @@ interface InstanceDetailsProps {
 
 export const InstanceDetails = ({ selectedInstance, instanceDetails, onRefreshData }: InstanceDetailsProps) => {
   const [isTaskPopupOpen, setIsTaskPopupOpen] = useState(false);
+  // orgName/tenantName/baseUrl come from the SDK config (uipath.json), not env
+  const { sdk } = useAuth();
 
   if (!selectedInstance) {
     return (
@@ -387,7 +390,7 @@ export const InstanceDetails = ({ selectedInstance, instanceDetails, onRefreshDa
                     </div>
                   </div>
                   <a
-                    href={`${import.meta.env.VITE_UIPATH_BASE_URL}/${import.meta.env.VITE_UIPATH_ORG_NAME}/${import.meta.env.VITE_UIPATH_TENANT_NAME}/dataservice_/entities/${import.meta.env.VITE_UIPATH_ENTITY_ID}`}
+                    href={`${sdk.config.baseUrl}/${sdk.config.orgName}/${sdk.config.tenantName}/dataservice_/entities/${import.meta.env.VITE_UIPATH_ENTITY_ID}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"

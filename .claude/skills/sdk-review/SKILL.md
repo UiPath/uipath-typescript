@@ -60,6 +60,8 @@ Launch an agent that reads CLAUDE.md (which loads Agents.md and agent_docs/ via 
 
 **Review scope: diff lines only.** Read full files for context (imports, class structure, surrounding code) but ONLY flag issues on lines that appear in the diff. Pre-existing issues on unchanged lines are out of scope — even if they violate conventions.
 
+**Scope the diff correctly.** If local `main` is stale, `main...HEAD` pulls in unrelated already-merged PRs. Prefer `origin/main...HEAD` (after `git fetch`) so the review covers only this branch's changes.
+
 ### Review agent calibration — what agents get wrong in this codebase
 
 The conventions in agent_docs are comprehensive, but review agents consistently misjudge these areas:
@@ -82,6 +84,8 @@ The conventions in agent_docs are comprehensive, but review agents consistently 
 - Whether a new method should have bound methods (depends on entity lifecycle)
 - Endpoint grouping structure for new API domains
 - Whether a field is optional or required in the response type (needs live API check)
+
+**Sample apps (`samples/`) are not the SDK library** — the agent_docs conventions (`@track`, ServiceModel JSDoc, barrel exports, transform pipeline, pagination) do NOT apply. When the diff is under `samples/`, review only for: dead code left by a migration (unused env vars, orphaned `vite-env.d.ts` type decls, stale `.env`), `any` types, correctness of the change, favicon/config consistency with the golden sample, and secrets — `uipath.json.example` must hold placeholders (`<your-...>`), never real client IDs/orgs, and `.gitignore` must ignore `.uipath`. Hold sample code to a "clear, correct example" bar, not SDK-library rigor.
 
 ---
 

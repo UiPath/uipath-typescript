@@ -1,18 +1,15 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
-import { AuthToken, TokenInfo, OAuthContext } from './types';
+import { AuthToken, TokenInfo, OAuthContext, LogoutOptions } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
-const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
-  private skipAcrValues: boolean = false;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Only use stored OAuth context when completing an active callback (URL has ?code=).
@@ -116,15 +113,6 @@ export class AuthService {
    */
   public getTokenManager(): TokenManager {
     return this.tokenManager;
-  }
-
-  /**
-   * Enables the UiPath login picker during OAuth sign-in.
-   *
-   * @internal
-   */
-  public setMultiLogin(): void {
-    this.skipAcrValues = true;
   }
 
   /**
@@ -239,7 +227,7 @@ export class AuthService {
 
   /**
    * Updates the access token used for API requests
-   * @param tokenInfo The token information containing the access token, type, expiration, and refresh token
+   * @param tokenInfo The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.tokenManager.setToken(tokenInfo);
@@ -253,15 +241,28 @@ export class AuthService {
   }
 
   /**
-   * Clears all authentication state including tokens and stored OAuth context.
+   * Clears all authentication state. With `endSession: true`, also redirects
+   * the browser to end the UiPath platform session (skipped with a warning
+   * when the session has no OIDC ID token).
    */
-  public logout(): void {
+  public logout(options?: LogoutOptions): void {
+    // Capture the ID token before clearToken() wipes it.
+    const idTokenHint = options?.endSession ? this.tokenManager.getIdToken() : undefined;
+
+    // End-session is an unauthenticated Identity endpoint — id_token_hint is
+    // what proves the request, so without an ID token there is nothing to send.
+    if (options?.endSession && isBrowser && !idTokenHint) {
+      console.warn(
+        'endSession skipped — no OIDC ID token is available for this ' +
+        'session. Sign in again to enable it; only local authentication ' +
+        'state was cleared.'
+      );
+    }
+
     this.tokenManager.clearToken();
 
-    // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
-    // token exchange, but if a user calls logout() while an OAuth flow is
-    // mid-redirect (before callback completes), they'd be left behind.
-
+    // Clear stored OAuth context — it would be left behind if logout() is
+    // called mid-OAuth-flow (before the callback completes the cleanup).
     if (isBrowser) {
       try {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
@@ -269,6 +270,15 @@ export class AuthService {
       } catch (error) {
         console.warn('Failed to clear OAuth context from session storage', error);
       }
+    }
+
+    if (options?.endSession && isBrowser && idTokenHint) {
+      window.location.href = this._buildEndSessionUrl({
+        idTokenHint,
+        // The configured redirectUri is registered with Identity by
+        // definition, so it passes the exact-match validation.
+        postLogoutRedirectUri: this.config.redirectUri
+      });
     }
   }
 
@@ -340,24 +350,34 @@ export class AuthService {
     scope: string;
     state?: string;
   }): string {
-    const orgName = this.config.orgName;
-    const isGuid = GUID_REGEX.test(orgName);
-    const acrValues = isGuid ? `tenant:${orgName}` : `tenantName:${orgName}`;
-
     const queryParams = new URLSearchParams({
       response_type: 'code',
       client_id: params.clientId,
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
-      scope: params.scope + ' offline_access',
+      // `offline_access` (refresh token) and `openid` (ID token for
+      // endSession) are required by the SDK itself.
+      scope: params.scope + ' offline_access openid',
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
-    return this.skipAcrValues
-      ? authorizeUrl
-      : `${authorizeUrl}&acr_values=${acrValues}`;
+    // acr_values is intentionally omitted: Identity resolves the target org from
+    // client_id, and sending acr_values routes directly to the org's SAML IdP,
+    // which blocks Basic Auth users in mixed-auth orgs.
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+  }
+
+  /**
+   * Builds the Identity end-session URL (OIDC RP-initiated logout).
+   */
+  private _buildEndSessionUrl(params: { idTokenHint: string; postLogoutRedirectUri?: string }): string {
+    const queryParams = new URLSearchParams();
+    queryParams.set('id_token_hint', params.idTokenHint);
+    if (params.postLogoutRedirectUri) {
+      queryParams.set('post_logout_redirect_uri', params.postLogoutRedirectUri);
+    }
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.END_SESSION}?${queryParams.toString()}`;
   }
 
   /**
@@ -396,7 +416,8 @@ export class AuthService {
       token: token.access_token,
       type: 'oauth',
       expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : undefined,
-      refreshToken: token.refresh_token
+      refreshToken: token.refresh_token,
+      idToken: token.id_token
     });
 
     return token;

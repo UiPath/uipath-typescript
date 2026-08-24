@@ -70,49 +70,6 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
     super(instance, buildConversationalAgentHeaders(options));
   }
 
-  /**
-   * Gets exchanges for a conversation with pagination and optional sort parameters
-   *
-   * Returns a paginated response. When called without `pageSize`/`cursor`, the
-   * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
-   * to navigate further pages.
-   *
-   * @param conversationId - The conversation ID to get exchanges for
-   * @param options - Options for querying exchanges including optional pagination parameters
-   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
-   *
-   * @example Basic usage - default page size and sort order
-   * ```typescript
-   * // First page
-   * const firstPage = await exchanges.getAll(conversationId);
-   *
-   * // Navigate using cursor
-   * if (firstPage.hasNextPage) {
-   *   const nextPage = await exchanges.getAll(conversationId, { cursor: firstPage.nextCursor });
-   * }
-   * ```
-   *
-   * @example With explicit page size and exchange/message sort orders
-   * ```typescript
-   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
-   *
-   * const firstPage = await exchanges.getAll(conversationId, {
-   *   pageSize: 10,
-   *   exchangeSort: SortOrder.Descending,
-   *   messageSort: SortOrder.Ascending
-   * });
-   *
-   * // Navigate using cursor and same parameters
-   * if (firstPage.hasNextPage) {
-   *   const nextPage = await exchanges.getAll(conversationId, {
-   *     pageSize: 10,
-   *     exchangeSort: SortOrder.Descending,
-   *     messageSort: SortOrder.Ascending,
-   *     cursor: firstPage.nextCursor
-   *   });
-   * }
-   * ```
-   */
   @track('ConversationalAgent.Exchanges.GetAll')
   async getAll(
     conversationId: string,
@@ -139,24 +96,6 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
     });
   }
 
-  /**
-   * Gets an exchange by ID with its messages
-   *
-   * @param conversationId - The conversation containing the exchange
-   * @param exchangeId - The exchange ID to retrieve
-   * @param options - Optional parameters for message sorting
-   * @returns Promise resolving to {@link ExchangeGetResponse}
-   *
-   * @example
-   * ```typescript
-   * const exchange = await exchanges.getById(conversationId, exchangeId);
-   *
-   * // Access messages
-   * for (const message of exchange.messages) {
-   *   console.log(message.role, message.contentParts);
-   * }
-   * ```
-   */
   @track('ConversationalAgent.Exchanges.GetById')
   async getById(
     conversationId: string,
@@ -177,34 +116,6 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
     return transformExchange(result.data);
   }
 
-  /**
-   * Creates feedback for an exchange
-   *
-   * Submits user feedback (rating and optional comment) for an exchange.
-   * Useful for collecting feedback on assistant responses for quality improvement.
-   *
-   * @param conversationId - The conversation containing the exchange
-   * @param exchangeId - The exchange to provide feedback for
-   * @param options - Feedback data including rating and optional comment
-   * @returns Promise resolving to the feedback creation response
-   *
-   * @example
-   * ```typescript
-   * // Submit positive feedback
-   * await exchanges.createFeedback(
-   *   conversationId,
-   *   exchangeId,
-   *   { rating: FeedbackRating.Positive, comment: 'Very helpful response!' }
-   * );
-   *
-   * // Submit negative feedback with explanation
-   * await exchanges.createFeedback(
-   *   conversationId,
-   *   exchangeId,
-   *   { rating: FeedbackRating.Negative, comment: 'Response was not accurate' }
-   * );
-   * ```
-   */
   @track('ConversationalAgent.Exchanges.CreateFeedback')
   async createFeedback(
     conversationId: string,

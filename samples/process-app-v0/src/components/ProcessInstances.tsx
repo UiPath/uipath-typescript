@@ -227,7 +227,7 @@ export const ProcessInstances = () => {
     }
 
     try {
-      executionHistory = await sdk.maestro.processes.instances.getExecutionHistory(instance.instanceId);
+      executionHistory = await sdk.maestro.processes.instances.getExecutionHistory(instance.instanceId, instance.folderKey);
     } catch (err) {
       console.error('Error fetching execution history:', err);
       // Continue without execution history

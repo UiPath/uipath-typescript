@@ -1,4 +1,4 @@
-import { BaseOptions, RequestOptions } from "../common/types";
+import { BaseOptions, FolderScopedOptions, RequestOptions } from "../common/types";
 import { PaginationOptions } from '../../utils/pagination';
 import { JobState } from "../common/types";
 
@@ -313,3 +313,65 @@ export interface TaskGetByIdOptions extends BaseOptions {
  * Options for getting users with task permissions
  */
 export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
+
+/**
+ * Options for editing a task's metadata.
+ */
+export interface TaskEditMetadataOptions extends FolderScopedOptions {
+  /** New title (max 512 characters). */
+  title?: string;
+  /** Task catalog to associate with the task. */
+  taskCatalogId?: number;
+  /** Set true to unassociate the task's catalog. */
+  unlinkTaskCatalog?: boolean;
+  /** New priority. */
+  priority?: TaskPriority;
+  /** Comment recorded with the edit (max 512 characters). */
+  noteText?: string;
+}
+
+/**
+ * Options for saving a task's data.
+ */
+export interface TaskSaveDataOptions extends FolderScopedOptions {
+  /** Task type. Routes the save to the type-specific endpoint (Form and App tasks are saved via their own endpoints). Looked up automatically when omitted. */
+  type?: TaskType;
+}
+
+/**
+ * Raw task-data shape returned by `getData`, before any method attachment.
+ */
+export interface RawTaskDataGetResponse {
+  id: number;
+  key: string;
+  title: string;
+  type: TaskType;
+  status: TaskStatus;
+  priority: TaskPriority;
+  folderId: number;
+  data: Record<string, unknown> | null;
+  action: string | null;
+  createdTime: string;
+  lastModifiedTime: string | null;
+  tags?: Tag[];
+}
+
+/**
+ * Raw task comment shape returned by the API, before any method attachment.
+ */
+export interface RawTaskCommentGetResponse {
+  id: number;
+  key: string;
+  taskId: number;
+  folderId: number;
+  text: string;
+  createdTime: string;
+  creatorUserId: number;
+  creatorUser?: UserLoginInfo;
+  lastModifierUser?: UserLoginInfo;
+}
+
+/**
+ * Options for listing a task's comments: folder scope (folderId/folderKey/folderPath) + filtering/sorting + pagination.
+ */
+export type TaskCommentGetByTaskIdOptions = RequestOptions & PaginationOptions & FolderScopedOptions;

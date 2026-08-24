@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useMemo, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { UiPath } from '@uipath/uipath-typescript/core'
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -17,11 +16,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children, config }: { children: ReactNode; config: UiPathSDKConfig }) {
+/**
+ * Provides the authenticated UiPath SDK instance to the app.
+ *
+ * Coded App pattern: `new UiPath()` (no config) picks up `clientId`,
+ * `orgName`, `tenantName`, `baseUrl`, `scope`, and `redirectUri` from the
+ * `<meta name="uipath:*">` tags injected by `@uipath/coded-apps-dev`
+ * (locally, from `uipath.json`) or by the UiPath platform (in production).
+ */
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [uipathSDK, setUipathSDK] = useState<UiPath>(() => new UiPath(config))
+  const [uipathSDK, setUipathSDK] = useState<UiPath>(() => new UiPath())
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -67,8 +74,8 @@ export function AuthProvider({ children, config }: { children: ReactNode; config
     setIsAuthenticated(false)
     setError(null)
     // Create new SDK instance for next login
-    setUipathSDK(new UiPath(config))
-  }, [config])
+    setUipathSDK(new UiPath())
+  }, [])
 
   const contextValue = useMemo(() => ({
     isAuthenticated, isLoading, uipathSDK, login, logout, error

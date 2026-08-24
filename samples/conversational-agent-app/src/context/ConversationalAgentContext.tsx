@@ -21,6 +21,7 @@ export type { ChatMessage, ToolCallInfo, InterruptInfo, CitationInfo } from '../
 // ─── Context value interface ───
 
 interface ConversationalAgentContextValue {
+  conversationalAgent: ConversationalAgent | null
   connectionStatus: string
 
   agents: AgentGetResponse[]
@@ -51,6 +52,7 @@ interface ConversationalAgentContextValue {
   resolveInterrupt: (messageId: string, approved: boolean) => Promise<void>
 
   error: string | null
+  setError: (error: string | null) => void
   clearError: () => void
 }
 
@@ -188,6 +190,7 @@ export function ConversationalAgentProvider({ children }: { children: ReactNode 
   // ─── Memoized context value ───
 
   const value = useMemo<ConversationalAgentContextValue>(() => ({
+    conversationalAgent,
     connectionStatus,
     agents,
     selectedAgent,
@@ -212,8 +215,10 @@ export function ConversationalAgentProvider({ children }: { children: ReactNode 
     submitFeedback,
     resolveInterrupt,
     error,
+    setError,
     clearError,
   }), [
+    conversationalAgent,
     connectionStatus, agents, selectedAgent, isLoadingAgents, loadAgents, selectAgent,
     conversations, currentConversation, isLoadingConversations, conversationsHasMore,
     loadConversations, loadMoreConversations, createConversation, selectConversation,

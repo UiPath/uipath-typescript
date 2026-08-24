@@ -904,7 +904,7 @@ describe("Entity Models", () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       const options: EntityUpdateByIdOptions = {
-        addFields: [{ fieldName: "notes" }],
+        addFields: [{ name: "notes" }],
       };
       mockService.updateById = vi.fn().mockResolvedValue(undefined);
 
@@ -921,7 +921,7 @@ describe("Entity Models", () => {
       const entity = createEntityWithMethods(entityData, mockService);
 
       await expect(
-        entity.update({ addFields: [{ fieldName: "notes" }] }),
+        entity.update({ addFields: [{ name: "notes" }] }),
       ).rejects.toThrow(
         ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
       );

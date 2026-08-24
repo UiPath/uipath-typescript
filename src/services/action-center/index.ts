@@ -19,6 +19,9 @@
  */
 
 export { TaskService as Tasks, TaskService } from './tasks';
+export { TaskCatalogService as TaskCatalogs, TaskCatalogService } from './task-catalogs';
 
 export * from '../../models/action-center/tasks.types';
-export * from '../../models/action-center/tasks.models'; 
+export * from '../../models/action-center/tasks.models';
+export * from '../../models/action-center/task-catalogs.types';
+export * from '../../models/action-center/task-catalogs.models'; 

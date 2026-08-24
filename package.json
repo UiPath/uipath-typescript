@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.5.3",
+    "version": "1.6.2",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -225,11 +225,33 @@
                 "types": "./dist/notifications/index.d.ts",
                 "default": "./dist/notifications/index.cjs"
             }
+        },
+        "./functions": {
+            "import": {
+                "types": "./dist/functions/index.d.ts",
+                "default": "./dist/functions/index.mjs"
+            },
+            "require": {
+                "types": "./dist/functions/index.d.ts",
+                "default": "./dist/functions/index.cjs"
+            }
+        },
+        "./platform": {
+            "import": {
+                "types": "./dist/platform/index.d.ts",
+                "default": "./dist/platform/index.mjs"
+            },
+            "require": {
+                "types": "./dist/platform/index.d.ts",
+                "default": "./dist/platform/index.cjs"
+            }
         }
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "docs/oauth-scopes.md",
+        "release-metadata.json"
     ],
     "scripts": {
         "prepack": "rimraf *.tgz",
@@ -242,7 +264,9 @@
         "docs:post-process": "node scripts/docs-post-process.mjs",
         "docs:validate": "typedoc --options typedoc.validation.json",
         "lint": "oxlint",
+        "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
+        "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",
@@ -275,6 +299,7 @@
         "@vitest/ui": "^4.1.9",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
+        "node-html-parser": "^9.0.0",
         "oxlint": "^1.43.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.60.4",

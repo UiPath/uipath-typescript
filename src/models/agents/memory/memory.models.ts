@@ -34,14 +34,13 @@ import {
  */
 export interface AgentMemoryServiceModel {
   /**
+   * Gets agent memory state over time, with optional filters.
    *
    * @experimental
    *
    * /// warning
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
-   *
-   * Gets agent memory state over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetTimelineResponse}, one per time bucket.
@@ -72,14 +71,13 @@ export interface AgentMemoryServiceModel {
   getTimeline(options?: AgentMemoryGetTimelineOptions): Promise<AgentMemoryGetTimelineResponse[]>;
 
   /**
+   * Gets the number of agent memory calls (accesses to the memory store) over time, with optional filters.
    *
    * @experimental
    *
    * /// warning
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
-   *
-   * Gets the number of agent memory calls (accesses to the memory store) over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetCallsTimelineResponse}, one per time bucket.
@@ -110,14 +108,13 @@ export interface AgentMemoryServiceModel {
   getCallsTimeline(options?: AgentMemoryGetCallsTimelineOptions): Promise<AgentMemoryGetCallsTimelineResponse[]>;
 
   /**
+   * Gets the top memory spaces by memory count, with optional filters
    *
    * @experimental
    *
    * /// warning
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
-   *
-   * Gets the top memory spaces by memory count, with optional filters
    *
    * @param options - Optional limit, time window, and scope filters
    * @returns Promise resolving to an array of {@link AgentMemoryGetTopSpacesResponse}, ranked by memory count.

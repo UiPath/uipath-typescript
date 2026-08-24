@@ -38,14 +38,13 @@ import type {
  */
 export interface GovernanceServiceModel {
   /**
+   * Gets per-policy enforcement decisions across the requested time range.
    *
    * @experimental
    *
    * /// warning
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
-   *
-   * Gets per-policy enforcement decisions across the requested time range.
    *
    * Each result row represents one policy's verdict within a single governance enforcement event.
    * A single user action can produce multiple rows when multiple policies were consulted.
@@ -96,14 +95,13 @@ export interface GovernanceServiceModel {
   >;
 
   /**
+   * Gets aggregate governance enforcement counts across the requested time range.
    *
    * @experimental
    *
    * /// warning
    * Preview: This method is experimental and may change or be removed in future releases.
    * ///
-   *
-   * Gets aggregate governance enforcement counts across the requested time range.
    *
    * Returns the total number of evaluations along with how many resolved to
    * `Allow`, `Deny`, or `NoOp`.

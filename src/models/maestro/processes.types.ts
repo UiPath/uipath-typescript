@@ -6,6 +6,21 @@
 import { GetTopRunCountResponse, GetTopDurationResponse, GetTopFaultedCountResponse } from './insights.types';
 
 /**
+ * Optional filters for {@link MaestroProcessesServiceModel.getAll}.
+ * All fields are optional — pass any combination to narrow the returned processes.
+ */
+export interface MaestroProcessGetAllOptions {
+  /** Filter by process key */
+  processKey?: string;
+  /** Filter by package identifier */
+  packageId?: string;
+  /** Only include processes with instances started at or after this time */
+  startTime?: Date;
+  /** Only include processes with instances started at or before this time */
+  endTime?: Date;
+}
+
+/**
  * Process information with instance statistics
  */
 export interface RawMaestroProcessGetAllResponse {

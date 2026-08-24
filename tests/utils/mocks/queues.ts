@@ -2,7 +2,13 @@
  * Queue service mock utilities - Queue-specific mocks only
  * Uses generic utilities from core.ts for base functionality
  */
-import { QueueGetResponse } from '../../../src/models/orchestrator/queues.types';
+import {
+  QueueGetResponse,
+  QueueItem,
+  QueueItemStatus,
+  QueueItemReviewStatus,
+  QueuePriority
+} from '../../../src/models/orchestrator/queues.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { QUEUE_TEST_CONSTANTS } from '../constants/queues';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -108,5 +114,92 @@ export const createMockTransformedQueueCollection = (
     ...(options?.previousCursor !== undefined && { previousCursor: options.previousCursor }),
     ...(options?.currentPage !== undefined && { currentPage: options.currentPage }),
     ...(options?.totalPages !== undefined && { totalPages: options.totalPages })
+  });
+};
+
+/**
+ * Creates a mock queue item with RAW API format (before transformation).
+ * Mirrors the live AddQueueItem/GetItems response shape: PascalCase fields,
+ * the payload twice (SpecificContent object + SpecificData JSON string), and
+ * user-defined payload keys with mixed casing.
+ *
+ * @param overrides - Optional overrides for specific fields
+ * @returns Raw queue item data as it comes from the API (before transformation)
+ */
+export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
+  return createMockBaseResponse({
+    Id: QUEUE_TEST_CONSTANTS.ITEM_ID,
+    Key: QUEUE_TEST_CONSTANTS.ITEM_KEY,
+    Status: QUEUE_TEST_CONSTANTS.ITEM_STATUS,
+    ReviewStatus: QUEUE_TEST_CONSTANTS.ITEM_REVIEW_STATUS,
+    Priority: QUEUE_TEST_CONSTANTS.ITEM_PRIORITY,
+    QueueDefinitionId: QUEUE_TEST_CONSTANTS.QUEUE_ID,
+    Reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE,
+    Progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS,
+    RetryNumber: QUEUE_TEST_CONSTANTS.ITEM_RETRY_NUMBER,
+    DeferDate: QUEUE_TEST_CONSTANTS.ITEM_DEFER_DATE,
+    DueDate: QUEUE_TEST_CONSTANTS.ITEM_DUE_DATE,
+    RiskSlaDate: null,
+    StartProcessing: null,
+    EndProcessing: null,
+    ProcessingException: null,
+    SpecificContent: QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT,
+    SpecificData: QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_DATA_JSON,
+    Output: null,
+    OutputData: null,
+    // Using raw API field names that should be transformed
+    CreationTime: QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME,
+    OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
+    OrganizationUnitFullyQualifiedName: TEST_CONSTANTS.FOLDER_NAME,
+  }, overrides);
+};
+
+/**
+ * Creates a basic queue item object with TRANSFORMED data (not raw API format)
+ *
+ * @param overrides - Optional overrides for specific fields
+ * @returns Queue item with transformed field names (camelCase)
+ */
+export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueItem => {
+  return createMockBaseResponse({
+    id: QUEUE_TEST_CONSTANTS.ITEM_ID,
+    key: QUEUE_TEST_CONSTANTS.ITEM_KEY,
+    status: QueueItemStatus.New,
+    reviewStatus: QueueItemReviewStatus.None,
+    priority: QueuePriority.High,
+    queueId: QUEUE_TEST_CONSTANTS.QUEUE_ID,
+    reference: QUEUE_TEST_CONSTANTS.ITEM_REFERENCE,
+    progress: QUEUE_TEST_CONSTANTS.ITEM_PROGRESS,
+    retryNumber: QUEUE_TEST_CONSTANTS.ITEM_RETRY_NUMBER,
+    deferDate: QUEUE_TEST_CONSTANTS.ITEM_DEFER_DATE,
+    dueDate: QUEUE_TEST_CONSTANTS.ITEM_DUE_DATE,
+    riskSlaDate: null,
+    processingStartTime: null,
+    processingEndTime: null,
+    processingError: null,
+    specificData: QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT as Record<string, unknown>,
+    outputData: null,
+    createdTime: QUEUE_TEST_CONSTANTS.ITEM_CREATED_TIME,
+    folderId: TEST_CONSTANTS.FOLDER_ID,
+    folderName: TEST_CONSTANTS.FOLDER_NAME,
+  }, overrides);
+};
+
+/**
+ * Creates a mock transformed queue item collection response as returned by
+ * PaginationHelpers.getAll
+ *
+ * @param count - Number of queue items to include (defaults to 1)
+ * @returns Mock transformed queue item collection with items array
+ */
+export const createMockTransformedQueueItemCollection = (count: number = 1): any => {
+  const items = createMockCollection(count, (index) => createBasicQueueItem({
+    id: QUEUE_TEST_CONSTANTS.ITEM_ID + index,
+    key: `${index}-${QUEUE_TEST_CONSTANTS.ITEM_KEY}`
+  }));
+
+  return createMockBaseResponse({
+    items,
+    totalCount: count
   });
 };

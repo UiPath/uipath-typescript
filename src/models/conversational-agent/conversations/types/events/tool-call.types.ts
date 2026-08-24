@@ -101,8 +101,8 @@ export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
  *   if (!isClientSideTool) return;
  *
  *   toolCall.onExecutingToolCall(async (event) => {
- *     const result = await runLocalProcess(toolName, event.input);
- *     toolCall.sendToolCallEnd({ output: result });
+ *     const result = await runClientTool(toolName, event.input);
+ *     toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
  *   });
  * });
  * ```
@@ -184,19 +184,18 @@ export interface ToolCallStream {
   /**
    * Registers a handler for executingToolCall events. Fired when the tool is about
    * to be executed. For client-side tools, the client should begin executing its
-   * handler upon receiving this event.
+   * handler upon receiving this event and return the result via `sendToolCallEnd`.
    *
-   * @param cb - Callback receiving the executing event
+   * @param cb - Callback receiving the {@link ExecutingToolCallEvent} with the final input
    * @returns Cleanup function to remove the handler
    *
    * @example Handling client-side tool execution
    * ```typescript
    * toolCall.onExecutingToolCall(async (event) => {
-   *   const result = await executeLocally(toolCall.startEvent.toolName, event.input);
-   *   toolCall.sendToolCallEnd({ output: result });
+   *   const result = await runClientTool(toolCall.startEvent.toolName, event.input);
+   *   toolCall.sendToolCallEnd({ output: JSON.stringify(result) });
    * });
    * ```
-   * @internal
    */
   onExecutingToolCall(cb: (event: ExecutingToolCallEvent) => void): () => void;
 

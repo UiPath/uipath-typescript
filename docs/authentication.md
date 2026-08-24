@@ -63,6 +63,27 @@ To Generate a PAT Token:
 4. Give it a name and expiration date
 5. Provide relevant scopes
 
+### Confidential App-scoped External App (client-credentials)
+
+You can also authenticate the SDK with a token issued to a confidential, app-scoped [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) via the client-credentials grant. Your backend requests the token using the app's Client ID and Client Secret, then passes it to the SDK through the `secret` parameter — like any other bearer token above.
+
+To create a confidential app-scoped External App:
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+2. Click **Add Application** → **Confidential Application**
+3. Configure:
+    - **Name**: Your app name
+    - **Scopes**: Select the permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes)). All scopes must be added as **Application** scopes, not **User** scopes.
+4. Save and copy the **Client ID** and the **Client Secret** — you will not be shown the Client Secret again
+5. Follow the [official UiPath documentation](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications) on how to request client-credentials tokens for a confidential app with application scopes
+6. Pass this token as your `secret`, as shown in the Secret-based Authentication example above
+
+!!! warning "Keep the Client Secret confidential"
+    The Client Secret must never be exposed to public or client-side consumers. If it is exposed, revoke it immediately and generate a new one.
+
+!!! note "No refresh tokens"
+    The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
+
 
 ## SDK Initialization - The initialize() Method
 
@@ -160,7 +181,7 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 
 ---

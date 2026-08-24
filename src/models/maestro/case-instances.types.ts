@@ -4,6 +4,7 @@
  */
 
 import { PaginationOptions } from "../../utils/pagination";
+import { InstanceGetVariablesOptions, InstanceGetVariablesResponse } from "./instance-variables.types";
 
 /**
  * Response for getting a single case instance
@@ -400,3 +401,13 @@ export interface ElementRunMetadata {
   elementRunId: string;
   parentElementRunId: string | null;
 }
+
+/**
+ * Response for getting global variables for case instance
+ */
+export interface CaseInstanceGetVariablesResponse extends InstanceGetVariablesResponse {}
+
+/**
+ * Options for getting global variables
+ */
+export interface CaseInstanceGetVariablesOptions extends InstanceGetVariablesOptions {}

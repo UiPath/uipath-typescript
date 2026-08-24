@@ -10,6 +10,7 @@ out-tsc/
 
 # Tenant-specific credentials — copy uipath.json.example instead
 uipath.json
+.uipath
 
 # Misc
 .DS_Store

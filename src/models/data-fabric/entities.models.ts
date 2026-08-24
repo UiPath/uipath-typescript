@@ -425,13 +425,16 @@ export interface EntityServiceModel {
    * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
    * instead of the full content — use {@link getRecordById} to retrieve the full value.
    *
+   * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
+   * for constraints and the result-row key format.
+   *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -460,6 +463,18 @@ export interface EntityServiceModel {
    *   ],
    * });
    *
+   * // Post-aggregation filter (HAVING): only statuses with more than 5 records
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   *   havingFilter: {
+   *     aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+   *   },
+   * });
+   *
    * // Folder-scoped entity: pass the entity's folder key
    * await entities.queryRecordsById(<id>, {
    *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
@@ -475,8 +490,9 @@ export interface EntityServiceModel {
    * });
    *
    * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys).
    * await entities.queryRecordsById(<id>, {
-   *   selectedFields: ["Id", "amount"],
+   *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [
    *     {
    *       entityName: "Order",
@@ -665,29 +681,29 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const id = await entities.create("product_catalog", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    *
    * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
    * const ordersId = await entities.create("orders", [
-   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
-   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { name: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
    *
    * // Cross-folder references — link a folder-scoped entity to entities and
    * // system choice sets that live in another folder or at the tenant level.
    * await entities.create("orderLine", [
    *   {
-   *     fieldName: "order",
+   *     name: "order",
    *     type: EntityFieldDataType.RELATIONSHIP,
    *     referenceEntityId: "<orderEntityId>",
    *     referenceFieldId: "<orderEntityPkId>",
    *     referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
    *   },
    *   {
-   *     fieldName: "userType",
+   *     name: "userType",
    *     type: EntityFieldDataType.CHOICE_SET_SINGLE,
    *     choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
    *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
@@ -730,8 +746,8 @@ export interface EntityServiceModel {
    * ```typescript
    * // Schema-only: add a field and remove another
    * await entities.updateById(<id>, {
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: [{ fieldName: "old_field" }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ name: "old_field" }],
    * });
    *
    * // Metadata-only: rename the entity
@@ -749,8 +765,8 @@ export interface EntityServiceModel {
    * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
    * await entities.updateById(<id>, {
    *   addFields: [
-   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
-   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *     { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   ],
    *   updateFields: [
    *     { id: <fieldId>, lengthLimit: 1000 },
@@ -760,7 +776,7 @@ export interface EntityServiceModel {
    * // Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
    * await entities.updateById(<id>, {
    *   folderKey: "<folderKey>",
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal
@@ -913,12 +929,15 @@ export interface EntityMethods {
   /**
    * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination
+   * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
+   * for constraints and the result-row key format.
+   *
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -941,6 +960,18 @@ export interface EntityMethods {
    *   ],
    * });
    *
+   * // Post-aggregation filter (HAVING): only statuses with more than 5 records
+   * await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   *   havingFilter: {
+   *     aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+   *   },
+   * });
+   *
    * // Aggregate: total sum and average across all records (no grouping)
    * await entity.queryRecords({
    *   aggregates: [
@@ -950,8 +981,9 @@ export interface EntityMethods {
    * });
    *
    * // Multi-join: pull fields from related entities into the query
+   * // (result rows use entity-qualified keys).
    * await entity.queryRecords({
-   *   selectedFields: ["Id", "amount"],
+   *   selectedFields: ["Order.amount", "Customer.name", "Region.name"],
    *   joins: [
    *     {
    *       entityName: "Order",
@@ -1033,14 +1065,14 @@ export interface EntityMethods {
    * const entity = await entities.getById(<id>);
    * await entity.update({
    *   displayName: "Updated Name",
-   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    *
    * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints 
    * await entity.update({
    *   addFields: [
-   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
-   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *     { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
+   *     { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   ],
    * });
    * ```

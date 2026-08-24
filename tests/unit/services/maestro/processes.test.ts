@@ -62,7 +62,7 @@ describe('MaestroProcessesService', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
-        {}
+        { params: {} }
       );
 
       expect(result).toHaveLength(2);
@@ -95,7 +95,7 @@ describe('MaestroProcessesService', () => {
       expect(result).toEqual([]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
-        {}
+        { params: {} }
       );
     });
 
@@ -126,7 +126,7 @@ describe('MaestroProcessesService', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
-        {}
+        { params: {} }
       );
       expect(result).toEqual([]);
       expect(Array.isArray(result)).toBe(true);
@@ -158,6 +158,42 @@ describe('MaestroProcessesService', () => {
 
 
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.CUSTOM_PACKAGE_ID);
+    });
+
+    it('should forward filter options as query params and convert dates to ISO strings', async () => {
+      const startTime = new Date('2026-04-01T00:00:00Z');
+      const endTime = new Date('2026-05-01T00:00:00Z');
+      mockApiClient.get.mockResolvedValue({ processes: [] });
+
+      await service.getAll({
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        startTime,
+        endTime,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+        {
+          params: {
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            startedTimeUtcStart: startTime.toISOString(),
+            startedTimeUtcEnd: endTime.toISOString(),
+          },
+        }
+      );
+    });
+
+    it('should omit undefined filters from query params', async () => {
+      mockApiClient.get.mockResolvedValue({ processes: [] });
+
+      await service.getAll({ packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+        { params: { packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID } }
+      );
     });
   });
 

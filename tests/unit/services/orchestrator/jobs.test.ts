@@ -6,6 +6,7 @@ import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockTransformedJobCollection,
   createMockRawJob,
+  createMockRawJobAttachment,
 } from '../../../utils/mocks/jobs';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -20,6 +21,8 @@ import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
 import { JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../../src/models/orchestrator/jobs.constants';
+import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -818,6 +821,222 @@ describe('JobService Unit Tests', () => {
       await expect(
         jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
       ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+  });
+
+  describe('getAttachments', () => {
+    it('should get job attachments successfully with all fields mapped correctly', async () => {
+      mockApiClient.get.mockResolvedValue([createMockRawJobAttachment()]);
+
+      const result = await jobService.getAttachments(
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_LINK_ID);
+      expect(result[0].attachmentId).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_ID);
+      expect(result[0].jobKey).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+      expect(result[0].category).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CATEGORY);
+      expect(result[0].attachmentName).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_NAME);
+      expect(result[0].creatorUserId).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CREATOR_USER_ID);
+      expect(result[0].lastModifierUserId).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_LAST_MODIFIER_USER_ID);
+    });
+
+    it('should send the job key as a query param and the folder ID as a header', async () => {
+      mockApiClient.get.mockResolvedValue([createMockRawJobAttachment()]);
+
+      await jobService.getAttachments(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.ATTACHMENTS.GET_BY_JOB_KEY,
+        expect.objectContaining({
+          params: { jobKey: JOB_TEST_CONSTANTS.JOB_KEY },
+          headers: { [FOLDER_ID]: String(TEST_CONSTANTS.FOLDER_ID) },
+        })
+      );
+    });
+
+    it('should apply semantic renames and drop the raw API field names', async () => {
+      mockApiClient.get.mockResolvedValue([createMockRawJobAttachment()]);
+
+      const result = await jobService.getAttachments(
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      // creationTime -> createdTime
+      expect(result[0].createdTime).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CREATED_TIME);
+      expect((result[0] as any).creationTime).toBeUndefined();
+
+      // lastModificationTime -> lastModifiedTime
+      expect(result[0].lastModifiedTime).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_LAST_MODIFIED_TIME);
+      expect((result[0] as any).lastModificationTime).toBeUndefined();
+    });
+
+    it('should transform every item when the job has multiple attachments', async () => {
+      mockApiClient.get.mockResolvedValue([
+        createMockRawJobAttachment(),
+        createMockRawJobAttachment({
+          id: 'second-link-id',
+          category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY,
+        }),
+      ]);
+
+      const result = await jobService.getAttachments(
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[1].category).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY);
+      // The rename must apply to every element, not just the first
+      expect(result[1].createdTime).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CREATED_TIME);
+      expect((result[1] as any).creationTime).toBeUndefined();
+    });
+
+    it('should return an empty array when the job has no attachments', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      const result = await jobService.getAttachments(
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should throw ValidationError when jobKey is empty string', async () => {
+      await expect(
+        jobService.getAttachments('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderId is missing', async () => {
+      await expect(
+        jobService.getAttachments(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_ATTACHMENT_NOT_FOUND);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        jobService.getAttachments(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_ATTACHMENT_NOT_FOUND);
+    });
+  });
+
+  describe('linkAttachment', () => {
+    it('should link an attachment to a job and return the transformed link', async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockRawJobAttachment({ category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY })
+      );
+
+      const result = await jobService.linkAttachment(
+        JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID,
+        { category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY }
+      );
+
+      expect(result.id).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_LINK_ID);
+      expect(result.attachmentId).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_ID);
+      expect(result.category).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY);
+
+      // creationTime -> createdTime on the link path too
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_CREATED_TIME);
+      expect((result as any).creationTime).toBeUndefined();
+      expect(result.lastModifiedTime).toBe(JOB_TEST_CONSTANTS.ATTACHMENT_LAST_MODIFIED_TIME);
+      expect((result as any).lastModificationTime).toBeUndefined();
+    });
+
+    it('should send the link payload as-is with the folder ID as a header', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawJobAttachment());
+
+      await jobService.linkAttachment(
+        JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID,
+        { category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY }
+      );
+
+      // The API takes camelCase field names, so the body is sent unmapped
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.ATTACHMENTS.LINK,
+        {
+          attachmentId: JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+          jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+          category: JOB_TEST_CONSTANTS.ATTACHMENT_CUSTOM_CATEGORY,
+        },
+        expect.objectContaining({
+          headers: { [FOLDER_ID]: String(TEST_CONSTANTS.FOLDER_ID) },
+        })
+      );
+    });
+
+    it('should omit the category when no options are supplied', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawJobAttachment({ category: null }));
+
+      const result = await jobService.linkAttachment(
+        JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+        JOB_TEST_CONSTANTS.JOB_KEY,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.ATTACHMENTS.LINK,
+        expect.objectContaining({ category: undefined }),
+        expect.any(Object)
+      );
+      // The API answers with a null category when none was sent
+      expect(result.category).toBeNull();
+    });
+
+    it('should throw ValidationError when attachmentId is empty string', async () => {
+      await expect(
+        jobService.linkAttachment('', JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when jobKey is empty string', async () => {
+      await expect(
+        jobService.linkAttachment(JOB_TEST_CONSTANTS.ATTACHMENT_ID, '', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderId is missing', async () => {
+      await expect(
+        jobService.linkAttachment(
+          JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          0
+        )
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_ATTACHMENT_NOT_FOUND);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        jobService.linkAttachment(
+          JOB_TEST_CONSTANTS.ATTACHMENT_ID,
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          TEST_CONSTANTS.FOLDER_ID
+        )
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_ATTACHMENT_NOT_FOUND);
     });
   });
 });

@@ -1,0 +1,8 @@
+{
+  "clientId": "<your-external-application-id>",
+  "orgName": "<your-org>",
+  "tenantName": "<your-tenant>",
+  "baseUrl": "https://api.uipath.com",
+  "redirectUri": "http://localhost:5173/",
+  "scope": "OR.Tasks OR.Buckets OR.Folders.Read"
+}

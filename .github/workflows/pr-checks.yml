@@ -33,7 +33,7 @@ jobs:
     # coverage workflow did not succeed.
     needs: coverage
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     steps:
       - name: Check coverage result
         if: needs.coverage.result != 'success'
@@ -42,7 +42,7 @@ jobs:
           exit 1
 
   test-packages:
-    runs-on: ubuntu-latest
+    runs-on: uipath-ubuntu-latest
     permissions:
       contents: read
     strategy:
@@ -55,10 +55,10 @@ jobs:
         working-directory: packages/${{ matrix.package }}
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -70,20 +70,52 @@ jobs:
       - name: Run tests
         run: npm test
 
-  jsdoc-validation:
-    # Fails when public API methods/parameters lack JSDoc. Uses TypeDoc's
-    # built-in notDocumented validation (typedoc.validation.json) - no custom
-    # parsing. Expected to fail until existing gaps are documented or tagged
-    # @internal.
-    runs-on: ubuntu-latest
+  check-samples:
+    # Sample-app convention gate. Runs the check-samples.mjs rules against the
+    # sample apps changed in this PR (existing apps are a backlog; each becomes
+    # enforced the next time it is changed). Not an oxlint rule — these are
+    # filesystem/structural checks (file presence, README media, favicon) that a
+    # source-code linter can't express, so they live as a script + this job.
+    runs-on: uipath-ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The rule logic is unit-tested in tests/unit/scripts/check-samples.test.ts
+      # (runs with the normal test suite); this job only gates changed apps.
+      - name: Check changed sample apps
+        # base_ref is empty on workflow_dispatch; fall back to main so the ref
+        # is always valid (origin/main) instead of an invalid "origin/".
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: node scripts/check-samples.mjs --changed "origin/$BASE_REF"
+
+  jsdoc-validation:
+    # Fails when public API methods/parameters lack JSDoc. Uses TypeDoc's
+    # built-in notDocumented validation (typedoc.validation.json) - no custom
+    # parsing.
+    runs-on: uipath-ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -93,4 +125,3 @@ jobs:
 
       - name: Validate JSDoc completeness
         run: npm run docs:validate
-

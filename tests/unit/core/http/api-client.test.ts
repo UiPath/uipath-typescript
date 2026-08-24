@@ -18,10 +18,13 @@ const mockConfig = {
 const mockExecutionContext = {};
 
 let capturedHeaders: Record<string, string> = {};
+let capturedUrl = '';
 
 beforeEach(() => {
   capturedHeaders = {};
-  global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+  capturedUrl = '';
+  global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
+    capturedUrl = url;
     capturedHeaders = { ...options.headers };
     return Promise.resolve({
       ok: true,
@@ -88,6 +91,80 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient query param serialization', () => {
+  it('serializes an array param as repeated keys, not a comma-joined value', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { Publishers: ['Apps', 'Orchestrator'] } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    const publishers = new URLSearchParams(query).getAll('Publishers');
+    expect(publishers).toEqual(['Apps', 'Orchestrator']);
+    expect(capturedUrl).not.toContain('Apps%2COrchestrator');
+  });
+
+  it('serializes a single-element array param as one key', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { Publishers: ['Apps'] } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    expect(new URLSearchParams(query).getAll('Publishers')).toEqual(['Apps']);
+  });
+
+  it('serializes a scalar param as a single key', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { PublisherName: 'Apps' } });
+
+    const query = capturedUrl.split('?')[1] ?? '';
+    expect(new URLSearchParams(query).getAll('PublisherName')).toEqual(['Apps']);
+  });
+});
+
+describe('ApiClient Content-Type header', () => {
+  it('omits Content-Type on GET (bodyless request)', async () => {
+    const client = createClient();
+    await client.get('/test');
+
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
+  });
+
+  it('sends application/json Content-Type on POST with a JSON body', async () => {
+    const client = createClient();
+    await client.post('/test', { foo: 'bar' });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/json');
+  });
+
+  it('omits Content-Type on POST with a FormData body (browser sets boundary)', async () => {
+    const client = createClient();
+    const form = new FormData();
+    form.append('field', 'value');
+    await client.post('/test', form);
+
+    expect(capturedHeaders['Content-Type']).toBeUndefined();
+  });
+
+  it('lets per-request options.headers override the omitted Content-Type on GET', async () => {
+    const client = createClient();
+    await client.get('/test', { headers: { 'Content-Type': 'application/xml' } });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+
+  it('preserves Content-Type coming from clientConfig.headers on GET', async () => {
+    const client = createClient({ headers: { 'Content-Type': 'application/xml' } });
+    await client.get('/test');
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+
+  it('respects clientConfig.headers Content-Type override on POST', async () => {
+    const client = createClient({ headers: { 'Content-Type': 'application/xml' } });
+    await client.post('/test', { foo: 'bar' });
+
+    expect(capturedHeaders['Content-Type']).toBe('application/xml');
   });
 });
 

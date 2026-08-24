@@ -138,6 +138,48 @@ describe('CasesService', () => {
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
+    it('should forward filter options alongside the pinned processType and convert dates to ISO strings', async () => {
+      const startTime = new Date('2026-04-01T00:00:00Z');
+      const endTime = new Date('2026-05-01T00:00:00Z');
+      mockApiClient.get.mockResolvedValue({ processes: [] });
+
+      await service.getAll({
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        startTime,
+        endTime,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+        {
+          params: {
+            processType: ProcessType.CaseManagement,
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+            startedTimeUtcStart: startTime.toISOString(),
+            startedTimeUtcEnd: endTime.toISOString(),
+          },
+        }
+      );
+    });
+
+    it('should omit undefined filters while keeping processType', async () => {
+      mockApiClient.get.mockResolvedValue({ processes: [] });
+
+      await service.getAll({ packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+        {
+          params: {
+            processType: ProcessType.CaseManagement,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          },
+        }
+      );
+    });
+
     it('should extract case name from packageId with CaseManagement prefix', async () => {
 
       const mockApiResponse = createMockCasesGetAllApiResponse([

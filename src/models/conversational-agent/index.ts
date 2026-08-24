@@ -16,6 +16,9 @@ export * from './agents';
 // User service types and models
 export * from './user';
 
+// Connection types
+export * from './connections';
+
 // ==================== Feature Types ====================
 // Feature flags
 export * from './feature-flags.types';

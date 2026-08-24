@@ -2,6 +2,10 @@
 
 A sample React TypeScript application for managing UiPath Maestro processes with OAuth authentication.
 
+## Preview
+
+![Browsing Maestro processes and process instances](./screenshots/preview.gif)
+
 ## Installation
 
 To install the sdk do
@@ -41,7 +45,7 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_ORG_NAME=your-organization-name
    VITE_UIPATH_TENANT_NAME=your-tenant-name
    VITE_UIPATH_BASE_URL=https://api.uipath.com
-   VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
+   VITE_UIPATH_SCOPE=Traces.Api PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write OR.Execution.Read
    ```
 
 ### 4. Installation and Running

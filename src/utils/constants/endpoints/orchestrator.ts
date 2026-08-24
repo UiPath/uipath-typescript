@@ -21,7 +21,31 @@ export const TASK_ENDPOINTS = {
   COMPLETE_GENERIC_TASK: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/CompleteTask`,
   GET_TASK_FORM_BY_ID: `${ORCHESTRATOR_BASE}/forms/TaskForms/GetTaskFormById`,
   GET_GENERIC_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/GetTaskDataById`,
+  GET_GENERIC_TASK_BY_KEY: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/GetTaskDataByKey`,
   GET_APP_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskById`,
+  SAVE_TASK_TAGS: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskTags`,
+  SAVE_TASK_DATA: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/SaveTaskData`,
+  SAVE_FORM_TASK_DATA: `${ORCHESTRATOR_BASE}/forms/TaskForms/SaveTaskData`,
+  SAVE_APP_TASK_DATA: `${ORCHESTRATOR_BASE}/tasks/AppTasks/SaveAppTasksData`,
+  EDIT_TASK_METADATA: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata`,
+} as const;
+
+/**
+ * Task Catalog (Action Center) Endpoints
+ */
+export const TASK_CATALOG_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/TaskCatalogs`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/TaskCatalogs(${id})`,
+  CREATE: `${ORCHESTRATOR_BASE}/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog`,
+  UPDATE: (id: number) => `${ORCHESTRATOR_BASE}/odata/TaskCatalogs(${id})/UiPath.Server.Configuration.OData.UpdateTaskCatalog`,
+} as const;
+
+/**
+ * Task Note (Action Center) Endpoints
+ */
+export const TASK_NOTE_ENDPOINTS = {
+  GET_BY_TASK_ID: (taskId: number) => `${ORCHESTRATOR_BASE}/odata/TaskNotes/UiPath.Server.Configuration.OData.GetByTaskId(taskId=${taskId})`,
+  CREATE: `${ORCHESTRATOR_BASE}/odata/TaskNotes/UiPath.Server.Configuration.OData.CreateTaskNote`,
 } as const;
 
 /**
@@ -54,6 +78,10 @@ export const QUEUE_ENDPOINTS = {
   GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions`,
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/QueueDefinitions(${id})`,
+  GET_ITEMS: `${ORCHESTRATOR_BASE}/odata/QueueItems`,
+  ADD_ITEM: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.AddQueueItem`,
+  START_TRANSACTION: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.StartTransaction`,
+  SET_TRANSACTION_RESULT: (itemId: number) => `${ORCHESTRATOR_BASE}/odata/Queues(${itemId})/UiPathODataSvc.SetTransactionResult`,
 } as const;
 
 /**
@@ -65,6 +93,12 @@ export const JOB_ENDPOINTS = {
   STOP: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
   RESUME: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob`,
   RESTART: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob`,
+  ATTACHMENTS: {
+    /** Attachments linked to a job; the job is addressed by the `jobKey` query param. */
+    GET_BY_JOB_KEY: `${ORCHESTRATOR_BASE}/api/JobAttachments/GetByJobKey`,
+    /** Links an existing attachment to a job. */
+    LINK: `${ORCHESTRATOR_BASE}/api/JobAttachments/Post`,
+  },
 } as const;
 
 /**
@@ -81,6 +115,8 @@ export const ASSET_ENDPOINTS = {
  */
 export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
   GET_BY_ID: (id: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${id})`,
+  /** Creates an attachment record and returns a short-lived URI to upload its content to. */
+  CREATE: `${ORCHESTRATOR_BASE}/odata/Attachments`,
 } as const;
 
 /**
@@ -89,4 +125,34 @@ export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
 export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
   SUBMIT_EXCEPTION_REPORT: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/SubmitExceptionReport`,
   PROCESS_EXTRACTED_DATA: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/ProcessExtractedData`,
+} as const;
+
+/**
+ * Orchestrator Folder Endpoints
+ */
+export const FOLDER_ENDPOINTS = {
+  GET_BY_ID: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Folders(${folderId})`,
+} as const;
+
+/**
+ * Coded Functions Endpoints
+ */
+export const FUNCTION_ENDPOINTS = {
+  /** Folder-scoped list of function HTTP endpoints. */
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/HttpTriggers`,
+  /** Invokes a function through its HTTP endpoint; the response body is the function output. */
+  INVOKE: (folderKey: string, processSlug: string, functionSlug: string) =>
+    `${ORCHESTRATOR_BASE}/t/${folderKey}/${processSlug}/${functionSlug}`,
+} as const;
+
+/**
+ * Studio Web Licensing Endpoints
+ */
+export const STUDIO_WEB_LICENSE_ENDPOINTS = {
+  /**
+   * Acquires a license for the calling user, falling back to the free
+   * "Attended Studio Web" license. `POST` only, no request body, not
+   * folder-scoped.
+   */
+  ACQUIRE: `${ORCHESTRATOR_BASE}/api/StudioWeb/AcquireLicense`,
 } as const;
