@@ -7,6 +7,28 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
+/**
+ * ApiClient.request issues a single bare fetch with no timeout and no retry
+ * (src/core/http/api-client.ts), so one stalled request hangs until vitest's
+ * 30s test timeout kills the test. CI run 15 hit exactly that: the first
+ * getById of a freshly submitted entry stalled past 30s while the identical
+ * call in the next test returned in 365ms. Race the call against a deadline
+ * so a stalled attempt is abandoned and reissued instead of eating the test's
+ * whole budget. (The underlying fetch cannot be aborted from here — it is
+ * merely orphaned, which is acceptable in tests.)
+ */
+async function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} did not respond within ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([promise, deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
@@ -102,11 +124,47 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       existingFeedbackId = created.id;
       createdForGetById = created.id;
       registerResource('feedbackEntries', { id: created.id, folderKey: configuredFolderKey });
-    });
+
+      // Warm up the fixture before any test reads it. The first read of a
+      // freshly submitted entry has been observed to stall server-side for
+      // over 30s while every subsequent read of the same entry takes ~400ms,
+      // so absorb that first read here with bounded, abandonable attempts
+      // rather than letting it burn a test's entire 30s budget.
+      const warmupDeadline = Date.now() + 20_000;
+      let lastError: unknown;
+      while (Date.now() < warmupDeadline) {
+        try {
+          await withDeadline(
+            feedback.getById(created.id, { folderKey: configuredFolderKey }),
+            5_000,
+            `warm-up getById(${created.id})`
+          );
+          return;
+        } catch (error) {
+          lastError = error;
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+        }
+      }
+      throw new Error(
+        `getById fixture ${created.id} never became readable within 20s of creation: ${lastError}`
+      );
+    }, 60_000);
 
     afterAll(async () => {
       if (createdForGetById) {
-        await feedback.deleteById(createdForGetById, { folderKey: existingFolderKey });
+        // Cleanup must not fail the suite: registerResource's emergency sweep
+        // is never invoked (cleanupAllTestResources has no caller), so warn
+        // loudly instead. A leaked entry is benign here — the next run's
+        // beforeAll finds it in the test folder and reuses it as the fixture.
+        try {
+          await withDeadline(
+            feedback.deleteById(createdForGetById, { folderKey: existingFolderKey }),
+            10_000,
+            `cleanup deleteById(${createdForGetById})`
+          );
+        } catch (error) {
+          console.warn(`Failed to delete getById fixture ${createdForGetById}:`, error);
+        }
       }
     });
 
