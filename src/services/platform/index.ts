@@ -21,6 +21,12 @@
  *   organizationId: '<organizationId>',
  * });
  *
+ * await platform.updateUserSettings(
+ *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
+ *   settings[0].userId,
+ *   settings[0].organizationId
+ * );
+ *
  * const users = new Users(sdk);
  * const allUsers = await users.getAll('<organizationId>');
  * ```

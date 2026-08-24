@@ -22,7 +22,6 @@ import type { PlatformUserServiceModel } from '../../models/platform/users.model
 import { PlatformUserGetResponse, createPlatformUserWithMethods } from '../../models/platform/users.models';
 import {
   PlatformUserMap,
-  PlatformUserUpdateMap,
   PlatformUserTypeMap,
   PlatformUserCategoryMap,
 } from '../../models/platform/users.constants';
@@ -115,7 +114,7 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
       throw new ValidationError({ message: 'update must contain at least one field to change' });
     }
 
-    const body = transformRequest(update, PlatformUserUpdateMap);
+    const body = transformRequest(update, PlatformUserMap);
     const response = await this.put<RawPlatformUserUpdateResult>(
       IDENTITY_USER_ENDPOINTS.GET_BY_ID(userId),
       body
@@ -173,6 +172,8 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
     let data = transformData(wire, PlatformUserMap) as Record<string, unknown>;
     data = applyDataTransforms(data, { field: 'type', valueMap: PlatformUserTypeMap });
     data = applyDataTransforms(data, { field: 'category', valueMap: PlatformUserCategoryMap });
+    // The API sends null for a user in no groups — normalize so callers always get an array.
+    data.groupIds = data.groupIds ?? [];
 
     return createPlatformUserWithMethods(data as unknown as RawPlatformUserGetResponse, this);
   }

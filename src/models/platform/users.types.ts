@@ -86,7 +86,7 @@ export interface RawPlatformUserGetResponse {
   lastModifiedTime: string | null;
   /** When the user last signed in. */
   lastLoginTime: string | null;
-  /** GUIDs of the groups the user belongs to. */
+  /** GUIDs of the groups the user belongs to — empty when the user is in none. */
   groupIds: string[];
   /** Whether the account is active. */
   isActive: boolean;
