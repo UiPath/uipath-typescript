@@ -10,6 +10,7 @@ import { ErrorParams } from './types';
  * - Gateway timeout
  */
 export class ServerError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.SERVER, {
       message: params.message || ErrorMessages.INTERNAL_SERVER_ERROR,

@@ -15,7 +15,6 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
 
     it('should retrieve incidents through process context', async () => {
       const { maestroProcesses } = getServices();
-      const config = getTestConfig();
 
       try {
         const processes = await maestroProcesses.getAll({
@@ -23,25 +22,20 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
         });
 
         if (processes.length === 0) {
-          console.log('No processes available to test incidents');
-          return;
+          throw new Error('No Maestro processes available — cannot test incident retrieval');
         }
 
-        const processKey = processes[0].key;
+        const { processKey, folderKey } = processes[0];
 
-        try {
-          const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+        const incidents = await maestroProcesses.getIncidents(processKey, folderKey);
 
-          expect(incidents).toBeDefined();
-          expect(Array.isArray(incidents)).toBe(true);
+        expect(incidents).toBeDefined();
+        expect(Array.isArray(incidents)).toBe(true);
 
-          if (incidents.length > 0) {
-            const incident = incidents[0];
-            expect(incident).toBeDefined();
-            expect(incident.id || incident.incidentId).toBeDefined();
-          }
-        } catch (error: any) {
-          console.log('Incident retrieval failed:', error.message);
+        if (incidents.length > 0) {
+          const incident = incidents[0];
+          expect(incident).toBeDefined();
+          expect(incident.id || incident.incidentId).toBeDefined();
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -62,34 +56,27 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       const processKey = config.maestroTestProcessKey;
 
       if (!processKey) {
-        console.log(
-          'Skipping incident structure test: MAESTRO_TEST_PROCESS_KEY not configured'
-        );
-        return;
+        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot validate incident structure');
       }
 
-      try {
-        const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+      const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
-        expect(incidents).toBeDefined();
-        expect(Array.isArray(incidents)).toBe(true);
+      expect(incidents).toBeDefined();
+      expect(Array.isArray(incidents)).toBe(true);
 
-        if (incidents.length > 0) {
-          const incident = incidents[0];
+      if (incidents.length > 0) {
+        const incident = incidents[0];
 
-          expect(incident).toBeDefined();
-          expect(typeof incident).toBe('object');
+        expect(incident).toBeDefined();
+        expect(typeof incident).toBe('object');
 
-          if (incident.id || incident.incidentId) {
-            expect(typeof (incident.id || incident.incidentId)).toBe('string');
-          }
-
-          if (incident.type) {
-            expect(typeof incident.type).toBe('string');
-          }
+        if (incident.id || incident.incidentId) {
+          expect(typeof (incident.id || incident.incidentId)).toBe('string');
         }
-      } catch (error: any) {
-        console.log('Incident structure validation failed:', error.message);
+
+        if (incident.type) {
+          expect(typeof incident.type).toBe('string');
+        }
       }
     });
   });
@@ -104,15 +91,14 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
         });
 
         if (processes.length === 0) {
-          console.log('No processes available');
-          return;
+          throw new Error('No Maestro processes available — cannot test empty incident results');
         }
 
         let foundEmptyIncidents = false;
 
         for (const process of processes) {
           try {
-            const incidents = await maestroProcesses.getIncidents(process.key);
+            const incidents = await maestroProcesses.getIncidents(process.processKey, process.folderKey);
 
             if (incidents.length === 0) {
               foundEmptyIncidents = true;
@@ -145,27 +131,21 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       const processKey = config.maestroTestProcessKey;
 
       if (!processKey) {
-        console.log('Skipping incident details test: process key not configured');
-        return;
+        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot test incident details');
       }
 
-      try {
-        const incidents = await maestroProcesses.getIncidents(processKey, config.folderId);
+      const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
-        if (incidents.length === 0) {
-          console.log('No incidents available for the configured process');
-          return;
-        }
-
-        const incident = incidents[0];
-
-        expect(incident).toBeDefined();
-        expect(Object.keys(incident).length).toBeGreaterThan(0);
-
-        console.log('Incident fields:', Object.keys(incident));
-      } catch (error: any) {
-        console.log('Incident details test failed:', error.message);
+      if (incidents.length === 0) {
+        throw new Error(
+          'No incidents available for the configured process — MAESTRO_TEST_PROCESS_KEY must point at a process with faulted runs'
+        );
       }
+
+      const incident = incidents[0];
+
+      expect(incident).toBeDefined();
+      expect(Object.keys(incident).length).toBeGreaterThan(0);
     });
   });
 

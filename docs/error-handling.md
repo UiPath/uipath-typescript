@@ -151,7 +151,7 @@ await sdk.initialize();
 const queues = new Queues(sdk);
 
 try {
-  await queues.getAll();
+  await queues.getAllWithMethods();
 } catch (error) {
   if (isServerError(error)) {
     console.log('Server error:', error.message);

@@ -19,3 +19,21 @@ export const FUNCTION_TEST_CONSTANTS = {
   INVOKE_OUTPUT: { message: 'Hello, Alice!' },
   JOB_KEY: '7f3f4bd6-6f2e-4c5a-9d38-6f3f0a1b2c3d',
 } as const;
+
+/**
+ * Test constants for the license acquisition that precedes an invocation.
+ * Values mirror a live `POST /api/StudioWeb/AcquireLicense` response.
+ */
+export const FUNCTION_LICENSE_TEST_CONSTANTS = {
+  ROBOT_TYPE: 'StudioX',
+  ROBOT_TYPES: ['Attended', 'StudioX'],
+  /** ISO 8601 session start, distinctive so the `started` → `startedTime` rename is verifiable. */
+  STARTED: '2026-08-11T13:24:05.2768387Z',
+  /** Base license tier of a licensed user, from the token's `ubl` claim. */
+  LICENSE_TIER: 'BASICNU',
+  /** Licensed units, from the token's `lu` claim. */
+  LICENSED_UNITS: ['APPS', 'ATTR', 'STDW', 'STDX'],
+  /** Orchestrator issues license tokens valid for two hours. */
+  TTL_SECONDS: 7200,
+  ERROR_LICENSE_UNAVAILABLE: 'No license available for this user',
+} as const;

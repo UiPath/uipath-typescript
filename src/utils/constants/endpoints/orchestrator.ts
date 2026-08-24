@@ -78,6 +78,10 @@ export const QUEUE_ENDPOINTS = {
   GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions`,
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/QueueDefinitions(${id})`,
+  GET_ITEMS: `${ORCHESTRATOR_BASE}/odata/QueueItems`,
+  ADD_ITEM: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.AddQueueItem`,
+  START_TRANSACTION: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.StartTransaction`,
+  SET_TRANSACTION_RESULT: (itemId: number) => `${ORCHESTRATOR_BASE}/odata/Queues(${itemId})/UiPathODataSvc.SetTransactionResult`,
 } as const;
 
 /**
@@ -139,4 +143,16 @@ export const FUNCTION_ENDPOINTS = {
   /** Invokes a function through its HTTP endpoint; the response body is the function output. */
   INVOKE: (folderKey: string, processSlug: string, functionSlug: string) =>
     `${ORCHESTRATOR_BASE}/t/${folderKey}/${processSlug}/${functionSlug}`,
+} as const;
+
+/**
+ * Studio Web Licensing Endpoints
+ */
+export const STUDIO_WEB_LICENSE_ENDPOINTS = {
+  /**
+   * Acquires a license for the calling user, falling back to the free
+   * "Attended Studio Web" license. `POST` only, no request body, not
+   * folder-scoped.
+   */
+  ACQUIRE: `${ORCHESTRATOR_BASE}/api/StudioWeb/AcquireLicense`,
 } as const;

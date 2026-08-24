@@ -6,7 +6,15 @@ import {
   FunctionRef,
   RawFunctionGetResponse,
 } from '../../../models/orchestrator/functions.types';
-import { RawFolderResponse, RawFunctionTrigger } from '../../../models/orchestrator/functions.internal-types';
+import {
+  FunctionAcquireLicenseOptions,
+  LicenseCacheEntry,
+  RawFolderResponse,
+  RawFunctionTrigger,
+  RawStudioWebLicenseResponse,
+  StudioWebLicense,
+  StudioWebLicenseTokenClaims,
+} from '../../../models/orchestrator/functions.internal-types';
 import { CollectionResponse, FolderScopedOptions } from '../../../models/common/types';
 import { UiPathError } from '../../../core/errors/base';
 import { NotFoundError } from '../../../core/errors/not-found';
@@ -18,7 +26,8 @@ import {
 } from '../../../models/orchestrator/functions.models';
 import { FunctionMap } from '../../../models/orchestrator/functions.constants';
 import { pascalToCamelCaseKeys, transformOptions } from '../../../utils/transform';
-import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS, STUDIO_WEB_LICENSE_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { decodeJwtClaims, extractUserIdFromToken } from '../../../utils/encoding/jwt';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { JOB_KEY } from '../../../utils/constants/headers';
@@ -27,9 +36,73 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { IUiPath } from '../../../core/types';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
+
+/**
+ * How long a license is reused when it states no expiry of its own — the free
+ * grant carries no token to read one from.
+ *
+ * Deliberately short. Where a license states a window the SDK follows it; where
+ * the platform states none, re-checking soon keeps the SDK from honouring a
+ * licensing change later than it happens. Re-checking costs almost nothing: the
+ * acquisition runs in parallel with the name lookup, so it hides inside a leg
+ * the invocation already pays for.
+ */
+const FALLBACK_LICENSE_TTL_MS = 5 * 60 * 1000;
+
+/** Renew slightly early so an invoke never races the expiry boundary. */
+const LICENSE_EXPIRY_SKEW_MS = 30 * 1000;
+
+/**
+ * Cap, so a long-lived server does not accumulate an entry per user served.
+ *
+ * @internal
+ */
+export const MAX_CACHED_LICENSES = 500;
+
+/**
+ * The license cache outlives any single service instance: consumers build one
+ * per request or per render, and an instance field would start empty each time.
+ * A shared symbol on `globalThis` also keeps it single when `core` and
+ * `functions` are bundled separately.
+ */
+const LICENSE_CACHE_KEY = Symbol.for('@uipath/functions-license-cache');
+
+/** The process-wide license cache, created on first use. */
+function getLicenseCache(): Map<string, LicenseCacheEntry> {
+  const store = globalThis as typeof globalThis & Record<symbol, Map<string, LicenseCacheEntry> | undefined>;
+  return (store[LICENSE_CACHE_KEY] ??= new Map<string, LicenseCacheEntry>());
+}
+
+/**
+ * Empties the license cache. The cache is process-wide, so tests need this to
+ * avoid inheriting licenses from each other.
+ *
+ * @internal
+ */
+export function clearLicenseCache(): void {
+  getLicenseCache().clear();
+}
+
+/** Drops expired entries, then oldest-first, to stay under the cap. */
+function evictIfFull(cache: Map<string, LicenseCacheEntry>): void {
+  if (cache.size < MAX_CACHED_LICENSES) return;
+
+  const now = Date.now();
+  for (const [key, entry] of cache) {
+    if (entry.expiresAtMs <= now) cache.delete(key);
+  }
+
+  // Map iterates in insertion order, so this drops the oldest first.
+  for (const key of cache.keys()) {
+    if (cache.size < MAX_CACHED_LICENSES) break;
+    cache.delete(key);
+  }
+}
 
 /**
  * Service for discovering and invoking UiPath Coded Functions
@@ -37,6 +110,25 @@ const MAX_SUGGESTED_NAMES = 20;
 export class FunctionService extends FolderScopedService implements FunctionServiceModel {
   /** Folder ID → folder key (GUID); folder keys are immutable, so cache hits stay valid. */
   private readonly folderKeyCache = new Map<number, string>();
+
+  /** Caller identity → its resolved or in-flight license acquisition. */
+  private get licenseCache(): Map<string, LicenseCacheEntry> {
+    return getLicenseCache();
+  }
+
+  /** Tenant this service talks to; scopes the shared license cache. */
+  private readonly tenantScope: string;
+
+  /**
+   * Creates an instance of the Functions service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    const { config } = SDKInternalsRegistry.get(instance);
+    this.tenantScope = `${config.orgName}/${config.tenantName}`;
+  }
 
   @track('Functions.GetAll')
   async getAll<T extends FunctionGetAllOptions = FunctionGetAllOptions>(
@@ -82,18 +174,103 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     >;
   }
 
+  @track('Functions.AcquireLicense')
+  async acquireLicense(options?: FunctionAcquireLicenseOptions): Promise<StudioWebLicense> {
+    return this.resolveLicense(options?.refresh ?? false);
+  }
+
   @track('Functions.Invoke')
   async invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(
     func: FunctionRef,
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput> {
-    // jobKey governs only the invocation leg — keep it out of the folder-scoped
-    // discovery lookup, which would forward it as a query param.
-    const { jobKey, ...folderOptions } = options ?? {};
-    const fn = await this.findByName(func.name, folderOptions);
+    // jobKey and refreshLicense govern only the invocation leg — keep them out of
+    // the folder-scoped discovery lookup, which would forward them as query
+    // params.
+    const { jobKey, refreshLicense = false, ...folderOptions } = options ?? {};
+
+    // Licensing and the name lookup are independent, so run them together: only
+    // the slower of the two is paid. `allSettled` rather than `all` so a failure
+    // in one still observes the other — an unobserved rejection can take down a
+    // process configured to treat them as fatal.
+    const [licensing, lookup] = await Promise.allSettled([
+      this.resolveLicense(refreshLicense),
+      this.findByName(func.name, folderOptions),
+    ]);
+
+    // Licensing is a precondition, not an optimisation: acquiring is what
+    // provisions the personal robot the invocation runs on. Without it the
+    // invocation fails anyway, further in, as "no personal robot configured" —
+    // so surface the licensing failure instead of that.
+    if (licensing.status === 'rejected') throw licensing.reason;
+    if (lookup.status === 'rejected') throw lookup.reason;
+
+    const fn = lookup.value;
     const folderKey = await this.resolveInvokeFolderKey(fn, folderOptions);
     return this.invokeFunction<TOutput>(fn, folderKey, input ?? {}, jobKey);
+  }
+
+  /**
+   * Returns a license for the caller, reusing a cached one when still fresh.
+   *
+   * Shared by {@link invoke} and {@link acquireLicense} so only one `@track`
+   * decorator fires per call — a tracked method calling another tracked one
+   * would double-count the telemetry.
+   */
+  private async resolveLicense(refresh: boolean): Promise<StudioWebLicense> {
+    const cacheKey = await this.licenseCacheKey();
+    const cache = this.licenseCache;
+    const now = Date.now();
+
+    if (!refresh) {
+      const cached = cache.get(cacheKey);
+      // Awaiting a pending entry is the point: concurrent invokes share one
+      // round trip rather than each issuing their own.
+      if (cached && cached.expiresAtMs > now) return cached.acquisition;
+    }
+
+    const entry: LicenseCacheEntry = {
+      acquisition: this.requestLicense(),
+      // Stands in until the real expiry arrives, and earns its keep twice: a
+      // pending entry is never read as stale by a concurrent caller, and an
+      // acquisition that never settles stops capturing new callers once this
+      // lapses. Eviction reads the expiry synchronously, so it lives on the
+      // entry rather than inside the promise.
+      expiresAtMs: now + FALLBACK_LICENSE_TTL_MS,
+    };
+    // Replacing an existing key does not grow the map, so no room is needed —
+    // evicting there would drop another caller's license for nothing.
+    if (!cache.has(cacheKey)) evictIfFull(cache);
+    cache.set(cacheKey, entry);
+
+    try {
+      const license = await entry.acquisition;
+      entry.expiresAtMs = licenseExpiryMs(license.expiresTime) ?? now + FALLBACK_LICENSE_TTL_MS;
+      return license;
+    } catch (error) {
+      // Never cache a rejection — the next call must retry, not replay it.
+      if (cache.get(cacheKey) === entry) cache.delete(cacheKey);
+      throw error;
+    }
+  }
+
+  /** Performs the acquisition. Takes no body and is not folder-scoped. */
+  private async requestLicense(): Promise<StudioWebLicense> {
+    const response = await this.post<RawStudioWebLicenseResponse>(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE);
+    return toStudioWebLicense(response.data);
+  }
+
+  /**
+   * Identifies the caller. Prefers the token's `sub` so the entry survives a
+   * token refresh; opaque tokens fall back to the token itself.
+   */
+  private async licenseCacheKey(): Promise<string> {
+    const token = await this.getValidAuthToken();
+    // Tenant is in the key because the cache outlives any one service instance:
+    // without it, two tenants could share a license.
+    const identity = extractUserIdFromToken(token) || token;
+    return `${this.tenantScope}:${identity}`;
   }
 
   /**
@@ -233,6 +410,42 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       folderId: trigger.organizationUnitId,
     };
   }
+}
+
+/**
+ * Maps the raw acquisition response to the SDK shape, folding in the token's
+ * claims. A token the SDK cannot read costs only the derived fields.
+ *
+ * @internal
+ */
+export function toStudioWebLicense(raw: RawStudioWebLicenseResponse): StudioWebLicense {
+  const claims = decodeJwtClaims<StudioWebLicenseTokenClaims>(raw.licenseToken);
+
+  return {
+    robotType: raw.robotType,
+    robotTypes: raw.robotTypes,
+    isLicensed: raw.isLicensed,
+    startedTime: raw.started,
+    expiresTime: claims?.exp ? new Date(claims.exp * 1000).toISOString() : undefined,
+    licenseTier: claims?.ubl,
+    licensedUnits: claims?.lu,
+  };
+}
+
+/**
+ * Epoch milliseconds at which a license should be renewed, from its expiry.
+ * Returns `undefined` when the license carries none, costing only the
+ * fallback lifetime.
+ *
+ * @internal
+ */
+export function licenseExpiryMs(expiresTime?: string): number | undefined {
+  if (!expiresTime) return undefined;
+
+  const expiresAt = new Date(expiresTime).getTime();
+  if (Number.isNaN(expiresAt)) return undefined;
+
+  return expiresAt - LICENSE_EXPIRY_SKEW_MS;
 }
 
 /** Serializes function input for GET invocations (query-string transport). */

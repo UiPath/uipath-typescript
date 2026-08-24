@@ -10,6 +10,7 @@ import { ErrorParams } from './types';
  * - Resource deleted
  */
 export class NotFoundError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.NOT_FOUND, {
       message: params.message || ErrorMessages.RESOURCE_NOT_FOUND,

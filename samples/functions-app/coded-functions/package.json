@@ -1,0 +1,10 @@
+{
+  "name": "functions-app-fn",
+  "version": "1.2.0",
+  "type": "module",
+  "devDependencies": {
+    "@uipath/coded-functions-js-sdk": "^0.6.0",
+    "typescript": "^5.7.0"
+  },
+  "description": "Coded functions for the functions-app sample"
+}

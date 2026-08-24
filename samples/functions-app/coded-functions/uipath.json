@@ -1,0 +1,15 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/uipath",
+  "packOptions": {
+    "fileExtensionsIncluded": [],
+    "filesIncluded": [],
+    "filesExcluded": [],
+    "directoriesExcluded": [],
+    "includeLockFile": true
+  },
+  "functions": {
+    "list-products": "functions/list-products.ts:default",
+    "quote": "functions/quote.ts:default"
+  },
+  "projectId": "2d9cdf59-c8a9-4f18-b390-d241a55cba67"
+}

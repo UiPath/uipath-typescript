@@ -11,6 +11,7 @@ export const IDENTITY_ENDPOINTS = {
   BASE_PATH: `${IDENTITY_BASE}/connect`,
   TOKEN: `${IDENTITY_BASE}/connect/token`,
   AUTHORIZE: `${IDENTITY_BASE}/connect/authorize`,
+  END_SESSION: `${IDENTITY_BASE}/connect/endsession`,
 } as const;
 
 /**

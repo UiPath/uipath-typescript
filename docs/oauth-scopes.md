@@ -28,6 +28,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
 
+Before running the function, `invoke()` also acquires a Studio Web license for the calling user. That call requires a valid Orchestrator token but no scope of its own, so it adds nothing to the table below.
+
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `OR.Default` |
@@ -267,6 +269,14 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `OR.Queues` or `OR.Queues.Read` |
 | `getById()` | `OR.Queues` or `OR.Queues.Read` |
+| `getAllWithMethods()` | `OR.Queues` or `OR.Queues.Read` |
+| `getByIdWithMethods()` | `OR.Queues` or `OR.Queues.Read` |
+| `getByName()` | `OR.Queues` or `OR.Queues.Read` |
+| `getByKey()` | `OR.Queues` or `OR.Queues.Read` |
+| `getAllItems()` | `OR.Queues` or `OR.Queues.Read` |
+| `insertItemByName()` / `insertItem()` | `OR.Queues` or `OR.Queues.Write` |
+| `startTransaction()` | `OR.Queues` or `OR.Queues.Write` |
+| `completeTransaction()` | `OR.Queues` or `OR.Queues.Write` |
 
 ## Tasks
 

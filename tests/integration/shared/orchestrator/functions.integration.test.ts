@@ -127,5 +127,53 @@ describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
 
       expect(output).toBeDefined();
     });
+
+    it('should invoke with a freshly acquired license', async () => {
+      // Licensing is always applied; refreshLicense forces a new acquisition
+      // rather than reusing the one already held for this user.
+      const output = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId, refreshLicense: true },
+      );
+
+      expect(output).toBeDefined();
+    });
+
+    it('should reuse the acquired license across invocations', async () => {
+      // Second invocation is served from the license cache; both must succeed.
+      const first = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId, refreshLicense: true },
+      );
+      const second = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: functionName },
+        {},
+        { folderId },
+      );
+
+      expect(first).toBeDefined();
+      expect(second).toBeDefined();
+    });
+  });
+
+  describe('acquireLicense', () => {
+    it('should return the license in the transformed SDK shape', async () => {
+      const license = await functions.acquireLicense({ refresh: true });
+
+      expect(license.isLicensed).toBe(true);
+      expect(typeof license.robotType).toBe('string');
+      expect(Array.isArray(license.robotTypes)).toBe(true);
+      // Renamed from the wire field `started`
+      expect(typeof license.startedTime).toBe('string');
+
+      // The wire names must not survive the transform, and the license token is
+      // credential-shaped, so it must not reach the SDK shape at all
+      expect('started' in license).toBe(false);
+      expect('ubl' in license).toBe(false);
+      expect('lu' in license).toBe(false);
+      expect('licenseToken' in license).toBe(false);
+    });
   });
 });

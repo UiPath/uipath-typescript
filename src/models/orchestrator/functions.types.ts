@@ -63,6 +63,19 @@ export type FunctionGetAllOptions = RequestOptions & PaginationOptions & FolderS
 export interface FunctionInvokeOptions extends FolderScopedOptions {
   /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
+  /**
+   * Acquires a fresh license instead of reusing the one already held for this
+   * user. Defaults to `false`.
+   *
+   * A license is reused for as long as it says it is valid, read from the
+   * license rather than assumed, so a burst of invocations costs one
+   * acquisition. A license that states no validity window — as the free tier's
+   * does not — is reused for five minutes and then re-acquired.
+   *
+   * Set this when the user's licensing may have changed and the invocation must
+   * reflect it before that lapses.
+   */
+  refreshLicense?: boolean;
 }
 
 /**

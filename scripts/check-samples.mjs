@@ -122,11 +122,18 @@ function changedAppDirs(baseRef, appDirs) {
   return appDirs.filter(dir => changed.some(f => f.startsWith(`${dir}/`)));
 }
 
+// A package.json nested inside another app's directory belongs to that app — it
+// is a sub-project the app ships with (functions-app/coded-functions holds the
+// Coded Functions the app invokes), not a sample in its own right. The rules
+// above describe a deployable sample app, so only the outermost dir is checked.
+export const topLevelApps = dirs =>
+  dirs.filter(dir => !dirs.some(other => other !== dir && dir.startsWith(`${other}/`)));
+
 function discoverApps() {
   const tracked = new Set(
     execFileSync('git', ['ls-files', 'samples'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean),
   );
-  let appDirs = [...new Set([...tracked].filter(f => f.endsWith('/package.json')).map(dirname))];
+  let appDirs = topLevelApps([...new Set([...tracked].filter(f => f.endsWith('/package.json')).map(dirname))]);
   const changedIdx = process.argv.indexOf('--changed');
   if (changedIdx !== -1) appDirs = changedAppDirs(process.argv[changedIdx + 1] || 'origin/main', appDirs);
   return appDirs.map(dir => {

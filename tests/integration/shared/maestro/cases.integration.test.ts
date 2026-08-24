@@ -36,7 +36,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
           );
           return;
         }
-        console.log('Case retrieval test:', error.message);
+        throw error;
       }
     });
   });
@@ -72,6 +72,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
@@ -129,6 +130,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopRunCount', () => {
     it('should retrieve top case processes by run count', async () => {
       const { cases } = getServices();
@@ -136,6 +138,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopFaultedCount', () => {
     it('should retrieve top case processes by failure count', async () => {
       const { cases } = getServices();
@@ -159,6 +162,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count for cases', async () => {
       const { cases } = getServices();
@@ -182,6 +186,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
   describe.skip('getTopExecutionDuration', () => {
     it('should retrieve top case processes by duration', async () => {
       const { cases } = getServices();

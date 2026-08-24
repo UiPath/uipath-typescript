@@ -38,6 +38,17 @@ export interface TelemetryClientInitOptions {
     loggerName: string;
     /** Default event display name used when none is supplied to `track`. */
     defaultEventName: string;
+    /**
+     * Application Insights connection string. Omit it to use the shared one
+     * patched into this package at publish time, which is what every consumer
+     * did before this option existed. Supply one to send a consumer's events to
+     * its own resource instead.
+     *
+     * An empty string disables telemetry rather than falling back, so a
+     * consumer whose own value is unset emits nothing instead of silently
+     * reporting to the shared resource.
+     */
+    connectionString?: string;
     /** Optional per-tenant context applied to every event. */
     context?: TelemetryContext;
 }

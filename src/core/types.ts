@@ -9,7 +9,7 @@
  */
 
 import type { BaseConfig } from './config/sdk-config';
-import type { TokenInfo } from './auth/types';
+import type { TokenInfo, LogoutOptions } from './auth/types';
 
 export interface IUiPath {
   /** Read-only configuration for the SDK instance */
@@ -56,14 +56,15 @@ export interface IUiPath {
   /**
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
+   * Pass `endSession: true` to also end the UiPath platform session.
    */
-  logout(): void;
+  logout(options?: LogoutOptions): void;
 
   /**
    * Updates the access token used for API requests.
    * Use this to inject or refresh a token externally.
    *
-   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   updateToken(tokenInfo: TokenInfo): void;
 }
