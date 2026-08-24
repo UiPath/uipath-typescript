@@ -217,8 +217,11 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         { folderId: Number(config.folderId) }
       );
 
-      // Wait for Running specifically — cancelling while still Pending is rejected
+      // Wait for Running specifically — cancelling while still Pending is rejected.
+      // If the instance faults before the poll catches the brief Running window, retry
+      // it once: the retried run re-enters Running, which is cancellable.
       let running = false;
+      let faultRetried = false;
       for (let attempt = 0; attempt < 20; attempt++) {
         try {
           const instance = await processInstances.getById(job.key, config.folderKey);
@@ -227,7 +230,11 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
             break;
           }
           if (instance.latestRunStatus === InstanceStatus.FAULTED) {
-            throw new Error('Seeded instance faulted before it could be cancelled — cannot test cancel');
+            if (faultRetried) {
+              throw new Error('Seeded instance faulted twice before it could be cancelled — cannot test cancel');
+            }
+            await processInstances.retry(job.key, config.folderKey);
+            faultRetried = true;
           }
         } catch (error: any) {
           if (error.message?.includes('cannot test cancel')) {
@@ -235,7 +242,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
           }
           // not yet visible in PIMS
         }
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       if (!running) {
         throw new Error('Seeded instance did not reach Running within 60s — cannot test cancel');
