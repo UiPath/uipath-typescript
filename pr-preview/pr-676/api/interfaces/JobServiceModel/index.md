@@ -51,7 +51,7 @@ const folderJobs = await jobs.getAll({ folderId: <folderId> });
 // With filtering
 const recentInvoiceJobs = await jobs.getAll({
   filter: "processName eq 'InvoiceBot'",
-  orderby: 'createdTime desc',
+  orderby: 'id desc',
 });
 
 // First page with pagination

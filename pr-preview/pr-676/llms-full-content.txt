@@ -724,7 +724,7 @@ const folderJobs = await jobs.getAll({ folderId: <folderId> });
 // With filtering
 const recentInvoiceJobs = await jobs.getAll({
   filter: "processName eq 'InvoiceBot'",
-  orderby: 'createdTime desc',
+  orderby: 'id desc',
 });
 
 // First page with pagination
@@ -1310,7 +1310,7 @@ const items = await queues.getAllItems(<queueId>, { folderId: <folderId> });
 const failed = await queues.getAllItems(<queueId>, {
   folderPath: 'Shared/Finance',
   filter: "status eq 'Failed'",
-  orderby: 'createdTime desc',
+  orderby: 'id desc',
   pageSize: 25
 });
 ```
