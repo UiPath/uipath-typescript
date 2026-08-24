@@ -62,7 +62,11 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         expect(result.items).toBeDefined();
         expect(Array.isArray(result.items)).toBe(true);
 
-        const instance = result.items.find((item) => item.instanceId && item.folderKey);
+        // Never select the seeded retry fixture: pausing it stops its execution, so it
+        // would never fault and the retry test would time out waiting
+        const instance = result.items.find(
+          (item) => item.instanceId && item.folderKey && item.instanceId !== seededFaultedJobKey
+        );
         if (instance) {
           testInstanceId = instance.instanceId;
           testFolderKey = instance.folderKey;
