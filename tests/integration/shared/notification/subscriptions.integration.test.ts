@@ -31,6 +31,48 @@ describe.skipIf(!hasUserToken()).each(modes)('Subscriptions - Integration Tests 
     }
     tenantId = configuredTenantId;
 
+    // TEMPORARY DIAGNOSTIC — remove once the notification 403 is resolved.
+    // Policies.UserContext succeeds only when the token's `prt_id` claim
+    // contains the org id from the X-UiPath-Internal-AccountId header, so
+    // print the claim and the raw body before the SDK reduces it to "Forbidden".
+    const EXPECTED_ORG_ID = '3aa10965-a82d-4d9e-8366-0eff8e87bf7a';
+    const diagConfig = getTestConfig();
+    const diagToken = diagConfig.userToken;
+    if (diagToken) {
+      try {
+        const claims = JSON.parse(
+          Buffer.from(diagToken.split('.')[1], 'base64url').toString('utf8'),
+        ) as Record<string, unknown>;
+        const prtId = String(claims.prt_id ?? '(absent)');
+        console.log('[subs-diag] prt_id          :', prtId);
+        console.log('[subs-diag] expected org id :', EXPECTED_ORG_ID);
+        console.log(
+          '[subs-diag] prt_id matches  :',
+          prtId.toLowerCase().includes(EXPECTED_ORG_ID.toLowerCase()),
+        );
+      } catch (err) {
+        console.log('[subs-diag] could not decode token:', (err as Error).message);
+      }
+
+      const url =
+        `${diagConfig.baseUrl}/${diagConfig.orgName}/notificationservice_` +
+        `/usersubscriptionservice/api/v1/UserSubscription`;
+      try {
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${diagToken}`,
+            'X-UIPATH-Internal-TenantId': tenantId,
+            Accept: 'application/json',
+          },
+        });
+        console.log('[subs-diag] GET UserSubscription ->', res.status, res.statusText);
+        console.log('[subs-diag] x-request-id:', res.headers.get('x-request-id') ?? '(none)');
+        console.log('[subs-diag] response body:', (await res.text()).slice(0, 500));
+      } catch (err) {
+        console.log('[subs-diag] request threw:', (err as Error).message);
+      }
+    }
+
     const { publishers } = await subscriptions.getAll(tenantId);
     if (publishers.length === 0) {
       throw new Error('No publishers visible to the test user — cannot run subscription tests.');

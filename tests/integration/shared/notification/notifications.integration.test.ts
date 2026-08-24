@@ -31,6 +31,54 @@ describe.skipIf(!hasUserToken()).each(modes)('Notifications - Integration Tests 
     tenantId = configuredTenantId;
   });
 
+  // TEMPORARY DIAGNOSTIC — remove once the notification 403 is resolved.
+  // The service gates these routes behind Policies.UserContext, whose only
+  // requirement (OrganizationIdHandler) succeeds when the token's `prt_id`
+  // claim contains the org id in the X-UiPath-Internal-AccountId header.
+  // Print the claim, compare it against the known procodeapps org id, and
+  // show the raw response body the SDK's error swallows.
+  beforeAll(async () => {
+    const EXPECTED_ORG_ID = '3aa10965-a82d-4d9e-8366-0eff8e87bf7a';
+    const config = getTestConfig();
+    const token = config.userToken;
+    if (!token) return;
+
+    try {
+      const raw = Buffer.from(token.split('.')[1], 'base64url').toString('utf8');
+      const claims = JSON.parse(raw) as Record<string, unknown>;
+      const prtId = String(claims.prt_id ?? '(absent)');
+      console.log('[notif-diag] prt_id          :', prtId);
+      console.log('[notif-diag] expected org id :', EXPECTED_ORG_ID);
+      console.log(
+        '[notif-diag] prt_id matches  :',
+        prtId.toLowerCase().includes(EXPECTED_ORG_ID.toLowerCase()),
+      );
+      console.log('[notif-diag] client_id       :', String(claims.client_id ?? '(absent)'));
+      console.log('[notif-diag] idp             :', String(claims.idp ?? '(absent)'));
+      console.log('[notif-diag] sub             :', String(claims.sub ?? '(absent)'));
+    } catch (err) {
+      console.log('[notif-diag] could not decode token:', (err as Error).message);
+    }
+
+    // Raw request — the SDK surfaces only "Forbidden", not the body or headers.
+    const url =
+      `${config.baseUrl}/${config.orgName}/notificationservice_` +
+      `/notificationserviceapi/odata/v1/NotificationEntry?$top=1&$count=true`;
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'X-UIPATH-Internal-TenantId': tenantId,
+          Accept: 'application/json',
+        },
+      });
+      console.log('[notif-diag] GET NotificationEntry ->', res.status, res.statusText);
+      console.log('[notif-diag] response body:', (await res.text()).slice(0, 500));
+    } catch (err) {
+      console.log('[notif-diag] request threw:', (err as Error).message);
+    }
+  });
+
   const ORDER_BY = 'publishedOn desc';
 
   describe('getAll', () => {
