@@ -87,6 +87,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 ### Samples & Template Gallery
 
 - Every app under `samples/` must ship a **preview GIF** at `samples/<app>/screenshots/` (e.g. `preview.gif`) showing the app in use. The app README and the docs Template Gallery both render it — a missing GIF leaves an empty poster tile in the gallery.
+- **NEVER** reference UiPath alpha, staging, or internal non-production environments in sample READMEs or docs (e.g., alpha tenant URLs, staging cloud URLs) — always use production URLs and instructions. These URLs are inaccessible to external SDK consumers and become stale as UiPath infrastructure evolves. Note: advising users to configure their *own* apps for multiple environments (e.g., OAuth redirect URIs for a staging deployment) is legitimate and not covered by this rule.
 - The **Template Gallery** (`docs/samples/index.md`) is the browsable, searchable index of `samples/` published on the docs site. When you **add, rename, remove, or re-scope a sample, update the gallery in the same PR** so the site stays in sync. Edit the inline app list (the `#tg-data` JSON block) — add or adjust an entry:
 
   ```json
