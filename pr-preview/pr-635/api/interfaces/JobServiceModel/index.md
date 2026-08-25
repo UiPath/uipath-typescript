@@ -69,6 +69,42 @@ const page5 = await jobs.getAll({
 });
 ```
 
+### getAttachments()
+
+> **getAttachments**(`jobKey`: `string`, `folderId`: `number`): `Promise`\<`JobAttachmentGetResponse`[]>
+
+Gets all attachments linked to a job.
+
+#### Parameters
+
+- `jobKey`: `string` — The unique key (GUID) of the job whose attachments to retrieve
+- `folderId`: `number` — The folder ID where the job resides
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`[]>
+
+Promise resolving to an array of [JobAttachmentGetResponse](../JobAttachmentGetResponse/) links, empty when the job has none
+
+#### Examples
+
+```
+const attachments = await jobs.getAttachments(<jobKey>, <folderId>);
+```
+
+```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+// Read the underlying file of each attachment linked to a job
+const attachmentsService = new Attachments(sdk);
+const links = await jobs.getAttachments(<jobKey>, <folderId>);
+
+for (const link of links) {
+  const attachment = await attachmentsService.getById(link.attachmentId);
+  console.log(link.category, attachment.blobFileAccess.uri);
+}
+```
+
 ### getById()
 
 > **getById**(`id`: `string`, `folderId`: `number`, `options?`: `JobGetByIdOptions`): `Promise`\<`JobGetResponse`>
@@ -143,6 +179,42 @@ const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
 if (completedJob) {
   const output = await completedJob.getOutput();
 }
+```
+
+### linkAttachment()
+
+> **linkAttachment**(`attachmentId`: `string`, `jobKey`: `string`, `folderId`: `number`, `options?`: `JobLinkAttachmentOptions`): `Promise`\<`JobAttachmentGetResponse`>
+
+Links an existing attachment to a job.
+
+This does not upload a file — it associates an attachment that already exists in Orchestrator with a job.
+
+The returned link does not carry `attachmentName` or `creatorUserId` yet — read them back with [getAttachments](#getattachments).
+
+#### Parameters
+
+- `attachmentId`: `string` — The unique ID (GUID) of the attachment to link
+- `jobKey`: `string` — The unique key (GUID) of the job to link the attachment to
+- `folderId`: `number` — The folder ID where the job resides
+- `options?`: `JobLinkAttachmentOptions` — Optional settings for the link, such as its category
+
+#### Returns
+
+`Promise`\<`JobAttachmentGetResponse`>
+
+Promise resolving to the created [JobAttachmentGetResponse](../JobAttachmentGetResponse/) link
+
+#### Examples
+
+```
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>);
+```
+
+```
+// Group the attachment under a category of your choosing
+const link = await jobs.linkAttachment(<attachmentId>, <jobKey>, <folderId>, {
+  category: 'Invoice',
+});
 ```
 
 ### restart()

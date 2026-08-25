@@ -598,7 +598,7 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 #### Parameters
 
 - `id`: `string` — UUID of the entity
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, and pagination The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -609,7 +609,7 @@ Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pa
 #### Example
 
 ```
-import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, JoinType } from '@uipath/uipath-typescript/entities';
+import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction, EntityHavingOperator, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -636,6 +636,18 @@ await entities.queryRecordsById(<id>, {
   aggregates: [
     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
   ],
+});
+
+// Post-aggregation filter (HAVING): only statuses with more than 5 records
+await entities.queryRecordsById(<id>, {
+  selectedFields: ["status"],
+  groupBy: ["status"],
+  aggregates: [
+    { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+  ],
+  havingFilter: {
+    aggregateFilters: [{ aggregateAlias: "total", operator: EntityHavingOperator.GreaterThan, value: "5" }],
+  },
 });
 
 // Folder-scoped entity: pass the entity's folder key
