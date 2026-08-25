@@ -21,30 +21,24 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     traces = services.traces;
 
     // Span data expires with the observability retention window, so a fixed trace ID
-    // fixture rots over time. Prefer self-discovery: recent Maestro process instances
-    // carry a traceId with spans. TRACES_TEST_TRACE_ID remains as an explicit override.
-    const candidateTraceIds: string[] = [];
-    if (process.env.TRACES_TEST_TRACE_ID) {
-      candidateTraceIds.push(process.env.TRACES_TEST_TRACE_ID);
-    }
+    // fixture would rot over time. Self-discover instead: Maestro process instances
+    // carry a traceId (their instanceId) with spans, and getAll returns newest first,
+    // so recent instances are tried before ones whose spans may have expired.
     const instances = await services.processInstances.getAll({ pageSize: 10 });
-    for (const instance of instances.items) {
-      candidateTraceIds.push(instance.instanceId);
-    }
 
     let spans: SpanGetResponse[] = [];
-    for (const traceId of candidateTraceIds) {
-      spans = await traces.getById(traceId);
+    for (const instance of instances.items) {
+      spans = await traces.getById(instance.instanceId);
       if (spans.length > 0) {
-        existingTraceId = traceId;
+        existingTraceId = instance.instanceId;
         break;
       }
     }
 
     if (spans.length === 0) {
       throw new Error(
-        'No trace with spans found (checked TRACES_TEST_TRACE_ID and recent process ' +
-          'instances) — ensure recent trace data exists before running these tests'
+        'No recent process instance has a trace with spans — ensure recent trace data ' +
+          'exists (e.g. run the maestro suite) before running these tests'
       );
     }
 

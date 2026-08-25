@@ -78,7 +78,6 @@ jobs:
           echo "data_fabric_test_join_related_field_name=${{ secrets.UIPATH_DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME_DEV || secrets.UIPATH_DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME }}" >> $GITHUB_OUTPUT
           echo "orchestrator_attachment_id=${{ secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID_DEV || secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID }}" >> $GITHUB_OUTPUT
           echo "jobs_test_folder_id=${{ secrets.UIPATH_JOBS_TEST_FOLDER_ID_DEV || secrets.UIPATH_JOBS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
-          echo "traces_test_trace_id=${{ secrets.UIPATH_TRACES_TEST_TRACE_ID_DEV || secrets.UIPATH_TRACES_TEST_TRACE_ID }}" >> $GITHUB_OUTPUT
           echo "tasks_test_user_group_id=${{ secrets.UIPATH_TASKS_TEST_USER_GROUP_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_GROUP_ID }}" >> $GITHUB_OUTPUT
           echo "tasks_test_user_id=${{ secrets.UIPATH_TASKS_TEST_USER_ID_DEV || secrets.UIPATH_TASKS_TEST_USER_ID }}" >> $GITHUB_OUTPUT
           echo "functions_test_folder_id=${{ secrets.UIPATH_FUNCTIONS_TEST_FOLDER_ID_DEV || secrets.UIPATH_FUNCTIONS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
@@ -115,7 +114,6 @@ jobs:
           QUEUES_TEST_QUEUE_NAME=${{ steps.config.outputs.queues_test_queue_name }}
           ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
           JOBS_TEST_FOLDER_ID=${{ steps.config.outputs.jobs_test_folder_id }}
-          TRACES_TEST_TRACE_ID=${{ steps.config.outputs.traces_test_trace_id }}
           TASKS_TEST_USER_GROUP_ID=${{ steps.config.outputs.tasks_test_user_group_id }}
           TASKS_TEST_USER_ID=${{ steps.config.outputs.tasks_test_user_id }}
           FUNCTIONS_TEST_FOLDER_ID=${{ steps.config.outputs.functions_test_folder_id }}
