@@ -3456,7 +3456,7 @@ Pass any combination of schema fields (`addFields`, `removeFields`, `updateField
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)) The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. The `folderKey` property is **experimental**.
 
 #### Returns
 
