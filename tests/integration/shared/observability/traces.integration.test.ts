@@ -16,20 +16,35 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   let existingSpanId!: string;
 
   beforeAll(async () => {
-    if (!process.env.TRACES_TEST_TRACE_ID) {
-      throw new Error('TRACES_TEST_TRACE_ID env var required for Traces integration tests');
-    }
-
     const services = getServices();
     if (!services.traces) throw new Error('Traces service not available');
     traces = services.traces;
 
-    existingTraceId = process.env.TRACES_TEST_TRACE_ID;
+    // Span data expires with the observability retention window, so a fixed trace ID
+    // fixture rots over time. Prefer self-discovery: recent Maestro process instances
+    // carry a traceId with spans. TRACES_TEST_TRACE_ID remains as an explicit override.
+    const candidateTraceIds: string[] = [];
+    if (process.env.TRACES_TEST_TRACE_ID) {
+      candidateTraceIds.push(process.env.TRACES_TEST_TRACE_ID);
+    }
+    const instances = await services.processInstances.getAll({ pageSize: 10 });
+    for (const instance of instances.items) {
+      candidateTraceIds.push(instance.instanceId);
+    }
 
-    const spans = await traces.getById(existingTraceId);
+    let spans: SpanGetResponse[] = [];
+    for (const traceId of candidateTraceIds) {
+      spans = await traces.getById(traceId);
+      if (spans.length > 0) {
+        existingTraceId = traceId;
+        break;
+      }
+    }
+
     if (spans.length === 0) {
       throw new Error(
-        `No spans found for traceId ${existingTraceId} — ensure trace data exists before running these tests`
+        'No trace with spans found (checked TRACES_TEST_TRACE_ID and recent process ' +
+          'instances) — ensure recent trace data exists before running these tests'
       );
     }
 
