@@ -24,8 +24,6 @@ export interface PlatformServiceModel {
    * **omitted** from the response rather than returned with an empty value, so the result
    * may be shorter than the list of keys requested.
    *
-   * Reads are scoped to the organization the SDK was initialized against.
-   *
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
    * @returns The user's stored settings for the requested keys, as {@link PlatformSetting} rows
@@ -70,8 +68,6 @@ export interface PlatformServiceModel {
    * existing keys are overwritten. Keys absent from the request are left untouched, so
    * there is no need to send back the settings you are not changing. Returns the stored
    * rows as they are after the write, including their generated `id`.
-   *
-   * Writes go to the organization the SDK was initialized against.
    *
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
