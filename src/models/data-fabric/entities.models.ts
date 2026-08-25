@@ -725,7 +725,7 @@ export interface EntityServiceModel {
    * only when the corresponding fields are provided.
    *
    * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}) The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
