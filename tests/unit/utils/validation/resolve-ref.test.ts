@@ -38,12 +38,6 @@ describe('resolveRefToId', () => {
     expect(result).toEqual({ id: 'guid-abc', effectiveFolder: { folderId: undefined } });
   });
 
-  it('supports non-numeric ids — the lookup return type carries through', async () => {
-    const byName = vi.fn().mockResolvedValue({ id: 'guid-abc' });
-    const result = await resolveRefToId<string>({ name: 'MyEntity' }, { byName }, CALLER);
-    expect(result.id).toBe('guid-abc');
-  });
-
   it('throws ValidationError when the ref is undefined', async () => {
     await expect(resolveRefToId<number>(undefined, {}, CALLER)).rejects.toBeInstanceOf(
       ValidationError,
