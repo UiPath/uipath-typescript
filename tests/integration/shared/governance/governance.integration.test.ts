@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Governance } from '../../../../src/services/governance';
 import { PolicyEvaluationResult } from '../../../../src/models/governance/governance.types';
 
@@ -8,9 +8,7 @@ const modes: InitMode[] = ['v1'];
 // The governance API is served by insightsrtm_, which rejects PAT tokens with 401
 // regardless of scopes. This suite authenticates with a user token and skips when
 // one is not configured. Endpoints also require an organization-admin caller.
-describe.skipIf(!hasUserToken()).each(modes)('Governance - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode, 'user');
-
+describeIntegration('Governance - Integration Tests', 'user', modes, () => {
   let governance!: Governance;
   // Start time wide enough to cover historical traces in the test tenant.
   const startTime = new Date('2024-01-01T00:00:00Z');

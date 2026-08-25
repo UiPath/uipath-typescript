@@ -296,18 +296,6 @@ export function canAuthenticate(requirement: AuthRequirement): boolean {
 }
 
 /**
- * Whether a user access token is configured.
- *
- * Reads the environment directly rather than going through
- * {@link loadIntegrationConfig} so it can be evaluated at module scope by
- * `describe.skipIf(...)` without throwing when the rest of the integration
- * config is absent — a suite gated on this must skip, never fail to collect.
- */
-export function hasUserToken(): boolean {
-  return canAuthenticate('user');
-}
-
-/**
  * Resets the cached configuration (useful for testing)
  */
 export function resetConfigCache(): void {

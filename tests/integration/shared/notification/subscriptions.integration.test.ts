@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import type { Subscriptions } from '../../../../src/services/notification';
 import { NotificationCategory, NotificationMode, type SubscriptionEntity, type SubscriptionPublisher } from '../../../../src/models/notification';
 
@@ -7,9 +7,7 @@ const modes: InitMode[] = ['v1'];
 
 // The subscription API rejects PAT tokens, so this suite authenticates with a user
 // token and skips when one is not configured.
-describe.skipIf(!hasUserToken()).each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode, 'user');
-
+describeIntegration('Subscriptions - Integration Tests', 'user', modes, () => {
   let subscriptions!: Subscriptions;
   let tenantId!: string;
   let allPublishers!: SubscriptionPublisher[];

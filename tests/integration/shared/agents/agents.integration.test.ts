@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
 import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { JobState } from '../../../../src/models/common/types';
@@ -17,9 +17,7 @@ const modes: InitMode[] = ['v1'];
 
 // insightsrtm_ rejects PAT tokens entirely (401 regardless of scopes), so this
 // suite authenticates with a user token and skips when one is not configured.
-describe.skipIf(!hasUserToken()).each(modes)('Agents - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode, 'user');
-
+describeIntegration('Agents - Integration Tests', 'user', modes, () => {
   let agents!: Agents;
   let folderKey!: string;
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, hasUserToken, setupUnifiedTests, InitMode } from '../../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../../config/unified-setup';
 import { recentWindow } from '../../../utils/helpers';
 import { AgentTraces } from '../../../../../src/services/observability/traces/agent';
 import {
@@ -23,9 +23,7 @@ const modes: InitMode[] = ['v1'];
 // Every method here rejects PAT (401 regardless of scopes): Traceview rejects it
 // directly, and the governance methods sit on the llmopstenant_ facade that forwards
 // to InsightsRTM. This suite authenticates with a user token and skips without one.
-describe.skipIf(!hasUserToken()).each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode, 'user');
-
+describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
   let trace!: AgentTraces;
   let folderKey!: string;
   let traceId!: string;

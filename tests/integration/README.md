@@ -258,16 +258,20 @@ credential is absent:
 
 ```ts
 // Needs a user token — skips when none is configured.
-describe.skipIf(!hasUserToken()).each(modes)('Notifications', (mode) => {
-  setupUnifiedTests(mode, 'user');
+describeIntegration('Notifications - Integration Tests', 'user', modes, (mode) => { ... });
 
 // Needs the external application.
-describe.skipIf(!canAuthenticate('pat')).each(modes)('Some suite', (mode) => {
-  setupUnifiedTests(mode, 'pat');
+describeIntegration('Some suite', 'pat', modes, (mode) => { ... });
 
-// Either works — the default; omit the argument.
-setupUnifiedTests(mode);
+// Either works — plain describe plus the setup helper.
+describe.each(modes)('Some suite [%s]', (mode) => {
+  setupUnifiedTests(mode);
 ```
+
+`describeIntegration` states the requirement once and derives both halves from it:
+the collection-time skip guard and the credential the suite runs under. Writing the
+guard separately from the requirement lets the two disagree, and nothing catches
+that — the suite just runs under a credential it did not ask for.
 
 `INTEGRATION_AUTH_MODE=pat|user` forces one credential across a whole run without
 editing any suite, which is useful for checking that a change behaves the same
@@ -324,15 +328,14 @@ a run that outlives the token will start failing with 401s partway through.
 
 ### Writing a suite that needs a user token
 
-Gate the suite on `hasUserToken()` and pass `'user'` to the setup helper:
+Declare the requirement with `describeIntegration`:
 
 ```typescript
-import { hasUserToken, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describeIntegration, InitMode } from '../../config/unified-setup';
 
 const modes: InitMode[] = ['v1'];
 
-describe.skipIf(!hasUserToken()).each(modes)('My Suite [%s]', (mode) => {
-  setupUnifiedTests(mode, 'user');
+describeIntegration('My Suite', 'user', modes, (mode) => {
   // ...
 });
 ```

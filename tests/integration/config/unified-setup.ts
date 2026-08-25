@@ -25,13 +25,13 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
-import { loadIntegrationConfig, IntegrationConfig, resolveAuthMode, AuthRequirement, AuthMode,
+import { loadIntegrationConfig, IntegrationConfig, resolveAuthMode, canAuthenticate, AuthRequirement, AuthMode,
   resolveBaseUrl,
 } from './test-config';
-export { hasUserToken, canAuthenticate, resolveAuthMode } from './test-config';
+export { canAuthenticate, resolveAuthMode } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
-import { afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe } from 'vitest';
 
 // Re-export cleanup functions from cleanup.ts for convenience
 export {
@@ -105,7 +105,7 @@ function resolveToken(config: IntegrationConfig, authMode: AuthMode): string {
   if (!config.userToken) {
     throw new Error(
       'User-token auth was requested but UIPATH_USER_TOKEN is not set. Suites that ' +
-      'require it must guard with `describe.skipIf(!hasUserToken())` so they skip ' +
+      'require it must be declared with `describeIntegration(name, requirement, ...)` so they skip ' +
       'instead of failing when the token is unavailable.'
     );
   }
@@ -281,8 +281,8 @@ export function cleanupServices(): void {
  * more of the API than an external app's granted scopes. Suites that genuinely
  * need one credential declare it explicitly.
  *
- * Suites declaring `'user'` must be gated on `hasUserToken()` (or
- * `canAuthenticate('user')`) — setup throws when nothing can satisfy the
+ * Suites declaring `'user'` must be gated on `canAuthenticate('user')` —
+ * setup throws when nothing can satisfy the
  * requirement, so an unguarded suite fails the run rather than skipping.
  */
 export function setupUnifiedTests(mode: InitMode, requirement: AuthRequirement = 'any'): void {
@@ -300,5 +300,31 @@ export function setupUnifiedTests(mode: InitMode, requirement: AuthRequirement =
 
   afterAll(() => {
     cleanupServices();
+  });
+}
+
+/**
+ * Declares an integration suite that needs a particular credential.
+ *
+ * The requirement is stated once and drives both halves: it gates collection so
+ * the suite skips rather than fails when the credential is absent, and it selects
+ * the credential and host the suite runs against. Declaring the guard separately
+ * from the requirement lets the two disagree, which nothing would catch.
+ *
+ * @example
+ * describeIntegration('Notifications - Integration Tests', 'user', modes, () => {
+ *   let notifications!: Notifications;
+ *   beforeAll(() => { notifications = getServices().notifications!; });
+ * });
+ */
+export function describeIntegration(
+  name: string,
+  requirement: AuthRequirement,
+  modes: InitMode[],
+  body: (mode: InitMode) => void,
+): void {
+  describe.skipIf(!canAuthenticate(requirement)).each(modes)(`${name} [%s]`, (mode) => {
+    setupUnifiedTests(mode, requirement);
+    body(mode);
   });
 }
