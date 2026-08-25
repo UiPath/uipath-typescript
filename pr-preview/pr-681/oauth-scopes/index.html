@@ -3695,6 +3695,7 @@
 </table>
 <h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
 <p>Coded functions are invoked through their HTTP endpoint, which requires the <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes"><code>OR.Default</code></a> scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.</p>
+<p>Before running the function, <code>invoke()</code> also acquires a Studio Web license for the calling user. That call requires a valid Orchestrator token but no scope of its own, so it adds nothing to the table below.</p>
 <table>
 <thead>
 <tr>
