@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ServerError } from '../../../../src/core/errors/server';
+import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -195,5 +197,116 @@ describe('ApiClient error handling', () => {
       message: expect.stringContaining(`200 ${testUrl}`),
       statusCode: 200,
     });
+  });
+});
+
+describe('ApiClient retry', () => {
+  function retryableResponse() {
+    return new Response(null, { status: HTTP_TEST_CONSTANTS.STATUS_SERVICE_UNAVAILABLE });
+  }
+
+  function successResponse() {
+    return new Response(JSON.stringify(HTTP_TEST_CONSTANTS.JSON_BODY), {
+      status: HTTP_TEST_CONSTANTS.STATUS_OK,
+    });
+  }
+
+  it('makes a single attempt on a retryable status when no retry options are supplied', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(retryableResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(client.get('/test')).rejects.toBeInstanceOf(ServerError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a GET when the request supplies retry options', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(retryableResponse())
+      .mockResolvedValueOnce(successResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    const result = await client.get('/test', { retry: { maxRetries: 1, initialDelayMs: 0 } });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(HTTP_TEST_CONSTANTS.JSON_BODY);
+  });
+
+  it('does not retry a POST even when retry options are supplied', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(retryableResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(
+      client.post('/test', { foo: 'bar' }, { retry: { maxRetries: 2, initialDelayMs: 0 } })
+    ).rejects.toBeInstanceOf(ServerError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies a per-request timeout, independently of retry options', async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      })
+    );
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(client.get('/test', { timeoutMs: 1 })).rejects.toBeInstanceOf(NetworkError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('honours the deprecated retryOptions field when retry is absent', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(retryableResponse())
+      .mockResolvedValueOnce(successResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await client.get('/test', { retryOptions: { maxRetries: 1, retryDelay: 0 } });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets retry win over the deprecated retryOptions', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(retryableResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(
+      client.get('/test', {
+        retry: { maxRetries: 0 },
+        retryOptions: { maxRetries: 5, retryDelay: 0 },
+      })
+    ).rejects.toBeInstanceOf(ServerError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('honours the deprecated timeoutOptions.timeout when timeoutMs is absent', async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      })
+    );
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(
+      client.get('/test', { timeoutOptions: { timeout: 1 } })
+    ).rejects.toBeInstanceOf(NetworkError);
+  });
+
+  it('throws the mapped error once the retries are exhausted', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(retryableResponse());
+    global.fetch = fetchMock;
+
+    const client = createClient();
+    await expect(
+      client.get('/test', { retry: { maxRetries: 2, initialDelayMs: 0 } })
+    ).rejects.toBeInstanceOf(ServerError);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

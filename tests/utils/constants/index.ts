@@ -21,3 +21,4 @@ export * from './agents';
 export * from './governance';
 export * from './notification';
 export * from './platform';
+export * from './http';
