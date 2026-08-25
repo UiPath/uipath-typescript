@@ -26,7 +26,7 @@ import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 import { QUEUE_TEST_CONSTANTS } from '../../../utils/constants/queues';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { QUEUE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID, FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -163,11 +163,11 @@ describe('QueueService Unit Tests', () => {
     });
   });
 
-  describe('getByIdWithMethods', () => {
+  describe('getById — options-object overload', () => {
     it('should retrieve the queue with folder scoping via options and attach methods', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawQueue());
 
-      const result = await queueService.getByIdWithMethods(
+      const result = await queueService.getById(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
         { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
@@ -176,6 +176,14 @@ describe('QueueService Unit Tests', () => {
       expect(result.name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
       expect(typeof result.getAllItems).toBe('function');
       expect(typeof result.insertItem).toBe('function');
+
+      // Transform completeness for this overload's own pipeline: renamed
+      // camelCase fields carry the values, raw API fields are removed.
+      expect(result.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+      expect((result as any).OrganizationUnitFullyQualifiedName).toBeUndefined();
+
       expect(mockApiClient.get).toHaveBeenCalledWith(
         QUEUE_ENDPOINTS.GET_BY_ID(QUEUE_TEST_CONSTANTS.QUEUE_ID),
         expect.objectContaining({
@@ -191,7 +199,7 @@ describe('QueueService Unit Tests', () => {
     it('should scope by folder key through options', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawQueue());
 
-      await queueService.getByIdWithMethods(
+      await queueService.getById(
         QUEUE_TEST_CONSTANTS.QUEUE_ID,
         { folderKey: TEST_CONSTANTS.FOLDER_KEY }
       );
@@ -207,7 +215,7 @@ describe('QueueService Unit Tests', () => {
     });
 
     it('should throw a ValidationError when no folder scoping is provided', async () => {
-      await expect(queueService.getByIdWithMethods(QUEUE_TEST_CONSTANTS.QUEUE_ID))
+      await expect(queueService.getById(QUEUE_TEST_CONSTANTS.QUEUE_ID))
         .rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
@@ -230,7 +238,7 @@ describe('QueueService Unit Tests', () => {
           transformFn: expect.any(Function),
           pagination: expect.any(Object)
         }),
-        undefined
+        {}
       );
 
       expect(result).toEqual(mockResponse);
@@ -247,17 +255,19 @@ describe('QueueService Unit Tests', () => {
 
       const result = await queueService.getAll(options);
 
-      // Verify PaginationHelpers.getAll was called with folder options
+      // The folder moves into the request headers and switches the endpoint —
+      // it must not leak into the query options.
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
-          getEndpoint: expect.toSatisfy((fn: Function) => fn(TEST_CONSTANTS.FOLDER_ID) === QUEUE_ENDPOINTS.GET_BY_FOLDER),
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          }),
           transformFn: expect.any(Function),
           pagination: expect.any(Object)
         }),
-        expect.objectContaining({
-          folderId: TEST_CONSTANTS.FOLDER_ID
-        })
+        expect.not.objectContaining({ folderId: expect.anything() })
       );
 
       expect(result).toEqual(mockResponse);
@@ -345,20 +355,24 @@ describe('QueueService Unit Tests', () => {
     });
   });
 
-  describe('getAllWithMethods', () => {
-    it('should list queues across folders by default and attach methods via the transform', async () => {
+  describe('getAll — folder scoping', () => {
+    it('should scope by folder key, switch to the folder endpoint, and attach methods via the transform', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedQueueCollection()
       );
 
-      await queueService.getAllWithMethods();
+      await queueService.getAll({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ALL),
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
+          }),
           transformFn: expect.any(Function)
         }),
-        {}
+        // The folder fields go into headers only — never into the query options.
+        expect.not.objectContaining({ folderKey: expect.anything() })
       );
 
       // Run the transformFn the service handed to PaginationHelpers on a raw
@@ -372,57 +386,54 @@ describe('QueueService Unit Tests', () => {
       expect(typeof transformed.insertItem).toBe('function');
     });
 
-    it('should move folder scoping into headers and switch to the folder endpoint', async () => {
+    it('should scope by folder path through the request headers', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedQueueCollection()
       );
 
-      await queueService.getAllWithMethods({ folderId: TEST_CONSTANTS.FOLDER_ID });
+      await queueService.getAll({ folderPath: TEST_CONSTANTS.FOLDER_PATH });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+            [FOLDER_PATH_ENCODED]: expect.any(String)
           })
         }),
-        expect.not.objectContaining({ folderId: expect.anything() })
+        expect.not.objectContaining({ folderPath: expect.anything() })
       );
     });
 
-    it('should scope by folder key through the request headers', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
-        createMockTransformedQueueCollection()
-      );
-
-      await queueService.getAllWithMethods({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
-
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_BY_FOLDER),
-          headers: expect.objectContaining({
-            [FOLDER_KEY]: TEST_CONSTANTS.FOLDER_KEY
-          })
-        }),
-        expect.not.objectContaining({ folderKey: expect.anything() })
-      );
-    });
-
-    it('should keep the deprecated getAll transform free of attached methods', async () => {
+    it('should list queues across folders by default and attach methods via the transform', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(
         createMockTransformedQueueCollection()
       );
 
       await queueService.getAll();
 
-      // The deprecated method's contract: pure data — safe to enumerate,
-      // structuredClone, and postMessage.
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ALL)
+        }),
+        {}
+      );
+
+      // Run the transformFn the service handed to PaginationHelpers on a raw
+      // queue and verify it produces a queue with bound methods.
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
       const transformed = (config as any).transformFn(createMockRawQueue());
 
       expect(transformed.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ID);
-      expect(transformed.getAllItems).toBeUndefined();
-      expect(transformed.insertItem).toBeUndefined();
+      expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(typeof transformed.getAllItems).toBe('function');
+      expect(typeof transformed.insertItem).toBe('function');
+
+      // Transform completeness for this closure: renamed camelCase fields
+      // carry the values, raw API fields are removed.
+      expect(transformed.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect(transformed.CreationTime).toBeUndefined();
+      expect(transformed.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+      expect(transformed.OrganizationUnitFullyQualifiedName).toBeUndefined();
     });
   });
 
