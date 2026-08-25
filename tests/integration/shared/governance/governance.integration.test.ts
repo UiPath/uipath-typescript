@@ -51,7 +51,9 @@ describeIntegration('Governance - Integration Tests', 'user', modes, () => {
       expect(Array.isArray(result.items)).toBe(true);
     });
 
-    it('should round-trip a cursor to fetch the next page', async () => {
+    // skip: needs at least two policy traces in the test tenant, which requires a deployed
+    // access policy and runs against it.
+    it.skip('should round-trip a cursor to fetch the next page', async () => {
       const page1 = await governance.getPolicyTraces(startTime, { pageSize: 1, fullOrganization: true });
 
       if (!page1.hasNextPage || !page1.nextCursor) {
