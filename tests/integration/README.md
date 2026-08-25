@@ -250,6 +250,41 @@ takes either. The PAT mode is deliberately retained rather than replaced — it 
 the credential most SDK consumers use, and keeping it exercised preserves that
 coverage.
 
+### Choosing the credential for a suite
+
+Pass the requirement as the second argument to `setupUnifiedTests`, and gate
+collection with the matching guard so the suite skips instead of failing when the
+credential is absent:
+
+```ts
+// Needs a user token — skips when none is configured.
+describe.skipIf(!hasUserToken()).each(modes)('Notifications', (mode) => {
+  setupUnifiedTests(mode, 'user');
+
+// Needs the external application.
+describe.skipIf(!canAuthenticate('pat')).each(modes)('Some suite', (mode) => {
+  setupUnifiedTests(mode, 'pat');
+
+// Either works — the default; omit the argument.
+setupUnifiedTests(mode);
+```
+
+`INTEGRATION_AUTH_MODE=pat|user` forces one credential across a whole run without
+editing any suite, which is useful for checking that a change behaves the same
+under both.
+
+### Host per credential
+
+User-token suites use `MINTER_BASE_URL` when it is set; everything else uses
+`UIPATH_BASE_URL`. The default host sits behind a CORS proxy whose path whitelist
+must name every service a suite touches — a service missing from it is rejected
+before the request reaches the platform. Suites on the user token reach services
+that are not on that list, so they talk to the platform host directly. The proxy
+exists for browser callers; tests run in Node, where it buys nothing.
+
+`MINTER_BASE_URL` is optional and falls back to `UIPATH_BASE_URL`, so leaving it
+unset keeps the previous single-host behaviour.
+
 ### Getting a user token
 
 The token comes from [Minter](https://uipath.atlassian.net/wiki/spaces/CLD/pages/87134404744),
@@ -324,6 +359,7 @@ configured, so an unguarded suite fails the run on any machine without one.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `UIPATH_USER_TOKEN` | User access token for services that reject PATs — see [Authentication modes](#authentication-modes) | (those suites skip) |
+| `MINTER_BASE_URL` | Base URL for user-token suites — see [Host per credential](#host-per-credential) | (falls back to `UIPATH_BASE_URL`) |
 | `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |

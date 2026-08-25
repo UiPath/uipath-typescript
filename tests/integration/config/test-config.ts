@@ -6,6 +6,13 @@ config({ path: path.resolve(__dirname, '../../.env.integration') });
 
 export interface IntegrationConfig {
   baseUrl: string;
+  /**
+   * Base URL for suites authenticating with a user token. The CORS proxy in
+   * front of `baseUrl` whitelists paths per service, which suites reaching
+   * newer services would have to be added to; user-token suites therefore
+   * talk to the platform host directly. Falls back to `baseUrl` when unset.
+   */
+  minterBaseUrl?: string;
   orgName: string;
   tenantName: string;
   tenantId?: string;
@@ -108,6 +115,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
   if (typeof rawConfig.baseUrl !== 'string' || !isValidUrl(rawConfig.baseUrl)) {
     errors.push('  - baseUrl: UIPATH_BASE_URL must be a valid URL');
   }
+  if (rawConfig.minterBaseUrl !== undefined &&
+      (typeof rawConfig.minterBaseUrl !== 'string' || !isValidUrl(rawConfig.minterBaseUrl))) {
+    errors.push('  - minterBaseUrl: MINTER_BASE_URL must be a valid URL when set');
+  }
   if (typeof rawConfig.orgName !== 'string' || rawConfig.orgName.length === 0) {
     errors.push('  - orgName: UIPATH_ORG_NAME is required');
   }
@@ -128,6 +139,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
 
   return {
     baseUrl: rawConfig.baseUrl as string,
+    minterBaseUrl: typeof rawConfig.minterBaseUrl === 'string' ? rawConfig.minterBaseUrl : undefined,
     orgName: rawConfig.orgName as string,
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
@@ -184,6 +196,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
   const rawConfig = {
     baseUrl: process.env.UIPATH_BASE_URL,
+    minterBaseUrl: process.env.MINTER_BASE_URL || undefined,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
     tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
@@ -268,6 +281,16 @@ export function resolveAuthMode(requirement: AuthRequirement): AuthMode | null {
 }
 
 /** Whether any configured credential can satisfy the requirement. */
+/**
+ * Picks the host for a run. User-token suites use `MINTER_BASE_URL` when set:
+ * the default host sits behind a CORS proxy whose path whitelist has to list
+ * every service a suite touches, and these suites reach services that are not
+ * on it. PAT suites keep the default host.
+ */
+export function resolveBaseUrl(config: IntegrationConfig, authMode: AuthMode): string {
+  return authMode === 'user' ? config.minterBaseUrl ?? config.baseUrl : config.baseUrl;
+}
+
 export function canAuthenticate(requirement: AuthRequirement): boolean {
   return resolveAuthMode(requirement) !== null;
 }

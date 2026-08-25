@@ -64,6 +64,7 @@ jobs:
           # Configuration for the development environment
           echo "env_name=development" >> $GITHUB_OUTPUT
           echo "base_url=${{ secrets.UIPATH_BASE_URL_DEV || secrets.UIPATH_BASE_URL }}" >> $GITHUB_OUTPUT
+          echo "minter_base_url=${{ secrets.MINTER_BASE_URL_DEV || secrets.MINTER_BASE_URL }}" >> $GITHUB_OUTPUT
           echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
           echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
           echo "tenant_id=${{ secrets.UIPATH_TENANT_ID_DEV || secrets.UIPATH_TENANT_ID }}" >> $GITHUB_OUTPUT
@@ -100,6 +101,7 @@ jobs:
           # Auto-generated configuration for development environment
           # Branch: ${{ inputs.ref_label }}
           UIPATH_BASE_URL=${{ steps.config.outputs.base_url }}
+          MINTER_BASE_URL=${{ steps.config.outputs.minter_base_url }}
           UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
           UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
           UIPATH_TENANT_ID_DEV=${{ steps.config.outputs.tenant_id }}

@@ -25,7 +25,9 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
-import { loadIntegrationConfig, IntegrationConfig, resolveAuthMode, AuthRequirement, AuthMode } from './test-config';
+import { loadIntegrationConfig, IntegrationConfig, resolveAuthMode, AuthRequirement, AuthMode,
+  resolveBaseUrl,
+} from './test-config';
 export { hasUserToken, canAuthenticate, resolveAuthMode } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
@@ -114,9 +116,9 @@ function resolveToken(config: IntegrationConfig, authMode: AuthMode): string {
 /**
  * Creates services using V0 pattern (legacy SDK property access)
  */
-function createV0Services(config: IntegrationConfig, token: string): TestServices {
+function createV0Services(config: IntegrationConfig, token: string, baseUrl: string): TestServices {
   const sdk = new LegacyUiPath({
-    baseUrl: config.baseUrl,
+    baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
     secret: token,
@@ -150,9 +152,9 @@ function createV0Services(config: IntegrationConfig, token: string): TestService
 /**
  * Creates services using V1 pattern (modular instantiation)
  */
-function createV1Services(config: IntegrationConfig, token: string): TestServices {
+function createV1Services(config: IntegrationConfig, token: string, baseUrl: string): TestServices {
   const sdk = new UiPath({
-    baseUrl: config.baseUrl,
+    baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
     secret: token,
@@ -215,11 +217,12 @@ export async function initializeServices(
   currentAuthMode = authMode;
 
   const token = resolveToken(testConfig, authMode);
+  const baseUrl = resolveBaseUrl(testConfig, authMode);
 
   if (mode === 'v0') {
-    servicesInstance = createV0Services(testConfig, token);
+    servicesInstance = createV0Services(testConfig, token, baseUrl);
   } else {
-    servicesInstance = createV1Services(testConfig, token);
+    servicesInstance = createV1Services(testConfig, token, baseUrl);
   }
 
   return servicesInstance;
