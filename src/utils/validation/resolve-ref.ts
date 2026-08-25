@@ -72,23 +72,22 @@ export async function resolveRefToId<TId>(
     return { id: ref.id, effectiveFolder: {} };
   }
 
-  if ('name' in ref && ref.name) {
-    if (!resolvers.byName) {
-      throw new ValidationError({
-        message: `${callerLabel}: this method does not support lookup by 'name'.`,
-      });
-    }
-    const { id, folderId } = await resolvers.byName(ref.name);
-    return { id, effectiveFolder: { folderId } };
-  }
+  // Name and key branches share the same shape — pick the field the caller supplied, then
+  // dispatch to the matching resolver. A ref with neither falls through to the ValidationError.
+  const stringVariants: ReadonlyArray<{ variant: 'name' | 'key'; resolver: RefLookup<TId> | undefined }> = [
+    { variant: 'name', resolver: resolvers.byName },
+    { variant: 'key', resolver: resolvers.byKey },
+  ];
 
-  if ('key' in ref && ref.key) {
-    if (!resolvers.byKey) {
+  for (const { variant, resolver } of stringVariants) {
+    const value = (ref as { name?: string; key?: string })[variant];
+    if (!value) continue;
+    if (!resolver) {
       throw new ValidationError({
-        message: `${callerLabel}: this method does not support lookup by 'key'.`,
+        message: `${callerLabel}: this method does not support lookup by '${variant}'.`,
       });
     }
-    const { id, folderId } = await resolvers.byKey(ref.key);
+    const { id, folderId } = await resolver(value);
     return { id, effectiveFolder: { folderId } };
   }
 
