@@ -3353,10 +3353,9 @@
 </blockquote>
 <p>Updates the value of an existing asset, identified by ref (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID)).</p>
 <p>Fetches the asset internally to determine its type, then updates only the value while
-preserving the asset's name, scope, and description. When the caller supplies <code>{ name }</code>
-or <code>{ key }</code>, folder scoping in <code>options</code> drives the lookup; the update then targets the
-folder the resolved asset actually lives in, so runtime overrides that redirect across
-folders remain consistent.</p>
+preserving the asset's name, scope, and description. Folder scoping in <code>options</code> drives
+both the ref's name/key lookup and the update itself — the same folder options apply to
+both calls.</p>
 <p><strong>Supported value types:</strong> <code>Text</code>, <code>Integer</code>, and <code>Bool</code> only. Other types
 (<code>Credential</code>, <code>Secret</code>) throw a <code>ValidationError</code>.</p>
 <p>The <code>newValue</code> runtime type must match the asset's <code>valueType</code>:
@@ -3439,7 +3438,7 @@ folders remain consistent.</p>
 <h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h4>
-<p>Use <a href="#updatevalue">AssetServiceModel.updateValue</a> with <code>{ id }</code> or <code>{ name }</code> instead. This
+<p>Use <a href="#updatevalue">AssetServiceModel.updateValue</a> with <code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> instead. This
 method will be removed in the next major version.</p>
 
 

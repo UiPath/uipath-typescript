@@ -143,7 +143,7 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyVal
 
 Updates the value of an existing asset, identified by ref (`{ id }`, `{ name }`, or `{ key }` (GUID)).
 
-Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description. When the caller supplies `{ name }` or `{ key }`, folder scoping in `options` drives the lookup; the update then targets the folder the resolved asset actually lives in, so runtime overrides that redirect across folders remain consistent.
+Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description. Folder scoping in `options` drives both the ref's name/key lookup and the update itself — the same folder options apply to both calls.
 
 **Supported value types:** `Text`, `Integer`, and `Bool` only. Other types (`Credential`, `Secret`) throw a `ValidationError`.
 
@@ -196,4 +196,4 @@ Updates the value of an existing asset by ID.
 
 #### Deprecated
 
-Use [AssetServiceModel.updateValue](#updatevalue) with `{ id }` or `{ name }` instead. This method will be removed in the next major version.
+Use [AssetServiceModel.updateValue](#updatevalue) with `{ id }`, `{ name }`, or `{ key }` instead. This method will be removed in the next major version.
