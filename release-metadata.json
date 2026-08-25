@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.2",
+  "sdkVersion": "1.6.3",
   "services": [
     {
       "name": "AgentMemory",
