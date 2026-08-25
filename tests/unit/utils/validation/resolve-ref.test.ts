@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { resolveRefToId } from '../../../../src/utils/refs/resolve-ref';
+import { resolveRefToId } from '../../../../src/utils/validation/resolve-ref';
 import { ValidationError } from '../../../../src/core/errors';
 
 const CALLER = 'Assets.updateValue';
@@ -69,12 +69,11 @@ describe('resolveRefToId', () => {
   });
 
   it('includes the caller label in the error message so failures point at the offending method', async () => {
-    try {
-      await resolveRefToId<number>(undefined, {}, 'Buckets.uploadFile');
-      throw new Error('should have thrown');
-    } catch (err) {
-      expect((err as Error).message).toContain('Buckets.uploadFile');
-    }
+    const error = await resolveRefToId<number>(undefined, {}, 'Buckets.uploadFile').catch(
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).message).toContain('Buckets.uploadFile');
   });
 
   it('propagates a rejection from the byName lookup', async () => {
