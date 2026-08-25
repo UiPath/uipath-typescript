@@ -21,9 +21,8 @@ import { transformData } from '../../utils/transform';
 /**
  * Service for reading and writing UiPath platform settings.
  *
- * Operations are scoped to an (organization, user) pair — the organization comes from the
- * SDK instance, and `userId` is always sent, so reads and writes act on that user's own
- * value for a key. Both operations are bulk:
+ * Every operation is user-scoped — `userId` is always sent, so reads and writes act on that
+ * user's own value for a key. Both operations are bulk:
  * {@link PlatformService.getUserSettings} fetches many keys in one request, and
  * {@link PlatformService.updateUserSettings} upserts many keys in one request.
  *
