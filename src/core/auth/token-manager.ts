@@ -227,6 +227,14 @@ export class TokenManager {
   }
 
   /**
+   * Gets the OIDC ID token from the current token, if present.
+   * Used as `id_token_hint` for RP-initiated logout.
+   */
+  getIdToken(): string | undefined {
+    return this.currentToken?.idToken;
+  }
+
+  /**
    * Checks if we have a valid token
    */
   hasValidToken(): boolean {
@@ -345,7 +353,9 @@ export class TokenManager {
       token: token.access_token,
       type: 'oauth',
       expiresAt: new Date(Date.now() + token.expires_in * 1000),
-      refreshToken: token.refresh_token
+      refreshToken: token.refresh_token,
+      // A refresh response may omit id_token — keep the one from initial login.
+      idToken: token.id_token ?? tokenInfo.idToken
     });
     return token;
   }
