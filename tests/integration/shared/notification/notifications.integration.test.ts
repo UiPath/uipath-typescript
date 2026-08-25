@@ -54,13 +54,22 @@ describeIntegration('Notifications - Integration Tests', 'user', modes, () => {
     });
 
     it('should filter using the SDK field name `hasRead` (rewritten to the API `isRead`)', async () => {
+      // Asks for page 2 because the server intermittently stalls for 30s on
+      // `$filter` with `$top` and no `$skip`, and the SDK omits `$skip` on page 1.
       const result = await notifications.getAll(tenantId, {
         filter: 'hasRead eq false',
-        pageSize: 5,
+        pageSize: 1,
+        jumpToPage: 2,
       });
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
+      if (result.items.length === 0) {
+        throw new Error(
+          'Test tenant has fewer than 2 unread notifications; the filter rewrite cannot be ' +
+            'verified. Populate the inbox with test data.',
+        );
+      }
       // Every returned entry must respect the filter.
       for (const item of result.items) {
         expect(item.hasRead).toBe(false);
