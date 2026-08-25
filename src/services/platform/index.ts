@@ -17,14 +17,11 @@
  * await sdk.initialize();
  *
  * const platform = new Platform(sdk);
- * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
- *   organizationId: '<organizationId>',
- * });
+ * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
  *
  * await platform.updateUserSettings(
  *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
- *   settings[0].userId,
- *   settings[0].organizationId
+ *   settings[0].userId
  * );
  * ```
  *
