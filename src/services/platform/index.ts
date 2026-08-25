@@ -21,7 +21,7 @@
  *
  * await platform.updateUserSettings(
  *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
- *   settings[0].userId
+ *   '<userId>'
  * );
  * ```
  *
