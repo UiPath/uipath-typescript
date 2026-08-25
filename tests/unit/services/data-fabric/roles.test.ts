@@ -26,6 +26,13 @@ describe('DataFabricRoleService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  describe('constructor', () => {
+    it('should send x-uipath-source: uipath-typescript-sdk on every ApiClient request', () => {
+      const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
+      expect(clientConfig).toEqual({ headers: { 'x-uipath-source': 'uipath-typescript-sdk' } });
+    });
+  });
+
   describe('getAll', () => {
     it('should list Data Fabric roles with stats enabled by default', async () => {
       mockApiClient.get.mockResolvedValue([

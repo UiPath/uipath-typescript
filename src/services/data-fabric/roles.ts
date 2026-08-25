@@ -6,11 +6,12 @@ import {
   DataFabricRoleGetAllOptions,
   DataFabricRoleType,
 } from '../../models/data-fabric/roles.types';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+import { FOLDER_KEY, UIPATH_SOURCE } from '../../utils/constants/headers';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
 import { createHeaders } from '../../utils/http/headers';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
+import type { IUiPath } from '../../core/types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -45,6 +46,10 @@ function validateRolesResponse(data: unknown): DataFabricRole[] {
  * @internal
  */
 export class DataFabricRoleService extends BaseService implements DataFabricRoleServiceModel {
+  constructor(instance: IUiPath) {
+    super(instance, { [UIPATH_SOURCE]: 'uipath-typescript-sdk' });
+  }
+
   @track('DataFabricRoles.GetAll')
   async getAll(options: DataFabricRoleGetAllOptions = {}): Promise<DataFabricRole[]> {
     const params = createParams({

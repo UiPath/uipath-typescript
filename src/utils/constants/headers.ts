@@ -9,6 +9,12 @@ export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
 export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
 export const  TRACEPARENT = 'traceparent';
 export const  UIPATH_TRACEPARENT_ID = 'x-uipath-traceparent-id';
+/**
+ * Identifies the implementing service/domain of an SDK request. Set once per
+ * service via `BaseService`'s constructor `headers` arg so `ApiClient` includes
+ * it on every request from that service.
+ */
+export const  UIPATH_SOURCE = 'x-uipath-source';
 
 /**
  * Content type constants for HTTP requests/responses
