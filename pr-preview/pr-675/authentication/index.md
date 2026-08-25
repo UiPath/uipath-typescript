@@ -40,51 +40,6 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
-## Zero-config (execution context)
-
-Outside the browser the SDK configures itself from the execution-context environment contract, so `new UiPath()` needs no arguments and no credential code:
-
-```
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-const sdk = new UiPath();
-await sdk.initialize();
-```
-
-On a UiPath runner the contract is already populated. Off-runner — a script, a test, a local `uip functions serve` — set the variables yourself:
-
-```
-UIPATH_URL=https://cloud.uipath.com
-UIPATH_ORGANIZATION_ID=<organizationId>   # a logical org name also works
-UIPATH_TENANT_ID=<tenantId>               # a logical tenant name also works
-UIPATH_ACCESS_TOKEN=<accessToken>         # PAT or bearer token
-```
-
-| Variable                 | Also accepted                                                  |
-| ------------------------ | -------------------------------------------------------------- |
-| `UIPATH_URL`             | `UIPATH_BASE_URL`                                              |
-| `UIPATH_ORGANIZATION_ID` | `UIPATH_ORG_ID`, `UIPATH_ORGANIZATION_NAME`, `UIPATH_ORG_NAME` |
-| `UIPATH_TENANT_ID`       | `UIPATH_TENANT_NAME`                                           |
-| `UIPATH_ACCESS_TOKEN`    | `UIPATH_SECRET`                                                |
-
-To state the context explicitly instead, pass it to the constructor — this takes precedence over the environment:
-
-```
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgId: '<organizationId>',
-  tenantId: '<tenantId>',
-  accessToken: '<accessToken>'
-});
-await sdk.initialize();
-```
-
-The access token is consumed internally and is never exposed on `sdk.config`.
-
-Precedence
-
-Constructor config wins over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
-
 ## Secret-based Authentication
 
 ```
@@ -133,13 +88,73 @@ No refresh tokens
 
 The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
 
+## Coded Functions
+
+A coded function receives its platform coordinates as the handler's `ctx`. Pass that straight to the SDK — it maps the context itself, so the handler names no credential fields and never touches the workload token:
+
+```
+import { defineFunction } from '@uipath/coded-functions-js-sdk';
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+export default defineFunction({
+  name: 'list-entities',
+  handler: async (_input, ctx) => {
+    const sdk = new UiPath(ctx);
+
+    const entities = await new Entities(sdk).getAll();
+    return { entityCount: entities.length };
+  },
+});
+```
+
+Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
+
+## Server-side and scripts (environment contract)
+
+Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+```
+
+```
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=<organization>          # an id works here as well as a name
+UIPATH_TENANT_NAME=<tenant>
+UIPATH_ACCESS_TOKEN=<accessToken>       # PAT or bearer token
+```
+
+These are the names this SDK already uses elsewhere for the same values, so one `.env` serves a script and a test run alike.
+
+The variables are read from `process.env` or `Deno.env`, whichever the runtime provides.
+
+To state the configuration explicitly instead, pass it to the constructor — this takes precedence over both the environment and meta tags:
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: '<organizationId>',   // an id works here as well as a name
+  tenantName: '<tenantId>',
+  secret: '<accessToken>'        // any bearer token
+});
+```
+
+The access token is consumed internally and is never exposed on `sdk.config`.
+
+Precedence
+
+Constructor arguments win over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
+
 ## SDK Initialization - The initialize() Method
 
 ### When to Use initialize()
 
 The `initialize()` method completes the authentication process for the SDK:
 
-- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**. This covers `secret`, `accessToken`, a coded function's `ctx`, and the environment contract.
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
 ### Example: Secret Authentication (Auto-initialized)
@@ -234,19 +249,19 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 
 ## Quick Test Script
 
-Create `.env` file — the SDK reads these itself:
+Create `.env` file:
 
 ```
 # .env
-UIPATH_URL=https://cloud.uipath.com
-UIPATH_ORGANIZATION_ID=your-organization
-UIPATH_TENANT_ID=your-tenant
-UIPATH_ACCESS_TOKEN=your-pat-token
+UIPATH_BASE_URL=https://api.uipath.com
+UIPATH_ORG_NAME=your-organization-name
+UIPATH_TENANT_NAME=your-tenant-name
+UIPATH_SECRET=your-pat-token
 ```
 
 Verify your authentication setup:
@@ -258,15 +273,19 @@ import { UiPath } from '@uipath/uipath-typescript/core';
 import { Assets } from '@uipath/uipath-typescript/assets';
 
 async function testAuthentication() {
-  const sdk = new UiPath();
-  await sdk.initialize();
+  const sdk = new UiPath({
+    baseUrl: process.env.UIPATH_BASE_URL!,
+    orgName: process.env.UIPATH_ORG_NAME!,
+    tenantName: process.env.UIPATH_TENANT_NAME!,
+    secret: process.env.UIPATH_SECRET!
+  });
 
   try {
     // Test with a simple API call
     const assets = new Assets(sdk);
     const allAssets = await assets.getAll();
     console.log('Authentication successful!');
-    console.log(`Connected to ${sdk.config.orgName}/${sdk.config.tenantName}`);
+    console.log(`Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
     console.log(`Found ${allAssets.items.length} assets`);
 
   } catch (error) {

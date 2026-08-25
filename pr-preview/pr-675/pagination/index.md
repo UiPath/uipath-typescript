@@ -133,6 +133,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
 | CaseInstances                     | `getSlaSummary()`          | ✅ Yes                 |
 | Queues                            | `getAll()`                 | ✅ Yes                 |
+| Queues                            | `getAllItems()`            | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |
 | Tasks                             | `getComments()`            | ✅ Yes                 |
