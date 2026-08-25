@@ -31,6 +31,15 @@ describeIntegration('Notifications - Integration Tests', 'user', modes, () => {
 
   const ORDER_BY = 'publishedOn desc';
 
+  // The mark-read flows only need *an* unread entry. Asking the server to filter
+  // would route them through the `$filter` + `$top` path that intermittently
+  // stalls (covered by the getAll filter test), so scan a page instead — the
+  // unfiltered read is consistently sub-second.
+  const findUnread = async (): Promise<NotificationGetResponse | undefined> => {
+    const page = await notifications.getAll(tenantId, { pageSize: 50, orderby: ORDER_BY });
+    return page.items.find((entry) => !entry.hasRead);
+  };
+
   describe('getAll', () => {
     it('should retrieve notifications with pagination options as a PaginatedResponse', async () => {
       const result = await notifications.getAll(tenantId, { pageSize: 5, orderby: ORDER_BY });
@@ -121,13 +130,12 @@ describeIntegration('Notifications - Integration Tests', 'user', modes, () => {
 
   describe('mark-read flows', () => {
     it('should mark a single notification as read and reflect the change via getAll', async () => {
-      const unread = await notifications.getAll(tenantId, { filter: 'hasRead eq false', pageSize: 1 });
-      if (unread.items.length === 0) {
+      const target = await findUnread();
+      if (!target) {
         throw new Error(
           'No unread notifications in the inbox — cannot validate markAsRead. Trigger one on the test tenant.'
         );
       }
-      const target = unread.items[0];
 
       const mark = await notifications.markAsRead(tenantId, [target.id]);
       expect(mark.success).toBe(true);
@@ -142,15 +150,15 @@ describeIntegration('Notifications - Integration Tests', 'user', modes, () => {
 
     it('markAllAsRead should succeed without per-id payload', async () => {
       // Snapshot one unread notification before the bulk operation so we can restore inbox state.
-      const preSnapshot = await notifications.getAll(tenantId, { filter: 'hasRead eq false', pageSize: 1 });
+      const preSnapshot = await findUnread();
 
       const result = await notifications.markAllAsRead(tenantId);
       expect(result.success).toBe(true);
       expect(result.data).toEqual({ all: true, read: true });
 
       // Restore so subsequent runs can still find unread notifications for the markAsRead test.
-      if (preSnapshot.items.length > 0) {
-        await notifications.markAsUnread(tenantId, [preSnapshot.items[0].id]);
+      if (preSnapshot) {
+        await notifications.markAsUnread(tenantId, [preSnapshot.id]);
       }
     });
   });
