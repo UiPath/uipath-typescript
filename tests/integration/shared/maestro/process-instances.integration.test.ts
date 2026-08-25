@@ -21,16 +21,37 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   let seededFaultedJobKey: string | null = null;
 
   beforeAll(async () => {
-    const { processes } = getServices();
+    const { processes, processInstances } = getServices();
     const config = getTestConfig();
 
-    if (config.maestroTestProcessKey && config.folderId) {
-      const [job] = await processes.start(
-        { processKey: config.maestroTestProcessKey },
-        { folderId: Number(config.folderId) }
-      );
-      seededFaultedJobKey = job.key;
+    if (!config.maestroTestProcessKey || !config.folderId) {
+      return;
     }
+
+    // Reuse an existing Faulted instance when one exists — the retry test consumes its
+    // fixture, so a Faulted leftover can only come from an interrupted run, and
+    // scavenging it keeps the tenant clean (instances cannot be deleted via API).
+    // Only when none exists is a fresh instance seeded.
+    const existing = await processInstances.getAll({
+      processKey: config.maestroTestProcessKey,
+      pageSize: 20,
+    });
+    // The folder must match the configured one — the retry test reads the instance with
+    // config.folderKey, so an orphan from another folder would 404 there
+    const orphan = existing.items.find(
+      (inst) =>
+        inst.latestRunStatus === InstanceStatus.FAULTED && inst.folderKey === config.folderKey
+    );
+    if (orphan) {
+      seededFaultedJobKey = orphan.instanceId;
+      return;
+    }
+
+    const [job] = await processes.start(
+      { processKey: config.maestroTestProcessKey },
+      { folderId: Number(config.folderId) }
+    );
+    seededFaultedJobKey = job.key;
   }, 60_000);
 
   describe('getAll', () => {
@@ -44,7 +65,11 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         expect(result.items).toBeDefined();
         expect(Array.isArray(result.items)).toBe(true);
 
-        const instance = result.items.find((item) => item.instanceId && item.folderKey);
+        // Never select the seeded retry fixture: pausing it stops its execution, so it
+        // would never fault and the retry test would time out waiting
+        const instance = result.items.find(
+          (item) => item.instanceId && item.folderKey && item.instanceId !== seededFaultedJobKey
+        );
         if (instance) {
           testInstanceId = instance.instanceId;
           testFolderKey = instance.folderKey;
@@ -199,25 +224,34 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         { folderId: Number(config.folderId) }
       );
 
-      // Wait for Running specifically — cancelling while still Pending is rejected
+      // Wait for Running specifically — cancelling while still Pending is rejected.
+      // If the instance faults before the poll catches the brief Running window, retry
+      // it once: the retried run re-enters Running, which is cancellable. The status may
+      // keep reading Faulted for a few polls after the retry (propagation lag), so a
+      // repeat Faulted reading is not treated as a second fault — the attempt cap bounds
+      // a genuinely stuck instance instead.
       let running = false;
+      let faultRetried = false;
       for (let attempt = 0; attempt < 20; attempt++) {
+        let status: string | null = null;
         try {
-          const instance = await processInstances.getById(job.key, config.folderKey);
-          if (instance.latestRunStatus === InstanceStatus.RUNNING) {
-            running = true;
-            break;
-          }
-          if (instance.latestRunStatus === InstanceStatus.FAULTED) {
-            throw new Error('Seeded instance faulted before it could be cancelled — cannot test cancel');
-          }
-        } catch (error: any) {
-          if (error.message?.includes('cannot test cancel')) {
-            throw error;
-          }
+          status = (await processInstances.getById(job.key, config.folderKey)).latestRunStatus;
+        } catch {
           // not yet visible in PIMS
         }
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        if (status === InstanceStatus.RUNNING) {
+          running = true;
+          break;
+        }
+        if (status === InstanceStatus.FAULTED && !faultRetried) {
+          // Outside the visibility catch: a failing retry() must propagate, not be
+          // silently swallowed and re-attempted every poll
+          faultRetried = true;
+          await processInstances.retry(job.key, config.folderKey);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       if (!running) {
         throw new Error('Seeded instance did not reach Running within 60s — cannot test cancel');

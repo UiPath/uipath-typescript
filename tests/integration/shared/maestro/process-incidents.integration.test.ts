@@ -53,10 +53,12 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       const { maestroProcesses } = getServices();
       const config = getTestConfig();
 
-      const processKey = config.maestroTestProcessKey;
+      // The statically-faulted process, never run by the suite: its incident aggregation
+      // is never recomputed mid-run, so this read cannot race an incident write
+      const processKey = config.maestroIncidentsProcessKey;
 
       if (!processKey) {
-        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot validate incident structure');
+        throw new Error('MAESTRO_TEST_INCIDENTS_PROCESS_KEY not configured — cannot validate incident structure');
       }
 
       const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
@@ -128,17 +130,17 @@ describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode
       const { maestroProcesses } = getServices();
       const config = getTestConfig();
 
-      const processKey = config.maestroTestProcessKey;
+      const processKey = config.maestroIncidentsProcessKey;
 
       if (!processKey) {
-        throw new Error('MAESTRO_TEST_PROCESS_KEY not configured — cannot test incident details');
+        throw new Error('MAESTRO_TEST_INCIDENTS_PROCESS_KEY not configured — cannot test incident details');
       }
 
       const incidents = await maestroProcesses.getIncidents(processKey, config.folderKey);
 
       if (incidents.length === 0) {
         throw new Error(
-          'No incidents available for the configured process — MAESTRO_TEST_PROCESS_KEY must point at a process with faulted runs'
+          'No incidents available for the configured process — MAESTRO_TEST_INCIDENTS_PROCESS_KEY must point at a process with at least one faulted run'
         );
       }
 
