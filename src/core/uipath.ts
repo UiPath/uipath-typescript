@@ -3,10 +3,12 @@ import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
+import { validateConfig, normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
+import { loadFromEnvironment } from './config/environment';
+import { configFromFunctionContext, isFunctionContext, type CodedFunctionContext } from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
 import { trustedEmbeddingOrigin } from './auth/host-token-request';
@@ -17,9 +19,12 @@ import { trustedEmbeddingOrigin } from './auth/host-token-request';
  * Handles authentication, configuration, and provides access to SDK internals
  * for service instantiation in the modular pattern.
  *
- * Supports two usage patterns:
- * 1. Full config in constructor — for server-side or explicit configuration
- * 2. No config / partial config — loads from meta tags injected by @uipath/coded-apps-dev plugin
+ * Configuration is resolved from three sources, in precedence order:
+ * 1. The constructor argument — either an explicit config or a coded function's
+ *    `ctx`, which the SDK maps onto the config fields itself
+ * 2. Meta tags injected by the @uipath/coded-apps-dev plugin — browser only
+ * 3. The environment contract — `UIPATH_BASE_URL`, `UIPATH_ORG_NAME`,
+ *    `UIPATH_TENANT_NAME`, `UIPATH_ACCESS_TOKEN` — outside the browser
  *
  * @example
  * ```typescript
@@ -37,9 +42,38 @@ import { trustedEmbeddingOrigin } from './auth/host-token-request';
  *
  * @example
  * ```typescript
- * // Auto-load from meta tags (coded apps)
+ * // No arguments: meta tags in a coded app, the environment contract elsewhere
  * const sdk = new UiPath();
  * await sdk.initialize();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Coded function: pass the handler's context, ready to use straight away
+ * import { defineFunction } from '@uipath/coded-functions-js-sdk';
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * export default defineFunction({
+ *   name: 'list-entities',
+ *   handler: async (_input, ctx) => {
+ *     const sdk = new UiPath(ctx);
+ *     const entities = await new Entities(sdk).getAll();
+ *     return { count: entities.length };
+ *   },
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Explicit ids and a bearer token — org and tenant accept either an id or a
+ * // name, and `secret` takes any bearer token
+ * const sdk = new UiPath({
+ *   baseUrl: 'https://cloud.uipath.com',
+ *   orgName: '<organizationId>',
+ *   tenantName: '<tenantId>',
+ *   secret: '<accessToken>'
+ * });
  * ```
  */
 export class UiPath implements IUiPath {
@@ -66,22 +100,29 @@ export class UiPath implements IUiPath {
   /**
    * Creates a UiPath SDK instance.
    *
-   * @param config - Optional SDK configuration; when omitted, configuration is loaded from meta tags
+   * @param config - Optional SDK configuration, or the execution context a coded function receives; when omitted, configuration is loaded from meta tags or the environment
    */
-  constructor(config?: PartialUiPathConfig) {
+  constructor(config?: PartialUiPathConfig | CodedFunctionContext) {
+    // A coded function passes its ctx here. A context with no coordinates (the
+    // local case) resolves to undefined and falls through to the other sources.
+    const resolved = config && isFunctionContext(config)
+      ? configFromFunctionContext(config) ?? undefined
+      : config;
+
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
     this.#metaFolderKey = configFromMetaTags?.folderKey;
     this.#metaOrgId = configFromMetaTags?.orgName;
     this.#metaTenantId = configFromMetaTags?.tenantName;
 
-    // Merge configuration: constructor config overrides meta tags
-    const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
+    // Merge configuration: constructor config overrides meta tags, which
+    // override the ambient execution-context environment contract.
+    const mergedConfig = UiPath.#mergeConfigSources(configFromMetaTags, resolved);
 
     if (mergedConfig && isCompleteConfig(mergedConfig)) {
       this.#initializeWithConfig(mergedConfig);
-    } else if (config) {
-      this.#partialConfig = config;
+    } else if (resolved) {
+      this.#partialConfig = resolved;
     }
   }
 
@@ -149,21 +190,60 @@ export class UiPath implements IUiPath {
     }
   }
 
+  /**
+   * Merge every configuration source in precedence order: constructor config,
+   * then meta tags, then the environment contract.
+   *
+   * Each layer is compacted before merging so a sparse layer never blanks out
+   * values from the layer beneath it.
+   */
+  static #mergeConfigSources(
+    metaConfig?: PartialUiPathConfig | null,
+    config?: PartialUiPathConfig | null,
+  ): PartialUiPathConfig | undefined {
+    const layers = [loadFromEnvironment(), metaConfig, config]
+      .filter((layer): layer is PartialUiPathConfig => Boolean(layer))
+      .map((layer) => compactConfig(layer));
+
+    if (layers.length === 0) return undefined;
+
+    const merged = layers.reduce<PartialUiPathConfig>((acc, layer) => ({ ...acc, ...layer }), {});
+
+    // Auth is `secret` or OAuth, never both, and merging can end up with both.
+    // Whichever the caller named here wins; the other's fields are dropped.
+    // A caller naming both is contradicting themselves: left intact for validateConfig() to reject.
+    const namesSecret = config ? hasSecretConfig(config) : false;
+    // Any OAuth field, not all three: a half-filled OAuth config should error,
+    // not quietly fall back to a `secret` from a lower layer.
+    const namesOAuth = Boolean(config?.clientId || config?.redirectUri || config?.scope);
+
+    if (namesSecret !== namesOAuth) {
+      if (namesSecret) {
+        delete merged.clientId;
+        delete merged.redirectUri;
+        delete merged.scope;
+      } else {
+        delete merged.secret;
+      }
+    }
+
+    return merged;
+  }
+
   #loadConfig(): UiPathSDKConfig {
-    // Load from meta tags
+    // Re-reads every source rather than reusing the constructor's merge: meta
+    // tags can be injected after construction, and recovering that is why this
+    // runs at all.
     const metaConfig = loadFromMetaTags();
     this.#metaFolderKey = metaConfig?.folderKey;
     this.#metaOrgId = metaConfig?.orgName;
     this.#metaTenantId = metaConfig?.tenantName;
 
-    // Merge with any partial config from constructor (constructor overrides meta tags)
-    const merged = { ...metaConfig, ...this.#partialConfig };
+    // Constructor config overrides meta tags, which override the environment.
+    const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
-    if (!isCompleteConfig(merged)) {
-      throw new Error(
-        'UiPath SDK configuration not found. ' +
-        'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.'
-      );
+    if (!merged || !isCompleteConfig(merged)) {
+      throw new Error(missingConfigMessage());
     }
 
     return merged;
@@ -173,7 +253,8 @@ export class UiPath implements IUiPath {
    * Initialize the SDK based on the provided configuration.
    * This method handles both OAuth flow initiation and completion automatically.
    * For secret-based authentication, initialization is automatic and this returns immediately.
-   * If no config was provided in constructor, loads from meta tags.
+   * If no config was provided in constructor, loads from meta tags in the browser,
+   * or from the execution-context environment contract outside it.
    */
   public async initialize(): Promise<void> {
     // Load config from meta tags if not provided in constructor
