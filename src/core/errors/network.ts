@@ -11,6 +11,7 @@ import { ErrorParams } from './types';
  * - Request aborted
  */
 export class NetworkError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.NETWORK, {
       message: params.message || ErrorMessages.NETWORK_ERROR,

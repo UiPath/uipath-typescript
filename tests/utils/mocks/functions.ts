@@ -1,9 +1,50 @@
 import { RawFunctionGetResponse, FunctionHttpMethod } from '../../../src/models/orchestrator/functions.types';
+import { RawStudioWebLicenseResponse, StudioWebLicenseTokenClaims } from '../../../src/models/orchestrator/functions.internal-types';
 import { FunctionGetResponse } from '../../../src/models/orchestrator/functions.models';
 import { NonPaginatedResponse } from '../../../src/utils/pagination';
-import { FUNCTION_TEST_CONSTANTS } from '../constants/functions';
+import { FUNCTION_TEST_CONSTANTS, FUNCTION_LICENSE_TEST_CONSTANTS } from '../constants/functions';
 import { TEST_CONSTANTS } from '../constants/common';
 import { createMockBaseResponse, createMockCollection } from './core';
+
+/**
+ * Builds an unsigned license token carrying the given claims, in the shape
+ * Orchestrator issues: an empty header, a base64url payload, and no signature.
+ */
+export const createMockLicenseToken = (claims: StudioWebLicenseTokenClaims): string => {
+  const payload = Buffer.from(JSON.stringify(claims)).toString('base64url');
+  return `e30.${payload}.`;
+};
+
+/**
+ * Creates a raw `POST /api/StudioWeb/AcquireLicense` response.
+ *
+ * The token's expiry is relative to now, so a mock license is live for the
+ * duration of a test rather than instantly stale.
+ */
+export const createMockRawStudioWebLicense = (
+  overrides: Partial<RawStudioWebLicenseResponse> = {},
+  claimOverrides: Partial<StudioWebLicenseTokenClaims> = {}
+): RawStudioWebLicenseResponse => {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  return {
+    robotType: FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE,
+    robotTypes: [...FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPES],
+    externalLicense: false,
+    isLicensed: true,
+    started: FUNCTION_LICENSE_TEST_CONSTANTS.STARTED,
+    lastUpdated: '0001-01-01T00:00:00Z',
+    licenseToken: createMockLicenseToken({
+      nbf: nowSeconds,
+      exp: nowSeconds + FUNCTION_LICENSE_TEST_CONSTANTS.TTL_SECONDS,
+      ubl: FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER,
+      lu: [...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS],
+      status: 'VALID',
+      ...claimOverrides,
+    }),
+    ...overrides,
+  };
+};
 
 /**
  * Creates a raw HttpTriggers row as the API returns it (PascalCase wire format,

@@ -104,6 +104,7 @@ npm run typecheck     # TypeScript compilation — must be clean
 npm run lint          # oxlint — 0 errors
 npm run test:unit     # All unit tests pass
 npm run build         # Rollup build produces dist/ output
+npm run docs:validate # JSDoc completeness (TypeDoc notDocumented) — 0 warnings
 ```
 
 Manual checks:

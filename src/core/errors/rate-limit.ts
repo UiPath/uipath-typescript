@@ -9,6 +9,7 @@ import { ErrorParams } from './types';
  * - API throttling
  */
 export class RateLimitError extends UiPathError {
+  /** @internal */
   constructor(params: Partial<ErrorParams> = {}) {
     super(ErrorType.RATE_LIMIT, {
       message: params.message || ErrorMessages.RATE_LIMIT_EXCEEDED,

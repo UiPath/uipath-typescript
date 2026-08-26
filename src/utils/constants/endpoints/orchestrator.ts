@@ -144,3 +144,15 @@ export const FUNCTION_ENDPOINTS = {
   INVOKE: (folderKey: string, processSlug: string, functionSlug: string) =>
     `${ORCHESTRATOR_BASE}/t/${folderKey}/${processSlug}/${functionSlug}`,
 } as const;
+
+/**
+ * Studio Web Licensing Endpoints
+ */
+export const STUDIO_WEB_LICENSE_ENDPOINTS = {
+  /**
+   * Acquires a license for the calling user, falling back to the free
+   * "Attended Studio Web" license. `POST` only, no request body, not
+   * folder-scoped.
+   */
+  ACQUIRE: `${ORCHESTRATOR_BASE}/api/StudioWeb/AcquireLicense`,
+} as const;

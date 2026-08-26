@@ -28,8 +28,6 @@ describe('Queue Models', () => {
     mockService = {
       getAll: vi.fn(),
       getById: vi.fn(),
-      getAllWithMethods: vi.fn(),
-      getByIdWithMethods: vi.fn(),
       getByName: vi.fn(),
       getByKey: vi.fn(),
       getAllItems: vi.fn(),
