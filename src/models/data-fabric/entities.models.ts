@@ -1030,7 +1030,7 @@ export interface EntityMethods {
   /**
    * Updates this entity — schema and/or metadata.
    *
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
