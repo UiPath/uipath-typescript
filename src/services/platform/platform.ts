@@ -42,12 +42,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       throw new ValidationError({ message: 'userId is required for getUserSettings' });
     }
 
-    // Scope travels in the query string on reads, but in the body on writes
-    const params: Record<string, string | PlatformSettingKey[]> = {
-      key: keys,
-      userId,
-      partitionGlobalId: this.config.orgName,
-    };
+    const params: Record<string, string | PlatformSettingKey[]> = { key: keys, userId };
 
     const response = await this.get<RawPlatformSetting[]>(
       PLATFORM_SETTING_ENDPOINTS.SETTINGS,
@@ -70,7 +65,6 @@ export class PlatformService extends BaseService implements PlatformServiceModel
 
     const response = await this.put<RawPlatformSetting[]>(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
       settings,
-      partitionGlobalId: this.config.orgName,
       userId,
     });
     return transformData(response.data, PlatformSettingMap) as unknown as PlatformSetting[];
