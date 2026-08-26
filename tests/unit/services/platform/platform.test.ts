@@ -24,11 +24,7 @@ describe('Platform Service Unit Tests', () => {
   let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
-    // The organization is no longer a parameter — it comes from the SDK instance's
-    // `orgName`, which the API accepts as the organization either way
-    const { instance } = createServiceTestDependencies({
-      orgName: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-    });
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
@@ -89,11 +85,7 @@ describe('Platform Service Unit Tests', () => {
       await platformService.getUserSettings([PlatformSettingKey.UserCaseAppOrder], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
-        params: {
-          key: ['UserCase.AppOrderByTenant'],
-          userId: PLATFORM_TEST_CONSTANTS.USER_ID,
-          partitionGlobalId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-        },
+        params: { key: ['UserCase.AppOrderByTenant'], userId: PLATFORM_TEST_CONSTANTS.USER_ID },
       });
     });
 
@@ -109,7 +101,6 @@ describe('Platform Service Unit Tests', () => {
         params: {
           key: [PLATFORM_TEST_CONSTANTS.SETTING_KEY, PLATFORM_TEST_CONSTANTS.SETTING_KEY_ALT],
           userId: PLATFORM_TEST_CONSTANTS.USER_ID,
-          partitionGlobalId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
         },
       });
       expect(result.map((s) => s.key)).toEqual([
@@ -118,29 +109,23 @@ describe('Platform Service Unit Tests', () => {
       ]);
     });
 
-    it("should scope the read to the SDK's organization, sent as the wire param partitionGlobalId", async () => {
+    it('should send no organization scope in the query string — the org rides the URL path', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
       await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
-        params: {
-          key: [PLATFORM_TEST_CONSTANTS.SETTING_KEY],
-          userId: PLATFORM_TEST_CONSTANTS.USER_ID,
-          partitionGlobalId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-        },
-      });
+      const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
+      expect(spec.params).not.toHaveProperty('partitionGlobalId');
+      expect(spec.params).not.toHaveProperty('organizationId');
     });
 
-    it('should always send userId alongside the organization, so reads are never organization-wide', async () => {
+    it('should always send userId, so reads are never organization-wide', async () => {
       mockApiClient.get.mockResolvedValue(createBasicPlatformSettings());
 
       await platformService.getUserSettings([PLATFORM_TEST_CONSTANTS.SETTING_KEY], PLATFORM_TEST_CONSTANTS.USER_ID);
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params.userId).toBe(PLATFORM_TEST_CONSTANTS.USER_ID);
-      // The SDK name never reaches the wire — only the API's own `partitionGlobalId`
-      expect(spec.params).not.toHaveProperty('organizationId');
     });
 
     it('should target the organization-level Setting URL with no tenant segment', async () => {
@@ -245,14 +230,14 @@ describe('Platform Service Unit Tests', () => {
       { key: PLATFORM_TEST_CONSTANTS.SETTING_KEY, value: PLATFORM_TEST_CONSTANTS.SETTING_VALUE },
     ];
 
-    it('should PUT Setting with settings, the SDK organization as partitionGlobalId, and userId in the body', async () => {
+    it('should PUT Setting with settings and userId in the body', async () => {
       mockApiClient.put.mockResolvedValue([createBasicPlatformSetting()]);
 
       const result = await platformService.updateUserSettings(settings, PLATFORM_TEST_CONSTANTS.USER_ID);
 
       expect(mockApiClient.put).toHaveBeenCalledWith(
         PLATFORM_SETTING_ENDPOINTS.SETTINGS,
-        { settings, partitionGlobalId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, userId: PLATFORM_TEST_CONSTANTS.USER_ID },
+        { settings, userId: PLATFORM_TEST_CONSTANTS.USER_ID },
         {}
       );
       expect(result[0].key).toBe(PLATFORM_TEST_CONSTANTS.SETTING_KEY);
@@ -266,7 +251,8 @@ describe('Platform Service Unit Tests', () => {
 
       const body = mockApiClient.put.mock.calls[0][1] as Record<string, unknown>;
       expect(body.userId).toBe(PLATFORM_TEST_CONSTANTS.USER_ID);
-      expect(Object.keys(body)).toEqual(['settings', 'partitionGlobalId', 'userId']);
+      // No organization scope in the body either — the org rides the URL path
+      expect(Object.keys(body)).toEqual(['settings', 'userId']);
     });
 
     it('should send no scope in the query string on a write', async () => {
