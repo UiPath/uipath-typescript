@@ -1579,7 +1579,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       ]);
       createdEntityIds.push(entityId);
 
-      const bodyValue = `Large body content ${generateRandomString(256)}`;
+      // Size above the server-side marker threshold — below it, list returns the
+      // raw content instead of the "HasValue=true Length=..." projection.
+      const bodyValue = `Large body content ${generateRandomString(16 * 1024)}`;
       const inserted = await entities.insertRecordById(entityId, { body: bodyValue });
       expect(inserted.Id).toBeDefined();
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
