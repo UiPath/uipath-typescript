@@ -100,8 +100,17 @@ Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
 #### Example
 
 ```
+// By folder ID
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderId: 123 });
+
+// By folder key (GUID)
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderKey: '<folderKey>' });
+
 // By folder path
 await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance' });
+
+// With expand
+await assets.getByKey('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
 ```
 
 ### getByName()
