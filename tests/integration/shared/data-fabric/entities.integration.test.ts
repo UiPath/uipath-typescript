@@ -529,14 +529,19 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         entityMetadata = await entities.getById(entityId);
       }
 
-      // Build update payloads: each must include `Id` plus at least one updated field
-      const writableFields = getWritableFields(entityMetadata.fields);
+      // Build update payloads: each must include `Id` plus at least one updated field.
+      // Skip ChoiceSet fields — they need a numeric CS-value id, not the string
+      // that generateFieldValue would fall back to; buildDummyRecord already covers
+      // that path for full-record inserts.
+      const updateField = getWritableFields(entityMetadata.fields).find(
+        (f) =>
+          f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+          f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple,
+      );
       const updateData: EntityRecord[] = serviceLevelRecordIds.map((id) => {
         const updates = { Id: id } as EntityRecord;
-        // Update the first writable field with a new value
-        if (writableFields.length > 0) {
-          const field = writableFields[0];
-          updates[field.name] = generateFieldValue(field);
+        if (updateField) {
+          updates[updateField.name] = generateFieldValue(updateField);
         }
         return updates;
       });
@@ -685,12 +690,15 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entity = await entities.getById(entityId);
       entityMetadata = entity;
 
-      const writableFields = getWritableFields(entity.fields);
+      const updateField = getWritableFields(entity.fields).find(
+        (f) =>
+          f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+          f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple,
+      );
       const updateData: EntityRecord[] = entityMethodRecordIds.map((id) => {
         const updates = { Id: id } as EntityRecord;
-        if (writableFields.length > 0) {
-          const field = writableFields[0];
-          updates[field.name] = generateFieldValue(field);
+        if (updateField) {
+          updates[updateField.name] = generateFieldValue(updateField);
         }
         return updates;
       });
