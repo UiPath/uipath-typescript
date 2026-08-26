@@ -43,6 +43,9 @@ import {
   SqlType,
   FieldDisplayType,
   ReferenceType,
+  EntityClass,
+  EntityCreateExternalSource,
+  EntityCreateExternalField,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -62,8 +65,9 @@ import {
   ENTITY_FIELD_CONSTRAINT_SPEC,
   ENTITY_TYPE_IDS,
   MAX_QUERY_JOINS,
+  EntityClassToIdMap,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /** Wire values for join types on the name-based multi-entity query route. */
@@ -89,6 +93,38 @@ function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload
       right: qualifyJoinField(join.relatedEntityName, join.relatedFieldName),
     },
   };
+}
+
+/** Name of the external object a Federated source reads from (wire shape). */
+function externalSourceObjectName(source: Record<string, unknown>): string | undefined {
+  return (source.externalObjectDetail as Record<string, unknown> | undefined)?.externalObjectName as string | undefined;
+}
+
+/** Internal column name of a Federated source field (wire shape uses `fieldDefinition`). */
+function externalSourceFieldName(field: Record<string, unknown>): string | undefined {
+  const def = field.fieldDefinition as Record<string, unknown> | undefined;
+  return (def?.name ?? def?.Name) as string | undefined;
+}
+
+/**
+ * Carries an existing source forward for the upsert. The only reshaping the write needs
+ * is defaulting `fieldDisplayType`/`description` on each field definition: the GET omits
+ * them, but the upsert requires `fieldDisplayType` (a missing one fails the source's field
+ * validation and surfaces as a misleading join-dependency error). Server-managed identity
+ * fields round-trip harmlessly, so everything else is kept as-is.
+ */
+function carryForwardSource(source: Record<string, unknown>): Record<string, unknown> {
+  const fields = ((source.fields as Array<Record<string, unknown>> | undefined) ?? []).map(f => {
+    const fieldDefinition: Record<string, unknown> = { ...(f.fieldDefinition as Record<string, unknown> | undefined) };
+    if (fieldDefinition.fieldDisplayType === undefined && fieldDefinition.FieldDisplayType === undefined) {
+      fieldDefinition.fieldDisplayType = FieldDisplayType.Basic;
+    }
+    if (fieldDefinition.description === undefined && fieldDefinition.Description === undefined) {
+      fieldDefinition.description = '';
+    }
+    return { ...f, fieldDefinition };
+  });
+  return { ...source, fields };
 }
 
 /**
@@ -264,13 +300,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // folderKey is preferred over includeFolderEntities: when present, scope to that folder
-    // via the v1 endpoint + header. Only when no folderKey is given AND includeFolderEntities
-    // is explicitly true does the SDK switch to the v2 endpoint (returns tenant + folder
-    // entities together). Default (no options or includeFolderEntities omitted) stays on
-    // the v1 endpoint = tenant only.
-    const endpoint = !options?.folderKey && options?.includeFolderEntities
-      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
+    // Use the v3 endpoint whenever a folder scope is requested: a folderKey scopes to that
+    // folder via the header, and includeFolderEntities returns tenant + folder entities
+    // together. Only the default (no folderKey and includeFolderEntities omitted) stays on
+    // the v1 endpoint = tenant only, since v3 has no tenant-only listing.
+    const endpoint = options?.folderKey || options?.includeFolderEntities
+      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
 
     const response = await this.get<RawEntityGetResponse[]>(
@@ -432,7 +467,24 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
+    // entityClassId is only sent when a class is explicitly chosen — native creates
+    // stay byte-identical to the legacy shape (no discriminator).
+    let entityClassId: number | undefined;
+    if (opts.entityClass !== undefined) {
+      entityClassId = EntityClassToIdMap[opts.entityClass];
+      if (entityClassId === undefined) {
+        throw new ValidationError({
+          message: `entityClass '${opts.entityClass}' is not creatable. Use EntityClass.Native or EntityClass.Federated.`,
+        });
+      }
+    }
+    if (opts.entityClass === EntityClass.Federated && !opts.externalFields?.length) {
+      throw new ValidationError({
+        message: 'Federated entities require at least one external source in `externalFields`.',
+      });
+    }
     const fieldPayloads = await this.buildFieldsWithReferenceMeta(fields);
+    const externalFields = await this.buildExternalSourcesPayload(opts.externalFields);
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
       displayName: opts.displayName ?? name,
@@ -442,7 +494,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
         folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
         isInsightsEnabled: opts.isAnalyticsEnabled ?? false,
-        externalFields: opts.externalFields ?? [],
+        externalFields,
+        ...(entityClassId !== undefined && { entityClassId }),
+        ...(opts.sourceJoinConditionDetails !== undefined && { sourceJoinConditionDetails: opts.sourceJoinConditionDetails }),
       },
     };
     const response = await this.post<string>(
@@ -464,8 +518,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.UpdateById')
   async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
     const opts = options ?? {};
-    const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
-    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
+    const hasFederatedChanges = !!(
+      opts.addExternalSources?.length ||
+      opts.removeExternalSources?.length ||
+      opts.addFieldsToSource?.length ||
+      opts.removeFieldsFromSource?.length ||
+      opts.updateExternalFieldMapping?.length ||
+      opts.addSourceJoins?.length ||
+      opts.updateSourceJoin?.length
+    );
+    const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length) || hasFederatedChanges;
+    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined || opts.isAnalyticsEnabled !== undefined;
 
     if (hasSchemaChanges) {
       await this.applySchemaUpdate(id, opts);
@@ -477,6 +540,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(opts.displayName !== undefined && { displayName: opts.displayName }),
           ...(opts.description !== undefined && { description: opts.description }),
           ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
+          ...(opts.isAnalyticsEnabled !== undefined && { isInsightsEnabled: opts.isAnalyticsEnabled }),
         },
         { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
       );
@@ -490,7 +554,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param options - Field changes to apply
    * @private
    */
-  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields' | 'folderKey'>): Promise<void> {
+  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields' | 'folderKey'> & FederatedUpdateDeltas): Promise<void> {
     const folderHeaders = createHeaders({ [FOLDER_KEY]: options.folderKey });
     const entityResponse = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId),
@@ -498,9 +562,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
     const raw = entityResponse.data;
 
-    // Carry forward existing non-system fields from GET response (skip system/primary-key fields)
+    // Carry forward existing non-system fields from GET response (skip system/primary-key
+    // fields). Exclude external fields: on a Federated entity the GET flattens the external
+    // source fields into `fields` too (isExternalField=true); they belong only under
+    // `externalFields`, so reposting them here duplicates them and the upsert fails.
     let fields: FieldMetaData[] = (raw.fields ?? [])
-      .filter(f => !f.isSystemField && !f.isPrimaryKey);
+      .filter(f => !f.isSystemField && !f.isPrimaryKey && !f.isExternalField);
 
     // Filter out removed fields
     if (options.removeFields?.length) {
@@ -549,6 +616,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
       newFields.push(...await this.buildFieldsWithReferenceMeta(options.addFields));
     }
 
+    // Carry forward (and, for Federated entities, translate + apply deltas to) the
+    // external sources and joins. Reposting the raw `externalFields` alone would drop
+    // the joins and class discriminator — the v3 upsert is a full-definition replace.
+    const federated = await this.buildFederatedUpsertParts(raw, options);
+
     await this.post(
       DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
       {
@@ -563,7 +635,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
           // `raw` is the untransformed GET response, so read the wire key `isInsightsEnabled`
           // directly (it is not on the public type, which exposes it as `isAnalyticsEnabled`).
           isInsightsEnabled: (raw as { isInsightsEnabled?: boolean }).isInsightsEnabled ?? false,
-          externalFields: raw.externalFields ?? [],
+          externalFields: federated.externalFields,
+          ...(federated.entityClassId !== undefined && { entityClassId: federated.entityClassId }),
+          ...(federated.sourceJoinConditionDetails !== undefined && { sourceJoinConditionDetails: federated.sourceJoinConditionDetails }),
         },
       },
       { headers: folderHeaders },
@@ -585,6 +659,113 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
     return transformData(response.data, EntityMap).name;
+  }
+
+  /**
+   * Translates a raw GET into the write-ready Federated parts, then applies any
+   * source/join deltas. Joins arrive as `sourceJoinCriterias` (object/field IDs) and
+   * are resolved to `sourceJoinConditionDetails` (object names + connection ids) using
+   * each source's `externalObjectDetail.id` → connection map. `joinType` passes through
+   * as-is (the API accepts both the string form and the numeric form).
+   */
+  private async buildFederatedUpsertParts(
+    raw: RawEntityGetResponse,
+    options: FederatedUpdateDeltas,
+  ): Promise<FederatedUpsertParts> {
+    // Carry forward current sources (only `fieldDisplayType`/`description` need defaulting).
+    let externalFields: Array<Record<string, unknown>> = (raw.externalFields ?? []).map(s => carryForwardSource({ ...s } as Record<string, unknown>));
+    let joins = this.translateSourceJoins(raw);
+    const entityClassId = raw.entityClass ? EntityClassToIdMap[raw.entityClass] : undefined;
+
+    const findSource = (name: string): Record<string, unknown> | undefined =>
+      externalFields.find(s => externalSourceObjectName(s) === name);
+
+    if (options.addExternalSources?.length) {
+      externalFields.push(...await this.buildExternalSourcesPayload(options.addExternalSources));
+    }
+    if (options.removeExternalSources?.length) {
+      const remove = new Set(options.removeExternalSources);
+      externalFields = externalFields.filter(s => !remove.has(externalSourceObjectName(s) ?? ''));
+      // Cascade: a join can't outlive its source. Drop any join that references a removed
+      // source — otherwise it dangles (and, once the source is gone, can't be targeted by
+      // name to remove later). Join names were resolved from the pre-removal GET.
+      joins = joins.filter(j => !remove.has(j.sourceObjectName as string) && !remove.has(j.relatedSourceObjectName as string));
+    }
+    if (options.addFieldsToSource?.length) {
+      for (const add of options.addFieldsToSource) {
+        const src = findSource(add.sourceObjectName);
+        if (!src) throw new ValidationError({ message: `Cannot add fields: source '${add.sourceObjectName}' not found on the entity.` });
+        const builtFields = await this.buildExternalFieldsPayload(add.fields);
+        const existing = (src.fields as Array<Record<string, unknown>> | undefined) ?? [];
+        src.fields = [...existing, ...builtFields];
+      }
+    }
+    if (options.removeFieldsFromSource?.length) {
+      for (const rem of options.removeFieldsFromSource) {
+        const src = findSource(rem.sourceObjectName);
+        if (!src) throw new ValidationError({ message: `Cannot remove fields: source '${rem.sourceObjectName}' not found on the entity.` });
+        const drop = new Set(rem.fieldNames);
+        src.fields = ((src.fields as Array<Record<string, unknown>> | undefined) ?? []).filter(f => !drop.has(externalSourceFieldName(f) ?? ''));
+      }
+    }
+    if (options.updateExternalFieldMapping?.length) {
+      for (const up of options.updateExternalFieldMapping) {
+        const src = findSource(up.sourceObjectName);
+        if (!src) throw new ValidationError({ message: `Cannot update mapping: source '${up.sourceObjectName}' not found on the entity.` });
+        const field = ((src.fields as Array<Record<string, unknown>> | undefined) ?? []).find(f => externalSourceFieldName(f) === up.fieldName);
+        if (!field) throw new ValidationError({ message: `Cannot update mapping: field '${up.fieldName}' not found on source '${up.sourceObjectName}'.` });
+        field.externalFieldMappingDetail = { ...(field.externalFieldMappingDetail as Record<string, unknown>), ...up.mapping };
+      }
+    }
+    if (options.addSourceJoins?.length) {
+      joins.push(...options.addSourceJoins.map(j => ({ ...j } as Record<string, unknown>)));
+    }
+    if (options.updateSourceJoin?.length) {
+      for (const up of options.updateSourceJoin) {
+        const join = joins.find(j => j.sourceObjectName === up.sourceObjectName && j.relatedSourceObjectName === up.relatedSourceObjectName);
+        if (!join) throw new ValidationError({ message: `Cannot update join: no join between '${up.sourceObjectName}' and '${up.relatedSourceObjectName}'.` });
+        if (up.sourceJoinField !== undefined) join.sourceJoinField = up.sourceJoinField;
+        if (up.relatedSourceJoinField !== undefined) join.relatedSourceJoinField = up.relatedSourceJoinField;
+        if (up.joinType !== undefined) join.joinType = up.joinType;
+      }
+    }
+
+    return {
+      externalFields,
+      ...(entityClassId !== undefined && { entityClassId }),
+      ...(joins.length > 0 && { sourceJoinConditionDetails: joins }),
+    };
+  }
+
+  /**
+   * Resolves read-shape `sourceJoinCriterias` (object/field IDs) into write-shape
+   * `sourceJoinConditionDetails` (object names + connection ids). The connection id for a
+   * source is its `externalConnectionDetail.connectionId` (external) or
+   * `nativeConnectionDetail.entityId` (a Native source referencing another UiPath entity).
+   */
+  private translateSourceJoins(raw: RawEntityGetResponse): Array<Record<string, unknown>> {
+    const byObjectId = new Map<string, { name?: string; connectionId?: string }>();
+    for (const source of raw.externalFields ?? []) {
+      const objectId = source.externalObjectDetail?.id;
+      if (!objectId) continue;
+      byObjectId.set(objectId, {
+        name: source.externalObjectDetail?.externalObjectName,
+        connectionId: source.externalConnectionDetail?.connectionId ?? source.nativeConnectionDetail?.entityId,
+      });
+    }
+    return (raw.sourceJoinCriterias ?? []).map(join => {
+      const src = byObjectId.get(join.sourceObjectId ?? '');
+      const related = byObjectId.get(join.relatedSourceObjectId ?? '');
+      return {
+        sourceObjectName: src?.name,
+        sourceJoinField: join.joinFieldName,
+        sourceObjectConnectionId: src?.connectionId,
+        joinType: join.joinType,
+        relatedSourceObjectName: related?.name,
+        relatedSourceJoinField: join.relatedSourceFieldName,
+        relatedSourceObjectConnectionId: related?.connectionId,
+      };
+    });
   }
 
   /**
@@ -682,6 +863,36 @@ export class EntityService extends BaseService implements EntityServiceModel {
   private async buildFieldsWithReferenceMeta(fields: EntityCreateFieldOptions[]): Promise<FieldSchemaPayload[]> {
     const metas = await Promise.all(fields.map(f => this.buildReferenceMeta(f)));
     return fields.map((f, i) => this.buildSchemaFieldPayload(f, metas[i]));
+  }
+
+  /** Builds the wire `fields` payload for a Federated source (field definition + mapping). */
+  private async buildExternalFieldsPayload(
+    fields?: EntityCreateExternalField[],
+  ): Promise<Array<Record<string, unknown>>> {
+    const list = fields ?? [];
+    const fieldDefs = await this.buildFieldsWithReferenceMeta(list.map(f => f.field));
+    return list.map((f, i) => ({
+      fieldDefinition: fieldDefs[i],
+      externalFieldMappingDetail: f.externalFieldMappingDetail,
+    }));
+  }
+
+  /**
+   * Builds the wire `externalFields` payload for a Federated entity. Each source's
+   * internal columns run through the same {@link buildFieldsWithReferenceMeta} pipeline
+   * as native fields (so `fieldDefinition` is identical to a native field), then pair
+   * with their external mapping and source connection/object details.
+   */
+  private async buildExternalSourcesPayload(
+    sources?: EntityCreateExternalSource[],
+  ): Promise<Array<Record<string, unknown>>> {
+    if (!sources?.length) return [];
+    return Promise.all(sources.map(async source => ({
+      fields: await this.buildExternalFieldsPayload(source.fields),
+      externalObjectDetail: source.externalObjectDetail,
+      ...(source.externalConnectionDetail !== undefined && { externalConnectionDetail: source.externalConnectionDetail }),
+      ...(source.nativeConnectionDetail !== undefined && { nativeConnectionDetail: source.nativeConnectionDetail }),
+    })));
   }
 
   // Choice-set targets resolve server-side by NAME (the API rejects cross-folder
