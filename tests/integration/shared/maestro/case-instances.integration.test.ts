@@ -333,9 +333,12 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       const resumeResult = await caseInstances.resume(target.instanceId, target.folderKey);
       expect(resumeResult.success).toBe(true);
 
-      // The instance must return to Running so later tests can keep using it
+      // The instance must return to Running so later tests can keep using it. The
+      // Paused→Running propagation is accepted immediately (success asserted above) but
+      // has been observed to take well over 20s under tenant load, so the wait window
+      // is sized for that tail rather than the ~5s typical case.
       let resumedStatus = '';
-      for (let attempt = 0; attempt < 10; attempt++) {
+      for (let attempt = 0; attempt < 30; attempt++) {
         const current = await caseInstances.getById(target.instanceId, target.folderKey);
         resumedStatus = current.latestRunStatus;
         if (resumedStatus === InstanceStatus.RUNNING) {
@@ -344,7 +347,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       expect(resumedStatus).toBe(InstanceStatus.RUNNING);
-    }, 60_000);
+    }, 120_000);
   });
 
   // Runs after pause/resume (see note there): the ad-hoc trigger spawns an in-flight task
