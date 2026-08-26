@@ -3229,7 +3229,7 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <h2 id="constructors">Constructors<a class="headerlink" href="#constructors" title="Permanent link">&para;</a></h2>
 <h3 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt;): <code>UiPath</code></p>
+<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
 </blockquote>
 <p>Creates a UiPath SDK instance.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -3244,8 +3244,8 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <tbody>
 <tr>
 <td><code>config?</code></td>
-<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt;</td>
-<td>Optional SDK configuration; when omitted, configuration is loaded from meta tags</td>
+<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt; | <code>CodedFunctionContext</code></td>
+<td>Optional SDK configuration, or the execution context a coded function receives; when omitted, configuration is loaded from meta tags or the environment</td>
 </tr>
 </tbody>
 </table>
@@ -3399,7 +3399,8 @@ Cancels any in-flight token-refresh request. Call this when the coded app is unm
 <p>Initialize the SDK based on the provided configuration.
 This method handles both OAuth flow initiation and completion automatically.
 For secret-based authentication, initialization is automatic and this returns immediately.
-If no config was provided in constructor, loads from meta tags.</p>
+If no config was provided in constructor, loads from meta tags in the browser,
+or from the execution-context environment contract outside it.</p>
 <h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="inherited-from_4">Inherited from<a class="headerlink" href="#inherited-from_4" title="Permanent link">&para;</a></h4>
