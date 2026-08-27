@@ -202,7 +202,7 @@ export interface ChoiceSetServiceModel {
    *   folderKey: "<folderKey>",
    * });
    * ```
-   * @internal
+   * @experimental
    */
   insertValueById(
     choiceSetId: string,
@@ -237,7 +237,7 @@ export interface ChoiceSetServiceModel {
    *   folderKey: "<folderKey>",
    * });
    * ```
-   * @internal
+   * @experimental
    */
   updateValueById(
     choiceSetId: string,
@@ -265,7 +265,7 @@ export interface ChoiceSetServiceModel {
    * // Folder-scoped choice set
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete, { folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   deleteValuesById(choiceSetId: string, valueIds: string[], options?: ChoiceSetValueDeleteOptions): Promise<void>;
 }
