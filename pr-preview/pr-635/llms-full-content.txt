@@ -3781,6 +3781,39 @@ await choicesets.deleteById(expenseTypes.id);
 await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
 ```
 
+### deleteValuesById()
+
+> **deleteValuesById**(`choiceSetId`: `string`, `valueIds`: `string`[], `options?`: `ChoiceSetValueDeleteOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes one or more values from a choice set.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the parent choice set
+- `valueIds`: `string`[] — Array of value UUIDs to delete
+- `options?`: `ChoiceSetValueDeleteOptions` — Optional [ChoiceSetValueDeleteOptions](../ChoiceSetValueDeleteOptions/) — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the values are deleted
+
+#### Example
+
+```
+// Get the value IDs from getById()
+const values = await choicesets.getById('<choiceSetId>');
+const idsToDelete = values.items.slice(0, 2).map(v => v.id);
+
+await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
+
+// Folder-scoped choice set
+await choicesets.deleteValuesById('<choiceSetId>', idsToDelete, { folderKey: "<folderKey>" });
+```
+
 ### getAll()
 
 > **getAll**(`options?`: `ChoiceSetGetAllOptions`): `Promise`\<`ChoiceSetGetAllResponse`[]>
@@ -3873,6 +3906,45 @@ if (page1.hasNextPage) {
 const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
 ```
 
+### insertValueById()
+
+> **insertValueById**(`choiceSetId`: `string`, `name`: `string`, `options?`: `ChoiceSetValueInsertOptions`): `Promise`\<`ChoiceSetValueInsertResponse`>
+
+**`Experimental`**
+
+Inserts a single value into a choice set.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the parent choice set
+- `name`: `string` — Identifier name of the new value (e.g., `"TRAVEL"`)
+- `options?`: `ChoiceSetValueInsertOptions` — Optional fields ([ChoiceSetValueInsertOptions](../ChoiceSetValueInsertOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`ChoiceSetValueInsertResponse`>
+
+Promise resolving to the inserted value ([ChoiceSetValueInsertResponse](../ChoiceSetValueInsertResponse/))
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+const inserted = await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+  displayName: 'Travel',
+});
+console.log(inserted.id);
+
+// Folder-scoped choice set: folderKey is required on the wire
+await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+  displayName: 'Travel',
+  folderKey: "<folderKey>",
+});
+```
+
 ### updateById()
 
 > **updateById**(`choiceSetId`: `string`, `options`: `ChoiceSetUpdateOptions`): `Promise`\<`void`>
@@ -3904,6 +3976,46 @@ const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
 await choicesets.updateById(expenseTypes.id, {
   displayName: "Expense Categories",
   description: "Updated description",
+});
+```
+
+### updateValueById()
+
+> **updateValueById**(`choiceSetId`: `string`, `valueId`: `string`, `displayName`: `string`, `options?`: `ChoiceSetValueUpdateOptions`): `Promise`\<`ChoiceSetValueUpdateResponse`>
+
+**`Experimental`**
+
+Updates an existing choice-set value's display name.
+
+Only `displayName` is mutable; the value's `name` (identifier) is fixed at insert time and cannot be changed.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the parent choice set
+- `valueId`: `string` — UUID of the value to update
+- `displayName`: `string` — New human-readable display name for the value
+- `options?`: `ChoiceSetValueUpdateOptions` — Optional [ChoiceSetValueUpdateOptions](../ChoiceSetValueUpdateOptions/) — pass `folderKey` for folder-scoped choice sets; omit for tenant-level. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`ChoiceSetValueUpdateResponse`>
+
+Promise resolving to the updated value ([ChoiceSetValueUpdateResponse](../ChoiceSetValueUpdateResponse/))
+
+#### Example
+
+```
+// Get the choice set ID from getAll() and the value ID from getById()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+const values = await choicesets.getById(expenseTypes.id);
+const travel = values.items.find(v => v.name === 'TRAVEL');
+
+await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
+
+// Folder-scoped choice set: folderKey is required on the wire
+await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel', {
+  folderKey: "<folderKey>",
 });
 ```
 
