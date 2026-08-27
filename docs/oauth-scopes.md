@@ -61,8 +61,11 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
 | `getById()` | `DataFabric.Schema.Read` |
+| `getByName()` | `DataFabric.Data.Read` |
 | `getAllRecords()` | `DataFabric.Data.Read` |
+| `getRecordsByName()` | `DataFabric.Data.Read` |
 | `getRecordById()` / `getRecord()`  | `DataFabric.Data.Read` |
+| `getRecordByName()` | `DataFabric.Data.Read` |
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |

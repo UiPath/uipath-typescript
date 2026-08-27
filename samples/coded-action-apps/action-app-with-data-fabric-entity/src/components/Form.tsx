@@ -182,7 +182,7 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
       try {
         setIsLoadingDocument(true);
         setDocumentError(null);
-        const blob = await uipath.entityService.downloadAttachment(entityId, recordId, LOAN_DOCUMENT_FIELD);
+        const blob = await uipath.entityService.downloadAttachment({ id: entityId }, recordId, LOAN_DOCUMENT_FIELD);
         if (cancelled) return;
         const url = URL.createObjectURL(blob);
         blobUrlRef.current = url;

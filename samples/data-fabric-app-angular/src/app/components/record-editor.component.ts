@@ -460,7 +460,7 @@ export class RecordEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.removingAttachment.set(field.name)
     try {
       const entityService = new Entities(this.auth.sdk)
-      await entityService.deleteAttachment(this.entityId(), record.Id, field.name)
+      await entityService.deleteAttachment({ id: this.entityId() }, record.Id, field.name)
       // Reflect the removal locally so the "Remove" button disappears.
       this.removedAttachments.update((prev) => new Set(prev).add(field.name))
       this.toast.success(`Removed ${field.displayName || field.name}`)
@@ -535,7 +535,7 @@ export class RecordEditorComponent implements OnInit, AfterViewInit, OnDestroy {
       for (const [fieldName, file] of Object.entries(this.pickedFiles())) {
         try {
           await entityService.uploadAttachment(
-            this.entityId(),
+            { id: this.entityId() },
             recordId,
             fieldName,
             file,

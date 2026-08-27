@@ -1086,6 +1086,221 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
     });
   });
 
+  // ─── By-name methods ──────────────────────────────────────────────────────
+
+  describe('By-name methods', () => {
+    let byNameEntityId!: string;
+    let byNameEntityName!: string;
+    let byNameMetadata!: RawEntityGetResponse;
+
+    beforeAll(async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for by-name tests. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      // Resolve the entity name from its id so by-name calls have a real name to address.
+      byNameMetadata = await entities.getById(entityId);
+      byNameEntityId = byNameMetadata.id;
+      byNameEntityName = byNameMetadata.name;
+    });
+
+    describe('getByName', () => {
+      it('should retrieve entity metadata by name with methods attached', async () => {
+        const { entities } = getServices();
+
+        const result = await entities.getByName(byNameEntityName);
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(byNameEntityId);
+        expect(result.name).toBe(byNameEntityName);
+        expect(Array.isArray(result.fields)).toBe(true);
+        expect(result.fields.length).toBeGreaterThan(0);
+        expect(typeof result.insertRecord).toBe('function');
+        expect(typeof result.getAllRecords).toBe('function');
+      });
+    });
+
+    describe('getRecordsByName', () => {
+      it('should retrieve records by entity name', async () => {
+        const { entities } = getServices();
+
+        const result = await entities.getRecordsByName(byNameEntityName, { pageSize: 5 });
+
+        expect(result).toBeDefined();
+        expect(Array.isArray(result.items)).toBe(true);
+        expect(typeof result.totalCount).toBe('number');
+      });
+    });
+
+    describe('queryRecords (by name ref)', () => {
+      it('should query records by entity name', async () => {
+        const { entities } = getServices();
+
+        const result = await entities.queryRecords({ name: byNameEntityName }, { pageSize: 5 });
+
+        expect(result).toBeDefined();
+        expect(Array.isArray(result.items)).toBe(true);
+        expect(typeof result.totalCount).toBe('number');
+      });
+    });
+
+    describe('Record CRUD operations (by name)', () => {
+      const byNameRecordIds: string[] = [];
+
+      it('should insert a single record using insertRecord with a name ref', async () => {
+        const { entities } = getServices();
+
+        const testData = await buildDummyRecord(byNameMetadata);
+        const result = await entities.insertRecord({ name: byNameEntityName }, testData);
+
+        expect(result).toBeDefined();
+        expect(result.Id).toBeDefined();
+
+        byNameRecordIds.push(result.Id);
+        createdRecordIds.push(result.Id);
+        registerResource('entityRecords', { entityId: byNameEntityId, recordIds: [result.Id] });
+      });
+
+      it('should verify the inserted record via getRecordByName', async () => {
+        const { entities } = getServices();
+
+        if (byNameRecordIds.length === 0) {
+          throw new Error('No record inserted to verify via getRecordByName');
+        }
+
+        const recordId = byNameRecordIds[0];
+        const record = await entities.getRecordByName(byNameEntityName, recordId);
+
+        expect(record).toBeDefined();
+        expect(record.Id).toBe(recordId);
+      });
+
+      it('should batch insert records using insertRecords with a name ref', async () => {
+        const { entities } = getServices();
+
+        const testData = await Promise.all([
+          buildDummyRecord(byNameMetadata),
+          buildDummyRecord(byNameMetadata),
+        ]);
+        const result = await entities.insertRecords({ name: byNameEntityName }, testData);
+
+        expect(result).toBeDefined();
+        expect(Array.isArray(result.successRecords)).toBe(true);
+
+        const insertedIds = result.successRecords.filter((r) => r.Id).map((r) => r.Id);
+        byNameRecordIds.push(...insertedIds);
+        createdRecordIds.push(...insertedIds);
+        registerResource('entityRecords', { entityId: byNameEntityId, recordIds: insertedIds });
+      });
+
+      it('should update a single record using updateRecord with a name ref', async () => {
+        const { entities } = getServices();
+
+        if (byNameRecordIds.length === 0) {
+          throw new Error('No record available to update via updateRecord (by name ref)');
+        }
+
+        const writableFields = getWritableFields(byNameMetadata.fields);
+        const updates: Record<string, any> = {};
+        if (writableFields.length > 0) {
+          updates[writableFields[0].name] = generateFieldValue(writableFields[0]);
+        }
+
+        const result = await entities.updateRecord({ name: byNameEntityName }, byNameRecordIds[0], updates);
+
+        expect(result).toBeDefined();
+        expect(result.Id).toBe(byNameRecordIds[0]);
+      });
+
+      it('should update records using updateRecords with a name ref', async () => {
+        const { entities } = getServices();
+
+        if (byNameRecordIds.length === 0) {
+          throw new Error('No records available to update via updateRecords (by name ref)');
+        }
+
+        const writableFields = getWritableFields(byNameMetadata.fields);
+        const updateData: EntityRecord[] = byNameRecordIds.map((id) => {
+          const updates = { Id: id } as EntityRecord;
+          if (writableFields.length > 0) {
+            updates[writableFields[0].name] = generateFieldValue(writableFields[0]);
+          }
+          return updates;
+        });
+
+        const result = await entities.updateRecords({ name: byNameEntityName }, updateData);
+
+        expect(result).toBeDefined();
+        expect(Array.isArray(result.successRecords)).toBe(true);
+      });
+
+      it('should delete records using deleteRecords with a name ref', async () => {
+        const { entities } = getServices();
+
+        if (byNameRecordIds.length === 0) {
+          throw new Error('No records available to delete via deleteRecords (by name ref)');
+        }
+
+        const result = await entities.deleteRecords({ name: byNameEntityName }, byNameRecordIds);
+
+        expect(result).toBeDefined();
+        expect(Array.isArray(result.successRecords)).toBe(true);
+
+        // Deleted here — drop from the shared tracking list so afterAll doesn't re-delete.
+        for (const id of byNameRecordIds) {
+          const idx = createdRecordIds.indexOf(id);
+          if (idx !== -1) createdRecordIds.splice(idx, 1);
+        }
+        byNameRecordIds.length = 0;
+      });
+    });
+
+    describe('deleteRecord (by name ref)', () => {
+      it('should insert then delete a single record by name', async () => {
+        const { entities } = getServices();
+
+        const testData = await buildDummyRecord(byNameMetadata);
+        const inserted = await entities.insertRecord({ name: byNameEntityName }, testData);
+        expect(inserted.Id).toBeDefined();
+        createdRecordIds.push(inserted.Id);
+
+        await entities.deleteRecord({ name: byNameEntityName }, inserted.Id);
+
+        // Removed — drop from the shared tracking list so afterAll doesn't re-delete.
+        const idx = createdRecordIds.indexOf(inserted.Id);
+        if (idx !== -1) createdRecordIds.splice(idx, 1);
+      });
+    });
+
+    describe('importRecords (by name ref)', () => {
+      it('should import records from a CSV blob by entity name', async () => {
+        const { entities } = getServices();
+
+        const writableFields = getWritableFields(byNameMetadata.fields).filter(
+          (f) => f.fieldDataType?.name === EntityFieldDataType.STRING,
+        );
+
+        if (writableFields.length === 0) {
+          throw new Error('No string fields available for by-name bulk import test');
+        }
+
+        const fieldName = writableFields[0].name;
+        const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+        const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+
+        const result = await entities.importRecords({ name: byNameEntityName }, csvBlob);
+
+        expect(result).toBeDefined();
+        expect(typeof result.totalRecords).toBe('number');
+        expect(typeof result.insertedRecords).toBe('number');
+      });
+    });
+  });
+
   // ─── Cleanup ──────────────────────────────────────────────────────────────
 
   afterAll(async () => {

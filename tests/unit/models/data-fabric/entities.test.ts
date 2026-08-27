@@ -26,18 +26,29 @@ describe("Entity Models", () => {
     mockService = {
       getAll: vi.fn(),
       getById: vi.fn(),
+      getByName: vi.fn(),
       getAllRecords: vi.fn(),
+      getRecordsByName: vi.fn(),
       getRecordsById: vi.fn(),
       getRecordById: vi.fn(),
+      getRecordByName: vi.fn(),
+      insertRecord: vi.fn(),
       insertRecordById: vi.fn(),
       insertById: vi.fn(),
+      insertRecords: vi.fn(),
       insertRecordsById: vi.fn(),
       batchInsertById: vi.fn(),
+      updateRecord: vi.fn(),
       updateRecordById: vi.fn(),
+      updateRecords: vi.fn(),
       updateRecordsById: vi.fn(),
+      deleteRecords: vi.fn(),
       deleteRecordsById: vi.fn(),
+      queryRecords: vi.fn(),
       queryRecordsById: vi.fn(),
+      importRecords: vi.fn(),
       importRecordsById: vi.fn(),
+      deleteRecord: vi.fn(),
       deleteRecordById: vi.fn(),
       downloadAttachment: vi.fn(),
       uploadAttachment: vi.fn(),
@@ -60,12 +71,12 @@ describe("Entity Models", () => {
 
         const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
         const mockResponse = createMockSingleInsertResponse(testData);
-        mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecord = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecord(testData);
 
-        expect(mockService.insertRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.insertRecord).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           undefined,
         );
@@ -95,12 +106,12 @@ describe("Entity Models", () => {
         const mockResponse = createMockSingleInsertResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
-        mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecord = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecord(testData, options);
 
-        expect(mockService.insertRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.insertRecord).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           options,
         );
@@ -118,12 +129,12 @@ describe("Entity Models", () => {
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2,
         ];
         const mockResponse = createMockInsertResponse(testData);
-        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecords(testData);
 
-        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.insertRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           undefined,
         );
@@ -155,12 +166,12 @@ describe("Entity Models", () => {
         const mockResponse = createMockInsertResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
-        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecords(testData, options);
 
-        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.insertRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           options,
         );
@@ -178,7 +189,7 @@ describe("Entity Models", () => {
         const mockResponse = createMockInsertResponse(testData, {
           successCount: 1,
         });
-        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecords(testData);
 
@@ -211,15 +222,15 @@ describe("Entity Models", () => {
           Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
           ...testData,
         });
-        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecord = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecord(
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           testData,
         );
 
-        expect(mockService.updateRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.updateRecord).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           testData,
           undefined,
@@ -245,7 +256,7 @@ describe("Entity Models", () => {
             expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
           },
         );
-        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecord = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecord(
           ENTITY_TEST_CONSTANTS.RECORD_ID,
@@ -253,8 +264,8 @@ describe("Entity Models", () => {
           options,
         );
 
-        expect(mockService.updateRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.updateRecord).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           testData,
           options,
@@ -305,12 +316,12 @@ describe("Entity Models", () => {
           },
         ];
         const mockResponse = createMockUpdateResponse(testData);
-        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecords(testData);
 
-        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.updateRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           undefined,
         );
@@ -337,12 +348,12 @@ describe("Entity Models", () => {
         const mockResponse = createMockUpdateResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
-        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecords(testData, options);
 
-        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.updateRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           testData,
           options,
         );
@@ -379,7 +390,7 @@ describe("Entity Models", () => {
         const mockResponse = createMockUpdateResponse(testData, {
           successCount: 1,
         });
-        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecords(testData);
 
@@ -419,12 +430,12 @@ describe("Entity Models", () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID_2,
         ];
         const mockResponse = createMockDeleteResponse(recordIds);
-        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.deleteRecords(recordIds);
 
-        expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.deleteRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           recordIds,
           undefined,
         );
@@ -442,12 +453,12 @@ describe("Entity Models", () => {
           failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
         };
         const mockResponse = createMockDeleteResponse(recordIds);
-        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.deleteRecords(recordIds, options);
 
-        expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.deleteRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           recordIds,
           options,
         );
@@ -471,7 +482,7 @@ describe("Entity Models", () => {
         const mockResponse = createMockDeleteResponse(recordIds, {
           successCount: 1,
         });
-        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.deleteRecords(recordIds);
 
@@ -495,12 +506,12 @@ describe("Entity Models", () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        mockService.deleteRecordById = vi.fn().mockResolvedValue(undefined);
+        mockService.deleteRecord = vi.fn().mockResolvedValue(undefined);
 
         await entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
 
-        expect(mockService.deleteRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.deleteRecord).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           undefined,
         );
@@ -597,12 +608,12 @@ describe("Entity Models", () => {
         const entity = createEntityWithMethods(entityData, mockService);
 
         const mockResponse = { items: createMockEntityRecords(2), totalCount: 2 };
-        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.queryRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.queryRecords();
 
-        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.queryRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           undefined,
         );
         expect(result).toEqual(mockResponse);
@@ -632,12 +643,12 @@ describe("Entity Models", () => {
           items: [{ status: "active", total: 12 }, { status: "closed", total: 5 }],
           totalCount: 2,
         };
-        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.queryRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.queryRecords(options);
 
-        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        expect(mockService.queryRecords).toHaveBeenCalledWith(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           options,
         );
         expect(result).toEqual(mockResponse);
@@ -710,7 +721,7 @@ describe("Entity Models", () => {
         );
 
         expect(mockService.downloadAttachment).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
           undefined,
@@ -766,7 +777,7 @@ describe("Entity Models", () => {
       );
 
       expect(mockService.uploadAttachment).toHaveBeenCalledWith(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file,
@@ -805,7 +816,7 @@ describe("Entity Models", () => {
       );
 
       expect(mockService.deleteAttachment).toHaveBeenCalledWith(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         undefined,

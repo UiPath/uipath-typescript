@@ -242,7 +242,7 @@ export class RowInspectorComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const entityService = new Entities(this.auth.sdk)
       const blob = await entityService.downloadAttachment(
-        this.entityId(),
+        { id: this.entityId() },
         this.recordId(),
         fieldName,
       )

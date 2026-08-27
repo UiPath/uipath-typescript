@@ -160,7 +160,7 @@ export function RecordEditor({
       // record id; we don't fail the whole save if one fails.
       for (const [fieldName, file] of Object.entries(files)) {
         try {
-          await entityService.uploadAttachment(entityId, recordId, fieldName, file)
+          await entityService.uploadAttachment({ id: entityId }, recordId, fieldName, file)
         } catch (err) {
           toast.error(`Upload ${fieldName} failed`, {
             description:
