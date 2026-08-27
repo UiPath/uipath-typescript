@@ -107,9 +107,7 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
     });
   });
 
-  // Skipped: choiceset CRUD methods are tagged @internal and validated live on alpha.
-  // Re-enable locally with describe.only when a fresh tenant secret is configured.
-  describe.skip('create / updateById / deleteById', () => {
+  describe('create / updateById / deleteById', () => {
     it('should create a choice set and return its UUID', async () => {
       const { choiceSets } = getServices();
       const name = `sdk_cs_${generateRandomString(8)}`;
@@ -165,7 +163,11 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
     });
   });
 
-  // Skipped: choice-value CRUD requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  // Skipped: value-CRUD endpoints (POST /api/EntityService/{name}/choiceset/insert |
+  // /{recordId}/update | /entity/{id}/choiceset/delete) accept only the first-party
+  // `DataServiceApiUserAccess` scope — PATs with `DataFabric.*` scopes get 403 at the
+  // scope gate. Un-skip once the DF team wires `DataFabric.Data.Write` onto these
+  // endpoints (parallel to record-CRUD).
   describe.skip('Choice value CRUD operations', () => {
     const serviceLevelValueIds: string[] = [];
 
@@ -283,11 +285,7 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
     });
   });
 
-  // Skipped: folder-scoped choice-set value CRUD requires the DataFabric.Schema.Write
-  // OAuth scope (same restriction as the tenant-scope value CRUD block above), which
-  // PAT-authenticated CI runs do not have. Re-enable locally with describe.only when
-  // INTEGRATION_TEST_FOLDER_KEY is set and OAuth is configured.
-  describe.skip('Folder-scoped operations', () => {
+  describe('Folder-scoped operations', () => {
     beforeAll(() => {
       const config = getTestConfig();
       if (!config.folderKey) {
@@ -370,10 +368,9 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
   // INTEGRATION_TEST_FOLDER_KEY (looked up by name in beforeAll so the test
   // env doesn't need a separate CS UUID).
   //
-  // Skipped: same DataFabric.Schema.Write OAuth-scope restriction as the tenant
-  // value-CRUD block. Re-enable locally with describe.only when
-  // INTEGRATION_TEST_FOLDER_KEY is set, OAuth is configured, and the named
-  // choice set exists in that folder.
+  // Skipped: same first-party-only scope restriction as the tenant value-CRUD block
+  // above — the endpoint accepts only `DataServiceApiUserAccess`, so PAT + DataFabric.*
+  // scopes get 403 at the scope gate.
   describe.skip('Folder-scoped Choice value CRUD operations', () => {
     const FOLDER_CHOICE_SET_NAME = 'aIntegrationTestFolderScoped';
     const folderValueIds: string[] = [];
