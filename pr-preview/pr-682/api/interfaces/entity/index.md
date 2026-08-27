@@ -170,7 +170,7 @@ Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResp
 
 Use [deleteRecords](#deleterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
 
-Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecordById](#deleterecordbyid) if you need trigger events to fire for the deleted record.
+Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
 
 #### Example
 
@@ -741,7 +741,7 @@ Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatch
 
 Use [insertRecords](#insertrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
 
-Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecordById](#insertrecordbyid) if you need trigger events to fire for each inserted record.
+Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
 
 #### Example
 
@@ -1057,7 +1057,7 @@ Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResp
 
 Use [updateRecords](#updaterecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
 
-Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecordById](#updaterecordbyid) if you need trigger events to fire for each updated record.
+Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Example
 

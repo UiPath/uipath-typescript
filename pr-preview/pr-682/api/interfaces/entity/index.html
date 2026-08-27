@@ -3479,7 +3479,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <p>Promise resolving to delete response (<a href="../EntityDeleteResponse/">EntityDeleteResponse</a>)</p>
 <h4 id="deprecated_1">Deprecated<a class="headerlink" href="#deprecated_1" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#deleterecords">deleteRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
-<p>Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use <a href="#deleterecordbyid">deleteRecordById</a> if you need trigger events to fire for the deleted record.</p>
+<p>Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use <a href="#deleterecord">deleteRecord</a> if you need trigger events to fire for the deleted record.</p>
 <h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Basic usage</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">deleteRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">entityId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
@@ -4254,7 +4254,7 @@ trigger events to fire for each inserted record.</p>
 <p>Promise resolving to insert response (<a href="../EntityBatchInsertResponse/">EntityBatchInsertResponse</a>)</p>
 <h4 id="deprecated_4">Deprecated<a class="headerlink" href="#deprecated_4" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#insertrecords">insertRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
-<p>Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use <a href="#insertrecordbyid">insertRecordById</a> if you need
+<p>Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use <a href="#insertrecord">insertRecord</a> if you need
 trigger events to fire for each inserted record.</p>
 <h4 id="example_18">Example<a class="headerlink" href="#example_18" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Basic usage</span>
@@ -4678,7 +4678,7 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <p>Promise resolving to update response (<a href="../EntityUpdateResponse/">EntityUpdateResponse</a>)</p>
 <h4 id="deprecated_7">Deprecated<a class="headerlink" href="#deprecated_7" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#updaterecords">updateRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
-<p>Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use <a href="#updaterecordbyid">updateRecordById</a> if you need trigger events to fire for each updated record.</p>
+<p>Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use <a href="#updaterecord">updateRecord</a> if you need trigger events to fire for each updated record.</p>
 <h4 id="example_24">Example<a class="headerlink" href="#example_24" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1">// Basic usage</span>
 <a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">updateRecordsById</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">entityId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
