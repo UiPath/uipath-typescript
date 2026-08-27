@@ -6,7 +6,7 @@ import {
   DataFabricRoleGetAllOptions,
   DataFabricRoleType,
 } from '../../models/data-fabric/roles.types';
-import { FOLDER_KEY, UIPATH_SOURCE } from '../../utils/constants/headers';
+import { FOLDER_KEY, UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../utils/constants/headers';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
 import { createHeaders } from '../../utils/http/headers';
 import { createParams } from '../../utils/http/params';
@@ -47,7 +47,7 @@ function validateRolesResponse(data: unknown): DataFabricRole[] {
  */
 export class DataFabricRoleService extends BaseService implements DataFabricRoleServiceModel {
   constructor(instance: IUiPath) {
-    super(instance, { [UIPATH_SOURCE]: 'uipath-typescript-sdk' });
+    super(instance, { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK });
   }
 
   @track('DataFabricRoles.GetAll')

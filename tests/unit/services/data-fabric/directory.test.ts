@@ -12,6 +12,7 @@ import {
   createServiceTestDependencies,
 } from '../../../utils/setup';
 import { TEST_CONSTANTS } from '../../../utils/constants';
+import { UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../../../src/utils/constants/headers';
 
 vi.mock('../../../../src/core/http/api-client');
 
@@ -33,7 +34,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
   describe('constructor', () => {
     it('should send x-uipath-source: uipath-typescript-sdk on every ApiClient request', () => {
       const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
-      expect(clientConfig).toEqual({ headers: { 'x-uipath-source': 'uipath-typescript-sdk' } });
+      expect(clientConfig).toEqual({ headers: { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK } });
     });
   });
 
