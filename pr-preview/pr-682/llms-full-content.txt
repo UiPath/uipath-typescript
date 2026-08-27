@@ -2844,7 +2844,7 @@ Removes an attachment from a File-type field of an entity record, identified by 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDeleteAttachmentOptions` — Optional [EntityDeleteAttachmentOptions](../EntityDeleteAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteAttachmentOptions` — Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3017,7 +3017,7 @@ Downloads an attachment stored in a File-type field of an entity record, identif
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
-- `options?`: `EntityDownloadAttachmentOptions` — Optional [EntityDownloadAttachmentOptions](../EntityDownloadAttachmentOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDownloadAttachmentOptions` — Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3605,7 +3605,7 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 #### Parameters
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3649,7 +3649,7 @@ Queries entity records with filters, sorting, aggregates, and SDK-managed pagina
 #### Parameters
 
 - `id`: `string` — UUID of the entity
-- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3917,7 +3917,7 @@ Uses multipart/form-data to upload the file content to the specified field. Iden
 - `recordId`: `string` — UUID of the record to upload the attachment to
 - `fieldName`: `string` — Name of the File-type field
 - `file`: `EntityFileType` — File to upload (Blob, File, or Uint8Array)
-- `options?`: `EntityUploadAttachmentOptions` — Optional [EntityUploadAttachmentOptions](../EntityUploadAttachmentOptions/) (e.g. `expansionLevel`, `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityUploadAttachmentOptions` — Optional upload options (e.g. `expansionLevel`, `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
 
 #### Returns
 
