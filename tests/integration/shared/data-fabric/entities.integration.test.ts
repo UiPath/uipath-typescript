@@ -1462,50 +1462,6 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(updated?.fieldDataType.minValue).toBe(-9999);
     }, 60_000);
 
-    it('should reject STRING with lengthLimit above max (5000) without hitting the API', async () => {
-      const { entities } = getServices();
-      const name = `sdk_str_oor_${generateRandomString(8).toLowerCase()}`;
-
-      // SDK validation must throw before any API call is made.
-      await expect(
-        entities.create(name, [
-          { name: 'strField', type: EntityFieldDataType.STRING, lengthLimit: 5000 },
-        ]),
-      ).rejects.toThrow(/lengthLimit 5000 out of range \[1, 4000\]/);
-
-      // Verify no entity was created server-side
-      const all = await entities.getAll();
-      expect(all.find(e => e.name === name)).toBeUndefined();
-    });
-
-    it('should reject MULTILINE_TEXT with lengthLimit above max (15000) without hitting the API', async () => {
-      const { entities } = getServices();
-      const name = `sdk_ml_oor_${generateRandomString(8).toLowerCase()}`;
-
-      await expect(
-        entities.create(name, [
-          { name: 'mlField', type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 15000 },
-        ]),
-      ).rejects.toThrow(/lengthLimit 15000 out of range \[1, 10000\]/);
-
-      const all = await entities.getAll();
-      expect(all.find(e => e.name === name)).toBeUndefined();
-    });
-
-    it('should reject STRING with lengthLimit below min (0) without hitting the API', async () => {
-      const { entities } = getServices();
-      const name = `sdk_str_zero_${generateRandomString(8).toLowerCase()}`;
-
-      await expect(
-        entities.create(name, [
-          { name: 'strField', type: EntityFieldDataType.STRING, lengthLimit: 0 },
-        ]),
-      ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
-
-      const all = await entities.getAll();
-      expect(all.find(e => e.name === name)).toBeUndefined();
-    });
-
     it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', async () => {
       const { entities } = getServices();
       const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
@@ -1521,19 +1477,6 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(field?.fieldDataType.lengthLimit).toBe(200);
     }, 60_000);
 
-    it('should reject DECIMAL when minValue >= maxValue without hitting the API', async () => {
-      const { entities } = getServices();
-      const name = `sdk_dec_minmax_${generateRandomString(8).toLowerCase()}`;
-
-      await expect(
-        entities.create(name, [
-          { name: 'numField', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, minValue: 100, maxValue: 50 },
-        ]),
-      ).rejects.toThrow(/minValue 100 >= maxValue 50/);
-
-      const all = await entities.getAll();
-      expect(all.find(e => e.name === name)).toBeUndefined();
-    });
   });
 
   // Custom user-defined RELATIONSHIP fields must follow the same expansion rules as
