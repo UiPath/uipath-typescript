@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
+import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
   EntityAggregateFunction,
   EntityFieldDataType,
@@ -19,33 +19,9 @@ import {
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
-import { isAuthorizationError } from '../../../../src/core/errors/guards';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
-
-/**
- * Runs `entities.create` with a bounded retry on transient 403s from the DF
- * post-auth handler. On a burst of schema-writes the server's per-request
- * AdminPermissions rebuild (Identity group-membership cache + roles DB) can
- * come up empty for one request, throwing ForbiddenException — the next call
- * with the same JWT succeeds. Retries only on AuthorizationError so real
- * ValidationErrors / server errors still fail fast.
- */
-async function createEntityWithAuthRetry<T>(fn: () => Promise<T>): Promise<T> {
-  const maxAttempts = 4;
-  let delayMs = 1000;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (attempt === maxAttempts || !isAuthorizationError(err)) throw err;
-      await wait(delayMs);
-      delayMs *= 2;
-    }
-  }
-  throw new Error('unreachable');
-}
 
 /**
  * Fetches and caches choice set values for a given choice set ID.
@@ -180,21 +156,6 @@ const modes: InitMode[] = ['v0', 'v1'];
 
 describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
-
-  // Monkey-patch entities.create with a bounded retry on transient 403s.
-  // DF's post-auth handler rebuilds user.AdminPermissions per request via
-  // Identity's group-membership cache + roles DB; on a burst of schema-writes
-  // it can come back empty for one request, and EntityController's
-  // AuthorizeBasedOnTenantSchemaPermissionIfNeeded throws ForbiddenException.
-  // The very next call with the same JWT succeeds. Retrying only on
-  // AuthorizationError keeps real ValidationErrors / server errors fast-failing.
-  beforeAll(() => {
-    const { entities } = getServices();
-    const original = entities.create.bind(entities);
-    entities.create = (async (...args: Parameters<typeof original>) => {
-      return createEntityWithAuthRetry(() => original(...args));
-    }) as typeof entities.create;
-  });
 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;
