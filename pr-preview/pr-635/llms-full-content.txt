@@ -3717,6 +3717,70 @@ const allChoiceSets = await choicesets.getAll();
 
 ## Methods
 
+### create()
+
+> **create**(`name`: `string`, `options?`: `ChoiceSetCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric choice set
+
+#### Parameters
+
+- `name`: `string` — Choice set name. Must start with a letter, may contain only letters, numbers, and underscores, length 3–100 characters (e.g., `"expenseTypes"`).
+- `options?`: `ChoiceSetCreateOptions` — Optional choice-set-level settings ([ChoiceSetCreateOptions](../ChoiceSetCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the UUID of the created choice set
+
+#### Example
+
+```
+// Minimal create
+const expenseTypesId = await choicesets.create("expense_types");
+
+// With display name and description
+const priorityLevelsId = await choicesets.create("priority_levels", {
+  displayName: "Priority Levels",
+  description: "Ticket priority categories",
+});
+```
+
+### deleteById()
+
+> **deleteById**(`choiceSetId`: `string`, `options?`: `ChoiceSetDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes a Data Fabric choice set and all its values.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to delete
+- `options?`: `ChoiceSetDeleteByIdOptions` — Optional [ChoiceSetDeleteByIdOptions](../ChoiceSetDeleteByIdOptions/) — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the choice set is deleted
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.deleteById(expenseTypes.id);
+
+// Folder-scoped choice set
+await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
+```
+
 ### getAll()
 
 > **getAll**(`options?`: `ChoiceSetGetAllOptions`): `Promise`\<`ChoiceSetGetAllResponse`[]>
@@ -3807,6 +3871,40 @@ if (page1.hasNextPage) {
 
 // Folder-scoped choice set
 const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
+```
+
+### updateById()
+
+> **updateById**(`choiceSetId`: `string`, `options`: `ChoiceSetUpdateOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing choice set's metadata (display name and/or description).
+
+**At least one of `displayName` or `description` must be provided** — the call throws `ValidationError` if both are omitted.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to update
+- `options`: `ChoiceSetUpdateOptions` — Metadata fields to change ([ChoiceSetUpdateOptions](../ChoiceSetUpdateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.updateById(expenseTypes.id, {
+  displayName: "Expense Categories",
+  description: "Updated description",
+});
 ```
 
 Service for managing UiPath Maestro Processes
