@@ -3340,7 +3340,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityDeleteRecordByIdOptions/"><code>EntityDeleteRecordByIdOptions</code></a></td>
-<td>Optional <a href="../EntityDeleteRecordByIdOptions/">EntityDeleteRecordByIdOptions</a> (e.g. <code>folderKey</code> for folder-scoped entities) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Optional delete options such as <code>folderKey</code> for folder-scoped entities. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
@@ -3383,7 +3383,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityDeleteRecordByIdOptions/"><code>EntityDeleteRecordByIdOptions</code></a></td>
-<td>Optional <a href="../EntityDeleteRecordByIdOptions/">EntityDeleteRecordByIdOptions</a> (e.g. <code>folderKey</code> for folder-scoped entities) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Optional delete options such as <code>folderKey</code> for folder-scoped entities. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
@@ -3427,14 +3427,13 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityDeleteRecordsOptions/"><code>EntityDeleteRecordsOptions</code></a></td>
-<td>Delete options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Delete options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityDeleteResponse/"><code>EntityDeleteResponse</code></a>&gt;</p>
-<p>Promise resolving to delete response
-<a href="../EntityDeleteResponse/">EntityDeleteResponse</a></p>
+<p>Promise resolving to delete response (<a href="../EntityDeleteResponse/">EntityDeleteResponse</a>)</p>
 <h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// By id</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">deleteRecords</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&lt;recordId-1&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&lt;recordId-2&gt;&quot;</span><span class="p">]);</span>
@@ -3471,14 +3470,13 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityDeleteRecordsOptions/"><code>EntityDeleteRecordsOptions</code></a></td>
-<td>Delete options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Delete options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityDeleteResponse/"><code>EntityDeleteResponse</code></a>&gt;</p>
-<p>Promise resolving to delete response
-<a href="../EntityDeleteResponse/">EntityDeleteResponse</a></p>
+<p>Promise resolving to delete response (<a href="../EntityDeleteResponse/">EntityDeleteResponse</a>)</p>
 <h4 id="deprecated_1">Deprecated<a class="headerlink" href="#deprecated_1" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#deleterecords">deleteRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
 <p>Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use <a href="#deleterecordbyid">deleteRecordById</a> if you need trigger events to fire for the deleted record.</p>
@@ -3681,14 +3679,13 @@ instead of the full content — use <a href="#getrecordbyid">getRecordById</a> t
 <tr>
 <td><code>options?</code></td>
 <td><code>T</code></td>
-<td>Query options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Query options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
-<a href="../EntityRecord/">EntityRecord</a></p>
+<p>Promise resolving to entity records (<a href="../EntityRecord/">EntityRecord</a>) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.</p>
 <h4 id="example_7">Example<a class="headerlink" href="#example_7" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// Basic usage (non-paginated)</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getAllRecords</span><span class="p">(</span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="p">);</span>
@@ -3743,8 +3740,7 @@ instead of the full content — use <a href="#getrecordbyid">getRecordById</a> t
 </table>
 <h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/EntityGetResponse/"><code>EntityGetResponse</code></a>&gt;</p>
-<p>Promise resolving to entity metadata with operation methods
-<a href="../../type-aliases/EntityGetResponse/">EntityGetResponse</a></p>
+<p>Promise resolving to entity metadata with operation methods (<a href="../../type-aliases/EntityGetResponse/">EntityGetResponse</a>)</p>
 <h4 id="example_8">Example<a class="headerlink" href="#example_8" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Entities</span><span class="p">,</span><span class="w"> </span><span class="nx">ChoiceSets</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
@@ -3802,14 +3798,13 @@ resources by name and <code>folderKey</code>), avoiding a lookup to resolve the 
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityGetByNameOptions/"><code>EntityGetByNameOptions</code></a></td>
-<td>Optional <a href="../EntityGetByNameOptions/">EntityGetByNameOptions</a> (e.g. <code>folderKey</code> for folder-scoped entities) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Optional lookup options such as <code>folderKey</code> for folder-scoped entities. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/EntityGetResponse/"><code>EntityGetResponse</code></a>&gt;</p>
-<p>Promise resolving to entity metadata with operation methods
-<a href="../../type-aliases/EntityGetResponse/">EntityGetResponse</a></p>
+<p>Promise resolving to entity metadata with operation methods (<a href="../../type-aliases/EntityGetResponse/">EntityGetResponse</a>)</p>
 <h4 id="example_9">Example<a class="headerlink" href="#example_9" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">// Get entity metadata by name</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">entity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getByName</span><span class="p">(</span><span class="s2">&quot;Customer&quot;</span><span class="p">);</span>
@@ -3850,14 +3845,13 @@ resources by name and <code>folderKey</code>), avoiding a lookup to resolve the 
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityGetRecordByIdOptions/"><code>EntityGetRecordByIdOptions</code></a></td>
-<td>Query options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Query options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
-<p>Promise resolving to a single entity record
-<a href="../EntityRecord/">EntityRecord</a></p>
+<p>Promise resolving to a single entity record (<a href="../EntityRecord/">EntityRecord</a>)</p>
 <h4 id="example_10">Example<a class="headerlink" href="#example_10" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// First, get records to obtain the record ID</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getAllRecords</span><span class="p">(</span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="p">);</span>
@@ -3907,14 +3901,13 @@ including the complete content of <code>MULTILINE_MAX</code> fields.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityGetRecordByNameOptions/"><code>EntityGetRecordByNameOptions</code></a></td>
-<td>Query options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Query options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
-<p>Promise resolving to a single entity record
-<a href="../EntityRecord/">EntityRecord</a></p>
+<p>Promise resolving to a single entity record (<a href="../EntityRecord/">EntityRecord</a>)</p>
 <h4 id="example_11">Example<a class="headerlink" href="#example_11" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// First, get records to obtain the record ID</span>
 <a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getRecordsByName</span><span class="p">(</span><span class="s2">&quot;Customer&quot;</span><span class="p">);</span>
@@ -3969,14 +3962,13 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 <tr>
 <td><code>options?</code></td>
 <td><code>T</code></td>
-<td>Query options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Query options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
-<p>Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
-<a href="../EntityRecord/">EntityRecord</a></p>
+<p>Promise resolving to entity records (<a href="../EntityRecord/">EntityRecord</a>) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.</p>
 <h4 id="example_12">Example<a class="headerlink" href="#example_12" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// Basic usage (non-paginated)</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getRecordsByName</span><span class="p">(</span><span class="s2">&quot;Customer&quot;</span><span class="p">);</span>
@@ -4016,7 +4008,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityImportRecordsByIdOptions/"><code>EntityImportRecordsByIdOptions</code></a></td>
-<td>Optional <a href="../EntityImportRecordsByIdOptions/">EntityImportRecordsByIdOptions</a> (e.g. <code>folderKey</code> for folder-scoped entities) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Optional import options such as <code>folderKey</code> for folder-scoped entities. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
@@ -4061,7 +4053,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityImportRecordsByIdOptions/"><code>EntityImportRecordsByIdOptions</code></a></td>
-<td>Optional <a href="../EntityImportRecordsByIdOptions/">EntityImportRecordsByIdOptions</a> (e.g. <code>folderKey</code> for folder-scoped entities) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Optional import options such as <code>folderKey</code> for folder-scoped entities. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
@@ -4105,14 +4097,13 @@ Use this method if you need trigger events to fire for the inserted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityInsertRecordOptions/"><code>EntityInsertRecordOptions</code></a></td>
-<td>Insert options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Insert options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityInsertResponse/"><code>EntityInsertResponse</code></a>&gt;</p>
-<p>Promise resolving to the inserted record with generated record ID
-<a href="../EntityInsertResponse/">EntityInsertResponse</a></p>
+<p>Promise resolving to the inserted record with generated record ID (<a href="../EntityInsertResponse/">EntityInsertResponse</a>)</p>
 <h4 id="example_15">Example<a class="headerlink" href="#example_15" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1">// By id</span>
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">insertRecord</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="kt">30</span><span class="w"> </span><span class="p">});</span>
@@ -4152,14 +4143,13 @@ Use this method if you need trigger events to fire for the inserted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityInsertRecordOptions/"><code>EntityInsertRecordOptions</code></a></td>
-<td>Insert options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Insert options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_16">Returns<a class="headerlink" href="#returns_16" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityInsertResponse/"><code>EntityInsertResponse</code></a>&gt;</p>
-<p>Promise resolving to the inserted record with generated record ID
-<a href="../EntityInsertResponse/">EntityInsertResponse</a></p>
+<p>Promise resolving to the inserted record with generated record ID (<a href="../EntityInsertResponse/">EntityInsertResponse</a>)</p>
 <h4 id="deprecated_3">Deprecated<a class="headerlink" href="#deprecated_3" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#insertrecord">insertRecord</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
 <p>Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.
@@ -4209,14 +4199,13 @@ trigger events to fire for each inserted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityInsertRecordsOptions/"><code>EntityInsertRecordsOptions</code></a></td>
-<td>Insert options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Insert options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_17">Returns<a class="headerlink" href="#returns_17" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityBatchInsertResponse/"><code>EntityBatchInsertResponse</code></a>&gt;</p>
-<p>Promise resolving to insert response
-<a href="../EntityBatchInsertResponse/">EntityBatchInsertResponse</a></p>
+<p>Promise resolving to insert response (<a href="../EntityBatchInsertResponse/">EntityBatchInsertResponse</a>)</p>
 <h4 id="example_17">Example<a class="headerlink" href="#example_17" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// By id</span>
 <a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">insertRecords</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="kt">30</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Jane&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span><span class="w"> </span><span class="p">}]);</span>
@@ -4256,14 +4245,13 @@ trigger events to fire for each inserted record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityInsertRecordsOptions/"><code>EntityInsertRecordsOptions</code></a></td>
-<td>Insert options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Insert options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_18">Returns<a class="headerlink" href="#returns_18" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityBatchInsertResponse/"><code>EntityBatchInsertResponse</code></a>&gt;</p>
-<p>Promise resolving to insert response
-<a href="../EntityBatchInsertResponse/">EntityBatchInsertResponse</a></p>
+<p>Promise resolving to insert response (<a href="../EntityBatchInsertResponse/">EntityBatchInsertResponse</a>)</p>
 <h4 id="deprecated_4">Deprecated<a class="headerlink" href="#deprecated_4" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#insertrecords">insertRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
 <p>Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use <a href="#insertrecordbyid">insertRecordById</a> if you need
@@ -4529,14 +4517,13 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a></td>
-<td>Update options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Update options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_21">Returns<a class="headerlink" href="#returns_21" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
-<p>Promise resolving to the updated record
-<a href="../EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a></p>
+<p>Promise resolving to the updated record (<a href="../EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a>)</p>
 <h4 id="example_21">Example<a class="headerlink" href="#example_21" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1">// By id</span>
 <a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">updateRecord</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s2">&quot;&lt;recordId&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="kt">31</span><span class="w"> </span><span class="p">});</span>
@@ -4581,14 +4568,13 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a></td>
-<td>Update options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Update options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_22">Returns<a class="headerlink" href="#returns_22" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
-<p>Promise resolving to the updated record
-<a href="../EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a></p>
+<p>Promise resolving to the updated record (<a href="../EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a>)</p>
 <h4 id="deprecated_6">Deprecated<a class="headerlink" href="#deprecated_6" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#updaterecord">updateRecord</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
 <p>Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
@@ -4637,14 +4623,13 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a></td>
-<td>Update options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Update options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_23">Returns<a class="headerlink" href="#returns_23" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
-<p>Promise resolving to update response
-<a href="../EntityUpdateResponse/">EntityUpdateResponse</a></p>
+<p>Promise resolving to update response (<a href="../EntityUpdateResponse/">EntityUpdateResponse</a>)</p>
 <h4 id="example_23">Example<a class="headerlink" href="#example_23" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1">// By id</span>
 <a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">updateRecords</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;entityId&gt;&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">Id</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;123&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;John Updated&quot;</span><span class="w"> </span><span class="p">}]);</span>
@@ -4684,14 +4669,13 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a></td>
-<td>Update options The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+<td>Update options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_24">Returns<a class="headerlink" href="#returns_24" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
-<p>Promise resolving to update response
-<a href="../EntityUpdateResponse/">EntityUpdateResponse</a></p>
+<p>Promise resolving to update response (<a href="../EntityUpdateResponse/">EntityUpdateResponse</a>)</p>
 <h4 id="deprecated_7">Deprecated<a class="headerlink" href="#deprecated_7" title="Permanent link">&para;</a></h4>
 <p>Use <a href="#updaterecords">updateRecords</a> with <code>{ id }</code> or <code>{ name }</code> instead. This method will be removed in a future major version.</p>
 <p>Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use <a href="#updaterecordbyid">updateRecordById</a> if you need trigger events to fire for each updated record.</p>

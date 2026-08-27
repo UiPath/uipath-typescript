@@ -2890,7 +2890,7 @@ Note: Data Fabric supports trigger events only on individual deletes, not on del
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to delete
-- `options?`: `EntityDeleteRecordByIdOptions` — Optional [EntityDeleteRecordByIdOptions](../EntityDeleteRecordByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2918,7 +2918,7 @@ Deletes a single record from an entity by entity ID and record ID
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record to delete
-- `options?`: `EntityDeleteRecordByIdOptions` — Optional [EntityDeleteRecordByIdOptions](../EntityDeleteRecordByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -2950,13 +2950,13 @@ Note: Records deleted using deleteRecords will not trigger Data Fabric trigger e
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordIds`: `string`[] — Array of record UUIDs to delete
-- `options?`: `EntityDeleteRecordsOptions` — Delete options The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityDeleteResponse`>
 
-Promise resolving to delete response [EntityDeleteResponse](../EntityDeleteResponse/)
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
 
 #### Example
 
@@ -2978,13 +2978,13 @@ Deletes data from an entity by entity ID
 
 - `id`: `string` — UUID of the entity
 - `recordIds`: `string`[] — Array of record UUIDs to delete
-- `options?`: `EntityDeleteRecordsOptions` — Delete options The `folderKey` property is **experimental**.
+- `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityDeleteResponse`>
 
-Promise resolving to delete response [EntityDeleteResponse](../EntityDeleteResponse/)
+Promise resolving to delete response ([EntityDeleteResponse](../EntityDeleteResponse/))
 
 #### Deprecated
 
@@ -3143,13 +3143,13 @@ Gets entity records by entity ID
 #### Parameters
 
 - `entityId`: `string` — UUID of the entity
-- `options?`: `T` — Query options The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
 
 #### Example
 
@@ -3193,7 +3193,7 @@ Gets entity metadata by entity ID with attached operation methods
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
 #### Example
 
@@ -3239,13 +3239,13 @@ Sibling of [getById](#getbyid) that addresses the entity by name — useful when
 #### Parameters
 
 - `name`: `string` — Name of the entity
-- `options?`: `EntityGetByNameOptions` — Optional [EntityGetByNameOptions](../EntityGetByNameOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to entity metadata with operation methods ([EntityGetResponse](../../type-aliases/EntityGetResponse/))
 
 #### Example
 
@@ -3272,13 +3272,13 @@ Returns the full record, including the complete content of `MULTILINE_MAX` field
 
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record
-- `options?`: `EntityGetRecordByIdOptions` — Query options The `folderKey` property is **experimental**.
+- `options?`: `EntityGetRecordByIdOptions` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityRecord`>
 
-Promise resolving to a single entity record [EntityRecord](../EntityRecord/)
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
 
 #### Example
 
@@ -3313,13 +3313,13 @@ Sibling of [getRecordById](#getrecordbyid) that addresses the entity by name. Re
 
 - `name`: `string` — Name of the entity
 - `recordId`: `string` — UUID of the record
-- `options?`: `EntityGetRecordByNameOptions` — Query options The `folderKey` property is **experimental**.
+- `options?`: `EntityGetRecordByNameOptions` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityRecord`>
 
-Promise resolving to a single entity record [EntityRecord](../EntityRecord/)
+Promise resolving to a single entity record ([EntityRecord](../EntityRecord/))
 
 #### Example
 
@@ -3352,13 +3352,13 @@ Sibling of [getAllRecords](#getallrecords) that addresses the entity by name —
 #### Parameters
 
 - `name`: `string` — Name of the entity
-- `options?`: `T` — Query options The `folderKey` property is **experimental**.
+- `options?`: `T` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+Promise resolving to entity records ([EntityRecord](../EntityRecord/)) — a NonPaginatedResponse, or a PaginatedResponse when pagination options are used.
 
 #### Example
 
@@ -3383,7 +3383,7 @@ Imports records from a CSV file into an entity, identified by ref (`{ id }` or `
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
-- `options?`: `EntityImportRecordsByIdOptions` — Optional [EntityImportRecordsByIdOptions](../EntityImportRecordsByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3413,7 +3413,7 @@ Imports records from a CSV file into an entity
 
 - `id`: `string` — UUID of the entity
 - `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
-- `options?`: `EntityImportRecordsByIdOptions` — Optional [EntityImportRecordsByIdOptions](../EntityImportRecordsByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+- `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3444,13 +3444,13 @@ Note: Data Fabric supports trigger events only on individual inserts, not on ins
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`> — Record to insert
-- `options?`: `EntityInsertRecordOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityInsertResponse`>
 
-Promise resolving to the inserted record with generated record ID [EntityInsertResponse](../EntityInsertResponse/)
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
 
 #### Example
 
@@ -3475,13 +3475,13 @@ Inserts a single record into an entity by entity ID
 
 - `id`: `string` — UUID of the entity
 - `data`: `Record`\<`string`, `any`> — Record to insert
-- `options?`: `EntityInsertRecordOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityInsertResponse`>
 
-Promise resolving to the inserted record with generated record ID [EntityInsertResponse](../EntityInsertResponse/)
+Promise resolving to the inserted record with generated record ID ([EntityInsertResponse](../EntityInsertResponse/))
 
 #### Deprecated
 
@@ -3518,13 +3518,13 @@ Note: Records inserted using insertRecords will not trigger Data Fabric trigger 
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`>[] — Array of records to insert
-- `options?`: `EntityInsertRecordsOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityBatchInsertResponse`>
 
-Promise resolving to insert response [EntityBatchInsertResponse](../EntityBatchInsertResponse/)
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
 
 #### Example
 
@@ -3549,13 +3549,13 @@ Inserts one or more records into an entity by entity ID
 
 - `id`: `string` — UUID of the entity
 - `data`: `Record`\<`string`, `any`>[] — Array of records to insert
-- `options?`: `EntityInsertRecordsOptions` — Insert options The `folderKey` property is **experimental**.
+- `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityBatchInsertResponse`>
 
-Promise resolving to insert response [EntityBatchInsertResponse](../EntityBatchInsertResponse/)
+Promise resolving to insert response ([EntityBatchInsertResponse](../EntityBatchInsertResponse/))
 
 #### Deprecated
 
@@ -3759,13 +3759,13 @@ Note: Data Fabric supports trigger events only on individual updates, not on upd
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to update
 - `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
-- `options?`: `EntityUpdateRecordOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateRecordResponse`>
 
-Promise resolving to the updated record [EntityUpdateRecordResponse](../EntityUpdateRecordResponse/)
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
 
 #### Example
 
@@ -3791,13 +3791,13 @@ Updates a single record in an entity by entity ID
 - `entityId`: `string` — UUID of the entity
 - `recordId`: `string` — UUID of the record to update
 - `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
-- `options?`: `EntityUpdateRecordOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateRecordResponse`>
 
-Promise resolving to the updated record [EntityUpdateRecordResponse](../EntityUpdateRecordResponse/)
+Promise resolving to the updated record ([EntityUpdateRecordResponse](../EntityUpdateRecordResponse/))
 
 #### Deprecated
 
@@ -3834,13 +3834,13 @@ Note: Records updated using updateRecords will not trigger Data Fabric trigger e
 
 - `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
-- `options?`: `EntityUpdateRecordsOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateResponse`>
 
-Promise resolving to update response [EntityUpdateResponse](../EntityUpdateResponse/)
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
 
 #### Example
 
@@ -3865,13 +3865,13 @@ Updates data in an entity by entity ID
 
 - `id`: `string` — UUID of the entity
 - `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
-- `options?`: `EntityUpdateRecordsOptions` — Update options The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
 
 #### Returns
 
 `Promise`\<`EntityUpdateResponse`>
 
-Promise resolving to update response [EntityUpdateResponse](../EntityUpdateResponse/)
+Promise resolving to update response ([EntityUpdateResponse](../EntityUpdateResponse/))
 
 #### Deprecated
 
