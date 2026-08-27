@@ -17,6 +17,8 @@ const allEntities = await entities.getAll();
 
 > **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
 
+**`Experimental`**
+
 Creates a new Data Fabric entity with the given schema
 
 #### Parameters
@@ -114,6 +116,8 @@ await entity.deleteAttachment(recordId, 'Documents');
 ### deleteById()
 
 > **deleteById**(`id`: `string`, `options?`: `EntityDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
 
 Deletes a Data Fabric entity and all its records
 
@@ -690,6 +694,8 @@ await entities.queryRecordsById(<id>, {
 ### updateById()
 
 > **updateById**(`id`: `string`, `options?`: `EntityUpdateByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
 
 Updates an existing Data Fabric entity — schema and/or metadata.
 
