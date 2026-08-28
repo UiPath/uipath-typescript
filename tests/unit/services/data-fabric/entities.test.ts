@@ -3342,7 +3342,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         {
@@ -3363,7 +3363,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
@@ -3405,7 +3405,7 @@ describe("EntityService Unit Tests", () => {
         folderHeaders,
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         { displayName: "renamed" },
         folderHeaders,
       );
@@ -3419,7 +3419,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { isRbacEnabled: false },
@@ -3449,7 +3449,7 @@ describe("EntityService Unit Tests", () => {
         { headers: {} },
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: "New Display Name" },

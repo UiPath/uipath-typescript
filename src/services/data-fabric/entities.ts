@@ -471,7 +471,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
     if (hasMetadataChanges) {
       await this.patch(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(id),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(id),
         {
           ...(opts.displayName !== undefined && { displayName: opts.displayName }),
           ...(opts.description !== undefined && { description: opts.description }),
