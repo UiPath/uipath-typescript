@@ -142,6 +142,7 @@ export class UiPath implements IUiPath {
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
+      enforceSso: config.enforceSso,
     });
 
     const executionContext = new ExecutionContext();
