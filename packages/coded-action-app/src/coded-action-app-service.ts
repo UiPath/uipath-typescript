@@ -190,7 +190,8 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
     let hostname: string;
     try {
       ({ hostname } = new URL(origin));
-    } catch {
+    } catch (error) {
+      console.warn('isValidOrigin: received a malformed origin URL', origin, error);
       return false;
     }
 
