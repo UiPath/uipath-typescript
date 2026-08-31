@@ -12,20 +12,20 @@ export interface OAuthFields {
   scope: string;
 }
 
-// Opt-in sign-in behaviour.
-export interface SsoFields {
+// Opt-in login behaviour.
+export interface LoginFields {
   enforceSso?: boolean;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields
-export type UiPathSDKConfig = BaseConfig & SsoFields & (
+export type UiPathSDKConfig = BaseConfig & LoginFields & (
   | { secret: string; clientId?: never; redirectUri?: never; scope?: never }
   | ({ secret?: never } & OAuthFields)
 );
 
 // Flexible partial type for constructor input (allows any combination of fields)
 // The isCompleteConfig function validates the final merged config
-export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & SsoFields>;
+export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & LoginFields>;
 
 // Type guard to check if config has OAuth credentials
 export function hasOAuthConfig(config: { clientId?: string; redirectUri?: string; scope?: string }): config is { clientId: string; redirectUri: string; scope: string } {
