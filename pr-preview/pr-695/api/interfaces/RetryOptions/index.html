@@ -2959,9 +2959,7 @@
 
   <h1>RetryOptions</h1>
 
-<p>Retry and backoff behavior for a single HTTP call.</p>
-<p>Retries on a transport failure or a status in <code>retryableStatusCodes</code>, and only for methods in
-<code>retryMethods</code>.</p>
+<p>How a failed request is retried.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2975,42 +2973,42 @@
 <tr>
 <td><a id="backofffactor"></a> <code>backoffFactor?</code></td>
 <td><code>number</code></td>
-<td>Multiplier; <code>'exponential'</code> only. <strong>Default</strong> <code>2</code></td>
+<td>The multiplier. Used by <code>'exponential'</code> only. <strong>Default</strong> <code>2</code></td>
 </tr>
 <tr>
 <td><a id="backoffmaxdelayms"></a> <code>backoffMaxDelayMs?</code></td>
 <td><code>number</code></td>
-<td>Cap on any computed delay, ms. Does not apply to a <code>Retry-After</code> delay — see <code>maxRetryAfterMs</code>. <strong>Default</strong> <code>30000</code></td>
+<td>Longest wait allowed, in ms. A <code>Retry-After</code> wait uses <code>maxRetryAfterMs</code> instead. <strong>Default</strong> <code>30000</code></td>
 </tr>
 <tr>
 <td><a id="backoffstrategy"></a> <code>backoffStrategy?</code></td>
 <td><a href="../../type-aliases/BackoffStrategy/"><code>BackoffStrategy</code></a></td>
-<td>Delay growth, for delay <code>d</code> and factor <code>f</code>: <code>constant</code> d,d,d</td>
+<td>How the wait grows. For a delay <code>d</code> and factor <code>f</code>: <code>constant</code> d, d, d</td>
 </tr>
 <tr>
 <td><a id="initialdelayms"></a> <code>initialDelayMs?</code></td>
 <td><code>number</code></td>
-<td>Delay before the first retry, ms. Later delays grow from it per <code>backoffStrategy</code>. <strong>Default</strong> <code>500</code></td>
+<td>How long to wait before the first retry, in ms. Later waits grow from this. <strong>Default</strong> <code>500</code></td>
 </tr>
 <tr>
 <td><a id="maxretries"></a> <code>maxRetries?</code></td>
 <td><code>number</code></td>
-<td>Extra attempts after the first. <code>0</code> disables retrying. <strong>Default</strong> 2 for <code>httpRequest</code>, 0 for SDK service methods</td>
+<td>How many extra tries after the first. <code>0</code> turns retrying off. <strong>Default</strong> 2 for <code>httpRequest</code>, 0 for SDK service methods</td>
 </tr>
 <tr>
 <td><a id="maxretryafterms"></a> <code>maxRetryAfterMs?</code></td>
 <td><code>number</code></td>
-<td>Cap on a <code>Retry-After</code> delay, ms. Unbounded, so the server's instruction is honoured as sent. <strong>Default</strong> <code>Infinity</code></td>
+<td>Longest <code>Retry-After</code> wait allowed, in ms. Unlimited by default. <strong>Default</strong> <code>Infinity</code></td>
 </tr>
 <tr>
 <td><a id="respectretryafter"></a> <code>respectRetryAfter?</code></td>
 <td><code>boolean</code></td>
-<td>Whether a <code>Retry-After</code> response header overrides the computed backoff delay. <strong>Default</strong> <code>true</code></td>
+<td>Let a <code>Retry-After</code> header decide the wait instead. <strong>Default</strong> <code>true</code></td>
 </tr>
 <tr>
 <td><a id="retryablestatuscodes"></a> <code>retryableStatusCodes?</code></td>
 <td><code>number</code>[]</td>
-<td>Response status codes that make the call eligible for a retry. <strong>Default</strong> <code>[408, 429, 500, 502, 503, 504]</code></td>
+<td>Which statuses are worth retrying. <strong>Default</strong> <code>[408, 429, 500, 502, 503, 504]</code></td>
 </tr>
 <tr>
 <td><a id="retrydelay"></a> <del><code>retryDelay?</code></del></td>
@@ -3020,12 +3018,12 @@
 <tr>
 <td><a id="retrymethods"></a> <code>retryMethods?</code></td>
 <td><a href="../../type-aliases/HttpMethod/"><code>HttpMethod</code></a>[]</td>
-<td>Methods eligible for a retry. Defaults to the idempotent methods of RFC 9110. <strong>Default</strong> <code>['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']</code></td>
+<td>Which methods are worth retrying. Defaults to the ones RFC 9110 says are safe to repeat. <strong>Default</strong> <code>['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']</code></td>
 </tr>
 <tr>
 <td><a id="retrynetworkerrors"></a> <code>retryNetworkErrors?</code></td>
 <td><code>boolean</code></td>
-<td>Retry when no response came back at all — refused connection, DNS failure, timeout. <strong>Default</strong> <code>true</code></td>
+<td>Retry when the request never reached the server. <strong>Default</strong> <code>true</code></td>
 </tr>
 <tr>
 <td><a id="useexponentialbackoff"></a> <del><code>useExponentialBackoff?</code></del></td>

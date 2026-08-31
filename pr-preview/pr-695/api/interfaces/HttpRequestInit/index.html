@@ -2973,7 +2973,7 @@
 <tr>
 <td><a id="body"></a> <code>body?</code></td>
 <td><code>unknown</code></td>
-<td>Request body. Plain objects and arrays are serialized as JSON; strings, <code>FormData</code>, <code>Blob</code>, <code>ArrayBuffer</code>, <code>URLSearchParams</code> and <code>ReadableStream</code> are sent as-is. A stream disables retrying — it cannot be replayed.</td>
+<td>Request body. Objects and arrays are sent as JSON; strings, <code>FormData</code>, <code>Blob</code>, <code>ArrayBuffer</code>, <code>URLSearchParams</code> and <code>ReadableStream</code> are sent as-is. A stream turns retrying off, because it can only be read once.</td>
 </tr>
 <tr>
 <td><a id="headers"></a> <code>headers?</code></td>
@@ -2993,22 +2993,22 @@
 <tr>
 <td><a id="responsetype"></a> <code>responseType?</code></td>
 <td><a href="../../type-aliases/ResponseType/"><code>ResponseType</code></a></td>
-<td>How to read the body. Omitted: JSON content types are parsed, everything else is text.</td>
+<td>How to read the body. By default JSON is parsed and everything else is text.</td>
 </tr>
 <tr>
 <td><a id="retry"></a> <code>retry?</code></td>
 <td><a href="../RetryOptions/"><code>RetryOptions</code></a></td>
-<td>Retry and backoff behavior for this call.</td>
+<td>How to retry this call.</td>
 </tr>
 <tr>
 <td><a id="signal"></a> <code>signal?</code></td>
 <td><code>AbortSignal</code></td>
-<td>Signal for cancelling the request, including any pending retry.</td>
+<td>Cancels the request, including a retry that is waiting.</td>
 </tr>
 <tr>
 <td><a id="timeoutms"></a> <code>timeoutMs?</code></td>
 <td><code>number</code></td>
-<td>Timeout for a single attempt, ms. Each retry gets a fresh one. Unbounded by default.</td>
+<td>How long one attempt may take, in ms. Each retry gets a fresh one. No limit by default.</td>
 </tr>
 </tbody>
 </table>

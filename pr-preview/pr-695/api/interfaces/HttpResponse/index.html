@@ -2959,8 +2959,8 @@
 
   <h1>HttpResponse</h1>
 
-<p>The outcome of an <code>httpRequest</code> call. A response is returned for every status the server
-produced — including 4xx and 5xx — so callers branch on <code>ok</code> or <code>status</code> rather than catching.</p>
+<p>What <code>httpRequest</code> returns. Every status the server sent comes back here, including 4xx and
+5xx, so check <code>ok</code> or <code>status</code> instead of catching.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2974,22 +2974,22 @@ produced — including 4xx and 5xx — so callers branch on <code>ok</code> or <
 <tr>
 <td><a id="data"></a> <code>data</code></td>
 <td><code>unknown</code></td>
-<td>Parsed body, or <code>undefined</code> when there was none. <code>unknown</code> because it is your shape on a 2xx, an error payload on a 4xx/5xx, and absent on a 204 — narrow it after checking <code>ok</code>.</td>
+<td>The parsed body, or <code>undefined</code> if there was none. It is <code>unknown</code> because a failed call returns an error payload rather than what you asked for. Check <code>ok</code>, then narrow it.</td>
 </tr>
 <tr>
 <td><a id="headers"></a> <code>headers</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>string</code>&gt;</td>
-<td>Response headers, with lowercased header names.</td>
+<td>Response headers. Names are lowercased.</td>
 </tr>
 <tr>
 <td><a id="ok"></a> <code>ok</code></td>
 <td><code>boolean</code></td>
-<td>Whether the status is in the 200–299 range.</td>
+<td>True when the status is 200–299.</td>
 </tr>
 <tr>
 <td><a id="redirected"></a> <code>redirected</code></td>
 <td><code>boolean</code></td>
-<td>Whether a redirect occurred. A silent redirect to a login page is a common cause of an unexpected 200 with an HTML body.</td>
+<td>Whether the request was redirected. Often the reason an API returns 200 with HTML.</td>
 </tr>
 <tr>
 <td><a id="status"></a> <code>status</code></td>
@@ -2999,12 +2999,12 @@ produced — including 4xx and 5xx — so callers branch on <code>ok</code> or <
 <tr>
 <td><a id="statustext"></a> <code>statusText</code></td>
 <td><code>string</code></td>
-<td>Response status text, when the runtime supplies one.</td>
+<td>The status text, if the runtime provides one.</td>
 </tr>
 <tr>
 <td><a id="url"></a> <code>url</code></td>
 <td><code>string</code></td>
-<td>The final URL the response came from, after any redirects.</td>
+<td>The URL the response came from, after any redirects.</td>
 </tr>
 </tbody>
 </table>
