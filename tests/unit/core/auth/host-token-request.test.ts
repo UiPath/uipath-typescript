@@ -103,7 +103,8 @@ describe('isValidHostOrigin', () => {
     expect(isValidHostOrigin('not-a-url')).toBe(false);
     expect(warnSpy).toHaveBeenCalledWith(
       'isValidHostOrigin: received a malformed origin URL',
-      'not-a-url'
+      'not-a-url',
+      expect.any(TypeError)
     );
     warnSpy.mockRestore();
   });

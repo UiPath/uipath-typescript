@@ -15,8 +15,8 @@ export function isValidHostOrigin(origin: string | null): boolean {
   let hostname: string;
   try {
     ({ hostname } = new URL(origin));
-  } catch {
-    console.warn('isValidHostOrigin: received a malformed origin URL', origin);
+  } catch (error) {
+    console.warn('isValidHostOrigin: received a malformed origin URL', origin, error);
     return false;
   }
   if (hostname === 'localhost') return true;
