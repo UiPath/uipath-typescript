@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vite
 import { httpRequest } from '../../../../src/utils/http/http-request';
 import { NetworkError } from '../../../../src/core/errors/network';
 import { ServerError } from '../../../../src/core/errors/server';
+import { ValidationError } from '../../../../src/core/errors/validation';
 import { CONTENT_TYPES } from '../../../../src/utils/constants/headers';
 import { HTTP_TEST_CONSTANTS, TEST_CONSTANTS } from '../../../utils/constants';
 
@@ -53,6 +54,14 @@ describe('httpRequest', () => {
     expect(response.status).toBe(HTTP_TEST_CONSTANTS.STATUS_OK);
     expect(response.data).toEqual(HTTP_TEST_CONSTANTS.JSON_BODY);
     expect(response.headers['content-type']).toBe(CONTENT_TYPES.JSON);
+  });
+
+  it('reports whether the response followed a redirect', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(HTTP_TEST_CONSTANTS.JSON_BODY));
+
+    const response = await httpRequest(HTTP_TEST_CONSTANTS.URL);
+
+    expect(response.redirected).toBe(false);
   });
 
   it('resolves rather than throwing when the server answers with a non-2xx status', async () => {
@@ -142,6 +151,15 @@ describe('httpRequest', () => {
     const init = sentInit();
     expect(init.body).toBe(HTTP_TEST_CONSTANTS.TEXT_BODY);
     expect(init.headers['content-type']).toBeUndefined();
+  });
+
+  it('rejects a ReadableStream body without sending a request', async () => {
+    const body = new ReadableStream({ start: (controller) => controller.close() });
+
+    await expect(
+      httpRequest(HTTP_TEST_CONSTANTS.URL, { method: 'POST', body })
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
@@ -422,19 +440,6 @@ describe('httpRequest retry eligibility', () => {
     fetchMock.mockResolvedValue(unavailable());
 
     await httpRequest(HTTP_TEST_CONSTANTS.URL, { method, retry: IMMEDIATE_RETRIES });
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not retry a ReadableStream body, which cannot be replayed', async () => {
-    fetchMock.mockResolvedValue(unavailable());
-    const body = new ReadableStream({ start: (controller) => controller.close() });
-
-    await httpRequest(HTTP_TEST_CONSTANTS.URL, {
-      method: 'PUT',
-      body,
-      retry: IMMEDIATE_RETRIES,
-    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

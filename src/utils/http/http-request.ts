@@ -3,6 +3,7 @@ import type { ResponseType } from '../../models/common/request-spec';
 import { CONTENT_TYPES, RESPONSE_TYPES } from '../constants/headers';
 import { ErrorFactory } from '../../core/errors/error-factory';
 import { ServerError } from '../../core/errors/server';
+import { ValidationError } from '../../core/errors/validation';
 import { appendSearchParams } from './params';
 import { fetchWithRetry } from './fetch-with-retry';
 import { resolveRetryOptions } from './retry-policy';
@@ -10,7 +11,7 @@ import { resolveRetryOptions } from './retry-policy';
 const CONTENT_TYPE_HEADER = 'content-type';
 const JSON_CONTENT_TYPE = /\bjson\b/i;
 
-/** Body shapes `fetch` already knows how to send; everything else is serialized as JSON. */
+/** Types `fetch` can send as-is. Anything else becomes JSON. */
 function isNativeBody(body: unknown): body is BodyInit {
   return (
     typeof body === 'string' ||
@@ -18,8 +19,7 @@ function isNativeBody(body: unknown): body is BodyInit {
     body instanceof URLSearchParams ||
     body instanceof Blob ||
     body instanceof ArrayBuffer ||
-    ArrayBuffer.isView(body) ||
-    body instanceof ReadableStream
+    ArrayBuffer.isView(body)
   );
 }
 
@@ -27,7 +27,7 @@ function hasHeader(headers: Record<string, string>, name: string): boolean {
   return Object.keys(headers).some((key) => key.toLowerCase() === name);
 }
 
-/** `Headers` is not iterable under the SDK's TS lib target, so collect it by callback. */
+/** `Headers` is not iterable under our TS lib setting, so read it with a callback. */
 function collectHeaders(headers: Headers): Record<string, string> {
   const collected: Record<string, string> = {};
   headers.forEach((value, key) => {
@@ -44,6 +44,12 @@ interface PreparedBody {
 function prepareBody(body: unknown): PreparedBody {
   if (body === undefined || body === null) return {};
   if (isNativeBody(body)) return { body };
+  // Rejected ahead of the JSON fallback, which would otherwise send a stream as "{}"
+  if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) {
+    throw new ValidationError({
+      message: 'Streaming request bodies are not supported. Use a string, Blob, ArrayBuffer, FormData, or URLSearchParams.',
+    });
+  }
   return { body: JSON.stringify(body), contentType: CONTENT_TYPES.JSON };
 }
 
@@ -72,9 +78,8 @@ async function readBody(response: Response, responseType?: ResponseType): Promis
   try {
     return JSON.parse(text);
   } catch (error) {
-    // Auto-detection is a guess — a host can label an HTML error page as JSON, so fall back to
-    // the raw text rather than failing a request the server actually answered. When the caller
-    // asked for JSON explicitly, an unparseable body is a real problem worth surfacing.
+    // Guessing the type can be wrong — a server may label an HTML error page as JSON — so fall
+    // back to text. If the caller asked for JSON, a body that will not parse is a real problem.
     if (responseType !== RESPONSE_TYPES.JSON) return text;
     throw new ServerError({
       message: `Failed to parse response as JSON (${response.status} ${response.url}): ${(error as Error).message}`,
@@ -84,28 +89,18 @@ async function readBody(response: Response, responseType?: ResponseType): Promis
 }
 
 /**
- * Sends an HTTP request to any URL, with optional retries and exponential backoff.
+ * Sends an HTTP request to any URL, with optional retries and backoff.
  *
- * This helper carries no UiPath authentication and adds no UiPath headers — it is a plain
- * `fetch` convenience for arbitrary endpoints. Pass `retry` to control retry behavior; by
- * default the idempotent methods are retried up to twice on a transient failure, and `POST` and
- * `PATCH` are not retried at all.
- *
- * Unlike the SDK's service methods, this never throws because of the response status: a 404 or a
- * 500 comes back as a resolved response with `ok: false`. A transport failure — a request that
- * never produced a response — throws as a {@link NetworkError}. The one other throwing case is
- * asking for `responseType: 'json'` explicitly and receiving a body that does not parse, which
- * raises a {@link ServerError}.
+ * Sends no UiPath authentication — it targets third-party endpoints. A non-2xx status resolves
+ * with `ok: false` instead of throwing; only a request that never reached the server throws.
  *
  * @param url - Absolute URL to send the request to
- * @param init - Request method, headers, body, query parameters, timeout, and retry behavior
- * @returns A promise resolving to an {@link HttpResponse} carrying the status, headers, and parsed
- * body. `data` is `unknown` — narrow or validate it once you have checked `ok`, since the body is
- * the shape you expect only on a success, an error payload on a 4xx or 5xx, and absent on a 204.
+ * @param init - Method, headers, body, query parameters, timeout, and retry behavior
+ * @returns An {@link HttpResponse}. `data` is `unknown` — narrow it after checking `ok`.
  *
  * @example
  * ```typescript
- * import { httpRequest } from '@uipath/uipath-typescript';
+ * import { httpRequest } from '@uipath/uipath-typescript/core';
  *
  * const response = await httpRequest('https://api.example.com/v1/orders');
  * if (response.ok) {
@@ -117,9 +112,9 @@ async function readBody(response: Response, responseType?: ResponseType): Promis
  *
  * @example
  * ```typescript
- * import { httpRequest } from '@uipath/uipath-typescript';
+ * import { httpRequest } from '@uipath/uipath-typescript/core';
  *
- * // POST with a JSON body, a per-attempt timeout, and retries enabled for a non-idempotent method
+ * // POST with retries, which are off for non-idempotent methods by default
  * const response = await httpRequest('https://api.example.com/v1/orders', {
  *   method: 'POST',
  *   headers: { 'x-api-key': '<apiKey>' },
@@ -134,7 +129,6 @@ async function readBody(response: Response, responseType?: ResponseType): Promis
  * });
  *
  * if (response.ok) {
- *   // `data` is unknown, so give it a shape once you know the call succeeded
  *   const order = response.data as { id: string };
  *   console.log(response.status, order.id);
  * }
@@ -172,5 +166,6 @@ export async function httpRequest(
     headers: collectHeaders(response.headers),
     data: await readBody(response, init.responseType),
     url: response.url,
+    redirected: response.redirected,
   };
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { wait } from '../../../src/utils/wait';
-import { HTTP_TEST_CONSTANTS } from '../../utils/constants';
+import { wait } from '../../../../src/utils/http/fetch-with-retry';
+import { HTTP_TEST_CONSTANTS } from '../../../utils/constants';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -21,8 +21,18 @@ describe('wait', () => {
     expect(settled).toHaveBeenCalledTimes(1);
   });
 
-  it('resolves immediately for a zero or negative duration', async () => {
+  it('treats zero or negative as zero, and still resolves asynchronously', async () => {
     await expect(wait(0)).resolves.toBeUndefined();
     await expect(wait(-1)).resolves.toBeUndefined();
+  });
+
+  it('does not resolve synchronously — a queued microtask runs first', async () => {
+    const order: string[] = [];
+
+    const pending = wait(0).then(() => order.push('wait'));
+    void Promise.resolve().then(() => order.push('microtask'));
+    await pending;
+
+    expect(order).toEqual(['microtask', 'wait']);
   });
 });

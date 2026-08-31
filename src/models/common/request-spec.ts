@@ -24,8 +24,8 @@ export type Headers = Record<string, string>;
 /**
  * Options for request timeouts
  *
- * @deprecated Set {@link RequestSpec.timeoutMs} on the request instead. Note that
- * `abortOnTimeout` has never had an effect: with `fetch`, a timeout *is* an abort.
+ * @deprecated Set {@link RequestSpec.timeoutMs} on the request instead. `abortOnTimeout` has no
+ * effect — a timeout always aborts the request.
  */
 export interface TimeoutOptions {
   /** Request timeout in milliseconds */
@@ -91,10 +91,7 @@ export interface RequestSpec {
    */
   timeoutOptions?: TimeoutOptions;
   
-  /**
-   * Retry and backoff behavior for this request. Service calls do not retry unless this is
-   * supplied — `maxRetries` defaults to `0` here, not to the `2` that `httpRequest` uses.
-   */
+  /** How to retry this request. No retrying unless supplied. */
   retry?: RetryOptions;
 
   /**

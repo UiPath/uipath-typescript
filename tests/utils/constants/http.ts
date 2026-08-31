@@ -6,7 +6,6 @@ export const HTTP_TEST_CONSTANTS = {
   // Target URLs
   URL: 'https://api.example.com/v1/orders',
   URL_WITH_QUERY: 'https://api.example.com/v1/orders?page=2',
-  REDIRECTED_URL: 'https://api.example.com/v1/orders/final',
 
   // Statuses
   STATUS_OK: 200,

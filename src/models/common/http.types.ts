@@ -1,94 +1,67 @@
 import type { HttpMethod, Headers, QueryParams, ResponseType } from './request-spec';
 
-/**
- * How the delay between retries grows with each attempt.
- */
+/** How the wait between retries grows. */
 export type BackoffStrategy = 'constant' | 'linear' | 'exponential';
 
-/**
- * Retry and backoff behavior applied to a single HTTP call.
- *
- * A call is retried when the transport fails (the connection never produced a response) or when
- * the server answers with a status listed in `retryableStatusCodes` — and only when the request
- * method is listed in `retryMethods`. Non-idempotent methods are excluded by default because a
- * retried POST can create the same resource twice.
- *
- * The delay before each retry grows from `initialDelayMs` according to `backoffStrategy`, capped at
- * `backoffMaxDelayMs`.
- */
+/** How a failed request is retried. */
 export interface RetryOptions {
   /**
-   * Number of additional attempts after the first one. `0` disables retrying.
-   *
-   * The default depends on who is making the call: `httpRequest` retries twice, while SDK
-   * service methods do not retry at all unless a caller asks them to.
-   * @default 2 for `httpRequest`, 0 for SDK service methods
+   * How many extra tries after the first. `0` turns retrying off.
+   * @default 2
    */
   maxRetries?: number;
 
   /**
-   * Delay before the *first* retry, in milliseconds. Later delays grow from this value according
-   * to `backoffStrategy` — it is the starting point, not a fixed gap between attempts (except
-   * under `'constant'`, where it is both).
+   * How long to wait before the first retry, in ms. Later waits grow from this.
    * @default 500
    */
   initialDelayMs?: number;
 
   /**
-   * How the delay grows between attempts, given an `initialDelayMs` of `d` and a
-   * `backoffFactor` of `f`:
-   *
-   * - `constant` — `d, d, d, …`
-   * - `linear` — `d, 2d, 3d, …`
-   * - `exponential` — `d, d×f, d×f², …`
-   *
+   * How the wait grows. For a delay `d` and factor `f`:
+   * `constant` d, d, d | `linear` d, 2d, 3d | `exponential` d, d×f, d×f².
    * @default 'exponential'
    */
   backoffStrategy?: BackoffStrategy;
 
   /**
-   * Multiplier applied to the delay after each attempt. Used only when `backoffStrategy` is
-   * `'exponential'`; ignored by the other strategies.
+   * The multiplier. Used by `'exponential'` only.
    * @default 2
    */
   backoffFactor?: number;
 
   /**
-   * Upper bound for any single computed delay, in milliseconds. Does not apply to a delay taken
-   * from a `Retry-After` header — see `maxRetryAfterMs` for that.
+   * Longest wait allowed, in ms. A `Retry-After` wait uses `maxRetryAfterMs` instead.
    * @default 30000
    */
   backoffMaxDelayMs?: number;
 
   /**
-   * Response status codes that make the call eligible for a retry.
+   * Which statuses are worth retrying.
    * @default [408, 429, 500, 502, 503, 504]
    */
   retryableStatusCodes?: number[];
 
   /**
-   * Request methods eligible for a retry. Defaults to the idempotent methods defined by
-   * RFC 9110 — replaying any of these leaves the server in the same state as a single call.
+   * Which methods are worth retrying. Defaults to the ones RFC 9110 says are safe to repeat.
    * @default ['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']
    */
   retryMethods?: HttpMethod[];
 
   /**
-   * Whether a request that never produced a response — a refused connection, a DNS failure, a
-   * timeout — is eligible for a retry. Set to `false` to retry only on response status codes.
+   * Retry when the request never reached the server.
    * @default true
    */
   retryNetworkErrors?: boolean;
 
   /**
-   * Whether a `Retry-After` response header overrides the computed backoff delay.
+   * Let a `Retry-After` header decide the wait instead.
    * @default true
    */
   respectRetryAfter?: boolean;
 
   /**
-   * Upper bound for a delay taken from a `Retry-After` header, in milliseconds. Unbounded by
-   * default, so a server's explicit instruction is honoured as sent.
+   * Longest `Retry-After` wait allowed, in ms. Unlimited by default.
    * @default Infinity
    */
   maxRetryAfterMs?: number;
@@ -125,63 +98,53 @@ export interface HttpRequestInit {
   headers?: Headers;
 
   /**
-   * Request body. Plain objects and arrays are serialized as JSON and sent with a
-   * `Content-Type: application/json` header unless one is already set. Strings, `FormData`,
-   * `Blob`, `ArrayBuffer`, and `URLSearchParams` are sent as-is. A `ReadableStream` body is
-   * also sent as-is, but disables retrying — a stream is consumed by the first attempt and
-   * cannot be replayed.
+   * Request body. Objects and arrays are sent as JSON; strings, `FormData`, `Blob`,
+   * `ArrayBuffer` and `URLSearchParams` are sent as-is.
    */
   body?: unknown;
 
   /** Query parameters appended to the URL. Array values are sent as repeated parameters. */
   params?: QueryParams;
 
-  /**
-   * How to read the response body. When omitted, a JSON `Content-Type` is parsed as JSON and
-   * anything else is read as text.
-   */
+  /** How to read the body. By default JSON is parsed and everything else is text. */
   responseType?: ResponseType;
 
-  /**
-   * Timeout for a single attempt, in milliseconds. Applies whether or not retrying is enabled;
-   * when it is, each retry starts a fresh timeout. Unbounded by default.
-   */
+  /** How long one attempt may take, in ms. Each retry gets a fresh one. No limit by default. */
   timeoutMs?: number;
 
-  /** Retry and backoff behavior for this call. */
+  /** How to retry this call. */
   retry?: RetryOptions;
 
-  /** Signal for cancelling the request, including any pending retry. */
+  /** Cancels the request, including a retry that is waiting. */
   signal?: AbortSignal;
 }
 
 /**
- * The outcome of an `httpRequest` call. A response is returned for every status the server
- * produced — including 4xx and 5xx — so callers branch on `ok` or `status` rather than catching.
+ * What `httpRequest` returns. Every status the server sent comes back here, including 4xx and
+ * 5xx, so check `ok` or `status` instead of catching.
  */
 export interface HttpResponse {
   /** Response status code. */
   status: number;
 
-  /** Response status text, when the runtime supplies one. */
+  /** The status text. Empty on HTTP/2, which does not send one. */
   statusText: string;
 
-  /** Whether the status is in the 200–299 range. */
+  /** True when the status is 200–299. */
   ok: boolean;
 
-  /** Response headers, with lowercased header names. */
+  /** Response headers. Names are lowercased. */
   headers: Record<string, string>;
 
   /**
-   * Parsed response body, or `undefined` when the response carried no body.
-   *
-   * Typed as `unknown` deliberately. The body is whatever the server sent: the shape you expect
-   * on a 2xx, an error payload on a 4xx or 5xx, and nothing at all on a 204. Narrow or validate
-   * it — usually after checking `ok` — rather than being promised a type that does not hold on
-   * every path.
+   * The parsed body, or `undefined` if there was none. It is `unknown` because a failed call
+   * returns an error payload rather than what you asked for. Check `ok`, then narrow it.
    */
   data: unknown;
 
-  /** The final URL the response came from, after any redirects. */
+  /** The URL the response came from, after any redirects. */
   url: string;
+
+  /** Whether the request was redirected. Often the reason an API returns 200 with HTML. */
+  redirected: boolean;
 }

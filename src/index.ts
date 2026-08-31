@@ -28,7 +28,7 @@ export * from './core/errors';
 export * from './utils/pagination';
 export * from './utils/runtime';
 export { httpRequest } from './utils/http/http-request';
-export { wait } from './utils/wait';
+export { wait } from './utils/http/fetch-with-retry';
 
 // Export telemetry
 export * from './core/telemetry';

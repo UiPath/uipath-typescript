@@ -1,13 +1,25 @@
-/**
- * The retry loop: issues a `fetch`, decides whether the outcome is worth another attempt, and
- * waits out the delay the policy asks for. Shared by the public `httpRequest` helper and the
- * SDK's internal ApiClient, so the retry behavior lives in one place.
- */
+/** The retry loop around `fetch`. Used by both `httpRequest` and ApiClient. */
 
 import type { HttpMethod } from '../../models/common/request-spec';
 import type { ResolvedRetryOptions } from '../../models/common/http.internal-types';
-import { wait } from '../wait';
 import { computeBackoffDelay, parseRetryAfter } from './retry-policy';
+
+/**
+ * Waits for a fixed duration before resolving.
+ *
+ * @param durationMs - How long to wait, in milliseconds.
+ * @returns A promise that resolves once the duration has elapsed.
+ *
+ * @example
+ * ```typescript
+ * import { wait } from '@uipath/uipath-typescript/core';
+ *
+ * await wait(1000); // pause for one second
+ * ```
+ */
+export function wait(durationMs: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, Math.max(0, durationMs)));
+}
 
 const RETRY_AFTER = 'retry-after';
 
@@ -17,9 +29,8 @@ interface AttemptSignal {
 }
 
 /**
- * Builds the signal for one attempt: the caller's signal when there is no timeout, otherwise a
- * controller that aborts on whichever comes first. Written by hand rather than with
- * `AbortSignal.any()`, which is missing from browsers the SDK still supports.
+ * Builds the signal for one attempt. With no timeout it is just the caller's signal; otherwise it
+ * aborts on whichever comes first. Written by hand because older browsers lack `AbortSignal.any()`.
  */
 function createAttemptSignal(timeoutMs: number | undefined, external?: AbortSignal): AttemptSignal {
   if (timeoutMs === undefined || !Number.isFinite(timeoutMs)) return { signal: external, dispose: () => {} };
@@ -45,7 +56,7 @@ function createAttemptSignal(timeoutMs: number | undefined, external?: AbortSign
   };
 }
 
-/** Waits out the backoff, rejecting early if the caller cancels mid-delay. */
+/** Waits before the next try, stopping early if the caller cancels. */
 function delayBeforeRetry(durationMs: number, signal?: AbortSignal): Promise<void> {
   if (!signal) return wait(durationMs);
   if (signal.aborted) return Promise.reject(signal.reason);
@@ -65,47 +76,35 @@ function delayBeforeRetry(durationMs: number, signal?: AbortSignal): Promise<voi
   });
 }
 
-/** A stream body is consumed by the first attempt, so it can never be replayed. */
-function isReplayableBody(body: BodyInit | null | undefined): boolean {
-  return !(typeof ReadableStream !== 'undefined' && body instanceof ReadableStream);
-}
-
-/** Everything the retry loop needs beyond the request itself. */
+/** What the loop needs besides the request itself. */
 export interface FetchWithRetryOptions {
   /**
-   * Fully resolved retry behavior. Callers apply their own defaults with
-   * {@link resolveRetryOptions} — `httpRequest` retries by default, SDK service calls do not —
-   * so the loop itself has no opinion about who is calling it. Required, so a caller cannot
-   * silently inherit someone else's defaults by omitting it.
+   * Retry options with defaults already applied. Each caller applies its own, so the loop does not
+   * need to know who is calling. Required, so nobody picks up another caller's defaults by mistake.
    */
   retry: ResolvedRetryOptions;
-  /**
-   * Timeout for a single attempt, in milliseconds. Independent of retrying — it bounds one
-   * attempt whether or not more follow. Each retry starts a fresh timeout.
-   */
+  /** How long one attempt may take, in ms. Each retry gets a fresh one. */
   timeoutMs?: number;
-  /** Caller cancellation, honoured during an attempt and during a backoff delay. */
+  /** Cancels the call, both mid-request and while waiting to retry. */
   signal?: AbortSignal;
 }
 
 /**
- * Issues a `fetch`, retrying transport failures and retryable statuses according to `settings`.
+ * Runs a `fetch`, retrying failed connections and retryable statuses.
  *
- * A response is returned for every status the server produced — retryable statuses only reach
- * the caller once the attempts are exhausted. Transport failures are rethrown after the last
- * attempt; caller cancellation is rethrown immediately without consuming a retry.
+ * Any status the server sent is returned; a retryable one only after the tries run out. A failed
+ * connection throws after the last try. A cancel by the caller throws straight away.
  */
 export async function fetchWithRetry(
   url: string,
   init: Omit<RequestInit, 'signal'>,
   options: FetchWithRetryOptions
 ): Promise<Response> {
-  // `init.signal` is deliberately absent from the type: the loop builds a fresh signal per
-  // attempt and would silently overwrite one passed here. Cancellation belongs in `options`.
+  // `init.signal` is left out of the type on purpose: the loop makes a new signal per attempt and
+  // would overwrite one passed here. Pass cancellation in `options` instead.
   const settings = options.retry;
   const method = (init.method ?? 'GET').toUpperCase() as HttpMethod;
-  const eligible = settings.retryMethods.includes(method) && isReplayableBody(init.body);
-  const retriesAllowed = eligible ? Math.max(0, settings.maxRetries) : 0;
+  const retriesAllowed = settings.retryMethods.includes(method) ? Math.max(0, settings.maxRetries) : 0;
 
   let attempt = 0;
   for (;;) {
@@ -121,7 +120,7 @@ export async function fetchWithRetry(
       dispose();
     }
 
-    // The caller cancelled — surface that instead of burning a retry on it
+    // The caller cancelled, so report that rather than spending a retry on it
     if (options.signal?.aborted && failure !== undefined) throw failure;
 
     if (response && !settings.retryableStatusCodes.includes(response.status)) return response;
@@ -135,14 +134,15 @@ export async function fetchWithRetry(
     const retryAfter = settings.respectRetryAfter && response
       ? parseRetryAfter(response.headers.get(RETRY_AFTER))
       : undefined;
-    // A `Retry-After` is the server's explicit instruction, so it is honoured as sent rather
-    // than being squeezed under the backoff cap; `maxRetryAfterMs` bounds it separately.
+    // `Retry-After` is what the server asked for, so use it as sent. `maxRetryAfterMs` caps it.
     const delay = retryAfter !== undefined
       ? Math.min(retryAfter, settings.maxRetryAfterMs)
       : computeBackoffDelay(attempt, settings);
 
-    // The discarded response still holds its connection open until the body is released
-    response?.body?.cancel().catch(() => {});
+    // An unreleased body holds its connection open. Failing here only leaks it, so retry anyway.
+    response?.body?.cancel().catch((error) => {
+      console.warn('[UiPath SDK] Could not release a discarded response body:', error);
+    });
 
     await delayBeforeRetry(delay, options.signal);
     attempt++;
