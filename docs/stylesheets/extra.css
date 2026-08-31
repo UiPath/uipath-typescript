@@ -317,3 +317,11 @@ video {
   height: 100%;
   border: 0;
 }
+
+/* Suppress the sidebar expand/collapse animation while extra.js reapplies the
+   reader's saved section state on page load, so restoring reads as the page's
+   initial state rather than a visible animation. */
+[data-md-nav-restoring] .md-nav__toggle ~ .md-nav,
+[data-md-nav-restoring] .md-nav__toggle ~ .md-nav__link .md-nav__icon:after {
+  transition: none !important;
+}
