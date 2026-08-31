@@ -46,7 +46,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.indexes
     - navigation.sections
@@ -59,7 +58,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.sections
     - search.highlight
