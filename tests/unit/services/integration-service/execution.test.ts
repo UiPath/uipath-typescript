@@ -3,6 +3,7 @@ import { execute } from '../../../../src/services/integration-service/execution/
 import { ValidationError } from '../../../../src/core/errors';
 import { createServiceTestDependencies } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS } from '../../../utils/mocks';
+import { HTTP_TEST_CONSTANTS } from '../../../utils/constants';
 import {
   FOLDER_ID,
   FOLDER_KEY,
@@ -234,5 +235,144 @@ describe('execute', () => {
     await expect(
       execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, ''),
     ).rejects.toThrow(ValidationError);
+  });
+
+  describe('retry', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('makes a single attempt on a retryable status when no retry options are supplied', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR, body: '{}' }),
+      );
+
+      const result = await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(result.status).toBe(HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR);
+    });
+
+    it('retries a retryable status and returns the successful response', async () => {
+      vi.useFakeTimers();
+      const { instance } = createServiceTestDependencies();
+      fetchSpy
+        .mockResolvedValueOnce(buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVICE_UNAVAILABLE, body: '{}' }))
+        .mockResolvedValueOnce(buildResponse({ body: JSON.stringify([{ id: 1 }]) }));
+
+      const pending = execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        retry: { maxRetries: 1, initialDelayMs: HTTP_TEST_CONSTANTS.RETRY_DELAY_MS },
+      });
+
+      await vi.advanceTimersByTimeAsync(HTTP_TEST_CONSTANTS.RETRY_DELAY_MS - 1);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(1);
+      const result = await pending;
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(result.ok).toBe(true);
+      expect(result.body).toEqual([{ id: 1 }]);
+    });
+
+    it('returns the last response once the retries are exhausted', async () => {
+      vi.useFakeTimers();
+      const { instance } = createServiceTestDependencies();
+      // A fresh Response per attempt — the retry loop releases the body of each one it discards
+      fetchSpy.mockImplementation(async () =>
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR, body: '{}' }),
+      );
+
+      const pending = execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        retry: {
+          maxRetries: HTTP_TEST_CONSTANTS.MAX_RETRIES,
+          initialDelayMs: HTTP_TEST_CONSTANTS.RETRY_DELAY_MS,
+          backoffStrategy: 'constant',
+        },
+      });
+
+      await vi.advanceTimersByTimeAsync(HTTP_TEST_CONSTANTS.RETRY_DELAY_MS * (HTTP_TEST_CONSTANTS.MAX_RETRIES + 1));
+      const result = await pending;
+
+      expect(fetchSpy).toHaveBeenCalledTimes(HTTP_TEST_CONSTANTS.MAX_RETRIES + 1);
+      expect(result.ok).toBe(false);
+      expect(result.status).toBe(HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR);
+    });
+
+    it('does not retry a POST unless the method is opted in', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR, body: '{}' }),
+      );
+
+      await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'POST', {
+        body: { subject: 'New' },
+        retry: { maxRetries: HTTP_TEST_CONSTANTS.MAX_RETRIES, initialDelayMs: 0 },
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries a POST when it is listed in retryMethods', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockImplementation(async () =>
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR, body: '{}' }),
+      );
+
+      await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'POST', {
+        body: { subject: 'New' },
+        retry: {
+          maxRetries: HTTP_TEST_CONSTANTS.MAX_RETRIES,
+          initialDelayMs: 0,
+          retryMethods: ['POST'],
+        },
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(HTTP_TEST_CONSTANTS.MAX_RETRIES + 1);
+    });
+
+    it('honours retryableStatusCodes so an unlisted status is not retried', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockResolvedValue(
+        buildResponse({ status: HTTP_TEST_CONSTANTS.STATUS_SERVER_ERROR, body: '{}' }),
+      );
+
+      await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        retry: {
+          maxRetries: HTTP_TEST_CONSTANTS.MAX_RETRIES,
+          initialDelayMs: 0,
+          retryableStatusCodes: [HTTP_TEST_CONSTANTS.STATUS_TOO_MANY_REQUESTS],
+        },
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries a transport failure and rethrows once the retries are exhausted', async () => {
+      const { instance } = createServiceTestDependencies();
+      fetchSpy.mockRejectedValue(new Error(HTTP_TEST_CONSTANTS.TRANSPORT_ERROR_MESSAGE));
+
+      await expect(
+        execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+          retry: { maxRetries: HTTP_TEST_CONSTANTS.MAX_RETRIES, initialDelayMs: 0 },
+        }),
+      ).rejects.toThrow(HTTP_TEST_CONSTANTS.TRANSPORT_ERROR_MESSAGE);
+      expect(fetchSpy).toHaveBeenCalledTimes(HTTP_TEST_CONSTANTS.MAX_RETRIES + 1);
+    });
+
+    it('passes an abort signal to fetch so a caller can cancel the request', async () => {
+      const { instance } = createServiceTestDependencies();
+      const controller = new AbortController();
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        signal: controller.signal,
+        timeoutMs: HTTP_TEST_CONSTANTS.TIMEOUT_MS,
+      });
+
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(init.signal).toBeInstanceOf(AbortSignal);
+    });
   });
 });
