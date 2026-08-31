@@ -14,6 +14,8 @@ import { loadFromMetaTags } from './telemetry/runtime';
 
 const INIT_TIMEOUT = 3000;
 
+const TRUSTED_HOST_DOMAINS = ['uipath.com', 'uipath-dev.com'];
+
 /**
  * Service for bi-directional communication between coded action apps and Action Center
  */
@@ -173,7 +175,7 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
     }
   }
 
-  /** 
+  /**
    * Validates that the given origin is a known UiPath environment or a local development server,
    * guarding against cross-origin message spoofing.
    *
@@ -181,21 +183,21 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
    * @returns `true` if the origin is trusted, `false` otherwise.
    */
   private isValidOrigin(origin: string | null): boolean {
-    const ALLOWED_ORIGINS = ['https://alpha.uipath.com', 'https://staging.uipath.com', 'https://cloud.uipath.com'];
-
     if (!origin) {
       return false;
     }
 
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return true;
-    }
-
+    let hostname: string;
     try {
-      const url = new URL(origin);
-      return url.hostname === 'localhost';
+      ({ hostname } = new URL(origin));
     } catch {
       return false;
     }
+
+    if (hostname === 'localhost') {
+      return true;
+    }
+
+    return TRUSTED_HOST_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
   }
 }

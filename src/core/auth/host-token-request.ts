@@ -4,25 +4,23 @@ import { embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 
 export const AUTHENTICATION_TIMEOUT = 8000;
 
-const ALLOWED_HOST_ORIGINS = new Set([
-  'https://alpha.uipath.com',
-  'https://staging.uipath.com',
-  'https://cloud.uipath.com',
-]);
+const TRUSTED_HOST_DOMAINS = ['uipath.com', 'uipath-dev.com'];
 
 /**
  * Returns true if the origin is a trusted UiPath host that may initiate
- * token delegation. Mirrors the same allowlist used by ActionCenterTokenManager.
+ * token delegation. Mirrors the same trust check used by ActionCenterTokenManager.
  */
 export function isValidHostOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  if (ALLOWED_HOST_ORIGINS.has(origin)) return true;
+  let hostname: string;
   try {
-    return new URL(origin).hostname === 'localhost';
+    ({ hostname } = new URL(origin));
   } catch {
     console.warn('isValidHostOrigin: received a malformed origin URL', origin);
     return false;
   }
+  if (hostname === 'localhost') return true;
+  return TRUSTED_HOST_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 }
 
 export function isTokenExpired(tokenInfo: TokenInfo): boolean {

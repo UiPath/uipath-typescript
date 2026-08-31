@@ -36,8 +36,9 @@ import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
 // keep driving the scenario by mutating platform.isHostEmbedded / embeddingOrigin.
 vi.mock('@/core/auth/host-token-request', async () => {
   const platform = await import('@/utils/platform');
-  const ALLOWED = ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'];
-  const isValidHostOrigin = (origin: string | null): boolean => !!origin && ALLOWED.includes(origin);
+  const TRUSTED_SUFFIXES = ['uipath.com', 'uipath-dev.com'];
+  const isValidHostOrigin = (origin: string | null): boolean =>
+    !!origin && TRUSTED_SUFFIXES.some((suffix) => origin.endsWith(suffix));
   return {
     isValidHostOrigin: vi.fn(isValidHostOrigin),
     isTokenExpired: vi.fn(() => false),
