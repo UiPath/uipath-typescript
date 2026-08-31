@@ -5,6 +5,8 @@ import { SDKInternalsRegistry } from '../../../core/internals';
 import { ELEMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { CONTENT_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../../utils/constants/headers';
 import { resolveFolderScope } from '../folder-scope';
+import { fetchWithRetry } from '../../../utils/http/fetch-with-retry';
+import { resolveRetryOptions, DEFAULT_API_CLIENT_RETRY } from '../../../utils/http/retry-policy';
 import type { IUiPath } from '../../../core/types';
 import type { UiPathConfig } from '../../../core/config/config';
 import {
@@ -85,11 +87,21 @@ class Execution extends BaseService {
       headers['Content-Type'] = CONTENT_TYPES.JSON;
     }
 
-    const response = await fetch(fullUrl, {
-      method,
-      headers,
-      body: hasBody ? JSON.stringify(options.body) : undefined,
-    });
+    const response = await fetchWithRetry(
+      fullUrl,
+      {
+        method,
+        headers,
+        body: hasBody ? JSON.stringify(options.body) : undefined,
+      },
+      {
+        // Defaults to no retries, so an existing caller that supplies no `retry` keeps its
+        // single-attempt behaviour
+        retry: resolveRetryOptions(options.retry, DEFAULT_API_CLIENT_RETRY),
+        timeoutMs: options.timeoutMs,
+        signal: options.signal,
+      },
+    );
 
     const text = await response.text();
     let parsed: unknown = text;
@@ -132,7 +144,8 @@ class Execution extends BaseService {
  * @param connectionId - Connection GUID
  * @param objectName - Connector object name (e.g. `tickets`, `messages`)
  * @param method - HTTP method (defaults to `GET`)
- * @param options - Body, query params, and folder scoping (`folderId` / `folderKey` / `folderPath`)
+ * @param options - Body, query params, folder scoping (`folderId` / `folderKey` / `folderPath`),
+ *   and robustness knobs (`retry`, `timeoutMs`, `signal`)
  * @returns Promise resolving to an {@link ExecuteResult}
  *
  * @example
@@ -166,6 +179,31 @@ class Execution extends BaseService {
  * const result = await execute(sdk, '<connectionId>', 'tickets', 'GET', {
  *   queryParams: { limit: '10', status: 'open' },
  *   folderPath: 'Shared/Finance',
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Retry transient connector failures. Retrying is off unless `maxRetries` is set.
+ * const result = await execute(sdk, '<connectionId>', 'tickets', 'GET', {
+ *   timeoutMs: 10_000,
+ *   retry: {
+ *     maxRetries: 3,
+ *     initialDelayMs: 500,
+ *     backoffStrategy: 'exponential',
+ *     backoffFactor: 2,
+ *     retryableStatusCodes: [429, 500, 502, 503, 504],
+ *   },
+ * });
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // POST is not retried by default — a replay can create the same record twice.
+ * // Opt in only when the connector operation is safe to repeat.
+ * const result = await execute(sdk, '<connectionId>', 'tickets', 'POST', {
+ *   body: { subject: 'New ticket' },
+ *   retry: { maxRetries: 2, retryMethods: ['POST'] },
  * });
  * ```
  */

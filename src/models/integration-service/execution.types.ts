@@ -3,6 +3,7 @@
  */
 
 import { IntegrationServiceFolderContextOptions } from './integration-service.types';
+import type { RetryOptions } from '../common/http.types';
 
 /**
  * HTTP method for an execute call.
@@ -39,4 +40,19 @@ export interface ExecuteOptions extends IntegrationServiceFolderContextOptions {
   body?: unknown;
   /** Query string parameters. */
   queryParams?: Record<string, string>;
+  /**
+   * Retry and backoff behavior for this call. Retrying is off unless `maxRetries` is set.
+   *
+   * Only the idempotent methods of RFC 9110 (`GET`, `HEAD`, `PUT`, `DELETE`, `OPTIONS`) are
+   * retried by default — a replayed `POST` can create the same record twice through the
+   * connector. To retry a `POST` or `PATCH`, list it explicitly in `retryMethods`.
+   */
+  retry?: RetryOptions;
+  /**
+   * Timeout for a single attempt, in milliseconds. Applies whether or not retrying is enabled;
+   * each retry starts a fresh timeout. Unbounded by default.
+   */
+  timeoutMs?: number;
+  /** Signal for cancelling the request, including any pending retry. */
+  signal?: AbortSignal;
 }
