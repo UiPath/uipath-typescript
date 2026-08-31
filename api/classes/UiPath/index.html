@@ -3229,20 +3229,23 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <h2 id="constructors">Constructors<a class="headerlink" href="#constructors" title="Permanent link">&para;</a></h2>
 <h3 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt;): <code>UiPath</code></p>
+<p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
 </blockquote>
+<p>Creates a UiPath SDK instance.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
 <th>Parameter</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>config?</code></td>
-<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; }&gt;</td>
+<td><code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code></td>
+<td>Optional SDK configuration, or the execution context a coded function receives; when omitted, configuration is loaded from meta tags or the environment</td>
 </tr>
 </tbody>
 </table>
@@ -3396,7 +3399,8 @@ Cancels any in-flight token-refresh request. Call this when the coded app is unm
 <p>Initialize the SDK based on the provided configuration.
 This method handles both OAuth flow initiation and completion automatically.
 For secret-based authentication, initialization is automatic and this returns immediately.
-If no config was provided in constructor, loads from meta tags.</p>
+If no config was provided in constructor, loads from meta tags in the browser,
+or from the execution-context environment contract outside it.</p>
 <h4 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <h4 id="inherited-from_4">Inherited from<a class="headerlink" href="#inherited-from_4" title="Permanent link">&para;</a></h4>
@@ -3434,12 +3438,41 @@ If no config was provided in constructor, loads from meta tags.</p>
 <hr />
 <h3 id="logout"><del>logout()</del><a class="headerlink" href="#logout" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>logout</strong>(): <code>void</code></p>
+<p><strong>logout</strong>(<code>options?</code>: <code>LogoutOptions</code>): <code>void</code></p>
 </blockquote>
-<p>Logout from the SDK, clearing all authentication state.
-After calling this method, the user will need to re-initialize to authenticate again.</p>
+<p>By default only local state is cleared — the UiPath session (Automation
+Cloud or Automation Suite) stays active, so the next sign-in completes
+silently. Pass <code>endSession: true</code> (browser-only) to also sign the user
+out of the UiPath session: the browser is redirected and returns to the
+configured <code>redirectUri</code>. The redirect is asynchronous — the page keeps rendering
+until the browser navigates; handle that interim state to prevent your
+login screen appearing twice.</p>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><code>LogoutOptions</code></td>
+<td>Logout behavior options</td>
+</tr>
+</tbody>
+</table>
 <h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Local logout only (default)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Also end the UiPath session</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
 <h4 id="inherited-from_8">Inherited from<a class="headerlink" href="#inherited-from_8" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.logout</code></p>
 <hr />
@@ -3449,7 +3482,7 @@ After calling this method, the user will need to re-initialize to authenticate a
 </blockquote>
 <p>Updates the access token used for API requests.
 Use this to inject or refresh a token externally.</p>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3462,7 +3495,7 @@ Use this to inject or refresh a token externally.</p>
 <tr>
 <td><code>tokenInfo</code></td>
 <td><code>TokenInfo</code></td>
-<td>The token information containing the access token, type, expiration, and optional refresh token</td>
+<td>The token information containing the access token, type, expiration, and optional refresh/ID tokens</td>
 </tr>
 </tbody>
 </table>
