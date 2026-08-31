@@ -1,8 +1,9 @@
-# HTTP Requests
+# Helper Methods
 
-`httpRequest` calls any URL, with optional retries, backoff, and a per-attempt timeout. It carries no UiPath authentication and adds no UiPath headers, so it is for third-party endpoints rather than UiPath services — use the SDK's service methods for those.
+Standalone functions you call directly — no `UiPath` instance, no service class.
 
-`wait` pauses for a duration, which is useful between calls you are pacing yourself.
+- **`httpRequest`** calls any URL, with optional retries, backoff, and a per-attempt timeout. It sends no UiPath authentication and adds no UiPath headers, so it is for third-party endpoints — use the SDK's service methods for UiPath itself.
+- **`wait`** pauses for a duration, useful between calls you are pacing yourself.
 
 ## Error contract
 

@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/http-requests/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/helpers/">
       
       
         <link rel="prev" href="../pagination/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>HTTP Requests - UiPath TypeScript SDK</title>
+        <title>Helper Methods - UiPath TypeScript SDK</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#http-requests" class="md-skip">
+        <a href="#helper-methods" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              HTTP Requests
+              Helper Methods
             
           </span>
         </div>
@@ -467,7 +467,7 @@
   <span class="md-ellipsis">
     
   
-    HTTP Requests
+    Helper Methods
   
 
     
@@ -485,7 +485,7 @@
   <span class="md-ellipsis">
     
   
-    HTTP Requests
+    Helper Methods
   
 
     
@@ -3045,11 +3045,14 @@
   
 
 
-<h1 id="http-requests">HTTP Requests<a class="headerlink" href="#http-requests" title="Permanent link">&para;</a></h1>
-<p><code>httpRequest</code> calls any URL, with optional retries, backoff, and a per-attempt timeout. It carries
-no UiPath authentication and adds no UiPath headers, so it is for third-party endpoints rather than
-UiPath services — use the SDK's service methods for those.</p>
-<p><code>wait</code> pauses for a duration, which is useful between calls you are pacing yourself.</p>
+<h1 id="helper-methods">Helper Methods<a class="headerlink" href="#helper-methods" title="Permanent link">&para;</a></h1>
+<p>Standalone functions you call directly — no <code>UiPath</code> instance, no service class.</p>
+<ul>
+<li><strong><code>httpRequest</code></strong> calls any URL, with optional retries, backoff, and a per-attempt timeout. It
+  sends no UiPath authentication and adds no UiPath headers, so it is for third-party endpoints —
+  use the SDK's service methods for UiPath itself.</li>
+<li><strong><code>wait</code></strong> pauses for a duration, useful between calls you are pacing yourself.</li>
+</ul>
 <h2 id="error-contract">Error contract<a class="headerlink" href="#error-contract" title="Permanent link">&para;</a></h2>
 <p>Because it proxies arbitrary third-party calls, <code>httpRequest</code> follows a different contract from the
 SDK's service methods.</p>
