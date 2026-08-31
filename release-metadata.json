@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.2",
+  "sdkVersion": "1.7.0",
   "services": [
     {
       "name": "AgentMemory",
@@ -288,12 +288,24 @@
       "since": null,
       "methods": [
         {
+          "name": "create",
+          "since": "1.7.0"
+        },
+        {
+          "name": "deleteById",
+          "since": "1.7.0"
+        },
+        {
           "name": "getAll",
           "since": null
         },
         {
           "name": "getById",
           "since": null
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.0"
         }
       ]
     },
@@ -342,8 +354,16 @@
           "since": null
         },
         {
+          "name": "create",
+          "since": "1.7.0"
+        },
+        {
           "name": "deleteAttachment",
           "since": null
+        },
+        {
+          "name": "deleteById",
+          "since": "1.7.0"
         },
         {
           "name": "deleteRecordById",
@@ -396,6 +416,10 @@
         {
           "name": "queryRecordsById",
           "since": null
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.0"
         },
         {
           "name": "updateRecordById",
@@ -715,7 +739,8 @@
         },
         {
           "name": "getAllWithMethods",
-          "since": "1.6.2"
+          "since": "1.6.2",
+          "deleted": "1.7.0"
         },
         {
           "name": "getById",
@@ -723,7 +748,8 @@
         },
         {
           "name": "getByIdWithMethods",
-          "since": "1.6.2"
+          "since": "1.6.2",
+          "deleted": "1.7.0"
         },
         {
           "name": "getByKey",
