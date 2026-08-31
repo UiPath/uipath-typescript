@@ -3016,25 +3016,30 @@
 <tr>
 <th>Parameter</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>name</code></td>
 <td><code>string</code></td>
+<td>New display name, unique within the tenant</td>
 </tr>
 <tr>
 <td><code>processKeys</code></td>
 <td><code>string</code>[]</td>
+<td>The full set of Orchestrator process (release) keys the app surfaces</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
 <td><a href="../BusinessAppUpdateOptions/"><code>BusinessAppUpdateOptions</code></a></td>
+<td>Optional description, icon and color; omitting one clears it</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/BusinessAppGetResponse/"><code>BusinessAppGetResponse</code></a>&gt;</p>
+<p>The app as stored after the write, as a <a href="../../type-aliases/BusinessAppGetResponse/">BusinessAppGetResponse</a></p>
 
 
 
