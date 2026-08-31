@@ -309,8 +309,8 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `IS.Connectors.Read` |
 | `getById()` | `IS.Connectors.Read` |
-| `getDefaultConnection()` | `IS.Connectors.Read` |
-| `getConnections()` | `IS.Connectors.Read` |
+| `getDefaultConnection()` | `IS.Connections.Read` |
+| `getConnections()` | `IS.Connections.Read` |
 
 ### Connections
 
@@ -324,15 +324,15 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getObjects()` | `IS.Connector.Export` |
-| `getActivities()` | `IS.Connector.Export` |
-| `getObjectMetadata()` | `IS.Connector.Export` |
-| `getEventObjects()` | `IS.Connector.Export` |
-| `getEventObjectMetadata()` | `IS.Connector.Export` |
-| `getInstanceObjects()` | `IS.Connector.Export` |
-| `getInstanceObjectMetadata()` | `IS.Connector.Export` |
-| `getInstanceEventObjects()` | `IS.Connector.Export` |
-| `getInstanceEventObjectMetadata()` | `IS.Connector.Export` |
+| `getObjects()` | `IS.Connectors.Read` |
+| `getActivities()` | `IS.Connectors.Read` |
+| `getObjectMetadata()` | `IS.Connectors.Read` |
+| `getEventObjects()` | `IS.Connectors.Read` |
+| `getEventObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceObjects()` | `IS.Connectors.Read` |
+| `getInstanceObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceEventObjects()` | `IS.Connectors.Read` |
+| `getInstanceEventObjectMetadata()` | `IS.Connectors.Read` |
 
 ### Execution
 
