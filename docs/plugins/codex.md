@@ -20,7 +20,7 @@ A short, silent tour of installing the plugin and what it does once it's in plac
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
 </div>
 
-More videos in the [AI App Builders video gallery](../ai-app-builders/videos.md).
+More videos in [App Builder Integrations → Guides](../ai-app-builders/guides/index.md).
 
 ---
 
