@@ -7,6 +7,8 @@ import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
@@ -362,10 +364,24 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    // acr_values is intentionally omitted: Identity resolves the target org from
+    // acr_values is omitted by default: Identity resolves the target org from
     // client_id, and sending acr_values routes directly to the org's SAML IdP,
-    // which blocks Basic Auth users in mixed-auth orgs.
-    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    // which blocks Basic Auth users in mixed-auth orgs. `forceSso` opts back in.
+    const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    if (!this.config.forceSso) {
+      return authorizeUrl;
+    }
+
+    const orgName = this.config.orgName;
+    if (!GUID_REGEX.test(orgName)) {
+      console.warn(
+        `[UiPath SDK] forceSso was ignored: orgName "${orgName}" is not an organization id. ` +
+        'Pass the organization id (GUID) as orgName to sign in through the org\'s identity provider.'
+      );
+      return authorizeUrl;
+    }
+
+    return `${authorizeUrl}&acr_values=${encodeURIComponent(`tenant:${orgName}`)}`;
   }
 
   /**
