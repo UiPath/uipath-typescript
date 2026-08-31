@@ -671,7 +671,9 @@ export interface EntityServiceModel {
    *
    * @param name - Entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
-   * @param fields - Array of field definitions
+   * @param fields - Array of field definitions. Each field's `name` must be camelCase —
+   *   start with a letter, letters and numbers only; the Data Fabric backend rejects
+   *   underscores in field names.
    * @param options - Optional entity-level settings ({@link EntityCreateOptions}) The `folderKey` property is **experimental**.
    * @returns Promise resolving to the ID of the created entity
    * @example
@@ -681,15 +683,15 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const id = await entities.create("product_catalog", [
-   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    *
    * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
    * const ordersId = await entities.create("orders", [
-   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
    *   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
-   *   { name: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   *   { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
    *
    * // Cross-folder references — link a folder-scoped entity to entities and
@@ -710,7 +712,7 @@ export interface EntityServiceModel {
    *   },
    * ], { folderKey: "<sourceFolderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
@@ -727,7 +729,7 @@ export interface EntityServiceModel {
    * // Folder-scoped: pass the entity's folder key
    * await entities.deleteById(<id>, { folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void>;
 
@@ -739,7 +741,7 @@ export interface EntityServiceModel {
    * only when the corresponding fields are provided.
    *
    * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}) The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
@@ -747,7 +749,7 @@ export interface EntityServiceModel {
    * // Schema-only: add a field and remove another
    * await entities.updateById(<id>, {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: [{ name: "old_field" }],
+   *   removeFields: [{ name: "oldField" }],
    * });
    *
    * // Metadata-only: rename the entity
@@ -779,7 +781,7 @@ export interface EntityServiceModel {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
-   * @internal
+   * @experimental
    */
   updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
 
@@ -1051,14 +1053,14 @@ export interface EntityMethods {
    * // Folder-scoped entity: pass the entity's folder key
    * await entity.delete({ folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   delete(options?: EntityDeleteByIdOptions): Promise<void>;
 
   /**
    * Updates this entity — schema and/or metadata.
    *
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
@@ -1076,7 +1078,7 @@ export interface EntityMethods {
    *   ],
    * });
    * ```
-   * @internal
+   * @experimental
    */
   update(options?: EntityUpdateByIdOptions): Promise<void>;
 
