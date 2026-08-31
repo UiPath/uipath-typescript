@@ -168,31 +168,21 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
-### Signing in through the organization's identity provider
+### Forcing sign-in through the organization's identity provider
 
-By default the SDK does not tell Identity which organization the sign-in is for — Identity resolves that from the Client ID. Users are shown the UiPath account sign-in screen, and those belonging to an organization with SSO can continue from there to their provider.
-
-If your organization signs everyone in through SSO and you want users taken straight to your identity provider, set `forceSso` and pass the **organization id** as `orgName`:
+By default users see the UiPath account sign-in screen. Set `forceSso: true` to send them straight to the organization's configured identity provider instead.
 
 ```
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: '3aa10965-a82d-4d9e-8366-0eff8e87bf7a', // organization id, not the name
-  tenantName: 'your-tenant',
-  clientId: 'your-client-id',
-  redirectUri: 'http://localhost:3000',
-  scope: 'OR.Users OR.Assets',
-  forceSso: true,
-});
+const sdk = new UiPath({ forceSso: true });
 ```
 
-Only for organizations where everyone signs in through SSO
+Only where everyone signs in through SSO
 
-`forceSso` sends users directly to the organization's identity provider. Anyone who signs in with a UiPath account instead — a local account, or an external collaborator — does not exist in that provider and will be rejected by it. Leave `forceSso` off if your organization allows both.
+Users who sign in with a UiPath account do not exist in the organization's identity provider and will be rejected by it.
 
-Requires the organization id
+Needs the organization id
 
-Identity resolves the organization from its id, so `orgName` must be the GUID. If it is an organization name, `forceSso` is ignored and a warning is logged.
+This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `forceSso` is ignored and a warning is logged.
 
 ## Secret-based Authentication
 

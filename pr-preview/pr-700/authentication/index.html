@@ -450,10 +450,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#signing-in-through-the-organizations-identity-provider" class="md-nav__link">
+  <a href="#forcing-sign-in-through-the-organizations-identity-provider" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Signing in through the organization's identity provider
+        Forcing sign-in through the organization's identity provider
       
     </span>
   </a>
@@ -3175,10 +3175,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#signing-in-through-the-organizations-identity-provider" class="md-nav__link">
+  <a href="#forcing-sign-in-through-the-organizations-identity-provider" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Signing in through the organization's identity provider
+        Forcing sign-in through the organization's identity provider
       
     </span>
   </a>
@@ -3404,33 +3404,21 @@
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">();</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
 </code></pre></div>
-<h3 id="signing-in-through-the-organizations-identity-provider">Signing in through the organization's identity provider<a class="headerlink" href="#signing-in-through-the-organizations-identity-provider" title="Permanent link">&para;</a></h3>
-<p>By default the SDK does not tell Identity which organization the sign-in is for — Identity
-resolves that from the Client ID. Users are shown the UiPath account sign-in screen, and
-those belonging to an organization with SSO can continue from there to their provider.</p>
-<p>If your organization signs everyone in through SSO and you want users taken straight to
-your identity provider, set <code>forceSso</code> and pass the <strong>organization id</strong> as <code>orgName</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://cloud.uipath.com&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;3aa10965-a82d-4d9e-8366-0eff8e87bf7a&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// organization id, not the name</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-tenant&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nx">clientId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-client-id&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">redirectUri</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;http://localhost:3000&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;OR.Users OR.Assets&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">forceSso</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">});</span>
+<h3 id="forcing-sign-in-through-the-organizations-identity-provider">Forcing sign-in through the organization's identity provider<a class="headerlink" href="#forcing-sign-in-through-the-organizations-identity-provider" title="Permanent link">&para;</a></h3>
+<p>By default users see the UiPath account sign-in screen. Set <code>forceSso: true</code> to send them
+straight to the organization's configured identity provider instead.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">forceSso</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <div class="admonition warning">
-<p class="admonition-title">Only for organizations where everyone signs in through SSO</p>
-<p><code>forceSso</code> sends users directly to the organization's identity provider. Anyone who
-signs in with a UiPath account instead — a local account, or an external collaborator —
-does not exist in that provider and will be rejected by it. Leave <code>forceSso</code> off if
-your organization allows both.</p>
+<p class="admonition-title">Only where everyone signs in through SSO</p>
+<p>Users who sign in with a UiPath account do not exist in the organization's identity
+provider and will be rejected by it.</p>
 </div>
 <div class="admonition note">
-<p class="admonition-title">Requires the organization id</p>
-<p>Identity resolves the organization from its id, so <code>orgName</code> must be the GUID. If it is
-an organization name, <code>forceSso</code> is ignored and a warning is logged.</p>
+<p class="admonition-title">Needs the organization id</p>
+<p>This uses the organization id, which the platform and <code>uipath.json</code> supply for you. If
+you instead pass configuration directly to the constructor, set <code>orgName</code> to the
+organization id, otherwise <code>forceSso</code> is ignored and a warning is logged.</p>
 </div>
 <h2 id="secret-based-authentication">Secret-based Authentication<a class="headerlink" href="#secret-based-authentication" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
