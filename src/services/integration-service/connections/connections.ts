@@ -9,8 +9,6 @@ import {
   ConnectionGetByIdOptions,
   ConnectionPingOptions,
   ConnectionPingResponse,
-  ConnectionReauthenticateOptions,
-  ConnectionReauthenticateResponse,
   RawConnectionGetResponse,
 } from '../../../models/integration-service/connections.types';
 import {
@@ -86,27 +84,4 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
     return response.data;
   }
 
-  @track('Connections.Reauthenticate')
-  async reauthenticate(
-    connectionId: string,
-    options?: ConnectionReauthenticateOptions,
-  ): Promise<ConnectionReauthenticateResponse> {
-    if (!connectionId) {
-      throw new ValidationError({ message: 'connectionId is required for reauthenticate' });
-    }
-    const { headers, queryOptions } = resolveFolderScope(
-      options ?? {},
-      'Connections.reauthenticate',
-      this.config.folderKey,
-    );
-    const response = await this.post<ConnectionReauthenticateResponse>(
-      CONNECTION_ENDPOINTS.REAUTHENTICATE(connectionId),
-      undefined,
-      {
-        headers,
-        params: queryOptions as QueryParams,
-      },
-    );
-    return response.data;
-  }
 }
