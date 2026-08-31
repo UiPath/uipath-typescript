@@ -40,12 +40,12 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
-### Forcing sign-in through the organization's identity provider
+### Enforcing sign-in through the organization's identity provider
 
-By default users see the UiPath account sign-in screen. Set `forceSso: true` to send them straight to the organization's configured identity provider instead.
+By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them straight to the organization's configured identity provider instead.
 
 ```
-const sdk = new UiPath({ forceSso: true });
+const sdk = new UiPath({ enforceSso: true });
 ```
 
 Only where everyone signs in through SSO
@@ -54,7 +54,7 @@ Users who sign in with a UiPath account do not exist in the organization's ident
 
 Needs the organization id
 
-This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `forceSso` is ignored and a warning is logged.
+This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `enforceSso` is ignored and a warning is logged.
 
 ## Secret-based Authentication
 
