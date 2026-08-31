@@ -2842,7 +2842,7 @@ Creates a new Data Fabric entity with the given schema
 #### Parameters
 
 - `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
-- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions
+- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions. Each field's `name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names.
 - `options?`: `EntityCreateOptions` — Optional entity-level settings ([EntityCreateOptions](../EntityCreateOptions/)) The `folderKey` property is **experimental**.
 
 #### Returns
@@ -2859,13 +2859,13 @@ import { Entities } from '@uipath/uipath-typescript/entities';
 const entities = new Entities(sdk);
 
 const id = await entities.create("product_catalog", [
-  { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
   { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
 ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
 
 // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
 const ordersId = await entities.create("orders", [
-  { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
   { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
   { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
 ]);
@@ -3522,7 +3522,7 @@ Pass any combination of schema fields (`addFields`, `removeFields`, `updateField
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -3536,7 +3536,7 @@ Promise resolving when the update is complete
 // Schema-only: add a field and remove another
 await entities.updateById(<id>, {
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-  removeFields: [{ name: "old_field" }],
+  removeFields: [{ name: "oldField" }],
 });
 
 // Metadata-only: rename the entity
