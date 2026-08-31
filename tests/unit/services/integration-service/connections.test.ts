@@ -48,7 +48,6 @@ describe('ConnectionsService', () => {
       expect(result).toHaveLength(2);
       for (const conn of result) {
         expect(typeof conn.ping).toBe('function');
-        expect(typeof conn.reauthenticate).toBe('function');
       }
     });
 
@@ -190,7 +189,6 @@ describe('ConnectionsService', () => {
       );
       expect(result.id).toBe(IS_TEST_CONSTANTS.CONNECTION_ID);
       expect(typeof result.ping).toBe('function');
-      expect(typeof result.reauthenticate).toBe('function');
     });
 
     it('should forward includeConfigs as a query param', async () => {
@@ -313,81 +311,4 @@ describe('ConnectionsService', () => {
     });
   });
 
-  describe('reauthenticate', () => {
-    it('should start an OAuth session', async () => {
-      mockApiClient.post.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-
-      const result = await service.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
-        undefined,
-        { headers: {}, params: {} },
-      );
-      expect(result.sessionId).toBe(IS_TEST_CONSTANTS.AUTH_SESSION_ID);
-      expect(result.authUrl).toBe(IS_TEST_CONSTANTS.AUTH_URL);
-    });
-
-    it('should send folder header when folderKey is provided', async () => {
-      mockApiClient.post.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-      await service.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID, {
-        folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
-      });
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
-        undefined,
-        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
-      );
-    });
-
-    it('should route folderPath to the encoded folder path header', async () => {
-      mockApiClient.post.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-      await service.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID, {
-        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
-      });
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
-        undefined,
-        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
-      );
-    });
-
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
-      const scopedService = new ConnectionsService(instance);
-      mockApiClient.post.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-
-      await scopedService.reauthenticate(IS_TEST_CONSTANTS.CONNECTION_ID);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.REAUTHENTICATE(IS_TEST_CONSTANTS.CONNECTION_ID),
-        undefined,
-        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
-      );
-    });
-
-    it('should throw ValidationError when connectionId is empty', async () => {
-      await expect(service.reauthenticate('')).rejects.toThrow(ValidationError);
-    });
-  });
 });

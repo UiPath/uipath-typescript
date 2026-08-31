@@ -146,25 +146,3 @@ export interface ConnectionPingResponse {
   /** Error message if the ping failed. */
   error?: string;
 }
-
-/**
- * Options for {@link ConnectionsServiceModel.reauthenticate}.
- */
-export interface ConnectionReauthenticateOptions extends IntegrationServiceFolderContextOptions {}
-
-/**
- * Response from {@link ConnectionsServiceModel.reauthenticate}.
- *
- * Re-authentication is a multi-step OAuth flow — the SDK returns the session
- * handle and the auth URL the user must visit to grant consent.
- */
-export interface ConnectionReauthenticateResponse {
-  /** Connector key for the connection being re-authenticated. */
-  connector: string;
-  /** Session ID used to poll for auth completion. */
-  sessionId: string;
-  /** Epoch milliseconds when the auth session expires. */
-  expiresAt: number;
-  /** URL the user must visit to grant or refresh OAuth consent. */
-  authUrl: string;
-}
