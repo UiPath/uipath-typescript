@@ -230,10 +230,11 @@ nav:
   - AI App Builders:
       - Getting Started: ai-app-builders/getting-started.md
       - Video Gallery: ai-app-builders/videos.md
-      - Vercel (v0): ai-app-builders/vercel.md
-      - Replit: ai-app-builders/replit.md
-      - Bolt: ai-app-builders/bolt.md
-      - Lovable: ai-app-builders/lovable.md
+      - Guides:
+          - Vercel (v0): ai-app-builders/vercel.md
+          - Replit: ai-app-builders/replit.md
+          - Bolt: ai-app-builders/bolt.md
+          - Lovable: ai-app-builders/lovable.md
   - Sample Apps Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
