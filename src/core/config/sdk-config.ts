@@ -14,7 +14,7 @@ export interface OAuthFields {
 
 // Opt-in sign-in behaviour.
 export interface SsoFields {
-  forceSso?: boolean;
+  enforceSso?: boolean;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields

@@ -8,7 +8,7 @@ export const ConfigSchema = z.object({
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
   scope: z.string().optional(),
-  forceSso: z.boolean().optional(),
+  enforceSso: z.boolean().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -21,7 +21,7 @@ interface ConfigOptions {
   clientId?: string;
   redirectUri?: string;
   scope?: string;
-  forceSso?: boolean;
+  enforceSso?: boolean;
 }
 
 export class UiPathConfig {
@@ -32,7 +32,7 @@ export class UiPathConfig {
   public readonly clientId?: string;
   public readonly redirectUri?: string;
   public readonly scope?: string;
-  public readonly forceSso?: boolean;
+  public readonly enforceSso?: boolean;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -42,7 +42,7 @@ export class UiPathConfig {
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
-    this.forceSso = options.forceSso;
+    this.enforceSso = options.enforceSso;
   }
 }
 

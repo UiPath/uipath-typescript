@@ -68,17 +68,17 @@ describe('AuthService', () => {
       }
     });
 
-    it('should emit acr_values with the org id when forceSso is enabled', () => {
-      const service = createService(TEST_CONSTANTS.GUID_ORG_ID, { forceSso: true });
+    it('should emit acr_values with the org id when enforceSso is enabled', () => {
+      const service = createService(TEST_CONSTANTS.GUID_ORG_ID, { enforceSso: true });
       const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
       expect(new URL(url).searchParams.get('acr_values')).toBe(`tenant:${TEST_CONSTANTS.GUID_ORG_ID}`);
     });
 
-    it('should ignore forceSso and warn when orgName is not an org id', () => {
+    it('should ignore enforceSso and warn when orgName is not an org id', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
         for (const orgName of [ TEST_CONSTANTS.ORGANIZATION_ID, TEST_CONSTANTS.INVALID_GUID_ORG_ID ]) {
-          const service = createService(orgName, { forceSso: true });
+          const service = createService(orgName, { enforceSso: true });
           const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
           expect(url).not.toContain('acr_values');
         }

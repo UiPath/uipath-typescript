@@ -366,16 +366,16 @@ export class AuthService {
 
     // acr_values is omitted by default: Identity resolves the target org from
     // client_id, and sending acr_values routes directly to the org's SAML IdP,
-    // which blocks Basic Auth users in mixed-auth orgs. `forceSso` opts back in.
+    // which blocks Basic Auth users in mixed-auth orgs. `enforceSso` opts back in.
     const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
-    if (!this.config.forceSso) {
+    if (!this.config.enforceSso) {
       return authorizeUrl;
     }
 
     const orgName = this.config.orgName;
     if (!GUID_REGEX.test(orgName)) {
       console.warn(
-        `[UiPath SDK] forceSso was ignored: orgName "${orgName}" is not an organization id. ` +
+        `[UiPath SDK] enforceSso was ignored: orgName "${orgName}" is not an organization id. ` +
         'Pass the organization id (GUID) as orgName to sign in through the org\'s identity provider.'
       );
       return authorizeUrl;
