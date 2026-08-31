@@ -227,6 +227,11 @@ export interface BusinessAppMethods {
   /**
    * Replaces this business app. A full replace — an omitted `description`, `icon` or
    * `color` is cleared.
+   *
+   * @param name - New display name, unique within the tenant
+   * @param processKeys - The full set of Orchestrator process (release) keys the app surfaces
+   * @param options - Optional description, icon and color; omitting one clears it
+   * @returns The app as stored after the write, as a {@link BusinessAppGetResponse}
    */
   update(
     name: string,
@@ -270,6 +275,10 @@ function createBusinessAppMethods(
 
 /**
  * Merges a raw business app with its bound entity methods.
+ *
+ * @param data - The business app data from the API
+ * @param service - The business apps service instance
+ * @returns A business app object with `update` and `delete` attached
  */
 export function createBusinessAppWithMethods(
   data: RawBusinessAppGetResponse,
