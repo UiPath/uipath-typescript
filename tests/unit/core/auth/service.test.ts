@@ -3,6 +3,7 @@ import { AuthService } from '../../../../src/core/auth/service';
 import { ExecutionContext } from '../../../../src/core/context/execution';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { IDENTITY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import type { LoginFields } from '../../../../src/core/config/sdk-config';
 
 // Mock platform detection for Node test environment
 vi.mock('../../../../src/utils/platform', () => ({
@@ -18,7 +19,7 @@ describe('AuthService', () => {
   const codeChallenge = TEST_CONSTANTS.CODE_CHALLENGE;
   const scope = TEST_CONSTANTS.OAUTH_SCOPE;
 
-  function createService(orgName: string, extra: Record<string, unknown> = {}) {
+  function createService(orgName: string, extra: LoginFields = {}) {
     const config = {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName,
