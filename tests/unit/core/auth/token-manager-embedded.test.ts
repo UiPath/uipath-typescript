@@ -36,9 +36,20 @@ import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
 // keep driving the scenario by mutating platform.isHostEmbedded / embeddingOrigin.
 vi.mock('@/core/auth/host-token-request', async () => {
   const platform = await import('@/utils/platform');
-  const TRUSTED_SUFFIXES = ['uipath.com', 'uipath-dev.com'];
-  const isValidHostOrigin = (origin: string | null): boolean =>
-    !!origin && TRUSTED_SUFFIXES.some((suffix) => origin.endsWith(suffix));
+  // Mirrors the real hostname-level trust check so a look-alike domain
+  // (e.g. https://evil-uipath.com) is rejected here exactly as it is in production.
+  const TRUSTED_HOST_DOMAINS = ['uipath.com', 'uipath-dev.com'];
+  const isValidHostOrigin = (origin: string | null): boolean => {
+    if (!origin) return false;
+    let hostname: string;
+    try {
+      ({ hostname } = new URL(origin));
+    } catch {
+      return false;
+    }
+    if (hostname === 'localhost') return true;
+    return TRUSTED_HOST_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+  };
   return {
     isValidHostOrigin: vi.fn(isValidHostOrigin),
     isTokenExpired: vi.fn(() => false),
