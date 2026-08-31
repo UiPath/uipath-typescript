@@ -168,6 +168,22 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Enforcing sign-in through the organization's identity provider
+
+By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them straight to the organization's configured identity provider instead.
+
+```
+const sdk = new UiPath({ enforceSso: true });
+```
+
+Only where everyone signs in through SSO
+
+Users who sign in with a UiPath account do not exist in the organization's identity provider and will be rejected by it.
+
+Needs the organization id
+
+This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `enforceSso` is ignored and a warning is logged.
+
 ## Secret-based Authentication
 
 ```
@@ -216,13 +232,73 @@ No refresh tokens
 
 The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
 
+## Coded Functions
+
+A coded function receives its platform coordinates as the handler's `ctx`. Pass that straight to the SDK — it maps the context itself, so the handler names no credential fields and never touches the workload token:
+
+```
+import { defineFunction } from '@uipath/coded-functions-js-sdk';
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+export default defineFunction({
+  name: 'list-entities',
+  handler: async (_input, ctx) => {
+    const sdk = new UiPath(ctx);
+
+    const entities = await new Entities(sdk).getAll();
+    return { entityCount: entities.length };
+  },
+});
+```
+
+Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
+
+## Server-side and scripts (environment contract)
+
+Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+```
+
+```
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=<organization>          # an id works here as well as a name
+UIPATH_TENANT_NAME=<tenant>
+UIPATH_ACCESS_TOKEN=<accessToken>       # PAT or bearer token
+```
+
+These are the names this SDK already uses elsewhere for the same values, so one `.env` serves a script and a test run alike.
+
+The variables are read from `process.env` or `Deno.env`, whichever the runtime provides.
+
+To state the configuration explicitly instead, pass it to the constructor — this takes precedence over both the environment and meta tags:
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: '<organizationId>',   // an id works here as well as a name
+  tenantName: '<tenantId>',
+  secret: '<accessToken>'        // any bearer token
+});
+```
+
+The access token is consumed internally and is never exposed on `sdk.config`.
+
+Precedence
+
+Constructor arguments win over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
+
 ## SDK Initialization - The initialize() Method
 
 ### When to Use initialize()
 
 The `initialize()` method completes the authentication process for the SDK:
 
-- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**. This covers `secret`, `accessToken`, a coded function's `ctx`, and the environment contract.
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
 ### Example: Secret Authentication (Auto-initialized)
@@ -2824,6 +2900,64 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
+### create()
+
+> **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric entity with the given schema
+
+#### Parameters
+
+- `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
+- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions. Each field's `name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names.
+- `options?`: `EntityCreateOptions` — Optional entity-level settings ([EntityCreateOptions](../EntityCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the ID of the created entity
+
+#### Example
+
+```
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const id = await entities.create("product_catalog", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+  { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
+], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+
+// With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+const ordersId = await entities.create("orders", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+  { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
+]);
+
+// Cross-folder references — link a folder-scoped entity to entities and
+// system choice sets that live in another folder or at the tenant level.
+await entities.create("orderLine", [
+  {
+    name: "order",
+    type: EntityFieldDataType.RELATIONSHIP,
+    referenceEntityId: "<orderEntityId>",
+    referenceFieldId: "<orderEntityPkId>",
+    referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+  },
+  {
+    name: "userType",
+    type: EntityFieldDataType.CHOICE_SET_SINGLE,
+    choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+    // referenceFolderKey omitted → SDK looks up the target at tenant scope
+  },
+], { folderKey: "<sourceFolderKey>" });
+```
+
 ### deleteAttachment()
 
 > **deleteAttachment**(`entityId`: `string`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
@@ -2864,6 +2998,34 @@ await entities.deleteAttachment(entityId, recordId, 'Documents');
 // Or delete using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
 await entity.deleteAttachment(recordId, 'Documents');
+```
+
+### deleteById()
+
+> **deleteById**(`id`: `string`, `options?`: `EntityDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes a Data Fabric entity and all its records
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to delete
+- `options?`: `EntityDeleteByIdOptions` — Optional [EntityDeleteByIdOptions](../EntityDeleteByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the entity is deleted
+
+#### Example
+
+```
+await entities.deleteById(<id>);
+
+// Folder-scoped: pass the entity's folder key
+await entities.deleteById(<id>, { folderKey: "<folderKey>" });
 ```
 
 ### deleteRecordById()
@@ -3416,6 +3578,66 @@ await entities.queryRecordsById(<id>, {
 });
 ```
 
+### updateById()
+
+> **updateById**(`id`: `string`, `options?`: `EntityUpdateByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing Data Fabric entity — schema and/or metadata.
+
+Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to update
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+// Schema-only: add a field and remove another
+await entities.updateById(<id>, {
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+  removeFields: [{ name: "oldField" }],
+});
+
+// Metadata-only: rename the entity
+await entities.updateById(<id>, {
+  displayName: "My Updated Entity",
+  description: "Updated description",
+});
+
+// Combined: update a field and rename at the same time
+await entities.updateById(<id>, {
+  updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
+  displayName: "Price Catalog",
+});
+
+// Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+await entities.updateById(<id>, {
+  addFields: [
+    { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+    { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  ],
+  updateFields: [
+    { id: <fieldId>, lengthLimit: 1000 },
+  ],
+});
+
+// Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
+await entities.updateById(<id>, {
+  folderKey: "<folderKey>",
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+});
+```
+
 ### updateRecordById()
 
 > **updateRecordById**(`entityId`: `string`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
@@ -3564,6 +3786,70 @@ const allChoiceSets = await choicesets.getAll();
 
 ## Methods
 
+### create()
+
+> **create**(`name`: `string`, `options?`: `ChoiceSetCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric choice set
+
+#### Parameters
+
+- `name`: `string` — Choice set name. Must start with a letter, may contain only letters, numbers, and underscores, length 3–100 characters (e.g., `"expenseTypes"`).
+- `options?`: `ChoiceSetCreateOptions` — Optional choice-set-level settings ([ChoiceSetCreateOptions](../ChoiceSetCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the UUID of the created choice set
+
+#### Example
+
+```
+// Minimal create
+const expenseTypesId = await choicesets.create("expense_types");
+
+// With display name and description
+const priorityLevelsId = await choicesets.create("priority_levels", {
+  displayName: "Priority Levels",
+  description: "Ticket priority categories",
+});
+```
+
+### deleteById()
+
+> **deleteById**(`choiceSetId`: `string`, `options?`: `ChoiceSetDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes a Data Fabric choice set and all its values.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to delete
+- `options?`: `ChoiceSetDeleteByIdOptions` — Optional [ChoiceSetDeleteByIdOptions](../ChoiceSetDeleteByIdOptions/) — pass `folderKey` for folder-scoped choice sets; omit for tenant-level The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the choice set is deleted
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.deleteById(expenseTypes.id);
+
+// Folder-scoped choice set
+await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
+```
+
 ### getAll()
 
 > **getAll**(`options?`: `ChoiceSetGetAllOptions`): `Promise`\<`ChoiceSetGetAllResponse`[]>
@@ -3654,6 +3940,40 @@ if (page1.hasNextPage) {
 
 // Folder-scoped choice set
 const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
+```
+
+### updateById()
+
+> **updateById**(`choiceSetId`: `string`, `options`: `ChoiceSetUpdateOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing choice set's metadata (display name and/or description).
+
+**At least one of `displayName` or `description` must be provided** — the call throws `ValidationError` if both are omitted.
+
+#### Parameters
+
+- `choiceSetId`: `string` — UUID of the choice set to update
+- `options`: `ChoiceSetUpdateOptions` — Metadata fields to change ([ChoiceSetUpdateOptions](../ChoiceSetUpdateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+
+await choicesets.updateById(expenseTypes.id, {
+  displayName: "Expense Categories",
+  description: "Updated description",
+});
 ```
 
 Service for managing UiPath Maestro Processes
