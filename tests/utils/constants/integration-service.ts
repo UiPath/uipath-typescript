@@ -25,9 +25,6 @@ export const IS_TEST_CONSTANTS = {
   /** `FOLDER_PATH` encoded as base64-of-UTF-16-LE, per the Orchestrator folder-path contract. */
   FOLDER_PATH_ENCODED_VALUE: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
   FOLDER_DISPLAY_NAME: 'Test Folder',
-  AUTH_SESSION_ID: 'sess_abcdef0123456789',
-  AUTH_URL: 'https://alpha.uipath.com/oauth/authorize?session_id=sess_abcdef0123456789',
-  AUTH_EXPIRES_AT: 1782303998000,
   ERROR_CONNECTOR_NOT_FOUND: 'Connector not found',
   ERROR_CONNECTION_NOT_FOUND: 'Connection not found',
   ERROR_PING_FAILED: 'Ping failed',

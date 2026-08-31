@@ -1,7 +1,7 @@
 /**
  * Integration Service — Connection models
  *
- * Combines raw connection data with bound entity methods (`ping`, `reauthenticate`).
+ * Combines raw connection data with bound entity methods (`ping`).
  */
 
 import {
@@ -10,16 +10,14 @@ import {
   ConnectionGetByIdOptions,
   ConnectionPingOptions,
   ConnectionPingResponse,
-  ConnectionReauthenticateOptions,
-  ConnectionReauthenticateResponse,
 } from './connections.types';
 
 /**
  * A Connection entity enriched with bound methods.
  *
  * Returned by every Connection-yielding method on the {@link ConnectionsServiceModel}
- * and {@link ConnectorsServiceModel}. The bound methods (`ping`, `reauthenticate`)
- * close over this connection's ID so callers can act on the entity directly.
+ * and {@link ConnectorsServiceModel}. The bound `ping` method closes over this
+ * connection's ID so callers can act on the entity directly.
  */
 export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods;
 
@@ -154,31 +152,6 @@ export interface ConnectionsServiceModel {
    * ```
    */
   ping(connectionId: string, options?: ConnectionPingOptions): Promise<ConnectionPingResponse>;
-
-  /**
-   * Start an OAuth re-authentication session for a connection.
-   *
-   * Returns a session handle plus the URL the end user must visit to grant or
-   * refresh consent. The session expires at {@link ConnectionReauthenticateResponse.expiresAt}.
-   *
-   * @param connectionId - Connection GUID
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving to a {@link ConnectionReauthenticateResponse}
-   * @example
-   * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/is-connections';
-   *
-   * const connections = new Connections(sdk);
-   *
-   * const session = await connections.reauthenticate('<connectionId>');
-   * // Direct the user to session.authUrl to complete OAuth consent.
-   * console.log(`Visit: ${session.authUrl}`);
-   * ```
-   */
-  reauthenticate(
-    connectionId: string,
-    options?: ConnectionReauthenticateOptions,
-  ): Promise<ConnectionReauthenticateResponse>;
 }
 
 /**
@@ -195,14 +168,6 @@ export interface ConnectionMethods {
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    */
   ping(options?: ConnectionPingOptions): Promise<ConnectionPingResponse>;
-
-  /**
-   * Start an OAuth re-authentication session for this connection.
-   *
-   * @param options - Optional folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving to a {@link ConnectionReauthenticateResponse}
-   */
-  reauthenticate(options?: ConnectionReauthenticateOptions): Promise<ConnectionReauthenticateResponse>;
 }
 
 function createConnectionMethods(
@@ -213,10 +178,6 @@ function createConnectionMethods(
     async ping(options?: ConnectionPingOptions): Promise<ConnectionPingResponse> {
       if (!data.id) throw new Error('Connection id is undefined');
       return service.ping(data.id, options);
-    },
-    async reauthenticate(options?: ConnectionReauthenticateOptions): Promise<ConnectionReauthenticateResponse> {
-      if (!data.id) throw new Error('Connection id is undefined');
-      return service.reauthenticate(data.id, options);
     },
   };
 }

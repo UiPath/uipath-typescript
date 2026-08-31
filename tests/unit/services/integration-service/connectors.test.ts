@@ -113,7 +113,6 @@ describe('ConnectorsService', () => {
       expect(result.id).toBe(IS_TEST_CONSTANTS.CONNECTION_ID);
       // Bound methods attached:
       expect(typeof result.ping).toBe('function');
-      expect(typeof result.reauthenticate).toBe('function');
     });
 
     it('should send no folder header when folderKey is omitted', async () => {
@@ -201,7 +200,6 @@ describe('ConnectorsService', () => {
       expect(result).toHaveLength(2);
       for (const conn of result) {
         expect(typeof conn.ping).toBe('function');
-        expect(typeof conn.reauthenticate).toBe('function');
       }
     });
 
