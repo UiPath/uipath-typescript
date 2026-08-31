@@ -28,6 +28,7 @@
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type *` silently drops runtime values (classes, enums), causing `undefined` errors for SDK consumers. Note: individual `export type { Name }` for specific type-only re-exports is fine — the prohibition is on the wildcard form.
 - When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily. **Use `Promise.allSettled` instead of `Promise.all` when calls are best-effort and partial success is acceptable** — `Promise.all` rejects if any call fails, which is too strict when one result can be returned in a degraded state while the other still provides value (e.g., returning variables without BPMN enrichment when the BPMN fetch fails).
 - **Time-range parameters in service method options types must be `Date` objects, not strings.** The SDK is responsible for converting to the API's expected format (epoch ms, ISO string, etc.) internally. Accepting raw strings forces callers to know the API's format and breaks when the API format changes. Pattern: `startTime: Date`, `endTime?: Date`. See `getTopRunCount()` (Maestro) for reference.
+- **When a public method signature changes (new optional parameters added), update the corresponding interface declaration** — if `IUiPath`, `{Entity}ServiceModel`, or any other interface declares the method with its old signature, callers holding an interface reference will get a TypeScript error when they try to pass the new parameter. The interface and implementation must be kept in sync on every signature change.
 
 ## Type naming
 
@@ -260,7 +261,7 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
-**Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center.
+**Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center. **Do NOT extend `FolderScopedOptions` for services whose endpoints do not accept OData query params** — because `FolderScopedOptions` inherits `expand` and `select` from `BaseOptions`, extending it for a non-OData service (e.g., Integration Service) causes those fields to leak into request bodies the API never expects. Create a service-specific scoping type (e.g., `{ folderId?: string; folderPath?: string }`) for such services.
 
 ## OperationResponse pattern
 
