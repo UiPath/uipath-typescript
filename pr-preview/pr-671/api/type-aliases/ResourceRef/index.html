@@ -2960,11 +2960,13 @@
   <h1>ResourceRef</h1>
 
 <blockquote>
-<p><strong>ResourceRef</strong>&lt;<code>TId</code>&gt; = { <code>id</code>: <code>TId</code>; <code>name?</code>: <code>never</code>; } | { <code>id?</code>: <code>never</code>; <code>name</code>: <code>string</code>; }</p>
+<p><strong>ResourceRef</strong>&lt;<code>TId</code>&gt; = { <code>id</code>: <code>TId</code>; <code>key?</code>: <code>never</code>; <code>name?</code>: <code>never</code>; } | { <code>id?</code>: <code>never</code>; <code>key?</code>: <code>never</code>; <code>name</code>: <code>string</code>; } | { <code>id?</code>: <code>never</code>; <code>key</code>: <code>string</code>; <code>name?</code>: <code>never</code>; }</p>
 </blockquote>
 <p>Selects a resource by exactly one identifier. Operational methods accept a
 <code>ResourceRef</code> and resolve it internally to the canonical identifier the
 API expects before executing the operation.</p>
+<p>Three variants — id (numeric), name (folder-scoped), or key (GUID). The
+<code>?: never</code> markers reject supplying more than one at compile time.</p>
 <h2 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

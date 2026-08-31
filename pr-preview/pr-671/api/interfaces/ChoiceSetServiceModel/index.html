@@ -1298,6 +1298,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deletebyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deleteById()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getall" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1313,6 +1335,17 @@
     <span class="md-ellipsis">
       
         getById()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatebyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        updateById()
       
     </span>
   </a>
@@ -3049,6 +3082,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deletebyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        deleteById()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#getall" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3064,6 +3119,17 @@
     <span class="md-ellipsis">
       
         getById()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#updatebyid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        updateById()
       
     </span>
   </a>
@@ -3107,6 +3173,90 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
+<h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../ChoiceSetCreateOptions/"><code>ChoiceSetCreateOptions</code></a>): <code>Promise</code>&lt;<code>string</code>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Creates a new Data Fabric choice set</p>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>Choice set name. Must start with a letter, may contain only letters, numbers, and underscores, length 3–100 characters (e.g., <code>"expenseTypes"</code>).</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../ChoiceSetCreateOptions/"><code>ChoiceSetCreateOptions</code></a></td>
+<td>Optional choice-set-level settings (<a href="../ChoiceSetCreateOptions/">ChoiceSetCreateOptions</a>) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>string</code>&gt;</p>
+<p>Promise resolving to the UUID of the created choice set</p>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Minimal create</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypesId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;expense_types&quot;</span><span class="p">);</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1">// With display name and description</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">priorityLevelsId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;priority_levels&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Priority Levels&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Ticket priority categories&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">});</span>
+</code></pre></div>
+<hr />
+<h3 id="deletebyid">deleteById()<a class="headerlink" href="#deletebyid" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>deleteById</strong>(<code>choiceSetId</code>: <code>string</code>, <code>options?</code>: <a href="../ChoiceSetDeleteByIdOptions/"><code>ChoiceSetDeleteByIdOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Deletes a Data Fabric choice set and all its values.</p>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>choiceSetId</code></td>
+<td><code>string</code></td>
+<td>UUID of the choice set to delete</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../ChoiceSetDeleteByIdOptions/"><code>ChoiceSetDeleteByIdOptions</code></a></td>
+<td>Optional <a href="../ChoiceSetDeleteByIdOptions/">ChoiceSetDeleteByIdOptions</a> — pass <code>folderKey</code> for folder-scoped choice sets; omit for tenant-level The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving when the choice set is deleted</p>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// First, get the choice set ID using getAll()</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;expense_types&#39;</span><span class="p">);</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="nx">expenseTypes</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// Folder-scoped choice set</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="nx">expenseTypes</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getAll</strong>(<code>options?</code>: <a href="../ChoiceSetGetAllOptions/"><code>ChoiceSetGetAllOptions</code></a>): <code>Promise</code>&lt;<a href="../ChoiceSetGetAllResponse/"><code>ChoiceSetGetAllResponse</code></a>[]&gt;</p>
@@ -3116,7 +3266,7 @@
 - <code>getAll()</code> — default. Returns only tenant-level choice sets.
 - <code>getAll({ folderKey: "&lt;uuid&gt;" })</code> — preferred for folder-scoped data. Returns only choice sets in that folder.
 - <code>getAll({ includeFolderChoiceSets: true })</code> — returns tenant-level <strong>and</strong> folder-level choice sets together. <code>folderKey</code> is preferred over <code>includeFolderChoiceSets</code> when both are set.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3133,22 +3283,22 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../ChoiceSetGetAllResponse/"><code>ChoiceSetGetAllResponse</code></a>[]&gt;</p>
 <p>Promise resolving to an array of choice set metadata
 <a href="../ChoiceSetGetAllResponse/">ChoiceSetGetAllResponse</a></p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Tenant-only (default)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tenantChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1">// A single folder&#39;s choice sets (preferred when targeting a specific folder)</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folderChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1">// Tenant + folder choice sets together</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">includeFolderChoiceSets</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1">// Find a specific choice set by name</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tenantChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ExpenseTypes&#39;</span><span class="p">);</span>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Tenant-only (default)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tenantChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// A single folder&#39;s choice sets (preferred when targeting a specific folder)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folderChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1">// Tenant + folder choice sets together</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">includeFolderChoiceSets</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1">// Find a specific choice set by name</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tenantChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ExpenseTypes&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
@@ -3174,7 +3324,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3196,34 +3346,78 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../ChoiceSetGetResponse/"><code>ChoiceSetGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../ChoiceSetGetResponse/"><code>ChoiceSetGetResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to choice set values or paginated result
 <a href="../ChoiceSetGetResponse/">ChoiceSetGetResponse</a></p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// First, get the choice set ID using getAll()</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ExpenseTypes&#39;</span><span class="p">);</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">choiceSetId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1">// Get all values (non-paginated)</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">);</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1">// Iterate through choice set values</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">values</span><span class="p">.</span><span class="nx">items</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Value: </span><span class="si">${</span><span class="nx">value</span><span class="p">.</span><span class="nx">displayName</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="c1">// First page with pagination</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="c1">// Navigate using cursor</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">}</span>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="c1">// Folder-scoped choice set</span>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folderValues</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// First, get the choice set ID using getAll()</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ExpenseTypes&#39;</span><span class="p">);</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">choiceSetId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// Get all values (non-paginated)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">);</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// Iterate through choice set values</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">values</span><span class="p">.</span><span class="nx">items</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Value: </span><span class="si">${</span><span class="nx">value</span><span class="p">.</span><span class="nx">displayName</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="c1">// First page with pagination</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1">// Navigate using cursor</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="p">}</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="c1">// Folder-scoped choice set</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="kd">const</span><span class="w"> </span><span class="nx">folderValues</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">choiceSetId</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<hr />
+<h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>updateById</strong>(<code>choiceSetId</code>: <code>string</code>, <code>options</code>: <a href="../ChoiceSetUpdateOptions/"><code>ChoiceSetUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Updates an existing choice set's metadata (display name and/or description).</p>
+<p><strong>At least one of <code>displayName</code> or <code>description</code> must be provided</strong> —
+the call throws <code>ValidationError</code> if both are omitted.</p>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>choiceSetId</code></td>
+<td><code>string</code></td>
+<td>UUID of the choice set to update</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td><a href="../ChoiceSetUpdateOptions/"><code>ChoiceSetUpdateOptions</code></a></td>
+<td>Metadata fields to change (<a href="../ChoiceSetUpdateOptions/">ChoiceSetUpdateOptions</a>) The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving when the update is complete</p>
+<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// First, get the choice set ID using getAll()</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">expenseTypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allChoiceSets</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">cs</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">cs</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;expense_types&#39;</span><span class="p">);</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">choicesets</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">expenseTypes</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Expense Categories&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Updated description&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">});</span>
 </code></pre></div>
 
 

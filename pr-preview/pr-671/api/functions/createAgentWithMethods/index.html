@@ -2984,6 +2984,7 @@
 <blockquote>
 <p><strong>createAgentWithMethods</strong>&lt;<code>T</code>&gt;(<code>agentData</code>: <code>T</code>, <code>conversationService</code>: <a href="../../interfaces/ConversationServiceModel/"><code>ConversationServiceModel</code></a>): <code>T</code> &amp; <a href="../../interfaces/AgentMethods/"><code>AgentMethods</code></a></p>
 </blockquote>
+<p>Combines raw agent data with bound methods.</p>
 <h2 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3003,21 +3004,25 @@
 <tr>
 <th>Parameter</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>agentData</code></td>
 <td><code>T</code></td>
+<td>The raw agent data from API</td>
 </tr>
 <tr>
 <td><code>conversationService</code></td>
 <td><a href="../../interfaces/ConversationServiceModel/"><code>ConversationServiceModel</code></a></td>
+<td>The conversation service instance</td>
 </tr>
 </tbody>
 </table>
 <h2 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h2>
 <p><code>T</code> &amp; <a href="../../interfaces/AgentMethods/"><code>AgentMethods</code></a></p>
+<p>An agent object with added methods</p>
 
 
 

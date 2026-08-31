@@ -3013,6 +3013,11 @@ or initialize the SDK with a folder context.</p>
 <td>Key (GUID) of the job this invocation belongs to, so the run is attributed to it.</td>
 </tr>
 <tr>
+<td><a id="refreshlicense"></a> <code>refreshLicense?</code></td>
+<td><code>boolean</code></td>
+<td>Acquires a fresh license instead of reusing the one already held for this user. Defaults to <code>false</code>. A license is reused for as long as it says it is valid, read from the license rather than assumed, so a burst of invocations costs one acquisition. A license that states no validity window — as the free tier's does not — is reused for five minutes and then re-acquired. Set this when the user's licensing may have changed and the invocation must reflect it before that lapses.</td>
+</tr>
+<tr>
 <td><a id="select"></a> <code>select?</code></td>
 <td><code>string</code></td>
 <td>-</td>
