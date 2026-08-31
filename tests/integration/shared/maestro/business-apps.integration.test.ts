@@ -17,7 +17,11 @@ const newProcessKey = () => crypto.randomUUID();
 /** Names are unique per tenant, so every created app gets a fresh one. */
 const newAppName = () => `sdk-it-${generateRandomString(10)}`;
 
-describe.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
+// skip: mutations on v1/business-apps are not yet supported for the app-token credential this
+// suite authenticates with — PIMS accepts the token but the tenant-scoped ORCHESTRATOR.APPS.*
+// permission check (TenantPermissionHandler) rejects create/update/delete with a 403. Re-enable
+// once the credential this suite uses can hold that permission (see PR #671 discussion).
+describe.skip.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let businessApps!: BusinessApps;
