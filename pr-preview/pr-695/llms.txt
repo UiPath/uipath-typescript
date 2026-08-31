@@ -5,6 +5,7 @@
 - [Getting Started](https://uipath.github.io/uipath-typescript/getting-started/index.md): Introduction to UiPath TypeScript SDK
 - [Authentication](https://uipath.github.io/uipath-typescript/authentication/index.md): Authentication setup
 - [Pagination](https://uipath.github.io/uipath-typescript/pagination/index.md): Pagination guide
+- [HTTP Requests](https://uipath.github.io/uipath-typescript/http-requests/index.md): HTTP requests guide
 
 ## API Reference
 

@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../http-requests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Requests
   
 
     
@@ -2943,7 +2973,7 @@
 <tr>
 <td><a id="body"></a> <code>body?</code></td>
 <td><code>unknown</code></td>
-<td>Request body. Plain objects and arrays are serialized as JSON and sent with a <code>Content-Type: application/json</code> header unless one is already set. Strings, <code>FormData</code>, <code>Blob</code>, <code>ArrayBuffer</code>, and <code>URLSearchParams</code> are sent as-is. A <code>ReadableStream</code> body is also sent as-is, but disables retrying — a stream is consumed by the first attempt and cannot be replayed.</td>
+<td>Request body. Plain objects and arrays are serialized as JSON; strings, <code>FormData</code>, <code>Blob</code>, <code>ArrayBuffer</code>, <code>URLSearchParams</code> and <code>ReadableStream</code> are sent as-is. A stream disables retrying — it cannot be replayed.</td>
 </tr>
 <tr>
 <td><a id="headers"></a> <code>headers?</code></td>
@@ -2963,7 +2993,7 @@
 <tr>
 <td><a id="responsetype"></a> <code>responseType?</code></td>
 <td><a href="../../type-aliases/ResponseType/"><code>ResponseType</code></a></td>
-<td>How to read the response body. When omitted, a JSON <code>Content-Type</code> is parsed as JSON and anything else is read as text.</td>
+<td>How to read the body. Omitted: JSON content types are parsed, everything else is text.</td>
 </tr>
 <tr>
 <td><a id="retry"></a> <code>retry?</code></td>
@@ -2978,7 +3008,7 @@
 <tr>
 <td><a id="timeoutms"></a> <code>timeoutMs?</code></td>
 <td><code>number</code></td>
-<td>Timeout for a single attempt, in milliseconds. Applies whether or not retrying is enabled; when it is, each retry starts a fresh timeout. Unbounded by default.</td>
+<td>Timeout for a single attempt, ms. Each retry gets a fresh one. Unbounded by default.</td>
 </tr>
 </tbody>
 </table>

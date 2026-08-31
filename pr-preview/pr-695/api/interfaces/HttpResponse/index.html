@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../http-requests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Requests
   
 
     
@@ -2944,7 +2974,7 @@ produced — including 4xx and 5xx — so callers branch on <code>ok</code> or <
 <tr>
 <td><a id="data"></a> <code>data</code></td>
 <td><code>unknown</code></td>
-<td>Parsed response body, or <code>undefined</code> when the response carried no body. Typed as <code>unknown</code> deliberately. The body is whatever the server sent: the shape you expect on a 2xx, an error payload on a 4xx or 5xx, and nothing at all on a 204. Narrow or validate it — usually after checking <code>ok</code> — rather than being promised a type that does not hold on every path.</td>
+<td>Parsed body, or <code>undefined</code> when there was none. <code>unknown</code> because it is your shape on a 2xx, an error payload on a 4xx/5xx, and absent on a 204 — narrow it after checking <code>ok</code>.</td>
 </tr>
 <tr>
 <td><a id="headers"></a> <code>headers</code></td>
@@ -2955,6 +2985,11 @@ produced — including 4xx and 5xx — so callers branch on <code>ok</code> or <
 <td><a id="ok"></a> <code>ok</code></td>
 <td><code>boolean</code></td>
 <td>Whether the status is in the 200–299 range.</td>
+</tr>
+<tr>
+<td><a id="redirected"></a> <code>redirected</code></td>
+<td><code>boolean</code></td>
+<td>Whether a redirect occurred. A silent redirect to a login page is a common cause of an unexpected 200 with an HTML body.</td>
 </tr>
 <tr>
 <td><a id="status"></a> <code>status</code></td>

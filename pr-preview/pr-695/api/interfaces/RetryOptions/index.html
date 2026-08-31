@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../http-requests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Requests
   
 
     
@@ -2929,13 +2959,9 @@
 
   <h1>RetryOptions</h1>
 
-<p>Retry and backoff behavior applied to a single HTTP call.</p>
-<p>A call is retried when the transport fails (the connection never produced a response) or when
-the server answers with a status listed in <code>retryableStatusCodes</code> — and only when the request
-method is listed in <code>retryMethods</code>. Non-idempotent methods are excluded by default because a
-retried POST can create the same resource twice.</p>
-<p>The delay before each retry grows from <code>initialDelayMs</code> according to <code>backoffStrategy</code>, capped at
-<code>backoffMaxDelayMs</code>.</p>
+<p>Retry and backoff behavior for a single HTTP call.</p>
+<p>Retries on a transport failure or a status in <code>retryableStatusCodes</code>, and only for methods in
+<code>retryMethods</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2949,32 +2975,32 @@ retried POST can create the same resource twice.</p>
 <tr>
 <td><a id="backofffactor"></a> <code>backoffFactor?</code></td>
 <td><code>number</code></td>
-<td>Multiplier applied to the delay after each attempt. Used only when <code>backoffStrategy</code> is <code>'exponential'</code>; ignored by the other strategies. <strong>Default</strong> <code>2</code></td>
+<td>Multiplier; <code>'exponential'</code> only. <strong>Default</strong> <code>2</code></td>
 </tr>
 <tr>
 <td><a id="backoffmaxdelayms"></a> <code>backoffMaxDelayMs?</code></td>
 <td><code>number</code></td>
-<td>Upper bound for any single computed delay, in milliseconds. Does not apply to a delay taken from a <code>Retry-After</code> header — see <code>maxRetryAfterMs</code> for that. <strong>Default</strong> <code>30000</code></td>
+<td>Cap on any computed delay, ms. Does not apply to a <code>Retry-After</code> delay — see <code>maxRetryAfterMs</code>. <strong>Default</strong> <code>30000</code></td>
 </tr>
 <tr>
 <td><a id="backoffstrategy"></a> <code>backoffStrategy?</code></td>
 <td><a href="../../type-aliases/BackoffStrategy/"><code>BackoffStrategy</code></a></td>
-<td>How the delay grows between attempts, given an <code>initialDelayMs</code> of <code>d</code> and a <code>backoffFactor</code> of <code>f</code>: - <code>constant</code> — <code>d, d, d, …</code> - <code>linear</code> — <code>d, 2d, 3d, …</code> - <code>exponential</code> — <code>d, d×f, d×f², …</code> <strong>Default</strong> <code>'exponential'</code></td>
+<td>Delay growth, for delay <code>d</code> and factor <code>f</code>: <code>constant</code> d,d,d</td>
 </tr>
 <tr>
 <td><a id="initialdelayms"></a> <code>initialDelayMs?</code></td>
 <td><code>number</code></td>
-<td>Delay before the <em>first</em> retry, in milliseconds. Later delays grow from this value according to <code>backoffStrategy</code> — it is the starting point, not a fixed gap between attempts (except under <code>'constant'</code>, where it is both). <strong>Default</strong> <code>500</code></td>
+<td>Delay before the first retry, ms. Later delays grow from it per <code>backoffStrategy</code>. <strong>Default</strong> <code>500</code></td>
 </tr>
 <tr>
 <td><a id="maxretries"></a> <code>maxRetries?</code></td>
 <td><code>number</code></td>
-<td>Number of additional attempts after the first one. <code>0</code> disables retrying. The default depends on who is making the call: <code>httpRequest</code> retries twice, while SDK service methods do not retry at all unless a caller asks them to. <strong>Default</strong> 2 for <code>httpRequest</code>, 0 for SDK service methods</td>
+<td>Extra attempts after the first. <code>0</code> disables retrying. <strong>Default</strong> 2 for <code>httpRequest</code>, 0 for SDK service methods</td>
 </tr>
 <tr>
 <td><a id="maxretryafterms"></a> <code>maxRetryAfterMs?</code></td>
 <td><code>number</code></td>
-<td>Upper bound for a delay taken from a <code>Retry-After</code> header, in milliseconds. Unbounded by default, so a server's explicit instruction is honoured as sent. <strong>Default</strong> <code>Infinity</code></td>
+<td>Cap on a <code>Retry-After</code> delay, ms. Unbounded, so the server's instruction is honoured as sent. <strong>Default</strong> <code>Infinity</code></td>
 </tr>
 <tr>
 <td><a id="respectretryafter"></a> <code>respectRetryAfter?</code></td>
@@ -2994,12 +3020,12 @@ retried POST can create the same resource twice.</p>
 <tr>
 <td><a id="retrymethods"></a> <code>retryMethods?</code></td>
 <td><a href="../../type-aliases/HttpMethod/"><code>HttpMethod</code></a>[]</td>
-<td>Request methods eligible for a retry. Defaults to the idempotent methods defined by RFC 9110 — replaying any of these leaves the server in the same state as a single call. <strong>Default</strong> <code>['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']</code></td>
+<td>Methods eligible for a retry. Defaults to the idempotent methods of RFC 9110. <strong>Default</strong> <code>['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']</code></td>
 </tr>
 <tr>
 <td><a id="retrynetworkerrors"></a> <code>retryNetworkErrors?</code></td>
 <td><code>boolean</code></td>
-<td>Whether a request that never produced a response — a refused connection, a DNS failure, a timeout — is eligible for a retry. Set to <code>false</code> to retry only on response status codes. <strong>Default</strong> <code>true</code></td>
+<td>Retry when no response came back at all — refused connection, DNS failure, timeout. <strong>Default</strong> <code>true</code></td>
 </tr>
 <tr>
 <td><a id="useexponentialbackoff"></a> <del><code>useExponentialBackoff?</code></del></td>

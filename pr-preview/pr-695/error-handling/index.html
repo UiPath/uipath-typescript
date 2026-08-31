@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://uipath.github.io/uipath-typescript/error-handling/">
       
       
-        <link rel="prev" href="../pagination/">
+        <link rel="prev" href="../http-requests/">
       
       
         <link rel="next" href="../agents/">
@@ -285,6 +285,8 @@
       
         
       
+        
+      
     
     
     
@@ -429,6 +431,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../http-requests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTTP Requests
   
 
     
@@ -662,23 +692,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="The httpRequest Helper">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#retries-and-backoff" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Retries and backoff
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -3276,23 +3289,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="The httpRequest Helper">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#retries-and-backoff" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Retries and backoff
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -3532,105 +3528,8 @@
 <a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="the-httprequest-helper">The <code>httpRequest</code> Helper<a class="headerlink" href="#the-httprequest-helper" title="Permanent link">&para;</a></h2>
-<p><code>httpRequest</code> is a general-purpose HTTP utility for calling any URL. It carries no UiPath
-authentication, so it follows a different error contract from the SDK's service methods.</p>
-<p><strong>A status the server returned is never an exception.</strong> A 404 or a 500 comes back as a resolved
-response with <code>ok: false</code> — branch on the status rather than catching:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">httpRequest</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript&#39;</span><span class="p">;</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/v1/orders&#39;</span><span class="p">);</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Request failed with status&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="p">}</span>
-</code></pre></div>
-<p><strong><code>data</code> is <code>unknown</code>.</strong> The body is whatever the server sent — the shape you expect on a success,
-an error payload on a 4xx or 5xx, and nothing at all on a 204. Give it a type once you know which
-you have:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">order</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="p">}</span>
-</code></pre></div>
-<p><strong>A request that never produced a response still throws.</strong> DNS failures, refused connections,
-a timeout, and caller cancellation all surface as a <code>NetworkError</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">NetworkError</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript&#39;</span><span class="p">;</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/v1/orders&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">5000</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nx">NetworkError</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;The request never reached the server:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="p">}</span>
-</code></pre></div>
-<p>One other case throws: asking for <code>responseType: 'json'</code> explicitly when the body does not parse
-raises a <code>ServerError</code>. Without an explicit <code>responseType</code>, an unparseable body is returned as raw
-text instead — auto-detection is a guess, and a host can label an HTML error page as JSON.</p>
-<h3 id="retries-and-backoff">Retries and backoff<a class="headerlink" href="#retries-and-backoff" title="Permanent link">&para;</a></h3>
-<p>The idempotent methods — <code>GET</code>, <code>HEAD</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>, per RFC 9110 — are retried up
-to twice by default on a transient failure: a transport error, or a <code>408</code>, <code>429</code>, <code>500</code>, <code>502</code>,
-<code>503</code>, or <code>504</code>. <code>POST</code> and <code>PATCH</code> are not retried, since a replayed <code>POST</code> can create the same
-resource twice. Pass <code>retry</code> to change any of that:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/v1/orders&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">sku</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ABC-123&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">10000</span><span class="p">,</span><span class="w">              </span><span class="c1">// bounds one attempt; each retry gets a fresh timeout</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nx">retry</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nx">maxRetries</span><span class="o">:</span><span class="w"> </span><span class="kt">4</span><span class="p">,</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nx">initialDelayMs</span><span class="o">:</span><span class="w"> </span><span class="kt">1000</span><span class="p">,</span><span class="w">   </span><span class="c1">// the first delay; later ones grow from it</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="nx">backoffStrategy</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;exponential&#39;</span><span class="p">,</span><span class="w">     </span><span class="c1">// 1s, 2s, 4s, 8s</span>
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="nx">backoffFactor</span><span class="o">:</span><span class="w"> </span><span class="kt">2</span><span class="p">,</span>
-<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="nx">backoffMaxDelayMs</span><span class="o">:</span><span class="w"> </span><span class="kt">30000</span><span class="p">,</span>
-<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nx">retryMethods</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;HEAD&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">]</span>
-<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="p">});</span>
-</code></pre></div>
-<p><code>backoffStrategy</code> controls how the delay grows, given an <code>initialDelayMs</code> of <code>d</code> and a <code>backoffFactor</code> of <code>f</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Strategy</th>
-<th>Delays</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>constant</code></td>
-<td><code>d, d, d, …</code></td>
-</tr>
-<tr>
-<td><code>linear</code></td>
-<td><code>d, 2d, 3d, …</code></td>
-</tr>
-<tr>
-<td><code>exponential</code> (default)</td>
-<td><code>d, d×f, d×f², …</code></td>
-</tr>
-</tbody>
-</table>
-<p><code>backoffFactor</code> applies only to <code>exponential</code>; the other strategies ignore it. Every computed delay
-is capped at <code>backoffMaxDelayMs</code>.</p>
-<p>A <code>Retry-After</code> response header overrides the computed delay unless <code>respectRetryAfter</code> is <code>false</code>.
-It is honoured as the server sent it — <code>backoffMaxDelayMs</code> does not apply to it — so set
-<code>maxRetryAfterMs</code> if you need a ceiling on how long a server can ask you to wait.</p>
-<p>Set <code>retryNetworkErrors: false</code> to retry only on response status codes, leaving connection
-failures, DNS errors, and timeouts to fail on the first attempt.</p>
-<p><code>timeoutMs</code> sits outside <code>retry</code> deliberately — it bounds a single attempt whether or not
-retrying is enabled, so a call that just needs a deadline does not have to open a bag of retry
-options to get one:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// one attempt, five second ceiling, no retrying involved</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/v1/orders&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">5000</span><span class="w"> </span><span class="p">});</span>
-</code></pre></div>
-<p>Two cases never retry, regardless of settings: a <code>ReadableStream</code> body (it is consumed by the first
-attempt and cannot be replayed) and a request cancelled through <code>signal</code>.</p>
-<p>Use <code>wait</code> to pause between calls of your own:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">wait</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript&#39;</span><span class="p">;</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">await</span><span class="w"> </span><span class="nx">wait</span><span class="p">(</span><span class="mf">1000</span><span class="p">);</span><span class="w"> </span><span class="c1">// milliseconds</span>
-</code></pre></div>
+<p><code>httpRequest</code> calls third-party URLs and follows a different contract from the SDK's service
+methods — a 404 or 500 resolves rather than throwing. See <a href="../http-requests/">HTTP Requests</a>.</p>
 
 
 
@@ -3668,7 +3567,7 @@ attempt and cannot be replayed) and a request cancelled through <code>signal</co
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../pagination/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Pagination">
+          <a href="../http-requests/" class="md-footer__link md-footer__link--prev" aria-label="Previous: HTTP Requests">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3678,7 +3577,7 @@ attempt and cannot be replayed) and a request cancelled through <code>signal</co
                 Previous
               </span>
               <div class="md-ellipsis">
-                Pagination
+                HTTP Requests
               </div>
             </div>
           </a>
