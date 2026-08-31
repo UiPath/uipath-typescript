@@ -14,7 +14,6 @@ describe('Connection bound methods', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       ping: vi.fn(),
-      reauthenticate: vi.fn(),
     };
   });
 
@@ -74,58 +73,6 @@ describe('Connection bound methods', () => {
     });
   });
 
-  describe('connection.reauthenticate()', () => {
-    it('should delegate to service.reauthenticate with bound id', async () => {
-      const connection = createConnectionWithMethods(createMockConnection(), mockService);
-      const mockResponse = {
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      };
-      mockService.reauthenticate = vi.fn().mockResolvedValue(mockResponse);
-
-      const result = await connection.reauthenticate();
-
-      expect(mockService.reauthenticate).toHaveBeenCalledWith(
-        IS_TEST_CONSTANTS.CONNECTION_ID,
-        undefined,
-      );
-      expect(result).toBe(mockResponse);
-    });
-
-    it('should pass folderKey through', async () => {
-      const connection = createConnectionWithMethods(createMockConnection(), mockService);
-      mockService.reauthenticate = vi.fn().mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-
-      await connection.reauthenticate({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
-
-      expect(mockService.reauthenticate).toHaveBeenCalledWith(IS_TEST_CONSTANTS.CONNECTION_ID, {
-        folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
-      });
-    });
-
-    it('should pass folderId through', async () => {
-      const connection = createConnectionWithMethods(createMockConnection(), mockService);
-      mockService.reauthenticate = vi.fn().mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        sessionId: IS_TEST_CONSTANTS.AUTH_SESSION_ID,
-        expiresAt: IS_TEST_CONSTANTS.AUTH_EXPIRES_AT,
-        authUrl: IS_TEST_CONSTANTS.AUTH_URL,
-      });
-
-      await connection.reauthenticate({ folderId: IS_TEST_CONSTANTS.FOLDER_ID });
-
-      expect(mockService.reauthenticate).toHaveBeenCalledWith(IS_TEST_CONSTANTS.CONNECTION_ID, {
-        folderId: IS_TEST_CONSTANTS.FOLDER_ID,
-      });
-    });
-  });
 
   describe('createConnectionWithMethods', () => {
     it('should attach raw data fields verbatim', () => {
@@ -139,10 +86,9 @@ describe('Connection bound methods', () => {
       expect(connection.folder?.key).toBe(raw.folder?.key);
     });
 
-    it('should attach both bound methods', () => {
+    it('should attach the bound ping method', () => {
       const connection = createConnectionWithMethods(createMockConnection(), mockService);
       expect(typeof connection.ping).toBe('function');
-      expect(typeof connection.reauthenticate).toBe('function');
     });
   });
 });
