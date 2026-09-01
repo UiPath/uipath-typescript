@@ -132,6 +132,12 @@ class Execution extends BaseService {
  * Execute an arbitrary HTTP operation against a connection instance through
  * the Integration Service passthrough endpoint.
  *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This function is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Targets `elements_/v3/element/instances/{connectionId}/{objectName}`.
  * Use this when you need to call a connector's runtime API without going
  * through a curated SDK method.
