@@ -6,6 +6,9 @@ import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { ServerError } from '../errors/server';
 import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
+import { toSearchParams } from '../../utils/http/params';
+import { fetchWithRetry } from '../../utils/http/fetch-with-retry';
+import { DEFAULT_API_CLIENT_RETRY, resolveRetryOptions } from '../../utils/http/retry-policy';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -83,19 +86,7 @@ export class ApiClient {
       ...options.headers
     };
 
-    // Convert params to URLSearchParams
-    const searchParams = new URLSearchParams();
-    if (options.params) {
-      Object.entries(options.params).forEach(([key, value]: [string, any]) => {
-        // Array values are serialized as repeated params (key=a&key=b) rather than a
-        // single comma-joined value, which APIs expecting a collection reject.
-        if (Array.isArray(value)) {
-          value.forEach((item) => searchParams.append(key, String(item)));
-        } else {
-          searchParams.append(key, String(value));
-        }
-      });
-    }
+    const searchParams = toSearchParams(options.params);
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
     let body = undefined;
@@ -104,13 +95,21 @@ export class ApiClient {
       body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
     }
 
+    // Retrying is off unless the caller supplied settings, so service methods keep their
+    // existing single-attempt behaviour. `retryOptions` and `timeoutOptions` are the deprecated
+    // spellings, honoured only when the current field is absent.
+    const retrySettings = resolveRetryOptions(
+      options.retry ?? options.retryOptions,
+      DEFAULT_API_CLIENT_RETRY
+    );
+    const timeoutMs = options.timeoutMs ?? options.timeoutOptions?.timeout;
+
     try {
-      const response = await fetch(fullUrl, {
-        method,
-        headers,
-        body,
-        signal: options.signal
-      });
+      const response = await fetchWithRetry(
+        fullUrl,
+        { method, headers, body },
+        { retry: retrySettings, timeoutMs, signal: options.signal }
+      );
 
       if (!response.ok) {
         const errorInfo = await errorResponseParser.parse(response);

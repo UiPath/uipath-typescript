@@ -56,5 +56,15 @@ export * from './errors';
 // Pagination (common across all services)
 export * from '../utils/pagination';
 
+// HTTP helpers for calling non-UiPath endpoints
+export { httpRequest } from '../utils/http/http-request';
+export { wait } from '../utils/http/fetch-with-retry';
+export type {
+  HttpRequestInit,
+  HttpResponse,
+  RetryOptions,
+  BackoffStrategy,
+} from '../models/common/http.types';
+
 // Export telemetry
 export * from './telemetry';

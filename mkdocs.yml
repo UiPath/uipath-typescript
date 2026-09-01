@@ -85,6 +85,7 @@ plugins:
           - getting-started.md: Introduction to UiPath TypeScript SDK
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
+          - helpers.md: Helper methods guide
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/JobServiceModel.md: Job service methods
@@ -177,6 +178,7 @@ nav:
       - Authentication: authentication.md
       - OAuth Scopes: oauth-scopes.md
       - Pagination: pagination.md
+      - Helper Methods: helpers.md
       - Error Handling: error-handling.md
   - API Reference:
       - Services:

@@ -1,4 +1,5 @@
 import { PaginationType } from '../../utils/pagination/internal-types';
+import type { RetryOptions } from './http.types';
 
 /**
  * HTTP methods supported by the API client
@@ -21,21 +22,10 @@ export type QueryParams = Record<string, string | number | boolean | Array<strin
 export type Headers = Record<string, string>;
 
 /**
- * Options for request retries
- */
-export interface RetryOptions {
-  /** Maximum number of retry attempts */
-  maxRetries?: number;
-  /** Base delay between retries in milliseconds */
-  retryDelay?: number;
-  /** Whether to use exponential backoff */
-  useExponentialBackoff?: boolean;
-  /** Status codes that should trigger a retry */
-  retryableStatusCodes?: number[];
-}
-
-/**
  * Options for request timeouts
+ *
+ * @deprecated Set {@link RequestSpec.timeoutMs} on the request instead. `abortOnTimeout` has no
+ * effect — a timeout always aborts the request.
  */
 export interface TimeoutOptions {
   /** Request timeout in milliseconds */
@@ -90,10 +80,26 @@ export interface RequestSpec {
   /** Expected response type */
   responseType?: ResponseType;
   
-  /** Request timeout options */
+  /** Timeout for a single attempt, in milliseconds. Unbounded unless supplied. */
+  timeoutMs?: number;
+
+  /**
+   * Request timeout options.
+   *
+   * @deprecated Use {@link RequestSpec.timeoutMs}. `timeoutOptions.timeout` is still honoured
+   * when `timeoutMs` is not supplied; scheduled for removal in a future minor release.
+   */
   timeoutOptions?: TimeoutOptions;
   
-  /** Retry behavior options */
+  /** How to retry this request. No retrying unless supplied. */
+  retry?: RetryOptions;
+
+  /**
+   * Retry behavior options.
+   *
+   * @deprecated Use {@link RequestSpec.retry}. Still honoured when `retry` is not supplied;
+   * scheduled for removal in a future minor release.
+   */
   retryOptions?: RetryOptions;
   
   /** Body transformation options */
