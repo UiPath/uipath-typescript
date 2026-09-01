@@ -49,6 +49,40 @@ export interface AttachmentResponse {
 }
 
 /**
+ * A job attachment as delivered to an automation's input by the platform.
+ *
+ * Declare a field of this type in a coded function's input contract to receive
+ * a file at runtime — Studio Web and Orchestrator render a file picker for it
+ * and pass the selected file's metadata in this shape. The type carries
+ * metadata only; fetch the content with `attachments.getById()`.
+ *
+ * Field names are intentionally PascalCase: they mirror the platform's
+ * `job-attachment` schema verbatim, so the received value matches this type
+ * with no transformation.
+ */
+export interface JobAttachmentSchema {
+  /**
+   * UUID of the attachment
+   */
+  ID: string;
+
+  /**
+   * Name of the attachment file, including its extension
+   */
+  FullName: string;
+
+  /**
+   * MIME type of the attachment content
+   */
+  MimeType: string;
+
+  /**
+   * Additional metadata associated with the attachment
+   */
+  Metadata?: Record<string, string>;
+}
+
+/**
  * Options for getting an attachment by ID
  */
 export interface AttachmentGetByIdOptions extends BaseOptions {};
