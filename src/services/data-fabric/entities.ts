@@ -49,8 +49,9 @@ import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
-import { FOLDER_KEY, RESPONSE_TYPES } from '../../utils/constants/headers';
+import { FOLDER_KEY, RESPONSE_TYPES, UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
+import type { IUiPath } from '../../core/types';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
 import {
@@ -95,6 +96,10 @@ function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
+  constructor(instance: IUiPath) {
+    super(instance, { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK });
+  }
+
   @track('Entities.GetById')
   async getById(id: string, options?: EntityGetByIdOptions): Promise<EntityGetResponse> {
     // Get entity metadata

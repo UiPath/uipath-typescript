@@ -9,6 +9,21 @@ export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
 export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
 export const  TRACEPARENT = 'traceparent';
 export const  UIPATH_TRACEPARENT_ID = 'x-uipath-traceparent-id';
+/**
+ * Identifies SDK-originated requests. Set once per DF service via
+ * `BaseService`'s constructor `headers` arg so `ApiClient` includes
+ * it on every request from that service.
+ *
+ * @internal
+ */
+export const  UIPATH_SOURCE = 'x-uipath-source';
+
+/**
+ * Value sent with the `UIPATH_SOURCE` header to identify this SDK.
+ *
+ * @internal
+ */
+export const  UIPATH_TYPESCRIPT_SDK = 'uipath-typescript-sdk';
 
 /**
  * Content type constants for HTTP requests/responses

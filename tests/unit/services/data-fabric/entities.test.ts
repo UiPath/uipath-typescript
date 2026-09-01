@@ -56,6 +56,7 @@ import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
 import { DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints/data-fabric";
 import { SqlFieldType, FieldSchemaPayload } from "@/models/data-fabric/entities.internal-types";
+import { UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from "../../../../src/utils/constants/headers";
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -95,6 +96,13 @@ describe("EntityService Unit Tests", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("constructor", () => {
+    it("should send x-uipath-source: uipath-typescript-sdk on every ApiClient request", () => {
+      const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
+      expect(clientConfig).toEqual({ headers: { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK } });
+    });
   });
 
   describe("getById", () => {
