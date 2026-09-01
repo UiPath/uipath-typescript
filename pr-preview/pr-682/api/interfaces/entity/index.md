@@ -75,8 +75,6 @@ await entities.create("orderLine", [
 
 > **deleteAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
 
-**`Experimental`**
-
 Removes an attachment from a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
@@ -150,8 +148,6 @@ await entities.deleteById(<id>, { folderKey: "<folderKey>" });
 
 > **deleteRecord**(`ref`: `EntityRef`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
 
-**`Experimental`**
-
 Deletes a single record from an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records. Use this method if you need trigger events to fire for the deleted record.
@@ -181,8 +177,6 @@ await entities.deleteRecord({ name: "Customer" }, "<recordId>", { folderKey: "<f
 ### ~~deleteRecordById()~~
 
 > **deleteRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
-
-**`Experimental`**
 
 Deletes a single record from an entity by entity ID and record ID
 
@@ -214,8 +208,6 @@ await entities.deleteRecordById("<entityId>", "<recordId>");
 
 > **deleteRecords**(`ref`: `EntityRef`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
 
-**`Experimental`**
-
 Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use [deleteRecord](#deleterecord) if you need trigger events to fire for the deleted record.
@@ -245,8 +237,6 @@ await entities.deleteRecords({ name: "Customer" }, ["<recordId-1>", "<recordId-2
 ### ~~deleteRecordsById()~~
 
 > **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
-
-**`Experimental`**
 
 Deletes data from an entity by entity ID
 
@@ -285,8 +275,6 @@ await entities.deleteRecordsById(<entityId>, [
 ### downloadAttachment()
 
 > **downloadAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
-
-**`Experimental`**
 
 Downloads an attachment stored in a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
@@ -409,8 +397,6 @@ if (customerEntity) {
 ### getAllRecords()
 
 > **getAllRecords**\<`T`>(`entityId`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
-
-**`Experimental`**
 
 Gets entity records by entity ID
 
@@ -544,8 +530,6 @@ const records = await entity.getAllRecords();
 
 > **getRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByIdOptions`): `Promise`\<`EntityRecord`>
 
-**`Experimental`**
-
 Gets a single entity record by entity ID and record ID
 
 Returns the full record, including the complete content of `MULTILINE_MAX` fields.
@@ -587,8 +571,6 @@ const record = await entities.getRecordById(<entityId>, recordId, {
 
 > **getRecordByName**(`name`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByNameOptions`): `Promise`\<`EntityRecord`>
 
-**`Experimental`**
-
 Gets a single entity record by entity name and record ID
 
 Sibling of [getRecordById](#getrecordbyid) that addresses the entity by name. Returns the full record, including the complete content of `MULTILINE_MAX` fields.
@@ -622,8 +604,6 @@ const record = await entities.getRecordByName("Customer", recordId, { folderKey:
 ### getRecordsByName()
 
 > **getRecordsByName**\<`T`>(`name`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
-
-**`Experimental`**
 
 Gets entity records by entity name.
 
@@ -663,8 +643,6 @@ const records = await entities.getRecordsByName("Customer", { folderKey: "<folde
 
 > **importRecords**(`ref`: `EntityRef`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
 
-**`Experimental`**
-
 Imports records from a CSV file into an entity, identified by ref (`{ id }` or `{ name }`)
 
 #### Parameters
@@ -695,8 +673,6 @@ await entities.importRecords({ name: "Customer" }, fileInput.files[0], { folderK
 
 > **importRecordsById**(`id`: `string`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
 
-**`Experimental`**
-
 Imports records from a CSV file into an entity
 
 #### Parameters
@@ -725,8 +701,6 @@ const result = await entities.importRecordsById(<id>, fileInput.files[0]);
 ### insertRecord()
 
 > **insertRecord**(`ref`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
-
-**`Experimental`**
 
 Inserts a single record into an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -760,8 +734,6 @@ await entities.insertRecord({ name: "Customer" }, { name: "John", age: 30 }, { f
 ### ~~insertRecordById()~~
 
 > **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
-
-**`Experimental`**
 
 Inserts a single record into an entity by entity ID
 
@@ -804,8 +776,6 @@ await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
 
 > **insertRecords**(`ref`: `EntityRef`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
 
-**`Experimental`**
-
 Inserts one or more records into an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Records inserted using insertRecords will not trigger Data Fabric trigger events. Use [insertRecord](#insertrecord) if you need trigger events to fire for each inserted record.
@@ -838,8 +808,6 @@ await entities.insertRecords({ name: "Customer" }, [{ name: "John", age: 30 }], 
 ### ~~insertRecordsById()~~
 
 > **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
-
-**`Experimental`**
 
 Inserts one or more records into an entity by entity ID
 
@@ -890,8 +858,6 @@ await entities.insertRecordsById(<entityId>, [
 
 > **queryRecords**\<`T`>(`ref`: `EntityRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
-**`Experimental`**
-
 Queries entity records with filters, sorting, aggregates, and SDK-managed pagination, identified by ref (`{ id }` or `{ name }`)
 
 `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
@@ -939,8 +905,6 @@ if (page1.hasNextPage) {
 ### ~~queryRecordsById()~~
 
 > **queryRecordsById**\<`T`>(`id`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
-
-**`Experimental`**
 
 Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
 
@@ -1112,8 +1076,6 @@ await entities.updateById(<id>, {
 
 > **updateRecord**(`ref`: `EntityRef`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
 
-**`Experimental`**
-
 Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
@@ -1147,8 +1109,6 @@ await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Up
 ### ~~updateRecordById()~~
 
 > **updateRecordById**(`entityId`: `string`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
-
-**`Experimental`**
 
 Updates a single record in an entity by entity ID
 
@@ -1192,8 +1152,6 @@ await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }
 
 > **updateRecords**(`ref`: `EntityRef`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
 
-**`Experimental`**
-
 Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
 
 Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
@@ -1226,8 +1184,6 @@ await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Upd
 ### ~~updateRecordsById()~~
 
 > **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
-
-**`Experimental`**
 
 Updates data in an entity by entity ID
 
@@ -1276,8 +1232,6 @@ await entities.updateRecordsById(<entityId>, [
 ### uploadAttachment()
 
 > **uploadAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
-
-**`Experimental`**
 
 Uploads an attachment to a File-type field of an entity record.
 

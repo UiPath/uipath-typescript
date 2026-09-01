@@ -3140,7 +3140,6 @@
 <blockquote>
 <p><strong>deleteAttachment</strong>(<code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteAttachmentOptions/"><code>EntityDeleteAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityDeleteAttachmentResponse/"><code>EntityDeleteAttachmentResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Deletes an attachment from a File-type field of an entity record</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
@@ -3177,7 +3176,6 @@
 <blockquote>
 <p><strong>deleteRecord</strong>(<code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteRecordByIdOptions/"><code>EntityDeleteRecordByIdOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Delete a single record from this entity</p>
 <p>Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
 Use this method if you need trigger events to fire for the deleted record.</p>
@@ -3211,7 +3209,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>deleteRecords</strong>(<code>recordIds</code>: <code>string</code>[], <code>options?</code>: <a href="../EntityDeleteRecordsOptions/"><code>EntityDeleteRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityDeleteResponse/"><code>EntityDeleteResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Delete data from this entity</p>
 <p>Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use <a href="#deleterecord">deleteRecord</a> if you need trigger events to fire for the deleted record.</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
@@ -3244,7 +3241,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>downloadAttachment</strong>(<code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDownloadAttachmentOptions/"><code>EntityDownloadAttachmentOptions</code></a>): <code>Promise</code>&lt;<code>Blob</code>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Downloads an attachment stored in a File-type field of an entity record</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
@@ -3281,7 +3277,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>getAllRecords</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Get all records from this entity</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
 <table>
@@ -3323,7 +3318,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>getRecord</strong>(<code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetRecordByIdOptions/"><code>EntityGetRecordByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Gets a single record from this entity by record ID</p>
 <h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
@@ -3355,7 +3349,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>importRecords</strong>(<code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityImportRecordsByIdOptions/"><code>EntityImportRecordsByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityImportRecordsResponse/"><code>EntityImportRecordsResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Imports records from a CSV file into this entity</p>
 <h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
@@ -3396,7 +3389,6 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <blockquote>
 <p><strong>insertRecord</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityInsertRecordOptions/"><code>EntityInsertRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityInsertResponse/"><code>EntityInsertResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Insert a single record into this entity</p>
 <p>Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.
 Use this method if you need trigger events to fire for the inserted record.</p>
@@ -3430,7 +3422,6 @@ Use this method if you need trigger events to fire for the inserted record.</p>
 <blockquote>
 <p><strong>insertRecords</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;[], <code>options?</code>: <a href="../EntityInsertRecordsOptions/"><code>EntityInsertRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityBatchInsertResponse/"><code>EntityBatchInsertResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Insert multiple records into this entity using insertRecords</p>
 <p>Note: Inserting multiple records do not trigger Data Fabric trigger events. Use <a href="#insertrecord">insertRecord</a> if you need
 trigger events to fire for each inserted record.</p>
@@ -3464,7 +3455,6 @@ trigger events to fire for each inserted record.</p>
 <blockquote>
 <p><strong>queryRecords</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination</p>
 <p>Cross-entity joins are supported via the <code>joins</code> option — see <a href="../EntityJoin/">EntityJoin</a>
 for constraints and the result-row key format.</p>
@@ -3617,7 +3607,6 @@ for constraints and the result-row key format.</p>
 <blockquote>
 <p><strong>updateRecord</strong>(<code>recordId</code>: <code>string</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Update a single record in this entity</p>
 <p>Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
 Use this method if you need trigger events to fire for the updated record.</p>
@@ -3656,7 +3645,6 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <blockquote>
 <p><strong>updateRecords</strong>(<code>data</code>: <a href="../EntityRecord/"><code>EntityRecord</code></a>[], <code>options?</code>: <a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Update data in this entity</p>
 <p>Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use <a href="#updaterecord">updateRecord</a> if you need
 trigger events to fire for each updated record.</p>
@@ -3690,7 +3678,6 @@ trigger events to fire for each updated record.</p>
 <blockquote>
 <p><strong>uploadAttachment</strong>(<code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityUploadAttachmentOptions/"><code>EntityUploadAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityUploadAttachmentResponse/"><code>EntityUploadAttachmentResponse</code></a>&gt;</p>
 </blockquote>
-<p><strong><code>Experimental</code></strong></p>
 <p>Uploads an attachment to a File-type field of an entity record</p>
 <h4 id="parameters_14">Parameters<a class="headerlink" href="#parameters_14" title="Permanent link">&para;</a></h4>
 <table>
