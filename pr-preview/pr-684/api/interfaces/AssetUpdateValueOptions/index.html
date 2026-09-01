@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#extends" class="md-skip">
+        <a href="#properties" class="md-skip">
           Skip to content
         </a>
       
@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -2897,17 +2927,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#extends" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Extends
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2942,10 +2961,9 @@
 
 <p>Options for <a href="../AssetServiceModel/#updatevalue">AssetServiceModel.updateValue</a>. Folder scoping applies to both
 the ref's name/key lookup and the update — the same folder options drive both calls.</p>
-<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a></li>
-</ul>
+<p>Only folder-scoping fields are accepted; <code>expand</code> / <code>select</code> are intentionally absent because
+the internal lookup needs the full asset shape (name, valueType, valueScope, description) to
+round-trip the update body without a redundant follow-up GET.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2956,11 +2974,6 @@ the ref's name/key lookup and the update — the same folder options drive both 
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><a id="expand"></a> <code>expand?</code></td>
-<td><code>string</code></td>
-<td>-</td>
-</tr>
 <tr>
 <td><a id="folderid"></a> <code>folderId?</code></td>
 <td><code>number</code></td>
@@ -2975,11 +2988,6 @@ the ref's name/key lookup and the update — the same folder options drive both 
 <td><a id="folderpath"></a> <code>folderPath?</code></td>
 <td><code>string</code></td>
 <td>Slash-delimited folder path, e.g. <code>'Shared/Finance'</code>.</td>
-</tr>
-<tr>
-<td><a id="select"></a> <code>select?</code></td>
-<td><code>string</code></td>
-<td>-</td>
 </tr>
 </tbody>
 </table>
