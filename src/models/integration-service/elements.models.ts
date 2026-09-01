@@ -18,6 +18,13 @@ import {
 } from './elements.types';
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for inspecting connector elements (objects, activities, trigger events,
  * field schemas) on UiPath Integration Service.
  *
@@ -42,6 +49,12 @@ import {
 export interface ElementsServiceModel {
   /**
    * List objects (resources) exposed by a connector.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param elementKey - Connector key (e.g. `uipath-slack`)
    * @param options - Filtering options (type, subtype, hasEvents, hasBulk)
@@ -69,6 +82,12 @@ export interface ElementsServiceModel {
   /**
    * List curated activities exposed by a connector.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param elementKey - Connector key
    * @param options - Optional `version` to pin to a specific connector schema
    * @returns Promise resolving to an array of {@link ElementActivity}
@@ -85,6 +104,12 @@ export interface ElementsServiceModel {
   /**
    * Get metadata for a single connector object (field schema, supported methods,
    * parameters). Connection-independent — returns the standard schema only.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param elementKey - Connector key
    * @param objectName - Object name (e.g. `messages`)
@@ -105,6 +130,12 @@ export interface ElementsServiceModel {
   /**
    * List event objects (trigger sources) for a connector's event operation.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param elementKey - Connector key
    * @param operationName - Event operation name (e.g. `INDEX_COMPLETED`)
    * @param options - Optional `version`
@@ -122,6 +153,12 @@ export interface ElementsServiceModel {
 
   /**
    * Get metadata for a single event object.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param elementKey - Connector key
    * @param operationName - Event operation name
@@ -148,6 +185,12 @@ export interface ElementsServiceModel {
    * List objects exposed by a connection instance (includes connector custom
    * fields discovered from the live system).
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param connectionId - Connection GUID
    * @param elementKey - Connector key
    * @param options - Filtering options
@@ -166,6 +209,12 @@ export interface ElementsServiceModel {
   /**
    * Get instance-scoped metadata for a single object — includes connector
    * custom fields discovered from the live system.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param connectionId - Connection GUID
    * @param elementKey - Connector key
@@ -191,6 +240,12 @@ export interface ElementsServiceModel {
   /**
    * List event objects for a connection instance.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param connectionId - Connection GUID
    * @param elementKey - Connector key
    * @param operationName - Event operation name
@@ -214,6 +269,12 @@ export interface ElementsServiceModel {
 
   /**
    * Get instance-scoped metadata for a single event object.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param connectionId - Connection GUID
    * @param elementKey - Connector key
