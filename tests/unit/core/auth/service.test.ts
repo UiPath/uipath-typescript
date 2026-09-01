@@ -3,6 +3,7 @@ import { AuthService } from '../../../../src/core/auth/service';
 import { ExecutionContext } from '../../../../src/core/context/execution';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { IDENTITY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import type { LoginFields } from '../../../../src/core/config/sdk-config';
 
 // Mock platform detection for Node test environment
 vi.mock('../../../../src/utils/platform', () => ({
@@ -18,14 +19,15 @@ describe('AuthService', () => {
   const codeChallenge = TEST_CONSTANTS.CODE_CHALLENGE;
   const scope = TEST_CONSTANTS.OAUTH_SCOPE;
 
-  function createService(orgName: string) {
+  function createService(orgName: string, extra: LoginFields = {}) {
     const config = {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName,
       tenantName: TEST_CONSTANTS.TENANT_ID,
       clientId,
       redirectUri,
-      scope
+      scope,
+      ...extra
     };
     return new AuthService(config, new ExecutionContext());
   }
@@ -52,9 +54,9 @@ describe('AuthService', () => {
       expect(params.get('scope')).toContain(scope);
     });
 
-    // acr_values is never sent: Identity resolves the org from client_id, and
-    // sending it routes directly to the org's SAML IdP, blocking Basic Auth users.
-    it('should never emit acr_values, regardless of orgName format', () => {
+    // acr_values is not sent by default: Identity resolves the org from client_id,
+    // and sending it routes directly to the org's SAML IdP, blocking Basic Auth users.
+    it('should not emit acr_values by default, regardless of orgName format', () => {
       for (const orgName of [
         TEST_CONSTANTS.ORGANIZATION_ID,
         TEST_CONSTANTS.GUID_ORG_ID,
@@ -64,6 +66,26 @@ describe('AuthService', () => {
         const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
         expect(new URL(url).searchParams.has('acr_values')).toBe(false);
         expect(url).not.toContain('acr_values');
+      }
+    });
+
+    it('should emit acr_values with the org id when enforceSso is enabled', () => {
+      const service = createService(TEST_CONSTANTS.GUID_ORG_ID, { enforceSso: true });
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      expect(new URL(url).searchParams.get('acr_values')).toBe(`tenant:${TEST_CONSTANTS.GUID_ORG_ID}`);
+    });
+
+    it('should ignore enforceSso and warn when orgName is not an org id', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        for (const orgName of [ TEST_CONSTANTS.ORGANIZATION_ID, TEST_CONSTANTS.INVALID_GUID_ORG_ID ]) {
+          const service = createService(orgName, { enforceSso: true });
+          const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+          expect(url).not.toContain('acr_values');
+        }
+        expect(warn).toHaveBeenCalledTimes(2);
+      } finally {
+        warn.mockRestore();
       }
     });
 

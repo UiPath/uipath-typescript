@@ -7,6 +7,7 @@
 - **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
+- **Place private methods at the bottom of the class** — public methods first, private helpers last. This keeps the public API surface visible at the top without requiring readers to scroll past implementation details.
 - **Keep inline code comments concise** — say what is non-obvious in a single phrase. Avoid restating what the code already expresses or adding multi-sentence commentary where a short comment suffices.
 - No `any` type — use `unknown` if truly unknown, then validate.
 - **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
@@ -294,3 +295,4 @@ Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None`
 - **NEVER** leave unused code — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
 - **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure.
+- **Silent catches must emit a `console.warn`** — when a `try/catch` swallows an error without re-throwing (e.g., best-effort reads from an ambient channel or optional DOM lookup), always call `console.warn(error)` so issues remain observable in the runtime console (browser, Node.js, and Workers). A completely silent catch makes failures invisible during development and debugging.

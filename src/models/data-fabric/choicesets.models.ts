@@ -126,7 +126,7 @@ export interface ChoiceSetServiceModel {
    *   description: "Ticket priority categories",
    * });
    * ```
-   * @internal
+   * @experimental
    */
   create(name: string, options?: ChoiceSetCreateOptions): Promise<string>;
 
@@ -151,7 +151,7 @@ export interface ChoiceSetServiceModel {
    *   description: "Updated description",
    * });
    * ```
-   * @internal
+   * @experimental
    */
   updateById(choiceSetId: string, options: ChoiceSetUpdateOptions): Promise<void>;
 
@@ -173,7 +173,7 @@ export interface ChoiceSetServiceModel {
    * // Folder-scoped choice set
    * await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
    * ```
-   * @internal
+   * @experimental
    */
   deleteById(choiceSetId: string, options?: ChoiceSetDeleteByIdOptions): Promise<void>;
 

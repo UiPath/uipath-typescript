@@ -45,6 +45,11 @@
 
 export { UiPath } from './uipath';
 export type { UiPathSDKConfig } from './config/sdk-config';
+export type {
+  CodedFunctionContext,
+  CodedFunctionPlatform,
+  CodedFunctionRobot,
+} from './config/function-context';
 export type { TokenInfo, LogoutOptions } from './auth/types';
 export * from './errors';
 

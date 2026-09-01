@@ -74,6 +74,9 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `deleteAttachment()` | `DataFabric.Data.Write` |
 | `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
+| `create()` | `DataFabric.Schema.Write` |
+| `updateById()` / `update()` | `DataFabric.Schema.Write` |
+| `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
 
 ## ChoiceSets
 
@@ -81,6 +84,9 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
 | `getById()` | `DataFabric.Data.Read` |
+| `create()` | `DataFabric.Schema.Write` |
+| `updateById()` | `DataFabric.Schema.Write` |
+| `deleteById()` | `DataFabric.Schema.Write` |
 
 ## Maestro Processes
 
