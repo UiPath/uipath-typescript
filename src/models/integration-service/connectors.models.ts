@@ -19,6 +19,13 @@ import { ConnectionGetResponse } from './connections.models';
 export interface ConnectorGetResponse extends RawConnectorGetResponse {}
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for inspecting UiPath Integration Service connectors.
  *
  * Connectors are the catalog of integrations available on a tenant (Slack,
@@ -40,6 +47,12 @@ export interface ConnectorGetResponse extends RawConnectorGetResponse {}
 export interface ConnectorsServiceModel {
   /**
    * List all connectors available on this tenant.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Returns a plain array — the Integration Service does not paginate this endpoint.
    *
@@ -68,6 +81,12 @@ export interface ConnectorsServiceModel {
   /**
    * Get a single connector by key or numeric ID.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param keyOrId - Connector key (e.g. `uipath-slack`) or numeric ID as a string
    * @returns Promise resolving to a {@link ConnectorGetResponse}
    * @example
@@ -84,6 +103,12 @@ export interface ConnectorsServiceModel {
 
   /**
    * Get the default connection for a connector in the current folder.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Each connector may have a single connection marked as default per folder;
    * use this to resolve "which connection should I use for Slack?" without
@@ -114,6 +139,12 @@ export interface ConnectorsServiceModel {
 
   /**
    * List all connections for a connector.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Returns a plain array — the Integration Service uses page-indexed
    * pagination (no continuation cursor). Increment `pageIndex` to walk pages.

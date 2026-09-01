@@ -22,6 +22,13 @@ import {
 export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods;
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for managing UiPath Integration Service connections.
  *
  * A connection represents an authenticated link to a third-party system (Salesforce,
@@ -42,6 +49,12 @@ export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods
 export interface ConnectionsServiceModel {
   /**
    * Get all connections, optionally scoped to a folder.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * Returns a plain array of connection entities. Pagination is page-indexed
    * via `pageIndex`/`pageSize`; there is no continuation cursor, so callers
@@ -92,6 +105,12 @@ export interface ConnectionsServiceModel {
   /**
    * Get a single connection by ID.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * @param connectionId - Connection GUID
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `includeConfigs` flag
    * @returns Promise resolving to a {@link ConnectionGetResponse}
@@ -126,6 +145,12 @@ export interface ConnectionsServiceModel {
   /**
    * Check whether a connection is currently active.
    *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
    * Returns the resolved state plus an optional error message. Use this before
    * invoking activities to surface a friendly error when the connection has
    * expired or been disabled.
@@ -155,6 +180,13 @@ export interface ConnectionsServiceModel {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Methods bound onto every {@link ConnectionGetResponse} entity.
  *
  * Each method closes over the connection's ID and delegates to the
@@ -163,6 +195,12 @@ export interface ConnectionsServiceModel {
 export interface ConnectionMethods {
   /**
    * Check whether this connection is currently active.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param options - Optional `forceRefresh` flag and folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to a {@link ConnectionPingResponse}
