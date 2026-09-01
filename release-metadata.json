@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.6.0",
+  "sdkVersion": "1.6.1-test.1",
   "services": [
     {
       "name": "AgentMemory",
@@ -214,6 +214,10 @@
           "since": null
         },
         {
+          "name": "getVariables",
+          "since": "1.6.1-test.1"
+        },
+        {
           "name": "pause",
           "since": null
         },
@@ -290,6 +294,52 @@
       ]
     },
     {
+      "name": "Connections",
+      "subpath": "@uipath/uipath-typescript/is-connections",
+      "since": "1.6.1-test.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "ping",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "reauthenticate",
+          "since": "1.6.1-test.1"
+        }
+      ]
+    },
+    {
+      "name": "Connectors",
+      "subpath": "@uipath/uipath-typescript/is-connectors",
+      "since": "1.6.1-test.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getConnections",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getDefaultConnection",
+          "since": "1.6.1-test.1"
+        }
+      ]
+    },
+    {
       "name": "ConversationalAgent",
       "subpath": "@uipath/uipath-typescript/conversational-agent",
       "since": null,
@@ -309,6 +359,49 @@
         {
           "name": "onConnectionStatusChanged",
           "since": null
+        }
+      ]
+    },
+    {
+      "name": "Elements",
+      "subpath": "@uipath/uipath-typescript/is-elements",
+      "since": "1.6.1-test.1",
+      "methods": [
+        {
+          "name": "getActivities",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getEventObjectMetadata",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getEventObjects",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getInstanceEventObjectMetadata",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getInstanceEventObjects",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getInstanceObjectMetadata",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getInstanceObjects",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getObjectMetadata",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getObjects",
+          "since": "1.6.1-test.1"
         }
       ]
     },
@@ -446,6 +539,21 @@
         {
           "name": "updateById",
           "since": null
+        }
+      ]
+    },
+    {
+      "name": "Functions",
+      "subpath": "@uipath/uipath-typescript/functions",
+      "since": "1.6.1-test.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "invoke",
+          "since": "1.6.1-test.1"
         }
       ]
     },
@@ -654,6 +762,37 @@
       ]
     },
     {
+      "name": "TaskCatalogs",
+      "subpath": "@uipath/uipath-typescript/tasks",
+      "since": "1.6.1-test.1",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getAll",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getByName",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "updateById",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "updateByName",
+          "since": "1.6.1-test.1"
+        }
+      ]
+    },
+    {
       "name": "Tasks",
       "subpath": "@uipath/uipath-typescript/tasks",
       "since": null,
@@ -671,6 +810,14 @@
           "since": null
         },
         {
+          "name": "createComment",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "editMetadata",
+          "since": "1.6.1-test.1"
+        },
+        {
           "name": "getAll",
           "since": null
         },
@@ -679,12 +826,32 @@
           "since": null
         },
         {
+          "name": "getComments",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getDataById",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "getDataByKey",
+          "since": "1.6.1-test.1"
+        },
+        {
           "name": "getUsers",
           "since": null
         },
         {
           "name": "reassign",
           "since": null
+        },
+        {
+          "name": "saveData",
+          "since": "1.6.1-test.1"
+        },
+        {
+          "name": "saveTags",
+          "since": "1.6.1-test.1"
         },
         {
           "name": "unassign",
