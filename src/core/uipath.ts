@@ -11,7 +11,7 @@ import { loadFromEnvironment } from './config/environment';
 import { configFromFunctionContext, isFunctionContext, type CodedFunctionContext } from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
-import { trustedEmbeddingOrigin } from './auth/host-token-request';
+import { hostEmbeddingOrigin } from './auth/host-token-request';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -185,7 +185,7 @@ export class UiPath implements IUiPath {
      * initialize tokenInfo with an empty token so getValidToken() can bootstrap via postMessage.
      * When an sdk call is made, the host passes the token to the sdk.
      */
-    if (hasSecretAuth || isInActionCenter || trustedEmbeddingOrigin) {
+    if (hasSecretAuth || isInActionCenter || hostEmbeddingOrigin) {
       this.#authService.authenticateWithSecret(config.secret ?? '');
       this.#initialized = true;
     }

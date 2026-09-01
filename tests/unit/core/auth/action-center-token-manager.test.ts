@@ -99,16 +99,21 @@ describe('ActionCenterTokenManager', () => {
     expect(mock.parentPostMessage).not.toHaveBeenCalled();
   });
 
-  it('rejects before registering a listener when basedomain is not a trusted origin', async () => {
-    mock = makeWindowMock('https://evil.example.com');
+  // Host origins are customer-configurable and follow no fixed pattern, so the
+  // basedomain is used as given — pinned as both the postMessage target and the
+  // only accepted event.origin.
+  it('pins the refresh to a non-uipath.com basedomain', async () => {
+    const customerOrigin = 'https://automation.customer-sf.internal';
+    mock = makeWindowMock(customerOrigin);
     global.window = mock as unknown as Window & typeof globalThis;
     manager = new ActionCenterTokenManager(MOCK_CONFIG, onTokenRefreshed);
 
     const expired: TokenInfo = { token: 'tok-old', type: 'secret', expiresAt: new Date(0) };
-    await expect(manager.refreshAccessToken(expired)).rejects.toBeInstanceOf(AuthenticationError);
-    // No listener registered — the inbound listener window is never opened
-    expect(mock.addEventListener).not.toHaveBeenCalledWith('message', expect.any(Function));
-    expect(mock.parentPostMessage).not.toHaveBeenCalled();
+    const refreshPromise = manager.refreshAccessToken(expired);
+    mock.dispatch(makeRefreshedEvent(customerOrigin, 'tok-new'));
+
+    expect(await refreshPromise).toBe('tok-new');
+    expect(mock.parentPostMessage).toHaveBeenCalledWith(expect.any(Object), customerOrigin);
   });
 
   // ---- refresh flow ----

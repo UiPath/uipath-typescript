@@ -4,40 +4,23 @@ import { embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 
 export const AUTHENTICATION_TIMEOUT = 8000;
 
-const TRUSTED_HOST_DOMAINS = ['uipath.com', 'uipath-dev.com'];
-
-/**
- * Returns true if the origin is a trusted UiPath host that may initiate
- * token delegation. Mirrors the same trust check used by ActionCenterTokenManager.
- */
-export function isValidHostOrigin(origin: string | null): boolean {
-  if (!origin) return false;
-  let hostname: string;
-  try {
-    ({ hostname } = new URL(origin));
-  } catch (error) {
-    console.warn('isValidHostOrigin: received a malformed origin URL', origin, error);
-    return false;
-  }
-  if (hostname === 'localhost') return true;
-  return TRUSTED_HOST_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
-}
-
 export function isTokenExpired(tokenInfo: TokenInfo): boolean {
   if (!tokenInfo?.expiresAt) return true;
   return new Date() >= tokenInfo.expiresAt;
 }
 
 /**
- * The validated host origin when the app is running as a trusted, generic
- * host-embedded app (`?host=embed&basedomain=<origin>` with an allowlisted
- * UiPath origin); otherwise null. Shared by TokenManager (to create the
+ * The host origin when the app is running as a generic host-embedded app
+ * (`?host=embed&basedomain=<origin>`); otherwise null. Host origins are
+ * customer-configurable and follow no fixed pattern, so the origin is taken as
+ * given and only pinned — every request is sent to it and only messages whose
+ * `event.origin` matches it are accepted. Shared by TokenManager (to create the
  * EmbeddedTokenManager) and UiPath init (to seed an empty token so getValidToken
  * can bootstrap the postMessage token flow), which previously duplicated this
  * condition inline.
  */
-export const trustedEmbeddingOrigin: string | null =
-  isHostEmbedded && embeddingOrigin && isValidHostOrigin(embeddingOrigin) ? embeddingOrigin : null;
+export const hostEmbeddingOrigin: string | null =
+  isHostEmbedded && embeddingOrigin ? embeddingOrigin : null;
 
 export interface HostTokenResponse {
   accessToken: string;

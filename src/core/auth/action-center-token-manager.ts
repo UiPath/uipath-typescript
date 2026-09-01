@@ -2,7 +2,7 @@ import { ActionCenterEventNames, ActionCenterEventResponsePayload } from '../../
 import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { Config } from '../config/config';
-import { HostTokenResponse, isTokenExpired, isValidHostOrigin, requestHostToken } from './host-token-request';
+import { HostTokenResponse, isTokenExpired, requestHostToken } from './host-token-request';
 
 export class ActionCenterTokenManager {
   private readonly parentOrigin = new URLSearchParams(window.location.search).get('basedomain');
@@ -32,18 +32,6 @@ export class ActionCenterTokenManager {
       );
     }
 
-    // Guard before requestHostToken registers the inbound listener — an untrusted
-    // basedomain would otherwise leave the listener live for the full timeout window,
-    // accepting a forged TOKENREFRESHED from that origin.
-    if (!isValidHostOrigin(parentOrigin)) {
-      return Promise.reject(
-        new AuthenticationError({
-          message: 'Cannot refresh token: basedomain is not a trusted UiPath host origin',
-          statusCode: HttpStatus.UNAUTHORIZED,
-        })
-      );
-    }
-
     const { promise } = requestHostToken({
       pinnedOrigin: parentOrigin,
       sendRequest: () => this.sendMessageToParent(ActionCenterEventNames.REFRESHTOKEN, {
@@ -68,9 +56,9 @@ export class ActionCenterTokenManager {
   }
 
   private sendMessageToParent(eventType: string, content?: unknown): void {
-    if (window.parent && isValidHostOrigin(this.parentOrigin)) {
+    if (window.parent && this.parentOrigin) {
       try {
-        window.parent.postMessage({ eventType, content }, this.parentOrigin!);
+        window.parent.postMessage({ eventType, content }, this.parentOrigin);
       } catch (error) {
         console.warn('ActionCenterTokenManager: postMessage to host failed', JSON.stringify(error));
       }
