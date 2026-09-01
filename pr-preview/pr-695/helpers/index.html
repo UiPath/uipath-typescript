@@ -3146,8 +3146,7 @@ options to get one:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// one attempt, five second ceiling, no retrying involved</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">httpRequest</span><span class="p">(</span><span class="s1">&#39;https://api.example.com/v1/orders&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">timeoutMs</span><span class="o">:</span><span class="w"> </span><span class="kt">5000</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<p>Two cases never retry, regardless of settings: a <code>ReadableStream</code> body (it is consumed by the first
-attempt and cannot be replayed) and a request cancelled through <code>signal</code>.</p>
+<p>A request cancelled through <code>signal</code> never retries, regardless of settings.</p>
 <p>Use <code>wait</code> to pause between calls of your own:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">wait</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>

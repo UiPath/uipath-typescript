@@ -89,7 +89,7 @@ Set `retryNetworkErrors: false` to retry only on response status codes, leaving 
 const response = await httpRequest('https://api.example.com/v1/orders', { timeoutMs: 5000 });
 ```
 
-Two cases never retry, regardless of settings: a `ReadableStream` body (it is consumed by the first attempt and cannot be replayed) and a request cancelled through `signal`.
+A request cancelled through `signal` never retries, regardless of settings.
 
 Use `wait` to pause between calls of your own:
 
