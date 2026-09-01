@@ -2909,13 +2909,13 @@ await entities.create("orderLine", [
 
 ### deleteAttachment()
 
-> **deleteAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
+> **deleteAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
 
 Removes an attachment from a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
 - `options?`: `EntityDeleteAttachmentOptions` — Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -2982,7 +2982,7 @@ await entities.deleteById(<id>, { folderKey: "<folderKey>" });
 
 ### deleteRecord()
 
-> **deleteRecord**(`ref`: `EntityRef`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
+> **deleteRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `options?`: `EntityDeleteRecordByIdOptions`): `Promise`\<`void`>
 
 Deletes a single record from an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -2990,7 +2990,7 @@ Note: Data Fabric supports trigger events only on individual deletes, not on del
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to delete
 - `options?`: `EntityDeleteRecordByIdOptions` — Optional delete options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
@@ -3042,7 +3042,7 @@ await entities.deleteRecordById("<entityId>", "<recordId>");
 
 ### deleteRecords()
 
-> **deleteRecords**(`ref`: `EntityRef`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
+> **deleteRecords**(`entityRef`: `EntityRef`, `recordIds`: `string`[], `options?`: `EntityDeleteRecordsOptions`): `Promise`\<`EntityDeleteResponse`>
 
 Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -3050,7 +3050,7 @@ Note: Records deleted using deleteRecords will not trigger Data Fabric trigger e
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordIds`: `string`[] — Array of record UUIDs to delete
 - `options?`: `EntityDeleteRecordsOptions` — Delete options. The `folderKey` property is **experimental**.
 
@@ -3110,13 +3110,13 @@ await entities.deleteRecordsById(<entityId>, [
 
 ### downloadAttachment()
 
-> **downloadAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
+> **downloadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDownloadAttachmentOptions`): `Promise`\<`Blob`>
 
 Downloads an attachment stored in a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
 - `options?`: `EntityDownloadAttachmentOptions` — Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -3332,7 +3332,7 @@ const batchResult = await entity.insertRecords([
 
 ### getByName()
 
-> **getByName**(`name`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
+> **getByName**(`entityName`: `string`, `options?`: `EntityGetByNameOptions`): `Promise`\<`EntityGetResponse`>
 
 Gets entity metadata by entity name with attached operation methods.
 
@@ -3340,7 +3340,7 @@ Sibling of [getById](#getbyid) that addresses the entity by name — useful when
 
 #### Parameters
 
-- `name`: `string` — Name of the entity
+- `entityName`: `string` — Name of the entity
 - `options?`: `EntityGetByNameOptions` — Optional lookup options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
 #### Returns
@@ -3405,7 +3405,7 @@ const record = await entities.getRecordById(<entityId>, recordId, {
 
 ### getRecordByName()
 
-> **getRecordByName**(`name`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByNameOptions`): `Promise`\<`EntityRecord`>
+> **getRecordByName**(`entityName`: `string`, `recordId`: `string`, `options?`: `EntityGetRecordByNameOptions`): `Promise`\<`EntityRecord`>
 
 Gets a single entity record by entity name and record ID
 
@@ -3413,7 +3413,7 @@ Sibling of [getRecordById](#getrecordbyid) that addresses the entity by name. Re
 
 #### Parameters
 
-- `name`: `string` — Name of the entity
+- `entityName`: `string` — Name of the entity
 - `recordId`: `string` — UUID of the record
 - `options?`: `EntityGetRecordByNameOptions` — Query options. The `folderKey` property is **experimental**.
 
@@ -3439,7 +3439,7 @@ const record = await entities.getRecordByName("Customer", recordId, { folderKey:
 
 ### getRecordsByName()
 
-> **getRecordsByName**\<`T`>(`name`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+> **getRecordsByName**\<`T`>(`entityName`: `string`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
 Gets entity records by entity name.
 
@@ -3453,7 +3453,7 @@ Sibling of [getAllRecords](#getallrecords) that addresses the entity by name —
 
 #### Parameters
 
-- `name`: `string` — Name of the entity
+- `entityName`: `string` — Name of the entity
 - `options?`: `T` — Query options. The `folderKey` property is **experimental**.
 
 #### Returns
@@ -3477,13 +3477,13 @@ const records = await entities.getRecordsByName("Customer", { folderKey: "<folde
 
 ### importRecords()
 
-> **importRecords**(`ref`: `EntityRef`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
+> **importRecords**(`entityRef`: `EntityRef`, `file`: `EntityFileType`, `options?`: `EntityImportRecordsByIdOptions`): `Promise`\<`EntityImportRecordsResponse`>
 
 Imports records from a CSV file into an entity, identified by ref (`{ id }` or `{ name }`)
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `file`: `EntityFileType` — CSV file to import as a Blob or File or Uint8Array
 - `options?`: `EntityImportRecordsByIdOptions` — Optional import options such as `folderKey` for folder-scoped entities. The `folderKey` property is **experimental**.
 
@@ -3536,7 +3536,7 @@ const result = await entities.importRecordsById(<id>, fileInput.files[0]);
 
 ### insertRecord()
 
-> **insertRecord**(`ref`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
+> **insertRecord**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityInsertRecordOptions`): `Promise`\<`EntityInsertResponse`>
 
 Inserts a single record into an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -3544,7 +3544,7 @@ Note: Data Fabric supports trigger events only on individual inserts, not on ins
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`> — Record to insert
 - `options?`: `EntityInsertRecordOptions` — Insert options. The `folderKey` property is **experimental**.
 
@@ -3610,7 +3610,7 @@ await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
 
 ### insertRecords()
 
-> **insertRecords**(`ref`: `EntityRef`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
+> **insertRecords**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>[], `options?`: `EntityInsertRecordsOptions`): `Promise`\<`EntityBatchInsertResponse`>
 
 Inserts one or more records into an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -3618,7 +3618,7 @@ Note: Records inserted using insertRecords will not trigger Data Fabric trigger 
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `Record`\<`string`, `any`>[] — Array of records to insert
 - `options?`: `EntityInsertRecordsOptions` — Insert options. The `folderKey` property is **experimental**.
 
@@ -3692,7 +3692,7 @@ await entities.insertRecordsById(<entityId>, [
 
 ### queryRecords()
 
-> **queryRecords**\<`T`>(`ref`: `EntityRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
+> **queryRecords**\<`T`>(`entityRef`: `EntityRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`EntityRecord`> : `NonPaginatedResponse`\<`EntityRecord`>>
 
 Queries entity records with filters, sorting, aggregates, and SDK-managed pagination, identified by ref (`{ id }` or `{ name }`)
 
@@ -3706,7 +3706,7 @@ Cross-entity joins are supported via the `joins` option — see [EntityJoin](../
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `options?`: `T` — Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, joins, havingFilter, and pagination. The `folderKey` property is **experimental**.
 
 #### Returns
@@ -3910,7 +3910,7 @@ await entities.updateById(<id>, {
 
 ### updateRecord()
 
-> **updateRecord**(`ref`: `EntityRef`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
+> **updateRecord**(`entityRef`: `EntityRef`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
 
 Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -3918,7 +3918,7 @@ Note: Data Fabric supports trigger events only on individual updates, not on upd
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to update
 - `data`: `Record`\<`string`, `any`> — Key-value pairs of fields to update
 - `options?`: `EntityUpdateRecordOptions` — Update options. The `folderKey` property is **experimental**.
@@ -3986,7 +3986,7 @@ await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }
 
 ### updateRecords()
 
-> **updateRecords**(`ref`: `EntityRef`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
+> **updateRecords**(`entityRef`: `EntityRef`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
 
 Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
 
@@ -3994,7 +3994,7 @@ Note: Records updated using updateRecords will not trigger Data Fabric trigger e
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `data`: `EntityRecord`[] — Array of records to update. Each record MUST contain the record id.
 - `options?`: `EntityUpdateRecordsOptions` — Update options. The `folderKey` property is **experimental**.
 
@@ -4067,7 +4067,7 @@ await entities.updateRecordsById(<entityId>, [
 
 ### uploadAttachment()
 
-> **uploadAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
+> **uploadAttachment**(`entityRef`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `file`: `EntityFileType`, `options?`: `EntityUploadAttachmentOptions`): `Promise`\<`EntityUploadAttachmentResponse`>
 
 Uploads an attachment to a File-type field of an entity record.
 
@@ -4075,7 +4075,7 @@ Uses multipart/form-data to upload the file content to the specified field. Iden
 
 #### Parameters
 
-- `ref`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to upload the attachment to
 - `fieldName`: `string` — Name of the File-type field
 - `file`: `EntityFileType` — File to upload (Blob, File, or Uint8Array)

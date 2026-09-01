@@ -3353,7 +3353,7 @@
 <hr />
 <h3 id="deleteattachment">deleteAttachment()<a class="headerlink" href="#deleteattachment" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>deleteAttachment</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteAttachmentOptions/"><code>EntityDeleteAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityDeleteAttachmentResponse/"><code>EntityDeleteAttachmentResponse</code></a>&gt;</p>
+<p><strong>deleteAttachment</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteAttachmentOptions/"><code>EntityDeleteAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityDeleteAttachmentResponse/"><code>EntityDeleteAttachmentResponse</code></a>&gt;</p>
 </blockquote>
 <p>Removes an attachment from a File-type field of an entity record, identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
@@ -3367,7 +3367,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -3455,7 +3455,7 @@
 <hr />
 <h3 id="deleterecord">deleteRecord()<a class="headerlink" href="#deleterecord" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>deleteRecord</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteRecordByIdOptions/"><code>EntityDeleteRecordByIdOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>deleteRecord</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDeleteRecordByIdOptions/"><code>EntityDeleteRecordByIdOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Deletes a single record from an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
@@ -3471,7 +3471,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -3543,7 +3543,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <hr />
 <h3 id="deleterecords">deleteRecords()<a class="headerlink" href="#deleterecords" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>deleteRecords</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordIds</code>: <code>string</code>[], <code>options?</code>: <a href="../EntityDeleteRecordsOptions/"><code>EntityDeleteRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityDeleteResponse/"><code>EntityDeleteResponse</code></a>&gt;</p>
+<p><strong>deleteRecords</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordIds</code>: <code>string</code>[], <code>options?</code>: <a href="../EntityDeleteRecordsOptions/"><code>EntityDeleteRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityDeleteResponse/"><code>EntityDeleteResponse</code></a>&gt;</p>
 </blockquote>
 <p>Deletes data from an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use <a href="#deleterecord">deleteRecord</a> if you need trigger events to fire for the deleted record.</p>
@@ -3558,7 +3558,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -3637,7 +3637,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <hr />
 <h3 id="downloadattachment">downloadAttachment()<a class="headerlink" href="#downloadattachment" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>downloadAttachment</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDownloadAttachmentOptions/"><code>EntityDownloadAttachmentOptions</code></a>): <code>Promise</code>&lt;<code>Blob</code>&gt;</p>
+<p><strong>downloadAttachment</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityDownloadAttachmentOptions/"><code>EntityDownloadAttachmentOptions</code></a>): <code>Promise</code>&lt;<code>Blob</code>&gt;</p>
 </blockquote>
 <p>Downloads an attachment stored in a File-type field of an entity record, identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
@@ -3651,7 +3651,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -3917,7 +3917,7 @@ instead of the full content — use <a href="#getrecordbyid">getRecordById</a> t
 <hr />
 <h3 id="getbyname">getByName()<a class="headerlink" href="#getbyname" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getByName</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetByNameOptions/"><code>EntityGetByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityGetResponse/"><code>EntityGetResponse</code></a>&gt;</p>
+<p><strong>getByName</strong>(<code>entityName</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetByNameOptions/"><code>EntityGetByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityGetResponse/"><code>EntityGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets entity metadata by entity name with attached operation methods.</p>
 <p>Sibling of <a href="#getbyid">getById</a> that addresses the entity by name — useful when
@@ -3934,7 +3934,7 @@ resources by name and <code>folderKey</code>), avoiding a lookup to resolve the 
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><code>entityName</code></td>
 <td><code>string</code></td>
 <td>Name of the entity</td>
 </tr>
@@ -4016,7 +4016,7 @@ resources by name and <code>folderKey</code>), avoiding a lookup to resolve the 
 <hr />
 <h3 id="getrecordbyname">getRecordByName()<a class="headerlink" href="#getrecordbyname" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getRecordByName</strong>(<code>name</code>: <code>string</code>, <code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetRecordByNameOptions/"><code>EntityGetRecordByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
+<p><strong>getRecordByName</strong>(<code>entityName</code>: <code>string</code>, <code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetRecordByNameOptions/"><code>EntityGetRecordByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single entity record by entity name and record ID</p>
 <p>Sibling of <a href="#getrecordbyid">getRecordById</a> that addresses the entity by name. Returns the full record,
@@ -4032,7 +4032,7 @@ including the complete content of <code>MULTILINE_MAX</code> fields.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><code>entityName</code></td>
 <td><code>string</code></td>
 <td>Name of the entity</td>
 </tr>
@@ -4065,7 +4065,7 @@ including the complete content of <code>MULTILINE_MAX</code> fields.</p>
 <hr />
 <h3 id="getrecordsbyname">getRecordsByName()<a class="headerlink" href="#getrecordsbyname" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getRecordsByName</strong>&lt;<code>T</code>&gt;(<code>name</code>: <code>string</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
+<p><strong>getRecordsByName</strong>&lt;<code>T</code>&gt;(<code>entityName</code>: <code>string</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets entity records by entity name.</p>
 <p>Sibling of <a href="#getallrecords">getAllRecords</a> that addresses the entity by name — useful when you only
@@ -4098,7 +4098,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><code>entityName</code></td>
 <td><code>string</code></td>
 <td>Name of the entity</td>
 </tr>
@@ -4125,7 +4125,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 <hr />
 <h3 id="importrecords">importRecords()<a class="headerlink" href="#importrecords" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>importRecords</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityImportRecordsByIdOptions/"><code>EntityImportRecordsByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityImportRecordsResponse/"><code>EntityImportRecordsResponse</code></a>&gt;</p>
+<p><strong>importRecords</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityImportRecordsByIdOptions/"><code>EntityImportRecordsByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityImportRecordsResponse/"><code>EntityImportRecordsResponse</code></a>&gt;</p>
 </blockquote>
 <p>Imports records from a CSV file into an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <h4 id="parameters_15">Parameters<a class="headerlink" href="#parameters_15" title="Permanent link">&para;</a></h4>
@@ -4139,7 +4139,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4212,7 +4212,7 @@ instead of the full content — use <a href="#getrecordbyname">getRecordByName</
 <hr />
 <h3 id="insertrecord">insertRecord()<a class="headerlink" href="#insertrecord" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>insertRecord</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityInsertRecordOptions/"><code>EntityInsertRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityInsertResponse/"><code>EntityInsertResponse</code></a>&gt;</p>
+<p><strong>insertRecord</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityInsertRecordOptions/"><code>EntityInsertRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityInsertResponse/"><code>EntityInsertResponse</code></a>&gt;</p>
 </blockquote>
 <p>Inserts a single record into an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.
@@ -4228,7 +4228,7 @@ Use this method if you need trigger events to fire for the inserted record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4314,7 +4314,7 @@ Use this method if you need trigger events to fire for the inserted record.</p>
 <hr />
 <h3 id="insertrecords">insertRecords()<a class="headerlink" href="#insertrecords" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>insertRecords</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;[], <code>options?</code>: <a href="../EntityInsertRecordsOptions/"><code>EntityInsertRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityBatchInsertResponse/"><code>EntityBatchInsertResponse</code></a>&gt;</p>
+<p><strong>insertRecords</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;[], <code>options?</code>: <a href="../EntityInsertRecordsOptions/"><code>EntityInsertRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityBatchInsertResponse/"><code>EntityBatchInsertResponse</code></a>&gt;</p>
 </blockquote>
 <p>Inserts one or more records into an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Records inserted using insertRecords will not trigger Data Fabric trigger events. Use <a href="#insertrecord">insertRecord</a> if you need
@@ -4330,7 +4330,7 @@ trigger events to fire for each inserted record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4424,7 +4424,7 @@ trigger events to fire for each inserted record.</p>
 <hr />
 <h3 id="queryrecords">queryRecords()<a class="headerlink" href="#queryrecords" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>queryRecords</strong>&lt;<code>T</code>&gt;(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
+<p><strong>queryRecords</strong>&lt;<code>T</code>&gt;(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Queries entity records with filters, sorting, aggregates, and SDK-managed pagination,
 identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
@@ -4458,7 +4458,7 @@ for constraints and the result-row key format.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4698,7 +4698,7 @@ only when the corresponding fields are provided.</p>
 <hr />
 <h3 id="updaterecord">updateRecord()<a class="headerlink" href="#updaterecord" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateRecord</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
+<p><strong>updateRecord</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
 </blockquote>
 <p>Updates a single record in an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
@@ -4714,7 +4714,7 @@ Use this method if you need trigger events to fire for the updated record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4810,7 +4810,7 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <hr />
 <h3 id="updaterecords">updateRecords()<a class="headerlink" href="#updaterecords" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateRecords</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <a href="../EntityRecord/"><code>EntityRecord</code></a>[], <code>options?</code>: <a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
+<p><strong>updateRecords</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <a href="../EntityRecord/"><code>EntityRecord</code></a>[], <code>options?</code>: <a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
 </blockquote>
 <p>Updates data in an entity, identified by ref (<code>{ id }</code> or <code>{ name }</code>)</p>
 <p>Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use <a href="#updaterecord">updateRecord</a> if you need trigger events to fire for each updated record.</p>
@@ -4825,7 +4825,7 @@ Use this method if you need trigger events to fire for the updated record.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
@@ -4917,7 +4917,7 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <hr />
 <h3 id="uploadattachment">uploadAttachment()<a class="headerlink" href="#uploadattachment" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>uploadAttachment</strong>(<code>ref</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityUploadAttachmentOptions/"><code>EntityUploadAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityUploadAttachmentResponse/"><code>EntityUploadAttachmentResponse</code></a>&gt;</p>
+<p><strong>uploadAttachment</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>recordId</code>: <code>string</code>, <code>fieldName</code>: <code>string</code>, <code>file</code>: <a href="../../type-aliases/EntityFileType/"><code>EntityFileType</code></a>, <code>options?</code>: <a href="../EntityUploadAttachmentOptions/"><code>EntityUploadAttachmentOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/EntityUploadAttachmentResponse/"><code>EntityUploadAttachmentResponse</code></a>&gt;</p>
 </blockquote>
 <p>Uploads an attachment to a File-type field of an entity record.</p>
 <p>Uses multipart/form-data to upload the file content to the specified field.
@@ -4933,7 +4933,7 @@ Identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>entityRef</code></td>
 <td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
 <td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
 </tr>
