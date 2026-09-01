@@ -13,6 +13,64 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
+### create()
+
+> **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
+
+**`Experimental`**
+
+Creates a new Data Fabric entity with the given schema
+
+#### Parameters
+
+- `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
+- `fields`: `EntityCreateFieldOptions`[] — Array of field definitions. Each field's `name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names.
+- `options?`: `EntityCreateOptions` — Optional entity-level settings ([EntityCreateOptions](../EntityCreateOptions/)) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to the ID of the created entity
+
+#### Example
+
+```
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const id = await entities.create("product_catalog", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+  { name: "price", type: EntityFieldDataType.DECIMAL, defaultValue: "0" },
+], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+
+// With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+const ordersId = await entities.create("orders", [
+  { name: "productName", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+  { name: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  { name: "quantity", type: EntityFieldDataType.DECIMAL, decimalPrecision: 0, maxValue: 10000, minValue: 1, defaultValue: "0" },
+]);
+
+// Cross-folder references — link a folder-scoped entity to entities and
+// system choice sets that live in another folder or at the tenant level.
+await entities.create("orderLine", [
+  {
+    name: "order",
+    type: EntityFieldDataType.RELATIONSHIP,
+    referenceEntityId: "<orderEntityId>",
+    referenceFieldId: "<orderEntityPkId>",
+    referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+  },
+  {
+    name: "userType",
+    type: EntityFieldDataType.CHOICE_SET_SINGLE,
+    choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+    // referenceFolderKey omitted → SDK looks up the target at tenant scope
+  },
+], { folderKey: "<sourceFolderKey>" });
+```
+
 ### deleteAttachment()
 
 > **deleteAttachment**(`ref`: `EntityRef`, `recordId`: `string`, `fieldName`: `string`, `options?`: `EntityDeleteAttachmentOptions`): `Promise`\<`EntityDeleteAttachmentResponse`>
@@ -58,6 +116,34 @@ await entities.deleteAttachment({ name: 'Customer' }, recordId, 'Documents');
 // Or delete using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
 await entity.deleteAttachment(recordId, 'Documents');
+```
+
+### deleteById()
+
+> **deleteById**(`id`: `string`, `options?`: `EntityDeleteByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Deletes a Data Fabric entity and all its records
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to delete
+- `options?`: `EntityDeleteByIdOptions` — Optional [EntityDeleteByIdOptions](../EntityDeleteByIdOptions/) (e.g. `folderKey` for folder-scoped entities) The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the entity is deleted
+
+#### Example
+
+```
+await entities.deleteById(<id>);
+
+// Folder-scoped: pass the entity's folder key
+await entities.deleteById(<id>, { folderKey: "<folderKey>" });
 ```
 
 ### deleteRecord()
@@ -959,6 +1045,66 @@ await entities.queryRecordsById(<id>, {
       relatedFieldName: "Id",
     },
   ],
+});
+```
+
+### updateById()
+
+> **updateById**(`id`: `string`, `options?`: `EntityUpdateByIdOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Updates an existing Data Fabric entity — schema and/or metadata.
+
+Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
+
+#### Parameters
+
+- `id`: `string` — UUID of the entity to update
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the update is complete
+
+#### Example
+
+```
+// Schema-only: add a field and remove another
+await entities.updateById(<id>, {
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+  removeFields: [{ name: "oldField" }],
+});
+
+// Metadata-only: rename the entity
+await entities.updateById(<id>, {
+  displayName: "My Updated Entity",
+  description: "Updated description",
+});
+
+// Combined: update a field and rename at the same time
+await entities.updateById(<id>, {
+  updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
+  displayName: "Price Catalog",
+});
+
+// Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+await entities.updateById(<id>, {
+  addFields: [
+    { name: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+    { name: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+  ],
+  updateFields: [
+    { id: <fieldId>, lengthLimit: 1000 },
+  ],
+});
+
+// Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
+await entities.updateById(<id>, {
+  folderKey: "<folderKey>",
+  addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
 });
 ```
 
