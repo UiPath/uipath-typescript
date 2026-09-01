@@ -21,10 +21,22 @@ export enum EntityFieldDataType {
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
   /**
-   * Large multi-line text (up to 128 KB). Unlike {@link MULTILINE_TEXT}, the full
-   * value is lazy-loaded: list/query operations return a size marker
-   * (e.g. `"HasValue=true Length=512"`) instead of the content; reading a single
-   * record by ID returns the full value.
+   * Large multi-line text, up to a 128 KB byte budget (about 65,536 characters). Creating the
+   * field requires the Multi-line (Max) feature to be enabled for the tenant; `create` and
+   * add-field otherwise reject it with 400.
+   *
+   * Reads are not uniform, and only a single-record read by ID is guaranteed to return the
+   * whole value. List and query return a bounded preview: the value itself when it is at most
+   * 10,000 characters, its first 10,000 characters followed by `"...[Truncated]"` when longer,
+   * or a size marker starting `"HasValue=true Length=N"`, sometimes with a trailing hint.
+   * Which of those a tenant returns depends on its rollout state, so treat a preview as
+   * opaque: do not parse or compare it, and never write it back, since that replaces the
+   * stored value with the preview. An encrypted field always returns the marker
+   * `"HasValue=true Encrypted=true"` and never content, on any tenant.
+   *
+   * The key is absent rather than null whenever there is no value to return: a null value on
+   * any read, a join query, and insert/update responses. The field cannot be used in
+   * `filterGroup`, `sortOptions`, or a join condition; the server rejects those with 400.
    */
   MULTILINE_MAX = "MULTILINE_MAX",
   FILE = "FILE",
@@ -297,7 +309,9 @@ export interface EntityHavingFilter {
  * resolve only while unique across the joined entities. Result rows use the
  * same qualified keys; a LEFT join with no match omits the related entity's
  * keys. Joins are not supported on choice-set, relationship, file, encrypted,
- * or system fields, nor on folder-scoped entities.
+ * or system fields, nor on folder-scoped entities. Naming a `MULTILINE_MAX` field in a
+ * join condition is rejected with 400; selecting one is allowed, but its key is omitted
+ * from the result rows, so read the record by ID to get its value.
  *
  * @example
  * ```typescript
