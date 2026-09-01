@@ -58,7 +58,9 @@ export interface AttachmentResponse {
  *
  * Field names are intentionally PascalCase: they mirror the platform's
  * `job-attachment` schema verbatim, so the received value matches this type
- * with no transformation.
+ * with no transformation. The field shape is the contract — platform tooling
+ * recognizes attachment inputs structurally by these fields, so their names
+ * and types must not change.
  */
 export interface JobAttachmentSchema {
   /**
