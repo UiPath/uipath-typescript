@@ -33,7 +33,7 @@ export interface AttachmentServiceModel {
   /**
    * Gets the attachment a job attachment input refers to.
    *
-   * @param attachment - A {@link JobAttachmentSchema} received as automation input
+   * @param attachment - The job attachment input received from the automation
    * @param options - Optional query parameters (expand, select)
    * @returns Promise resolving to the attachment
    * {@link AttachmentResponse}
