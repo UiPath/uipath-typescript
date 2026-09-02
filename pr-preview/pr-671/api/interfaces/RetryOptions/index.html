@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -2959,7 +2989,7 @@
 
   <h1>RetryOptions</h1>
 
-<p>Options for request retries</p>
+<p>How a failed request is retried.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2971,24 +3001,64 @@
 </thead>
 <tbody>
 <tr>
+<td><a id="backofffactor"></a> <code>backoffFactor?</code></td>
+<td><code>number</code></td>
+<td>The multiplier. Used by <code>'exponential'</code> only. <strong>Default</strong> <code>2</code></td>
+</tr>
+<tr>
+<td><a id="backoffmaxdelayms"></a> <code>backoffMaxDelayMs?</code></td>
+<td><code>number</code></td>
+<td>Longest wait allowed, in ms. A <code>Retry-After</code> wait uses <code>maxRetryAfterMs</code> instead. <strong>Default</strong> <code>30000</code></td>
+</tr>
+<tr>
+<td><a id="backoffstrategy"></a> <code>backoffStrategy?</code></td>
+<td><a href="../../type-aliases/BackoffStrategy/"><code>BackoffStrategy</code></a></td>
+<td>How the wait grows. For a delay <code>d</code> and factor <code>f</code>: <code>constant</code> d, d, d</td>
+</tr>
+<tr>
+<td><a id="initialdelayms"></a> <code>initialDelayMs?</code></td>
+<td><code>number</code></td>
+<td>How long to wait before the first retry, in ms. Later waits grow from this. <strong>Default</strong> <code>500</code></td>
+</tr>
+<tr>
 <td><a id="maxretries"></a> <code>maxRetries?</code></td>
 <td><code>number</code></td>
-<td>Maximum number of retry attempts</td>
+<td>How many extra tries after the first. <code>0</code> turns retrying off. <strong>Default</strong> <code>2</code></td>
+</tr>
+<tr>
+<td><a id="maxretryafterms"></a> <code>maxRetryAfterMs?</code></td>
+<td><code>number</code></td>
+<td>Longest <code>Retry-After</code> wait allowed, in ms. Unlimited by default. <strong>Default</strong> <code>Infinity</code></td>
+</tr>
+<tr>
+<td><a id="respectretryafter"></a> <code>respectRetryAfter?</code></td>
+<td><code>boolean</code></td>
+<td>Let a <code>Retry-After</code> header decide the wait instead. <strong>Default</strong> <code>true</code></td>
 </tr>
 <tr>
 <td><a id="retryablestatuscodes"></a> <code>retryableStatusCodes?</code></td>
 <td><code>number</code>[]</td>
-<td>Status codes that should trigger a retry</td>
+<td>Which statuses are worth retrying. <strong>Default</strong> <code>[408, 429, 500, 502, 503, 504]</code></td>
 </tr>
 <tr>
-<td><a id="retrydelay"></a> <code>retryDelay?</code></td>
+<td><a id="retrydelay"></a> <del><code>retryDelay?</code></del></td>
 <td><code>number</code></td>
-<td>Base delay between retries in milliseconds</td>
+<td>Base delay between retries in milliseconds. <strong>Deprecated</strong> Use <a href="#initialdelayms">RetryOptions.initialDelayMs</a>. Still honoured when <code>initialDelayMs</code> is not supplied; scheduled for removal in a future minor release.</td>
 </tr>
 <tr>
-<td><a id="useexponentialbackoff"></a> <code>useExponentialBackoff?</code></td>
+<td><a id="retrymethods"></a> <code>retryMethods?</code></td>
+<td><a href="../../type-aliases/HttpMethod/"><code>HttpMethod</code></a>[]</td>
+<td>Which methods are worth retrying. Defaults to the ones RFC 9110 says are safe to repeat. <strong>Default</strong> <code>['GET', 'HEAD', 'PUT', 'DELETE', 'OPTIONS']</code></td>
+</tr>
+<tr>
+<td><a id="retrynetworkerrors"></a> <code>retryNetworkErrors?</code></td>
 <td><code>boolean</code></td>
-<td>Whether to use exponential backoff</td>
+<td>Retry when the request never reached the server. <strong>Default</strong> <code>true</code></td>
+</tr>
+<tr>
+<td><a id="useexponentialbackoff"></a> <del><code>useExponentialBackoff?</code></del></td>
+<td><code>boolean</code></td>
+<td>Whether to use exponential backoff. <strong>Deprecated</strong> Use <a href="#backoffstrategy">RetryOptions.backoffStrategy</a> — <code>true</code> maps to <code>'exponential'</code> and <code>false</code> to <code>'constant'</code>. Still honoured when <code>backoffStrategy</code> is not supplied; scheduled for removal in a future minor release.</td>
 </tr>
 </tbody>
 </table>

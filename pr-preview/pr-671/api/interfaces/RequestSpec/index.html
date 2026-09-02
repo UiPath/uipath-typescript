@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -3006,9 +3036,14 @@
 <td>Expected response type</td>
 </tr>
 <tr>
-<td><a id="retryoptions"></a> <code>retryOptions?</code></td>
+<td><a id="retry"></a> <code>retry?</code></td>
 <td><a href="../RetryOptions/"><code>RetryOptions</code></a></td>
-<td>Retry behavior options</td>
+<td>How to retry this request. No retrying unless supplied.</td>
+</tr>
+<tr>
+<td><a id="retryoptions"></a> <del><code>retryOptions?</code></del></td>
+<td><a href="../RetryOptions/"><code>RetryOptions</code></a></td>
+<td>Retry behavior options. <strong>Deprecated</strong> Use <a href="#retry">RequestSpec.retry</a>. Still honoured when <code>retry</code> is not supplied; scheduled for removal in a future minor release.</td>
 </tr>
 <tr>
 <td><a id="signal"></a> <code>signal?</code></td>
@@ -3016,9 +3051,14 @@
 <td>AbortSignal for cancelling the request</td>
 </tr>
 <tr>
-<td><a id="timeoutoptions"></a> <code>timeoutOptions?</code></td>
+<td><a id="timeoutms"></a> <code>timeoutMs?</code></td>
+<td><code>number</code></td>
+<td>Timeout for a single attempt, in milliseconds. Unbounded unless supplied.</td>
+</tr>
+<tr>
+<td><a id="timeoutoptions"></a> <del><code>timeoutOptions?</code></del></td>
 <td><a href="../TimeoutOptions/"><code>TimeoutOptions</code></a></td>
-<td>Request timeout options</td>
+<td>Request timeout options. <strong>Deprecated</strong> Use <a href="#timeoutms">RequestSpec.timeoutMs</a>. <code>timeoutOptions.timeout</code> is still honoured when <code>timeoutMs</code> is not supplied; scheduled for removal in a future minor release.</td>
 </tr>
 <tr>
 <td><a id="url"></a> <code>url?</code></td>
