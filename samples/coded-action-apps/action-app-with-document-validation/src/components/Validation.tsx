@@ -14,7 +14,6 @@ import './Validation.css';
 /** Themes the widget accepts - the Theme enum minus AutoTheme, which the app resolves. */
 type WidgetTheme = 'light' | 'dark' | 'light-hc' | 'dark-hc';
 
-/** The `inputs` bag declared in action-schema.json, as delivered in `task.data`. */
 interface ActionInputs {
   contentValidationData?: DuFramework.ContentValidationData | null;
 }
