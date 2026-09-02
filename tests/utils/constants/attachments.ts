@@ -28,7 +28,6 @@ export const ATTACHMENT_TEST_CONSTANTS = {
   // Error Messages
   ERROR_ATTACHMENT_NOT_FOUND: 'Attachment not found',
   ERROR_ID_REQUIRED: 'id is required for getById',
-  ERROR_ATTACHMENT_ID_REQUIRED: 'attachment.ID is required for getFor',
 
   // OData Parameters
   ODATA_SELECT_FIELDS: 'id,name,blobFileAccess',

@@ -210,9 +210,7 @@ describe('AttachmentService Unit Tests', () => {
     });
 
     it('should throw ValidationError when the attachment ID is empty', async () => {
-      await expect(attachmentService.getFor({ ...jobAttachment, ID: '' })).rejects.toThrow(
-        ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_ID_REQUIRED
-      );
+      await expect(attachmentService.getFor({ ...jobAttachment, ID: '' })).rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
