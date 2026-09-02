@@ -1,0 +1,28 @@
+{
+    "inputs": {
+        "type": "object",
+        "properties": {
+            "contentValidationData": {
+                "type": "ContentValidationData",
+                "required": true,
+                "description": "Handed over by the Document Understanding workflow. Locates the document, its taxonomy and its extraction results in the storage bucket."
+            }
+        }
+    },
+    "outputs": {
+        "type": "object",
+        "properties": {}
+    },
+    "inOuts": {
+        "type": "object",
+        "properties": {}
+    },
+    "outcomes": {
+        "type": "object",
+        "properties": {
+            "Submit": {
+                "type": "string"
+            }
+        }
+    }
+}
