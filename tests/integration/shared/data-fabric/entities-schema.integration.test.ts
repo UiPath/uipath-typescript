@@ -12,7 +12,12 @@ import {
   FieldDisplayType,
 } from '../../../../src/models/data-fabric/entities.types';
 
-const modes: InitMode[] = ['v0', 'v1'];
+// Schema management APIs (create/updateById/deleteById) shipped in the modular-SDK
+// era — well after the legacy v0 init pattern — and both init modes resolve to the
+// identical EntityService class, so a v0 pass re-proves nothing. With schema DDL as
+// this suite's wall-clock critical path, the schema suite runs v1-only; v0 init
+// wiring stays covered by the records/query suites, which run dual-mode.
+const modes: InitMode[] = ['v1'];
 
 describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
