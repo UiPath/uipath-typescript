@@ -118,16 +118,6 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `resume()` | `PIMS` |
 | `retry()` | `PIMS` |
 
-## Maestro Business Apps
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `create()` | `PIMS` |
-| `getAll()` | `PIMS` |
-| `getById()` | `PIMS` |
-| `updateById()` | `PIMS` |
-| `deleteById()` | `PIMS` |
-
 ## Maestro Cases
 
 | Method | OAuth Scope |

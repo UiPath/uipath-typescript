@@ -34,6 +34,8 @@ import { BUSINESS_APP_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../..
 /**
  * Tenant-scoped CRUD for Maestro business app definitions.
  *
+ * @internal
+ *
  * @experimental
  *
  * /// warning

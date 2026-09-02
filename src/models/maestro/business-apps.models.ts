@@ -17,10 +17,14 @@ import type {
 
 /**
  * A business app definition, with entity methods attached.
+ *
+ * @internal
  */
 export type BusinessAppGetResponse = RawBusinessAppGetResponse & BusinessAppMethods;
 
 /**
+ *
+ * @internal
  *
  * @experimental
  *
@@ -41,6 +45,8 @@ export type BusinessAppGetResponse = RawBusinessAppGetResponse & BusinessAppMeth
 export interface BusinessAppsServiceModel {
   /**
    * Creates a business app.
+   *
+   * @internal
    *
    * @experimental
    *
@@ -87,6 +93,8 @@ export interface BusinessAppsServiceModel {
   /**
    * Gets the tenant's business apps, ordered by name.
    *
+   * @internal
+   *
    * @experimental
    *
    * /// warning
@@ -129,6 +137,8 @@ export interface BusinessAppsServiceModel {
   /**
    * Gets a business app by id.
    *
+   * @internal
+   *
    * @experimental
    *
    * /// warning
@@ -150,6 +160,8 @@ export interface BusinessAppsServiceModel {
 
   /**
    * Replaces a business app.
+   *
+   * @internal
    *
    * @experimental
    *
@@ -196,6 +208,8 @@ export interface BusinessAppsServiceModel {
   /**
    * Deletes a business app.
    *
+   * @internal
+   *
    * @experimental
    *
    * /// warning
@@ -217,6 +231,8 @@ export interface BusinessAppsServiceModel {
 /**
  * Methods attached to each business app returned by the service.
  *
+ * @internal
+ *
  * @experimental
  *
  * /// warning
@@ -227,6 +243,8 @@ export interface BusinessAppMethods {
   /**
    * Replaces this business app. A full replace — an omitted `description`, `icon` or
    * `color` is cleared.
+   *
+   * @internal
    *
    * @param name - New display name, unique within the tenant
    * @param processKeys - The full set of Orchestrator process (release) keys the app surfaces
@@ -241,6 +259,8 @@ export interface BusinessAppMethods {
 
   /**
    * Deletes this business app.
+   *
+   * @internal
    */
   delete(): Promise<void>;
 }
@@ -275,6 +295,8 @@ function createBusinessAppMethods(
 
 /**
  * Merges a raw business app with its bound entity methods.
+ *
+ * @internal
  *
  * @param data - The business app data from the API
  * @param service - The business apps service instance

@@ -131,7 +131,6 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Functions | `getAll()` | ✅ Yes |
 | ProcessInstances | `getAll()` | ❌ No |
 | CaseInstances | `getAll()` | ❌ No |
-| BusinessApps | `getAll()` | ❌ No |
 | CaseInstances | `getActionTasks()` | ✅ Yes |
 | CaseInstances | `getSlaSummary()` | ✅ Yes |
 | Queues | `getAll()` | ✅ Yes |

@@ -7,6 +7,8 @@
  *
  * A business app is the tenant-level definition behind a workspace in Maestro: display
  * metadata plus the set of processes the workspace surfaces.
+ *
+ * @internal
  */
 export interface RawBusinessAppGetResponse {
   /** Business app GUID. */
@@ -33,6 +35,8 @@ export interface RawBusinessAppGetResponse {
 
 /**
  * Optional display fields accepted when creating a business app.
+ *
+ * @internal
  */
 export interface BusinessAppCreateOptions {
   /** Human description of what the app is for. Omit, or pass blank, to store none. */
@@ -47,5 +51,7 @@ export interface BusinessAppCreateOptions {
  * Optional display fields accepted when updating a business app.
  *
  * An update is a full replace, so omitting one of these clears the stored value.
+ *
+ * @internal
  */
 export interface BusinessAppUpdateOptions extends BusinessAppCreateOptions {}

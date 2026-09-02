@@ -1,6 +1,8 @@
 /**
  * Business Apps Module
  *
+ * @internal
+ *
  * @experimental
  *
  * /// warning
