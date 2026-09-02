@@ -546,13 +546,33 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       // Clean up any entities created by schema management tests (no-op when those tests are skipped)
       if (createdEntityIds.length > 0) {
         const { entities } = getServices();
-        await Promise.all(
-          createdEntityIds.map(entityId =>
-            entities.deleteById(entityId).catch(() => {
-              // Best-effort cleanup — entity may have already been deleted
+
+        // A RELATIONSHIP target cannot be deleted while a source entity still
+        // references it, and Promise.all deletes in no particular order — so retry
+        // the failures once after the first pass has removed the referencing
+        // sources. Swallowing that 400 silently used to leak one sdk_target_*
+        // entity per run.
+        const deleteEntities = async (ids: string[]): Promise<string[]> => {
+          const results = await Promise.all(
+            ids.map(async (entityId) => {
+              try {
+                await entities.deleteById(entityId);
+                return null;
+              } catch {
+                return entityId;
+              }
             })
-          )
-        );
+          );
+          return results.filter((id): id is string => id !== null);
+        };
+
+        const failedOnce = await deleteEntities(createdEntityIds);
+        if (failedOnce.length > 0) {
+          const failedTwice = await deleteEntities(failedOnce);
+          if (failedTwice.length > 0) {
+            console.warn(`Failed to clean up test entities: ${failedTwice.join(', ')}`);
+          }
+        }
       }
     }
   });

@@ -821,7 +821,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       }
 
       const fieldName = writableFields[0].name;
-      const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+      const importedValues = [`BulkImport_${generateRandomString(8)}`, `BulkImport_${generateRandomString(8)}`];
+      const csvContent = `${fieldName}\n${importedValues.join('\n')}`;
       const csvBlob = new Blob([csvContent], { type: 'text/csv' });
       const result = await entities.importRecordsById(entityId, csvBlob);
 
@@ -829,6 +830,22 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(typeof result.totalRecords).toBe('number');
       expect(typeof result.insertedRecords).toBe('number');
       expect(result.totalRecords).toBeGreaterThanOrEqual(0);
+
+      // The import response carries counts, not record IDs — resolve the IDs of
+      // the rows this test created so the afterAll cleanup can delete them.
+      // Untracked imports previously accumulated in the test entity forever.
+      const importedRecords = await Promise.all(
+        importedValues.map((value) =>
+          entities.queryRecordsById(entityId, {
+            filterGroup: {
+              queryFilters: [{ fieldName, operator: QueryFilterOperator.Equals, value }],
+            },
+          }),
+        ),
+      );
+      const importedIds = importedRecords.flatMap((r) => r.items.map((item) => item.Id));
+      createdRecordIds.push(...importedIds);
+      registerResource('entityRecords', { entityId, recordIds: importedIds });
     });
   });
 
@@ -911,7 +928,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
   // Mirrors the tenant-scope record CRUD block above, but against a folder-scoped
   // entity (DATA_FABRIC_TEST_FOLDER_ENTITY_ID + INTEGRATION_TEST_FOLDER_KEY).
   // Record CRUD works with PAT auth; schema create/delete on the folder entity
-  // is NOT exercised here (lives in the schema-write blocks above).
+  // is NOT exercised here (lives in entities-schema.integration.test.ts).
   describe('Folder-scoped record CRUD', () => {
     let folderEntityId!: string;
     let folderKey!: string;
