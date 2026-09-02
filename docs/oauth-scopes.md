@@ -40,6 +40,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `OR.Folders` or `OR.Folders.Read` |
+| `getFor()` | `OR.Folders` or `OR.Folders.Read` |
 | `create()` | `OR.Folders` or `OR.Folders.Write` |
 
 ## Buckets

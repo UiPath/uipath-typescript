@@ -87,6 +87,11 @@ export interface JobAttachmentSchema {
 export interface AttachmentGetByIdOptions extends BaseOptions {};
 
 /**
+ * Options for getting the attachment a job attachment input refers to
+ */
+export interface AttachmentGetForOptions extends AttachmentGetByIdOptions {};
+
+/**
  * Attachment returned when a new attachment is created.
  *
  * The upload URI is deliberately not exposed — the SDK uploads the content
