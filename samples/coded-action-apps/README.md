@@ -14,6 +14,14 @@ Pick the sample that matches how your document/data is delivered, then open its 
 | [`action-app-with-storage-bucket-document`](./action-app-with-storage-bucket-document) | The document lives in an Orchestrator **Storage Bucket** | Looking up a bucket by name and fetching a file by path via `Buckets` | `OR.Buckets.Read` |
 | [`action-app-with-data-fabric-entity`](./action-app-with-data-fabric-entity) | Applicant data is stored in a **Data Fabric** entity | Reading an entity record, viewing its file attachment, and writing the decision back via `Entities` | `DataFabric.Schema.Read`, `DataFabric.Data.Read`, `DataFabric.Data.Write` |
 
+## Document Understanding review
+
+One sample breaks the loan-review mould, because its UI is supplied by UiPath rather than written by hand:
+
+| Sample | Use it when… | Demonstrates | OAuth scopes |
+|--------|--------------|--------------|--------------------|
+| [`action-app-with-document-validation`](./action-app-with-document-validation) | A **Document Understanding** workflow raises a validation action | Embedding the **Validation Station** widget as the whole app — field correction, table editing, submit, save-as-draft, and report-as-exception | `OR.Buckets`, `OR.Tasks`, `OR.Folders` |
+
 ## Common prerequisites
 
 All samples share the same baseline:
