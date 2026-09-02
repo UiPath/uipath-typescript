@@ -260,6 +260,21 @@ const sdk = new UiPath()
 await sdk.initialize()
 ```
 
+!!! tip "Tip: Overriding the redirect URI"
+    By default, the SDK reads `redirectUri` from the `<meta name="uipath:redirect-uri">` tag. You can also compute it at runtime, which is useful when the same app is reachable at multiple URLs (for example, orgs whose name contains `_` are also reachable at the hyphen form, or apps served from both a self-hosted URL and `uipath.host`):
+
+    ```typescript
+    import { UiPath } from '@uipath/uipath-typescript/core'
+    import { getAppBase } from '@uipath/uipath-typescript'
+
+    const sdk = new UiPath({
+      redirectUri: window.location.origin + getAppBase(),
+    })
+    await sdk.initialize()
+    ```
+
+    `getAppBase()` returns the app root injected by the platform, so the URI stays stable regardless of which route the user is on.
+
 ---
 
 ## Deploy
