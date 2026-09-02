@@ -103,7 +103,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
       // The historical query path ignores pageSize server-side (verified in CI:
       // pageSize 1 returned all 5 expired spans), so the assertion only holds
       // against live spans.
-      if (getByIdOptions.includeExpiredSpans) {
+      if (getByIdOptions?.includeExpiredSpans) {
         ctx.skip('pinned trace expired from the live window; pageSize is not applied to historical queries');
         return;
       }

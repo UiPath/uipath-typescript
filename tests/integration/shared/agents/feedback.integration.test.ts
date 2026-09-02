@@ -123,7 +123,6 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       });
       existingFeedbackId = created.id;
       createdForGetById = created.id;
-      registerResource('feedbackEntries', { id: created.id, folderKey: configuredFolderKey });
 
       // Warm up the fixture before any test reads it. The first read of a
       // freshly submitted entry has been observed to stall server-side for
@@ -152,10 +151,9 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
 
     afterAll(async () => {
       if (createdForGetById) {
-        // Cleanup must not fail the suite: registerResource's emergency sweep
-        // is never invoked (cleanupAllTestResources has no caller), so warn
-        // loudly instead. A leaked entry is benign here — the next run's
-        // beforeAll finds it in the test folder and reuses it as the fixture.
+        // Cleanup must not fail the suite — warn loudly instead. A leaked entry
+        // is benign here: the next run's beforeAll finds it in the test folder
+        // and reuses it as the fixture.
         try {
           await withDeadline(
             feedback.deleteById(createdForGetById, { folderKey: existingFolderKey }),

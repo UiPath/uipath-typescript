@@ -32,6 +32,9 @@ describe.each(modes)(
       });
 
       afterAll(async () => {
+        // beforeAll may have thrown before the assignment; the ! assertion is
+        // compile-time only, so guard against DELETE .../Attachments(undefined).
+        if (!attachmentId) return;
         const config = getTestConfig();
         const base = `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_`;
         await fetch(`${base}/odata/Attachments(${attachmentId})`, {

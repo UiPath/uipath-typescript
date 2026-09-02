@@ -165,6 +165,9 @@ jobs:
             *staging*) MINTER_ENV=stg ;;
             *)         MINTER_ENV=prd ;;
           esac
+          # Exported so `docker run -e MINTER_ENV` picks it up; the others already
+          # come from the step's env block.
+          export MINTER_ENV
 
           # A registry-scoped token (pull-only on the uipath-minter repository), not an
           # Azure AD identity — the runner needs Docker but no Azure CLI.
@@ -172,18 +175,26 @@ jobs:
           docker pull pltnonprodacr.azurecr.io/uipath-minter:latest
 
           mkdir -p "$RUNNER_TEMP/minter"
+          # Every value is passed via -e and dereferenced inside the container, so
+          # nothing is interpolated into the command line the runner builds — a
+          # value containing a quote cannot break out of it, and none of them
+          # land in the container's process list.
           docker run --rm \
             -v "$RUNNER_TEMP/minter:/out" \
+            -e MINTER_USERNAME \
             -e MINTER_PASSWORD \
+            -e ORG_NAME \
+            -e TENANT_NAME \
+            -e MINTER_ENV \
             pltnonprodacr.azurecr.io/uipath-minter:latest \
-            sh -c "npm run generate -- \
-              -u '$MINTER_USERNAME' \
-              -p \"\$MINTER_PASSWORD\" \
-              -n '$ORG_NAME' \
-              -t '$TENANT_NAME' \
-              -e '$MINTER_ENV' \
+            sh -c 'npm run generate -- \
+              -u "$MINTER_USERNAME" \
+              -p "$MINTER_PASSWORD" \
+              -n "$ORG_NAME" \
+              -t "$TENANT_NAME" \
+              -e "$MINTER_ENV" \
               -v basic \
-              -o /out/tokens.json"
+              -o /out/tokens.json'
 
           TOKEN=$(python3 -c "import json;print(json.load(open('$RUNNER_TEMP/minter/tokens.json'))['accessToken'])")
           if [ -z "$TOKEN" ]; then
