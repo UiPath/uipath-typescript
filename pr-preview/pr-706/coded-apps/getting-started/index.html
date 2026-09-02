@@ -3503,7 +3503,7 @@
 </code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Tip: Overriding the redirect URI</p>
-<p>By default, the SDK reads <code>redirectUri</code> from the <code>&lt;meta name="uipath:redirect-uri"&gt;</code> tag, which has a fixed hostname. If your app is reachable at multiple hostnames, you can compute <code>redirectUri</code> at runtime instead:</p>
+<p>By default, the SDK reads <code>redirectUri</code> from the <code>&lt;meta name="uipath:redirect-uri"&gt;</code> tag. You can also compute it at runtime, which is useful when the same app is reachable at multiple URLs (for example, orgs whose name contains <code>_</code> are also reachable at the hyphen form, or apps served from both a self-hosted URL and <code>uipath.host</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span>
 <a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">getAppBase</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript&#39;</span>
 <a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
