@@ -35,10 +35,13 @@ export interface AttachmentServiceModel {
    *
    * @param attachment - The job attachment input received from the automation
    * @param options - Optional query parameters (expand, select)
-   * @returns Promise resolving to the attachment
-   * {@link AttachmentResponse}
+   * @returns Promise resolving to the attachment, including `blobFileAccess` for downloading its content — {@link AttachmentResponse}
    * @example
    * ```typescript
+   * import { Attachments } from '@uipath/uipath-typescript/attachments';
+   *
+   * const attachments = new Attachments(sdk);
+   *
    * // Inside a coded function whose input declares a JobAttachmentSchema field
    * const attachment = await attachments.getFor(input.invoice);
    * ```

@@ -7,6 +7,7 @@ export const ATTACHMENT_TEST_CONSTANTS = {
   // Attachment IDs
   ATTACHMENT_ID: '12345678-1234-1234-1234-123456789abc',
   ATTACHMENT_NAME: 'test-attachment.pdf',
+  ATTACHMENT_MIME_TYPE: 'application/pdf',
 
   // Job Key
   JOB_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
@@ -27,6 +28,7 @@ export const ATTACHMENT_TEST_CONSTANTS = {
   // Error Messages
   ERROR_ATTACHMENT_NOT_FOUND: 'Attachment not found',
   ERROR_ID_REQUIRED: 'id is required for getById',
+  ERROR_ATTACHMENT_ID_REQUIRED: 'attachment.ID is required for getFor',
 
   // OData Parameters
   ODATA_SELECT_FIELDS: 'id,name,blobFileAccess',

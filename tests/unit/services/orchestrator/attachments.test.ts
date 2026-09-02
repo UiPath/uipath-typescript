@@ -5,7 +5,7 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { createMockRawAttachment } from '../../../utils/mocks/attachments';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import { AttachmentGetByIdOptions, JobAttachmentSchema } from '../../../../src/models/orchestrator/attachments.types';
+import { AttachmentGetByIdOptions, AttachmentGetForOptions, JobAttachmentSchema } from '../../../../src/models/orchestrator/attachments.types';
 import { ATTACHMENT_TEST_CONSTANTS } from '../../../utils/constants/attachments';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -108,39 +108,6 @@ describe('AttachmentService Unit Tests', () => {
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should resolve a job attachment input through getFor', async () => {
-      const mockAttachment = createMockRawAttachment();
-      mockApiClient.get.mockResolvedValue(mockAttachment);
-
-      const jobAttachment: JobAttachmentSchema = {
-        ID: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
-        FullName: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-        MimeType: 'application/pdf',
-      };
-
-      const result = await attachmentService.getFor(jobAttachment);
-
-      expect(result.id).toBe(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
-        expect.objectContaining({
-          params: expect.any(Object),
-        })
-      );
-    });
-
-    it('should throw ValidationError when getFor receives an attachment with an empty ID', async () => {
-      const jobAttachment: JobAttachmentSchema = {
-        ID: '',
-        FullName: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-        MimeType: 'application/pdf',
-      };
-
-      await expect(attachmentService.getFor(jobAttachment)).rejects.toBeInstanceOf(ValidationError);
-
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
     it('should handle API errors', async () => {
       const error = createMockError(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
@@ -186,6 +153,76 @@ describe('AttachmentService Unit Tests', () => {
             '$select': 'name,creationTime,blobFileAccess/fullPath,blobFileAccess/verb',
           }),
         }),
+      );
+    });
+  });
+
+  describe('getFor', () => {
+    const jobAttachment: JobAttachmentSchema = {
+      ID: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+      FullName: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
+      MimeType: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_MIME_TYPE,
+    };
+
+    it('should get the attachment a job attachment input refers to with all fields mapped correctly', async () => {
+      const mockAttachment = createMockRawAttachment();
+      mockApiClient.get.mockResolvedValue(mockAttachment);
+
+      const result = await attachmentService.getFor(jobAttachment);
+
+      expect(result.id).toBe(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID);
+      expect(result.name).toBe(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME);
+
+      // Verify the ID is extracted from the input and reaches the endpoint
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.any(Object),
+        })
+      );
+
+      // Verify transform: CreationTime -> createdTime, LastModificationTime -> lastModifiedTime
+      expect(result.createdTime).toBe(ATTACHMENT_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.lastModifiedTime).toBe(ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIED_TIME);
+      expect((result as any).LastModificationTime).toBeUndefined();
+      expect(result.blobFileAccess.uri).toBe(ATTACHMENT_TEST_CONSTANTS.BLOB_URI);
+    });
+
+    it('should forward options (select) with OData prefix', async () => {
+      const mockAttachment = createMockRawAttachment();
+      mockApiClient.get.mockResolvedValue(mockAttachment);
+
+      const options: AttachmentGetForOptions = {
+        select: ATTACHMENT_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
+      };
+
+      await attachmentService.getFor(jobAttachment, options);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': ATTACHMENT_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
+          }),
+        })
+      );
+    });
+
+    it('should throw ValidationError when the attachment ID is empty', async () => {
+      await expect(attachmentService.getFor({ ...jobAttachment, ID: '' })).rejects.toThrow(
+        ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_ID_REQUIRED
+      );
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(attachmentService.getFor(jobAttachment)).rejects.toThrow(
+        ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND
       );
     });
   });
