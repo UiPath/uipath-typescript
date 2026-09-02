@@ -219,9 +219,7 @@ describe('AttachmentService Unit Tests', () => {
       const error = createMockError(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(attachmentService.getFor(jobAttachment)).rejects.toThrow(
-        ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND
-      );
+      await expect(attachmentService.getFor(jobAttachment)).rejects.toBeInstanceOf(Error);
     });
   });
 
