@@ -333,16 +333,22 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       const resumeResult = await caseInstances.resume(target.instanceId, target.folderKey);
       expect(resumeResult.success).toBe(true);
 
-      // The instance must return to Running so later tests can keep using it. The
-      // Paused→Running propagation is accepted immediately (success asserted above) but
-      // has been observed to take well over 20s under tenant load, so the wait window
-      // is sized for that tail rather than the ~5s typical case.
+      // The instance must return to Running so later tests can keep using it. A resume
+      // issued while the pause is still settling (status Pausing) is accepted but can be
+      // lost — the pause completes afterwards and wins, leaving the instance Paused
+      // (observed live: success=true resume, then Paused for 60s+). When the status
+      // settles on Paused without running again, re-issue the resume: it is idempotent
+      // from Paused and no longer races the pause transition.
       let resumedStatus = '';
       for (let attempt = 0; attempt < 30; attempt++) {
         const current = await caseInstances.getById(target.instanceId, target.folderKey);
         resumedStatus = current.latestRunStatus;
         if (resumedStatus === InstanceStatus.RUNNING) {
           break;
+        }
+        // ~every 10s of settled Paused, assume the earlier resume was lost and re-issue
+        if (resumedStatus === InstanceStatus.PAUSED && attempt % 5 === 4) {
+          await caseInstances.resume(target.instanceId, target.folderKey);
         }
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
@@ -422,9 +428,11 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         instanceId = job.key;
       }
 
-      // Check immediately, then poll only if it has not completed yet
+      // Check immediately, then poll only if it has not completed yet. Completion takes
+      // ~45s idle but the execution engine stalls for minutes under load — sized to the
+      // same 180s ceiling the retry test uses for the equivalent fault wait.
       let completed = false;
-      for (let attempt = 0; attempt < 24; attempt++) {
+      for (let attempt = 0; attempt < 36; attempt++) {
         try {
           const instance = await caseInstances.getById(instanceId, config.folderKey);
           if (instance.latestRunStatus === InstanceStatus.COMPLETED) {
@@ -437,7 +445,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
       if (!completed) {
-        throw new Error('Seeded auto-completing case instance did not complete within 120s');
+        throw new Error('Seeded auto-completing case instance did not complete within 180s');
       }
 
       const stages = await caseInstances.getStages(instanceId, config.folderKey);
@@ -454,7 +462,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       // Cleanup: close the reopened instance — reopened instances do NOT re-complete on
       // their own, and letting them accumulate saturates the tenant's execution queue.
       await caseInstances.close(instanceId, config.folderKey);
-    }, 180_000);
+    }, 240_000);
   });
 
   describe('Case instance structure validation', () => {
