@@ -5,7 +5,7 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { createMockRawAttachment } from '../../../utils/mocks/attachments';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import { AttachmentGetByIdOptions, JobAttachmentSchema } from '../../../../src/models/orchestrator/attachments.types';
+import { AttachmentGetByIdOptions } from '../../../../src/models/orchestrator/attachments.types';
 import { ATTACHMENT_TEST_CONSTANTS } from '../../../utils/constants/attachments';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -104,39 +104,6 @@ describe('AttachmentService Unit Tests', () => {
       await expect(attachmentService.getById('')).rejects.toThrow(
         ATTACHMENT_TEST_CONSTANTS.ERROR_ID_REQUIRED
       );
-
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
-    it('should accept a JobAttachmentSchema and resolve the attachment by its ID', async () => {
-      const mockAttachment = createMockRawAttachment();
-      mockApiClient.get.mockResolvedValue(mockAttachment);
-
-      const jobAttachment: JobAttachmentSchema = {
-        ID: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
-        FullName: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-        MimeType: 'application/pdf',
-      };
-
-      const result = await attachmentService.getById(jobAttachment);
-
-      expect(result.id).toBe(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
-        expect.objectContaining({
-          params: expect.any(Object),
-        })
-      );
-    });
-
-    it('should throw ValidationError when a JobAttachmentSchema has an empty ID', async () => {
-      const jobAttachment: JobAttachmentSchema = {
-        ID: '',
-        FullName: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-        MimeType: 'application/pdf',
-      };
-
-      await expect(attachmentService.getById(jobAttachment)).rejects.toBeInstanceOf(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });

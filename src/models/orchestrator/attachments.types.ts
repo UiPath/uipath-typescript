@@ -51,16 +51,13 @@ export interface AttachmentResponse {
 /**
  * A job attachment as delivered to an automation's input by the platform.
  *
- * Declare a field of this type in a coded function's input contract to receive
- * a file at runtime — Studio Web and Orchestrator render a file picker for it
- * and pass the selected file's metadata in this shape. The type carries
- * metadata only; fetch the content with `attachments.getById()`.
+ * Declare a field of this type in a coded function's input contract to get a file
+ * picker in Studio Web and Orchestrator. Carries metadata only — fetch the content
+ * with `attachments.getById()`.
  *
- * Field names are intentionally PascalCase: they mirror the platform's
- * `job-attachment` schema verbatim, so the received value matches this type
- * with no transformation. The field shape is the contract — platform tooling
- * recognizes attachment inputs structurally by these fields, so their names
- * and types must not change.
+ * Field names mirror the platform's `job-attachment` schema verbatim: the value is
+ * injected into the input untransformed, and tooling matches attachment inputs on
+ * these names, so they must not change.
  */
 export interface JobAttachmentSchema {
   /**

@@ -6,7 +6,6 @@ import {
   AttachmentGetByIdOptions,
   AttachmentCreateOptions,
   AttachmentCreateResponse,
-  JobAttachmentSchema,
 } from '../../../models/orchestrator/attachments.types';
 import { BucketGetUriResponse } from '../../../models/orchestrator/buckets.types';
 import { AttachmentServiceModel } from '../../../models/orchestrator/attachments.models';
@@ -29,9 +28,8 @@ import { BucketMap } from '../../../models/orchestrator/buckets.constants';
 
 export class AttachmentService extends BaseService implements AttachmentServiceModel {
   @track('Attachments.GetById')
-  async getById(id: string | JobAttachmentSchema, options: AttachmentGetByIdOptions = {}): Promise<AttachmentResponse> {
-    const attachmentId = typeof id === 'string' ? id : id?.ID;
-    if (!attachmentId) {
+  async getById(id: string, options: AttachmentGetByIdOptions = {}): Promise<AttachmentResponse> {
+    if (!id) {
       throw new ValidationError({ message: 'id is required for getById' });
     }
 
@@ -41,7 +39,7 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
     const apiOptions = addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions));
 
     const response = await this.get<AttachmentResponse>(
-      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(attachmentId),
+      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(id),
       {
         params: apiOptions,
       }
