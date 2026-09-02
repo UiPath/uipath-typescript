@@ -1,0 +1,94 @@
+.workspace {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The viewer spans both rows on the left; the right column stacks the document type over the
+   fields form, with the table editor and business rules along the bottom. */
+.workspace__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 8px;
+  padding: 8px 8px 8px 0;
+  grid-template-columns: 1.3fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'viewer doctype'
+    'viewer form'
+    'table  rules';
+}
+
+/* Action Center's task pane is often narrower than the browser window, so this triggers on
+   real widths. Stacked, the viewer keeps a usable height of its own. */
+@media (max-width: 1100px) {
+  .workspace__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(320px, 1fr) auto auto auto auto;
+    grid-template-areas:
+      'viewer'
+      'doctype'
+      'form'
+      'table'
+      'rules';
+  }
+}
+
+.validation-status {
+  margin: 0;
+  padding: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.validation-status--error {
+  color: #b42318;
+}
+
+body.dark .validation-status--error {
+  color: #fda29b;
+}
+
+/* Covers the workspace between the fields form handing back control and the action actually
+   completing. By that point the form has gone idle, so without this the reviewer sees a still
+   screen and can keep clicking a document whose fate is already decided. */
+.validation-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+body.dark .validation-busy {
+  background: rgba(24, 32, 39, 0.72);
+}
+
+.validation-busy__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: validation-busy-spin 0.7s linear infinite;
+}
+
+@keyframes validation-busy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .validation-busy__spinner {
+    animation: none;
+  }
+}
