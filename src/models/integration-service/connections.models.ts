@@ -40,7 +40,7 @@ export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Connections } from '@uipath/uipath-typescript/is-connections';
+ * import { Connections } from '@uipath/uipath-typescript/connections';
  *
  * const connections = new Connections(sdk);
  * const allConnections = await connections.getAll();
@@ -68,7 +68,7 @@ export interface ConnectionsServiceModel {
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/is-connections';
+   * import { Connections } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    *
@@ -116,7 +116,7 @@ export interface ConnectionsServiceModel {
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connections } from '@uipath/uipath-typescript/is-connections';
+   * import { Connections } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    *
@@ -160,7 +160,7 @@ export interface ConnectionsServiceModel {
    * @returns Promise resolving to a {@link ConnectionPingResponse}
    * @example
    * ```typescript
-   * import { Connections, ConnectionState } from '@uipath/uipath-typescript/is-connections';
+   * import { Connections, ConnectionState } from '@uipath/uipath-typescript/connections';
    *
    * const connections = new Connections(sdk);
    *

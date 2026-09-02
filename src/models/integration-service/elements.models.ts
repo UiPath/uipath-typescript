@@ -40,7 +40,7 @@ import {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Elements } from '@uipath/uipath-typescript/is-elements';
+ * import { Elements } from '@uipath/uipath-typescript/connections';
  *
  * const elements = new Elements(sdk);
  * const objects = await elements.getObjects('uipath-slack');
@@ -61,7 +61,7 @@ export interface ElementsServiceModel {
    * @returns Promise resolving to an array of {@link ElementObject}
    * @example
    * ```typescript
-   * import { Elements } from '@uipath/uipath-typescript/is-elements';
+   * import { Elements } from '@uipath/uipath-typescript/connections';
    *
    * const elements = new Elements(sdk);
    *
