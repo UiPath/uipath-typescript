@@ -24,7 +24,7 @@ import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
-import { Platform } from '../../../src/services/platform';
+import { Platform, Users } from '../../../src/services/platform';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -73,6 +73,7 @@ export interface TestServices {
   conversationalAgent?: ConversationalAgentService;
   functions?: Functions;
   platform?: Platform;
+  platformUsers?: Users;
 }
 
 /**
@@ -168,6 +169,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     conversationalAgent: new ConversationalAgentService(sdk),
     functions: new Functions(sdk),
     platform: new Platform(sdk),
+    platformUsers: new Users(sdk),
   };
 }
 
