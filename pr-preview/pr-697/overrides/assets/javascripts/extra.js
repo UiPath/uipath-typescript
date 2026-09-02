@@ -240,8 +240,10 @@ function readNavState() {
         if (!saved || !Array.isArray(saved.open)) return null;
         if (saved.sig !== navSignature()) return null; // nav tree changed
         return new Set(saved.open);
-    } catch {
-        return null; // storage blocked (private mode) or corrupt — use defaults
+    } catch (error) {
+        // Storage blocked (private mode) or corrupt — fall back to defaults.
+        console.warn(error);
+        return null;
     }
 }
 
@@ -261,8 +263,9 @@ function updateNavState(toggle) {
             NAV_STATE_KEY,
             JSON.stringify({ sig: navSignature(), open: [...open] })
         );
-    } catch {
-        // Storage unavailable or full — silently fall back to default behaviour.
+    } catch (error) {
+        // Storage unavailable or full — fall back to default behaviour.
+        console.warn(error);
     }
 }
 
