@@ -10,6 +10,7 @@
  * import {
  *   Connections,
  *   Connectors,
+ *   Elements,
  *   execute,
  * } from '@uipath/uipath-typescript/connections';
  *
@@ -21,6 +22,9 @@
  *
  * const connections = new Connections(sdk);
  * const allConnections = await connections.getAll({ folderPath: 'Shared/Finance' });
+ *
+ * const elements = new Elements(sdk);
+ * const objects = await elements.getObjects('uipath-slack');
  *
  * const result = await execute(sdk, '<connectionId>', 'tickets', 'GET');
  * ```
