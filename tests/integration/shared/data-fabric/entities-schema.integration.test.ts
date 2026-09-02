@@ -557,13 +557,18 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
         // the failures once after the first pass has removed the referencing
         // sources. Swallowing that 400 silently used to leak one sdk_target_*
         // entity per run.
-        const deleteEntities = async (ids: string[]): Promise<string[]> => {
+        const deleteEntities = async (ids: string[], warnOnError = false): Promise<string[]> => {
           const results = await Promise.all(
             ids.map(async (entityId) => {
               try {
                 await entities.deleteById(entityId);
                 return null;
-              } catch {
+              } catch (error) {
+                // First pass stays quiet — failures there are expected FK-race
+                // 400s that the retry resolves. Terminal failures surface why.
+                if (warnOnError) {
+                  console.warn(`Failed to delete test entity ${entityId}:`, error);
+                }
                 return entityId;
               }
             })
@@ -573,7 +578,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
 
         const failedOnce = await deleteEntities(createdEntityIds);
         if (failedOnce.length > 0) {
-          const failedTwice = await deleteEntities(failedOnce);
+          const failedTwice = await deleteEntities(failedOnce, true);
           if (failedTwice.length > 0) {
             console.warn(`Failed to clean up test entities: ${failedTwice.join(', ')}`);
           }
