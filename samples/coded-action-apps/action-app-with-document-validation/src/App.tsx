@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Validation from './components/Validation';
 import './App.css';
 
@@ -19,7 +20,9 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Validation onInitTheme={handleInitTheme} />
+      <Routes>
+        <Route path="/" element={<Validation onInitTheme={handleInitTheme} />} />
+      </Routes>
     </div>
   );
 }

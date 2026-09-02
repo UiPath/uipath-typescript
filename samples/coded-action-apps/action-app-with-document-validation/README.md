@@ -121,8 +121,7 @@ Both are already satisfied by this sample's `package.json`.
 | Scope | Why |
 |---|---|
 | `OR.Buckets` | The widget reads the document and its extraction artifacts from a storage bucket, and writes the validated result back |
-| `OR.Tasks` | `submitExceptionReport` records the exception against the task |
-| `OR.Folders` | Resolves the folder the task and bucket live in |
+| `OR.Tasks` | Needed for Document Understanding to store the results|
 
 ---
 

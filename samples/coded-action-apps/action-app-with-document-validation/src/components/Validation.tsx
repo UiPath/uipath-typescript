@@ -63,7 +63,9 @@ interface ValidationProps {
 }
 
 const Validation = ({ onInitTheme }: ValidationProps) => {
-  const [data, setData] = useState<DuFramework.ContentValidationData | null>(null);
+  // The task's whole input bag is kept, not just the payload the widget needs: it has to be
+  // handed back verbatim on completion, or Action Center records the task with empty data.
+  const [taskData, setTaskData] = useState<ActionInputs | null>(null);
   const [taskId, setTaskId] = useState<number | null>(null);
   const [folderId, setFolderId] = useState<number | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
@@ -74,12 +76,13 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
   const duModule = useMemo(() => new OrchestratorDuModule(sdk), []);
 
+  const data = taskData?.contentValidationData ?? null;
+
   useEffect(() => {
     codedActionApp
       .getTask()
       .then((task) => {
-        const inputs = task.data as ActionInputs | null;
-        setData(inputs?.contentValidationData ?? null);
+        setTaskData((task.data as ActionInputs | null) ?? null);
         setTaskId(task.taskId);
         setFolderId(task.folderId);
         setIsReadonly(task.isReadOnly);
@@ -96,10 +99,9 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       });
   }, [onInitTheme]);
 
-  const completeTask = useCallback(async (outcome: string) => {
-    // The validated document already sits in the storage bucket - the widget put it there -
-    // so the completion carries no payload of its own.
-    const result = await codedActionApp.completeTask(outcome, {});
+  const completeTask = useCallback(async (outcome: string, payload: unknown) => {
+    // pass on current task data to completeTask
+    const result = await codedActionApp.completeTask(outcome, payload);
     if (!result.success) {
       codedActionApp.showMessage(
         result.errorMessage ?? 'Failed to complete the action.',
@@ -122,12 +124,12 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
       setPendingAction('submit');
       try {
-        await completeTask(SUBMIT_OUTCOME);
+        await completeTask(SUBMIT_OUTCOME, taskData);
       } finally {
         setPendingAction(null);
       }
     },
-    [completeTask],
+    [completeTask, taskData],
   );
 
   // A draft leaves the action open for the reviewer to come back to, so there is nothing to
