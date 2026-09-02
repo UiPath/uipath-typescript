@@ -2961,8 +2961,8 @@
 
 <p>A job attachment as delivered to an automation's input by the platform.</p>
 <p>Declare a field of this type in a coded function's input contract to get a file
-picker in Studio Web and Orchestrator. Carries metadata only — fetch the content
-with <code>attachments.getById()</code>.</p>
+picker in Studio Web and Orchestrator. Carries metadata only — pass it to
+<code>attachments.getFor()</code> to fetch the content.</p>
 <p>Field names mirror the platform's <code>job-attachment</code> schema verbatim: the value is
 injected into the input untransformed, and tooling matches attachment inputs on
 these names, so they must not change.</p>

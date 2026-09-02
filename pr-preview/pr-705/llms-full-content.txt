@@ -2941,7 +2941,7 @@ Gets the attachment a job attachment input refers to.
 
 #### Parameters
 
-- `attachment`: `JobAttachmentSchema` — A [JobAttachmentSchema](../JobAttachmentSchema/) received as automation input
+- `attachment`: `JobAttachmentSchema` — The job attachment input received from the automation
 - `options?`: `AttachmentGetForOptions` — Optional query parameters (expand, select)
 
 #### Returns
