@@ -3129,11 +3129,14 @@ field in an action's output data).</p>
 </table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../AttachmentResponse/"><code>AttachmentResponse</code></a>&gt;</p>
-<p>Promise resolving to the attachment
-<a href="../AttachmentResponse/">AttachmentResponse</a></p>
+<p>Promise resolving to the attachment, including <code>blobFileAccess</code> for downloading its content — <a href="../AttachmentResponse/">AttachmentResponse</a></p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Inside a coded function whose input declares a JobAttachmentSchema field</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">attachment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">attachments</span><span class="p">.</span><span class="nx">getFor</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">invoice</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Attachments</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/attachments&#39;</span><span class="p">;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">attachments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Attachments</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1">// Inside a coded function whose input declares a JobAttachmentSchema field</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">attachment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">attachments</span><span class="p">.</span><span class="nx">getFor</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">invoice</span><span class="p">);</span>
 </code></pre></div>
 
 

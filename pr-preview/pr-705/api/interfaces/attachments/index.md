@@ -87,11 +87,15 @@ Gets the attachment a job attachment input refers to.
 
 `Promise`\<`AttachmentResponse`>
 
-Promise resolving to the attachment [AttachmentResponse](../AttachmentResponse/)
+Promise resolving to the attachment, including `blobFileAccess` for downloading its content — [AttachmentResponse](../AttachmentResponse/)
 
 #### Example
 
 ```
+import { Attachments } from '@uipath/uipath-typescript/attachments';
+
+const attachments = new Attachments(sdk);
+
 // Inside a coded function whose input declares a JobAttachmentSchema field
 const attachment = await attachments.getFor(input.invoice);
 ```
