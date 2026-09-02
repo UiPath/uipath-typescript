@@ -148,9 +148,9 @@ await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyVal
 
 ### updateValue()
 
-> **updateValue**(`ref`: `AssetRef`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueOptions`): `Promise`\<`void`>
+> **updateValue**(`assetRef`: `AssetRef`, `newValue`: `AssetNewValue`, `options?`: `AssetUpdateValueOptions`): `Promise`\<`void`>
 
-Updates the value of an existing asset, identified by ref (`{ id }`, `{ name }`, or `{ key }` (GUID)).
+Updates the value of an existing asset, identified by `assetRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
 
 Fetches the asset internally to determine its type, then updates only the value while preserving the asset's name, scope, and description. Folder scoping in `options` drives both the ref's name/key lookup and the update itself — the same folder options apply to both calls.
 
@@ -164,7 +164,7 @@ The `newValue` runtime type must match the asset's `valueType`:
 
 #### Parameters
 
-- `ref`: `AssetRef` — Asset ref (`{ id }`, `{ name }`, or `{ key }` (GUID))
+- `assetRef`: `AssetRef` — Asset ref (`{ id }`, `{ name }`, or `{ key }` (GUID))
 - `newValue`: `AssetNewValue` — New value to apply
 - `options?`: `AssetUpdateValueOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
 

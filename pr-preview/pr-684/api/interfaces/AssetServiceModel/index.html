@@ -3388,9 +3388,9 @@
 <hr />
 <h3 id="updatevalue">updateValue()<a class="headerlink" href="#updatevalue" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateValue</strong>(<code>ref</code>: <a href="../../type-aliases/AssetRef/"><code>AssetRef</code></a>, <code>newValue</code>: <a href="../../type-aliases/AssetNewValue/"><code>AssetNewValue</code></a>, <code>options?</code>: <a href="../AssetUpdateValueOptions/"><code>AssetUpdateValueOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>updateValue</strong>(<code>assetRef</code>: <a href="../../type-aliases/AssetRef/"><code>AssetRef</code></a>, <code>newValue</code>: <a href="../../type-aliases/AssetNewValue/"><code>AssetNewValue</code></a>, <code>options?</code>: <a href="../AssetUpdateValueOptions/"><code>AssetUpdateValueOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Updates the value of an existing asset, identified by ref (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID)).</p>
+<p>Updates the value of an existing asset, identified by <code>assetRef</code> (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID)).</p>
 <p>Fetches the asset internally to determine its type, then updates only the value while
 preserving the asset's name, scope, and description. Folder scoping in <code>options</code> drives
 both the ref's name/key lookup and the update itself — the same folder options apply to
@@ -3412,7 +3412,7 @@ both calls.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>ref</code></td>
+<td><code>assetRef</code></td>
 <td><a href="../../type-aliases/AssetRef/"><code>AssetRef</code></a></td>
 <td>Asset ref (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID))</td>
 </tr>
