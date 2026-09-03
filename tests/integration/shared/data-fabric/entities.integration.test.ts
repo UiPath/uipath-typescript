@@ -1565,12 +1565,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     }, 150_000);
   });
 
-  // Verifies the MULTILINE_MAX round-trip end to end: create + insert + read the
-  // full value back via getRecordById (v2 read). The list endpoint's size-marker
-  // projection is not asserted — the server threshold is inconsistent and the
-  // consumer-facing guarantee is the full-content read.
+  // Verifies the MULTILINE_MAX read contract end to end. For content over the 10,000-char
+  // truncation limit, list returns one of two preview shapes depending on the tenant
+  // (truncated content, or a size marker), and getRecordById (v2 read) returns the whole
+  // value. The body is 12k to clear that threshold: at or under it list returns the value
+  // verbatim, and the preview assertions would not be exercised.
   describe('MULTILINE_MAX field lifecycle', () => {
-    it('should round-trip a MULTILINE_MAX value via getRecordById', async () => {
+    it('should preview on list and return the full value via getRecordById', async () => {
       const { entities } = getServices();
       const name = `sdk_mlmax_life_${generateRandomString(8).toLowerCase()}`;
 
@@ -1579,11 +1580,23 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       ]);
       createdEntityIds.push(entityId);
 
-      const bodyValue = `Large body content ${generateRandomString(256)}`;
+      // Over the 10k truncation limit, so a truncating server has to shorten it.
+      const bodyValue = `Large body content ${generateRandomString(12000)}`;
       const inserted = await entities.insertRecordById(entityId, { body: bodyValue });
       expect(inserted.Id).toBeDefined();
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
 
+      // Over the limit, so the preview must be the truncated content or a size marker.
+      const listed = await entities.getAllRecords(entityId, { pageSize: 50 });
+      const listedRecord = listed.items.find((r: EntityRecord) => r.Id === inserted.Id);
+      expect(listedRecord).toBeDefined();
+      expect(typeof listedRecord!.body).toBe('string');
+      const preview = listedRecord!.body as string;
+      const isTruncated = preview === `${bodyValue.slice(0, 10000)}...[Truncated]`;
+      const isMarker = /^HasValue=true Length=\d+/.test(preview);
+      expect(isTruncated || isMarker).toBe(true);
+
+      // getRecordById (v2 read) returns the full content.
       const full = await entities.getRecordById(entityId, inserted.Id);
       expect(full.body).toBe(bodyValue);
     }, 90_000);
