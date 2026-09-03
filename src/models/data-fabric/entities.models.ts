@@ -830,6 +830,11 @@ export interface EntityMethods {
   /**
    * Update a single record in this entity
    *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
+   *
    * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
    * Use this method if you need trigger events to fire for the updated record.
    *
@@ -842,6 +847,11 @@ export interface EntityMethods {
 
   /**
    * Update data in this entity
+   *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
    *
    * Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use {@link updateRecord} if you need
    * trigger events to fire for each updated record.

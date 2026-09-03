@@ -21,9 +21,9 @@ export enum EntityFieldDataType {
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
   /**
-   * Large multi-line text, up to a 128 KB byte budget (about 65,536 characters). Creating the
-   * field requires the Multi-line (Max) feature to be enabled for the tenant; `create` and
-   * add-field otherwise reject it with 400.
+   * Large multi-line text, up to a 128 KB byte budget (about 65,536 characters). The
+   * Multi-line (Max) feature must be enabled for the tenant, otherwise creating the field or
+   * adding it to an existing entity is rejected.
    *
    * Reads are not uniform, and only a single-record read by ID is guaranteed to return the
    * whole value. List and query return a bounded preview: the value itself when it is at most
@@ -36,7 +36,7 @@ export enum EntityFieldDataType {
    *
    * The key is absent rather than null whenever there is no value to return: a null value on
    * any read, a join query, and insert/update responses. The field cannot be used in
-   * `filterGroup`, `sortOptions`, or a join condition; the server rejects those with 400.
+   * `filterGroup`, `sortOptions`, or a join condition; those requests are rejected.
    */
   MULTILINE_MAX = "MULTILINE_MAX",
   FILE = "FILE",

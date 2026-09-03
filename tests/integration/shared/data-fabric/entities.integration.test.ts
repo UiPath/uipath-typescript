@@ -1568,7 +1568,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   // Verifies the MULTILINE_MAX read contract end to end. For content over the 10,000-char
   // truncation limit, list returns one of two preview shapes depending on the tenant
   // (truncated content, or a size marker), and getRecordById (v2 read) returns the whole
-  // value. Below that limit list returns the value verbatim, which is why the body is 12k.
+  // value. The body is 12k to clear that threshold: at or under it list returns the value
+  // verbatim, and the preview assertions would not be exercised.
   describe('MULTILINE_MAX field lifecycle', () => {
     it('should preview on list and return the full value via getRecordById', async () => {
       const { entities } = getServices();
