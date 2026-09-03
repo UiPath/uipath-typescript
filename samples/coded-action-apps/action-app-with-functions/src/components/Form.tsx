@@ -7,6 +7,7 @@ import type {
   ReadCredentialInput,
   ReadCredentialOutput,
   FUNCTION_NAMES as ContractFunctionNames,
+  RESOLVABLE_ASSET_PREFIX as ContractResolvablePrefix,
 } from '../../coded-functions/lib/contract';
 import uipath from '../uipath';
 import themeToggler from '../assets/themeToggler.png';
@@ -29,6 +30,15 @@ const MASK = '•'.repeat(16);
 const FUNCTION_NAMES: typeof ContractFunctionNames = {
   readCredential: 'action-app-with-functions-fn_read-credential',
 };
+
+/**
+ * Mirrors `RESOLVABLE_ASSET_PREFIX` from the contract, so the picker only offers assets the
+ * function will actually resolve.
+ *
+ * This filter is UX, not security — the function enforces the same prefix server-side, because
+ * its HTTP trigger is callable without going through this app at all.
+ */
+const RESOLVABLE_ASSET_PREFIX: typeof ContractResolvablePrefix = 'demo-';
 
 interface FormData {
   selectedAssetName: string;
@@ -56,8 +66,8 @@ const formatTimestamp = (value: string | null): string => {
 };
 
 /**
- * Lists every asset in the folder. Each getAll() call returns a single page, so this walks
- * the cursor until the server reports no further pages.
+ * Lists the folder's assets that the function is allowed to resolve. Each getAll() call
+ * returns a single page, so this walks the cursor until the server reports no further pages.
  *
  * Secret assets are omitted from this listing entirely, so they cannot be offered in the
  * picker — pass such an asset's name in from the automation instead.
@@ -76,7 +86,9 @@ const fetchAllAssets = async (folderId: number): Promise<AssetGetResponse[]> => 
     cursor = page.hasNextPage ? page.nextCursor : undefined;
   } while (cursor);
 
-  return collected.sort((a, b) => a.name.localeCompare(b.name));
+  return collected
+    .filter((asset) => asset.name.startsWith(RESOLVABLE_ASSET_PREFIX))
+    .sort((a, b) => a.name.localeCompare(b.name));
 };
 
 const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
@@ -272,7 +284,8 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
             <div className="empty-message">{assetsError}</div>
           ) : assets.length === 0 ? (
             <div className="empty-message">
-              No assets found in folder &ldquo;{folderName || '—'}&rdquo;.
+              No assets named <code>{RESOLVABLE_ASSET_PREFIX}*</code> in folder &ldquo;
+              {folderName || '—'}&rdquo;. The function only resolves assets with that prefix.
             </div>
           ) : (
             <>

@@ -38,6 +38,24 @@ export interface ReadCredentialOutput {
 }
 
 /**
+ * The function refuses to resolve any asset whose name does not start with this
+ * prefix.
+ *
+ * This is an authorization boundary, not cosmetics. The function reads assets
+ * with the *robot's* identity, which can read every Credential and Secret asset
+ * in the folder — including ones the calling user could never read themselves.
+ * The asset name arrives from the caller, and the function's HTTP trigger is
+ * directly callable by anyone who can invoke it, so the app's dropdown is not a
+ * security boundary. Without this check, one invocation per guessed name would
+ * exfiltrate every secret in the folder — a classic confused deputy.
+ *
+ * Keep the prefix as narrow as the demo allows. For production, prefer an
+ * explicit list of permitted names, or an authorization check against
+ * `ctx.user`, over a prefix.
+ */
+export const RESOLVABLE_ASSET_PREFIX = 'demo-';
+
+/**
  * A deployed function's registered name is package-prefixed: `read-credential`
  * inside the `action-app-with-functions-fn` package registers as
  * `action-app-with-functions-fn_read-credential`. Passing the bare name returns

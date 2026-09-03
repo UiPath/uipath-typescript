@@ -1,4 +1,5 @@
-import { defineFunction, logger } from '@uipath/coded-functions-js-sdk';
+import { defineFunction, FunctionError, logger } from '@uipath/coded-functions-js-sdk';
+import { RESOLVABLE_ASSET_PREFIX } from '../lib/contract.ts';
 import type { ReadCredentialOutput } from '../lib/contract.ts';
 import { readRobotAsset, robotConnection } from '../lib/orchestrator.ts';
 
@@ -25,6 +26,18 @@ export default defineFunction({
     additionalProperties: false,
   },
   handler: async (input, ctx): Promise<ReadCredentialOutput> => {
+    // Authorize BEFORE touching the robot identity. The name is caller-supplied and the
+    // robot can read every secret in the folder, so an unconstrained read here would let
+    // any caller enumerate all of them.
+    if (!input.assetName.startsWith(RESOLVABLE_ASSET_PREFIX)) {
+      logger.info(`read-credential: refused '${input.assetName}' — outside the resolvable prefix`);
+      throw new FunctionError(
+        `This function only resolves assets named '${RESOLVABLE_ASSET_PREFIX}*'.`,
+        403,
+        'ASSET_NOT_RESOLVABLE',
+      );
+    }
+
     const conn = robotConnection(ctx);
     const resolved = await readRobotAsset(conn, input.assetName);
 

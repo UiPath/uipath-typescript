@@ -27,6 +27,28 @@ So the function is the only place the read can happen. See [`coded-functions/lib
 
 ---
 
+## Security: the function is a privileged deputy
+
+The function reads assets with the **robot's** identity, which can read every Credential and Secret asset in its folder — including ones the calling user could never read themselves. The asset name arrives from the caller, and the function's HTTP trigger is callable directly, without going through this app. The dropdown is therefore **not** a security boundary.
+
+Left unconstrained, that is a textbook confused deputy: one invocation per guessed name would exfiltrate every secret in the folder, to any caller who can invoke the function.
+
+So the function authorizes before it reads. `RESOLVABLE_ASSET_PREFIX` in [`coded-functions/lib/contract.ts`](./coded-functions/lib/contract.ts) bounds what it will resolve, and any other name is refused with `403 ASSET_NOT_RESOLVABLE` before the robot identity is touched at all:
+
+```typescript
+if (!input.assetName.startsWith(RESOLVABLE_ASSET_PREFIX)) {
+  throw new FunctionError(
+    `This function only resolves assets named '${RESOLVABLE_ASSET_PREFIX}*'.`,
+    403,
+    'ASSET_NOT_RESOLVABLE',
+  );
+}
+```
+
+The app filters its picker by the same prefix, but that is only so the UI matches what the function accepts — the server-side check is the control.
+
+**If you adapt this sample, keep an authorization check.** A prefix is the loosest form that still bounds the blast radius; prefer an explicit list of permitted asset names, or a check against `ctx.user`, when the set of callers is wider than a demo. The general rule: a function holding a privileged identity must constrain what it will act on, never act on an arbitrary caller-supplied target.
+
 ## Architecture
 
 ```
@@ -107,7 +129,7 @@ uip or credential-stores list --output table
 Then create the asset. The value is a single positional argument in **`username:password`** format — the client id and client secret:
 
 ```bash
-uip or assets create "SalesforceClientSecret" "<client-id>:<client-secret>" \
+uip or assets create "demo-SalesforceClientSecret" "<client-id>:<client-secret>" \
   --type Credential \
   --credential-store-key <credential-store-key> \
   --folder-key <folder-key>
@@ -261,7 +283,7 @@ Create the task using an RPA workflow in **Studio Desktop** that uses the **Crea
 
 When the app loads inside Action Center:
 
-1. **Asset picker** — Shows the Orchestrator folder the task belongs to (read-only) and lists every asset in it, sorted by name and labelled with its type, e.g. `SalesforceClientSecret (Credential)`. `Secret` assets do not appear, because the listing omits them. If the folder has no assets, an empty-state message is shown; if the listing fails (for example a missing `OR.Assets.Read` scope), the error from Orchestrator is shown.
+1. **Asset picker** — Shows the Orchestrator folder the task belongs to (read-only) and lists the assets in it named `demo-*`, sorted by name and labelled with its type, e.g. `demo-SalesforceClientSecret (Credential)`. `Secret` assets do not appear, because the listing omits them. If the folder has no matching assets, an empty-state message naming the prefix is shown; if the listing fails (for example a missing `OR.Assets.Read` scope), the error from Orchestrator is shown.
 
 2. **Resolve via function** — Selecting an asset shows a **Resolve via function** button and a note explaining why the browser cannot read the value itself. Clicking it invokes `action-app-with-functions-fn_read-credential` in the task's folder. On success the panel shows:
    - the **Client ID** (from `CredentialUsername`), for `Credential` assets only
@@ -286,4 +308,5 @@ When the app loads inside Action Center:
 | Function not found, with a list of available names | The bare function name was used instead of the package-prefixed one, or the process was not created at the published version |
 | `NO_ROBOT_IDENTITY` from the function | The function ran without a robot identity. A `Credential` or `Secret` asset can only be read by a deployed run, never by `uip functions run` locally |
 | `ASSET_EMPTY` on a Credential asset | No value is set for this robot, or the asset is not assigned to the folder |
+| `403 ASSET_NOT_RESOLVABLE` | The asset name does not start with `RESOLVABLE_ASSET_PREFIX`. Rename the asset, or widen the prefix in `contract.ts` — deliberately, having read the Security section |
 | A `Secret` asset is missing from the picker | Expected — the assets listing omits them. Pass its name in from the automation instead |
