@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#deprecated" class="md-skip">
           Skip to content
         </a>
       
@@ -279,6 +279,8 @@
       
         
       
+        
+      
     
     
     
@@ -425,6 +427,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -2897,6 +2927,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#deprecated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2930,6 +2971,9 @@
   <h1>TimeoutOptions</h1>
 
 <p>Options for request timeouts</p>
+<h2 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h2>
+<p>Set <a href="../RequestSpec/#timeoutms">RequestSpec.timeoutMs</a> on the request instead. <code>abortOnTimeout</code> has no
+effect — a timeout always aborts the request.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2941,12 +2985,12 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="abortontimeout"></a> <code>abortOnTimeout?</code></td>
+<td><a id="abortontimeout"></a> <del><code>abortOnTimeout?</code></del></td>
 <td><code>boolean</code></td>
 <td>Whether to abort the request on timeout</td>
 </tr>
 <tr>
-<td><a id="timeout"></a> <code>timeout?</code></td>
+<td><a id="timeout"></a> <del><code>timeout?</code></del></td>
 <td><code>number</code></td>
 <td>Request timeout in milliseconds</td>
 </tr>
