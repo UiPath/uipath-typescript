@@ -2761,9 +2761,10 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="Authentication Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#scope-changes-not-taking-effect" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2771,6 +2772,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3034,9 +3040,10 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
+    <nav class="md-nav" aria-label="Authentication Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#scope-changes-not-taking-effect" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3044,6 +3051,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3105,20 +3117,38 @@
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">}</span>
 </code></pre></div></li>
 </ol>
-<hr />
-<h2 id="scope-changes-not-taking-effect">Scope Changes Not Taking Effect<a class="headerlink" href="#scope-changes-not-taking-effect" title="Permanent link">&para;</a></h2>
-<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error. The scopes in the token don't match what the app has been granted.</p>
-<p><strong>Cause</strong>: Two things hold on to the old scopes:</p>
-<ol type="1">
-<li>The app reads the scopes it asks for from the <code>uipath:scope</code> meta tag in <code>index.html</code>, and that tag is written when the app is deployed. Changing <code>uipath.json</code> on its own does nothing to an app that is already deployed.</li>
-<li>The token is cached in <code>sessionStorage</code> under <code>uipath_sdk_user_token-&lt;clientId&gt;</code>. The SDK only checks that it is well formed and not expired, never that its scopes still match. So an open session keeps using the old token.</li>
-</ol>
-<p><strong>Solution</strong>: Do all four, in order:</p>
+<h3 id="scope-changes-not-taking-effect">Scope Changes Not Taking Effect<a class="headerlink" href="#scope-changes-not-taking-effect" title="Permanent link">&para;</a></h3>
+<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error.</p>
+<p><strong>Cause</strong>: Two things hold on to the old scopes.</p>
+<p>First, the app requests the scopes it had when it was last deployed. What you need to change depends on how those scopes are set:</p>
+<table>
+<thead>
+<tr>
+<th>How scopes are set</th>
+<th>What to do after granting the scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uipath.json</code> with no <code>scope</code> field</td>
+<td>Redeploy. Every scope granted to the client is picked up automatically at deploy time, so no code change is needed.</td>
+</tr>
+<tr>
+<td><code>uipath.json</code> with <code>scope</code> set</td>
+<td>Add the scope to <code>scope</code>, then rebuild, pack, publish, and deploy.</td>
+</tr>
+<tr>
+<td><code>scope</code> passed to <code>UiPath()</code> in code</td>
+<td>Add the scope in the code, then rebuild, pack, publish, and deploy.</td>
+</tr>
+</tbody>
+</table>
+<p>Second, the token is cached in <code>sessionStorage</code>. The SDK only checks that it is well formed and not expired, never that its scopes still match, so an open session keeps using the old token.</p>
+<p><strong>Solution</strong>:</p>
 <ol type="1">
 <li>Add the scope in <strong>Admin → External Applications</strong>.</li>
-<li>Add the same scope to <code>scope</code> in <code>uipath.json</code>.</li>
-<li>Redeploy the app, so the new scope reaches the meta tag.</li>
-<li>Sign out and sign back in, or close the tab and reopen the app.</li>
+<li>Update and deploy the app as shown in the table above.</li>
+<li>Sign out and sign back in, or close the browser tab and reopen the app.</li>
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Sign out (clears the cached token)</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
