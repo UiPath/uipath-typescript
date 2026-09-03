@@ -36,7 +36,7 @@ import type { IUiPath } from '../../../core/types';
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Connectors } from '@uipath/uipath-typescript/is-connectors';
+ * import { Connectors } from '@uipath/uipath-typescript/connections';
  *
  * const connectors = new Connectors(sdk);
  * const allConnectors = await connectors.getAll();
@@ -64,7 +64,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * @returns Promise resolving to an array of {@link ConnectorGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/is-connectors';
+   * import { Connectors } from '@uipath/uipath-typescript/connections';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -95,7 +95,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * @returns Promise resolving to a {@link ConnectorGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/is-connectors';
+   * import { Connectors } from '@uipath/uipath-typescript/connections';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -124,7 +124,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * @returns Promise resolving to a {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/is-connectors';
+   * import { Connectors } from '@uipath/uipath-typescript/connections';
    *
    * const connectors = new Connectors(sdk);
    *
@@ -171,7 +171,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}
    * @example
    * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/is-connectors';
+   * import { Connectors } from '@uipath/uipath-typescript/connections';
    *
    * const connectors = new Connectors(sdk);
    *

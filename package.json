@@ -246,44 +246,14 @@
                 "default": "./dist/platform/index.cjs"
             }
         },
-        "./is-connectors": {
+        "./connections": {
             "import": {
-                "types": "./dist/is-connectors/index.d.ts",
-                "default": "./dist/is-connectors/index.mjs"
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.mjs"
             },
             "require": {
-                "types": "./dist/is-connectors/index.d.ts",
-                "default": "./dist/is-connectors/index.cjs"
-            }
-        },
-        "./is-elements": {
-            "import": {
-                "types": "./dist/is-elements/index.d.ts",
-                "default": "./dist/is-elements/index.mjs"
-            },
-            "require": {
-                "types": "./dist/is-elements/index.d.ts",
-                "default": "./dist/is-elements/index.cjs"
-            }
-        },
-        "./is-connections": {
-            "import": {
-                "types": "./dist/is-connections/index.d.ts",
-                "default": "./dist/is-connections/index.mjs"
-            },
-            "require": {
-                "types": "./dist/is-connections/index.d.ts",
-                "default": "./dist/is-connections/index.cjs"
-            }
-        },
-        "./is-execution": {
-            "import": {
-                "types": "./dist/is-execution/index.d.ts",
-                "default": "./dist/is-execution/index.mjs"
-            },
-            "require": {
-                "types": "./dist/is-execution/index.d.ts",
-                "default": "./dist/is-execution/index.cjs"
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.cjs"
             }
         }
     },

@@ -245,24 +245,9 @@ const serviceEntries = [
     output: 'platform/index'
   },
   {
-    name: 'is-connectors',
-    input: 'src/services/integration-service/connectors/index.ts',
-    output: 'is-connectors/index'
-  },
-  {
-    name: 'is-elements',
-    input: 'src/services/integration-service/elements/index.ts',
-    output: 'is-elements/index'
-  },
-  {
-    name: 'is-connections',
-    input: 'src/services/integration-service/connections/index.ts',
-    output: 'is-connections/index'
-  },
-  {
-    name: 'is-execution',
-    input: 'src/services/integration-service/execution/index.ts',
-    output: 'is-execution/index'
+    name: 'connections',
+    input: 'src/services/integration-service/index.ts',
+    output: 'connections/index'
   }
 ];
 
