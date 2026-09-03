@@ -132,8 +132,10 @@ jobs:
       - name: Run Integration Tests
         # Integration tests are network-bound (workers mostly await HTTP), so run
         # more workers than vitest's CPU-based default (cores-1 = 1 on this 2-vCPU
-        # runner); 4 reaches the wall-clock floor set by the longest test file.
-        run: npm run test:integration:coverage -- --run --maxWorkers=4
+        # runner). 2 is the risk-adjusted sweet spot: ~2x faster than serial while
+        # halving how many in-flight tests an alpha-tenant stall window can catch
+        # (4 workers measured 3.2x but a stall window failed 10+ tests at once).
+        run: npm run test:integration:coverage -- --run --maxWorkers=2
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
