@@ -3107,27 +3107,26 @@
 </ol>
 <hr />
 <h2 id="scope-changes-not-taking-effect">Scope Changes Not Taking Effect<a class="headerlink" href="#scope-changes-not-taking-effect" title="Permanent link">&para;</a></h2>
-<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error. The scopes in the JWT don't match what the app has been granted.</p>
-<p><strong>Cause</strong>: Three things have to agree, and two of them are sticky:</p>
+<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error. The scopes in the token don't match what the app has been granted.</p>
+<p><strong>Cause</strong>: Two things hold on to the old scopes:</p>
 <ol type="1">
-<li>The scopes granted to the External Application in <strong>Admin → External Applications</strong>.</li>
-<li>The scopes the app <em>asks for</em>. These are read at runtime from the <code>uipath:scope</code> meta tag in <code>index.html</code>, which is written when the app is <strong>deployed</strong>. Editing <code>uipath.json</code> alone changes nothing in an already-deployed app.</li>
-<li>The access token itself. The SDK caches it in <code>sessionStorage</code> under the key <code>uipath_sdk_user_token-&lt;clientId&gt;</code>. On load it is checked for format and expiry — not for whether its scopes still match what the app now asks for. So an open session keeps using the old, narrower token.</li>
+<li>The app reads the scopes it asks for from the <code>uipath:scope</code> meta tag in <code>index.html</code>, and that tag is written when the app is deployed. Changing <code>uipath.json</code> on its own does nothing to an app that is already deployed.</li>
+<li>The token is cached in <code>sessionStorage</code> under <code>uipath_sdk_user_token-&lt;clientId&gt;</code>. The SDK only checks that it is well formed and not expired, never that its scopes still match. So an open session keeps using the old token.</li>
 </ol>
 <p><strong>Solution</strong>: Do all four, in order:</p>
 <ol type="1">
 <li>Add the scope in <strong>Admin → External Applications</strong>.</li>
 <li>Add the same scope to <code>scope</code> in <code>uipath.json</code>.</li>
-<li><strong>Redeploy the app</strong>, so the new scope reaches the <code>uipath:scope</code> meta tag.</li>
-<li>Get a fresh token — call <code>sdk.logout()</code> and sign in again, or close the browser tab and reopen the app.</li>
+<li>Redeploy the app, so the new scope reaches the meta tag.</li>
+<li>Sign out and sign back in, or close the tab and reopen the app.</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Clears the cached token locally</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Sign out (clears the cached token)</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Also ends the session at the identity provider</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Sign out of UiPath as well, so the next sign in asks for credentials</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<p>Refreshing the page does not help — <code>sessionStorage</code> is scoped to the browser tab and survives reloads, including a hard reload. It is cleared by closing the tab, calling <code>sdk.logout()</code>, or <strong>DevTools → Application → Clear site data</strong>.</p>
+<p>Refreshing the page won't help. <code>sessionStorage</code> belongs to the browser tab and survives reloads, including a hard reload. Closing the tab clears it, as does <strong>DevTools → Application → Clear site data</strong>.</p>
 
 
 
