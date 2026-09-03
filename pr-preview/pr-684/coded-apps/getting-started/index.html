@@ -3501,12 +3501,25 @@
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">()</span>
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">()</span>
 </code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip: Overriding the redirect URI</p>
+<p>By default, the SDK reads <code>redirectUri</code> from the <code>&lt;meta name="uipath:redirect-uri"&gt;</code> tag. You can also compute it at runtime, which is useful when the same app is reachable at multiple URLs (for example, orgs whose name contains <code>_</code> are also reachable at the hyphen form, or apps served from both a self-hosted URL and <code>uipath.host</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">getAppBase</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript&#39;</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span><span class="nx">redirectUri</span><span class="o">:</span><span class="w"> </span><span class="kt">window.location.origin</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">getAppBase</span><span class="p">(),</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="p">})</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">()</span>
+</code></pre></div>
+<p><code>getAppBase()</code> returns the app root injected by the platform, so the URI stays stable regardless of which route the user is on.</p>
+</div>
 <hr />
 <h2 id="deploy">Deploy<a class="headerlink" href="#deploy" title="Permanent link">&para;</a></h2>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip login</span><span data-ty="input" data-ty-prompt="$">npm run build</span><span data-ty="input" data-ty-prompt="$">uip codedapp pack dist -n &lt;appName&gt; --version 1.0.0</span><span data-ty="input" data-ty-prompt="$">uip codedapp publish</span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy</span><span data-ty></span></div>
 
 <p>Once deployed, your app is accessible at:</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>https://&lt;orgName&gt;.uipath.host/&lt;appName&gt;
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>https://&lt;orgName&gt;.uipath.host/&lt;appName&gt;
 </code></pre></div>
 Refer to <a href="../cli-reference/">CLI Reference</a> for details.</p>
 <div class="admonition info">

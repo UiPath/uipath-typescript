@@ -2981,13 +2981,12 @@
 
   <h1>FolderScopedOptions</h1>
 
-<p>Options that scope a name-based lookup (e.g. <code>getByName</code>) to a folder.
-Provide one of <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>. When more than
-one is supplied, all are forwarded; the server applies precedence
-<code>folderPath</code> &gt; <code>folderKey</code> &gt; <code>folderId</code>.</p>
+<p>Options that scope a name-based lookup (e.g. <code>getByName</code>) to a folder and let the caller
+shape the OData response via <code>expand</code>/<code>select</code>. Adds the query-shape fields to
+<a href="../FolderScopingOnly/">FolderScopingOnly</a>.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../BaseOptions/"><code>BaseOptions</code></a></li>
+<li><a href="../BaseOptions/"><code>BaseOptions</code></a>.<a href="../FolderScopingOnly/"><code>FolderScopingOnly</code></a></li>
 </ul>
 <h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
 <ul>
