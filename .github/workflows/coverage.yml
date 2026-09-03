@@ -129,8 +129,14 @@ jobs:
           MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY=${{ steps.config.outputs.maestro_test_completed_case_process_key }}
           EOF
 
+      - name: Print runner specs
+        run: nproc && free -h && node -p "require('os').availableParallelism()"
+
       - name: Run Integration Tests
-        run: npm run test:integration:coverage -- --run
+        # Integration tests are network-bound (workers mostly await HTTP), so run
+        # more workers than vitest's CPU-based default; 4 reaches the wall-clock
+        # floor set by the longest test file.
+        run: npm run test:integration:coverage -- --run --maxWorkers=4
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
