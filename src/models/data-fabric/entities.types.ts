@@ -1,8 +1,17 @@
 import { PaginationOptions } from "../../utils/pagination/types";
+import { ResourceRef } from "../common/types";
 import { EntityFolderScopedOptions } from "./data-fabric.types";
 
 // Re-export — canonical definition is in `./data-fabric.types`.
 export type { EntityFolderScopedOptions };
+
+/**
+ * Selects an entity by exactly one identifier — `{ id }` (GUID) or `{ name }`.
+ *
+ * Operational record and attachment methods accept an `EntityRef` and route to the
+ * matching Data Fabric by-id or by-name endpoint. See {@link ResourceRef}.
+ */
+export type EntityRef = ResourceRef<string>;
 
 /**
  * Entity field data type names (SQL-level types returned by the API)
@@ -70,6 +79,11 @@ export interface EntityGetRecordByIdOptions extends EntityFolderScopedOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 }
+
+/**
+ * Options for getting a single entity record by entity name and record ID
+ */
+export interface EntityGetRecordByNameOptions extends EntityGetRecordByIdOptions {}
 
 /**
  * Common options for entity operations that modify multiple records
@@ -439,6 +453,11 @@ export interface EntityGetAllOptions extends EntityFolderScopedOptions {
 }
 
 export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}
+
+/**
+ * Options for getting entity metadata by entity name
+ */
+export interface EntityGetByNameOptions extends EntityGetByIdOptions {}
 
 export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
 

@@ -75,7 +75,7 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
     try {
       const entityService = new Entities(sdk)
       const blob = await entityService.downloadAttachment(
-        entityId,
+        { id: entityId },
         recordId,
         fieldName,
       )

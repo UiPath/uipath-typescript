@@ -46,6 +46,26 @@ export const DATA_FABRIC_ENDPOINTS = {
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
     DELETE_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
+
+    // ---- By-name variants ----
+    // The Data Fabric API exposes a parallel `{entityName}/...` route for every
+    // record operation, letting callers address an entity by name instead of id
+    // (used by solution binding overrides, which resolve resources by name + folderKey).
+    GET_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/Entity/${entityName}/metadata`,
+    GET_ENTITY_RECORDS_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/read`,
+    // v2 single-record read by name — mirrors GET_RECORD_BY_ID (full MULTILINE_MAX content).
+    GET_RECORD_BY_NAME: (entityName: string, recordId: string) =>
+      `${DATAFABRIC_BASE}/api/v2/EntityService/${entityName}/read/${recordId}`,
+    INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/insert`,
+    BATCH_INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/insert-batch`,
+    UPDATE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/update/${recordId}`,
+    UPDATE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/update-batch`,
+    DELETE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete/${recordId}`,
+    DELETE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete-batch`,
+    BULK_UPLOAD_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/bulk-upload`,
+    // Download (GET), upload (POST), and delete (DELETE) all share this URL; the HTTP method is chosen at the call site.
+    ATTACHMENT_BY_NAME: (entityName: string, recordId: string, fieldName: string) =>
+      `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
   },
   CHOICESETS: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
