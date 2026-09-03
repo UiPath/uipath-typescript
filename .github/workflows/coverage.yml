@@ -130,7 +130,8 @@ jobs:
           EOF
 
       - name: Run Integration Tests
-        run: npm run test:integration:coverage -- --run
+        # Network-bound suite: vitest's CPU-based default serializes on this 2-vCPU runner; 2 workers balances speed against tenant stall exposure.
+        run: npm run test:integration:coverage -- --run --maxWorkers=2
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2

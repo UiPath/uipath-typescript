@@ -49,8 +49,11 @@ tests/integration/
 │   │   └── case-instances.integration.test.ts
 │   ├── action-center/        # Action Center service tests
 │   │   └── tasks.integration.test.ts
-│   └── data-fabric/          # Data Fabric service tests
-│       ├── entities.integration.test.ts
+│   └── data-fabric/          # Data Fabric service tests (entities split by area so
+│       │                     # the files run on parallel vitest workers)
+│       ├── entities-records.integration.test.ts  # getAll/getById + record CRUD + import + folder-scoped
+│       ├── entities-query.integration.test.ts    # queryRecordsById: aggregates, having, joins, expansion
+│       ├── entities-schema.integration.test.ts   # create/updateById/deleteById, sqlType constraints, RELATIONSHIP/FILE (v1 only)
 │       ├── choicesets.integration.test.ts
 │       └── access.integration.test.ts
 └── auth-errors.integration.test.ts  # Authentication & authorization error tests
