@@ -7,7 +7,6 @@ export const ATTACHMENT_TEST_CONSTANTS = {
   // Attachment IDs
   ATTACHMENT_ID: '12345678-1234-1234-1234-123456789abc',
   ATTACHMENT_NAME: 'test-attachment.pdf',
-  ATTACHMENT_MIME_TYPE: 'application/pdf',
 
   // Job Key
   JOB_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',

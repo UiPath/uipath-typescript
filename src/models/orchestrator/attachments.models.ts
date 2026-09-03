@@ -1,10 +1,8 @@
 import {
   AttachmentResponse,
   AttachmentGetByIdOptions,
-  AttachmentGetForOptions,
   AttachmentCreateOptions,
   AttachmentCreateResponse,
-  JobAttachmentSchema,
 } from './attachments.types';
 
 /**
@@ -29,24 +27,6 @@ export interface AttachmentServiceModel {
    * ```
    */
   getById(id: string, options?: AttachmentGetByIdOptions): Promise<AttachmentResponse>;
-
-  /**
-   * Gets the attachment a job attachment input refers to.
-   *
-   * @param attachment - The job attachment input received from the automation
-   * @param options - Optional query parameters (expand, select)
-   * @returns Promise resolving to the attachment, including `blobFileAccess` for downloading its content — {@link AttachmentResponse}
-   * @example
-   * ```typescript
-   * import { Attachments } from '@uipath/uipath-typescript/attachments';
-   *
-   * const attachments = new Attachments(sdk);
-   *
-   * // Inside a coded function whose input declares a JobAttachmentSchema field
-   * const attachment = await attachments.getFor(input.invoice);
-   * ```
-   */
-  getFor(attachment: JobAttachmentSchema, options?: AttachmentGetForOptions): Promise<AttachmentResponse>;
 
   /**
    * Creates an attachment and uploads its content.

@@ -4,10 +4,8 @@ import { errorResponseParser } from '../../../core/errors/parser';
 import {
   AttachmentResponse,
   AttachmentGetByIdOptions,
-  AttachmentGetForOptions,
   AttachmentCreateOptions,
   AttachmentCreateResponse,
-  JobAttachmentSchema,
 } from '../../../models/orchestrator/attachments.types';
 import { BucketGetUriResponse } from '../../../models/orchestrator/buckets.types';
 import { AttachmentServiceModel } from '../../../models/orchestrator/attachments.models';
@@ -35,29 +33,6 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
       throw new ValidationError({ message: 'id is required for getById' });
     }
 
-    return this.fetchById(id, options);
-  }
-
-  @track('Attachments.GetFor')
-  async getFor(
-    attachment: JobAttachmentSchema,
-    options: AttachmentGetForOptions = {}
-  ): Promise<AttachmentResponse> {
-    if (!attachment?.ID) {
-      throw new ValidationError({ message: 'attachment.ID is required for getFor' });
-    }
-
-    return this.fetchById(attachment.ID, options);
-  }
-
-  /**
-   * Shared read path for `getById` and `getFor`. Untracked on purpose — each public
-   * method carries its own `@track`, so tracking here would double-count every call.
-   */
-  private async fetchById(
-    id: string,
-    options: AttachmentGetByIdOptions
-  ): Promise<AttachmentResponse> {
     // Response applies both maps (BucketMap on blobFileAccess, AttachmentsMap on top-level);
     // merge so SDK names from either are rewritten in one pass.
     const apiFieldOptions = transformOptions(options, { ...AttachmentsMap, ...BucketMap });

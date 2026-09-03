@@ -1,22 +1,11 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { AttachmentService } from '../../../../src/services/orchestrator/attachments';
-import { JobAttachmentSchema } from '../../../../src/models/orchestrator/attachments.types';
 import { generateRandomString } from '../../utils/helpers';
 
 /**
  * Integration tests for the Orchestrator Attachment service.
 */
-
-/**
- * Only `ID` reaches the API; `FullName`/`MimeType` are the metadata the
- * platform would deliver alongside it in a coded function's input.
- */
-const buildJobAttachment = (id: string): JobAttachmentSchema => ({
-  ID: id,
-  FullName: 'integration-test.txt',
-  MimeType: 'text/plain',
-});
 
 const modes: InitMode[] = ['v1'];
 
@@ -103,35 +92,6 @@ describe.each(modes)(
         const attachments = new AttachmentService(sdk);
 
         await expect(attachments.getById('')).rejects.toThrow('id is required for getById');
-      });
-    });
-
-    describe('getFor', () => {
-      it('should retrieve the attachment a job attachment input refers to', async () => {
-        const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
-        const attachments = new AttachmentService(sdk);
-
-        const result = await attachments.getFor(buildJobAttachment(attachmentId));
-
-        expect(result.id).toBe(attachmentId);
-        expect(typeof result.name).toBe('string');
-        expect(typeof result.blobFileAccess.uri).toBe('string');
-      });
-
-      it('should forward the select option', async () => {
-        const { sdk } = getServices();
-        const config = getTestConfig();
-        const attachmentId = config.orchestratorAttachmentId!;
-        const attachments = new AttachmentService(sdk);
-
-        const result = await attachments.getFor(buildJobAttachment(attachmentId), {
-          select: 'Id,Name',
-        });
-
-        expect(result.id).toBe(attachmentId);
-        expect(result.name).toBeDefined();
       });
     });
 

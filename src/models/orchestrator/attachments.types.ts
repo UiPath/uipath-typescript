@@ -52,8 +52,8 @@ export interface AttachmentResponse {
  * A job attachment as delivered to an automation's input by the platform.
  *
  * Declare a field of this type in a coded function's input contract to get a file
- * picker in Studio Web and Orchestrator. Carries metadata only — pass it to
- * `attachments.getFor()` to fetch the content.
+ * picker in Studio Web and Orchestrator. Carries metadata only — fetch the content
+ * with `attachments.getById()`.
  *
  * Field names mirror the platform's `job-attachment` schema verbatim: the value is
  * injected into the input untransformed, and tooling matches attachment inputs on
@@ -85,11 +85,6 @@ export interface JobAttachmentSchema {
  * Options for getting an attachment by ID
  */
 export interface AttachmentGetByIdOptions extends BaseOptions {};
-
-/**
- * Options for getting the attachment a job attachment input refers to
- */
-export interface AttachmentGetForOptions extends AttachmentGetByIdOptions {};
 
 /**
  * Attachment returned when a new attachment is created.
