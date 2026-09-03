@@ -3107,12 +3107,12 @@
 </ol>
 <hr />
 <h2 id="scope-changes-not-taking-effect">Scope Changes Not Taking Effect<a class="headerlink" href="#scope-changes-not-taking-effect" title="Permanent link">&para;</a></h2>
-<p><strong>Problem</strong>: You grant a new scope to the External Application, but calls still fail with a permission error. The scopes in the JWT don't match what the app has been granted.</p>
+<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error. The scopes in the JWT don't match what the app has been granted.</p>
 <p><strong>Cause</strong>: Three things have to agree, and two of them are sticky:</p>
 <ol type="1">
 <li>The scopes granted to the External Application in <strong>Admin → External Applications</strong>.</li>
 <li>The scopes the app <em>asks for</em>. These are read at runtime from the <code>uipath:scope</code> meta tag in <code>index.html</code>, which is written when the app is <strong>deployed</strong>. Editing <code>uipath.json</code> alone changes nothing in an already-deployed app.</li>
-<li>The access token itself. The SDK caches it in <code>sessionStorage</code> under a key built from the client ID only. On load it is checked for format and expiry — not for whether its scopes still match what the app now asks for. So an open session keeps using the old, narrower token.</li>
+<li>The access token itself. The SDK caches it in <code>sessionStorage</code> under the key <code>uipath_sdk_user_token-&lt;clientId&gt;</code>. On load it is checked for format and expiry — not for whether its scopes still match what the app now asks for. So an open session keeps using the old, narrower token.</li>
 </ol>
 <p><strong>Solution</strong>: Do all four, in order:</p>
 <ol type="1">
