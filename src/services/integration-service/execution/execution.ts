@@ -157,7 +157,7 @@ class Execution extends BaseService {
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { execute } from '@uipath/uipath-typescript/is-execution';
+ * import { execute } from '@uipath/uipath-typescript/connections';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
