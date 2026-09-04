@@ -157,6 +157,81 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
         expect(result[0].id).toBeDefined();
       }
     });
+
+    it('should start a process using the ref-based { name } form', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured to test the ref-based start');
+      }
+
+      // Pick an existing process so the { name } path exercises a real release. This proves the
+      // live API accepts `releaseName` (not just `releaseKey`) and that the ref dispatch reaches
+      // the wire.
+      const allProcesses = await processes.getAll({ folderId, pageSize: 1 });
+      if (allProcesses.items.length === 0) {
+        throw new Error('No processes available to test the ref-based { name } start');
+      }
+      const existing = allProcesses.items[0];
+
+      const result = await processes.start({ name: existing.name }, { folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].id).toBeDefined();
+        expect(result[0].key).toBeDefined();
+      }
+    });
+
+    it('should start a process using the ref-based { key } form', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      const processKey = config.orchestratorTestProcessKey;
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+      if (!processKey) {
+        throw new Error('ORCHESTRATOR_TEST_PROCESS_KEY must be configured to test the ref-based { key } start');
+      }
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured');
+      }
+
+      const result = await processes.start({ key: processKey }, { folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].id).toBeDefined();
+      }
+    });
+
+    it('should start a process using the ref-based { id } form (resolves the release key first)', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured to test the ref-based { id } start');
+      }
+
+      // Discover an existing release id — the { id } branch triggers an internal by-id lookup.
+      const allProcesses = await processes.getAll({ folderId, pageSize: 1 });
+      if (allProcesses.items.length === 0) {
+        throw new Error('No processes available to test the ref-based { id } start');
+      }
+      const existing = allProcesses.items[0];
+
+      const result = await processes.start({ id: existing.id }, { folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].id).toBeDefined();
+      }
+    });
   });
 
   describe('getByName', () => {
