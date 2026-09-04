@@ -6,18 +6,25 @@ import type { ResourceRef } from '../../models/common/types';
  * Populated from the lookup response so operational methods (updates, deletes) target the correct
  * folder even when a runtime override redirects the lookup across folders.
  *
- * For the `{id}` branch, `folderId` is `undefined` — the caller's folder options remain
+ * All three shapes are carried so callers can forward whichever variant the underlying lookup
+ * actually confirmed against — override redirects change `folderPath`, while `folderId`/`folderKey`
+ * are echoed back unchanged.
+ *
+ * For the `{id}` branch, every field is `undefined` — the caller's folder options remain
  * authoritative because no lookup ran.
  */
 export interface EffectiveFolder {
   folderId?: number;
+  folderKey?: string;
+  folderPath?: string;
 }
 
 /**
  * The canonical id from a `ResourceRef`, plus the folder the resolved resource actually lives in
- * when the ref carried a name or key. Operational methods should prefer `effectiveFolder.folderId`
- * over caller-supplied folder options when it is set — otherwise a name/key lookup that got
- * redirected by a runtime override would produce a folder mismatch on the follow-up call.
+ * when the ref carried a name or key. Operational methods should prefer any populated
+ * `effectiveFolder` field over the caller-supplied folder option of the same kind — otherwise a
+ * name/key lookup that got redirected by a runtime override would produce a folder mismatch on
+ * the follow-up call.
  */
 export interface ResolvedRef<TId> {
   id: TId;
@@ -25,11 +32,14 @@ export interface ResolvedRef<TId> {
 }
 
 /**
- * Service-supplied lookup that turns a name or key into `{ id, folderId? }`. The folder id is
- * optional — non-folder-scoped services (Data Fabric) can omit it — but folder-scoped services
- * should carry it through so downstream operational calls use the actual folder of record.
+ * Service-supplied lookup that turns a name or key into `{ id, ...effectiveFolder }`. Folder
+ * fields are optional — non-folder-scoped services (Data Fabric) can omit them — but folder-scoped
+ * services should carry them through so downstream operational calls use the actual folder of
+ * record (including any redirect an override applied).
  */
-export type RefLookup<TId> = (identifier: string) => Promise<{ id: TId; folderId?: number }>;
+export type RefLookup<TId> = (
+  identifier: string,
+) => Promise<{ id: TId } & EffectiveFolder>;
 
 /**
  * The set of lookups a service supports. Only variants for which a lookup is supplied are
@@ -87,8 +97,8 @@ export async function resolveRefToId<TId>(
         message: `${callerLabel}: this method does not support lookup by '${variant}'.`,
       });
     }
-    const { id, folderId } = await resolver(value);
-    return { id, effectiveFolder: { folderId } };
+    const { id, folderId, folderKey, folderPath } = await resolver(value);
+    return { id, effectiveFolder: { folderId, folderKey, folderPath } };
   }
 
   throw new ValidationError({

@@ -1,6 +1,7 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByKeyOptions, AssetGetByNameOptions, AssetNewValue, AssetRef, AssetUpdateValueByIdOptions, AssetUpdateValueOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
+import { resolveRefToId } from '../../../utils/validation/resolve-ref';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -76,7 +77,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
 
   @track('Assets.GetByName')
   async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
-    return this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
+    const { result } = await this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
       'Asset',
       ASSET_ENDPOINTS.GET_BY_FOLDER,
       name,
@@ -84,6 +85,83 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
       AssetMap,
     );
+    return result;
+  }
+
+  @track('Assets.GetByKey')
+  async getByKey(key: string, options: AssetGetByKeyOptions = {}): Promise<AssetGetResponse> {
+    const { result } = await this.getByKeyLookup<Record<string, unknown>, AssetGetResponse>(
+      'Asset',
+      ASSET_ENDPOINTS.GET_BY_FOLDER,
+      key,
+      options,
+      (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+      AssetMap,
+    );
+    return result;
+  }
+
+  @track('Assets.UpdateValue')
+  async updateValue(assetRef: AssetRef, newValue: AssetNewValue, options?: AssetUpdateValueOptions): Promise<void> {
+    if (newValue === null || newValue === undefined) {
+      throw new ValidationError({ message: 'newValue is required for updateValue' });
+    }
+
+    // Name/key lookups already return the full asset — stash it here so `updateValueByResolvedId`
+    // can skip the follow-up `getById` and go straight to the PUT.
+    let preFetched: Pick<AssetGetResponse, 'name' | 'valueScope' | 'valueType' | 'description'> | undefined;
+
+    const { id, effectiveFolder } = await resolveRefToId<number>(
+      assetRef,
+      {
+        byName: async (name) => {
+          const { result: asset, effectiveFolder: folder } = await this.getByNameLookup<Record<string, unknown>, AssetGetResponse>(
+            'Asset',
+            ASSET_ENDPOINTS.GET_BY_FOLDER,
+            name,
+            { folderId: options?.folderId, folderKey: options?.folderKey, folderPath: options?.folderPath },
+            (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+            AssetMap,
+            'Assets.updateValue',
+          );
+          preFetched = asset;
+          return { id: asset.id, ...folder };
+        },
+        byKey: async (key) => {
+          const { result: asset, effectiveFolder: folder } = await this.getByKeyLookup<Record<string, unknown>, AssetGetResponse>(
+            'Asset',
+            ASSET_ENDPOINTS.GET_BY_FOLDER,
+            key,
+            { folderId: options?.folderId, folderKey: options?.folderKey, folderPath: options?.folderPath },
+            (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+            AssetMap,
+            'Assets.updateValue',
+          );
+          preFetched = asset;
+          return { id: asset.id, ...folder };
+        },
+      },
+      'Assets.updateValue',
+    );
+
+    // `resolveRefToId` treats `id: 0` as a real value (generic over `TId`); assets have positive
+    // numeric ids only, so reject `0`/negatives here rather than letting them hit the API.
+    if (id <= 0) {
+      throw new ValidationError({ message: 'Assets.updateValue: assetRef.id must be a positive number.' });
+    }
+
+    // Prefer the folder the lookup confirmed against — for {name} refs an override redirect may
+    // have changed folderPath. Falls back to caller-supplied options only for the {id} branch,
+    // which leaves effectiveFolder empty (no lookup ran).
+    const headers = resolveFolderHeaders({
+      folderId: effectiveFolder.folderId ?? options?.folderId,
+      folderKey: effectiveFolder.folderKey ?? options?.folderKey,
+      folderPath: effectiveFolder.folderPath ?? options?.folderPath,
+      resourceType: 'Assets.updateValue',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    await this.updateValueByResolvedId(id, newValue, headers, preFetched);
   }
 
   @track('Assets.UpdateValueById')
@@ -103,25 +181,32 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       fallbackFolderKey: this.config.folderKey,
     });
 
-    const existingResponse = await this.get<{
-      Name: string;
-      ValueScope: AssetValueScope;
-      ValueType: AssetValueType;
-      Description: string | null;
-    }>(
-      ASSET_ENDPOINTS.GET_BY_ID(id),
-      { headers },
-    );
-    const existing = existingResponse.data;
+    await this.updateValueByResolvedId(id, newValue, headers);
+  }
 
-    const valueField = resolveValueField(id, existing.ValueType, newValue);
+  /**
+   * Reads the asset shape, then puts it back with only the value field changed. Split out so
+   * both `updateValue` and the deprecated `updateValueById` share the same wire behaviour
+   * without either firing the other's `@track` decorator.
+   */
+  private async updateValueByResolvedId(
+    id: number,
+    newValue: AssetNewValue,
+    headers: Record<string, string>,
+    preFetched?: Pick<AssetGetResponse, 'name' | 'valueScope' | 'valueType' | 'description'>,
+  ): Promise<void> {
+    // `updateValue`'s name/key branches already fetched the asset — reuse those fields and skip
+    // the extra GET. `updateValueById` and `updateValue({id})` still need the fetch.
+    const shape = preFetched ?? await this.fetchAssetShape(id, headers);
+
+    const valueField = resolveValueField(id, shape.valueType, newValue);
 
     const body: Record<string, unknown> = {
       Id: id,
-      Name: existing.Name,
-      ValueScope: existing.ValueScope,
-      ValueType: existing.ValueType,
-      Description: existing.Description,
+      Name: shape.name,
+      ValueScope: shape.valueScope,
+      ValueType: shape.valueType,
+      Description: shape.description,
       [valueField]: newValue,
     };
 
@@ -131,6 +216,33 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       { headers },
     );
   }
+
+  /**
+   * Reads the asset fields that a value update needs to round-trip. Split out so the id-branch of
+   * `updateValue` and the deprecated `updateValueById` share the fetch, while name/key branches
+   * bypass it by supplying `preFetched` from the lookup response.
+   */
+  private async fetchAssetShape(
+    id: number,
+    headers: Record<string, string>,
+  ): Promise<Pick<AssetGetResponse, 'name' | 'valueScope' | 'valueType' | 'description'>> {
+    const response = await this.get<{
+      Name: string;
+      ValueScope: AssetValueScope;
+      ValueType: AssetValueType;
+      Description: string | null;
+    }>(
+      ASSET_ENDPOINTS.GET_BY_ID(id),
+      { headers },
+    );
+    return {
+      name: response.data.Name,
+      valueScope: response.data.ValueScope,
+      valueType: response.data.ValueType,
+      description: response.data.Description,
+    };
+  }
+
 }
 
 /**
@@ -166,7 +278,7 @@ function resolveValueField(
       return 'BoolValue';
     default:
       throw new ValidationError({
-        message: `updateValueById only supports Text, Integer, or Bool assets; asset ${id} has valueType ${valueType}`,
+        message: `Asset ${id} has valueType ${valueType}; only Text, Integer, and Bool are supported`,
       });
   }
 }

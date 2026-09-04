@@ -284,7 +284,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     options: FolderScopedOptions
   ): Promise<RawFunctionGetResponse> {
     try {
-      return await this.getByNameLookup<Record<string, unknown>, RawFunctionGetResponse>(
+      const { result } = await this.getByNameLookup<Record<string, unknown>, RawFunctionGetResponse>(
         'Function',
         FUNCTION_ENDPOINTS.GET_ALL,
         name,
@@ -292,6 +292,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
         (raw) => this.toFunctionResponse(raw),
         FunctionMap,
       );
+      return result;
     } catch (error) {
       if (isNotFoundError(error)) {
         throw await this.withAvailableFunctionNames(error, options);

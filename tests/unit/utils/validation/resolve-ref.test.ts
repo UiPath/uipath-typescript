@@ -32,10 +32,22 @@ describe('resolveRefToId', () => {
     expect(byKey).toHaveBeenCalledExactlyOnceWith('5f6dadf1-3677-49dc-8aca-c2999dd4b3ba');
   });
 
-  it('omits folderId on effectiveFolder when the lookup does not supply one (non-folder-scoped services)', async () => {
+  it('omits folder fields on effectiveFolder when the lookup does not supply them (non-folder-scoped services)', async () => {
     const byName = vi.fn().mockResolvedValue({ id: 'guid-abc' });
     const result = await resolveRefToId<string>({ name: 'MyEntity' }, { byName }, CALLER);
-    expect(result).toEqual({ id: 'guid-abc', effectiveFolder: { folderId: undefined } });
+    expect(result).toEqual({ id: 'guid-abc', effectiveFolder: {} });
+  });
+
+  it('carries folderPath onto effectiveFolder when the lookup supplies one (override redirect)', async () => {
+    const byName = vi.fn().mockResolvedValue({ id: 7, folderPath: 'Shared/Prod' });
+    const result = await resolveRefToId<number>({ name: 'MyAsset' }, { byName }, CALLER);
+    expect(result).toEqual({ id: 7, effectiveFolder: { folderPath: 'Shared/Prod' } });
+  });
+
+  it('carries folderKey onto effectiveFolder when the lookup supplies one', async () => {
+    const byKey = vi.fn().mockResolvedValue({ id: 3, folderKey: 'fk-guid' });
+    const result = await resolveRefToId<number>({ key: 'k-guid' }, { byKey }, CALLER);
+    expect(result).toEqual({ id: 3, effectiveFolder: { folderKey: 'fk-guid' } });
   });
 
   it('throws ValidationError when the ref is undefined', async () => {

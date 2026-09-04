@@ -9,7 +9,9 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Assets` or `OR.Assets.Read` |
 | `getById()` | `OR.Assets` or `OR.Assets.Read` |
 | `getByName()` | `OR.Assets` or `OR.Assets.Read` |
-| `updateValueById()` | `OR.Assets` or `OR.Assets.Write` |
+| `getByKey()` | `OR.Assets` or `OR.Assets.Read` |
+| `updateValue()` | `OR.Assets` or `OR.Assets.Read`, `OR.Assets` or `OR.Assets.Write` |
+| `updateValueById()` | `OR.Assets` or `OR.Assets.Read`, `OR.Assets` or `OR.Assets.Write` |
 
 ## Jobs
 

@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
+import type { AssetGetResponse } from '../../../../src/models/orchestrator/assets.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -192,6 +193,121 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
 
       // Restore the asset so the suite is idempotent
       await assets.updateValueById(target.id, previousValue, { folderId });
+    });
+  });
+
+  describe('getByKey', () => {
+    let folderKey!: string;
+    let existing!: AssetGetResponse;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for getByKey');
+      }
+      folderKey = config.folderKey;
+
+      const { assets } = getServices();
+      const allAssets = await assets.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      if (allAssets.items.length === 0) {
+        throw new Error('No assets available in the configured folder to exercise getByKey');
+      }
+      existing = allAssets.items[0];
+    });
+
+    it('should retrieve an asset by its GUID key using folderKey', async () => {
+      const { assets } = getServices();
+
+      const result = await assets.getByKey(existing.key, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.key).toBe(existing.key);
+      expect(result.name).toBe(existing.name);
+
+      // Transform validation — camelCase renames present, PascalCase originals absent
+      expect(result.createdTime).toBeDefined();
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).LastModificationTime).toBeUndefined();
+    });
+
+    it('should throw NotFoundError for a nonexistent asset key', async () => {
+      const { assets } = getServices();
+
+      const missingKey = '00000000-0000-0000-0000-000000000000';
+      await expect(
+        assets.getByKey(missingKey, { folderKey }),
+      ).rejects.toSatisfy(isNotFoundError);
+    });
+  });
+
+  describe('updateValue (ref-based)', () => {
+    let folderId!: number;
+    let folderKey!: string;
+    let target!: AssetGetResponse;
+    let previousValue!: string | number | boolean;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderId || !config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID and INTEGRATION_TEST_FOLDER_KEY must be configured to test updateValue');
+      }
+      folderId = Number(config.folderId);
+      folderKey = config.folderKey;
+
+      const { assets } = getServices();
+      const allAssets = await assets.getAll({
+        folderId,
+        pageSize: 20,
+        filter: "ValueType eq 'Text'",
+      });
+      if (allAssets.items.length === 0) {
+        throw new Error('No Text-type assets available in the configured folder to exercise updateValue');
+      }
+      target = allAssets.items[0];
+      previousValue = target.value ?? '';
+    });
+
+    it('should update an existing text asset via {id} ref and persist the change', async () => {
+      const { assets } = getServices();
+      const newValue = `sdk-test-ref-id-${Date.now()}`;
+
+      await assets.updateValue({ id: target.id }, newValue, { folderId });
+
+      const refreshed = await assets.getById(target.id, folderId);
+      expect(refreshed.value).toBe(newValue);
+
+      // Restore
+      await assets.updateValue({ id: target.id }, previousValue, { folderId });
+    });
+
+    it('should resolve {name} via folder scoping and persist the change', async () => {
+      const { assets } = getServices();
+      const newValue = `sdk-test-ref-name-${Date.now()}`;
+
+      await assets.updateValue({ name: target.name }, newValue, { folderKey });
+
+      const refreshed = await assets.getById(target.id, folderId);
+      expect(refreshed.value).toBe(newValue);
+
+      // Restore
+      await assets.updateValue({ id: target.id }, previousValue, { folderId });
+    });
+
+    it('should resolve {key} (GUID) and persist the change', async () => {
+      const { assets } = getServices();
+      const newValue = `sdk-test-ref-key-${Date.now()}`;
+
+      await assets.updateValue({ key: target.key }, newValue, { folderKey });
+
+      const refreshed = await assets.getById(target.id, folderId);
+      expect(refreshed.value).toBe(newValue);
+
+      // Restore
+      await assets.updateValue({ id: target.id }, previousValue, { folderId });
     });
   });
 
