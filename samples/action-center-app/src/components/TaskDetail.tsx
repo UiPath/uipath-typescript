@@ -42,7 +42,6 @@ import {
   slaBadge,
   formatDateTime,
   taskTypeLabel,
-  buildCompleteOptions,
   extractServerMessage,
 } from '../taskUtils'
 import { buildCompletion, loadTaskForm, saveTaskDraft } from '../taskSchema'
@@ -177,7 +176,10 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
   const isCompleted = task?.isCompleted || task?.status === TaskStatus.Completed
   const hasAssignee = !!task?.assignedToUser
   const hasSchema = !!bundle?.model
-  const fallbackData = bundle?.data ?? task?.data ?? {}
+  // With no schema the bundle only echoes whatever `data` the caller's task
+  // object had — which is empty for a list summary. Prefer the full task from
+  // `getById`, and fall back to the bundle only when that has nothing.
+  const fallbackData = (Object.keys(task?.data ?? {}).length ? task?.data : bundle?.data) ?? {}
 
   return (
     <>
@@ -209,11 +211,13 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
             )}
           </SheetHeader>
 
-          {loading ? (
+          {/* Only block on the very first load — a reload after an action must not
+              unmount the tabs and throw the reviewer back to the default one. */}
+          {loading && !task ? (
             <div className="flex flex-1 items-center justify-center py-6">
               <Spinner label="Loading task…" showLabel />
             </div>
-          ) : error ? (
+          ) : error && !task ? (
             <div className="p-6">
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -286,7 +290,14 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
                     )}
                     {bundle.reason === 'no-schema' && (
                       <p className="text-xs text-muted-foreground">
-                        Action Center returned no schema for this task, so its values are shown as stored.
+                        Action Center returned no schema for this task, so its values are shown as stored. For app
+                        tasks this usually means the token lacks the <span className="font-medium">Apps.Read</span> scope.
+                      </p>
+                    )}
+                    {bundle.reason === 'empty-schema' && (
+                      <p className="text-xs text-muted-foreground">
+                        Action Center returned an empty schema for this task — the app version it points at declares
+                        no fields or outcomes — so its values are shown as stored.
                       </p>
                     )}
                     {bundle.reason === 'unsupported-type' && (
@@ -450,7 +461,12 @@ export function TaskDetail({ taskId, folderId, isManage, onClose, onChanged, onV
         />
       )}
       {task && sub === 'complete' && (
-        <CompleteForm task={task} onClose={() => setSub(null)} onDone={afterChange} />
+        <CompleteForm
+          task={task}
+          data={fallbackData as Record<string, unknown>}
+          onClose={() => setSub(null)}
+          onDone={afterChange}
+        />
       )}
     </>
   )
@@ -560,7 +576,7 @@ function AssignForm({
             <div className="flex justify-center py-4">
               <Spinner label="Loading users…" showLabel />
             </div>
-          ) : error ? (
+          ) : error && !task ? (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -612,10 +628,13 @@ function AssignForm({
  */
 function CompleteForm({
   task,
+  data,
   onClose,
   onDone,
 }: {
   task: TaskGetResponse
+  /** The task's current data — sent back untouched so completion never blanks it. */
+  data: Record<string, unknown>
   onClose: () => void
   onDone: () => void
 }) {
@@ -629,7 +648,7 @@ function CompleteForm({
     setBusy(true)
     setSubmitError(null)
     try {
-      const result = await task.complete(buildCompleteOptions(task.type, v))
+      const result = await task.complete(buildCompletion(task, v, data))
       if (result.success) {
         toast.success('Task completed')
         onDone()

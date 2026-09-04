@@ -15,7 +15,7 @@ system via [`@uipath/apollo-wind`](https://www.npmjs.com/package/@uipath/apollo-
 
 ## What it demonstrates
 
-Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/):
+The task-centric methods on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/):
 
 | SDK call | Where |
 |----------|-------|
@@ -26,7 +26,7 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 | `Tasks.getUsers(folderId)` | `hooks/useTasks.ts` (`useTaskUsers`) — assignee picker (cursor-looped) |
 | `Tasks.create({ title, priority }, folderId)` | `components/TaskList.tsx` (create form) |
 | `task.assign` / `task.reassign` / `task.unassign` | `components/TaskDetail.tsx` |
-| `task.complete(options)` | `components/TaskDetail.tsx` — outcome buttons in the Form tab (`taskSchema.ts` `buildCompletion`) and the free-text fallback (`taskUtils.ts` `buildCompleteOptions`) |
+| `task.complete(options)` | `components/TaskDetail.tsx` — outcome buttons in the Form tab and the free-text fallback, both via `taskSchema.ts` `buildCompletion` |
 | `Tasks.getById(id, { taskType: TaskType.DocumentValidation }, folderId)` + `task.complete({ type: TaskType.DocumentValidation, … })` | `components/DocumentValidationDialog.tsx` — loads the validation payload and submits it |
 
 By default the app lists tasks across **all folders** you can view/edit. The
@@ -122,11 +122,22 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
   | **Quick Form** (`QuickFormTask`, Maestro/Flow HITL node) | `GET tasks/TaskSchemas/GetByKey?key={task.taskSchemaKey}` → `fields[]` + `outcomes[]` | `Tasks.getDataById` |
   | External / legacy Form / Document Validation | none — the Form tab shows `data` as stored and **Complete** takes a free-text action | `Tasks.getById` |
 
-  The two `GET`s aren't wrapped by the SDK yet, so `taskSchema.ts` calls them
-  with the SDK's access token (`sdk.getToken()`) — the same pattern as the
-  folder dropdown. Action Center fetches an app's schema from the Apps service
-  **with the caller's token**, which is why `Apps.Read` is required; without it
-  the schema comes back empty and the sheet falls back to the raw values.
+  Neither `GET` is wrapped by the SDK yet, so `taskSchema.ts` calls them with the
+  SDK's access token (`sdk.getToken()`) — the same pattern as the folder
+  dropdown. `Tasks.getById` does *not* substitute for the first one: for an app
+  task it routes to `GetAppTaskById`, which returns `taskSchema: null`; only the
+  `ByKey` variant carries the parsed schema.
+
+  Two things to know about the app-task schema:
+
+  - **`Apps.Read` is required.** Action Center fetches the schema from the Apps
+    service **with the caller's token**. Without an Apps scope the call still
+    returns `200` but the schema is empty, and the sheet says so before falling
+    back to the raw values.
+  - **A property's `name` is its data key.** The parsed schema also carries a
+    `key`, but that is a UUID the Apps designer generates per property — it
+    never appears in the task's `data`. Outcomes work the same way: the `name`
+    (e.g. `Approve`) is the action string you complete the task with.
 - **Document Validation:** selecting a task of type `DocumentValidationTask`
   (from a My Tasks row, or via **Validate document** in the detail sheet) opens
   a near-fullscreen dialog hosting `@uipath/ui-widgets-validation-station`. The

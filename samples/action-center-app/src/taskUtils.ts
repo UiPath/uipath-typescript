@@ -5,7 +5,7 @@ import {
   TaskSlaStatus,
   TaskAssignmentCriteria,
 } from '@uipath/uipath-typescript/tasks'
-import type { TaskCompleteOptions, TaskGetResponse } from '@uipath/uipath-typescript/tasks'
+import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
 import { QUICK_FORM_TASK_TYPE } from './taskSchema'
@@ -108,31 +108,6 @@ export function buildTaskFilter(filters: TaskFilters): string | undefined {
   if (filters.priority && filters.priority !== 'all')
     clauses.push(`Priority eq '${filters.priority}'`)
   return clauses.length ? clauses.join(' and ') : undefined
-}
-
-/**
- * Builds `complete()` options for a task. `TaskCompleteOptions` is a
- * discriminated union on `type`: Form/App require `data` + `action`, while
- * External/document tasks accept them optionally. A `switch` narrows `type` to
- * a literal in each branch so the object matches exactly one union member —
- * passing a union-typed `type` directly would not type-check.
- */
-export function buildCompleteOptions(type: TaskType, action: string): TaskCompleteOptions {
-  switch (type) {
-    case TaskType.Form:
-      return { type: TaskType.Form, action, data: {} }
-    case TaskType.App:
-      return { type: TaskType.App, action, data: {} }
-    case TaskType.DocumentValidation:
-      return { type: TaskType.DocumentValidation, action }
-    case TaskType.DocumentClassification:
-      return { type: TaskType.DocumentClassification, action }
-    case TaskType.DataLabeling:
-      return { type: TaskType.DataLabeling, action }
-    case TaskType.External:
-    default:
-      return { type: TaskType.External, action }
-  }
 }
 
 /**

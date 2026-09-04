@@ -1,16 +1,16 @@
-// Renders a normalized task schema (see ../taskSchema.ts) as a native form:
+// Renders a normalized task schema (see lib/taskSchema.ts) as a native form:
 // inputs read-only, inOuts/outputs editable, outcomes as submit buttons.
 // Owns the draft values; the parent owns the SDK calls (complete / save).
 import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { FileText } from 'lucide-react'
 import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
-import { Badge } from '@uipath/apollo-wind/components/ui/badge'
 import { Button } from '@uipath/apollo-wind/components/ui/button'
 import { Checkbox } from '@uipath/apollo-wind/components/ui/checkbox'
 import { Input } from '@uipath/apollo-wind/components/ui/input'
 import { Label } from '@uipath/apollo-wind/components/ui/label'
 import { Textarea } from '@uipath/apollo-wind/components/ui/textarea'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
 import { formatDateTime } from '../taskUtils'
 import type { FieldKind, TaskFormField, TaskFormModel, TaskFormOutcome } from '../taskSchema'
 
@@ -29,6 +29,9 @@ interface Props {
 
 const EDITABLE_SECTIONS = new Set(['inOuts', 'outputs'])
 
+/** Kinds whose empty editor state means "no value", not an empty string. */
+const NULL_WHEN_BLANK = new Set<FieldKind>(['date', 'datetime', 'file'])
+
 /** A default value per kind so React inputs are always controlled. */
 function defaultFor(field: TaskFormField): unknown {
   switch (field.kind) {
@@ -43,6 +46,11 @@ function defaultFor(field: TaskFormField): unknown {
     case 'table':
       return []
     case 'json':
+    case 'date':
+    case 'datetime':
+    case 'file':
+      // No value yet — not an empty string. `toDateInput` renders null as '',
+      // so the controls stay controlled either way.
       return null
     default:
       return ''
@@ -56,10 +64,30 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
+/** Every required field that is still empty, including required children of objects. */
+function missingRequired(fields: TaskFormField[], values: Record<string, unknown>): string[] {
+  const missing: string[] = []
+  for (const f of fields) {
+    const value = values[f.key]
+    if (f.kind === 'object') {
+      const nested = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>
+      missing.push(...missingRequired(f.children ?? [], nested).map((label) => `${f.label} › ${label}`))
+      if (f.required && Object.keys(nested).length === 0) missing.push(f.label)
+      continue
+    }
+    if (f.required && isEmpty(value)) missing.push(f.label)
+  }
+  return missing
+}
+
 /** Coerce an edited value to what the workflow expects for the field's kind. */
 function coerce(field: TaskFormField, value: unknown): unknown {
   switch (field.kind) {
-    case 'integer':
+    case 'integer': {
+      if (value === '' || value === null || value === undefined) return null
+      const n = Number(value)
+      return Number.isFinite(n) ? n : null
+    }
     case 'number': {
       if (value === '' || value === null || value === undefined) return null
       const n = Number(value)
@@ -72,18 +100,40 @@ function coerce(field: TaskFormField, value: unknown): unknown {
       return Object.fromEntries((field.children ?? []).map((c) => [c.key, coerce(c, obj[c.key])]))
     }
     default:
-      return value === undefined ? null : value
+      if (value === undefined) return null
+      // An untouched date/file control holds '' — send null rather than a bogus empty value.
+      if (value === '' && NULL_WHEN_BLANK.has(field.kind)) return null
+      return value
   }
 }
 
-/** Date-ish values arrive as ISO strings; the inputs need `YYYY-MM-DD` / `YYYY-MM-DDTHH:mm`. */
+/**
+ * Date-ish values arrive as ISO strings; the inputs need `YYYY-MM-DD` /
+ * `YYYY-MM-DDTHH:mm`. A date-only string is passed through verbatim — running it
+ * through `Date` would parse it as UTC midnight and shift the day for anyone
+ * west of UTC.
+ */
 function toDateInput(value: unknown, withTime: boolean): string {
   if (typeof value !== 'string' || !value) return ''
+  const dateOnly = /^(\d{4}-\d{2}-\d{2})$/.exec(value)
+  if (dateOnly) return withTime ? `${dateOnly[1]}T00:00` : dateOnly[1]
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
   const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
   return withTime ? `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}` : date
+}
+
+/** Formats a date for display without the UTC-parse day shift. */
+function formatDateValue(value: unknown): string {
+  const s = String(value ?? '')
+  const parts = /^(\d{4})-(\d{2})-(\d{2})/.exec(s)
+  if (parts) {
+    const local = new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]))
+    return local.toLocaleDateString()
+  }
+  const d = new Date(s)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString()
 }
 
 function fileLabel(value: unknown): string {
@@ -100,7 +150,7 @@ export function ValueView({ kind, value }: { kind: FieldKind; value: unknown }) 
     case 'boolean':
       return <Badge variant={value ? 'success' : 'secondary'}>{value ? 'Yes' : 'No'}</Badge>
     case 'date':
-      return <span className="font-medium">{new Date(String(value)).toLocaleDateString()}</span>
+      return <span className="font-medium">{formatDateValue(value)}</span>
     case 'datetime':
       return <span className="font-medium">{formatDateTime(String(value))}</span>
     case 'file':
@@ -123,23 +173,60 @@ export function ValueView({ kind, value }: { kind: FieldKind; value: unknown }) 
   return <span className="font-medium break-words">{String(value)}</span>
 }
 
-/** Editable widget for one field. Objects recurse; arrays/tables/json edit as JSON text. */
+/**
+ * Integer fields the reviewer has filled with a fraction. The server types these
+ * as Int32/Int64, so this is a validation error — silently truncating would
+ * submit a number the reviewer never entered.
+ */
+function fractionalIntegers(fields: TaskFormField[], values: Record<string, unknown>): string[] {
+  const bad: string[] = []
+  for (const f of fields) {
+    if (f.kind === 'object') {
+      const nested = (values[f.key] && typeof values[f.key] === 'object' ? values[f.key] : {}) as Record<string, unknown>
+      bad.push(...fractionalIntegers(f.children ?? [], nested).map((label) => `${f.label} › ${label}`))
+      continue
+    }
+    if (f.kind !== 'integer') continue
+    const v = values[f.key]
+    if (v === '' || v === null || v === undefined) continue
+    const n = Number(v)
+    if (Number.isFinite(n) && !Number.isInteger(n)) bad.push(f.label)
+  }
+  return bad
+}
+
+/** True when a string field should get a textarea rather than a single-line input. */
+function isLongText(value: unknown): boolean {
+  const s = value === null || value === undefined ? '' : String(value)
+  return s.length > 80 || s.includes('\n')
+}
+
+/**
+ * Editable widget for one field. Objects recurse; arrays/tables/json edit as JSON
+ * text. `path` namespaces DOM ids and JSON-draft keys so a nested child never
+ * collides with a top-level field of the same name.
+ */
 function FieldEditor({
   field,
+  path,
   value,
   onChange,
   disabled,
+  multiline,
   jsonText,
   onJsonText,
 }: {
   field: TaskFormField
+  path: string
   value: unknown
   onChange: (next: unknown) => void
   disabled: boolean
+  /** Fixed at mount from the initial value, so the widget never swaps mid-typing. */
+  multiline: boolean
   jsonText: Record<string, string>
   onJsonText: (key: string, text: string) => void
 }) {
-  const id = `tf-${field.key}`
+  const id = `tf-${path}`
   switch (field.kind) {
     case 'boolean':
       return (
@@ -166,7 +253,7 @@ function FieldEditor({
           id={id}
           type="date"
           value={toDateInput(value, false)}
-          onChange={(e) => onChange(e.target.value || null)}
+          onChange={(e) => onChange(e.target.value || '')}
           disabled={disabled}
         />
       )
@@ -176,7 +263,7 @@ function FieldEditor({
           id={id}
           type="datetime-local"
           value={toDateInput(value, true)}
-          onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+          onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
           disabled={disabled}
         />
       )
@@ -189,12 +276,14 @@ function FieldEditor({
       return (
         <div className="grid grid-cols-1 gap-3 rounded-md border p-3 sm:grid-cols-2">
           {(field.children ?? []).map((child) => (
-            <FieldRow key={child.key} field={child}>
+            <FieldRow key={child.key} field={child} path={`${path}.${child.key}`}>
               <FieldEditor
                 field={child}
+                path={`${path}.${child.key}`}
                 value={obj[child.key]}
                 onChange={(next) => onChange({ ...obj, [child.key]: next })}
                 disabled={disabled}
+                multiline={isLongText(obj[child.key])}
                 jsonText={jsonText}
                 onJsonText={onJsonText}
               />
@@ -206,7 +295,7 @@ function FieldEditor({
     case 'array':
     case 'table':
     case 'json': {
-      const text = jsonText[field.key] ?? (value === undefined || value === null ? '' : JSON.stringify(value, null, 2))
+      const text = jsonText[path] ?? (value === undefined || value === null ? '' : JSON.stringify(value, null, 2))
       let invalid = false
       if (text.trim()) {
         try {
@@ -226,7 +315,7 @@ function FieldEditor({
             placeholder={field.kind === 'json' ? '{ }' : '[ ]'}
             onChange={(e) => {
               const t = e.target.value
-              onJsonText(field.key, t)
+              onJsonText(path, t)
               if (!t.trim()) {
                 onChange(field.kind === 'json' ? null : [])
                 return
@@ -245,8 +334,7 @@ function FieldEditor({
     }
     default: {
       const s = value === null || value === undefined ? '' : String(value)
-      const long = s.length > 80 || s.includes('\n')
-      return long ? (
+      return multiline ? (
         <Textarea id={id} value={s} rows={4} onChange={(e) => onChange(e.target.value)} disabled={disabled} />
       ) : (
         <Input id={id} type="text" value={s} onChange={(e) => onChange(e.target.value)} disabled={disabled} />
@@ -255,13 +343,20 @@ function FieldEditor({
   }
 }
 
-function FieldRow({ field, children, wide }: { field: TaskFormField; children: ReactNode; wide?: boolean }) {
+function FieldRow({
+  field,
+  path,
+  children,
+  wide,
+}: {
+  field: TaskFormField
+  path: string
+  children: ReactNode
+  wide?: boolean
+}) {
   return (
     <div className={`min-w-0 ${wide ? 'sm:col-span-2' : ''}`}>
-      <Label
-        htmlFor={`tf-${field.key}`}
-        className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground"
-      >
+      <Label htmlFor={`tf-${path}`} className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
         <span className="truncate">{field.label}</span>
         {field.required && <span className="text-destructive">*</span>}
         {field.rawType && <span className="rounded bg-muted px-1 py-0.5 text-[9px] normal-case">{field.rawType}</span>}
@@ -287,7 +382,16 @@ export function TaskForm({ model, initialData, readOnly, busy, error, onSubmit, 
   )
   const [jsonText, setJsonText] = useState<Record<string, string>>({})
 
-  const missing = editable.filter((f) => f.required && isEmpty(values[f.key])).map((f) => f.label)
+  // Whether a string field renders as a textarea is decided once, from the value
+  // the form opened with. Deriving it from the live value would swap the element
+  // as the reviewer crosses the threshold and drop keyboard focus mid-word.
+  const multiline = useMemo(
+    () => new Set(editable.filter((f) => isLongText(initialData[f.key])).map((f) => f.key)),
+    [editable, initialData],
+  )
+
+  const missing = missingRequired(editable, values)
+  const fractional = fractionalIntegers(editable, values)
   const invalidJson = Object.values(jsonText).some((t) => {
     if (!t.trim()) return false
     try {
@@ -306,7 +410,7 @@ export function TaskForm({ model, initialData, readOnly, busy, error, onSubmit, 
 
   const outcomes: TaskFormOutcome[] =
     model.outcomes.length > 0 ? model.outcomes : [{ key: 'Submit', label: 'Submit', primary: true }]
-  const canSubmit = !readOnly && !busy && missing.length === 0 && !invalidJson
+  const canSubmit = !readOnly && !busy && missing.length === 0 && !invalidJson && fractional.length === 0
   const disabled = readOnly || busy
 
   return (
@@ -337,19 +441,17 @@ export function TaskForm({ model, initialData, readOnly, busy, error, onSubmit, 
           </h4>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {editable.map((f) => (
-              <FieldRow
-                key={f.key}
-                field={f}
-                wide={WIDE_KINDS.has(f.kind) || (f.kind === 'string' && String(values[f.key] ?? '').length > 80)}
-              >
+              <FieldRow key={f.key} field={f} path={f.key} wide={WIDE_KINDS.has(f.kind) || multiline.has(f.key)}>
                 {readOnly ? (
                   <ValueView kind={f.kind} value={values[f.key]} />
                 ) : (
                   <FieldEditor
                     field={f}
+                    path={f.key}
                     value={values[f.key]}
                     onChange={(next) => setValues((v) => ({ ...v, [f.key]: next }))}
                     disabled={disabled}
+                    multiline={multiline.has(f.key)}
                     jsonText={jsonText}
                     onJsonText={(key, text) => setJsonText((j) => ({ ...j, [key]: text }))}
                   />
@@ -383,12 +485,15 @@ export function TaskForm({ model, initialData, readOnly, busy, error, onSubmit, 
             </Button>
           ))}
           {onSave && editable.length > 0 && (
-            <Button variant="ghost" onClick={() => onSave(collect())} disabled={busy || invalidJson}>
+            <Button variant="ghost" onClick={() => onSave(collect())} disabled={busy || invalidJson || fractional.length > 0}>
               Save draft
             </Button>
           )}
           {missing.length > 0 && (
             <span className="ml-auto text-xs text-muted-foreground">Required: {missing.join(', ')}</span>
+          )}
+          {fractional.length > 0 && (
+            <span className="ml-auto text-xs text-destructive">Whole numbers only: {fractional.join(', ')}</span>
           )}
         </div>
       )}

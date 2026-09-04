@@ -802,7 +802,6 @@ function hasAssignee(task: TaskGetResponse): boolean {
   return assignedToGroup(task)
 }
 
-/** Quick-complete dialog opened from a My Tasks row click. */
 /** Bulk-(re)assign dialog used on Manage Tasks when ≥1 task is selected. */
 function BulkAssignDialog({
   tasks: targetTasks,
