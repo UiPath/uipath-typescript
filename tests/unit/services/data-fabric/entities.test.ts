@@ -55,6 +55,7 @@ import {
 } from "../../../../src/models/data-fabric/entities.constants";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
+import { OVERRIDE_TEST_CONSTANTS } from "../../../utils/constants/overrides";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
 import { DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints/data-fabric";
 import { ValidationError } from "../../../../src/core/errors";
@@ -2188,6 +2189,30 @@ describe("EntityService Unit Tests", () => {
         entityService.getByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it("redirects the URL entity name when a runtime override matches (unscoped entity.<name> key)", async () => {
+      // DF doesn't accept folderPath so the override's folderPath field is intentionally ignored;
+      // only the redirected name lands in the URL.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ENTITY_TEST_CONSTANTS.ENTITY_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue(createMockEntityResponse());
+
+        await entityService.getByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME);
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(OVERRIDE_TEST_CONSTANTS.TARGET_NAME),
+          expect.anything(),
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
   });
 
   describe("getRecordsByName", () => {
@@ -2263,6 +2288,31 @@ describe("EntityService Unit Tests", () => {
         entityService.getRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it("redirects the URL entity name when a runtime override matches (unscoped entity.<name> key)", async () => {
+      // Each public byName read applies applyEntityNameOverride independently — this guards the
+      // path that reaches the paginated records-by-name endpoint via getRecordsImpl(false, ...).
+      const mockResponse = { items: createMockEntityRecords(3), totalCount: 3 };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ENTITY_TEST_CONSTANTS.ENTITY_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        await entityService.getRecordsByName(ENTITY_TEST_CONSTANTS.ENTITY_NAME);
+
+        const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+        expect((config as any).getEndpoint()).toBe(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(OVERRIDE_TEST_CONSTANTS.TARGET_NAME),
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
   });
 
   describe("getRecordByName", () => {
@@ -2326,6 +2376,36 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID,
         ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it("redirects the URL entity name when a runtime override matches (unscoped entity.<name> key)", async () => {
+      // Sibling to the getByName / getRecordsByName override tests — each public byName read
+      // applies applyEntityNameOverride independently, so each needs its own guard.
+      mockApiClient.get.mockResolvedValue({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID });
+
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ENTITY_TEST_CONSTANTS.ENTITY_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        await entityService.getRecordByName(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        );
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(
+            OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+            ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ),
+          expect.anything(),
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
@@ -2432,6 +2512,38 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
         ),
       ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("redirects the URL entity name when a runtime override matches the {name} ref (representative for all operational byName paths)", async () => {
+      // unwrapEntityRef routes every operational byName call through resolveEntityName;
+      // insertRecord stands in for the whole family (insertRecords, updateRecord(s),
+      // deleteRecord(s), queryRecords, importRecords, downloadAttachment, uploadAttachment,
+      // deleteAttachment). One representative test guards the shared code path.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`entity.${ENTITY_TEST_CONSTANTS.ENTITY_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockSingleInsertResponse(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+        );
+
+        await entityService.insertRecord(
+          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        );
+
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(OVERRIDE_TEST_CONSTANTS.TARGET_NAME),
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+          expect.any(Object),
+        );
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
