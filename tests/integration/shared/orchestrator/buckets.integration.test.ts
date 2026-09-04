@@ -373,6 +373,68 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
     });
   });
 
+  describe('File operations - name-based BucketRef', () => {
+    let bucketId!: number;
+    let bucketName!: string;
+    let folderId!: number;
+
+    beforeAll(async () => {
+      const { buckets } = getServices();
+      const folderIdFromConfig = getFolderId();
+
+      const allBuckets = await buckets.getAll({
+        folderId: folderIdFromConfig,
+        pageSize: 1,
+      });
+
+      if (allBuckets.items.length === 0) {
+        throw new Error('No buckets available for name-based BucketRef tests');
+      }
+      if (folderIdFromConfig == null) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured for name-based BucketRef tests');
+      }
+
+      bucketId = allBuckets.items[0].id;
+      bucketName = allBuckets.items[0].name;
+      folderId = folderIdFromConfig;
+    });
+
+    it('should get file metadata by { name }', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getFileMetaData({ name: bucketName }, { folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should list files by { name }', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getFiles({ name: bucketName }, { folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should upload, get read URI, and delete a file by { name }', async () => {
+      const { buckets } = getServices();
+      const fileName = `/integration-name-ref-${mode}-${Date.now()}.txt`;
+      const buffer = Buffer.from(createTestFileContent(fileName), 'utf-8');
+
+      const uploadResult = await buckets.uploadFile({ name: bucketName }, fileName, buffer, { folderId });
+      trackUploadedFile(bucketId, fileName, folderId);
+
+      expect(uploadResult.success).toBe(true);
+
+      const readUri = await buckets.getReadUri({ name: bucketName }, fileName, { folderId });
+      expect(readUri.uri).toMatch(/^https?:\/\/.+/);
+
+      await buckets.deleteFile({ name: bucketName }, fileName, { folderId });
+      untrackUploadedFile(fileName);
+    });
+  });
+
   describe('Bucket structure validation', () => {
     it('should have expected fields in bucket objects', async () => {
       const { buckets } = getServices();
