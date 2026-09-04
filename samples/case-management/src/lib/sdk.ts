@@ -2,6 +2,7 @@ import type { UiPath, PaginationCursor } from '@uipath/uipath-typescript/core';
 import { Cases, CaseInstances, TimeInterval } from '@uipath/uipath-typescript/cases';
 import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
 import { Tasks } from '@uipath/uipath-typescript/tasks';
+import type { TaskCompleteOptions } from '@uipath/uipath-typescript/tasks';
 import { hoursUntil } from '@/lib/format';
 import type {
   CaseInstance,
@@ -75,6 +76,21 @@ export async function getTaskById(
 ): Promise<ActionTask> {
   const tasks = new Tasks(sdk);
   return tasks.getById(id, taskType ? { taskType } : undefined, folderId);
+}
+
+/**
+ * Complete a task with an outcome and its form data (`Tasks.complete`). The
+ * options carry the type so the SDK routes to the right endpoint (app / form /
+ * generic); build them with `buildCompletion` from lib/taskSchema.ts.
+ */
+export async function completeTask(
+  sdk: UiPath,
+  task: Pick<ActionTask, 'id' | 'folderId'>,
+  options: TaskCompleteOptions,
+): Promise<void> {
+  const tasks = new Tasks(sdk);
+  const result = await tasks.complete({ ...options, taskId: task.id }, task.folderId);
+  if (!result.success) throw new Error('The task did not complete successfully');
 }
 
 export async function getCaseHistory(
@@ -362,7 +378,7 @@ export async function insightsElementStats(
   start: Date,
   end: Date,
 ): Promise<ElementStat[]> {
-  return new Cases(sdk).getElementStats(processKey, packageId, start, end, packageVersion);
+  return new Cases(sdk).getElementStats({ processKey, packageId, packageVersion, startTime: start, endTime: end });
 }
 
 // ============================================================

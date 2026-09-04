@@ -3,8 +3,8 @@
 // A task's `formLayout` (the form schema) is typed as an opaque
 // Record<string,unknown> by the SDK and its exact shape varies by task kind
 // (Quick Form vs low-code App). We extract field descriptors tolerantly and
-// pull values from `data`. Coded action apps expose no declarative schema, so
-// they fall back to the iframe (handled in the component).
+// pull values from `data`. This is the fallback view; tasks with a declarative
+// schema (App tasks, Quick Forms) render through lib/taskSchema.ts + TaskForm.
 import type { ActionTask } from '@/lib/types';
 import { humanize } from '@/lib/format';
 
@@ -20,6 +20,8 @@ export interface TaskField {
 export function taskTypeLabel(type: string | undefined): string {
   switch (type) {
     case 'FormTask':
+      return 'Form';
+    case 'QuickFormTask':
       return 'Quick Form';
     case 'AppTask':
       return 'Action App';

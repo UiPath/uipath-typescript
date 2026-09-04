@@ -9,7 +9,7 @@ import type { ActionTask } from '@/lib/types';
 
 export function ActionsTab({ instanceId }: { instanceId: string }) {
   const { sdk } = useAuth();
-  const { data, loading, error } = useAsync(() => getCaseActionTasks(sdk, instanceId), [instanceId]);
+  const { data, loading, error, reload } = useAsync(() => getCaseActionTasks(sdk, instanceId), [instanceId]);
   const [filter, setFilter] = useState<'Open' | 'Completed'>('Open');
   const [selected, setSelected] = useState<ActionTask | null>(null);
 
@@ -75,7 +75,7 @@ export function ActionsTab({ instanceId }: { instanceId: string }) {
       </div>
 
       {active ? (
-        <TaskDetail key={active.id} task={active} />
+        <TaskDetail key={active.id} task={active} onChanged={reload} />
       ) : (
         <Card>
           <div className="py-16 text-center text-sm text-muted-foreground">Select a task to open it</div>

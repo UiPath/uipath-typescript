@@ -137,6 +137,7 @@ export function ActionsPage() {
               onOpenCase={() =>
                 navigate(`/cases/${encodeURIComponent(active._case.folderKey)}/${encodeURIComponent(active._case.instanceId)}`)
               }
+              onChanged={tasksQ.reload}
             />
           ) : (
             <Card className="flex h-full min-h-[420px] items-center justify-center">

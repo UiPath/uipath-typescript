@@ -8,7 +8,10 @@ import { ENV } from '@/lib/env';
 export function apiToCloudUrl(apiBaseUrl: string): string {
   try {
     const url = new URL(apiBaseUrl);
-    const cloudHost = url.hostname.replace('api.uipath.com', 'uipath.com');
+    // "alpha.api.uipath.com" → "alpha.uipath.com"; the bare production API host
+    // "api.uipath.com" maps to "cloud.uipath.com", not "uipath.com".
+    let cloudHost = url.hostname.replace('api.uipath.com', 'uipath.com');
+    if (cloudHost === 'uipath.com') cloudHost = 'cloud.uipath.com';
     return `${url.protocol}//${cloudHost}`;
   } catch {
     return apiBaseUrl;
