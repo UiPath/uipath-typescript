@@ -4,7 +4,8 @@ A minimal React + TypeScript [UiPath Coded Web App](https://docs.uipath.com/)
 demonstrating the `@uipath/uipath-typescript` SDK's **Tasks (Action Center)**
 service. It's an operational dashboard for triaging human tasks: list and
 filter them across your folders, view detail, assign / reassign / unassign,
-complete (approve / reject), and create external tasks. **Document Validation
+complete them through a **form rendered from the task's own schema** (or the
+embedded Action Center task), and create external tasks. **Document Validation
 tasks** open the
 [`@uipath/ui-widgets-validation-station`](https://github.com/UiPath/uipath-ui-widgets/pkgs/npm/ui-widgets-validation-station)
 widget so a reviewer can validate the extracted document data inline.
@@ -20,10 +21,12 @@ Every method on [`TaskServiceModel`](https://uipath.github.io/uipath-typescript/
 |----------|-------|
 | `Tasks.getAll({ folderId, pageSize, jumpToPage, filter, orderby, asTaskAdmin })` | `hooks/useTasks.ts` (`useTasks`) — paginated, filterable list |
 | `Tasks.getById(id, {}, folderId)` | `hooks/useTasks.ts` (`useTask`) — full detail |
+| `Tasks.getDataById(id, { folderId })` | `taskSchema.ts` — Quick Form task values |
+| `Tasks.saveData(id, data, { folderId, type })` | `taskSchema.ts` (`saveTaskDraft`) — **Save draft** in the form |
 | `Tasks.getUsers(folderId)` | `hooks/useTasks.ts` (`useTaskUsers`) — assignee picker (cursor-looped) |
 | `Tasks.create({ title, priority }, folderId)` | `components/TaskList.tsx` (create form) |
 | `task.assign` / `task.reassign` / `task.unassign` | `components/TaskDetail.tsx` |
-| `task.complete(options)` | `components/TaskDetail.tsx` (+ `taskUtils.ts` builds the discriminated-union options) |
+| `task.complete(options)` | `components/TaskDetail.tsx` — outcome buttons in the Form tab (`taskSchema.ts` `buildCompletion`) and the free-text fallback (`taskUtils.ts` `buildCompleteOptions`) |
 | `Tasks.getById(id, { taskType: TaskType.DocumentValidation }, folderId)` + `task.complete({ type: TaskType.DocumentValidation, … })` | `components/DocumentValidationDialog.tsx` — loads the validation payload and submits it |
 
 By default the app lists tasks across **all folders** you can view/edit. The
@@ -38,9 +41,12 @@ row; creating a task picks the target folder from the same dropdown.
 src/
   main.tsx            App.tsx            index.css
   taskUtils.ts        — badges, filter builder, complete-options builder, formatting
-  hooks/useAuth.tsx   — OAuth/PKCE via the SDK (Coded Apps template)
-  hooks/useTasks.ts   — useTasks + useTask + useTaskUsers
+  taskSchema.ts       — task schema fetch + normalization (App tasks, Quick Forms), completion/draft helpers
+  taskUrl.ts          — Action Center task / embed URL construction
+  context/AuthContext.tsx — OAuth/PKCE via the SDK (Coded Apps template)
+  hooks/useTasks.ts   — useTasks + useTask + useTaskUsers + useFolders
   components/Theme.tsx, TaskList.tsx, TaskDetail.tsx
+  components/TaskForm.tsx — schema-driven form renderer (inputs read-only, inOuts/outputs editable, outcomes)
   components/DocumentValidationDialog.tsx — validation-station host for Document Validation tasks
 ```
 
@@ -48,11 +54,13 @@ src/
 
 - Node.js 20+
 - A UiPath OAuth External Application (client ID) with **`OR.Tasks`**,
-  **`OR.Folders.Read`**, and **`OR.Buckets`** scopes. `OR.Folders.Read` powers
-  the folder dropdown (the SDK doesn't expose a Folders service yet, so the app
-  calls `/odata/Folders` directly with the SDK's access token); `OR.Buckets`
-  lets the validation-station widget fetch the document binary referenced by a
-  Document Validation task.
+  **`OR.Folders.Read`**, **`OR.Buckets`**, and **`Apps.Read`** scopes.
+  `OR.Folders.Read` powers the folder dropdown (the SDK doesn't expose a Folders
+  service yet, so the app calls `/odata/Folders` directly with the SDK's access
+  token); `OR.Buckets` lets the validation-station widget fetch the document
+  binary referenced by a Document Validation task; `Apps.Read` lets Action
+  Center return an action app's schema (see *Rendering tasks* below). Grant the
+  scopes on the External Application in Admin **and** list them in `uipath.json`.
 - An Orchestrator folder that contains Action Center tasks (only needed for
   testing — leaving the filter on "All folders" still works)
 
@@ -82,11 +90,10 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
 ## Notes
 
 - **My Tasks vs Manage Tasks:** these map to `getAll`'s `asTaskAdmin` flag.
-  - **My Tasks** — clicking a row opens a quick-complete dialog (Approve /
-    Reject / custom action). An info icon in that dialog opens the full
-    detail sheet on demand. The streamlined flow is the daily worker view.
-    A **Document Validation** task instead opens the validation-station widget
-    (see below).
+  - **My Tasks** — clicking a row opens the task sheet on its **Form** tab, the
+    daily worker view: the task rendered from its schema with one button per
+    outcome. A **Document Validation** task instead opens the validation-station
+    widget (see below).
   - **Manage Tasks** (`asTaskAdmin: true`) — clicking rows selects them
     (multi-select), and bulk **Assign** / **Unassign** appear in the
     toolbar. Surfaces `Tasks.assign(payload[])` and `Tasks.unassign(ids)`
@@ -98,6 +105,28 @@ uip codedapp deploy -n action-center-app --folder-key <FOLDER_KEY>
   response holds every row.
 - **Creation** through the API only supports **external** tasks — form and
   app tasks are created by the system through workflows.
+- **Rendering tasks:** the task sheet (`components/TaskDetail.tsx`) has three tabs.
+  **Form** (default) is a native form built from the task's schema by
+  `components/TaskForm.tsx`: inputs read-only, inOuts/outputs editable with a
+  widget per type, and one button per outcome; submitting calls
+  `task.complete({ type, action: <outcome>, data })`, **Save draft** calls
+  `Tasks.saveData`. **Details** is Action Center's task summary. **Action
+  Center** embeds the task itself (`/embed_/{org}/{tenant}/actions_/current-task/tasks/{id}`,
+  built by `taskUrl.ts`) for the exact experience the app designer built.
+
+  Where the schema comes from (`taskSchema.ts`):
+
+  | Task type | Schema | Values |
+  |-----------|--------|--------|
+  | **App task** — coded or low-code action app | `GET tasks/AppTasks/GetAppTaskByKey` → `taskSchema`: the app's `action-schema.json` parsed by Action Center into .NET-typed properties (`String`, `Int32`, `Decimal`, `DateTime`, `DataTable`, `File`, …) | same response, `data` |
+  | **Quick Form** (`QuickFormTask`, Maestro/Flow HITL node) | `GET tasks/TaskSchemas/GetByKey?key={task.taskSchemaKey}` → `fields[]` + `outcomes[]` | `Tasks.getDataById` |
+  | External / legacy Form / Document Validation | none — the Form tab shows `data` as stored and **Complete** takes a free-text action | `Tasks.getById` |
+
+  The two `GET`s aren't wrapped by the SDK yet, so `taskSchema.ts` calls them
+  with the SDK's access token (`sdk.getToken()`) — the same pattern as the
+  folder dropdown. Action Center fetches an app's schema from the Apps service
+  **with the caller's token**, which is why `Apps.Read` is required; without it
+  the schema comes back empty and the sheet falls back to the raw values.
 - **Document Validation:** selecting a task of type `DocumentValidationTask`
   (from a My Tasks row, or via **Validate document** in the detail sheet) opens
   a near-fullscreen dialog hosting `@uipath/ui-widgets-validation-station`. The

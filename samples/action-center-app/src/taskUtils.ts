@@ -8,6 +8,7 @@ import {
 import type { TaskCompleteOptions, TaskGetResponse } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import type { BadgeProps } from '@uipath/apollo-wind/components/ui/badge'
+import { QUICK_FORM_TASK_TYPE } from './taskSchema'
 
 /**
  * Presentation + mapping helpers for Action Center tasks, kept out of the
@@ -65,6 +66,8 @@ export function slaBadge(status: TaskSlaStatus | undefined): Badge | null {
 }
 
 export function taskTypeLabel(type: TaskType): string {
+  // Quick Form tasks (Maestro/Flow HITL) aren't in the SDK enum yet.
+  if (String(type) === QUICK_FORM_TASK_TYPE) return 'Quick Form'
   switch (type) {
     case TaskType.Form:
       return 'Form'

@@ -77,7 +77,6 @@ import { useAuth } from '../context/AuthContext'
 import { useFolders, useTasks, useTaskUsers } from '../hooks/useTasks'
 import {
   assignedToGroup,
-  buildCompleteOptions,
   extractServerMessage,
   formatDateTime,
   priorityBadge,
@@ -129,8 +128,8 @@ export function TaskList() {
 
   // Multi-select state for Manage Tasks (kept as a Set of taskIds).
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  // Dialog state.
-  const [completeTask, setCompleteTask] = useState<TaskGetResponse | null>(null)
+  // Dialog state. My Tasks rows open the detail sheet, whose Form tab renders
+  // the task from its schema (outcome buttons complete it).
   const [detailTask, setDetailTask] = useState<TaskGetResponse | null>(null)
   // Document Validation tasks open the validation-station widget instead of
   // the generic Complete dialog.
@@ -322,7 +321,7 @@ export function TaskList() {
                         if (asTaskAdmin) toggleSelect(task.id)
                         else if (task.type === TaskType.DocumentValidation)
                           setValidationTask(task)
-                        else setCompleteTask(task)
+                        else setDetailTask(task)
                       }}
                       className="cursor-pointer"
                     >
@@ -437,18 +436,6 @@ export function TaskList() {
             </Button>
           </div>
         </div>
-      )}
-
-      {completeTask && (
-        <CompleteDialog
-          task={completeTask}
-          onClose={() => setCompleteTask(null)}
-          onDone={() => {
-            setCompleteTask(null)
-            refresh()
-          }}
-          onShowDetail={() => setDetailTask(completeTask)}
-        />
       )}
 
       {detailTask && (
@@ -816,100 +803,6 @@ function hasAssignee(task: TaskGetResponse): boolean {
 }
 
 /** Quick-complete dialog opened from a My Tasks row click. */
-function CompleteDialog({
-  task,
-  onClose,
-  onDone,
-  onShowDetail,
-}: {
-  task: TaskGetResponse
-  onClose: () => void
-  onDone: () => void
-  onShowDetail: () => void
-}) {
-  const [action, setAction] = useState(task.action || 'Approve')
-  const [busy, setBusy] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-
-  const complete = async (value: string) => {
-    const v = value.trim()
-    if (!v) return
-    setBusy(true)
-    setSubmitError(null)
-    try {
-      // task.complete is bound on the row task (added by Tasks.getAll's transform).
-      const result = await task.complete(buildCompleteOptions(task.type, v))
-      if (result.success) {
-        toast.success('Task completed')
-        onDone()
-      } else {
-        setSubmitError('The task did not complete successfully')
-      }
-    } catch (err) {
-      setSubmitError(extractServerMessage(err) ?? 'Completion failed')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          {/* Title left, info icon hugs the right edge of the body. DialogContent
-              already pads itself, so the info icon sits just inside the modal
-              with a small gap to the absolutely-positioned close X. */}
-          <div className="flex items-center justify-between gap-2">
-            <DialogTitle className="min-w-0 break-words pr-2">
-              Complete: {task.title}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onShowDetail}
-              aria-label="Show task details"
-              title="Show task details"
-              className="-mr-1 h-7 w-7 shrink-0 text-muted-foreground"
-            >
-              <Info className="h-4 w-4" />
-            </Button>
-          </div>
-          <DialogDescription>
-            Type the action your workflow expects (e.g. <span className="font-medium">Approve</span> or <span className="font-medium">Reject</span>) and confirm. Tap the info icon for full task details.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="complete-action">Action</Label>
-            <Input
-              id="complete-action"
-              type="text"
-              value={action}
-              onChange={(e) => setAction(e.target.value)}
-              placeholder="e.g. Approve"
-            />
-          </div>
-          {submitError && (
-            <Alert variant="destructive">
-              <AlertDescription>{submitError}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-
-        <DialogFooter className="flex-wrap gap-2">
-          <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
-          </Button>
-          <Button onClick={() => complete(action)} disabled={busy || !action.trim()}>
-            {busy ? 'Completing…' : 'Complete'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 /** Bulk-(re)assign dialog used on Manage Tasks when ≥1 task is selected. */
 function BulkAssignDialog({
   tasks: targetTasks,
