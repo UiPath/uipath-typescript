@@ -31,20 +31,15 @@ vi.mock('@/core/auth/embedded-token-manager', () => ({
 
 import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
 
-// TokenManager reads the trustedEmbeddingOrigin const at construction time.
+// TokenManager reads the hostEmbeddingOrigin const at construction time.
 // Expose it as a getter that derives from the (mocked) platform flags, so tests
 // keep driving the scenario by mutating platform.isHostEmbedded / embeddingOrigin.
 vi.mock('@/core/auth/host-token-request', async () => {
   const platform = await import('@/utils/platform');
-  const ALLOWED = ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'];
-  const isValidHostOrigin = (origin: string | null): boolean => !!origin && ALLOWED.includes(origin);
   return {
-    isValidHostOrigin: vi.fn(isValidHostOrigin),
     isTokenExpired: vi.fn(() => false),
-    get trustedEmbeddingOrigin() {
-      return platform.isHostEmbedded && platform.embeddingOrigin && isValidHostOrigin(platform.embeddingOrigin)
-        ? platform.embeddingOrigin
-        : null;
+    get hostEmbeddingOrigin() {
+      return platform.isHostEmbedded && platform.embeddingOrigin ? platform.embeddingOrigin : null;
     },
   };
 });
@@ -94,12 +89,15 @@ describe('TokenManager — EmbeddedTokenManager wiring', () => {
     expect(EmbeddedTokenManager).not.toHaveBeenCalled();
   });
 
-  it('does not instantiate EmbeddedTokenManager when basedomain is not a trusted UiPath origin', () => {
+  // Host origins are customer-configurable and follow no fixed pattern, so any
+  // basedomain the host supplies is used as the pinned origin.
+  it('instantiates EmbeddedTokenManager for a non-uipath.com basedomain', () => {
+    const customerOrigin = 'https://automation.customer-sf.internal';
     vi.mocked(platform).isInActionCenter = false;
     vi.mocked(platform).isHostEmbedded = true;
-    vi.mocked(platform).embeddingOrigin = 'https://evil.example.com';
+    vi.mocked(platform).embeddingOrigin = customerOrigin;
     makeManager();
-    expect(EmbeddedTokenManager).not.toHaveBeenCalled();
+    expect(EmbeddedTokenManager).toHaveBeenCalledWith(customerOrigin, expect.any(Object), expect.any(Function));
   });
 
   it('does not instantiate EmbeddedTokenManager when embeddingOrigin is null', () => {
@@ -110,7 +108,7 @@ describe('TokenManager — EmbeddedTokenManager wiring', () => {
     expect(EmbeddedTokenManager).not.toHaveBeenCalled();
   });
 
-  it('instantiates EmbeddedTokenManager when ?host=embed is present and embeddingOrigin is trusted', () => {
+  it('instantiates EmbeddedTokenManager when ?host=embed is present and embeddingOrigin is set', () => {
     vi.mocked(platform).isInActionCenter = false;
     vi.mocked(platform).isHostEmbedded = true;
     vi.mocked(platform).embeddingOrigin = PARENT_ORIGIN;

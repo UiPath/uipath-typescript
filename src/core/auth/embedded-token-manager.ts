@@ -24,9 +24,9 @@ function extractToken(data: unknown): HostTokenResponse | undefined {
  * (e.g. Governance Portal, Insights UI).
  *
  * Detection: the host signals embedding via `?host=embed&basedomain=<origin>`
- * in the iframe src URL. `parentOrigin` is read from `?basedomain=` and validated
- * against the trusted UiPath host allowlist before this manager is constructed.
- * This mirrors the mechanism used by ActionCenterTokenManager.
+ * in the iframe src URL. `parentOrigin` is read from `?basedomain=` and pinned:
+ * requests are sent only to it and only messages whose `event.origin` matches it
+ * are accepted. This mirrors the mechanism used by ActionCenterTokenManager.
  *
  * On every token expiry the SDK sends `UIP.refreshToken` with `clientId` and
  * `scope`; the host performs silent SSO and responds with `UIP.tokenRefreshed`.
