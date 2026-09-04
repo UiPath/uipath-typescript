@@ -24,6 +24,7 @@ export * from './traces';
 export * from './governance';
 export * from './notification';
 export * from './platform';
+export * from './integration-service';
 
 // Re-export constants for convenience
 export * from '../constants';
