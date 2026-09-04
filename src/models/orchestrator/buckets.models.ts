@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetReadUriRequestOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadFileRequestOptions, BucketUploadResponse, BlobItem, BucketGetFilesOptions, BucketFile, BucketDeleteFileOptions } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetReadUriRequestOptions, BucketGetUriResponse, BucketRef, BucketUploadFileOptions, BucketUploadFileRequestOptions, BucketUploadResponse, BlobItem, BucketGetFilesOptions, BucketFile, BucketDeleteFileOptions } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -111,35 +111,34 @@ export interface BucketServiceModel {
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
-   * @param bucketId - The ID of the bucket to get file metadata from
+   * @param bucketRef - Bucket ref (`{ id }` or `{ name }`). A raw numeric bucket id is also
+   *   accepted as a shorthand for `{ id }`. `{ name }` triggers an internal name lookup where
+   *   runtime resource overrides may redirect the target across folders.
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination
    * @returns Promise resolving to either an array of files metadata NonPaginatedResponse<BlobItem> or a PaginatedResponse<BlobItem> when pagination options are used.
    * {@link BlobItem}
    * @example
    * ```typescript
-   * // By folder ID
-   * const fileMetadata = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId> });
+   * // By bucket id (either as raw number or { id })
+   * const fileMetadata = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId> });
    *
-   * // By folder key (GUID)
-   * await buckets.getFileMetaData(<bucketId>, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-   *
-   * // By folder path
-   * await buckets.getFileMetaData(<bucketId>, { folderPath: 'Shared/Finance' });
+   * // By bucket name (folder scoping applies to both the name lookup and the meta-data read)
+   * await buckets.getFileMetaData({ name: 'InvoicesBucket' }, { folderPath: 'Shared/Finance' });
    *
    * // Filter by prefix
-   * await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, prefix: '/folder1' });
+   * await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, prefix: '/folder1' });
    *
    * // First page with pagination
-   * const page1 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, pageSize: 10 });
+   * const page1 = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getFileMetaData(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
+   *   const page2 = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, cursor: page1.nextCursor });
    * }
    * ```
    */
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketId: number,
+    bucketRef: BucketRef | number,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -191,7 +190,7 @@ export interface BucketServiceModel {
    * ```
    */
   getReadUri(
-    bucketId: number,
+    bucketRef: BucketRef | number,
     path: string,
     options?: BucketGetReadUriRequestOptions,
   ): Promise<BucketGetUriResponse>;
@@ -236,7 +235,7 @@ export interface BucketServiceModel {
    * ```
    */
   uploadFile(
-    bucketId: number,
+    bucketRef: BucketRef | number,
     path: string,
     content: Blob | Uint8Array<ArrayBuffer> | File,
     options?: BucketUploadFileRequestOptions,
@@ -265,7 +264,7 @@ export interface BucketServiceModel {
    * await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
    * ```
    */
-  deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void>;
+  deleteFile(bucketRef: BucketRef | number, path: string, options?: BucketDeleteFileOptions): Promise<void>;
 
   /**
    * Lists all files in a bucket.
@@ -311,7 +310,7 @@ export interface BucketServiceModel {
    * ```
    */
   getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
-    bucketId: number,
+    bucketRef: BucketRef | number,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>

@@ -35,6 +35,20 @@ export interface BucketGetByIdOptions extends BaseOptions {}
 export interface BucketGetByNameOptions extends FolderScopedOptions {}
 
 /**
+ * Selects a bucket by exactly one identifier — `{ id }` numeric or `{ name }`
+ * (folder-scoped). Used by the ref-based file-op signatures on
+ * {@link BucketServiceModel} (`uploadFile`, `deleteFile`, `getReadUri`,
+ * `getFiles`, `getFileMetaData`). `{ name }` triggers an internal
+ * `getByNameLookup` (runtime overrides apply); `{ id }` skips the lookup.
+ *
+ * Narrower than the generic {@link ResourceRef} — buckets don't have a public GUID key
+ * on their operational routes, so `{ key }` is intentionally not part of this union.
+ */
+export type BucketRef =
+  | { id: number; name?: never }
+  | { name: string; id?: never };
+
+/**
  * Maps header names to their values
  * 
  * @example
