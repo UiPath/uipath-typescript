@@ -67,10 +67,20 @@ Where the schema comes from, by task type ([`src/lib/taskSchema.ts`](src/lib/tas
 | **Quick Form** (`QuickFormTask`, Maestro/Flow HITL node) | `GET tasks/TaskSchemas/GetByKey?key={task.taskSchemaKey}` → `fields[]` + `outcomes[]` | `Tasks.getDataById` |
 | External / legacy Form | none — falls back to a key/value view of `data` with a free-text action | `Tasks.getById` |
 
-The two `GET`s above are not wrapped by the SDK yet, so the sample calls them with the SDK's access
-token (`sdk.getToken()`); swap them for the SDK methods once they ship. Action Center fetches an app's
-schema from the Apps service **with the caller's token**, which is why the token needs `Apps.Read`.
-A missing scope shows up as an empty schema (the card then falls back to the raw values and says so).
+Neither schema `GET` above is wrapped by the SDK yet, so the sample calls them with the SDK's access
+token (`sdk.getToken()`); swap them for the SDK methods once they ship. `Tasks.getById` is not a
+substitute for the first: for an app task it routes to `GetAppTaskById`, which returns
+`taskSchema: null` — only the `ByKey` variant carries the parsed schema. Every other call goes
+through the wrappers in [`src/lib/sdk.ts`](src/lib/sdk.ts).
+
+Two things to know about the app-task schema:
+
+- **`Apps.Read` is required.** Action Center fetches the schema from the Apps service **with the
+  caller's token**. Without an Apps scope the call still returns `200` with an empty schema; the card
+  says so and falls back to the raw values.
+- **A property's `name` is its data key.** The parsed schema also carries a `key`, but that is a UUID
+  the Apps designer generates per property and it never appears in the task's `data`. Outcomes work
+  the same way: the `name` (e.g. `Approve`) is the action string used to complete the task.
 
 ## Run locally
 

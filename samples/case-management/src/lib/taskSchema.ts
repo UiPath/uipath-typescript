@@ -21,12 +21,13 @@
 //     boolean, date, file; a `direction` of input / inOut / output) plus
 //     `outcomes[]`. Values come from `Tasks.getDataById`.
 //
-// Neither endpoint is wrapped by @uipath/uipath-typescript yet, so this file
-// calls them with the SDK's own access token (the same pattern the SDK team
-// recommends until the methods land). Everything else goes through the SDK.
+// Neither schema endpoint is wrapped by @uipath/uipath-typescript yet, so this
+// file calls them with the SDK's own access token (the pattern to use until the
+// methods land). Everything else goes through the wrappers in lib/sdk.ts.
 import type { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
+import { TaskType } from '@uipath/uipath-typescript/tasks';
 import type { TaskCompleteOptions, TaskGetResponse } from '@uipath/uipath-typescript/tasks';
+import { getTaskData, saveTaskData } from '@/lib/sdk';
 
 /** Task type Action Center uses for Quick Forms. Not in the SDK's `TaskType` enum yet. */
 export const QUICK_FORM_TASK_TYPE = 'QuickFormTask';
@@ -94,7 +95,7 @@ export interface TaskFormBundle {
   model: TaskFormModel | null;
   data: Record<string, unknown>;
   /** Set when `model` is null. */
-  reason?: 'no-schema' | 'unsupported-type' | 'error';
+  reason?: 'no-schema' | 'empty-schema' | 'unsupported-type' | 'error';
   error?: string;
 }
 
@@ -201,7 +202,10 @@ function dotNetKind(type: string | undefined, hasChildren: boolean): FieldKind {
 }
 
 function appProperty(p: unknown, section: FieldSection): TaskFormField | null {
-  const key = prop<string>(p, 'key') ?? prop<string>(p, 'name');
+  // `name` is the property name the automation reads and writes — it is the key
+  // inside the task's `data`. `key` is a UUID the Apps designer generates per
+  // property, so it must never be used to look up a value.
+  const key = prop<string>(p, 'name');
   if (!key) return null;
   const children = (prop<unknown[]>(p, 'properties') ?? [])
     .map((c) => appProperty(c, section))
@@ -211,7 +215,7 @@ function appProperty(p: unknown, section: FieldSection): TaskFormField | null {
   const baseKind = dotNetKind(rawType, children.length > 0);
   const field: TaskFormField = {
     key,
-    label: prop<string>(p, 'name') || humanizeKey(key),
+    label: humanizeKey(key),
     kind: isList && baseKind !== 'table' ? 'array' : baseKind,
     section,
     required: Boolean(prop<boolean>(p, 'required')),
@@ -223,9 +227,11 @@ function appProperty(p: unknown, section: FieldSection): TaskFormField | null {
 }
 
 function appOutcome(p: unknown, index: number): TaskFormOutcome | null {
-  const key = prop<string>(p, 'key') ?? prop<string>(p, 'name');
-  if (!key) return null;
-  return { key, label: prop<string>(p, 'name') || key, primary: index === 0 };
+  // Completion takes the outcome's `name` (e.g. "Approve") as the action string —
+  // the same value a coded action app passes to `completeTask()`. `key` is a UUID.
+  const name = prop<string>(p, 'name');
+  if (!name) return null;
+  return { key: name, label: name, primary: index === 0 };
 }
 
 /** Normalize a `taskSchema` object from GetAppTaskByKey. Returns null when the server sent none. */
@@ -245,6 +251,8 @@ export function normalizeAppTaskSchema(taskSchema: unknown, appType?: string): T
 
 export interface AppTaskByKey {
   model: TaskFormModel | null;
+  /** True when the server sent a schema object that declares no fields and no outcomes. */
+  emptySchema: boolean;
   data: Record<string, unknown> | null;
   appType?: string;
 }
@@ -258,8 +266,11 @@ export interface AppTaskByKey {
 export async function fetchAppTaskByKey(sdk: UiPath, taskKey: string, folderId: number): Promise<AppTaskByKey> {
   const body = await orchestratorGet<unknown>(sdk, 'tasks/AppTasks/GetAppTaskByKey', { taskKey }, folderId);
   const appType = prop<string>(prop(body, 'appTasksMetadata'), 'appType');
+  const taskSchema = prop(body, 'taskSchema');
+  const model = normalizeAppTaskSchema(taskSchema, appType);
   return {
-    model: normalizeAppTaskSchema(prop(body, 'taskSchema'), appType),
+    model,
+    emptySchema: !model && !!taskSchema && typeof taskSchema === 'object',
     data: (prop<Record<string, unknown>>(body, 'data') ?? null) as Record<string, unknown> | null,
     appType,
   };
@@ -332,6 +343,9 @@ export function normalizeQuickFormSchema(schema: unknown): TaskFormModel | null 
         ...(kind === 'array' ? { itemKind: 'json' as FieldKind } : {}),
       };
     });
+  // The outcome's `name` is the action string Action Center expects. A Quick Form
+  // outcome may also carry `action: 'Continue' | 'End'`, but that is the Flow's
+  // branching instruction, not the task action.
   const outcomes = (prop<QuickFormOutcomeDef[]>(schema, 'outcomes') ?? [])
     .filter((o) => o && (o.name || o.id))
     .map<TaskFormOutcome>((o, i) => ({
@@ -366,15 +380,12 @@ export async function loadTaskForm(sdk: UiPath, task: TaskGetResponse): Promise<
       return {
         model: res.model,
         data: res.data ?? fallbackData,
-        ...(res.model ? {} : { reason: 'no-schema' as const }),
+        ...(res.model ? {} : { reason: res.emptySchema ? ('empty-schema' as const) : ('no-schema' as const) }),
       };
     }
 
     if (isQuickFormTask(task)) {
-      const tasks = new Tasks(sdk);
-      const dataRes = (await tasks.getDataById(task.id, { folderId: task.folderId })) as TaskWithSchemaKey & {
-        data: Record<string, unknown> | null;
-      };
+      const dataRes = await getTaskData(sdk, task.id, task.folderId);
       const schemaKey = dataRes.taskSchemaKey ?? (task as TaskWithSchemaKey).taskSchemaKey;
       const model = schemaKey ? await fetchQuickFormSchema(sdk, schemaKey, task.folderId) : null;
       return {
@@ -426,8 +437,7 @@ export function buildCompletion(task: Pick<TaskGetResponse, 'type'>, action: str
 
 /** Persist a draft without completing the task (`Tasks.saveData`, routed by task type). */
 export async function saveTaskDraft(sdk: UiPath, task: Pick<TaskGetResponse, 'id' | 'type' | 'folderId'>, data: Record<string, unknown>): Promise<void> {
-  const tasks = new Tasks(sdk);
-  await tasks.saveData(task.id, data, { folderId: task.folderId, type: task.type });
+  await saveTaskData(sdk, task, data);
 }
 
 // ---------------------------------------------------------------------------

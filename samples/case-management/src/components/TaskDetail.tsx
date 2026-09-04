@@ -105,7 +105,10 @@ export function TaskDetail({
   const isCompleted = t.isCompleted || String(t.status).toLowerCase() === 'completed';
 
   // Fallback view for schema-less tasks: values (with formLayout labels if any).
-  const fallbackFields = buildTaskFields({ ...t, data: form.data?.data ?? t.data });
+  // With no schema the bundle only echoes the summary task's `data`, which the
+  // list endpoint leaves empty — prefer the full task from `getById`.
+  const fallbackData = (Object.keys((t.data ?? {}) as object).length ? t.data : form.data?.data) ?? {};
+  const fallbackFields = buildTaskFields({ ...t, data: fallbackData as Record<string, unknown> });
 
   const runAction = async (label: string, fn: () => Promise<void>) => {
     setBusy(true);
@@ -129,7 +132,7 @@ export function TaskDetail({
   const saveDraft = (data: Record<string, unknown>) => runAction('Draft saved', () => saveTaskDraft(sdk, t, data));
   const completeFree = () =>
     runAction(`Completed with “${freeAction.trim()}”`, () =>
-      completeTask(sdk, t, buildCompletion(t, freeAction.trim(), form.data?.data ?? (t.data as Record<string, unknown>) ?? {})),
+      completeTask(sdk, t, buildCompletion(t, freeAction.trim(), fallbackData as Record<string, unknown>)),
     );
 
   return (
@@ -241,7 +244,14 @@ export function TaskDetail({
               )}
               {form.data?.reason === 'no-schema' && (
                 <p className="mb-4 text-xs text-muted-foreground">
-                  Action Center returned no schema for this task, so its values are shown as stored.
+                  Action Center returned no schema for this task, so its values are shown as stored. For app tasks this
+                  usually means the token lacks the <span className="font-medium">Apps.Read</span> scope.
+                </p>
+              )}
+              {form.data?.reason === 'empty-schema' && (
+                <p className="mb-4 text-xs text-muted-foreground">
+                  Action Center returned an empty schema for this task — the app version it points at declares no fields or
+                  outcomes — so its values are shown as stored.
                 </p>
               )}
               {fallbackFields.length > 0 ? (

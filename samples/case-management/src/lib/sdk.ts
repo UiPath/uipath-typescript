@@ -2,7 +2,7 @@ import type { UiPath, PaginationCursor } from '@uipath/uipath-typescript/core';
 import { Cases, CaseInstances, TimeInterval } from '@uipath/uipath-typescript/cases';
 import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
 import { Tasks } from '@uipath/uipath-typescript/tasks';
-import type { TaskCompleteOptions } from '@uipath/uipath-typescript/tasks';
+import type { TaskCompleteOptions, TaskDataGetResponse } from '@uipath/uipath-typescript/tasks';
 import { hoursUntil } from '@/lib/format';
 import type {
   CaseInstance,
@@ -76,6 +76,29 @@ export async function getTaskById(
 ): Promise<ActionTask> {
   const tasks = new Tasks(sdk);
   return tasks.getById(id, taskType ? { taskType } : undefined, folderId);
+}
+
+/**
+ * Task data + values for a task the list endpoints only summarize
+ * (`Tasks.getDataById`). Quick Form tasks also carry their `taskSchemaKey` here.
+ */
+export async function getTaskData(
+  sdk: UiPath,
+  id: number,
+  folderId: number,
+): Promise<TaskDataGetResponse & { taskSchemaKey?: string | null }> {
+  const tasks = new Tasks(sdk);
+  return tasks.getDataById(id, { folderId });
+}
+
+/** Persist a task's field values without completing it (`Tasks.saveData`). */
+export async function saveTaskData(
+  sdk: UiPath,
+  task: Pick<ActionTask, 'id' | 'folderId' | 'type'>,
+  data: Record<string, unknown>,
+): Promise<void> {
+  const tasks = new Tasks(sdk);
+  await tasks.saveData(task.id, data, { folderId: task.folderId, type: task.type });
 }
 
 /**
