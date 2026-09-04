@@ -1,11 +1,33 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, setupUnifiedTests, InitMode, getTestConfig } from '../../config/unified-setup';
 import { Feedback } from '../../../../src/services/agents/feedback';
 import { FeedbackStatus, FeedbackResponse } from '../../../../src/models/agents/feedback/feedback.types';
 import { registerResource } from '../../utils/cleanup';
 import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
+
+/**
+ * ApiClient.request issues a single bare fetch with no timeout and no retry
+ * (src/core/http/api-client.ts), so one stalled request hangs until vitest's
+ * 30s test timeout kills the test. CI run 15 hit exactly that: the first
+ * getById of a freshly submitted entry stalled past 30s while the identical
+ * call in the next test returned in 365ms. Race the call against a deadline
+ * so a stalled attempt is abandoned and reissued instead of eating the test's
+ * whole budget. (The underlying fetch cannot be aborted from here — it is
+ * merely orphaned, which is acceptable in tests.)
+ */
+async function withDeadline<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} did not respond within ${ms}ms`)), ms);
+  });
+  try {
+    return await Promise.race([promise, deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
@@ -67,18 +89,81 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   describe('getById', () => {
     let existingFeedbackId!: string;
     let existingFolderKey!: string;
+    let createdForGetById: string | undefined;
 
     beforeAll(async () => {
       feedback = getServices().feedback!;
-      const result = await feedback.getAll({ pageSize: 1 });
+      const configuredFolderKey = getTestConfig().folderKey;
+      if (!configuredFolderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is not configured — cannot run getById tests.');
+      }
+
+      // getAll is tenant-wide, but getById is folder-authorized. Records created
+      // elsewhere (a personal workspace, another team's folder) return 403, so
+      // pick one that lives in the folder these tests own rather than whichever
+      // record happens to sort first.
+      const result = await feedback.getAll({ pageSize: 100 });
       if (result.items.length === 0) {
-        throw new Error('No feedback available for getById tests — create at least one feedback entry first');
+        throw new Error('No feedback in the tenant — cannot obtain a traceId for getById tests.');
       }
-      existingFeedbackId = result.items[0].id;
-      if (!result.items[0].folderKey) {
-        throw new Error('Feedback entry missing folderKey — cannot run getById tests');
+
+      existingFolderKey = configuredFolderKey;
+
+      // Reuse an entry from the test folder when one exists; otherwise create one,
+      // so the suite does not depend on another test having run first.
+      const accessible = result.items.find((item) => item.folderKey === configuredFolderKey);
+      if (accessible) {
+        existingFeedbackId = accessible.id;
+        return;
       }
-      existingFolderKey = result.items[0].folderKey;
+
+      const created = await feedback.submit(result.items[0].traceId, true, {
+        comment: 'getById fixture',
+        folderKey: configuredFolderKey,
+      });
+      existingFeedbackId = created.id;
+      createdForGetById = created.id;
+
+      // Warm up the fixture before any test reads it. The first read of a
+      // freshly submitted entry has been observed to stall server-side for
+      // over 30s while every subsequent read of the same entry takes ~400ms,
+      // so absorb that first read here with bounded, abandonable attempts
+      // rather than letting it burn a test's entire 30s budget.
+      const warmupDeadline = Date.now() + 20_000;
+      let lastError: unknown;
+      while (Date.now() < warmupDeadline) {
+        try {
+          await withDeadline(
+            feedback.getById(created.id, { folderKey: configuredFolderKey }),
+            5_000,
+            `warm-up getById(${created.id})`
+          );
+          return;
+        } catch (error) {
+          lastError = error;
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+        }
+      }
+      throw new Error(
+        `getById fixture ${created.id} never became readable within 20s of creation: ${lastError}`
+      );
+    }, 60_000);
+
+    afterAll(async () => {
+      if (createdForGetById) {
+        // Cleanup must not fail the suite — warn loudly instead. A leaked entry
+        // is benign here: the next run's beforeAll finds it in the test folder
+        // and reuses it as the fixture.
+        try {
+          await withDeadline(
+            feedback.deleteById(createdForGetById, { folderKey: existingFolderKey }),
+            10_000,
+            `cleanup deleteById(${createdForGetById})`
+          );
+        } catch (error) {
+          console.warn(`Failed to delete getById fixture ${createdForGetById}:`, error);
+        }
+      }
     });
 
     it('should retrieve feedback by ID', async () => {
@@ -214,15 +299,20 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
 
     beforeAll(async () => {
       feedback = getServices().feedback!;
+      const configuredFolderKey = getTestConfig().folderKey;
+      if (!configuredFolderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is not configured — cannot run submit/update/delete tests.');
+      }
+
       const result = await feedback.getAll({ pageSize: 1 });
       if (result.items.length === 0) {
-        throw new Error('No existing feedback — need at least one entry to obtain a valid traceId and folderKey');
+        throw new Error('No existing feedback — need at least one entry to obtain a valid traceId');
       }
-      if (!result.items[0].folderKey) {
-        throw new Error('Feedback entry missing folderKey — cannot run submit/update/delete tests');
-      }
+
+      // Only the traceId has to come from an existing entry; write the new ones
+      // into the folder these tests own, so they stay accessible afterwards.
       traceId = result.items[0].traceId;
-      folderKey = result.items[0].folderKey;
+      folderKey = configuredFolderKey;
     });
 
     afterAll(async () => {

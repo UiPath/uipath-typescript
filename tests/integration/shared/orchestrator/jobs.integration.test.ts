@@ -368,7 +368,10 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     function apiHeaders(): Record<string, string> {
       const config = getTestConfig();
       return {
-        Authorization: `Bearer ${config.secret}`,
+        // Must match the credential the SDK authenticates with: an attachment
+        // created by the external application is not readable by a user token,
+        // and vice versa.
+        Authorization: `Bearer ${config.userToken ?? config.secret}`,
         'Content-Type': 'application/json',
         'X-UIPATH-OrganizationUnitId': String(attachmentFolderId),
       };

@@ -220,6 +220,134 @@ Tests skip gracefully when:
 - PAT token lacks necessary permissions (e.g., Maestro scope)
 - Pre-existing resources don't exist in tenant
 - Prerequisites aren't met
+- A suite needs a user token and `UIPATH_USER_TOKEN` is not set (see below)
+
+## Authentication modes
+
+A suite declares what it *needs* from a credential, and the harness picks one:
+
+| Requirement | Meaning | Declared by |
+|-------------|---------|-------------|
+| `any` (default) | Either credential works | Every suite unless noted below |
+| `user` | Needs a user access token | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions |
+| `pat` | Needs the external-application identity | None currently — `auth-errors` builds its own SDK instances directly |
+
+For `any`, resolution prefers **`UIPATH_USER_TOKEN`** when configured and falls back to
+`UIPATH_SECRET`. A user token carries the signed-in user's own permissions rather than
+an external app's granted scopes, so it reaches strictly more of the API — which is why
+it wins by default. Set `INTEGRATION_AUTH_MODE=pat` (or `=user`) to force one credential
+for a whole run; that is how the PAT path stays covered once a user token is available
+everywhere.
+
+Resolution is a pure function of the environment (`resolveAuthMode`), so
+`describe.skipIf(...)` at collection time and the `beforeAll` setup always agree.
+
+The `user` suites exist because their APIs reject PAT and client-credentials tokens
+outright — `insightsrtm_` returns 401 regardless of which scopes the external
+application holds, and the required scopes are not available to external apps at
+all. A user access token carries the signed-in user's permissions instead, which
+those services do accept.
+
+Both credentials are sent as plain bearer tokens; the SDK's `secret` config field
+takes either. The PAT mode is deliberately retained rather than replaced — it is
+the credential most SDK consumers use, and keeping it exercised preserves that
+coverage.
+
+### Choosing the credential for a suite
+
+Pass the requirement as the second argument to `setupUnifiedTests`, and gate
+collection with the matching guard so the suite skips instead of failing when the
+credential is absent:
+
+```ts
+// Needs a user token — skips when none is configured.
+describeIntegration('Notifications - Integration Tests', 'user', modes, (mode) => { ... });
+
+// Needs the external application.
+describeIntegration('Some suite', 'pat', modes, (mode) => { ... });
+
+// Either works — plain describe plus the setup helper.
+describe.each(modes)('Some suite [%s]', (mode) => {
+  setupUnifiedTests(mode);
+```
+
+`describeIntegration` states the requirement once and derives both halves from it:
+the collection-time skip guard and the credential the suite runs under. Writing the
+guard separately from the requirement lets the two disagree, and nothing catches
+that — the suite just runs under a credential it did not ask for.
+
+`INTEGRATION_AUTH_MODE=pat|user` forces one credential across a whole run without
+editing any suite, which is useful for checking that a change behaves the same
+under both.
+
+### Host per credential
+
+User-token suites use `MINTER_BASE_URL` when it is set; everything else uses
+`UIPATH_BASE_URL`. The default host sits behind a CORS proxy whose path whitelist
+must name every service a suite touches — a service missing from it is rejected
+before the request reaches the platform. Suites on the user token reach services
+that are not on that list, so they talk to the platform host directly. The proxy
+exists for browser callers; tests run in Node, where it buys nothing.
+
+`MINTER_BASE_URL` is optional and falls back to `UIPATH_BASE_URL`, so leaving it
+unset keeps the previous single-host behaviour.
+
+### Getting a user token
+
+The token comes from [Minter](https://uipath.atlassian.net/wiki/spaces/CLD/pages/87134404744),
+a Portal-team tool that performs a headless browser login and exports the resulting
+tokens:
+
+```bash
+az acr login -n pltnonprodacr
+docker run --rm -v "$PWD/out:/out" pltnonprodacr.azurecr.io/uipath-minter:latest \
+  npm run generate -- -u <email> -p <password> -n <org> -t <tenant> -e <env> -v basic -o /out/tokens.json
+```
+
+Copy the `accessToken` field from `out/tokens.json` into `UIPATH_USER_TOKEN`.
+
+In CI this is automated: `coverage.yml` logs in to the registry with a scoped pull
+token, pulls the Minter image, and appends the minted token to
+`tests/.env.integration` before the integration run. The step is gated on `MINTER_ENABLED` and marked
+`continue-on-error`, so a Minter outage, a fork PR, or absent secrets all degrade to
+"user-token suites skip" rather than a failed build. It requires these repository
+secrets:
+
+| Secret | Purpose |
+|--------|---------|
+| `ACR_USERNAME`, `ACR_PASSWORD` | ACR scoped token with pull-only access to the `uipath-minter` repository on `pltnonprodacr` |
+| `MINTER_USERNAME`, `MINTER_PASSWORD` | The test account Minter signs in as — must use email/password auth, not SSO |
+
+The registry credential is a scoped token rather than a federated Azure identity
+because granting `AcrPull` requires role-assignment rights on `pltnonprodacr`, which
+lives in a subscription where the SDK team only has Contributor. Federation is the
+better long-term shape — no stored password to rotate — and the swap is a small one
+once that role assignment can be made.
+
+Two caveats. The account must sign in with an email and password — federated (SSO)
+and Google accounts cannot be driven by Minter. And the token is short-lived: the
+SDK treats a token supplied as `secret` as non-expiring and never refreshes it, so
+a run that outlives the token will start failing with 401s partway through.
+
+### Writing a suite that needs a user token
+
+Declare the requirement with `describeIntegration`:
+
+```typescript
+import { describeIntegration, InitMode } from '../../config/unified-setup';
+
+const modes: InitMode[] = ['v1'];
+
+describeIntegration('My Suite', 'user', modes, (mode) => {
+  // ...
+});
+```
+
+A suite that works with either credential needs no argument — `setupUnifiedTests(mode)`
+resolves to whatever is configured, preferring the user token.
+
+The guard is required: `setupUnifiedTests(mode, 'user')` throws when no token is
+configured, so an unguarded suite fails the run on any machine without one.
 
 ## Environment Variables Reference
 
@@ -236,6 +364,8 @@ Tests skip gracefully when:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `UIPATH_USER_TOKEN` | User access token for services that reject PATs — see [Authentication modes](#authentication-modes) | (those suites skip) |
+| `MINTER_BASE_URL` | Base URL for user-token suites — see [Host per credential](#host-per-credential) | (falls back to `UIPATH_BASE_URL`) |
 | `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |
