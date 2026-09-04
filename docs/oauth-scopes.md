@@ -264,7 +264,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
 | `getByName()` | `OR.Execution` or `OR.Execution.Read` |
-| `start()` | `OR.Jobs` or `OR.Jobs.Write` |
+| `start()` | `OR.Jobs` or `OR.Jobs.Write` (add `OR.Execution` or `OR.Execution.Read` when passing `{ id }` — start resolves the release key via `getById` first) |
 
 ## Queues
 
