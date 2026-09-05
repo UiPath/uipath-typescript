@@ -154,6 +154,8 @@ Promise resolving to an array of started process instances of [ProcessStartRespo
 ##### Example
 
 ```
+import { JobPriority } from '@uipath/uipath-typescript/processes';
+
 // By numeric release id
 await processes.start({ id: <releaseId> }, { folderId: <folderId> });
 
