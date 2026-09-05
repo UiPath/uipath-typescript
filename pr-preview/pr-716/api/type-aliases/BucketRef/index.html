@@ -2936,13 +2936,15 @@
   <h1>BucketRef</h1>
 
 <blockquote>
-<p><strong>BucketRef</strong> = <a href="../ResourceRef/"><code>ResourceRef</code></a>&lt;<code>number</code>&gt;</p>
+<p><strong>BucketRef</strong> = { <code>id</code>: <code>number</code>; <code>name?</code>: <code>never</code>; } | { <code>id?</code>: <code>never</code>; <code>name</code>: <code>string</code>; }</p>
 </blockquote>
 <p>Selects a bucket by exactly one identifier — <code>{ id }</code> numeric or <code>{ name }</code>
 (folder-scoped). Used by the ref-based file-op signatures on
 <a href="../../interfaces/BucketServiceModel/">BucketServiceModel</a> (<code>uploadFile</code>, <code>deleteFile</code>, <code>getReadUri</code>,
 <code>getFiles</code>, <code>getFileMetaData</code>). <code>{ name }</code> triggers an internal
 <code>getByNameLookup</code> (runtime overrides apply); <code>{ id }</code> skips the lookup.</p>
+<p>Narrower than the generic <a href="../ResourceRef/">ResourceRef</a> — buckets don't have a public GUID key
+on their operational routes, so <code>{ key }</code> is intentionally not part of this union.</p>
 
 
 
