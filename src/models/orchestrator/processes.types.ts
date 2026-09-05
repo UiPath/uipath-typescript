@@ -1,4 +1,4 @@
-import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions, ResourceRef } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -246,6 +246,22 @@ export interface ProcessStartRequestWithName extends BaseProcessStartRequest {
  * Either processKey or processName must be provided
  */
 export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
+
+/**
+ * Selects a process (release) by exactly one identifier — `{ id }` numeric,
+ * `{ name }` (folder-scoped), or `{ key }` (release GUID). Used by
+ * `ProcessServiceModel.start` in the ref-based signature.
+ */
+export type ProcessRef = ResourceRef<number>;
+
+/**
+ * Options for the ref-based `start(processRef, options?)` signature. Combines folder
+ * scoping (`folderId` / `folderKey` / `folderPath`), OData query shape (`expand`,
+ * `select`, `filter`, `orderby`) and every `BaseProcessStartRequest` startInfo
+ * field. Identity fields (`processKey` / `processName`) do not appear here — they
+ * come from the `ProcessRef` argument.
+ */
+export interface ProcessStartRefOptions extends ProcessStartOptions, BaseProcessStartRequest {}
 
 /**
  * Interface for robot metadata

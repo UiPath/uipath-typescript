@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessRef, ProcessStartRefOptions, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -104,44 +104,65 @@ export interface ProcessServiceModel {
   getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
 
   /**
-   * Starts a process with the specified configuration.
+   * Starts a process identified by `processRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
    *
-   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
-   * inside the options.
+   * Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`,
+   * `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on the
+   * `{ name }` and `{ key }` branches — a cross-folder redirect steers both the wire body
+   * identity and the `X-UIPATH-FolderPath-Encoded` header to the override target.
    *
-   * @param request - Process start configuration
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`)
-   * @returns Promise resolving to array of started process instances
-   * {@link ProcessStartResponse}
+   * Ref resolution:
+   * - `{ id }` — resolves numeric release id to its key via an internal `getById` lookup,
+   *   then sends `ReleaseKey` on the wire.
+   * - `{ name }` — sent as `ReleaseName` on the wire; the server resolves it against the
+   *   ambient folder scope.
+   * - `{ key }` — sent as `ReleaseKey` on the wire.
+   *
+   * @param processRef - Process ref (`{ id }`, `{ name }`, or `{ key }` (GUID))
+   * @param options - Folder scoping + startInfo fields + optional OData query
+   * @returns Promise resolving to an array of started process instances of {@link ProcessStartResponse}
+   *
    * @example
    * ```typescript
-   * // By folder ID
-   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
+   * import { JobPriority } from '@uipath/uipath-typescript/processes';
    *
-   * // By folder key (GUID)
-   * await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   * // By numeric release id
+   * await processes.start({ id: <releaseId> }, { folderId: <folderId> });
    *
-   * // By folder path
-   * await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
+   * // By process name + folder path (folder scoping applies to both the lookup and the start)
+   * await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
    *
-   * // Start by process name (instead of processKey)
-   * await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
+   * // By release key (GUID)
+   * await processes.start({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, { folderKey: '<folderKey>' });
    *
-   * // With additional options
-   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
+   * // With startInfo options
+   * await processes.start(
+   *   { name: 'InvoiceReview' },
+   *   { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
+   * );
    * ```
+   */
+  start(processRef: ProcessRef, options?: ProcessStartRefOptions): Promise<ProcessStartResponse[]>;
+  /**
+   * Starts a process — legacy `ProcessStartRequest` form.
+   *
+   * @deprecated Use the ref-based form: `start(processRef, options?)`. See {@link ProcessRef}
+   * and {@link ProcessStartRefOptions} for the recommended shape.
+   *
+   * @param request - Process start configuration
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters
+   * @returns Promise resolving to array of started process instances
    */
   start(request: ProcessStartRequest, options?: ProcessStartOptions): Promise<ProcessStartResponse[]>;
   /**
    * Starts a process — positional `folderId` form.
    *
-   * @deprecated Use the options-object form: `start(request, { folderId })`. See {@link ProcessStartOptions} for the supported options.
+   * @deprecated Use the ref-based form: `start(processRef, { folderId })`. See {@link ProcessRef}.
    *
    * @param request - Process start configuration
    * @param folderId - Required folder ID (numeric)
    * @param options - Optional request options
    * @returns Promise resolving to array of started process instances
-   * {@link ProcessStartResponse}
    */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 }

@@ -18,8 +18,9 @@ import {
   PROCESS_TEST_CONSTANTS
 } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
+import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessRef, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import { RequestOptions } from '../../../../src/models/common';
 import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 
@@ -491,6 +492,212 @@ describe('ProcessService Unit Tests', () => {
           }),
         }),
       );
+    });
+
+    it('accepts a { name } ProcessRef and sends ReleaseName on the wire', async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+      );
+
+      await service.start(
+        { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef,
+        { folderId: TEST_CONSTANTS.FOLDER_ID, jobPriority: JobPriority.High },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.objectContaining({
+          startInfo: expect.objectContaining({
+            releaseName: PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+            jobPriority: JobPriority.High,
+          }),
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() }),
+        }),
+      );
+    });
+
+    it('accepts a { key } ProcessRef and sends ReleaseKey on the wire', async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+      );
+
+      await service.start(
+        { key: PROCESS_TEST_CONSTANTS.PROCESS_KEY } as ProcessRef,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.objectContaining({
+          startInfo: expect.objectContaining({
+            releaseKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
+          }),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it('swaps the wire identity from ReleaseKey to ReleaseName when a runtime override redirects the { key } ProcessRef to a name', async () => {
+      // Two code paths in resolveProcessRefIdentity's { key } branch: no override → ReleaseKey,
+      // override.name present → ReleaseName. This guards the second path (already covered for
+      // { name } but the { key } → name swap has its own branch).
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_KEY}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+        );
+
+        await service.start(
+          { key: PROCESS_TEST_CONSTANTS.PROCESS_KEY } as ProcessRef,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+
+        const [, body] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        // The original key must not leak onto the wire when redirected to a name.
+        expect(body.startInfo.releaseKey).toBeUndefined();
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('does not send an empty ReleaseKey when a runtime override redirects the legacy { processKey } request to a name', async () => {
+      // Regression guard for a leak: a key→name override on the legacy path used to spread
+      // `{ processName, processKey: '' }` over the request, sending both `ReleaseName` and
+      // an empty `ReleaseKey` on the wire. The impl now drops processKey via `dropProcessKey`.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_KEY}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+        );
+
+        await service.start(
+          { processKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY } as ProcessStartRequest,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+
+        const [, body] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(body.startInfo.releaseKey).toBeUndefined();
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('accepts an { id } ProcessRef, looks up the release key via getById, then starts', async () => {
+      // First call: getById → returns a process with the release key.
+      mockApiClient.get.mockResolvedValue(createMockRawOrchestratorProcess());
+      mockApiClient.post.mockResolvedValue(
+        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+      );
+
+      await service.start(
+        { id: PROCESS_TEST_CONSTANTS.PROCESS_ID } as ProcessRef,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // The internal getById fires on the by-id release endpoint.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
+        expect.any(Object),
+      );
+      // Then StartJobs body carries the resolved ReleaseKey.
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.objectContaining({
+          startInfo: expect.objectContaining({
+            releaseKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
+          }),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it('rejects { id } ProcessRef without folderId (Process getById is folderId-scoped)', async () => {
+      await expect(
+        service.start({ id: PROCESS_TEST_CONSTANTS.PROCESS_ID } as ProcessRef, { folderPath: 'Shared/Live' }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('rejects an empty ProcessRef with ValidationError before hitting the API', async () => {
+      await expect(
+        service.start({} as ProcessRef, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('redirects both the wire ReleaseName and folderPath header when a runtime override matches the { name } ProcessRef', async () => {
+      // Publish a cross-folder override: PROCESS_NAME in Shared/Apps → TARGET_NAME in TARGET_FOLDER_PATH.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+        );
+
+        await service.start(
+          { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef,
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, body, opts] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('redirects both the wire ReleaseName and folderPath header when a runtime override matches the legacy { processName } request', async () => {
+      // Parity: the legacy signature must apply overrides too, matching Assets/Queues.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+        );
+
+        await service.start(
+          { processName: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessStartRequest,
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, body, opts] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
