@@ -53,8 +53,8 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getByName()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `getFileMetaData()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `getReadUri()` | `OR.Buckets` or `OR.Buckets.Read` |
-| `uploadFile()` | `OR.Buckets` |
-| `deleteFile()` | `OR.Buckets` or `OR.Buckets.Write` |
+| `uploadFile()` | `OR.Buckets` (add `OR.Buckets.Read` when passing `{ name }` — uploadFile resolves the bucket id via `getByNameLookup` first) |
+| `deleteFile()` | `OR.Buckets` or `OR.Buckets.Write` (add `OR.Buckets.Read` when passing `{ name }`) |
 | `getFiles()` | `OR.Buckets` or `OR.Buckets.Read` |
 
 ## Entities
