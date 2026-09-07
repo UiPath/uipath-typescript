@@ -263,6 +263,12 @@ Always pass `folderId` directly to `createHeaders` — the utility filters `unde
 
 **Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center. **Do NOT extend `FolderScopedOptions` for services whose endpoints do not accept OData query params** — because `FolderScopedOptions` inherits `expand` and `select` from `BaseOptions`, extending it for a non-OData service (e.g., Integration Service) causes those fields to leak into query parameters and request bodies the API never expects. Create a service-specific scoping type (e.g., `{ folderId?: string; folderPath?: string }`) for such services.
 
+**Ref resolution must carry the resolved folder through to mutations** — when a method resolves a ref by name or key (calling a lookup that converts a name/key to an ID), carry the **resolved folder context** (`effectiveFolder`) from the lookup result to the subsequent mutation. Do not fall back to the caller's original folder options for the follow-up write: if the lookup resolved in a different folder than what the caller specified (e.g., via a binding redirect), using the caller's original headers for the PUT targets the wrong folder. Pattern:
+```typescript
+const { id, effectiveFolder } = await this.resolveRefToId(ref, options);
+await this.put(ENDPOINTS.UPDATE(id), body, { headers: createHeaders({ [FOLDER_KEY]: effectiveFolder?.folderKey }) });
+```
+
 ## OperationResponse pattern
 
 ```typescript
@@ -295,5 +301,5 @@ Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None`
 
 - **NEVER** leave unused code — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure.
+- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure. When the same regex is used across two or more service files, extract it to a shared constant in `src/utils/` — duplicated patterns silently diverge when one copy is updated.
 - **Silent catches must emit a `console.warn`** — when a `try/catch` swallows an error without re-throwing (e.g., best-effort reads from an ambient channel or optional DOM lookup), always call `console.warn(error)` so issues remain observable in the runtime console (browser, Node.js, and Workers). A completely silent catch makes failures invisible during development and debugging.
