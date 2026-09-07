@@ -1795,7 +1795,7 @@ Deletes a file from a bucket
 
 #### Parameters
 
-- `bucketRef`: `number` | `BucketRef` — -
+- `bucketRef`: `number` | `BucketRef` — Bucket ref (`{ id }` or `{ name }`). A raw numeric bucket id is also accepted as a shorthand for `{ id }`. `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.
 - `path`: `string` — The full path to the file to delete
 - `options?`: `BucketDeleteFileOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
 
@@ -1808,8 +1808,11 @@ Promise resolving when the file is deleted
 #### Example
 
 ```
-// Delete a file from a bucket
-await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+// By bucket id (either as raw number or { id })
+await buckets.deleteFile({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
+
+// By bucket name
+await buckets.deleteFile({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
 ```
 
 ### getAll()
@@ -2027,7 +2030,7 @@ The method returns either:
 
 #### Parameters
 
-- `bucketRef`: `number` | `BucketRef` — -
+- `bucketRef`: `number` | `BucketRef` — Bucket ref (`{ id }` or `{ name }`). A raw numeric bucket id is also accepted as a shorthand for `{ id }`. `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.
 - `options?`: `T` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/)
 
 #### Returns
@@ -2039,25 +2042,28 @@ Promise resolving to either an array of files NonPaginatedResponse or a Paginate
 #### Example
 
 ```
-// List all files in the bucket
-const files = await buckets.getFiles(<bucketId>, { folderId: <folderId> });
+// By bucket id (either as raw number or { id })
+const files = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId> });
+
+// By bucket name (folder scoping applies to both the name lookup and the listing)
+const filesByName = await buckets.getFiles({ name: 'MyBucket' }, { folderPath: 'Shared/Finance' });
 
 // Filter by regex pattern
-const pdfs = await buckets.getFiles(<bucketId>, {
+const pdfs = await buckets.getFiles({ id: <bucketId> }, {
   folderId: <folderId>,
   fileNameRegex: '.*\\.pdf$'
 });
 
 // First page with pagination
-const page1 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, pageSize: 10 });
+const page1 = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId>, pageSize: 10 });
 
 // Navigate using cursor
 if (page1.hasNextPage) {
-  const page2 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
+  const page2 = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId>, cursor: page1.nextCursor });
 }
 
 // Jump to specific page
-const page5 = await buckets.getFiles(<bucketId>, {
+const page5 = await buckets.getFiles({ id: <bucketId> }, {
   folderId: <folderId>,
   jumpToPage: 5,
   pageSize: 10
@@ -2091,14 +2097,11 @@ Promise resolving to blob file access information [BucketGetUriResponse](../Buck
 ##### Example
 
 ```
-// By folder ID
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+// By bucket id (either as raw number or { id })
+await buckets.getReadUri({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
 
-// By folder key (GUID)
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-
-// By folder path
-await buckets.getReadUri(<bucketId>, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
+// By bucket name (folder scoping applies to both the name lookup and the read)
+await buckets.getReadUri({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
 ```
 
 #### Call Signature
@@ -2151,19 +2154,16 @@ Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadR
 ##### Example
 
 ```
-// By folder ID
+// By bucket id (either as raw number or { id })
 const file = new File(['file content'], 'example.txt');
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderId: <folderId> });
+await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', file, { folderId: <folderId> });
 
-// By folder key (GUID)
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
-
-// By folder path
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
+// By bucket name (folder scoping applies to both the name lookup and the upload)
+await buckets.uploadFile({ name: 'MyBucket' }, '/folder/example.txt', file, { folderPath: 'Shared/Finance' });
 
 // In Node env with Uint8Array or Buffer
 const content = new TextEncoder().encode('file content');
-await buckets.uploadFile(<bucketId>, '/folder/example.txt', content, { folderId: <folderId> });
+await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', content, { folderId: <folderId> });
 ```
 
 #### Call Signature
