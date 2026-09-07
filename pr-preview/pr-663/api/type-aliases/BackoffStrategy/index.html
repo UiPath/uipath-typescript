@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/type-aliases/QueueGetAllWithMethodsOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/type-aliases/BackoffStrategy/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>QueueGetAllWithMethodsOptions - UiPath TypeScript SDK</title>
+        <title>BackoffStrategy - UiPath TypeScript SDK</title>
       
     
     
@@ -109,7 +109,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              QueueGetAllWithMethodsOptions
+              BackoffStrategy
             
           </span>
         </div>
@@ -274,6 +274,8 @@
       
         
       
+        
+      
     
     
     
@@ -420,6 +422,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -2996,14 +3026,12 @@
   
 
 
-  <h1>QueueGetAllWithMethodsOptions</h1>
+  <h1>BackoffStrategy</h1>
 
 <blockquote>
-<p><strong>QueueGetAllWithMethodsOptions</strong> = <a href="../../interfaces/RequestOptions/"><code>RequestOptions</code></a> &amp; <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; <a href="../../interfaces/FolderScopedOptions/"><code>FolderScopedOptions</code></a></p>
+<p><strong>BackoffStrategy</strong> = <code>"constant"</code> | <code>"linear"</code> | <code>"exponential"</code></p>
 </blockquote>
-<p>Options for getting queues with methods attached. Folder scoping
-(<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) is optional — without it,
-queues across all folders are returned.</p>
+<p>How the wait between retries grows.</p>
 
 
 

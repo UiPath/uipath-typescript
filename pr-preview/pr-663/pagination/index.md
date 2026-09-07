@@ -123,8 +123,10 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
-| Platform Users                    | `getAll()`                 | ✅ Yes                 |
+| Users                             | `getAll()`                 | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
+| Entities                          | `getRecordsByName()`       | ✅ Yes                 |
+| Entities                          | `queryRecords()`           | ✅ Yes                 |
 | Entities                          | `queryRecordsById()`       | ✅ Yes                 |
 | ChoiceSets                        | `getById()`                | ✅ Yes                 |
 | Processes                         | `getAll()`                 | ✅ Yes                 |
@@ -134,7 +136,6 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | CaseInstances                     | `getActionTasks()`         | ✅ Yes                 |
 | CaseInstances                     | `getSlaSummary()`          | ✅ Yes                 |
 | Queues                            | `getAll()`                 | ✅ Yes                 |
-| Queues                            | `getAllWithMethods()`      | ✅ Yes                 |
 | Queues                            | `getAllItems()`            | ✅ Yes                 |
 | Tasks                             | `getAll()`                 | ✅ Yes                 |
 | Tasks                             | `getUsers()`               | ✅ Yes                 |

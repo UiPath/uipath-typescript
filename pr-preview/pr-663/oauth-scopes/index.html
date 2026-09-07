@@ -285,6 +285,8 @@
       
         
       
+        
+      
     
     
     
@@ -714,10 +716,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#platform-users" class="md-nav__link">
+  <a href="#users" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Platform Users
+        Users
       
     </span>
   </a>
@@ -814,6 +816,34 @@
     
   
     Pagination
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../helpers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Methods
   
 
     
@@ -3640,10 +3670,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#platform-users" class="md-nav__link">
+  <a href="#users" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Platform Users
+        Users
       
     </span>
   </a>
@@ -3760,8 +3790,16 @@
 <td><code>OR.Assets</code> or <code>OR.Assets.Read</code></td>
 </tr>
 <tr>
+<td><code>getByKey()</code></td>
+<td><code>OR.Assets</code> or <code>OR.Assets.Read</code></td>
+</tr>
+<tr>
+<td><code>updateValue()</code></td>
+<td><code>OR.Assets</code> or <code>OR.Assets.Read</code>, <code>OR.Assets</code> or <code>OR.Assets.Write</code></td>
+</tr>
+<tr>
 <td><code>updateValueById()</code></td>
-<td><code>OR.Assets</code> or <code>OR.Assets.Write</code></td>
+<td><code>OR.Assets</code> or <code>OR.Assets.Read</code>, <code>OR.Assets</code> or <code>OR.Assets.Write</code></td>
 </tr>
 </tbody>
 </table>
@@ -3909,11 +3947,23 @@
 <td><code>DataFabric.Schema.Read</code></td>
 </tr>
 <tr>
+<td><code>getByName()</code></td>
+<td><code>DataFabric.Data.Read</code></td>
+</tr>
+<tr>
 <td><code>getAllRecords()</code></td>
 <td><code>DataFabric.Data.Read</code></td>
 </tr>
 <tr>
+<td><code>getRecordsByName()</code></td>
+<td><code>DataFabric.Data.Read</code></td>
+</tr>
+<tr>
 <td><code>getRecordById()</code> / <code>getRecord()</code></td>
+<td><code>DataFabric.Data.Read</code></td>
+</tr>
+<tr>
+<td><code>getRecordByName()</code></td>
 <td><code>DataFabric.Data.Read</code></td>
 </tr>
 <tr>
@@ -3960,6 +4010,18 @@
 <td><code>importRecordsById()</code> / <code>importRecords()</code></td>
 <td><code>DataFabric.Data.Write</code></td>
 </tr>
+<tr>
+<td><code>create()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
+</tr>
+<tr>
+<td><code>updateById()</code> / <code>update()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
+</tr>
+<tr>
+<td><code>deleteById()</code> / <code>delete()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="choicesets">ChoiceSets<a class="headerlink" href="#choicesets" title="Permanent link">&para;</a></h2>
@@ -3978,6 +4040,18 @@
 <tr>
 <td><code>getById()</code></td>
 <td><code>DataFabric.Data.Read</code></td>
+</tr>
+<tr>
+<td><code>create()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
+</tr>
+<tr>
+<td><code>updateById()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
+</tr>
+<tr>
+<td><code>deleteById()</code></td>
+<td><code>DataFabric.Schema.Write</code></td>
 </tr>
 </tbody>
 </table>
@@ -4469,7 +4543,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="platform-users">Platform Users<a class="headerlink" href="#platform-users" title="Permanent link">&para;</a></h2>
+<h2 id="users">Users<a class="headerlink" href="#users" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -4534,14 +4608,6 @@
 </tr>
 <tr>
 <td><code>getById()</code></td>
-<td><code>OR.Queues</code> or <code>OR.Queues.Read</code></td>
-</tr>
-<tr>
-<td><code>getAllWithMethods()</code></td>
-<td><code>OR.Queues</code> or <code>OR.Queues.Read</code></td>
-</tr>
-<tr>
-<td><code>getByIdWithMethods()</code></td>
 <td><code>OR.Queues</code> or <code>OR.Queues.Read</code></td>
 </tr>
 <tr>
