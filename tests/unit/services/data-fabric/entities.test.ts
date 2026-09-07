@@ -2515,7 +2515,7 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("redirects the URL entity name when a runtime override matches the {name} ref (representative for all operational byName paths)", async () => {
-      // unwrapEntityRef routes every operational byName call through resolveEntityName;
+      // unwrapEntityRef routes every operational byName call through applyEntityNameOverride;
       // insertRecord stands in for the whole family (insertRecords, updateRecord(s),
       // deleteRecord(s), queryRecords, importRecords, downloadAttachment, uploadAttachment,
       // deleteAttachment). One representative test guards the shared code path.
@@ -3011,8 +3011,8 @@ describe("EntityService Unit Tests", () => {
         },
       );
 
-      // A by-name ref already carries the name, so the joins path must NOT make a
-      // resolveEntityName GET (unlike the by-id path).
+      // A by-name ref already carries the name, so the joins path must NOT trigger the
+      // id → name lookup (unlike the by-id path).
       expect(mockApiClient.get).not.toHaveBeenCalled();
 
       const [config, downstream] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
