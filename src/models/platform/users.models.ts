@@ -30,17 +30,17 @@ export type PlatformUserGetResponse = RawPlatformUserGetResponse & PlatformUserM
  * import { Users } from '@uipath/uipath-typescript/users';
  *
  * const users = new Users(sdk);
- * const allUsers = await users.getAll('<organizationId>');
+ * const allUsers = await users.getAll();
  * ```
  */
 export interface PlatformUserServiceModel {
   /**
-   * Gets the users of an organization, with optional search, sorting, and pagination.
+   * Gets the users of the organization the SDK is configured for, with optional
+   * search, sorting, and pagination.
    *
    * Returns each user's profile plus the groups they belong to (`groupIds`), so a
    * membership check against a known group needs no extra call.
    *
-   * @param organizationId - Organization (account) GUID to list users from
    * @param options - Search, sorting, and pagination options
    * @returns All users when no pagination options are given, one page otherwise, as {@link PlatformUserGetResponse} items
    *
@@ -53,7 +53,7 @@ export interface PlatformUserServiceModel {
    * await sdk.initialize();
    *
    * const users = new Users(sdk);
-   * const allUsers = await users.getAll('<organizationId>');
+   * const allUsers = await users.getAll();
    * for (const user of allUsers.items) {
    *   console.log(`${user.email}: member of ${user.groupIds.length} groups`);
    * }
@@ -63,19 +63,18 @@ export interface PlatformUserServiceModel {
    * ```typescript
    * import { PlatformUserSortField, PlatformUserSortOrder } from '@uipath/uipath-typescript/users';
    *
-   * const page1 = await users.getAll('<organizationId>', {
+   * const page1 = await users.getAll({
    *   searchTerm: 'sarah',
    *   sortBy: PlatformUserSortField.Email,
    *   sortOrder: PlatformUserSortOrder.Ascending,
    *   pageSize: 20,
    * });
    * if (page1.hasNextPage) {
-   *   const page2 = await users.getAll('<organizationId>', { cursor: page1.nextCursor });
+   *   const page2 = await users.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */
   getAll<T extends PlatformUserGetAllOptions = PlatformUserGetAllOptions>(
-    organizationId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>

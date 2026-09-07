@@ -199,6 +199,20 @@ const tasks = new Tasks(sdk);
 const allTasks = await tasks.getAll();
 ```
 
+### Organization id (optional)
+
+Some platform services (for example Users) address the organization by its GUID rather than by `orgName`. The SDK resolves that GUID for you — from the access token when it is a JWT, or by looking it up from `orgName` for personal access tokens — and caches it for the lifetime of the `UiPath` instance. Set `organizationId` to skip the lookup or to override the result:
+
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://api.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret',
+  organizationId: '<organizationId>' // optional
+});
+```
+
 ### Example: OAuth Authentication (Requires initialize)
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';

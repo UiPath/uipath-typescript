@@ -28,7 +28,7 @@ describe('Platform Users Service Unit Tests', () => {
   const userId = PLATFORM_USER_TEST_CONSTANTS.USER_ID;
 
   beforeEach(() => {
-    const { instance } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies({ organizationId });
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
@@ -54,7 +54,7 @@ describe('Platform Users Service Unit Tests', () => {
     it('should retrieve users from the organization user listing endpoint', async () => {
       mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
       expect(mockApiClient.get.mock.calls[0][0]).toBe(IDENTITY_USER_ENDPOINTS.GET_ALL(organizationId));
@@ -65,7 +65,7 @@ describe('Platform Users Service Unit Tests', () => {
     it('should apply the full transform pipeline to each listed user', async () => {
       mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
       const user = result.items[0];
 
       // Semantic renames carry their values (distinctive timestamps, not null defaults)
@@ -92,7 +92,7 @@ describe('Platform Users Service Unit Tests', () => {
         createBasicRawPlatformUser({ type: 4, category: 2 }),
       ]));
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(result.items[0].type).toBe(PlatformUserType.RobotAccount);
       expect(result.items[0].category).toBe(PlatformUserCategory.Directory);
@@ -101,7 +101,7 @@ describe('Platform Users Service Unit Tests', () => {
     it('should attach the update method to each listed user', async () => {
       mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(typeof result.items[0].update).toBe('function');
     });
@@ -109,7 +109,7 @@ describe('Platform Users Service Unit Tests', () => {
     it('should send search and sort options without an OData prefix', async () => {
       mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
 
-      await usersService.getAll(organizationId, {
+      await usersService.getAll({
         searchTerm: PLATFORM_USER_TEST_CONSTANTS.SEARCH_TERM,
         sortBy: PlatformUserSortField.Email,
         sortOrder: PlatformUserSortOrder.Descending,
@@ -135,7 +135,7 @@ describe('Platform Users Service Unit Tests', () => {
           createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-1001` }),
         ], 1002));
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(result.items).toHaveLength(1002);
       expect(result.totalCount).toBe(1002);
@@ -157,7 +157,7 @@ describe('Platform Users Service Unit Tests', () => {
       // totalCount overcounts (e.g. stale index) — a short page must still be terminal
       mockApiClient.get.mockResolvedValueOnce(createRawPlatformUserListResponse(shortPage, 5));
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(result.items).toHaveLength(3);
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
@@ -176,7 +176,7 @@ describe('Platform Users Service Unit Tests', () => {
           createBasicRawPlatformUser({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-1000` }),
         ], 1001));
 
-      const result = await usersService.getAll(organizationId);
+      const result = await usersService.getAll();
 
       expect(result.items).toHaveLength(1001);
       expect(result.items.filter(u => u.id === straddler)).toHaveLength(1);
@@ -187,7 +187,7 @@ describe('Platform Users Service Unit Tests', () => {
         createRawPlatformUserListResponse([createBasicRawPlatformUser()], PLATFORM_USER_TEST_CONSTANTS.TOTAL_COUNT)
       );
 
-      await usersService.getAll(organizationId, {
+      await usersService.getAll({
         searchTerm: PLATFORM_USER_TEST_CONSTANTS.SEARCH_TERM,
         sortBy: PlatformUserSortField.Email,
         sortOrder: PlatformUserSortOrder.Descending,
@@ -209,7 +209,7 @@ describe('Platform Users Service Unit Tests', () => {
         createRawPlatformUserListResponse([createBasicRawPlatformUser()], PLATFORM_USER_TEST_CONSTANTS.TOTAL_COUNT)
       );
 
-      const page = await usersService.getAll(organizationId, { pageSize: 1 });
+      const page = await usersService.getAll({ pageSize: 1 });
 
       expect(page.items).toHaveLength(1);
       expect(page.totalCount).toBe(PLATFORM_USER_TEST_CONSTANTS.TOTAL_COUNT);
@@ -224,15 +224,10 @@ describe('Platform Users Service Unit Tests', () => {
       expect(spec.params).not.toHaveProperty('count');
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(usersService.getAll('')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_USER_TEST_CONSTANTS.ERROR_USERS_FORBIDDEN));
 
-      await expect(usersService.getAll(organizationId)).rejects.toThrow(
+      await expect(usersService.getAll()).rejects.toThrow(
         PLATFORM_USER_TEST_CONSTANTS.ERROR_USERS_FORBIDDEN
       );
     });

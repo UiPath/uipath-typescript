@@ -15,7 +15,7 @@
  * await sdk.initialize();
  *
  * const users = new Users(sdk);
- * const allUsers = await users.getAll('<organizationId>');
+ * const allUsers = await users.getAll();
  * ```
  *
  * @module

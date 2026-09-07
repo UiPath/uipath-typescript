@@ -49,16 +49,13 @@ import {
 export class PlatformUserService extends BaseService implements PlatformUserServiceModel {
   @track('PlatformUsers.GetAll')
   async getAll<T extends PlatformUserGetAllOptions = PlatformUserGetAllOptions>(
-    organizationId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<PlatformUserGetResponse>
       : NonPaginatedResponse<PlatformUserGetResponse>
   > {
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for getAll' });
-    }
+    const organizationId = await this.resolveOrganizationId();
     const opts = options ?? ({} as T);
 
     // The API always pages (default page size 10, max 1000), so without pagination

@@ -16,7 +16,6 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let users!: Users;
-  let organizationId!: string;
   /** Read-only account — never mutated. */
   let readOnlyUserId!: string;
   /** Account the suite may mutate; profile round-tripped via snapshot + restore. */
@@ -31,9 +30,9 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
     }
     users = service;
 
-    const { organizationId: configuredOrganizationId, identityTestUserId, identityMutableTestUserId } = getTestConfig();
-    if (!configuredOrganizationId || !identityTestUserId) {
-      throw new Error('UIPATH_ORGANIZATION_ID and IDENTITY_TEST_USER_ID must be configured for the Users suite.');
+    const { identityTestUserId, identityMutableTestUserId } = getTestConfig();
+    if (!identityTestUserId) {
+      throw new Error('IDENTITY_TEST_USER_ID must be configured for the Users suite.');
     }
     if (!identityMutableTestUserId) {
       throw new Error(
@@ -41,7 +40,6 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
           'fields and must not run against the read-only IDENTITY_TEST_USER_ID account.'
       );
     }
-    organizationId = configuredOrganizationId;
     readOnlyUserId = identityTestUserId;
     mutableUserId = identityMutableTestUserId;
 
@@ -60,7 +58,7 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
 
   describe('getAll', () => {
     it('should list the organization users including the configured test users', async () => {
-      const result = await users.getAll(organizationId);
+      const result = await users.getAll();
 
       expect(result.items.length).toBeGreaterThan(0);
       const ids = result.items.map((u) => u.id);
@@ -69,7 +67,7 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
     });
 
     it('should apply the SDK transforms against the live response', async () => {
-      const result = await users.getAll(organizationId);
+      const result = await users.getAll();
       const user = result.items.find((u) => u.id === readOnlyUserId)!;
 
       // Renamed fields carry values
@@ -91,14 +89,14 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
     it('should filter by searchTerm', async () => {
       const target = await users.getById(readOnlyUserId);
 
-      const result = await users.getAll(organizationId, { searchTerm: target.email });
+      const result = await users.getAll({ searchTerm: target.email });
 
       expect(result.items.length).toBeGreaterThan(0);
       expect(result.items.map((u) => u.id)).toContain(readOnlyUserId);
     });
 
     it('should sort by email when requested', async () => {
-      const result = await users.getAll(organizationId, {
+      const result = await users.getAll({
         sortBy: PlatformUserSortField.Email,
         sortOrder: PlatformUserSortOrder.Ascending,
       });
@@ -108,13 +106,13 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
     });
 
     it('should paginate with pageSize and cursor', async () => {
-      const page1 = await users.getAll(organizationId, { pageSize: 2 });
+      const page1 = await users.getAll({ pageSize: 2 });
 
       expect(page1.items).toHaveLength(2);
       expect(page1.totalCount).toBeGreaterThan(2);
       expect(page1.hasNextPage).toBe(true);
 
-      const page2 = await users.getAll(organizationId, { cursor: page1.nextCursor });
+      const page2 = await users.getAll({ cursor: page1.nextCursor });
       expect(page2.items.length).toBeGreaterThan(0);
       expect(page2.items[0].id).not.toBe(page1.items[0].id);
     });
