@@ -12,7 +12,7 @@ Standalone helper functions that you call directly. Unlike the SDK's services, t
 
 ## httpRequest()
 
-Takes a URL and optional [`HttpRequestInit`](/uipath-typescript/api/interfaces/HttpRequestInit), and resolves to an [`HttpResponse`](/uipath-typescript/api/interfaces/HttpResponse). A status the server returned resolves rather than throwing, even a 4xx or 5xx, so check `ok` to spot a failed request. A call that never reached the server does throw — see [Error Handling](#error-handling).
+Takes a URL and optional [`HttpRequestInit`](/uipath-typescript/api/interfaces/HttpRequestInit), and resolves to an [`HttpResponse`](/uipath-typescript/api/interfaces/HttpResponse). A status the server returned does not by itself throw, even a 4xx or 5xx, so check `ok` to spot a failed request. A few conditions do throw — see [Error Handling](#error-handling).
 
 ```typescript
 import { httpRequest } from '@uipath/uipath-typescript/core';
@@ -35,7 +35,7 @@ Pass `retry` to change any of that. See [`RetryOptions`](/uipath-typescript/api/
 ```typescript
 import { httpRequest } from '@uipath/uipath-typescript/core';
 
-const response = await httpRequest('https://api.example.com/v1/orders', {
+await httpRequest('https://api.example.com/v1/orders', {
   method: 'POST',
   body: { sku: 'ABC-123' },
   retry: {
@@ -74,21 +74,21 @@ Objects and arrays are sent as JSON. Array values in `params` are sent as repeat
 ```typescript
 import { httpRequest } from '@uipath/uipath-typescript/core';
 
-const response = await httpRequest('https://api.example.com/v1/orders', {
+await httpRequest('https://api.example.com/v1/orders', {
   method: 'POST',
   headers: { 'x-api-key': '<apiKey>' },
-  params: { region: 'emea' },
+  params: { region: 'emea', status: ['open', 'shipped'] },
   body: { sku: 'ABC-123' }
 });
 ```
 
 ### Error Handling
 
-Because it makes arbitrary third-party calls, `httpRequest` handles errors differently from the SDK's service methods, which always throw. See the [Error Handling guide](/uipath-typescript/error-handling) for the SDK-wide error types.
+Because it makes arbitrary third-party calls, `httpRequest` handles errors differently from the SDK's service methods, which throw on any failed status. See the [Error Handling guide](/uipath-typescript/error-handling) for the SDK-wide error types.
 
 | Condition | Behavior |
 |-----------|----------|
-| The server returned a status, including 4xx and 5xx | Resolves with `ok: false`. Branch on `ok` or `status` |
+| The server returned a 4xx or 5xx | Resolves with `ok: false`. Branch on `ok` or `status` |
 | The request never produced a response | Throws [`NetworkError`](/uipath-typescript/api/classes/NetworkError) |
 | `responseType: 'json'` is set explicitly and the body does not parse | Throws [`ServerError`](/uipath-typescript/api/classes/ServerError) |
 | `body` is a `ReadableStream` | Throws [`ValidationError`](/uipath-typescript/api/classes/ValidationError) — streaming request bodies are not supported |
