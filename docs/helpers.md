@@ -49,9 +49,9 @@ const response = await httpRequest('https://api.example.com/v1/orders', {
 });
 ```
 
-Requests that never reached the server are retried too. Set `retryNetworkErrors` to `false` to retry only on response status codes, leaving connection failures and DNS errors to fail on the first attempt. `timeoutMs` bounds a single attempt rather than the call as a whole, so each retry gets a fresh one.
+A request that never reached the server is retried too, as long as its method is retryable. Set `retryNetworkErrors` to `false` to retry only on response status codes, leaving connection failures, DNS errors, and timeouts to fail on the first attempt. `timeoutMs` bounds a single attempt rather than the call as a whole, so each retry gets a fresh one.
 
-#### Backoff Strategies
+### Backoff Strategies
 
 `backoffStrategy` controls how the delay grows, given an `initialDelayMs` of `d` and a `backoffFactor` of `f`:
 
@@ -63,7 +63,7 @@ Requests that never reached the server are retried too. Set `retryNetworkErrors`
 
 `backoffFactor` applies only to `exponential`; the other strategies ignore it. Every computed delay is capped at `backoffMaxDelayMs`.
 
-#### Retry-After Header
+### Retry-After Header
 
 A `Retry-After` response header overrides the computed delay unless `respectRetryAfter` is `false`. It is applied exactly as the server sent it — `backoffMaxDelayMs` does not apply to it — so set `maxRetryAfterMs` if you need a ceiling on how long a server can ask you to wait.
 
@@ -76,7 +76,7 @@ import { httpRequest } from '@uipath/uipath-typescript/core';
 
 const response = await httpRequest('https://api.example.com/v1/orders', {
   method: 'POST',
-  headers: { 'x-api-key': apiKey },
+  headers: { 'x-api-key': '<apiKey>' },
   params: { region: 'emea' },
   body: { sku: 'ABC-123' }
 });
@@ -84,13 +84,14 @@ const response = await httpRequest('https://api.example.com/v1/orders', {
 
 ### Error Handling
 
-Because it proxies arbitrary third-party calls, `httpRequest` handles errors differently from the SDK's service methods, which always throw. See the [Error Handling guide](/uipath-typescript/error-handling/) for the SDK-wide error types.
+Because it makes arbitrary third-party calls, `httpRequest` handles errors differently from the SDK's service methods, which always throw. See the [Error Handling guide](/uipath-typescript/error-handling) for the SDK-wide error types.
 
 | Condition | Behavior |
 |-----------|----------|
-| The server returned a status, including 4xx and 5xx | Resolves with `ok: false`, no exception. Branch on `ok` or `status` |
+| The server returned a status, including 4xx and 5xx | Resolves with `ok: false`. Branch on `ok` or `status` |
 | The request never produced a response | Throws [`NetworkError`](/uipath-typescript/api/classes/NetworkError) |
 | `responseType: 'json'` is set explicitly and the body does not parse | Throws [`ServerError`](/uipath-typescript/api/classes/ServerError) |
+| `body` is a `ReadableStream` | Throws [`ValidationError`](/uipath-typescript/api/classes/ValidationError) — streaming request bodies are not supported |
 
 DNS failures, refused connections, and timeouts all surface as a [`NetworkError`](/uipath-typescript/api/classes/NetworkError). Handling both a failed status and a failed connection looks like this:
 
@@ -125,5 +126,5 @@ Pauses for a duration in milliseconds. Useful for pacing calls of your own, sepa
 ```typescript
 import { wait } from '@uipath/uipath-typescript/core';
 
-await wait(1000); // milliseconds
+await wait(1000); // pause for one second
 ```
