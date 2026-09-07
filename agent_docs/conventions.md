@@ -263,11 +263,7 @@ Always pass `folderId` directly to `createHeaders` — the utility filters `unde
 
 **Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center. **Do NOT extend `FolderScopedOptions` for services whose endpoints do not accept OData query params** — because `FolderScopedOptions` inherits `expand` and `select` from `BaseOptions`, extending it for a non-OData service (e.g., Integration Service) causes those fields to leak into query parameters and request bodies the API never expects. Create a service-specific scoping type (e.g., `{ folderId?: string; folderPath?: string }`) for such services.
 
-**Ref resolution must carry the resolved folder through to mutations** — when a method resolves a ref by name or key (calling a lookup that converts a name/key to an ID), carry the **resolved folder context** (`effectiveFolder`) from the lookup result to the subsequent mutation. Do not fall back to the caller's original folder options for the follow-up write: if the lookup resolved in a different folder than what the caller specified (e.g., via a binding redirect), using the caller's original headers for the PUT targets the wrong folder. Pattern:
-```typescript
-const { id, effectiveFolder } = await this.resolveRefToId(ref, options);
-await this.put(ENDPOINTS.UPDATE(id), body, { headers: createHeaders({ [FOLDER_KEY]: effectiveFolder?.folderKey }) });
-```
+**Ref resolution must carry the resolved folder through to mutations** — applies to folder-scoped services that implement name- or key-based ref resolution via `resolveRefToId` (`src/utils/validation/resolve-ref.ts`) and the `getByNameLookup` / `getByKeyLookup` helpers on `FolderScopedService` (`src/services/folder-scoped.ts`). When the lookup resolves, it returns an `effectiveFolder` alongside the resolved ID. Use `effectiveFolder` fields as the **primary** folder context for the subsequent mutation, falling back to the caller's original options with `??` for ID-based refs (where no lookup ran and `effectiveFolder` is empty). **NEVER** use the caller's options as-is when `effectiveFolder` is non-empty — if the name lookup redirected to a different folder (e.g., via a binding override), ignoring `effectiveFolder` targets the wrong folder. See `src/services/orchestrator/assets/assets.ts` for the reference implementation.
 
 ## OperationResponse pattern
 
