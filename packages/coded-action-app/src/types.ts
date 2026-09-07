@@ -31,6 +31,8 @@ export type Task = {
   folderId: number;
   /** Display name of the folder the task belongs to. */
   folderName: string;
+  /** GUID key of the job that created the task, or `null` if the task was not created by a job. */
+  jobKey: string | null;
   /** UI theme that Action Center is currently using. */
   theme: Theme;
 };
