@@ -3,7 +3,7 @@ import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { validateConfig, normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage } from './config/config-utils';
+import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
@@ -101,6 +101,10 @@ export class UiPath implements IUiPath {
   /**
    * Creates a UiPath SDK instance.
    *
+   * Precedence is per field: the constructor argument wins, then meta tags, then
+   * the environment. Naming one authentication method drops the other's inherited
+   * fields; `secret` beside a complete OAuth set is a fatal configuration error.
+   *
    * @param config - Optional SDK configuration, or the execution context a coded function receives; when omitted, configuration is loaded from meta tags or the environment
    */
   constructor(config?: PartialUiPathConfig | CodedFunctionContext) {
@@ -128,9 +132,6 @@ export class UiPath implements IUiPath {
   }
 
   #initializeWithConfig(config: UiPathSDKConfig): void {
-    // Validate and normalize the configuration
-    validateConfig(config);
-
     const hasSecretAuth = hasSecretConfig(config);
     const hasOAuthAuth = hasOAuthConfig(config);
 
@@ -204,7 +205,8 @@ export class UiPath implements IUiPath {
     metaConfig?: PartialUiPathConfig | null,
     config?: PartialUiPathConfig | null,
   ): PartialUiPathConfig | undefined {
-    const layers = [loadFromEnvironment(), metaConfig, config]
+    const environment = loadFromEnvironment();
+    const layers = [environment, metaConfig, config]
       .filter((layer): layer is PartialUiPathConfig => Boolean(layer))
       .map((layer) => compactConfig(layer));
 
@@ -214,7 +216,7 @@ export class UiPath implements IUiPath {
 
     // Auth is `secret` or OAuth, never both, and merging can end up with both.
     // Whichever the caller named here wins; the other's fields are dropped.
-    // A caller naming both is contradicting themselves: left intact for validateConfig() to reject.
+    // A caller naming both contradicts themselves: nothing is dropped; the guard below rejects it.
     const namesSecret = config ? hasSecretConfig(config) : false;
     // Any OAuth field, not all three: a half-filled OAuth config should error,
     // not quietly fall back to a `secret` from a lower layer.
@@ -228,6 +230,17 @@ export class UiPath implements IUiPath {
       } else {
         delete merged.secret;
       }
+    }
+
+    // Both methods present is the caller's own contradiction, which no precedence rule
+    // can resolve. Fail here rather than deferring — a deferred instance registers no
+    // internals, so the caller would otherwise hear about it from a service constructor.
+    // Read both before the branch: chaining the predicates leaves the second nothing to test.
+    const mergedHasSecret = hasSecretConfig(merged);
+    const mergedHasOAuth = hasOAuthConfig(merged);
+
+    if (mergedHasSecret && mergedHasOAuth) {
+      throw new Error(conflictingAuthMessage({ config, metaConfig, environment }));
     }
 
     return merged;
@@ -246,7 +259,7 @@ export class UiPath implements IUiPath {
     const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
     if (!merged || !isCompleteConfig(merged)) {
-      throw new Error(missingConfigMessage());
+      throw new Error(missingConfigMessage(merged));
     }
 
     return merged;
