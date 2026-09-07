@@ -69,7 +69,7 @@ console.log(taskData.isReadOnly); // boolean
 console.log(taskData.data);       // the task's form data
 console.log(taskData.folderId);   // number
 console.log(taskData.folderName); // string
-console.log(taskData.jobKey);     // string — GUID of the job that raised the task
+console.log(taskData.jobKey);     // string — GUID key of the job that created the task
 console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
 ```
 
