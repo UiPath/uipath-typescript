@@ -147,8 +147,9 @@ export interface EntityServiceModel {
   /**
    * Gets entity records by entity ID
    *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordById} to retrieve the full value.
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecordById} for
+   * the guaranteed full value.
    *
    * @param entityId - UUID of the entity
    * @param options - Query options. The `folderKey` property is **experimental**.
@@ -191,8 +192,9 @@ export interface EntityServiceModel {
    * Sibling of {@link getAllRecords} that addresses the entity by name — useful when you only
    * have the resource name (e.g. solution binding overrides), avoiding a lookup to resolve the ID.
    *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordByName} to retrieve the full value.
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecordByName} for
+   * the guaranteed full value.
    *
    * @param entityName - Name of the entity
    * @param options - Query options. The `folderKey` property is **experimental**.
@@ -412,6 +414,11 @@ export interface EntityServiceModel {
   /**
    * Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
    *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
+   *
    * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
    * Use this method if you need trigger events to fire for the updated record.
    *
@@ -436,6 +443,11 @@ export interface EntityServiceModel {
 
   /**
    * Updates a single record in an entity by entity ID
+   *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
    *
    * @deprecated Use {@link updateRecord} with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
    *
@@ -468,6 +480,11 @@ export interface EntityServiceModel {
   /**
    * Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
    *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
+   *
    * Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use {@link updateRecord} if you need trigger events to fire for each updated record.
    *
    * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
@@ -490,6 +507,11 @@ export interface EntityServiceModel {
 
   /**
    * Updates data in an entity by entity ID
+   *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
    *
    * @deprecated Use {@link updateRecords} with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
    *
@@ -615,8 +637,9 @@ export interface EntityServiceModel {
    * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination,
    * identified by ref (`{ id }` or `{ name }`)
    *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordById} to retrieve the full value.
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecordById} for
+   * the guaranteed full value.
    *
    * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
    * for constraints and the result-row key format.
@@ -658,8 +681,9 @@ export interface EntityServiceModel {
    *
    * @deprecated Use {@link queryRecords} with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
    *
-   * `MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`)
-   * instead of the full content — use {@link getRecordById} to retrieve the full value.
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecordById} for
+   * the guaranteed full value.
    *
    * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
    * for constraints and the result-row key format.
@@ -1099,6 +1123,11 @@ export interface EntityMethods {
   /**
    * Update a single record in this entity
    *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
+   *
    * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
    * Use this method if you need trigger events to fire for the updated record.
    *
@@ -1111,6 +1140,11 @@ export interface EntityMethods {
 
   /**
    * Update data in this entity
+   *
+   * Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back
+   * from a list or query carries only a preview, and writing that overwrites the stored value
+   * (see {@link EntityFieldDataType.MULTILINE_MAX}). Those fields are not returned in the
+   * response either.
    *
    * Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use {@link updateRecord} if you need
    * trigger events to fire for each updated record.
@@ -1148,6 +1182,10 @@ export interface EntityMethods {
   /**
    * Get all records from this entity
    *
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecord} for the
+   * guaranteed full value.
+   *
    * @param options - Query options. The `folderKey` property is **experimental**.
    * @returns Promise resolving to query response
    */
@@ -1159,6 +1197,8 @@ export interface EntityMethods {
 
   /**
    * Gets a single record from this entity by record ID
+   *
+   * Returns the full record, including the complete content of `MULTILINE_MAX` fields.
    *
    * @param recordId - UUID of the record
    * @param options - Query options including expansionLevel
@@ -1211,6 +1251,10 @@ export interface EntityMethods {
 
   /**
    * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
+   *
+   * `MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole
+   * value (see {@link EntityFieldDataType.MULTILINE_MAX}); use {@link getRecord} for the
+   * guaranteed full value.
    *
    * Cross-entity joins are supported via the `joins` option — see {@link EntityJoin}
    * for constraints and the result-row key format.
