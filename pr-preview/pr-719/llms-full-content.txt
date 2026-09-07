@@ -622,7 +622,7 @@ if (response.ok) {
 
 ### Retries and Backoff
 
-By default, the idempotent methods — `GET`, `HEAD`, `PUT`, `DELETE`, and `OPTIONS`, per RFC 9110 — are retried up to twice on a transient failure: a transport error, or a `408`, `429`, `500`, `502`, `503`, or `504`. `POST` and `PATCH` are not retried, since a replayed `POST` can create the same resource twice.
+By default, the idempotent methods — `GET`, `HEAD`, `PUT`, `DELETE`, and `OPTIONS`, per [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2) — are retried up to twice on a transient failure: a transport error, or a `408`, `429`, `500`, `502`, `503`, or `504`. `POST` and `PATCH` are not retried, since a replayed `POST` can create the same resource twice.
 
 Pass `retry` to change any of that. See `RetryOptions` for every setting and its default.
 
