@@ -32,8 +32,7 @@
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
- *   secret: 'your-api-secret',
- *   scope: 'OR.Users OR.Robots'
+ *   secret: 'your-api-secret'
  * });
  *
  * // No need to call initialize() for secret-based auth
@@ -44,7 +43,12 @@
  */
 
 export { UiPath } from './uipath';
-export type { UiPathSDKConfig } from './config/sdk-config';
+export type {
+  UiPathSDKConfig,
+  PartialUiPathConfig,
+  BaseConfig,
+  OAuthFields,
+} from './config/sdk-config';
 export type {
   CodedFunctionContext,
   CodedFunctionPlatform,
