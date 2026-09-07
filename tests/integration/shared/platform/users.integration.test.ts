@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { Users } from '../../../../src/services/platform';
+import { Users } from '../../../../src/services/platform/users';
 import {
   PlatformUserSortField,
   PlatformUserSortOrder,

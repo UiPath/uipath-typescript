@@ -2,41 +2,41 @@
  * PlatformUserService — lists, reads, and updates an organization's users.
  */
 
-import { track } from '../../core/telemetry';
-import { ValidationError } from '../../core/errors';
-import { BaseService } from '../base';
+import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import { BaseService } from '../../base';
 
 import type {
   RawPlatformUserGetResponse,
   PlatformUserGetAllOptions,
   PlatformUserUpdateOptions,
   PlatformUserUpdateResponse,
-} from '../../models/platform/users.types';
-import { PlatformUserSortField } from '../../models/platform/users.types';
+} from '../../../models/platform/users.types';
+import { PlatformUserSortField } from '../../../models/platform/users.types';
 import type {
   RawPlatformUser,
   RawPlatformUserListResponse,
   RawPlatformUserUpdateResult,
-} from '../../models/platform/users.internal-types';
-import type { PlatformUserServiceModel } from '../../models/platform/users.models';
-import { PlatformUserGetResponse, createPlatformUserWithMethods } from '../../models/platform/users.models';
+} from '../../../models/platform/users.internal-types';
+import type { PlatformUserServiceModel } from '../../../models/platform/users.models';
+import { PlatformUserGetResponse, createPlatformUserWithMethods } from '../../../models/platform/users.models';
 import {
   PlatformUserMap,
   PlatformUserTypeMap,
   PlatformUserCategoryMap,
-} from '../../models/platform/users.constants';
+} from '../../../models/platform/users.constants';
 
-import { IDENTITY_USER_ENDPOINTS } from '../../utils/constants/endpoints';
-import { IDENTITY_PAGINATION, IDENTITY_OFFSET_PARAMS, IDENTITY_MAX_PAGE_SIZE } from '../../utils/constants/common';
-import { transformData, transformRequest, applyDataTransforms } from '../../utils/transform';
-import { createParams } from '../../utils/http/params';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
+import { IDENTITY_USER_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { IDENTITY_PAGINATION, IDENTITY_OFFSET_PARAMS, IDENTITY_MAX_PAGE_SIZE } from '../../../utils/constants/common';
+import { transformData, transformRequest, applyDataTransforms } from '../../../utils/transform';
+import { createParams } from '../../../utils/http/params';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
 import {
   PaginatedResponse,
   NonPaginatedResponse,
   HasPaginationOptions,
-} from '../../utils/pagination';
+} from '../../../utils/pagination';
 
 /**
  * Service for managing an organization's users.

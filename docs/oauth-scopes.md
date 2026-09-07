@@ -257,7 +257,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
 | `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
 
-## Platform Users
+## Users
 
 | Method | OAuth Scope |
 |--------|-------------|

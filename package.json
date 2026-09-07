@@ -255,6 +255,16 @@
                 "types": "./dist/business-apps/index.d.ts",
                 "default": "./dist/business-apps/index.cjs"
             }
+        },
+        "./users": {
+            "import": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.cjs"
+            }
         }
     },
     "files": [

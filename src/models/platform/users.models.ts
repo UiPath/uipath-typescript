@@ -17,7 +17,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export type PlatformUserGetResponse = RawPlatformUserGetResponse & PlatformUserMethods;
 
 /**
- * Public surface of the platform Users service.
+ * Public surface of the Users service.
  *
  * Users are organization-scoped accounts. Together with groups they form the basis of
  * access management: put users in groups, then grant roles to the groups.
@@ -27,7 +27,7 @@ export type PlatformUserGetResponse = RawPlatformUserGetResponse & PlatformUserM
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Users } from '@uipath/uipath-typescript/platform';
+ * import { Users } from '@uipath/uipath-typescript/users';
  *
  * const users = new Users(sdk);
  * const allUsers = await users.getAll('<organizationId>');
@@ -47,7 +47,7 @@ export interface PlatformUserServiceModel {
    * @example Basic usage
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Users } from '@uipath/uipath-typescript/platform';
+   * import { Users } from '@uipath/uipath-typescript/users';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
@@ -61,7 +61,7 @@ export interface PlatformUserServiceModel {
    *
    * @example Search and paginate
    * ```typescript
-   * import { PlatformUserSortField, PlatformUserSortOrder } from '@uipath/uipath-typescript/platform';
+   * import { PlatformUserSortField, PlatformUserSortOrder } from '@uipath/uipath-typescript/users';
    *
    * const page1 = await users.getAll('<organizationId>', {
    *   searchTerm: 'sarah',

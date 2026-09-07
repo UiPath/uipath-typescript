@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // Imported through the subpath barrel, the way consumers reach it — this also catches a
 // barrel that stops re-exporting the class or the enums as runtime values.
-import { Users, PlatformUserType, PlatformUserCategory, PlatformUserSortField, PlatformUserSortOrder } from '../../../../src/services/platform';
+import { Users, PlatformUserType, PlatformUserCategory, PlatformUserSortField, PlatformUserSortOrder } from '../../../../src/services/platform/users';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import {
