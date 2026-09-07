@@ -72,7 +72,7 @@ const sdk = new UiPath({
 ```
 
 !!! info "Using externally obtained tokens"
-    If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.
+    If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side. In a deployed coded app the platform has already injected OAuth meta tags; passing `secret` still selects secret authentication and those injected fields are dropped.
 
 To Generate a PAT Token:
 
@@ -172,6 +172,20 @@ The access token is consumed internally and is never exposed on `sdk.config`.
     Constructor arguments win over meta tags, which win over the environment.
     Meta tags apply in the browser only; the environment contract applies
     outside it.
+
+    Precedence is per field: every field you do **not** pass to the constructor
+    is inherited from the meta tags or the environment. In a coded app, a config
+    that passes only `secret` therefore starts out inheriting the injected
+    `clientId`, `redirectUri` and `scope` as well.
+
+    Naming one method is enough to settle it. Pass `secret` and the SDK drops
+    the inherited OAuth fields; pass `clientId`/`redirectUri`/`scope` and it
+    drops the inherited `secret`. Naming fields of **both** methods is a fatal
+    configuration error whenever the merged result still ends up carrying
+    `secret` alongside a **complete** OAuth set (`clientId`, `redirectUri` and
+    `scope`) — the constructor throws, listing every auth field it found and
+    where it came from. A stray OAuth field that no layer completes is simply
+    dropped.
 
 ## SDK Initialization - The initialize() Method
 

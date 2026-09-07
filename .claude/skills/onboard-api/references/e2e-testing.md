@@ -180,7 +180,7 @@ When OAuth is needed, use the `useAuth` hook pattern from `samples/process-app-v
 2. **`redirectUri` is `window.location.origin`** (localhost) — where OAuth sends the user back after login
 3. **`http://localhost:5173` must be registered as a redirect URL** in the external app config on UiPath Cloud (Admin > External Applications). Error code 218 on the login page means it's not registered. Sometimes works on retry even without changes — likely a caching/propagation delay.
 4. **Vite proxy must handle BOTH** `/{orgName}` (API data calls) AND `/identity_` (OAuth auth flow). Without the `/identity_` proxy, the OAuth authorize redirect goes to localhost and 404s.
-5. **Use `scope` (singular)** in the config, not `scopes` — the SDK's `OAuthFields` interface defines `scope: string`. Using `scopes` silently fails `isCompleteConfig()`, causing a "configuration not found" error on `initialize()`.
+5. **Use `scope` (singular)** in the config, not `scopes` — the SDK's `OAuthFields` interface defines `scope: string`. Using `scopes` silently fails `isCompleteConfig()`, causing a `UiPath SDK configuration is incomplete: the OAuth configuration is incomplete — clientId, redirectUri set, scope missing` error on `initialize()`.
 
 #### PAT auth
 
@@ -437,7 +437,7 @@ These caused failures during real E2E runs:
 | **Port 5173 in use** — Vite starts on 5174, proxy doesn't match | `lsof -ti:5173 \| xargs kill -9` before starting dev server |
 | **OAuth error 218** — login page shows `errorCode=218` | `http://localhost:5173` not registered as redirect URL in the external app (Admin > External Applications). Sometimes resolves on retry due to caching/propagation delay. |
 | **OAuth redirect 404s on localhost** — `/identity_/connect/authorize` returns 404 | Missing `/identity_` proxy in `vite.config.ts`. The SDK sends OAuth requests to `baseUrl` (localhost), so Vite must proxy `/identity_` to the real API server alongside `/{orgName}`. |
-| **"configuration not found" on `initialize()`** — `UiPath SDK configuration not found` error | Used `scopes` (plural) instead of `scope` (singular) in OAuth config. The SDK's `OAuthFields` interface defines `scope: string` — `scopes` is silently ignored, `isCompleteConfig()` fails, and `initialize()` falls through to meta tag loading. |
+| **"configuration is incomplete" on `initialize()`** — `UiPath SDK configuration is incomplete: the OAuth configuration is incomplete — clientId, redirectUri set, scope missing` | Used `scopes` (plural) instead of `scope` (singular) in OAuth config. The SDK's `OAuthFields` interface defines `scope: string` — `scopes` is silently ignored, `isCompleteConfig()` fails, and `initialize()` falls through to meta tag loading. (Older SDK versions reported this as `UiPath SDK configuration not found`.) |
 | **OAuth works but API returns empty data** — login succeeds, responses are `[]` | Wrong `tenantName` — data may live in a different tenant than the one configured. Check which tenant the curl used (e.g., `DefaultTenant` vs `adetenant`). |
 
 ## Quick Reference
