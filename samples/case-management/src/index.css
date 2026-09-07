@@ -1,0 +1,13 @@
+/* Tailwind base + utilities, Apollo design tokens, light/dark overrides. */
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind skips node_modules — opt apollo-wind back in so its components'
+   utility classes are emitted. The second line scans this app's own files. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';
+
+html,
+body,
+#root {
+  height: 100%;
+}
