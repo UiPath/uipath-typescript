@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { Users } from '../../../../src/services/platform/users';
 import {
+  Users,
   PlatformUserSortField,
   PlatformUserSortOrder,
   PlatformUserType,
   PlatformUserCategory,
-} from '../../../../src/models/platform';
-import type { PlatformUserGetResponse } from '../../../../src/models/platform';
+} from '../../../../src/services/platform/users';
+import type { PlatformUserGetResponse } from '../../../../src/services/platform/users';
 import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
