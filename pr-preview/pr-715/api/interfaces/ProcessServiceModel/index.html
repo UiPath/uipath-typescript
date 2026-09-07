@@ -3317,14 +3317,15 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <p>Starts a process identified by <code>processRef</code> (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID)).</p>
 <p>Folder context and every startInfo field (<code>jobPriority</code>, <code>jobsCount</code>, <code>robotIds</code>,
 <code>inputArguments</code>, etc.) live in <code>options</code>. Runtime resource overrides apply on the
-<code>{ name }</code> and <code>{ key }</code> branches — a cross-folder redirect steers both the wire body
-identity and the <code>X-UIPATH-FolderPath-Encoded</code> header to the override target.</p>
+<code>{ name }</code> and <code>{ key }</code> branches — a cross-folder redirect steers both the identity
+and the folder scoping to the override target.</p>
 <p>Ref resolution:
-- <code>{ id }</code> — resolves numeric release id to its key via an internal <code>getById</code> lookup,
-  then sends <code>ReleaseKey</code> on the wire.
-- <code>{ name }</code> — sent as <code>ReleaseName</code> on the wire; the server resolves it against the
-  ambient folder scope.
-- <code>{ key }</code> — sent as <code>ReleaseKey</code> on the wire.</p>
+- <code>{ id }</code> — requires <code>folderId</code> in <code>options</code>; the release is resolved by numeric ID
+  within that folder before the job is queued.
+- <code>{ name }</code> — folder-scoped; the server resolves the process by name within the
+  supplied folder.
+- <code>{ key }</code> — started by release GUID; a folder scope (<code>folderId</code> / <code>folderKey</code> /
+  <code>folderPath</code>) is still required for the job to route correctly.</p>
 <h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
 <table>
 <thead>

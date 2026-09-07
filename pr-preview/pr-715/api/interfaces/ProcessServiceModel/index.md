@@ -130,13 +130,13 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 Starts a process identified by `processRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
 
-Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on the `{ name }` and `{ key }` branches — a cross-folder redirect steers both the wire body identity and the `X-UIPATH-FolderPath-Encoded` header to the override target.
+Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on the `{ name }` and `{ key }` branches — a cross-folder redirect steers both the identity and the folder scoping to the override target.
 
 Ref resolution:
 
-- `{ id }` — resolves numeric release id to its key via an internal `getById` lookup, then sends `ReleaseKey` on the wire.
-- `{ name }` — sent as `ReleaseName` on the wire; the server resolves it against the ambient folder scope.
-- `{ key }` — sent as `ReleaseKey` on the wire.
+- `{ id }` — requires `folderId` in `options`; the release is resolved by numeric ID within that folder before the job is queued.
+- `{ name }` — folder-scoped; the server resolves the process by name within the supplied folder.
+- `{ key }` — started by release GUID; a folder scope (`folderId` / `folderKey` / `folderPath`) is still required for the job to route correctly.
 
 ##### Parameters
 
