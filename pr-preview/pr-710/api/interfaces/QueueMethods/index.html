@@ -3015,7 +3015,7 @@ name, and folder are filled in automatically.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="completetransaction">completeTransaction()<a class="headerlink" href="#completetransaction" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>outcome</code>: <a href="../../enumerations/QueueTransactionOutcome/"><code>QueueTransactionOutcome</code></a>, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>completeTransaction</strong>(<code>itemId</code>: <code>number</code>, <code>outcome</code>: <a href="../../enumerations/QueueTransactionOutcome/"><code>QueueTransactionOutcome</code></a>, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Reports the processing outcome of one of this queue's items.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -3040,7 +3040,7 @@ name, and folder are filled in automatically.</p>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;</td>
+<td><code>Omit</code>&lt;<a href="../QueueCompleteTransactionOptions/"><code>QueueCompleteTransactionOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;</td>
 <td>Completion details (output data, failure details, new defer/due dates) — folder scoping comes from the queue</td>
 </tr>
 </tbody>
@@ -3064,8 +3064,8 @@ name, and folder are filled in automatically.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>T</code> <em>extends</em> <code>Omit</code>&lt;<a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;</td>
-<td><code>Omit</code>&lt;<a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;</td>
+<td><code>T</code> <em>extends</em> <code>Omit</code>&lt;<a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;</td>
+<td><code>Omit</code>&lt;<a href="../../type-aliases/QueueGetAllItemsOptions/"><code>QueueGetAllItemsOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;</td>
 </tr>
 </tbody>
 </table>
@@ -3092,7 +3092,7 @@ name, and folder are filled in automatically.</p>
 <hr />
 <h3 id="insertitem">insertItem()<a class="headerlink" href="#insertitem" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>insertItem</strong>(<code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;): <code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
+<p><strong>insertItem</strong>(<code>specificData</code>: <code>Record</code>&lt;<code>string</code>, <a href="../../type-aliases/QueueItemValue/"><code>QueueItemValue</code></a>&gt;, <code>options?</code>: <code>Omit</code>&lt;<a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;): <code>Promise</code>&lt;<a href="../QueueItem/"><code>QueueItem</code></a>&gt;</p>
 </blockquote>
 <p>Inserts a new item into this queue.</p>
 <p>The payload must be flat — nested objects and arrays are rejected.</p>
@@ -3113,7 +3113,7 @@ name, and folder are filled in automatically.</p>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><code>Omit</code>&lt;<a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>, <code>"folderId"</code> | <code>"folderKey"</code> | <code>"folderPath"</code>&gt;</td>
+<td><code>Omit</code>&lt;<a href="../QueueInsertItemOptions/"><code>QueueInsertItemOptions</code></a>, <code>"folderKey"</code> | <code>"folderId"</code> | <code>"folderPath"</code>&gt;</td>
 <td>Optional item metadata (priority, reference, defer/due dates) — folder scoping comes from the queue</td>
 </tr>
 </tbody>
