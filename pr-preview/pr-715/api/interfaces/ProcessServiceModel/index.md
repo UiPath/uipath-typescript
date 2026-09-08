@@ -128,22 +128,16 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 > **start**(`processRef`: `ProcessRef`, `options?`: `ProcessStartRefOptions`): `Promise`\<`ProcessStartResponse`[]>
 
-Starts a process identified by `processRef` (`{ id }`, `{ name }`, or `{ key }` (GUID)).
+Starts a process. First fetch the process via `processes.getAll()` or `processes.getByName()` to obtain an id, name, or key to pass in `processRef`.
 
 Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on the `{ name }` and `{ key }` branches — a cross-folder redirect steers both the identity and the folder scoping to the override target.
 
-Ref resolution:
-
-- `{ id }` — requires `folderId` in `options`; the release is resolved by numeric ID within that folder before the job is queued.
-- `{ name }` — folder-scoped; the server resolves the process by name within the supplied folder.
-- `{ key }` — started by release GUID; a folder scope (`folderId` / `folderKey` / `folderPath`) is still required for the job to route correctly.
-
 ##### Parameters
 
-| Parameter    | Type                     | Description                                              |
-| ------------ | ------------------------ | -------------------------------------------------------- |
-| `processRef` | `ProcessRef`             | Process ref (`{ id }`, `{ name }`, or `{ key }` (GUID))  |
-| `options?`   | `ProcessStartRefOptions` | Folder scoping + startInfo fields + optional OData query |
+| Parameter    | Type                     | Description                                                                                                                |
+| ------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `processRef` | `ProcessRef`             | Process identifier — see [ProcessRef](../../type-aliases/ProcessRef/) for the variants and their folder-scope requirements |
+| `options?`   | `ProcessStartRefOptions` | Folder scoping + startInfo fields + optional OData query                                                                   |
 
 ##### Returns
 
@@ -156,13 +150,13 @@ Promise resolving to an array of started process instances of [ProcessStartRespo
 ```
 import { JobPriority } from '@uipath/uipath-typescript/processes';
 
-// By numeric release id
-await processes.start({ id: <releaseId> }, { folderId: <folderId> });
+// By process id
+await processes.start({ id: <processId> }, { folderId: <folderId> });
 
-// By process name + folder path (folder scoping applies to both the lookup and the start)
+// By process name + folder path
 await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
 
-// By release key (GUID)
+// By process key (GUID)
 await processes.start({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, { folderKey: '<folderKey>' });
 
 // With startInfo options

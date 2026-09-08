@@ -3314,18 +3314,12 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <blockquote>
 <p><strong>start</strong>(<code>processRef</code>: <a href="../../type-aliases/ProcessRef/"><code>ProcessRef</code></a>, <code>options?</code>: <a href="../ProcessStartRefOptions/"><code>ProcessStartRefOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
 </blockquote>
-<p>Starts a process identified by <code>processRef</code> (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID)).</p>
+<p>Starts a process. First fetch the process via <code>processes.getAll()</code> or
+<code>processes.getByName()</code> to obtain an id, name, or key to pass in <code>processRef</code>.</p>
 <p>Folder context and every startInfo field (<code>jobPriority</code>, <code>jobsCount</code>, <code>robotIds</code>,
 <code>inputArguments</code>, etc.) live in <code>options</code>. Runtime resource overrides apply on the
 <code>{ name }</code> and <code>{ key }</code> branches — a cross-folder redirect steers both the identity
 and the folder scoping to the override target.</p>
-<p>Ref resolution:
-- <code>{ id }</code> — requires <code>folderId</code> in <code>options</code>; the release is resolved by numeric ID
-  within that folder before the job is queued.
-- <code>{ name }</code> — folder-scoped; the server resolves the process by name within the
-  supplied folder.
-- <code>{ key }</code> — started by release GUID; a folder scope (<code>folderId</code> / <code>folderKey</code> /
-  <code>folderPath</code>) is still required for the job to route correctly.</p>
 <h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
@@ -3339,7 +3333,7 @@ and the folder scoping to the override target.</p>
 <tr>
 <td><code>processRef</code></td>
 <td><a href="../../type-aliases/ProcessRef/"><code>ProcessRef</code></a></td>
-<td>Process ref (<code>{ id }</code>, <code>{ name }</code>, or <code>{ key }</code> (GUID))</td>
+<td>Process identifier — see <a href="../../type-aliases/ProcessRef/">ProcessRef</a> for the variants and their folder-scope requirements</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
@@ -3354,13 +3348,13 @@ and the folder scoping to the override target.</p>
 <h5 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h5>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">JobPriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/processes&#39;</span><span class="p">;</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// By numeric release id</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">releaseId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// By process id</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">processId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// By process name + folder path (folder scoping applies to both the lookup and the start)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// By process name + folder path</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;InvoiceReview&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Live&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// By release key (GUID)</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// By process key (GUID)</span>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
 <a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1">// With startInfo options</span>

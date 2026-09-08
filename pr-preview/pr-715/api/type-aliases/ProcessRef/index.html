@@ -2938,9 +2938,15 @@
 <blockquote>
 <p><strong>ProcessRef</strong> = <a href="../ResourceRef/"><code>ResourceRef</code></a>&lt;<code>number</code>&gt;</p>
 </blockquote>
-<p>Selects a process (release) by exactly one identifier — <code>{ id }</code> numeric,
-<code>{ name }</code> (folder-scoped), or <code>{ key }</code> (release GUID). Used by
-<code>ProcessServiceModel.start</code> in the ref-based signature.</p>
+<p>Selects a process by exactly one identifier. Used by <code>ProcessServiceModel.start</code>.</p>
+<ul>
+<li><code>{ id }</code> — numeric process id. Requires <code>folderId</code> in <code>options</code> (the underlying
+  lookup is folder-scoped).</li>
+<li><code>{ name }</code> — process name. Requires a folder scope (<code>folderId</code> / <code>folderKey</code> /
+  <code>folderPath</code>) to disambiguate across folders.</li>
+<li><code>{ key }</code> — process GUID. A folder scope is still required so the job routes
+  to the right folder.</li>
+</ul>
 
 
 
