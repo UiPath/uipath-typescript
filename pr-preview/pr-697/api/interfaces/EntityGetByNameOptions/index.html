@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityJoin/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityGetByNameOptions/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>EntityJoin - UiPath TypeScript SDK</title>
+        <title>EntityGetByNameOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#example" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EntityJoin
+              EntityGetByNameOptions
             
           </span>
         </div>
@@ -2935,10 +2935,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+  <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Extends
       
     </span>
   </a>
@@ -2976,35 +2976,13 @@
   
 
 
-  <h1>EntityJoin</h1>
+  <h1>EntityGetByNameOptions</h1>
 
-<p>A single cross-entity JOIN clause for a structured query.</p>
-<p>A join pulls related records together by matching a field on the base (left)
-entity (<code>joinFieldName</code>) to a field on a related (right) entity
-(<code>relatedFieldName</code>). Pass one EntityJoin per related entity; supplying
-several composes a multi-entity (multi-join) query. Up to 3 joins are
-supported (the SDK throws a <code>ValidationError</code> for more), and all of them
-must share the same <a href="../../enumerations/JoinType/">JoinType</a>.</p>
-<p>A join query must also set <code>selectedFields</code> or <code>aggregates</code> on
-<a href="../../type-aliases/EntityQueryRecordsOptions/">EntityQueryRecordsOptions</a>, referencing fields as
-<code>"&lt;EntityName&gt;.&lt;FieldName&gt;"</code> (e.g. <code>"Customer.Name"</code>) — bare field names
-resolve only while unique across the joined entities. Result rows use the
-same qualified keys; a LEFT join with no match omits the related entity's
-keys. Joins are not supported on choice-set, relationship, file, encrypted,
-or system fields, nor on folder-scoped entities. Naming a <code>MULTILINE_MAX</code> field in a
-join condition is rejected; selecting one is allowed, but its key is omitted from the
-result rows, so read the record by ID to get its value.</p>
-<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">EntityJoin</span><span class="p">,</span><span class="w"> </span><span class="nx">JoinType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">join</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityJoin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nx">entityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Order&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">joinType</span><span class="o">:</span><span class="w"> </span><span class="kt">JoinType.LeftJoin</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nx">joinFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;customerId&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nx">relatedEntityName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Customer&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nx">relatedFieldName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Id&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">};</span>
-</code></pre></div>
+<p>Options for getting entity metadata by entity name</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../EntityGetByIdOptions/"><code>EntityGetByIdOptions</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3016,29 +2994,9 @@ result rows, so read the record by ID to get its value.</p>
 </thead>
 <tbody>
 <tr>
-<td><a id="entityname"></a> <code>entityName?</code></td>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
 <td><code>string</code></td>
-<td>Name of the base (left) entity that owns <code>joinFieldName</code>. Defaults to the queried entity; set it to anchor chained joins.</td>
-</tr>
-<tr>
-<td><a id="joinfieldname"></a> <code>joinFieldName</code></td>
-<td><code>string</code></td>
-<td>Field on the base entity used as the join key.</td>
-</tr>
-<tr>
-<td><a id="jointype"></a> <code>joinType?</code></td>
-<td><a href="../../enumerations/JoinType/"><code>JoinType</code></a></td>
-<td>Join type to apply (default: <a href="../../enumerations/JoinType/#leftjoin">JoinType.LeftJoin</a>).</td>
-</tr>
-<tr>
-<td><a id="relatedentityname"></a> <code>relatedEntityName</code></td>
-<td><code>string</code></td>
-<td>Name of the related (right) entity to join in.</td>
-</tr>
-<tr>
-<td><a id="relatedfieldname"></a> <code>relatedFieldName</code></td>
-<td><code>string</code></td>
-<td>Field on <code>relatedEntityName</code> matched against <code>joinFieldName</code>.</td>
+<td><strong><code>Experimental</code></strong> Key identifying the folder the entity belongs to. Omit for tenant-level entities. Folder-scoped Data Fabric is in preview — the contract may change.</td>
 </tr>
 </tbody>
 </table>
