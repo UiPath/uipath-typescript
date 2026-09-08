@@ -4,13 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "stage-du-wc": "node scripts/stage-du-wc.mjs",
+    "predev": "npm run stage-du-wc",
     "dev": "vite",
+    "prebuild": "npm run stage-du-wc",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/ui-widgets-validation-station": "1.0.0",
+    "@uipath/ui-widgets-validation-station": "1.1.0-rc.0",
     "@uipath/uipath-typescript": "^1.4.2",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
