@@ -959,7 +959,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       // Fetch schema once so per-test record bodies match the entity's shape.
       const { entities } = getServices();
       folderEntityMetadata = await entities.getById(folderEntityId, { folderKey });
-    });
+      // A single live read, but hooks have stalled past the default 30s on the
+      // shared tenant — give it the same headroom as the schema cleanup hook.
+    }, 90_000);
 
     it('should insert a single record with folderKey via insertRecordById', async () => {
       const { entities } = getServices();
