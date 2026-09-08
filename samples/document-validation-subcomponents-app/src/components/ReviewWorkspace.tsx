@@ -14,7 +14,7 @@ import {
 import type { UiPath } from '@uipath/uipath-typescript/core';
 import type { DuFramework } from '@uipath/uipath-typescript/document-understanding';
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CenteredMessage from './CenteredMessage';
 import Panel from './Panel';
 
@@ -53,14 +53,14 @@ function ReviewWorkspace({
   onReportException,
 }: ReviewWorkspaceProps) {
   // The artifacts fetch scopes itself to the folder named on the payload, so fill in the
-  // task's folder when the payload arrived without one.
-  const raw = task.data as DuFramework.ContentValidationData;
-  const data =
-    raw.FolderId !== undefined ||
-    raw.FolderKey !== undefined ||
-    task.folderId === undefined
-      ? raw
-      : { ...raw, FolderId: task.folderId };
+  // task's folder when the payload arrived without one. Memoised because the fetch keys off
+  // this object's identity - a fresh one each render would refetch the document forever.
+  const data = useMemo(() => {
+    const raw = task.data as DuFramework.ContentValidationData;
+    if (raw.FolderId != null || raw.FolderKey != null || task.folderId == null) return raw;
+    return { ...raw, FolderId: task.folderId };
+  }, [task]);
+
   const { artifacts, error } = useDuDocumentArtifacts(sdk, data);
   const [status, setStatus] = useState<string>('');
 

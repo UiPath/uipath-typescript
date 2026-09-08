@@ -191,10 +191,8 @@ function ValidationPanel({
   const validationData = useMemo(() => {
     const payload = fullTask?.data as DuFramework.ContentValidationData | undefined;
     if (!payload) return null;
-    if (payload.FolderId !== undefined || payload.FolderKey !== undefined) return payload;
-    return fullTask?.folderId === undefined
-      ? payload
-      : { ...payload, FolderId: fullTask.folderId };
+    if (payload.FolderId != null || payload.FolderKey != null) return payload;
+    return fullTask?.folderId == null ? payload : { ...payload, FolderId: fullTask.folderId };
   }, [fullTask]);
 
   const displayTask = fullTask ?? task;

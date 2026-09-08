@@ -90,8 +90,8 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   const data = useMemo(() => {
     const payload = taskData?.contentValidationData;
     if (!payload) return null;
-    if (payload.FolderId !== undefined || payload.FolderKey !== undefined) return payload;
-    return folderId === null ? payload : { ...payload, FolderId: folderId };
+    if (payload.FolderId != null || payload.FolderKey != null) return payload;
+    return folderId == null ? payload : { ...payload, FolderId: folderId };
   }, [taskData, folderId]);
 
   useEffect(() => {
