@@ -8,7 +8,7 @@ It lists pending Document Validation tasks from UiPath Action Center and, for th
 
 ## Preview
 
-![Document review workspace walkthrough](./demo/screen-recording.gif)
+![Document review workspace walkthrough](./screenshots/preview.gif)
 
 ## What this sample demonstrates
 
