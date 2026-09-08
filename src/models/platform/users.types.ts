@@ -132,23 +132,3 @@ export interface PlatformUserUpdateOptions {
   /** GUIDs of groups to remove the user from. */
   groupIdsToRemove?: string[];
 }
-
-/**
- * A single failure reported by a user update.
- */
-export interface PlatformUserUpdateError {
-  /** Machine-readable error code. */
-  code: string;
-  /** Human-readable description of the failure. */
-  description: string;
-}
-
-/**
- * Result of a user update.
- */
-export interface PlatformUserUpdateResponse {
-  /** Whether the update was applied. */
-  success: boolean;
-  /** Failures reported by the API; empty when `success` is `true`. */
-  errors: PlatformUserUpdateError[];
-}

@@ -4,13 +4,15 @@
 
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { OrganizationIdResolver } from '../../../core/organization/organization-id-resolver';
 import { BaseService } from '../../base';
 
 import type {
   RawPlatformUserGetResponse,
   PlatformUserGetAllOptions,
   PlatformUserUpdateOptions,
-  PlatformUserUpdateResponse,
 } from '../../../models/platform/users.types';
 import { PlatformUserSortField } from '../../../models/platform/users.types';
 import type {
@@ -47,6 +49,19 @@ import {
  * `groupIdsToAdd` / `groupIdsToRemove`.
  */
 export class PlatformUserService extends BaseService implements PlatformUserServiceModel {
+  readonly #organizationIdResolver: OrganizationIdResolver;
+
+  /**
+   * Creates an instance of the Users service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    // Identity keys on the organization GUID; resolved once per SDK instance and shared
+    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
+  }
+
   @track('PlatformUsers.GetAll')
   async getAll<T extends PlatformUserGetAllOptions = PlatformUserGetAllOptions>(
     options?: T
@@ -55,7 +70,7 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
       ? PaginatedResponse<PlatformUserGetResponse>
       : NonPaginatedResponse<PlatformUserGetResponse>
   > {
-    const organizationId = await this.resolveOrganizationId();
+    const organizationId = await this.#organizationIdResolver.resolve();
     const opts = options ?? ({} as T);
 
     // The API always pages (default page size 10, max 1000), so without pagination
@@ -103,7 +118,7 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
   }
 
   @track('PlatformUsers.UpdateById')
-  async updateById(userId: string, update: PlatformUserUpdateOptions): Promise<PlatformUserUpdateResponse> {
+  async updateById(userId: string, update: PlatformUserUpdateOptions): Promise<void> {
     if (!userId) {
       throw new ValidationError({ message: 'userId is required for updateById' });
     }
@@ -116,7 +131,11 @@ export class PlatformUserService extends BaseService implements PlatformUserServ
       IDENTITY_USER_ENDPOINTS.GET_BY_ID(userId),
       body
     );
-    return { success: response.data.succeeded, errors: response.data.errors ?? [] };
+    // Identity reports rejected input as a 200 with `succeeded: false` rather than a 400
+    if (!response.data.succeeded) {
+      const reasons = (response.data.errors ?? []).map((e) => `${e.description} (${e.code})`).join('; ');
+      throw new ValidationError({ message: `User update was rejected: ${reasons}` });
+    }
   }
 
   /**

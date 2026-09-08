@@ -23,6 +23,8 @@ import { decodeJwtClaims } from '../../utils/encoding/jwt';
 import { decodeBase64 } from '../../utils/encoding/base64';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints/identity';
 import { TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
+import { fetchWithRetry } from '../../utils/http/fetch-with-retry';
+import { DEFAULT_RETRY_OPTIONS } from '../../utils/http/retry-policy';
 
 const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DASH_REGEX = /-/g;
@@ -144,19 +146,25 @@ function extractOrganizationId(location: URL): string | undefined {
 /**
  * Looks up an organization's GUID from its name using Identity's authorize redirect.
  *
- * Starts an OAuth authorization request with `acr_values=tenantName:<orgName>` and reads
- * the redirect it produces instead of following it. No token is sent and no login is
- * completed — Identity resolves the name while preparing the login page.
+ * The path for personal access tokens: they are opaque, so unlike a JWT they carry no
+ * organization claim to read. Starts an OAuth authorization request with
+ * `acr_values=tenantName:<orgName>` and reads the redirect it produces instead of following
+ * it. No token is sent and no login is completed — Identity resolves the name while
+ * preparing the login page.
  *
  * @param baseUrl - Normalized SDK base URL (no trailing slash)
  * @param orgName - Organization logical name
  * @returns The organization GUID
  */
-export async function lookupOrganizationIdByName(baseUrl: string, orgName: string): Promise<string> {
+export async function lookupOrganizationIdForPat(baseUrl: string, orgName: string): Promise<string> {
   let url = buildAuthorizeUrl(baseUrl, orgName);
 
   for (let hop = 0; hop < MAX_REDIRECT_HOPS; hop++) {
-    const response = await fetch(url, { redirect: 'manual', headers: tracingHeaders() });
+    const response = await fetchWithRetry(
+      url,
+      { redirect: 'manual', headers: tracingHeaders() },
+      { retry: DEFAULT_RETRY_OPTIONS }
+    );
     const location = response.headers.get('location');
     if (!location) {
       // Browsers expose redirects as opaque responses; non-redirects carry no Location
@@ -235,6 +243,6 @@ export class OrganizationIdResolver {
       return claimed;
     }
 
-    return lookupOrganizationIdByName(baseUrl, orgName);
+    return lookupOrganizationIdForPat(baseUrl, orgName);
   }
 }

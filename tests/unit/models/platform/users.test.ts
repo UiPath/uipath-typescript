@@ -4,7 +4,8 @@ import { createPlatformUserWithMethods } from '../../../../src/models/platform/u
 import type { PlatformUserServiceModel } from '../../../../src/models/platform/users.models';
 import type { RawPlatformUserGetResponse } from '../../../../src/models/platform/users.types';
 import { PlatformUserType, PlatformUserCategory } from '../../../../src/models/platform/users.types';
-import { createRawPlatformUserUpdateResult, PLATFORM_USER_TEST_CONSTANTS } from '../../../utils/mocks';
+import { PLATFORM_USER_TEST_CONSTANTS } from '../../../utils/mocks';
+import { ValidationError } from '../../../../src/core/errors';
 
 // ===== HELPERS =====
 const createTransformedUser = (
@@ -36,7 +37,7 @@ describe('Platform User Model Tests', () => {
     mockService = {
       getAll: vi.fn(),
       getById: vi.fn(),
-      updateById: vi.fn().mockResolvedValue({ success: true, errors: [] }),
+      updateById: vi.fn().mockResolvedValue(undefined),
     };
   });
 
@@ -55,20 +56,17 @@ describe('Platform User Model Tests', () => {
       const user = createPlatformUserWithMethods(createTransformedUser(), mockService);
       const update = { groupIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.GROUP_ID_ALT] };
 
-      const result = await user.update(update);
+      await expect(user.update(update)).resolves.toBeUndefined();
 
       expect(mockService.updateById).toHaveBeenCalledWith(PLATFORM_USER_TEST_CONSTANTS.USER_ID, update);
-      expect(result.success).toBe(true);
     });
 
-    it('should surface API-reported failures from the delegated call', async () => {
-      const failure = createRawPlatformUserUpdateResult({ succeeded: false });
-      vi.mocked(mockService.updateById).mockResolvedValue({ success: failure.succeeded, errors: failure.errors });
+    it('should propagate a rejection from the delegated call', async () => {
+      const rejection = new ValidationError({ message: PLATFORM_USER_TEST_CONSTANTS.ERROR_USER_NOT_FOUND });
+      vi.mocked(mockService.updateById).mockRejectedValue(rejection);
       const user = createPlatformUserWithMethods(createTransformedUser(), mockService);
 
-      const result = await user.update({ isActive: false });
-
-      expect(result.success).toBe(false);
+      await expect(user.update({ isActive: false })).rejects.toBe(rejection);
     });
 
     it('should throw when the user ID is missing', async () => {

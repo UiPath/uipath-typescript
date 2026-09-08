@@ -86,7 +86,6 @@ jobs:
           echo "identity_test_user_id=${{ secrets.UIPATH_IDENTITY_TEST_USER_ID_DEV || secrets.UIPATH_IDENTITY_TEST_USER_ID }}" >> $GITHUB_OUTPUT
           echo "identity_mutable_test_user_id=${{ secrets.UIPATH_IDENTITY_MUTABLE_TEST_USER_ID_DEV || secrets.UIPATH_IDENTITY_MUTABLE_TEST_USER_ID }}" >> $GITHUB_OUTPUT
           echo "organization_id=${{ secrets.UIPATH_ORGANIZATION_ID_DEV || secrets.UIPATH_ORGANIZATION_ID }}" >> $GITHUB_OUTPUT
-          echo "tenant_id=${{ secrets.UIPATH_TENANT_ID_DEV || secrets.UIPATH_TENANT_ID }}" >> $GITHUB_OUTPUT
           echo "maestro_test_process_key=${{ secrets.UIPATH_MAESTRO_TEST_PROCESS_KEY_DEV || secrets.UIPATH_MAESTRO_TEST_PROCESS_KEY }}" >> $GITHUB_OUTPUT
           echo "maestro_test_incidents_process_key=${{ secrets.UIPATH_MAESTRO_TEST_INCIDENTS_PROCESS_KEY_DEV || secrets.UIPATH_MAESTRO_TEST_INCIDENTS_PROCESS_KEY }}" >> $GITHUB_OUTPUT
           echo "maestro_test_case_process_key=${{ secrets.UIPATH_MAESTRO_TEST_CASE_PROCESS_KEY_DEV || secrets.UIPATH_MAESTRO_TEST_CASE_PROCESS_KEY }}" >> $GITHUB_OUTPUT
@@ -126,7 +125,6 @@ jobs:
           IDENTITY_TEST_USER_ID=${{ steps.config.outputs.identity_test_user_id }}
           IDENTITY_MUTABLE_TEST_USER_ID=${{ steps.config.outputs.identity_mutable_test_user_id }}
           UIPATH_ORGANIZATION_ID=${{ steps.config.outputs.organization_id }}
-          UIPATH_TENANT_ID=${{ steps.config.outputs.tenant_id }}
           MAESTRO_TEST_PROCESS_KEY=${{ steps.config.outputs.maestro_test_process_key }}
           MAESTRO_TEST_INCIDENTS_PROCESS_KEY=${{ steps.config.outputs.maestro_test_incidents_process_key }}
           MAESTRO_TEST_CASE_PROCESS_KEY=${{ steps.config.outputs.maestro_test_case_process_key }}

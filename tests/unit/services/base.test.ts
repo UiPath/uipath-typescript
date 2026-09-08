@@ -6,7 +6,7 @@ import { PaginationOptions } from '../../../src/utils/pagination/types';
 import type { RequestWithPaginationOptions } from '../../../src/utils/pagination/internal-types';
 import type { RequestSpec } from '../../../src/models/common/request-spec';
 import type { IUiPath } from '../../../src/core/types';
-import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient } from '../../utils/setup';
 import { createMockError } from '../../utils/mocks/core';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import {
@@ -22,10 +22,6 @@ const TEST_BODY = { foo: 'bar' };
 const TEST_RESPONSE = { id: 1, name: 'test' };
 
 class TestableBaseService extends BaseService {
-  public exposedResolveOrganizationId() {
-    return this.resolveOrganizationId();
-  }
-
   public exposedGetValidAuthToken() {
     return this.getValidAuthToken();
   }
@@ -112,28 +108,6 @@ describe('BaseService Unit Tests', () => {
       expect(() => new TestableBaseService(unknownInstance)).toThrow(
         /Invalid SDK instance/
       );
-    });
-  });
-
-  describe('resolveOrganizationId', () => {
-    it('should resolve the organization id from the SDK configuration', async () => {
-      const configured = createServiceTestDependencies({ organizationId: TEST_CONSTANTS.ORGANIZATION_ID });
-      const configuredService = new TestableBaseService(configured.instance);
-
-      await expect(configuredService.exposedResolveOrganizationId()).resolves.toBe(TEST_CONSTANTS.ORGANIZATION_ID);
-    });
-
-    it('should share one resolver between services built on the same instance', async () => {
-      const shared = createServiceTestDependencies({ organizationId: TEST_CONSTANTS.ORGANIZATION_ID });
-      const first = new TestableBaseService(shared.instance);
-      const second = new TestableBaseService(shared.instance);
-
-      const resolver = getPrivateSDK(shared.instance).organizationIdResolver;
-      expect(resolver).toBeDefined();
-      await expect(first.exposedResolveOrganizationId()).resolves.toBe(TEST_CONSTANTS.ORGANIZATION_ID);
-      await expect(second.exposedResolveOrganizationId()).resolves.toBe(TEST_CONSTANTS.ORGANIZATION_ID);
-      // Still the same cached resolver after both services used it
-      expect(getPrivateSDK(shared.instance).organizationIdResolver).toBe(resolver);
     });
   });
 

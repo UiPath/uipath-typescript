@@ -36,8 +36,7 @@ export interface RawPlatformUserListResponse {
 }
 
 /**
- * A failure entry exactly as the API returns it. Defined independently of the
- * public error type — the wire format is a separate concern.
+ * A failure entry exactly as the API returns it; surfaced to callers as a `ValidationError`.
  */
 export interface RawPlatformUserUpdateError {
   code: string;

@@ -52,6 +52,7 @@ describe('OrganizationIdResolver', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -166,6 +167,20 @@ describe('OrganizationIdResolver', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
+    it('should retry a transient Identity failure before reading the redirect', async () => {
+      vi.useFakeTimers();
+      fetchSpy
+        .mockResolvedValueOnce(new Response(null, { status: 503 }))
+        .mockRejectedValueOnce(new Error('network down'))
+        .mockResolvedValueOnce(redirectTo(loginRedirect(ORGANIZATION_ID)));
+
+      const attempt = createResolver().resolve();
+      await vi.runAllTimersAsync();
+
+      await expect(attempt).resolves.toBe(ORGANIZATION_ID);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    });
+
     it('should give up after the redirect hop limit', async () => {
       fetchSpy.mockResolvedValue(redirectTo(`${TEST_CONSTANTS.BASE_URL}/identity_/connect/authorize?again=1`));
 
@@ -188,12 +203,13 @@ describe('OrganizationIdResolver', () => {
     });
 
     it('should not cache a failed attempt so the next call retries', async () => {
+      // Identity reported the organization as unregistered: a definitive answer, not retried
       fetchSpy
-        .mockRejectedValueOnce(new Error('network down'))
+        .mockResolvedValueOnce(redirectTo(`${TEST_CONSTANTS.BASE_URL}/portal_/unregistered`))
         .mockResolvedValueOnce(redirectTo(loginRedirect(ORGANIZATION_ID)));
       const resolver = createResolver();
 
-      await expect(resolver.resolve()).rejects.toThrow('network down');
+      await expect(resolver.resolve()).rejects.toBeInstanceOf(ValidationError);
       await expect(resolver.resolve()).resolves.toBe(ORGANIZATION_ID);
 
       expect(fetchSpy).toHaveBeenCalledTimes(2);

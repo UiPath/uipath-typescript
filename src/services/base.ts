@@ -16,7 +16,6 @@ import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/com
 import { resolveNestedField } from '../utils/object';
 import type { IUiPath } from '../core/types';
 import { SDKInternalsRegistry } from '../core/internals';
-import type { OrganizationIdResolver } from '../core/organization/organization-id-resolver';
 
 export interface ApiResponse<T> {
   data: T;
@@ -40,7 +39,6 @@ export interface ApiResponse<T> {
 export class BaseService {
   // Private field - not visible via Object.keys() or any reflection
   #apiClient: ApiClient;
-  #organizationIdResolver: OrganizationIdResolver;
 
   /**
    * SDK configuration (read-only). Available to subclasses so they can
@@ -82,17 +80,6 @@ export class BaseService {
     const { config, context, tokenManager, folderKey } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
     this.config = { folderKey };
-    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
-  }
-
-  /**
-   * Resolves the organization (partition) GUID for APIs that key on it rather than the
-   * organization name. Resolved once per SDK instance and shared across services.
-   *
-   * @returns Promise resolving to the organization GUID
-   */
-  protected resolveOrganizationId(): Promise<string> {
-    return this.#organizationIdResolver.resolve();
   }
 
   /**

@@ -13,7 +13,7 @@ import {
   PLATFORM_TEST_CONSTANTS,
   PLATFORM_USER_TEST_CONSTANTS,
 } from '../../../utils/mocks';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { IDENTITY_USER_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 
 // ===== MOCKING =====
@@ -51,6 +51,19 @@ describe('Platform Users Service Unit Tests', () => {
   });
 
   describe('getAll', () => {
+    it('should share one organization id resolver between services built on the same instance', async () => {
+      const { instance } = createServiceTestDependencies({ organizationId });
+      mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
+
+      await new Users(instance).getAll();
+      const resolver = getPrivateSDK(instance).organizationIdResolver;
+      await new Users(instance).getAll();
+
+      expect(resolver).toBeDefined();
+      expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
+      expect(mockApiClient.get.mock.calls[1][0]).toBe(IDENTITY_USER_ENDPOINTS.GET_ALL(organizationId));
+    });
+
     it('should retrieve users from the organization user listing endpoint', async () => {
       mockApiClient.get.mockResolvedValue(createRawPlatformUserListResponse());
 
@@ -278,18 +291,17 @@ describe('Platform Users Service Unit Tests', () => {
   });
 
   describe('updateById', () => {
-    it('should PUT the update to the user URL and rename succeeded to success', async () => {
+    it('should PUT the update to the user URL and resolve when Identity reports success', async () => {
       mockApiClient.put.mockResolvedValue(createRawPlatformUserUpdateResult());
 
-      const result = await usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME });
+      await expect(
+        usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME })
+      ).resolves.toBeUndefined();
 
       expect(mockApiClient.put).toHaveBeenCalledTimes(1);
       const [endpoint, body] = mockApiClient.put.mock.calls[0];
       expect(endpoint).toBe(IDENTITY_USER_ENDPOINTS.GET_BY_ID(userId));
       expect(body.displayName).toBe(PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME);
-      expect(result.success).toBe(true);
-      expect(result.errors).toEqual([]);
-      expect(result).not.toHaveProperty('succeeded');
     });
 
     it('should send group changes under the wire groupIDs casing', async () => {
@@ -307,25 +319,32 @@ describe('Platform Users Service Unit Tests', () => {
       expect(body).not.toHaveProperty('groupIdsToRemove');
     });
 
-    it('should surface API-reported failures as success false with errors', async () => {
+    it('should throw ValidationError carrying the reasons when Identity rejects the update', async () => {
       mockApiClient.put.mockResolvedValue(createRawPlatformUserUpdateResult({
         succeeded: false,
         errors: [{ code: 'DuplicateEmail', description: 'Email is already taken.' }],
       }));
 
-      const result = await usersService.updateById(userId, { email: PLATFORM_USER_TEST_CONSTANTS.EMAIL });
+      const attempt = usersService.updateById(userId, { email: PLATFORM_USER_TEST_CONSTANTS.EMAIL });
 
-      expect(result.success).toBe(false);
-      expect(result.errors).toEqual([{ code: 'DuplicateEmail', description: 'Email is already taken.' }]);
+      await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+      await expect(attempt).rejects.toThrow('Email is already taken. (DuplicateEmail)');
     });
 
-    it('should normalize a null errors field to an empty array', async () => {
+    it('should throw ValidationError when Identity rejects the update without listing errors', async () => {
+      mockApiClient.put.mockResolvedValue(createRawPlatformUserUpdateResult({ succeeded: false, errors: null }));
+
+      await expect(
+        usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME })
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it('should resolve when Identity reports success with a null errors field', async () => {
       mockApiClient.put.mockResolvedValue(createRawPlatformUserUpdateResult({ errors: null }));
 
-      const result = await usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME });
-
-      expect(result.success).toBe(true);
-      expect(result.errors).toEqual([]);
+      await expect(
+        usersService.updateById(userId, { displayName: PLATFORM_USER_TEST_CONSTANTS.DISPLAY_NAME })
+      ).resolves.toBeUndefined();
     });
 
     it('should throw ValidationError when userId is empty', async () => {

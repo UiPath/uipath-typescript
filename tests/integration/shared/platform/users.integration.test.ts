@@ -145,10 +145,7 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
     it('should update the display name and leave other profile fields untouched', async () => {
       const newDisplayName = `sdk-it-${generateRandomString(8)}`;
 
-      const result = await users.updateById(mutableUserId, { displayName: newDisplayName });
-
-      expect(result.success).toBe(true);
-      expect(result.errors).toEqual([]);
+      await users.updateById(mutableUserId, { displayName: newDisplayName });
 
       const after = await users.getById(mutableUserId);
       expect(after.displayName).toBe(newDisplayName);
@@ -164,9 +161,7 @@ describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
       const user = await users.getById(mutableUserId);
       const newDisplayName = `sdk-it-${generateRandomString(8)}`;
 
-      const result = await user.update({ displayName: newDisplayName });
-
-      expect(result.success).toBe(true);
+      await user.update({ displayName: newDisplayName });
 
       const after = await users.getById(mutableUserId);
       expect(after.displayName).toBe(newDisplayName);

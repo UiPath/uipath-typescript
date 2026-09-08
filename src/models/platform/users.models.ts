@@ -7,7 +7,6 @@ import type {
   RawPlatformUserGetResponse,
   PlatformUserGetAllOptions,
   PlatformUserUpdateOptions,
-  PlatformUserUpdateResponse,
 } from './users.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
@@ -91,10 +90,16 @@ export interface PlatformUserServiceModel {
    * @param userId - GUID of the user
    * @returns The user, as a {@link PlatformUserGetResponse}
    *
-   * @example
+   * @example Basic usage
    * ```typescript
    * const user = await users.getById('<userId>');
    * console.log(`${user.userName} last signed in at ${user.lastLoginTime}`);
+   * ```
+   *
+   * @example Find the user id by email first
+   * ```typescript
+   * const { items } = await users.getAll({ searchTerm: 'sarah@example.com' });
+   * const user = await users.getById(items[0].id);
    * ```
    */
   getById(userId: string): Promise<PlatformUserGetResponse>;
@@ -109,18 +114,21 @@ export interface PlatformUserServiceModel {
    *
    * Group IDs can be read from any user's `groupIds` (e.g. via `users.getById()`).
    *
+   * Resolves once the change is applied. Input Identity rejects (for example an email
+   * that is already taken) surfaces as a `ValidationError` carrying the reason.
+   *
    * @param userId - GUID of the user to update
    * @param update - The fields to change
-   * @returns The update result, as a {@link PlatformUserUpdateResponse}
+   * @returns Promise that resolves when the update has been applied
    *
    * @example Add a user to a group
    * ```typescript
-   * const result = await users.updateById('<userId>', {
+   * // Find the user first, e.g. by email
+   * const { items } = await users.getAll({ searchTerm: 'sarah@example.com' });
+   *
+   * await users.updateById(items[0].id, {
    *   groupIdsToAdd: ['<groupId>'],
    * });
-   * if (!result.success) {
-   *   console.error(result.errors);
-   * }
    * ```
    *
    * @example Update profile fields
@@ -131,7 +139,7 @@ export interface PlatformUserServiceModel {
    * });
    * ```
    */
-  updateById(userId: string, update: PlatformUserUpdateOptions): Promise<PlatformUserUpdateResponse>;
+  updateById(userId: string, update: PlatformUserUpdateOptions): Promise<void>;
 }
 
 /**
@@ -142,9 +150,9 @@ export interface PlatformUserMethods {
    * Updates this user. Only the fields present in `update` are changed.
    *
    * @param update - The fields to change
-   * @returns Promise resolving to the update result
+   * @returns Promise that resolves when the update has been applied
    */
-  update(update: PlatformUserUpdateOptions): Promise<PlatformUserUpdateResponse>;
+  update(update: PlatformUserUpdateOptions): Promise<void>;
 }
 
 /**
@@ -159,7 +167,7 @@ function createPlatformUserMethods(
   service: PlatformUserServiceModel
 ): PlatformUserMethods {
   return {
-    async update(update: PlatformUserUpdateOptions): Promise<PlatformUserUpdateResponse> {
+    async update(update: PlatformUserUpdateOptions): Promise<void> {
       if (!userData.id) throw new Error('User ID is undefined');
 
       return service.updateById(userData.id, update);
