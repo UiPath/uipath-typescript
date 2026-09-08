@@ -283,11 +283,6 @@ export function resolveBaseUrl(config: IntegrationConfig, authMode: AuthMode): s
   return authMode === 'user' ? config.minterBaseUrl ?? config.baseUrl : config.baseUrl;
 }
 
-/** Whether any configured credential can satisfy the requirement. */
-export function canAuthenticate(requirement: AuthRequirement): boolean {
-  return resolveAuthModes(requirement).length > 0;
-}
-
 /**
  * Resets the cached configuration (useful for testing)
  */

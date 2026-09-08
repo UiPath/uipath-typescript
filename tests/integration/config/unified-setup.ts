@@ -29,7 +29,7 @@ import { BusinessApps } from '../../../src/services/maestro/business-apps';
 import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequirement, AuthMode,
   resolveBaseUrl,
 } from './test-config';
-export { canAuthenticate, resolveAuthModes } from './test-config';
+export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
@@ -209,7 +209,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
  */
 export async function initializeServices(
   mode: InitMode,
-  authMode: AuthMode = 'pat'
+  authMode: AuthMode,
 ): Promise<TestServices> {
   if (servicesInstance && currentMode === mode && currentAuthMode === authMode) {
     return servicesInstance;

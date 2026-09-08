@@ -220,6 +220,12 @@ jobs:
         # Network-bound suite: vitest's CPU-based default serializes on this 2-vCPU runner; 2 workers balances speed against tenant stall exposure.
         run: npm run test:integration:coverage -- --run --maxWorkers=2
 
+      # Runners are reused, so the config file — which holds the minted token —
+      # must not outlive the job.
+      - name: Remove integration test configuration
+        if: always()
+        run: rm -f tests/.env.integration
+
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:

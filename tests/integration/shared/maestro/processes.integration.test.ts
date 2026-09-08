@@ -4,7 +4,7 @@ import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTime
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () => {
+describeIntegration('Maestro Processes - Integration Tests', 'both', modes, (_mode, authMode) => {
   describe('getAll', () => {
     it('should retrieve all Maestro processes', async () => {
       const { maestroProcesses } = getServices();
@@ -156,32 +156,32 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopRunCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopRunCount', () => {
     it('should retrieve top processes by run count', async () => {
       const { maestroProcesses } = getServices();
       await testGetTopRunCount(maestroProcesses);
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getInstanceStatusTimeline', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date', async () => {
       const { maestroProcesses } = getServices();
       await testGetInstanceStatusTimeline(maestroProcesses);
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getIncidentsTimeline', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getIncidentsTimeline', () => {
     it('should retrieve incident counts bucketed by time', async () => {
       const { maestroProcesses } = getServices();
       await testGetIncidentsTimeline(maestroProcesses);
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopFaultedCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopFaultedCount', () => {
     it('should retrieve top processes by failure count', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -203,8 +203,8 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopElementFailedCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -227,8 +227,8 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopExecutionDuration', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopExecutionDuration', () => {
     it('should retrieve top processes by duration', async () => {
       const { maestroProcesses } = getServices();
       const now = new Date();
@@ -289,16 +289,16 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getElementStats', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getElementStats', () => {
     it('should retrieve element stats for a process', async () => {
       const { maestroProcesses } = getServices();
       await testGetElementStats(maestroProcesses, 'processes');
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getInstanceStats', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getInstanceStats', () => {
     it('should retrieve instance stats for a process', async () => {
       const { maestroProcesses } = getServices();
       await testGetInstanceStats(maestroProcesses, 'processes');
