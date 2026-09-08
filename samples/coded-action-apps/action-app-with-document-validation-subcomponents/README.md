@@ -108,7 +108,7 @@ Reporting an exception does not complete the action — `submitExceptionReport` 
 Three rules govern the composition, and each one is a silent failure if broken:
 
 1. **Fetch the artifacts once.** `useDuDocumentArtifacts` runs in the parent and the same `artifacts` object is passed to all five panels. Calling it per panel re-downloads the same document once per panel.
-2. **Only `CompactFieldsForm` gets `sdk` + `data` + `folderId`.** It owns persistence — submit, save-as-draft and report-exception. The other four take the pre-fetched artifacts only.
+2. **Only `CompactFieldsForm` gets `sdk` + `data`.** It owns persistence — submit, save-as-draft and report-exception. The other four take the pre-fetched artifacts only.
 3. **`persistent: false`.** These panels live in a static grid and are never re-parented. Left on, React StrictMode's throwaway unmount calls `forceDestroy()` and the panel renders blank.
 
 Because the doc-type and business-rules panels are rendered standalone, the fields form hides its built-in copies via `options: { hideBusinessRules: true, hideDocumentTypeField: true }` — otherwise each appears twice.

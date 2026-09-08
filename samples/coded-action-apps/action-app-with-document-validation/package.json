@@ -29,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
     "@uipath/coded-apps-dev": "^1.0.0-beta.1",
+    "@uipath/du-validation-station-wc": "1.0.0-rc.1",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^5.2.0",
