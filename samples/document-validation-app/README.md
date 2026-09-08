@@ -84,20 +84,20 @@ src/
 
 ### Validation station runtime assets
 
-The validation station web component resolves several files at runtime (relative to its own bundle): the `du-assets/` folder (PDF.js worker, cmaps, wasm, i18n) plus `styles.css`, `fonts.css`, and `media/`. `vite.config.ts` handles these in two ways:
+The validation station ships as a **separate web-component bundle** — `main.js`, `polyfills.js`, their chunks, `styles.css`, `fonts.css` and the PDF and font assets — that is loaded at runtime rather than imported.
 
-- **Build** — a `closeBundle` plugin copies `du-assets/`, `media/`, `styles.css`, and `fonts.css` from `@uipath/du-validation-station-wc` next to the emitted JS chunks so `import.meta.url` resolution finds them.
-- **Dev** — Vite rewrites `.css` requests into JS modules, which would break the component's runtime `fetch("styles.css")`. A dev-only middleware detects that raw fetch (`Sec-Fetch-Dest: empty`) and returns the real CSS instead.
+- **Staging** — `scripts/stage-du-wc.mjs` copies that bundle out of `node_modules/@uipath/du-validation-station-wc` into `public/du-vs-wc`. It runs automatically via the `predev` and `prebuild` hooks, so `npm run dev` and `npm run build` both take care of it. Vite serves `public/` verbatim in dev and copies it to `dist/` on build, which keeps these prebuilt Angular bundles out of Vite's module graph.
+- **Loading** — `src/main.tsx` calls `configureValidationStationWc({ includeFonts: true })`, which loads the component from `<app base>/du-vs-wc` and registers its custom elements. Without this call the elements are never defined and the widgets render nothing. `includeFonts` pulls in `fonts.css`, which carries the Apollo and Material Icons faces — omit it and the icons render blank.
 
-The web component bundle is also excluded from Vite's dependency pre-bundling (`optimizeDeps.exclude`), since pre-bundling rewrites `import.meta.url` and breaks the runtime asset resolution. If these steps are missing, the component silently 404s at runtime — PDFs fail to render and icons fall back to empty boxes.
+After `npm run build`, `dist/du-vs-wc/` should contain `main.js`, `polyfills.js`, `styles.css` and `du-assets/`.
 
 ## Troubleshooting
 
 - **Callback fails with `redirect_uri_mismatch`** — the `redirectUri` in `uipath.json` and the URL you opened in the browser must both match the External Application's Redirect URI character-for-character (scheme, host, port, path, trailing slash).
 - **`insufficient_scope` when loading tasks** — the External Application is missing one of `OR.Tasks`, `OR.Buckets`, or `OR.Folders`. Update the app, then sign out and sign back in to get a new token.
 - **A tab is empty** — the signed-in user has no tasks in that status (Pending / Unassigned / Completed), or no access to the folder the tasks live in. Verify in Action Center first.
-- **Validation station shows a blank panel in production but works in dev** — the asset copy step in `vite.config.ts` did not run, so `du-assets/`, `styles.css`, `fonts.css`, or `media/` are missing from the bundle. Confirm the copy plugin is registered and rebuild.
-- **Icons render as empty boxes or PDFs don't load in dev** — the dev raw-CSS middleware in `vite.config.ts` isn't serving `styles.css`/`fonts.css` to the web component's runtime `fetch`. Confirm the `serve`-only plugin is registered.
+- **Validation station renders nothing** — the web component bundle did not load. Check the console for a `configureValidationStationWc` error and the network tab for 404s under `/du-vs-wc/`; `npm run stage-du-wc` re-stages it.
+- **Icons render as empty boxes** — `fonts.css` is missing or `includeFonts` is not set on the `configureValidationStationWc()` call in `src/main.tsx`.
 
 ## Further reading
 

@@ -14,7 +14,7 @@ It lists pending Document Validation tasks from UiPath Action Center and, for th
 
 - OAuth 2.0 authorization code + PKCE login against UiPath Cloud using the `@uipath/uipath-typescript` SDK
 - Listing Document Validation tasks (`Tasks.getAll` with an OData filter) and hydrating one with its full validation payload (`Tasks.getById` with `TaskType.DocumentValidation`)
-- Fetching the document artifacts **once** with the `useBucketArtifacts` hook and sharing them across subcomponents
+- Fetching the document artifacts **once** with the `useDuDocumentArtifacts` hook and sharing them across subcomponents
 - Composing `DocumentViewer`, `CompactDocTypeField`, `CompactFieldsForm`, `CompactTableEditor`, and `CompactBusinessRules` into a custom layout linked by a shared `instanceId`
 - Using `options` flags (`hideBusinessRules`, `hideDocumentTypeField`, `emitDtoStateChanges`) so the fields form drops the panels that are rendered standalone
 - Submitting the completed task (`Task.complete`), saving in-progress edits (save as draft), and reporting a document as an exception via `OrchestratorDuModule.submitExceptionReport`
@@ -89,12 +89,12 @@ src/
 
 ### Validation station runtime assets
 
-The validation station web component resolves several files at runtime (relative to its own bundle): the `du-assets/` folder (PDF.js worker, cmaps, wasm, i18n) plus `styles.css`, `fonts.css`, and `media/`. `vite.config.ts` handles these in two ways:
+The validation station ships as a **separate web-component bundle** — `main.js`, `polyfills.js`, their chunks, `styles.css`, `fonts.css` and the PDF and font assets — that is loaded at runtime rather than imported.
 
-- **Build** — a `closeBundle` plugin copies `du-assets/`, `media/`, `styles.css`, and `fonts.css` from `@uipath/du-validation-station-wc` next to the emitted JS chunks so `import.meta.url` resolution finds them.
-- **Dev** — Vite rewrites `.css` requests into JS modules, which would break the component's runtime `fetch("styles.css")`. A dev-only middleware detects that raw fetch (`Sec-Fetch-Dest: empty`) and returns the real CSS instead.
+- **Staging** — `scripts/stage-du-wc.mjs` copies that bundle out of `node_modules/@uipath/du-validation-station-wc` into `public/du-vs-wc`. It runs automatically via the `predev` and `prebuild` hooks, so `npm run dev` and `npm run build` both take care of it. Vite serves `public/` verbatim in dev and copies it to `dist/` on build, which keeps these prebuilt Angular bundles out of Vite's module graph.
+- **Loading** — `src/main.tsx` calls `configureValidationStationWc({ includeFonts: true })`, which loads the component from `<app base>/du-vs-wc` and registers its custom elements. Without this call the elements are never defined and the widgets render nothing. `includeFonts` pulls in `fonts.css`, which carries the Apollo and Material Icons faces — omit it and the icons render blank.
 
-The web component bundle is also excluded from Vite's dependency pre-bundling (`optimizeDeps.exclude`), since pre-bundling rewrites `import.meta.url` and breaks the runtime asset resolution. If these steps are missing, the component silently 404s at runtime — PDFs fail to render and icons fall back to empty boxes.
+After `npm run build`, `dist/du-vs-wc/` should contain `main.js`, `polyfills.js`, `styles.css` and `du-assets/`.
 
 > **Use `persistent: false`.** With `persistent` on, StrictMode's throwaway unmount triggers `forceDestroy()` on the underlying element, so it never re-renders (a blank panel). These panels live in a static grid and are never re-parented, so `false` is safe.
 
