@@ -17,12 +17,9 @@ interface Notification {
   severity: 'success' | 'error';
 }
 
-function buildFilter(): string {
-  return (
-    `Type eq '${TaskType.DocumentValidation}' and IsDeleted eq false ` +
-    `and (Status eq '${TaskStatus.Pending}' or Status eq '${TaskStatus.Unassigned}')`
-  );
-}
+const PENDING_TASK_FILTER =
+  `Type eq '${TaskType.DocumentValidation}' and IsDeleted eq false ` +
+  `and (Status eq '${TaskStatus.Pending}' or Status eq '${TaskStatus.Unassigned}')`;
 
 /**
  * Owns the review workflow: lists pending document validation tasks, hydrates
@@ -63,7 +60,7 @@ function ReviewInbox() {
     void (async () => {
       try {
         const result = await tasks.getAll({
-          filter: buildFilter(),
+          filter: PENDING_TASK_FILTER,
           orderby: 'Priority desc,CreationTime asc',
           pageSize: 30,
         });

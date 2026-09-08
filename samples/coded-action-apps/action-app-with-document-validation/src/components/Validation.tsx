@@ -109,17 +109,6 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       });
   }, [onInitTheme]);
 
-  const completeTask = useCallback(async (outcome: string, payload: unknown) => {
-    // pass on current task data to completeTask
-    const result = await codedActionApp.completeTask(outcome, payload);
-    if (!result.success) {
-      codedActionApp.showMessage(
-        result.errorMessage ?? 'Failed to complete the action.',
-        MessageSeverity.Error,
-      );
-    }
-  }, []);
-
   // Submit finished: the widget has run ProcessExtractedData and uploaded the validated
   // result. It renders nothing on failure, so every error has to surface from here.
   //
@@ -138,12 +127,20 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
       setPendingAction('submit');
       try {
-        await completeTask(SUBMIT_OUTCOME, taskData);
+        // The whole input bag goes back: completeTask REPLACES the task's data, so anything
+        // left out is recorded as empty.
+        const completed = await codedActionApp.completeTask(SUBMIT_OUTCOME, taskData);
+        if (!completed.success) {
+          codedActionApp.showMessage(
+            completed.errorMessage ?? 'Failed to complete the action.',
+            MessageSeverity.Error,
+          );
+        }
       } finally {
         setPendingAction(null);
       }
     },
-    [completeTask, taskData],
+    [taskData],
   );
 
   // A draft leaves the action open for the reviewer to come back to, so there is nothing to
