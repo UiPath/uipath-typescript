@@ -3566,11 +3566,11 @@
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="p">&lt;</span><span class="nt">base</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/your-app-name/&quot;</span><span class="p">&gt;</span>
 </code></pre></div>
 <h3 id="2-add-action-center-redirect-uri-in-your-external-application">2. Add Action Center redirect uri in your external application<a class="headerlink" href="#2-add-action-center-redirect-uri-in-your-external-application" title="Permanent link">&para;</a></h3>
-<p>Add redirect uri <code>https://cloud.uipath.com/&lt;orgId&gt;/&lt;tenantId&gt;/actions_</code> to the external application you are using in <code>uipath.json</code>. Ignore if it already exists.
-(It is added automatically the first time any coded action app using this external application is deployed.)</p>
+<p>Add redirect uri <code>https://&lt;host&gt;/&lt;orgId&gt;/&lt;tenantId&gt;/actions_</code> to the external application you are using in <code>uipath.json</code>, where <code>&lt;host&gt;</code> is the environment you sign in to (<code>cloud.uipath.com</code>, <code>alpha.uipath.com</code>, …).</p>
+<p><code>&lt;orgId&gt;</code> and <code>&lt;tenantId&gt;</code> are the <strong>GUIDs, not the org and tenant names shown in the browser address bar</strong>. This entry is normally added the first time a coded action app using this external application is deployed, but confirm it is there — a missing or name-based entry fails with <code>invalid_request</code> / <code>Invalid redirect_uri</code>. To read the exact value your app sends, open it and copy <code>redirect_uri</code> from the <code>/identity_/connect/authorize</code> request in the browser's network tab.</p>
 <h3 id="3-open-action-center-coded-action-app-debug-page">3. Open Action Center Coded Action App Debug page<a class="headerlink" href="#3-open-action-center-coded-action-app-debug-page" title="Permanent link">&para;</a></h3>
 <p>Action Center offers a task-simulation experience for coded action apps running on localhost.
-Open <code>https://cloud.uipath.com/&lt;orgName&gt;/&lt;tenantName&gt;/actions_/debug/coded-action-app</code>.
+Open <code>https://&lt;host&gt;/&lt;orgName&gt;/&lt;tenantName&gt;/actions_/debug/coded-action-app</code> — this page addresses your org and tenant by <strong>name</strong>, unlike the redirect URI above.
 Fill in the details in the page and load the app.</p>
 <p><img alt="Coded Action App Local Development" src="../../assets/Coded-action-app-local-development.png" /></p>
 <hr />
