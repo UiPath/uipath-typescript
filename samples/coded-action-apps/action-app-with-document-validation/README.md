@@ -51,7 +51,34 @@ cp uipath.json.example uipath.json
 - **`clientId`** — the App ID of your registered External Application in UiPath Cloud
 - **`scope`** - the scopes required by the app. This must be a subset of the scopes granted to the external client above.
 
-### 3. Deploy to UiPath Cloud
+### 3. Run it locally
+
+A coded action app is an iframe inside Action Center, and it gets its task over `postMessage`
+from the page around it. Opening `http://localhost:5173` directly therefore fails with
+**"Discarding event from invalid origin"** — there is no host to hand it a task. Action Center
+provides a debug page that plays that host:
+
+```bash
+npm run dev
+```
+
+Then open `https://<host>/<orgName>/<tenantName>/actions_/debug/coded-action-app` (`<host>` being
+the environment you sign in to, and org and tenant addressed here by **name**) and fill in:
+
+| Field | Value |
+|---|---|
+| Localhost URL | `http://localhost:5173` |
+| Folder | the folder holding the storage bucket named in your payload |
+| Task Data (JSON) | `{ "contentValidationData": { … } }` |
+
+The quickest way to get a real `contentValidationData` is **Load from Task ID** with the id of an
+existing Document Understanding validation action; otherwise paste the payload from one. It has to
+name a bucket the signed-in user can read, or the widget loads no document.
+
+The redirect URI from the pre-requisites must already be registered, or the app loads and then
+fails to fetch a token.
+
+### 4. Deploy to UiPath Cloud
 
 Build and deploy using the [`UiPath CLI`](https://uipath.github.io/uipath-typescript/coded-apps/getting-started/#deploy):
 
@@ -94,6 +121,9 @@ Reporting an exception does not complete the action — `submitExceptionReport` 
 ---
 
 ## Viewing the coded action app in Action Center
+
+This is the **deployed** app driven by a real process. To run the version on your machine
+against a simulated task instead, see [Run it locally](#3-run-it-locally) above.
 
 1. Import the [Template With Document Validation.uis](./Template%20With%20Document%20Validation.uis) solution in **Studio Web**.
 
