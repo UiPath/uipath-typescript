@@ -3401,6 +3401,9 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <p><strong>getAllRecords</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Get all records from this entity</p>
+<p><code>MULTILINE_MAX</code> fields are returned as a bounded preview, not necessarily the whole
+value (see <a href="../../enumerations/EntityFieldDataType/#multiline_max">EntityFieldDataType.MULTILINE_MAX</a>); use <a href="#getrecord">getRecord</a> for the
+guaranteed full value.</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3442,6 +3445,7 @@ Use this method if you need trigger events to fire for the deleted record.</p>
 <p><strong>getRecord</strong>(<code>recordId</code>: <code>string</code>, <code>options?</code>: <a href="../EntityGetRecordByIdOptions/"><code>EntityGetRecordByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single record from this entity by record ID</p>
+<p>Returns the full record, including the complete content of <code>MULTILINE_MAX</code> fields.</p>
 <h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3579,6 +3583,9 @@ trigger events to fire for each inserted record.</p>
 <p><strong>queryRecords</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../EntityRecord/"><code>EntityRecord</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination</p>
+<p><code>MULTILINE_MAX</code> fields are returned as a bounded preview, not necessarily the whole
+value (see <a href="../../enumerations/EntityFieldDataType/#multiline_max">EntityFieldDataType.MULTILINE_MAX</a>); use <a href="#getrecord">getRecord</a> for the
+guaranteed full value.</p>
 <p>Cross-entity joins are supported via the <code>joins</code> option — see <a href="../EntityJoin/">EntityJoin</a>
 for constraints and the result-row key format.</p>
 <h4 id="type-parameters_1">Type Parameters<a class="headerlink" href="#type-parameters_1" title="Permanent link">&para;</a></h4>
@@ -3731,6 +3738,10 @@ for constraints and the result-row key format.</p>
 <p><strong>updateRecord</strong>(<code>recordId</code>: <code>string</code>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpdateRecordOptions/"><code>EntityUpdateRecordOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateRecordResponse/"><code>EntityUpdateRecordResponse</code></a>&gt;</p>
 </blockquote>
 <p>Update a single record in this entity</p>
+<p>Omit <code>MULTILINE_MAX</code> keys unless you intend to replace their content: a record echoed back
+from a list or query carries only a preview, and writing that overwrites the stored value
+(see <a href="../../enumerations/EntityFieldDataType/#multiline_max">EntityFieldDataType.MULTILINE_MAX</a>). Those fields are not returned in the
+response either.</p>
 <p>Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
 Use this method if you need trigger events to fire for the updated record.</p>
 <h4 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h4>
@@ -3769,6 +3780,10 @@ Use this method if you need trigger events to fire for the updated record.</p>
 <p><strong>updateRecords</strong>(<code>data</code>: <a href="../EntityRecord/"><code>EntityRecord</code></a>[], <code>options?</code>: <a href="../EntityUpdateRecordsOptions/"><code>EntityUpdateRecordsOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpdateResponse/"><code>EntityUpdateResponse</code></a>&gt;</p>
 </blockquote>
 <p>Update data in this entity</p>
+<p>Omit <code>MULTILINE_MAX</code> keys unless you intend to replace their content: a record echoed back
+from a list or query carries only a preview, and writing that overwrites the stored value
+(see <a href="../../enumerations/EntityFieldDataType/#multiline_max">EntityFieldDataType.MULTILINE_MAX</a>). Those fields are not returned in the
+response either.</p>
 <p>Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use <a href="#updaterecord">updateRecord</a> if you need
 trigger events to fire for each updated record.</p>
 <h4 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h4>

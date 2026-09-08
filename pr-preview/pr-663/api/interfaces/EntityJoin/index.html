@@ -3076,7 +3076,9 @@ must share the same <a href="../../enumerations/JoinType/">JoinType</a>.</p>
 resolve only while unique across the joined entities. Result rows use the
 same qualified keys; a LEFT join with no match omits the related entity's
 keys. Joins are not supported on choice-set, relationship, file, encrypted,
-or system fields, nor on folder-scoped entities.</p>
+or system fields, nor on folder-scoped entities. Naming a <code>MULTILINE_MAX</code> field in a
+join condition is rejected; selecting one is allowed, but its key is omitted from the
+result rows, so read the record by ID to get its value.</p>
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">EntityJoin</span><span class="p">,</span><span class="w"> </span><span class="nx">JoinType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/entities&#39;</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>

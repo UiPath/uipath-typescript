@@ -3319,14 +3319,17 @@ membership check against a known group needs no extra call.</p>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformUserGetResponse/"><code>PlatformUserGetResponse</code></a>&gt;</p>
 <p>The user, as a <a href="../../type-aliases/PlatformUserGetResponse/">PlatformUserGetResponse</a></p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">);</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">userName</span><span class="si">}</span><span class="sb"> last signed in at </span><span class="si">${</span><span class="nx">user</span><span class="p">.</span><span class="nx">lastLoginTime</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">searchTerm</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;sarah@example.com&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateById</strong>(<code>userId</code>: <code>string</code>, <code>update</code>: <a href="../PlatformUserUpdateOptions/"><code>PlatformUserUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../PlatformUserUpdateResponse/"><code>PlatformUserUpdateResponse</code></a>&gt;</p>
+<p><strong>updateById</strong>(<code>userId</code>: <code>string</code>, <code>update</code>: <a href="../PlatformUserUpdateOptions/"><code>PlatformUserUpdateOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Updates a user.</p>
 <p>Only the fields present in <code>update</code> are changed — omitted fields keep their
@@ -3334,6 +3337,8 @@ current values. Group membership is edited incrementally through
 <code>groupIdsToAdd</code> / <code>groupIdsToRemove</code>, which makes this the call for granting or
 revoking a user's access ("add user to the Administrators group").</p>
 <p>Group IDs can be read from any user's <code>groupIds</code> (e.g. via <code>users.getById()</code>).</p>
+<p>Resolves once the change is applied. Input Identity rejects (for example an email
+that is already taken) surfaces as a <code>ValidationError</code> carrying the reason.</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3357,20 +3362,20 @@ revoking a user's access ("add user to the Administrators group").</p>
 </tbody>
 </table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../PlatformUserUpdateResponse/"><code>PlatformUserUpdateResponse</code></a>&gt;</p>
-<p>The update result, as a <a href="../PlatformUserUpdateResponse/">PlatformUserUpdateResponse</a></p>
-<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nx">groupIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">});</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">.</span><span class="nx">success</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">errors</span><span class="p">);</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise that resolves when the update has been applied</p>
+<h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Find the user first, e.g. by email</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">searchTerm</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;sarah@example.com&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nx">groupIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Sarah C.&#39;</span><span class="p">,</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nx">isActive</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">users</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nx">displayName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Sarah C.&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nx">isActive</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">});</span>
 </code></pre></div>
 
 

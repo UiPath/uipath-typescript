@@ -400,7 +400,7 @@ if (customerEntity) {
 
 Gets entity records by entity ID
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 #### Type Parameters
 
@@ -609,7 +609,7 @@ Gets entity records by entity name.
 
 Sibling of [getAllRecords](#getallrecords) that addresses the entity by name — useful when you only have the resource name (e.g. solution binding overrides), avoiding a lookup to resolve the ID.
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordByName](#getrecordbyname) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordByName](#getrecordbyname) for the guaranteed full value.
 
 #### Type Parameters
 
@@ -860,7 +860,7 @@ await entities.insertRecordsById(<entityId>, [
 
 Queries entity records with filters, sorting, aggregates, and SDK-managed pagination, identified by ref (`{ id }` or `{ name }`)
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
 
@@ -927,7 +927,7 @@ Promise resolving to [NonPaginatedResponse](../NonPaginatedResponse/) without pa
 
 Use [queryRecords](#queryrecords) with `{ id }` or `{ name }` instead. This method will be removed in a future major version.
 
-`MULTILINE_MAX` fields are returned as a size marker (e.g. `"HasValue=true Length=512"`) instead of the full content — use [getRecordById](#getrecordbyid) to retrieve the full value.
+`MULTILINE_MAX` fields are returned as a bounded preview, not necessarily the whole value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)); use [getRecordById](#getrecordbyid) for the guaranteed full value.
 
 Cross-entity joins are supported via the `joins` option — see [EntityJoin](../EntityJoin/) for constraints and the result-row key format.
 
@@ -1078,6 +1078,8 @@ await entities.updateById(<id>, {
 
 Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
 
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
 Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records. Use this method if you need trigger events to fire for the updated record.
 
 #### Parameters
@@ -1111,6 +1113,8 @@ await entities.updateRecord({ name: "Customer" }, "<recordId>", { name: "John Up
 > **updateRecordById**(`entityId`: `string`, `recordId`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpdateRecordOptions`): `Promise`\<`EntityUpdateRecordResponse`>
 
 Updates a single record in an entity by entity ID
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
 
 #### Parameters
 
@@ -1154,6 +1158,8 @@ await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }
 
 Updates data in an entity, identified by ref (`{ id }` or `{ name }`)
 
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
+
 Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use [updateRecord](#updaterecord) if you need trigger events to fire for each updated record.
 
 #### Parameters
@@ -1186,6 +1192,8 @@ await entities.updateRecords({ name: "Customer" }, [{ Id: "123", name: "John Upd
 > **updateRecordsById**(`id`: `string`, `data`: `EntityRecord`[], `options?`: `EntityUpdateRecordsOptions`): `Promise`\<`EntityUpdateResponse`>
 
 Updates data in an entity by entity ID
+
+Omit `MULTILINE_MAX` keys unless you intend to replace their content: a record echoed back from a list or query carries only a preview, and writing that overwrites the stored value (see [EntityFieldDataType.MULTILINE_MAX](../../enumerations/EntityFieldDataType/#multiline_max)). Those fields are not returned in the response either.
 
 #### Parameters
 

@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformUserUpdateError/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/JobAttachmentSchema/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>PlatformUserUpdateError - UiPath TypeScript SDK</title>
+        <title>JobAttachmentSchema - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PlatformUserUpdateError
+              JobAttachmentSchema
             
           </span>
         </div>
@@ -3050,9 +3050,15 @@
   
 
 
-  <h1>PlatformUserUpdateError</h1>
+  <h1>JobAttachmentSchema</h1>
 
-<p>A single failure reported by a user update.</p>
+<p>A job attachment as delivered to an automation's input by the platform.</p>
+<p>Declare a field of this type in a coded function's input contract to get a file
+picker in Studio Web and Orchestrator. Carries metadata only — fetch the content
+with <code>attachments.getById()</code>.</p>
+<p>Field names mirror the platform's <code>job-attachment</code> schema verbatim: the value is
+injected into the input untransformed, and tooling matches attachment inputs on
+these names, so they must not change.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3064,14 +3070,24 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="code"></a> <code>code</code></td>
+<td><a id="fullname"></a> <code>FullName</code></td>
 <td><code>string</code></td>
-<td>Machine-readable error code.</td>
+<td>Name of the attachment file, including its extension</td>
 </tr>
 <tr>
-<td><a id="description"></a> <code>description</code></td>
+<td><a id="id"></a> <code>ID</code></td>
 <td><code>string</code></td>
-<td>Human-readable description of the failure.</td>
+<td>UUID of the attachment</td>
+</tr>
+<tr>
+<td><a id="metadata"></a> <code>Metadata?</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>string</code>&gt;</td>
+<td>Additional metadata associated with the attachment</td>
+</tr>
+<tr>
+<td><a id="mimetype"></a> <code>MimeType</code></td>
+<td><code>string</code></td>
+<td>MIME type of the attachment content</td>
 </tr>
 </tbody>
 </table>
