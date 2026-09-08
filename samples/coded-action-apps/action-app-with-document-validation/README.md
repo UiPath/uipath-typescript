@@ -63,7 +63,7 @@ uip codedapp publish --type Action
 uip codedapp deploy
 ```
 
-> The Validation Station's web component loads its stylesheets, fonts and PDF assets **at runtime**, so `vite.config.ts` copies them next to the build output. A green build does not prove this worked — after `npm run build`, check that `dist/assets/` contains `du-assets/`, `media/`, `styles.css` and `fonts.css`.
+> The Validation Station ships as a **separate web-component bundle**, loaded at runtime from `<app base>/du-vs-wc` by the `configureValidationStationWc()` call in `src/main.tsx`. `scripts/stage-du-wc.mjs` copies that bundle out of `node_modules` into `public/du-vs-wc` — it runs automatically via the `predev` and `prebuild` hooks, so `npm run dev` and `npm run build` both take care of it. Vite serves `public/` verbatim in dev and copies it to `dist/` on build, so after `npm run build` you should see `dist/du-vs-wc/` with `main.js`, `polyfills.js`, `styles.css` and `du-assets/`.
 
 ---
 

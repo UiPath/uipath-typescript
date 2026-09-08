@@ -7,7 +7,9 @@ import tsparser from '@typescript-eslint/parser'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // Third-party bundle staged from node_modules by `npm run stage-du-wc`;
+  // its du-assets/ ship .ts sources that are not ours to lint.
+  globalIgnores(['dist', 'public/du-vs-wc']),
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     extends: [
