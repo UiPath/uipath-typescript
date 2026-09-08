@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
+import { awaitRecordVisible } from '../../utils/helpers';
 
 /**
  * Integration tests for entity attachment operations (upload, remove, download)
@@ -55,6 +56,10 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         entityId: ATTACHMENT_CONFIG.entityId,
         recordIds: [recordId],
       });
+
+      // Uploads against a record the attachment path cannot see yet return an
+      // empty-body 404 — wait until the fresh record is addressable.
+      await awaitRecordVisible(entities, ATTACHMENT_CONFIG.entityId, recordId);
     });
 
     afterAll(async () => {

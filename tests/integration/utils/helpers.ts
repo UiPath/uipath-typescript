@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from '../../../src/models/maestro/insights.types';
 import type { IncidentTimelineResponse, InstanceStatusTimelineResponse } from '../../../src/models/maestro';
+import type { EntityCreateFieldOptions, EntityCreateOptions } from '../../../src/models/data-fabric/entities.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -356,4 +357,92 @@ export async function testGetInstanceStats(
 
   expect(result).toBeDefined();
   expectValidInstanceStats(result);
+}
+
+/**
+ * Data Fabric readiness helpers. The platform propagates a newly created
+ * resource asynchronously (authorization records, query indexes, and the
+ * backing SQL table settle after the create/insert API returns), so a test
+ * that uses a resource immediately after creating it is racing that
+ * propagation — observed as 403s on getById of a just-created entity and
+ * 404s uploading to a just-inserted record. These helpers wait for the
+ * resource to be addressable before the test proceeds, following the
+ * sanctioned transient-visibility polling pattern: the try/catch is scoped
+ * to the poll, and the final attempt lets the real error propagate so a
+ * genuinely broken create still fails loudly with its actual cause.
+ */
+
+interface DataFabricEntityReader {
+  getById(entityId: string, options?: { folderKey?: string }): Promise<unknown>;
+  getRecordById(entityId: string, recordId: string, options?: { folderKey?: string }): Promise<{ Id: string }>;
+  create(
+    name: string,
+    fields: EntityCreateFieldOptions[],
+    options?: EntityCreateOptions
+  ): Promise<string>;
+}
+
+const READINESS_ATTEMPTS = 8;
+const READINESS_DELAY_MS = 1500;
+
+/**
+ * Polls until a newly created entity is addressable via getById.
+ */
+export async function awaitEntityReady(
+  entities: DataFabricEntityReader,
+  entityId: string,
+  options?: { folderKey?: string }
+): Promise<void> {
+  for (let attempt = 1; attempt <= READINESS_ATTEMPTS; attempt++) {
+    try {
+      await entities.getById(entityId, options);
+      return;
+    } catch (error) {
+      if (attempt === READINESS_ATTEMPTS) {
+        throw error;
+      }
+      console.warn(`[awaitEntityReady] entity ${entityId} not addressable yet (attempt ${attempt}/${READINESS_ATTEMPTS}):`, error);
+      await wait(READINESS_DELAY_MS);
+    }
+  }
+}
+
+/**
+ * Creates an entity and waits until it is addressable before returning its id —
+ * use instead of a bare create whenever the test immediately operates on the
+ * new entity (reads its metadata, binds a relationship to it, inserts records).
+ */
+export async function createEntityAwaitingReady(
+  entities: DataFabricEntityReader,
+  name: string,
+  fields: EntityCreateFieldOptions[],
+  options?: EntityCreateOptions
+): Promise<string> {
+  const entityId = await entities.create(name, fields, options);
+  await awaitEntityReady(entities, entityId);
+  return entityId;
+}
+
+/**
+ * Polls until a newly inserted record is addressable via getRecordById —
+ * use before uploading attachments to it or asserting it appears in queries.
+ */
+export async function awaitRecordVisible(
+  entities: DataFabricEntityReader,
+  entityId: string,
+  recordId: string,
+  options?: { folderKey?: string }
+): Promise<void> {
+  for (let attempt = 1; attempt <= READINESS_ATTEMPTS; attempt++) {
+    try {
+      await entities.getRecordById(entityId, recordId, options);
+      return;
+    } catch (error) {
+      if (attempt === READINESS_ATTEMPTS) {
+        throw error;
+      }
+      console.warn(`[awaitRecordVisible] record ${recordId} not visible yet (attempt ${attempt}/${READINESS_ATTEMPTS}):`, error);
+      await wait(READINESS_DELAY_MS);
+    }
+  }
 }
