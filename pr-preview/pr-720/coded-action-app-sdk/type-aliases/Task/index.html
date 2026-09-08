@@ -3076,7 +3076,7 @@
   <h1>Task</h1>
 
 <blockquote>
-<p><strong>Task</strong> = { <code>action</code>: <code>string</code> | <code>null</code>; <code>data</code>: <code>unknown</code>; <code>folderId</code>: <code>number</code>; <code>folderName</code>: <code>string</code>; <code>isReadOnly</code>: <code>boolean</code>; <code>jobKey</code>: <code>string</code>; <code>status</code>: <a href="../../enumerations/TaskStatus/"><code>TaskStatus</code></a>; <code>taskId</code>: <code>number</code>; <code>theme</code>: <a href="../../enumerations/Theme/"><code>Theme</code></a>; <code>title</code>: <code>string</code>; }</p>
+<p><strong>Task</strong> = { <code>action</code>: <code>string</code> | <code>null</code>; <code>data</code>: <code>unknown</code>; <code>folderId</code>: <code>number</code>; <code>folderName</code>: <code>string</code>; <code>isReadOnly</code>: <code>boolean</code>; <code>jobKey</code>: <code>string</code> | <code>null</code>; <code>status</code>: <a href="../../enumerations/TaskStatus/"><code>TaskStatus</code></a>; <code>taskId</code>: <code>number</code>; <code>theme</code>: <a href="../../enumerations/Theme/"><code>Theme</code></a>; <code>title</code>: <code>string</code>; }</p>
 </blockquote>
 <p>Details of task opened in Action Center.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
@@ -3112,9 +3112,9 @@
 <hr />
 <h3 id="jobkey">jobKey<a class="headerlink" href="#jobkey" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>jobKey</strong>: <code>string</code></p>
+<p><strong>jobKey</strong>: <code>string</code> | <code>null</code></p>
 </blockquote>
-<p>GUID key of the job which created the task</p>
+<p>GUID key of the job that created the task, or <code>null</code> if the task was not created by a job.</p>
 <hr />
 <h3 id="status">status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h3>
 <blockquote>

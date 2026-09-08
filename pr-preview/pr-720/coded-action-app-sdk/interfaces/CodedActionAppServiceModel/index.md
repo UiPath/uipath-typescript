@@ -90,7 +90,7 @@ console.log(task.isReadOnly); // boolean — disable editing if true
 console.log(task.data);       // the task's form data
 console.log(task.folderId);   // number
 console.log(task.folderName); // string
-console.log(task.jobKey);     // string — GUID key of the job that raised the task
+console.log(task.jobKey);     // string | null — GUID key of the job that created the task
 console.log(task.theme);      // Theme enum — current Action Center UI theme
 
 // Disable the form when task is read-only
