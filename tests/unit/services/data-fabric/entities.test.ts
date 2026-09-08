@@ -401,10 +401,11 @@ describe("EntityService Unit Tests", () => {
 
         // Verify field-level transformations
         entity.fields.forEach((field) => {
-          // sqlType -> fieldDataType
+          // sqlType preserved as raw wire type alongside friendly fieldDataType
           expect(field.fieldDataType).toBeDefined();
           expect(field.fieldDataType.name).toBeDefined();
-          expect(field).not.toHaveProperty("sqlType"); // Raw field should not exist
+          expect(field.sqlType).toBeDefined();
+          expect(typeof field.sqlType!.name).toBe("string");
 
           // Use type assertion to check for any remaining raw field names
           const fieldAsAny = field as any;
@@ -2149,7 +2150,8 @@ describe("EntityService Unit Tests", () => {
       expect(result.fields[0].fieldDataType.name).toBe(
         ENTITY_TEST_CONSTANTS.FIELD_TYPE_UUID,
       );
-      expect(result.fields[0]).not.toHaveProperty("sqlType");
+      // sqlType preserved with raw wire name
+      expect(result.fields[0].sqlType).toEqual({ name: "UNIQUEIDENTIFIER" });
 
       // Bound methods attached (same as getById)
       expect(typeof result.insertRecord).toBe("function");

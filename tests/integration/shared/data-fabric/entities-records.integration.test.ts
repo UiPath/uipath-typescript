@@ -317,6 +317,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(field.name).toBeDefined();
       expect(field.fieldDataType).toBeDefined();
       expect(field.fieldDataType?.name).toBeDefined();
+      expect(field.sqlType).toBeDefined();
+      expect(typeof field.sqlType?.name).toBe('string');
       expect(typeof field.isSystemField).toBe('boolean');
       expect(typeof field.isRequired).toBe('boolean');
 
