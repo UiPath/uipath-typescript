@@ -65,7 +65,7 @@ uip codedapp publish --type Action
 uip codedapp deploy
 ```
 
-> The subcomponents load their stylesheets, fonts and PDF assets **at runtime**, so `vite.config.ts` copies them next to the build output. A green build does not prove this worked — after `npm run build`, check that `dist/assets/` contains `du-assets/`, `media/`, `styles.css` and `fonts.css`.
+> The Validation Station ships as a **separate web-component bundle**, loaded at runtime from `<app base>/du-vs-wc` by the `configureValidationStationWc()` call in `src/main.tsx`. `scripts/stage-du-wc.mjs` copies that bundle out of `node_modules` into `public/du-vs-wc` — it runs automatically via the `predev` and `prebuild` hooks, so `npm run dev` and `npm run build` both take care of it. Vite serves `public/` verbatim in dev and copies it to `dist/` on build, so after `npm run build` you should see `dist/du-vs-wc/` with `main.js`, `polyfills.js`, `styles.css` and `du-assets/`.
 
 ---
 
@@ -107,7 +107,7 @@ Reporting an exception does not complete the action — `submitExceptionReport` 
 
 Three rules govern the composition, and each one is a silent failure if broken:
 
-1. **Fetch the artifacts once.** `useBucketArtifacts` runs in the parent and the same `artifacts` object is passed to all five panels. Calling it per panel re-downloads the same document once per panel.
+1. **Fetch the artifacts once.** `useDuDocumentArtifacts` runs in the parent and the same `artifacts` object is passed to all five panels. Calling it per panel re-downloads the same document once per panel.
 2. **Only `CompactFieldsForm` gets `sdk` + `data` + `folderId`.** It owns persistence — submit, save-as-draft and report-exception. The other four take the pre-fetched artifacts only.
 3. **`persistent: false`.** These panels live in a static grid and are never re-parented. Left on, React StrictMode's throwaway unmount calls `forceDestroy()` and the panel renders blank.
 

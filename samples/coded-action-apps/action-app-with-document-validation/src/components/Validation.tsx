@@ -3,6 +3,9 @@ import {
   ValidationStation,
   ValidationStationLanguage,
   type IValidationStationOptions,
+  type IVsSaveExceptionReportRequest,
+  type IVsSaveValidatedDataAsDraftRequest,
+  type IVsSaveValidatedDataRequest,
   type SaveValidatedDataResult,
 } from '@uipath/ui-widgets-validation-station';
 import { OrchestratorDuModule } from '@uipath/uipath-typescript/orchestrator-du-module';
@@ -76,7 +79,14 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
   const duModule = useMemo(() => new OrchestratorDuModule(sdk), []);
 
-  const data = taskData?.contentValidationData ?? null;
+  // The widget scopes its bucket calls to the folder named on the payload, so fill in the
+  // task's folder when the payload arrived without one.
+  const data = useMemo(() => {
+    const payload = taskData?.contentValidationData;
+    if (!payload) return null;
+    if (payload.FolderId !== undefined || payload.FolderKey !== undefined) return payload;
+    return folderId === null ? payload : { ...payload, FolderId: folderId };
+  }, [taskData, folderId]);
 
   useEffect(() => {
     codedActionApp
@@ -112,11 +122,15 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
   // Submit finished: the widget has run ProcessExtractedData and uploaded the validated
   // result. It renders nothing on failure, so every error has to surface from here.
-  const handleSubmitComplete = useCallback(
-    async (result: SaveValidatedDataResult) => {
-      if (!result.success) {
+  //
+  // `result` is only populated when the widget owned the write-back, which it does here
+  // because it was given `sdk` + `data`. No result means nothing was persisted - treated as
+  // a failure, rather than completing the action over unsaved edits.
+  const handleSubmit = useCallback(
+    async (_request: IVsSaveValidatedDataRequest, result?: SaveValidatedDataResult) => {
+      if (!result?.success) {
         codedActionApp.showMessage(
-          result.error ?? 'Failed to submit the document.',
+          result?.error ?? 'Failed to submit the document.',
           MessageSeverity.Error,
         );
         return;
@@ -134,28 +148,36 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
   // A draft leaves the action open for the reviewer to come back to, so there is nothing to
   // complete here - only the outcome to report.
-  const handleSaveAsDraftComplete = useCallback((result: SaveValidatedDataResult) => {
-    codedActionApp.showMessage(
-      result.success ? 'Draft saved.' : (result.error ?? 'Failed to save the draft.'),
-      result.success ? MessageSeverity.Success : MessageSeverity.Error,
-    );
-  }, []);
+  const handleSaveAsDraft = useCallback(
+    (_request: IVsSaveValidatedDataAsDraftRequest, result?: SaveValidatedDataResult) => {
+      const saved = result?.success === true;
+      codedActionApp.showMessage(
+        saved ? 'Draft saved.' : (result?.error ?? 'Failed to save the draft.'),
+        saved ? MessageSeverity.Success : MessageSeverity.Error,
+      );
+    },
+    [],
+  );
 
   // The widget makes no API call when the reviewer reports an exception - it just hands the
   // host the document id and reason. Persisting it is this app's job.
   //
   // This flow does NOT complete the action: submitExceptionReport transitions the task on the
   // Document Understanding side, so completing it here as well would be a second close.
-  const handleReportExceptionComplete = useCallback(
-    async (documentId: string, reason: string) => {
+  const handleReportException = useCallback(
+    async (request: IVsSaveExceptionReportRequest) => {
       if (taskId === null || folderId === null) return;
+
+      // `exceptionReport` is typed `unknown` on the widget's contract - it carries the
+      // IReportAsExceptionDTO shape, of which the reason is the only part this app needs.
+      const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
 
       setPendingAction('report');
       try {
         const response = await duModule.submitExceptionReport(
           taskId,
-          documentId,
-          reason || 'Reported via Validation Station',
+          request.documentId,
+          Reason || 'Reported via Validation Station',
           { folderId },
         );
 
@@ -209,14 +231,13 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       <ValidationStation
         sdk={sdk}
         data={data}
-        folderId={folderId ?? undefined}
         theme={theme}
         language={ValidationStationLanguage.English}
         isReadonly={isReadonly}
         options={VALIDATION_STATION_OPTIONS}
-        onSubmitComplete={handleSubmitComplete}
-        onSaveAsDraftComplete={handleSaveAsDraftComplete}
-        onReportExceptionComplete={handleReportExceptionComplete}
+        onSubmit={handleSubmit}
+        onSaveAsDraft={handleSaveAsDraft}
+        onReportException={handleReportException}
       />
       {pendingAction && (
         <div className="validation-busy" role="status" aria-live="polite">
