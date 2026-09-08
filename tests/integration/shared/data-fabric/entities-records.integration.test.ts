@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
+import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -834,16 +834,26 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       // The import response carries counts, not record IDs — resolve the IDs of
       // the rows this test created so the afterAll cleanup can delete them.
       // Untracked imports previously accumulated in the test entity forever.
-      const importedRecords = await Promise.all(
-        importedValues.map((value) =>
-          entities.queryRecordsById(entityId, {
-            filterGroup: {
-              queryFilters: [{ fieldName, operator: QueryFilterOperator.Equals, value }],
-            },
-          }),
-        ),
-      );
-      const importedIds = importedRecords.flatMap((r) => r.items.map((item) => item.Id));
+      // The query index lags the import, so poll briefly until both rows appear.
+      let importedIds: string[] = [];
+      for (let attempt = 1; attempt <= 5 && importedIds.length < importedValues.length; attempt++) {
+        if (attempt > 1) {
+          await wait(1500);
+        }
+        const importedRecords = await Promise.all(
+          importedValues.map((value) =>
+            entities.queryRecordsById(entityId, {
+              filterGroup: {
+                queryFilters: [{ fieldName, operator: QueryFilterOperator.Equals, value }],
+              },
+            }),
+          ),
+        );
+        importedIds = importedRecords.flatMap((r) => r.items.map((item) => item.Id));
+      }
+      if (importedIds.length < importedValues.length) {
+        console.warn(`importRecordsById test: only ${importedIds.length}/${importedValues.length} imported rows became queryable — untracked rows may remain on the test entity`);
+      }
       createdRecordIds.push(...importedIds);
       registerResource('entityRecords', { entityId, recordIds: importedIds });
     });
@@ -949,7 +959,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       // Fetch schema once so per-test record bodies match the entity's shape.
       const { entities } = getServices();
       folderEntityMetadata = await entities.getById(folderEntityId, { folderKey });
-    });
+      // A single live read, but hooks have stalled past the default 30s on the
+      // shared tenant — give it the same headroom as the schema cleanup hook.
+    }, 90_000);
 
     it('should insert a single record with folderKey via insertRecordById', async () => {
       const { entities } = getServices();
@@ -959,6 +971,10 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(result).toBeDefined();
       expect(result.Id).toBeDefined();
       folderRecordIds.push(result.Id);
+
+      // Later tests read this record immediately; wait out the write-to-read
+      // propagation so they exercise their own subject, not index lag.
+      await awaitRecordVisible(entities, folderEntityId, result.Id, { folderKey });
     });
 
     it('should batch-insert records with folderKey via insertRecordsById', async () => {
@@ -975,6 +991,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       const ids = result.successRecords.map((r) => r.Id).filter(Boolean) as string[];
       folderRecordIds.push(...ids);
+
+      await Promise.all(ids.map((id) => awaitRecordVisible(entities, folderEntityId, id, { folderKey })));
     });
 
     it('should get a single record with folderKey via getRecordById', async () => {
@@ -1260,6 +1278,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
     });
 
     describe('deleteRecord (by name ref)', () => {
+      // Two sequential writes: insert + delete both baseline ~5s on alpha and
+      // exceeded the 30s default during slow phases.
       it('should insert then delete a single record by name', async () => {
         const { entities } = getServices();
 
@@ -1273,7 +1293,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         // Removed — drop from the shared tracking list so afterAll doesn't re-delete.
         const idx = createdRecordIds.indexOf(inserted.Id);
         if (idx !== -1) createdRecordIds.splice(idx, 1);
-      });
+      }, 60_000);
     });
 
     describe('importRecords (by name ref)', () => {

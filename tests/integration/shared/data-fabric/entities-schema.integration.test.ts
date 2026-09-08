@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString } from '../../utils/helpers';
+import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -33,7 +33,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
         { name: 'count', displayName: 'Count', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
@@ -41,7 +41,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       expect(typeof entityId).toBe('string');
       expect(entityId.length).toBeGreaterThan(0);
       createdEntityIds.push(entityId);
-    }, 60_000);
+    }, 90_000);
 
     it('should create entity with RELATIONSHIP and FILE fields and verify metadata', async () => {
       const { entities } = getServices();
@@ -50,7 +50,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       // 1. Create the target entity. The platform auto-adds a primary-key `Id`
       //    field we'll use as the FK target.
       const targetName = `sdk_target_${stamp}`;
-      const targetId = await entities.create(targetName, [
+      const targetId = await createEntityAwaitingReady(entities, targetName, [
         { name: 'label', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(targetId);
@@ -64,7 +64,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
 
       // 3. Create the source entity with a RELATIONSHIP field bound to target.Id
       const sourceName = `sdk_source_${stamp}`;
-      const sourceId = await entities.create(sourceName, [
+      const sourceId = await createEntityAwaitingReady(entities, sourceName, [
         { name: 'name', type: EntityFieldDataType.STRING },
         {
           name: 'parent',
@@ -99,7 +99,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
     it('should update entity display name and description', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [], { displayName: `Original ${name}`, description: 'Original description' });
+      const entityId = await createEntityAwaitingReady(entities, name, [], { displayName: `Original ${name}`, description: 'Original description' });
       createdEntityIds.push(entityId);
 
       const newDisplayName = `Updated ${name}`;
@@ -111,12 +111,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const updated = await entities.getById(entityId);
       expect(updated.displayName).toBe(newDisplayName);
       expect(updated.description).toBe('Updated description');
-    }, 60_000);
+    }, 90_000);
 
     it('should add a new field to an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'baseField', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -128,12 +128,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const updated = await entities.getById(entityId);
       const fieldNames = updated.fields.map(f => f.name);
       expect(fieldNames).toContain('newField');
-    }, 60_000);
+    }, 90_000);
 
     it('should remove a field from an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'keepField', type: EntityFieldDataType.STRING },
         { name: 'removeMe', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ]);
@@ -147,12 +147,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const fieldNames = updated.fields.map(f => f.name);
       expect(fieldNames).not.toContain('removeMe');
       expect(fieldNames).toContain('keepField');
-    }, 60_000);
+    }, 90_000);
 
     it('should update an existing field metadata', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'updatableField', displayName: 'Original Name', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -173,12 +173,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       expect(updatedField).toBeDefined();
       expect(updatedField?.displayName).toBe('Updated Name');
       expect(updatedField?.isRequired).toBe(true);
-    }, 60_000);
+    }, 90_000);
 
     it('should add, update, and remove fields in a single call', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'toUpdate', displayName: 'Before Update', type: EntityFieldDataType.STRING },
         { name: 'toRemove', type: EntityFieldDataType.DECIMAL, decimalPrecision: 0 },
       ]);
@@ -206,14 +206,14 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       // updated field has new display name
       const updated = after.fields.find(f => f.name === 'toUpdate');
       expect(updated?.displayName).toBe('After Update');
-    }, 60_000);
+    }, 90_000);
   });
 
   describe('sqlType constraint defaults', () => {
     it('should create STRING field with default lengthLimit 200', async () => {
       const { entities } = getServices();
       const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'strField', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -222,12 +222,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const field = entity.fields.find(f => f.name === 'strField');
       expect(field).toBeDefined();
       expect(field?.fieldDataType.lengthLimit).toBe(200);
-    }, 60_000);
+    }, 90_000);
 
     it('should create STRING field with user-provided lengthLimit', async () => {
       const { entities } = getServices();
       const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'strField', type: EntityFieldDataType.STRING, lengthLimit: 500 },
       ]);
       createdEntityIds.push(entityId);
@@ -235,12 +235,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'strField');
       expect(field?.fieldDataType.lengthLimit).toBe(500);
-    }, 60_000);
+    }, 90_000);
 
     it('should create MULTILINE_TEXT field with default lengthLimit 200', async () => {
       const { entities } = getServices();
       const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'mlField', type: EntityFieldDataType.MULTILINE_TEXT },
       ]);
       createdEntityIds.push(entityId);
@@ -248,12 +248,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'mlField');
       expect(field?.fieldDataType.lengthLimit).toBe(200);
-    }, 60_000);
+    }, 90_000);
 
     it('should create MULTILINE_MAX field with default lengthLimit 128 KB', async () => {
       const { entities } = getServices();
       const name = `sdk_mlmax_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'mlmaxField', type: EntityFieldDataType.MULTILINE_MAX },
       ]);
       createdEntityIds.push(entityId);
@@ -262,12 +262,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const field = entity.fields.find(f => f.name === 'mlmaxField');
       expect(field?.fieldDataType.name).toBe(EntityFieldDataType.MULTILINE_MAX);
       expect(field?.fieldDataType.lengthLimit).toBe(128 * 1024);
-    }, 60_000);
+    }, 90_000);
 
     it('should create DECIMAL field with correct default constraints', async () => {
       const { entities } = getServices();
       const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'decField', type: EntityFieldDataType.DECIMAL },
       ]);
       createdEntityIds.push(entityId);
@@ -278,12 +278,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       expect(field?.fieldDataType.decimalPrecision).toBe(2);
       expect(field?.fieldDataType.maxValue).toBe(1000000000000);
       expect(field?.fieldDataType.minValue).toBe(-1000000000000);
-    }, 60_000);
+    }, 90_000);
 
     it('should create DECIMAL field with user-provided constraints', async () => {
       const { entities } = getServices();
       const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         {
           name: 'decField',
           type: EntityFieldDataType.DECIMAL,
@@ -299,12 +299,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       expect(field?.fieldDataType.decimalPrecision).toBe(4);
       expect(field?.fieldDataType.maxValue).toBe(99999);
       expect(field?.fieldDataType.minValue).toBe(-99999);
-    }, 60_000);
+    }, 90_000);
 
     it('should create BOOLEAN field with fixed lengthLimit 100', async () => {
       const { entities } = getServices();
       const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'boolField', type: EntityFieldDataType.BOOLEAN },
       ]);
       createdEntityIds.push(entityId);
@@ -312,12 +312,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'boolField');
       expect(field?.fieldDataType.lengthLimit).toBe(100);
-    }, 60_000);
+    }, 90_000);
 
     it('should create DATE field with fixed lengthLimit 1000', async () => {
       const { entities } = getServices();
       const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'dateField', type: EntityFieldDataType.DATE },
       ]);
       createdEntityIds.push(entityId);
@@ -325,12 +325,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'dateField');
       expect(field?.fieldDataType.lengthLimit).toBe(1000);
-    }, 60_000);
+    }, 90_000);
 
     it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', async () => {
       const { entities } = getServices();
       const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'dtzField', type: EntityFieldDataType.DATETIME_WITH_TZ },
       ]);
       createdEntityIds.push(entityId);
@@ -338,12 +338,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'dtzField');
       expect(field?.fieldDataType.lengthLimit).toBe(1000);
-    }, 60_000);
+    }, 90_000);
 
     it('should allow updating STRING field lengthLimit without "Field type cannot be changed" error', async () => {
       const { entities } = getServices();
       const name = `sdk_upd_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'strField', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -362,12 +362,12 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const after = await entities.getById(entityId);
       const updated = after.fields.find(f => f.name === 'strField');
       expect(updated?.fieldDataType.lengthLimit).toBe(500);
-    }, 60_000);
+    }, 90_000);
 
     it('should allow updating DECIMAL field constraints via updateById', async () => {
       const { entities } = getServices();
       const name = `sdk_upddec_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'decField', type: EntityFieldDataType.DECIMAL },
       ]);
       createdEntityIds.push(entityId);
@@ -387,13 +387,13 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       expect(updated?.fieldDataType.decimalPrecision).toBe(4);
       expect(updated?.fieldDataType.maxValue).toBe(9999);
       expect(updated?.fieldDataType.minValue).toBe(-9999);
-    }, 60_000);
+    }, 90_000);
 
     it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', async () => {
       const { entities } = getServices();
       const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
 
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'strField', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -402,7 +402,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const field = entity.fields.find(f => f.name === 'strField');
       // Default is applied client-side and round-trips through the API as 200
       expect(field?.fieldDataType.lengthLimit).toBe(200);
-    }, 60_000);
+    }, 90_000);
 
   });
 
@@ -415,7 +415,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const stamp = generateRandomString(8).toLowerCase();
 
       // 1. Target entity with a user-defined string field we can assert on at L2+.
-      const targetId = await entities.create(`sdk_target_${stamp}`, [
+      const targetId = await createEntityAwaitingReady(entities, `sdk_target_${stamp}`, [
         { name: 'label', type: EntityFieldDataType.STRING, isRequired: true },
       ]);
       createdEntityIds.push(targetId);
@@ -427,7 +427,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       }
 
       // 2. Source entity with a RELATIONSHIP field bound to target.Id.
-      const sourceId = await entities.create(`sdk_source_${stamp}`, [
+      const sourceId = await createEntityAwaitingReady(entities, `sdk_source_${stamp}`, [
         { name: 'name', type: EntityFieldDataType.STRING },
         {
           name: 'parent',
@@ -450,6 +450,8 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
         parent: targetRecordId,
       });
       registerResource('entityRecords', { entityId: sourceId, recordIds: [sourceInsert.Id] });
+      // The expansion queries hit a read path that indexes asynchronously.
+      await awaitRecordVisible(entities, sourceId, sourceInsert.Id);
 
       // 5. Query the source at every expansion level.
       const levels = [0, 1, 2, 3] as const;
@@ -494,7 +496,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const { entities } = getServices();
       const name = `sdk_mlmax_life_${generateRandomString(8).toLowerCase()}`;
 
-      const entityId = await entities.create(name, [
+      const entityId = await createEntityAwaitingReady(entities, name, [
         { name: 'body', type: EntityFieldDataType.MULTILINE_MAX },
       ]);
       createdEntityIds.push(entityId);
@@ -503,6 +505,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const inserted = await entities.insertRecordById(entityId, { body: bodyValue });
       expect(inserted.Id).toBeDefined();
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+      await awaitRecordVisible(entities, entityId, inserted.Id);
 
       // Over the limit, so the preview must be the truncated content or a size marker.
       const listed = await entities.getAllRecords(entityId, { pageSize: 50 });
@@ -525,7 +528,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const { entities } = getServices();
 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, []);
+      const entityId = await createEntityAwaitingReady(entities, name, []);
 
       // Delete it immediately (not added to createdEntityIds so afterAll won't double-delete)
       await entities.deleteById(entityId);
@@ -534,7 +537,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const all = await entities.getAll();
       const found = all.find(e => e.id === entityId);
       expect(found).toBeUndefined();
-    }, 60_000);
+    }, 90_000);
   });
 
   describe('entity schema methods (bound)', () => {
@@ -542,7 +545,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
       const { entities } = getServices();
 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, []);
+      const entityId = await createEntityAwaitingReady(entities, name, []);
 
       const entity = await entities.getById(entityId);
       expect(typeof entity.delete).toBe('function');
@@ -553,7 +556,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
 
       const all = await entities.getAll();
       expect(all.find(e => e.id === entityId)).toBeUndefined();
-    }, 60_000);
+    }, 90_000);
   });
 
   // ─── Cleanup ──────────────────────────────────────────────────────────────
@@ -598,5 +601,7 @@ describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mo
         }
       }
     }
-  });
+    // Cleanup deletes have stalled past the default 30s hookTimeout on the
+    // shared tenant — give the hook explicit headroom.
+  }, 120_000);
 });
