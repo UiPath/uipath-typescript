@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Orchestrator Processes - Integration Tests', 'any', modes, () => {
   describe('getAll', () => {
     it('should retrieve all processes', async () => {
       const { processes } = getServices();

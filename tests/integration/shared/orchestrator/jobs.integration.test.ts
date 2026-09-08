@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, getActiveAuth, describeIntegration, InitMode } from '../../config/unified-setup';
 import { generateRandomString } from '../../utils/helpers';
 import type { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 
@@ -18,9 +18,7 @@ function getJobsService() {
   return { jobs, folderId };
 }
 
-describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Orchestrator Jobs - Integration Tests', 'any', modes, () => {
   describe('getAll', () => {
     it('should retrieve all jobs', async () => {
       const { jobs, folderId } = getJobsService();
@@ -362,13 +360,15 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
 
     function orchestratorBaseUrl(): string {
       const config = getTestConfig();
-      return `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_`;
+      return `${getActiveAuth().baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_`;
     }
 
     function apiHeaders(): Record<string, string> {
-      const config = getTestConfig();
       return {
-        Authorization: `Bearer ${config.secret}`,
+        // Must match the credential this cell authenticates with: an attachment
+        // created by the external application is not readable by a user token,
+        // and vice versa.
+        Authorization: `Bearer ${getActiveAuth().token}`,
         'Content-Type': 'application/json',
         'X-UIPATH-OrganizationUnitId': String(attachmentFolderId),
       };

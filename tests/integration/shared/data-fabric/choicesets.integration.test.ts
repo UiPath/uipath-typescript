@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric ChoiceSets - Integration Tests', 'any', modes, () => {
   const testConfig = getTestConfig();
   let testChoiceSetId: string | null = testConfig.dataFabricTestChoiceSetId || null;
   const createdChoiceSetIds: string[] = [];

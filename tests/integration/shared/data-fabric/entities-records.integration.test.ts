@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   cleanupTestEntityRecords,
   InitMode,
 } from '../../config/unified-setup';
@@ -187,8 +187,7 @@ async function resolveImportedRecordIds(
   return ids;
 }
 
-describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Entities Records - Integration Tests', 'any', modes, () => {
 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;

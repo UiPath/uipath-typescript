@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { InstanceStatus } from '../../../../src/models/maestro';
@@ -10,9 +10,7 @@ import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/mo
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Process Instances - Integration Tests', 'any', modes, () => {
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
 

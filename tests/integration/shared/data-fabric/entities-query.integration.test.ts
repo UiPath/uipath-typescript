@@ -2,8 +2,8 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
   cleanupTestEntityRecords,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString, awaitRecordVisible } from '../../utils/helpers';
@@ -18,8 +18,7 @@ import {
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Entities Query - Integration Tests', 'any', modes, () => {
 
   let testEntityId: string | null = null;
 

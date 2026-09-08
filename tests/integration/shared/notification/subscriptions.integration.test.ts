@@ -1,16 +1,13 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import type { Subscriptions } from '../../../../src/services/notification';
 import { NotificationCategory, NotificationMode, type SubscriptionEntity, type SubscriptionPublisher } from '../../../../src/models/notification';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: the subscription API requires OAuth and the current integration test
-// framework only authenticates with a PAT token. Re-enable by removing `.skip`
-// once OAuth support is wired into the integration test harness.
-describe.skip.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+// The subscription API rejects PAT tokens, so this suite authenticates with a user
+// token and skips when one is not configured.
+describeIntegration('Subscriptions - Integration Tests', 'user', modes, () => {
   let subscriptions!: Subscriptions;
   let tenantId!: string;
   let allPublishers!: SubscriptionPublisher[];
@@ -184,7 +181,9 @@ describe.skip.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
   });
 
   describe('updateTopicGroups', () => {
-    it('should round-trip a topic-group entity subscription change', async () => {
+    // skip: no publisher in the test tenant exposes a topic group with entities, so there
+    // is nothing to toggle.
+    it.skip('should round-trip a topic-group entity subscription change', async () => {
       // Find any publisher with a named topic group that has at least one entity to toggle
       let match: { publisherId: string; topicGroupName: string; entity: SubscriptionEntity } | undefined;
       for (const publisher of allPublishers) {

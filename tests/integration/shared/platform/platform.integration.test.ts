@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Platform } from '../../../../src/services/platform';
 import { PlatformSettingKey, type PlatformSetting } from '../../../../src/models/platform';
 
@@ -7,9 +7,7 @@ const modes: InitMode[] = ['v1'];
 
 const ALL_KEYS = Object.values(PlatformSettingKey);
 
-describe.each(modes)('Platform - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Platform - Integration Tests', 'any', modes, () => {
   let platform!: Platform;
   let userId!: string;
   let organizationId!: string;
