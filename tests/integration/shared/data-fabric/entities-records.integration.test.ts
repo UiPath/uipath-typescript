@@ -1276,6 +1276,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
     });
 
     describe('deleteRecord (by name ref)', () => {
+      // Two sequential writes: insert + delete both baseline ~5s on alpha and
+      // exceeded the 30s default during slow phases.
       it('should insert then delete a single record by name', async () => {
         const { entities } = getServices();
 
@@ -1289,7 +1291,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         // Removed — drop from the shared tracking list so afterAll doesn't re-delete.
         const idx = createdRecordIds.indexOf(inserted.Id);
         if (idx !== -1) createdRecordIds.splice(idx, 1);
-      });
+      }, 60_000);
     });
 
     describe('importRecords (by name ref)', () => {
