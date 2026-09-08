@@ -6,7 +6,7 @@ import { FunctionGetResponse } from '../../../../src/models/orchestrator/functio
 // New modular service — v1 init only.
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Functions - Integration Tests', 'any', modes, () => {
+describeIntegration('Functions - Integration Tests', 'both', modes, () => {
   let functions!: Functions;
   let folderId!: number;
   let functionName!: string;

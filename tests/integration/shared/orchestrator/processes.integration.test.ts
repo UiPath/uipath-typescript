@@ -4,7 +4,7 @@ import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Orchestrator Processes - Integration Tests', 'any', modes, () => {
+describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all processes', async () => {
       const { processes } = getServices();

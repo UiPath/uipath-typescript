@@ -9,7 +9,7 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Orchestrator Attachments - Integration Tests', 'any', modes, () => {
+describeIntegration('Orchestrator Attachments - Integration Tests', 'both', modes, () => {
     describe('getById', () => {
       // The configured ORCHESTRATOR_ATTACHMENT_ID may point at an attachment in a
       // folder the caller cannot reach (getById is folder-authorized, and a user

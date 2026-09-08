@@ -4,7 +4,7 @@ import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTime
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Processes - Integration Tests', 'any', modes, () => {
+describeIntegration('Maestro Processes - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all Maestro processes', async () => {
       const { maestroProcesses } = getServices();

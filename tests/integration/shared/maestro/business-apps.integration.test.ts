@@ -21,7 +21,7 @@ const newAppName = () => `sdk-it-${generateRandomString(10)}`;
 // suite authenticates with — PIMS accepts the token but the tenant-scoped ORCHESTRATOR.APPS.*
 // permission check (TenantPermissionHandler) rejects create/update/delete with a 403. Re-enable
 // once the credential this suite uses can hold that permission (see PR #671 discussion).
-describeIntegration('Business Apps - Integration Tests', 'any', modes, () => {
+describeIntegration('Business Apps - Integration Tests', 'both', modes, () => {
 
   let businessApps!: BusinessApps;
   const createdAppIds: string[] = [];

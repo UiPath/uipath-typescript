@@ -4,7 +4,7 @@ import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTime
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Cases - Integration Tests', 'any', modes, () => {
+describeIntegration('Maestro Cases - Integration Tests', 'both', modes, () => {
   describe('Case access and structure', () => {
     it('should instantiate cases service', async () => {
       const { cases } = getServices();

@@ -22,7 +22,7 @@ async function deleteCatalog(id: number, folderId: number): Promise<void> {
   });
 }
 
-describeIntegration('Action Center Task Catalogs - Integration Tests', 'any', modes, () => {
+describeIntegration('Action Center Task Catalogs - Integration Tests', 'both', modes, () => {
   let taskCatalogs!: TaskCatalogs;
   let folderId: number;
   // The same folder addressed three ways, to prove each header route resolves.

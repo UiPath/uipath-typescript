@@ -18,7 +18,7 @@ function getJobsService() {
   return { jobs, folderId };
 }
 
-describeIntegration('Orchestrator Jobs - Integration Tests', 'any', modes, () => {
+describeIntegration('Orchestrator Jobs - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all jobs', async () => {
       const { jobs, folderId } = getJobsService();

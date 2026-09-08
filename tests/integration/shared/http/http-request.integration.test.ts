@@ -16,7 +16,7 @@ const UNKNOWN_PATH = '/this-path-does-not-exist-sdk-probe';
  * suite runs against several environments, and a WAF or identity config can change 404 into 403
  * without anything being wrong with the helper.
  */
-describeIntegration('httpRequest - Integration Tests', 'any', modes, () => {
+describeIntegration('httpRequest - Integration Tests', 'both', modes, () => {
 
   let baseUrl!: string;
 

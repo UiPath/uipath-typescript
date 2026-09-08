@@ -10,7 +10,7 @@ import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/mo
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Process Instances - Integration Tests', 'any', modes, () => {
+describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
 

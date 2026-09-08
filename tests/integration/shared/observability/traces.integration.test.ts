@@ -9,7 +9,7 @@ import {
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Traces - Integration Tests', 'any', modes, () => {
+describeIntegration('Traces - Integration Tests', 'both', modes, () => {
   let traces!: Traces;
   let existingTraceId!: string;
   let existingSpanId!: string;

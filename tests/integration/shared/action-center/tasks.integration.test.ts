@@ -12,7 +12,7 @@ import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '..
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Action Center Tasks - Integration Tests', 'any', modes, (mode) => {
+describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (mode) => {
   let createdTaskId: number | null = null;
   const testTaskTitle = generateTestResourceName(`Task_${mode}`);
 
@@ -480,7 +480,7 @@ describeIntegration('Action Center Tasks - Integration Tests', 'any', modes, (mo
   });
 }, { timeout: 120000 });
 
-describeIntegration('Action Center Tasks (extended) - Integration Tests', 'any', ['v1'] as InitMode[], () => {
+describeIntegration('Action Center Tasks (extended) - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;
@@ -608,7 +608,7 @@ describeIntegration('Action Center Tasks (extended) - Integration Tests', 'any',
   });
 });
 
-describeIntegration('Action Center Task Comments - Integration Tests', 'any', ['v1'] as InitMode[], () => {
+describeIntegration('Action Center Task Comments - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;

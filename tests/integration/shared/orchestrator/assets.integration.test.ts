@@ -5,7 +5,7 @@ import type { AssetGetResponse } from '../../../../src/models/orchestrator/asset
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Orchestrator Assets - Integration Tests', 'any', modes, () => {
+describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all assets', async () => {
       const { assets } = getServices();

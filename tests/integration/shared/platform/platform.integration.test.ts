@@ -7,7 +7,7 @@ const modes: InitMode[] = ['v1'];
 
 const ALL_KEYS = Object.values(PlatformSettingKey);
 
-describeIntegration('Platform - Integration Tests', 'any', modes, () => {
+describeIntegration('Platform - Integration Tests', 'both', modes, () => {
   let platform!: Platform;
   let userId!: string;
   let organizationId!: string;
