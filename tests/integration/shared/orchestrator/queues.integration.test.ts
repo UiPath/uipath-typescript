@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { generateRandomString } from '../../utils/helpers';
 import { QueueItemReviewStatus, QueueItemStatus, QueuePriority, QueueTransactionOutcome } from '../../../../src/models/orchestrator/queues.types';
 import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchestrator/queues.models';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Orchestrator Queues - Integration Tests', 'any', modes, () => {
   describe('getAll', () => {
     it('should retrieve all queues', async () => {
       const { queues } = getServices();

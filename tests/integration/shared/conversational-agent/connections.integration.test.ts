@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { ConversationalAgentService } from '../../../../src/services/conversational-agent';
@@ -13,14 +13,16 @@ import { ConnectionState } from '../../../../src/models/conversational-agent';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: CAS endpoints do not support PAT auth — requires OAuth.
-// To run locally: grab a bearer token from browser DevTools and set it as UIPATH_SECRET,
-// then change describe.skip.each to describe.each.
+// Skipped: CAS endpoints reject PAT auth, and the suite has not been verified
+// against a user token yet. The `'user'` requirement below already routes it to
+// UIPATH_USER_TOKEN — drop the `skip` option once it passes, rather than
+// hand-pasting a browser token into UIPATH_SECRET.
 // Requires CAS_TEST_AGENT_ID and CAS_TEST_FOLDER_ID env vars.
-describe.skip.each(modes)(
-  'Conversational Agent Connections - Integration Tests [%s]',
-  (mode) => {
-    setupUnifiedTests(mode);
+describeIntegration(
+  'Conversational Agent Connections - Integration Tests',
+  'user',
+  modes,
+  () => {
 
     let service!: ConversationalAgentService;
     let agentId!: number;
@@ -267,5 +269,6 @@ describe.skip.each(modes)(
         expect(url).toBeNull();
       });
     });
-  }
+  },
+  { skip: true },
 );

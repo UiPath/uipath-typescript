@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Process Incidents - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Process Incidents - Integration Tests', 'any', modes, () => {
   describe('Incident read operations', () => {
     it('should instantiate process incidents service', async () => {
       const { processIncidents } = getServices();

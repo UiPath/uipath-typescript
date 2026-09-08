@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
@@ -10,9 +10,7 @@ import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Case Instances - Integration Tests', 'any', modes, () => {
   let testCaseInstanceId: string | null = null;
   let testCaseFolderKey: string | null = null;
 

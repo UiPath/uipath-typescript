@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { hasValidPagination } from '../../utils/helpers';
@@ -14,8 +14,7 @@ import {
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Entities Query - Integration Tests', 'any', modes, () => {
 
   let testEntityId: string | null = null;
 

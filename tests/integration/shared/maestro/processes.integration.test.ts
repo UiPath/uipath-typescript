@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Processes - Integration Tests', 'any', modes, () => {
   describe('getAll', () => {
     it('should retrieve all Maestro processes', async () => {
       const { maestroProcesses } = getServices();

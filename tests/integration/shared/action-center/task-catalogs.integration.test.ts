@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, getActiveAuth, describeIntegration, InitMode } from '../../config/unified-setup';
 import { TaskCatalogs } from '../../../../src/services/action-center';
 import { generateRandomString } from '../../utils/helpers';
 import { TaskCatalogRetentionAction } from '../../../../src/models/action-center/task-catalogs.types';
@@ -12,19 +12,17 @@ const createdCatalogIds: number[] = [];
 
 async function deleteCatalog(id: number, folderId: number): Promise<void> {
   const config = getTestConfig();
-  const url = `${config.baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_/odata/TaskCatalogs(${id})`;
+  const url = `${getActiveAuth().baseUrl}/${config.orgName}/${config.tenantName}/orchestrator_/odata/TaskCatalogs(${id})`;
   await fetch(url, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${config.secret}`,
+      Authorization: `Bearer ${getActiveAuth().token}`,
       'X-UIPATH-OrganizationUnitId': String(folderId),
     },
   });
 }
 
-describe.each(modes)('Action Center Task Catalogs - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Task Catalogs - Integration Tests', 'any', modes, () => {
   let taskCatalogs!: TaskCatalogs;
   let folderId: number;
   // The same folder addressed three ways, to prove each header route resolves.
