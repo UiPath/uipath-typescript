@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AuthProvider } from './hooks/AuthProvider';
+import { useAuth } from './hooks/useAuth';
 import ValidationInbox from './components/ValidationInbox';
 
 function AppContent() {
