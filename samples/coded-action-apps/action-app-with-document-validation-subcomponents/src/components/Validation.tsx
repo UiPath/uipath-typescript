@@ -7,6 +7,7 @@ import {
   DocumentViewer,
   useDuDocumentArtifacts,
   ValidationStationLanguage,
+  type DuSaveCallbacks,
   type IValidationStationOptions,
   type IVsSaveExceptionReportRequest,
   type IVsSaveValidatedDataAsDraftRequest,
@@ -116,18 +117,6 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       });
   }, [onInitTheme]);
 
-  const completeTask = useCallback(async (outcome: string, payload: unknown) => {
-    // completeTask REPLACES the task's data. contentValidationData must go back exactly as
-    // getTask() gave it; any other field can carry what the reviewer changed.
-    const result = await codedActionApp.completeTask(outcome, payload);
-    if (!result.success) {
-      codedActionApp.showMessage(
-        result.errorMessage ?? 'Failed to complete the action.',
-        MessageSeverity.Error,
-      );
-    }
-  }, []);
-
   // Submit finished: the fields form has run ProcessExtractedData and uploaded the validated
   // result. It renders nothing on failure, so every error has to surface from here.
   //
@@ -146,12 +135,21 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
 
       setPendingAction('submit');
       try {
-        await completeTask(SUBMIT_OUTCOME, taskData);
+        // completeTask REPLACES the task's data, so the whole bag goes back:
+        // contentValidationData exactly as getTask() gave it, plus anything the reviewer
+        // changed.
+        const completed = await codedActionApp.completeTask(SUBMIT_OUTCOME, taskData);
+        if (!completed.success) {
+          codedActionApp.showMessage(
+            completed.errorMessage ?? 'Failed to complete the action.',
+            MessageSeverity.Error,
+          );
+        }
       } finally {
         setPendingAction(null);
       }
     },
-    [completeTask, taskData],
+    [taskData],
   );
 
   // A draft leaves the action open for the reviewer to come back to, so there is nothing to
@@ -244,17 +242,13 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   );
 };
 
-interface WorkspaceProps {
+// The three save callbacks are the widget's own `DuSaveCallbacks`, required rather than
+// optional: the fields form is the only panel that persists, so all three must be wired.
+interface WorkspaceProps extends Required<DuSaveCallbacks> {
   data: DuFramework.ContentValidationData;
   theme: WidgetTheme;
   isReadonly: boolean;
   pendingAction: PendingAction | null;
-  onSubmit: (request: IVsSaveValidatedDataRequest, result?: SaveValidatedDataResult) => void;
-  onSaveAsDraft: (
-    request: IVsSaveValidatedDataAsDraftRequest,
-    result?: SaveValidatedDataResult,
-  ) => void;
-  onReportException: (request: IVsSaveExceptionReportRequest) => void;
 }
 
 /**
