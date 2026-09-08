@@ -268,16 +268,10 @@ export function getCurrentAuthMode(): AuthMode | null {
 }
 
 /**
- * Credential and host for the cell currently running — for the few tests that
- * bypass the SDK and hit the API with a raw `fetch`.
- *
- * A cell authenticates with one credential against one host. Deriving either
- * from the config directly (`config.userToken ?? config.secret`, `config.baseUrl`)
- * reads what is *configured* rather than what this cell is *using*, which sends
- * the wrong token the moment a suite runs under both credentials.
- *
- * Safe from a suite's `afterAll`: the harness registers its own hooks first, and
- * vitest unwinds `afterAll` in reverse, so `cleanupServices()` runs last.
+ * Credential and host for the running cell, for tests that bypass the SDK and
+ * use a raw `fetch`. Reading `config` directly picks what is *configured* rather
+ * than what this cell is *using*, which sends the wrong token once a suite runs
+ * under both. Safe from a suite's `afterAll` — `cleanupServices()` runs last.
  */
 export function getActiveAuth(): { token: string; baseUrl: string } {
   const authMode = getCurrentAuthMode();
@@ -301,12 +295,9 @@ export function cleanupServices(): void {
 }
 
 /**
- * Setup hooks for one cell of a suite's matrix: one init mode, one credential.
- *
- * Takes the resolved credential rather than the requirement so the credential a
- * suite runs under is decided in exactly one place — `describeIntegration`, which
- * also decides whether the cell is collected at all. Resolving it again here
- * would let the guard and the setup disagree, and nothing would catch that.
+ * Setup hooks for one cell: one init mode, one credential. Takes the resolved
+ * credential so only `describeIntegration` decides it — resolving again here
+ * would let the skip guard and the setup disagree.
  */
 export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
   beforeAll(async () => {
@@ -320,33 +311,21 @@ export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
 
 /** Extra knobs for {@link describeIntegration}. */
 export interface DescribeIntegrationOptions {
-  /**
-   * Skip the suite regardless of credentials — for a suite disabled on purpose,
-   * or one gated on fixture configuration as well as on a credential.
-   */
+  /** Skip regardless of credentials — disabled on purpose, or fixture-gated. */
   skip?: boolean;
   /** Per-suite timeout in ms, passed through to vitest. Applies to every cell. */
   timeout?: number;
 }
 
 /**
- * Declares an integration suite and expands it over its matrix.
- *
- * The requirement is stated once and drives everything: which credentials the
- * suite runs under, whether it is collected at all, and the host each run talks
- * to. A `'any'` suite runs once per configured credential — so with both a PAT
- * and a user token present it runs twice, and a failure names which one failed.
- * Cells are `[initMode][authMode]`, e.g. `My Suite [v1][pat]`.
- *
- * When nothing configured satisfies the requirement the suite is still collected
- * and reported as skipped, rather than vanishing from the run.
+ * Declares a suite and expands it over init modes x credentials, naming cells
+ * `[initMode][authMode]` so a failure says which credential failed. The
+ * requirement drives the credentials, the host, and whether the suite is
+ * collected; when nothing satisfies it the suite reports as skipped.
  *
  * @example
- * // Either credential — runs under both when both are configured.
- * describeIntegration('Orchestrator Assets - Integration Tests', 'any', modes, (mode) => { ... });
- *
- * // Needs a user token — skips when none is configured.
- * describeIntegration('Notifications - Integration Tests', 'user', modes, (mode) => { ... });
+ * describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => { ... });
+ * describeIntegration('Notifications - Integration Tests', 'user', modes, () => { ... });
  */
 export function describeIntegration(
   name: string,
@@ -358,11 +337,9 @@ export function describeIntegration(
   const authModes = resolveAuthModes(requirement);
   const skip = options.skip === true || authModes.length === 0;
 
-  // A skipped suite still needs cells to report against; `describe.each([])`
-  // emits nothing at all, which would hide the suite instead of marking it
-  // skipped. The placeholder names the credential the suite *wanted*, so the
-  // skipped line says why it skipped; it is never used to authenticate.
-  const placeholder: AuthMode = requirement === 'any' ? 'pat' : requirement;
+  // `describe.each([])` emits nothing, hiding the suite instead of marking it
+  // skipped, so a skipped suite still needs a cell. Never used to authenticate.
+  const placeholder: AuthMode = requirement === 'both' ? 'pat' : requirement;
   const effectiveAuthModes: AuthMode[] = authModes.length > 0 ? authModes : [placeholder];
   const cells: [InitMode, AuthMode][] = modes.flatMap(
     (mode) => effectiveAuthModes.map((authMode): [InitMode, AuthMode] => [mode, authMode]),

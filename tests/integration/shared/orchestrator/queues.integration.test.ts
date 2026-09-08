@@ -6,7 +6,7 @@ import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchest
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Orchestrator Queues - Integration Tests', 'any', modes, () => {
+describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all queues', async () => {
       const { queues } = getServices();

@@ -20,7 +20,7 @@ import {
 // wiring stays covered by the records/query suites, which run dual-mode.
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Data Fabric Entities Schema - Integration Tests', 'any', modes, () => {
+describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', modes, () => {
 
   const createdEntityIds: string[] = [];
 

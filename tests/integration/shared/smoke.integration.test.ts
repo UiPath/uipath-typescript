@@ -8,7 +8,7 @@ import {
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('SDK Initialization - Smoke Tests', 'any', modes, () => {
+describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
   describe('Configuration', () => {
     it('should load valid configuration from environment', () => {
       const config = getTestConfig();

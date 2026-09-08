@@ -242,39 +242,29 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
 /**
  * What a suite needs from its credential:
- * - 'pat'  — the external-application identity specifically
- * - 'user' — a user access token specifically (insightsrtm_, notification service)
- * - 'any'  — either works, so the suite runs once under EACH configured credential
+ * - 'pat'  — the external-application identity
+ * - 'user' — a user access token (insightsrtm_, notification service)
+ * - 'both' — either works; runs once under each configured credential
  */
-export type AuthRequirement = 'pat' | 'user' | 'any';
+export type AuthRequirement = 'pat' | 'user' | 'both';
 
 /** The credential actually used for a run. */
 export type AuthMode = 'pat' | 'user';
 
 /**
- * Every configured credential that satisfies the requirement, in a stable order.
+ * Every configured credential satisfying the requirement; a suite runs once per
+ * entry, and an empty array means it skips.
  *
- * A suite runs once per returned credential. `'any'` therefore yields BOTH when
- * both are configured — the two find different things and neither subsumes the
- * other: the PAT exercises the external-application scope model that most SDK
- * consumers authenticate with, while the user token exercises the API surface
- * generally, including services that reject external-app tokens outright. An
- * empty array means nothing configured can satisfy the requirement and the suite
- * skips.
- *
- * Reads `process.env` directly and stays free of side effects so it can be
- * evaluated at collection time, which runs long before any `beforeAll`.
- *
- * `INTEGRATION_AUTH_MODE=pat|user` narrows the result to that one credential for
- * a whole run. It restricts rather than forces: a suite requiring the credential
- * it excludes skips instead of running under the wrong one.
+ * Reads `process.env` directly and without side effects so it can run at
+ * collection time. `INTEGRATION_AUTH_MODE=pat|user` narrows the result rather
+ * than forcing it, so a suite needing the excluded credential skips.
  */
 export function resolveAuthModes(requirement: AuthRequirement): AuthMode[] {
   const configured: AuthMode[] = [];
   if (process.env.UIPATH_SECRET) configured.push('pat');
   if (process.env.UIPATH_USER_TOKEN) configured.push('user');
 
-  const wanted: AuthMode[] = requirement === 'any' ? ['pat', 'user'] : [requirement];
+  const wanted: AuthMode[] = requirement === 'both' ? ['pat', 'user'] : [requirement];
 
   const restriction = process.env.INTEGRATION_AUTH_MODE;
   const allowed = restriction === 'pat' || restriction === 'user'
@@ -285,10 +275,9 @@ export function resolveAuthModes(requirement: AuthRequirement): AuthMode[] {
 }
 
 /**
- * Picks the host for a run. User-token suites use `MINTER_BASE_URL` when set:
- * the default host sits behind a CORS proxy whose path whitelist has to list
- * every service a suite touches, and these suites reach services that are not
- * on it. PAT suites keep the default host.
+ * Host for a run. User-token cells use `MINTER_BASE_URL` when set — the default
+ * host sits behind a CORS proxy that whitelists paths per service, and these
+ * cells reach services missing from it.
  */
 export function resolveBaseUrl(config: IntegrationConfig, authMode: AuthMode): string {
   return authMode === 'user' ? config.minterBaseUrl ?? config.baseUrl : config.baseUrl;

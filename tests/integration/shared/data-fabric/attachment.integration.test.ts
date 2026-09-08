@@ -31,7 +31,7 @@ const modes: InitMode[] = ['v1'];
 
 describeIntegration(
   'Entity Attachment - Integration Tests',
-  'any',
+  'both',
   modes,
   () => {
 

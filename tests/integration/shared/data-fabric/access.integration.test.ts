@@ -10,7 +10,7 @@ const modes: InitMode[] = ['v0', 'v1'];
 // Skipped: Data Fabric role and directory APIs require DataFabric.Data.Read
 // and DataFabric.Data.Write scopes on the test external app/PAT. The standard
 // CI tenant currently returns 403 for these APIs.
-describeIntegration('Data Fabric Access - Integration Tests', 'any', modes, () => {
+describeIntegration('Data Fabric Access - Integration Tests', 'both', modes, () => {
 
   describe('roles.getAll', () => {
     it('should retrieve Data Fabric roles', async () => {

@@ -283,8 +283,6 @@
         "test:integration:coverage": "vitest --config vitest.integration.config.ts --coverage",
         "test:integration:v0": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v0\\]'",
         "test:integration:v1": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v1\\]'",
-        "test:integration:pat": "vitest --config vitest.integration.config.ts --testNamePattern='\\[pat\\]'",
-        "test:integration:user": "vitest --config vitest.integration.config.ts --testNamePattern='\\[user\\]'",
         "test:integration:smoke": "vitest tests/integration/shared/smoke.integration.test.ts --config vitest.integration.config.ts",
         "test:integration:watch": "vitest --config vitest.integration.config.ts --watch",
         "test:all": "npm run test:unit && npm run test:integration",

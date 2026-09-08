@@ -42,7 +42,7 @@ async function getBucketForTest(testName: string): Promise<{ bucketId: number; f
   };
 }
 
-describeIntegration('Orchestrator Buckets - Integration Tests', 'any', modes, (mode) => {
+describeIntegration('Orchestrator Buckets - Integration Tests', 'both', modes, (mode) => {
   const uploadedFiles: Array<{ bucketId: number; path: string; folderId: number }> = [];
 
   function trackUploadedFile(bucketId: number, path: string, folderId: number): void {

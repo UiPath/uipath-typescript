@@ -10,7 +10,7 @@ import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Case Instances - Integration Tests', 'any', modes, () => {
+describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes, () => {
   let testCaseInstanceId: string | null = null;
   let testCaseFolderKey: string | null = null;
 

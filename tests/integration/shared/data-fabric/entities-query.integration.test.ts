@@ -14,7 +14,7 @@ import {
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Data Fabric Entities Query - Integration Tests', 'any', modes, () => {
+describeIntegration('Data Fabric Entities Query - Integration Tests', 'both', modes, () => {
 
   let testEntityId: string | null = null;
 

@@ -152,7 +152,7 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Data Fabric Entities Records - Integration Tests', 'any', modes, () => {
+describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', modes, (mode) => {
 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;

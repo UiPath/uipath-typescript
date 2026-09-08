@@ -3,7 +3,7 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Maestro Process Incidents - Integration Tests', 'any', modes, () => {
+describeIntegration('Maestro Process Incidents - Integration Tests', 'both', modes, () => {
   describe('Incident read operations', () => {
     it('should instantiate process incidents service', async () => {
       const { processIncidents } = getServices();

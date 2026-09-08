@@ -141,11 +141,7 @@ Suites that accept either credential run once per configured credential. To narr
 to one half — reproducing a failure, or skipping the slower half while iterating:
 
 ```bash
-# Only the PAT runs
-npm run test:integration:pat
-
-# Only the user-token runs
-npm run test:integration:user
+INTEGRATION_AUTH_MODE=pat npm run test:integration
 ```
 
 See [Authentication modes](#authentication-modes) for what each credential covers.
@@ -255,7 +251,7 @@ A suite declares what it *needs* from a credential:
 
 | Requirement | Runs under | Declared by |
 |-------------|-----------|-------------|
-| `any` | **Every configured credential** — both, when both are set | Every suite unless noted below |
+| `both` | **Every configured credential** — both, when both are set | Every suite unless noted below |
 | `user` | The user token only | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions, CAS Connections |
 | `pat` | The PAT only | None currently — `auth-errors` builds its own SDK instances directly |
 
@@ -272,15 +268,14 @@ When nothing configured satisfies the requirement the suite is still collected a
 reported as **skipped** — it does not silently vanish — and the cell is labelled with
 the credential it wanted.
 
-**Locally, Minter is not required.** With only `UIPATH_SECRET` set, `any` suites run
+**Locally, Minter is not required.** With only `UIPATH_SECRET` set, `both` suites run
 PAT-only and `user` suites skip, which is what a developer machine looks like by
 default. CI mints a user token, so CI gets both.
 
 `INTEGRATION_AUTH_MODE=pat|user` narrows a whole run to one credential without editing
 any suite — useful for reproducing a single failing half. It *restricts* rather than
 forces: a suite that requires the excluded credential skips rather than running under
-the wrong one. The `npm run test:integration:pat` / `:user` scripts do the same by name
-filter.
+the wrong one.
 
 Both credentials are sent as plain bearer tokens; the SDK's `secret` config field takes
 either.
@@ -291,7 +286,7 @@ Declare it once, as the second argument to `describeIntegration`:
 
 ```ts
 // Either works — runs under both when both are configured. This is the default.
-describeIntegration('Orchestrator Assets - Integration Tests', 'any', modes, () => { ... });
+describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => { ... });
 
 // Needs a user token — skips when none is configured.
 describeIntegration('Notifications - Integration Tests', 'user', modes, () => { ... });
@@ -309,7 +304,7 @@ and the setup disagree, and nothing catches that.
 A fifth argument carries the rare extras:
 
 ```ts
-describeIntegration('Entity Attachment - Integration Tests', 'any', modes, () => {
+describeIntegration('Entity Attachment - Integration Tests', 'both', modes, () => {
   ...
 }, { skip: !hasAttachmentConfig, timeout: 120000 });
 ```
@@ -383,7 +378,7 @@ describeIntegration('My Suite', 'user', modes, () => {
 
 That one word is the whole declaration — the suite runs only under the user token and
 skips, visibly, wherever none is configured. A suite that works with either credential
-passes `'any'` and runs under both.
+passes `'both'` and runs under both.
 
 ## Environment Variables Reference
 
@@ -457,7 +452,7 @@ If tests fail before cleanup, manually delete resources with names starting with
    ```typescript
    const modes: InitMode[] = ['v0', 'v1'];
 
-   describeIntegration('My Integration Tests', 'any', modes, () => {
+   describeIntegration('My Integration Tests', 'both', modes, () => {
      it('should do something', () => {
        const { tasks, entities } = getServices();
        // ... test code using services
