@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskCreateOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/TaskCreateBaseOptions/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>TaskCreateOptions - UiPath TypeScript SDK</title>
+        <title>TaskCreateBaseOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#extends" class="md-skip">
+        <a href="#extended-by" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              TaskCreateOptions
+              TaskCreateBaseOptions
             
           </span>
         </div>
@@ -2935,10 +2935,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#extends" class="md-nav__link">
+  <a href="#extended-by" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extends
+        Extended by
       
     </span>
   </a>
@@ -2976,17 +2976,12 @@
   
 
 
-  <h1>TaskCreateOptions</h1>
+  <h1>TaskCreateBaseOptions</h1>
 
-<p>Options for creating a task.</p>
-<p><code>type</code> defaults to <a href="../../enumerations/TaskType/#external">TaskType.External</a> when omitted. For a schema-first
-HITL task, set <code>type: TaskType.QuickForm</code> and provide <code>taskSchemaKey</code> and
-<code>schema</code>: the schema is registered under <code>taskSchemaKey</code> on first use and
-reused (not updated) on later calls with the same key (keys are unique per
-tenant).</p>
-<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<p>Fields common to every task-creation shape.</p>
+<h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../TaskCreateBaseOptions/"><code>TaskCreateBaseOptions</code></a></li>
+<li><a href="../TaskCreateOptions/"><code>TaskCreateOptions</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -2999,24 +2994,9 @@ tenant).</p>
 </thead>
 <tbody>
 <tr>
-<td><a id="actionablemessagemetadata"></a> <code>actionableMessageMetaData?</code></td>
-<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>When omitted on a QuickForm task, the backend derives it from the referenced schema.</td>
-</tr>
-<tr>
-<td><a id="creatorjobkey"></a> <code>creatorJobKey?</code></td>
-<td><code>string</code></td>
-<td>Identifies the job that triggered the schema creation (paired with <code>schema</code>).</td>
-</tr>
-<tr>
 <td><a id="data"></a> <code>data?</code></td>
 <td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
 <td>-</td>
-</tr>
-<tr>
-<td><a id="isactionablemessageenabled"></a> <code>isActionableMessageEnabled?</code></td>
-<td><code>boolean</code></td>
-<td>Enables actionable (e.g. Outlook) notifications for a QuickForm task.</td>
 </tr>
 <tr>
 <td><a id="labels"></a> <code>labels?</code></td>
@@ -3029,24 +3009,9 @@ tenant).</p>
 <td>-</td>
 </tr>
 <tr>
-<td><a id="schema"></a> <code>schema?</code></td>
-<td><code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
-<td>Inline schema body for a QuickForm task, registered under <code>taskSchemaKey</code> on first use.</td>
-</tr>
-<tr>
-<td><a id="taskschemakey"></a> <code>taskSchemaKey?</code></td>
-<td><code>string</code></td>
-<td>Schema key for a QuickForm task. Required when <code>type</code> is <a href="../../enumerations/TaskType/#quickform">TaskType.QuickForm</a>; ignored for other task types.</td>
-</tr>
-<tr>
 <td><a id="title"></a> <code>title</code></td>
 <td><code>string</code></td>
 <td>-</td>
-</tr>
-<tr>
-<td><a id="type"></a> <code>type?</code></td>
-<td><a href="../../enumerations/TaskType/"><code>TaskType</code></a></td>
-<td>Task type. Defaults to <a href="../../enumerations/TaskType/#external">TaskType.External</a> when omitted.</td>
 </tr>
 </tbody>
 </table>
