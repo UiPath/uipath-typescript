@@ -159,8 +159,8 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   // The widget makes no API call when the reviewer reports an exception - it just hands the
   // host the document id and reason. Persisting it is this app's job.
   //
-  // This flow does NOT complete the action: submitExceptionReport transitions the task on the
-  // Document Understanding side, so completing it here as well would be a second close.
+  // This flow does NOT complete the action: SubmitExceptionReport completes the task server-side,
+  // so calling completeTask as well would close an already-closed task.
   const handleReportException = useCallback(
     async (request: IVsSaveExceptionReportRequest) => {
       if (taskId === null || folderId === null) return;
@@ -186,7 +186,8 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
           return;
         }
 
-        // Nothing else to do - say so, since not completing means the pane does not change.
+        // The task is already closed; Action Center's pane won't reflect that until it reloads,
+        // so the message is the only feedback the reviewer gets.
         codedActionApp.showMessage('Exception reported.', MessageSeverity.Success);
       } catch (err: unknown) {
         codedActionApp.showMessage(
