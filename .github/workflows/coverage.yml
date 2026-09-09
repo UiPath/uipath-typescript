@@ -17,17 +17,12 @@ permissions:
   contents: read
 
 jobs:
-  coverage:
+  unit:
     runs-on: uipath-ubuntu-latest
     env:
       # uipath-ubuntu-* runners have less RAM than ubuntu-latest, so Node
       # auto-sizes its heap to ~2 GB and the rollup build OOMs (exit 134).
       NODE_OPTIONS: --max-old-space-size=6144
-      # Gates the Minter steps. Fork PRs and repos without the Minter secrets
-      # configured evaluate this to false and skip straight to the tests, which
-      # then run PAT-only: user-token suites skip themselves, and suites that
-      # accept either credential run under the PAT alone instead of under both.
-      MINTER_ENABLED: ${{ secrets.MINTER_USERNAME != '' && secrets.ACR_USERNAME != '' }}
 
     steps:
       - name: Checkout
@@ -58,6 +53,33 @@ jobs:
 
       - name: Build Project
         run: npm run build
+
+  integration:
+    runs-on: uipath-ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        auth: [pat, user]
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
+      # Gates the Minter steps. Fork PRs and repos without the Minter secrets
+      # configured evaluate this to false, and the user leg then skips every suite.
+      MINTER_ENABLED: ${{ secrets.MINTER_USERNAME != '' && secrets.ACR_USERNAME != '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
 
       - name: Set Integration Test Configuration
         id: config
@@ -154,7 +176,7 @@ jobs:
       # pltnonprodacr, which lives in another subscription. Swap to federation once
       # that assignment can be made — it removes the stored password.
       - name: Mint user access token
-        if: env.MINTER_ENABLED == 'true'
+        if: matrix.auth == 'user' && env.MINTER_ENABLED == 'true'
         continue-on-error: true
         env:
           ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
@@ -217,6 +239,8 @@ jobs:
           echo "Minted a user access token; user-token suites will run, and either-credential suites will run under both."
 
       - name: Run Integration Tests
+        env:
+          INTEGRATION_AUTH_MODE: ${{ matrix.auth }}
         run: npm run test:integration:coverage -- --run --maxWorkers=2
 
       # Runners are reused, so the config file — which holds the minted token —
@@ -228,17 +252,43 @@ jobs:
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: integration-coverage
+          name: integration-coverage-${{ matrix.auth }}
           path: coverage-integration/lcov.info
 
+  sonar:
+    needs: [unit, integration]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    runs-on: uipath-ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          path: lcov
+
+      - name: Assemble coverage
+        run: |
+          mkdir -p coverage coverage-integration
+          cp lcov/unit-coverage/lcov.info coverage/lcov.info
+          # lcov reports concatenate; Sonar merges the records per file.
+          cat lcov/integration-coverage-*/lcov.info > coverage-integration/lcov.info
+
       - name: SonarCloud Scan
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d  # v5.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  summary:
+    needs: [unit, integration]
+    if: always()
+    runs-on: uipath-ubuntu-latest
+    steps:
       - name: Generate Summary
-        if: success()
+        if: needs.unit.result == 'success' && needs.integration.result == 'success'
         run: |
           echo "## ✅ Coverage Checks Passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -253,7 +303,7 @@ jobs:
           echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
 
       - name: Generate Failure Summary
-        if: failure()
+        if: needs.unit.result != 'success' || needs.integration.result != 'success'
         run: |
           echo "## ❌ Coverage Checks Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
