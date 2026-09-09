@@ -346,7 +346,9 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (resumedStatus === InstanceStatus.RUNNING) {
           break;
         }
-        // ~every 10s of settled Paused, assume the earlier resume was lost and re-issue
+        // On every 5th poll that reads Paused, assume the earlier resume was lost and
+        // re-issue it (a trailing re-issue also restores the shared instance for later
+        // tests even when this assertion is about to fail)
         if (resumedStatus === InstanceStatus.PAUSED && attempt % 5 === 4) {
           await caseInstances.resume(target.instanceId, target.folderKey);
         }
