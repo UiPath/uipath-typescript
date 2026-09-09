@@ -6,6 +6,10 @@ Use this variant when the standard layout doesn't fit — you need to rearrange 
 
 The five panels are linked by a single shared `instanceId`, which is the only wiring they need: selecting a field in the form highlights it in the document, picking a table field opens the line-item editor, and clicking a business rule focuses the offending field.
 
+## Preview
+
+![Document Understanding validation composed from subcomponents inside Action Center: linked document viewer, fields form, line-item editor and business rules](./screenshots/preview.gif)
+
 ---
 
 ## Pre-requisites
@@ -17,7 +21,7 @@ The five panels are linked by a single shared `instanceId`, which is the only wi
   - A non-confidential **External Application** (OAuth client) registered with the following:
     - Scopes:
         - `OR.Buckets` (to read the document and its extraction artifacts from the storage bucket, and write the validated result back)
-        - `OR.Tasks` (to record an exception report against the task)
+        - `OR.Tasks` (to read the action and complete it)
     - Redirect URI `https://<host>/<orgId>/<tenantId>/actions_`, where `<host>` is the environment you sign in to (`cloud.uipath.com`, `alpha.uipath.com`, …) and `<orgId>`/`<tenantId>` are the **GUIDs — not the org and tenant names shown in the browser address bar**. This is normally added the first time a coded action app using this external application is deployed, but confirm it is there: a missing or name-based entry fails with `invalid_request` / `Invalid redirect_uri`. To read the exact value your app sends, open it and copy `redirect_uri` from the `/identity_/connect/authorize` request in the browser's network tab.
 - Install [UiPath CLI](https://github.com/UiPath/cli#installation)
   
@@ -53,34 +57,7 @@ cp uipath.json.example uipath.json
 - **`clientId`** — the App ID of your registered External Application in UiPath Cloud
 - **`scope`** - the scopes required by the app. This must be a subset of the scopes granted to the external client above.
 
-### 3. Run it locally
-
-A coded action app is an iframe inside Action Center, and it gets its task over `postMessage`
-from the page around it. Opening `http://localhost:5173` directly therefore fails with
-**"Discarding event from invalid origin"** — there is no host to hand it a task. Action Center
-provides a debug page that plays that host:
-
-```bash
-npm run dev
-```
-
-Then open `https://<host>/<orgName>/<tenantName>/actions_/debug/coded-action-app` (`<host>` being
-the environment you sign in to, and org and tenant addressed here by **name**) and fill in:
-
-| Field | Value |
-|---|---|
-| Localhost URL | `http://localhost:5173` |
-| Folder | the folder holding the storage bucket named in your payload |
-| Task Data (JSON) | `{ "contentValidationData": { … } }` |
-
-The quickest way to get a real `contentValidationData` is **Load from Task ID** with the id of an
-existing Document Understanding validation action; otherwise paste the payload from one. It has to
-name a bucket the signed-in user can read, or the widget loads no document.
-
-The redirect URI from the pre-requisites must already be registered, or the app loads and then
-fails to fetch a token.
-
-### 4. Deploy to UiPath Cloud
+### 3. Deploy to UiPath Cloud
 
 Build and deploy using the [`UiPath CLI`](https://uipath.github.io/uipath-typescript/coded-apps/getting-started/#deploy):
 
@@ -118,7 +95,11 @@ _None._ Everything the reviewer changes travels back through the storage bucket,
 |---|---|
 | `Submit` | A successful **Submit** in the fields form |
 
-Reporting an exception does not complete the action — `submitExceptionReport` transitions the task on the Document Understanding side.
+### Report as exception
+
+The fields form's **Report as exception** button is hidden in this sample (`options.hideReportAsExceptionButton`). It cannot work in a Coded Action App: the form persists nothing for that flow, and the only API that records an exception report — `OrchestratorDuModule.submitExceptionReport` — is addressed by the id of a *Document Understanding validation task*, while the action this app renders is an *app task*. The call has no task to act on and fails every time.
+
+If you want the button anyway, `src/components/Validation.tsx` carries a commented-out handler that shows the reviewer a message and completes the action, along with a note on how to keep the action open instead.
 
 ---
 
@@ -135,27 +116,22 @@ Reporting an exception does not complete the action — `submitExceptionReport` 
 Three rules govern the composition, and each one is a silent failure if broken:
 
 1. **Fetch the artifacts once.** `useDuDocumentArtifacts` runs in the parent and the same `artifacts` object is passed to all five panels. Calling it per panel re-downloads the same document once per panel.
-2. **Only `CompactFieldsForm` gets `sdk` + `data`.** It owns persistence — submit, save-as-draft and report-exception. The other four take the pre-fetched artifacts only.
+2. **Only `CompactFieldsForm` gets `sdk` + `data`.** It owns persistence — submit and save-as-draft. The other four take the pre-fetched artifacts only.
 3. **`persistent: false`.** These panels live in a static grid and are never re-parented. Left on, React StrictMode's throwaway unmount calls `forceDestroy()` and the panel renders blank.
 
-Because the doc-type and business-rules panels are rendered standalone, the fields form hides its built-in copies via `options: { hideBusinessRules: true, hideDocumentTypeField: true }` — otherwise each appears twice.
+Because the doc-type and business-rules panels are rendered standalone, the fields form hides its built-in copies via `options: { hideBusinessRules: true, hideDocumentTypeField: true }` — otherwise each appears twice. The same `options` object also carries `hideReportAsExceptionButton: true`, for the reason given under [Report as exception](#report-as-exception).
 
 ---
 
 ## Viewing the coded action app in Action Center
 
-This is the **deployed** app driven by a real process. To run the version on your machine
-against a simulated task instead, see [Run it locally](#3-run-it-locally) above.
-
 1. Import the [Template With Document Validation Subcomponents.uis](./Template%20With%20Document%20Validation%20Subcomponents.uis) solution in **Studio Web**.
 
-   <!-- TODO: attach screenshot — importing the solution in Studio Web -->
-   _Screenshot placeholder — importing the solution in Studio Web._
+   <img width="3836" height="1977" alt="Screenshot 2026-03-10 174451" src="https://github.com/user-attachments/assets/36046521-a49c-49f6-b103-01164828d6fb" />
 
-2. In the **Properties** panel of the User Task node, update the **Action App** field to point to your deployed coded action app.
+2. In the **Properties** panel of the Create App Task activity, update the **Apps** field to point to your deployed coded action app.
 
-   <!-- TODO: attach screenshot — User Task properties, Action App field -->
-   _Screenshot placeholder — pointing the User Task at the deployed app._
+<img width="1725" height="796" alt="Screenshot 2026-09-10 at 2 19 57 AM" src="https://github.com/user-attachments/assets/d9ad5142-2597-4655-895b-3d6de58ad367" />
 
 3. Click **Debug** to run the process — this will create an Action Center task backed by your app.
 4. Open Action Center and complete the task to verify the full flow end-to-end.
@@ -164,8 +140,7 @@ against a simulated task instead, see [Run it locally](#3-run-it-locally) above.
 
 Create the task using an RPA workflow in **Studio Desktop** that uses the **Create App Task** activity, pointing to your deployed coded action app and passing the required inputs.
 
-<!-- TODO: attach screenshot — Create App Task activity in Studio Desktop -->
-_Screenshot placeholder — the Create App Task activity._
+<img width="3838" height="1875" alt="Screenshot 2026-03-10 182414" src="https://github.com/user-attachments/assets/5c72d051-bb7c-4cb4-a23a-2751ffda3e69" />
 
 ---
 
@@ -181,14 +156,9 @@ When the app loads inside Action Center:
 
 4. **Submit** — The fields form validates and uploads the result, then the app completes the action with the `Submit` outcome and it leaves the reviewer's queue.
 
-5. **Report as exception** — The reason is recorded against the task and a confirmation appears. The app does not complete the action itself.
+5. **Report as exception** — Not offered. The button is hidden, for the reason given under [Report as exception](#report-as-exception).
 
 6. **Theme** — The app follows the Action Center theme preference, including the high-contrast variants. There is no in-app toggle.
 
 7. **Read-only mode** — If the task is already completed or the current user does not have edit access, every panel renders non-editable.
 
----
-
-## Preview
-
-![Document Understanding validation composed from subcomponents inside Action Center: linked document viewer, fields form, line-item editor and business rules](./screenshots/preview.gif)
