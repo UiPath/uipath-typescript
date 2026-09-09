@@ -199,7 +199,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     minterBaseUrl: process.env.MINTER_BASE_URL || undefined,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
-    tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
+    tenantId: process.env.UIPATH_TENANT_ID || undefined,
     secret: process.env.UIPATH_SECRET,
     userToken: process.env.UIPATH_USER_TOKEN || undefined,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT

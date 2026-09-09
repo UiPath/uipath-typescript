@@ -23,7 +23,7 @@ describeIntegration('Subscriptions - Integration Tests', 'user', modes, () => {
     const configuredTenantId = getTestConfig().tenantId;
     if (!configuredTenantId) {
       throw new Error(
-        'UIPATH_TENANT_ID_DEV is not configured. Set it to the acting tenant GUID ' +
+        'UIPATH_TENANT_ID is not configured. Set it to the acting tenant GUID ' +
           'so subscription preferences can be queried.',
       );
     }
