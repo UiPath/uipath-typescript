@@ -106,7 +106,7 @@ jobs:
           MINTER_BASE_URL=${{ steps.config.outputs.minter_base_url }}
           UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
           UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
-          UIPATH_TENANT_ID_DEV=${{ steps.config.outputs.tenant_id }}
+          UIPATH_TENANT_ID=${{ steps.config.outputs.tenant_id }}
           UIPATH_SECRET=${{ steps.config.outputs.secret }}
           INTEGRATION_TEST_TIMEOUT=30000
           INTEGRATION_TEST_SKIP_CLEANUP=false
