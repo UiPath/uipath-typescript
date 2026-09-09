@@ -3285,7 +3285,7 @@ signalling that the user has finished interacting with the task.</p>
 <p>A promise that resolves with a <a href="../../type-aliases/TaskCompleteResponse/">TaskCompleteResponse</a> object
   containing success and error message if any.</p>
 <h4 id="throws">Throws<a class="headerlink" href="#throws" title="Permanent link">&para;</a></h4>
-<p>If called from an untrusted origin.</p>
+<p>If the host origin (<code>basedomain</code> query parameter) is missing.</p>
 <h4 id="throws_1">Throws<a class="headerlink" href="#throws_1" title="Permanent link">&para;</a></h4>
 <p>If a completeTask call is already in progress.</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
@@ -3314,7 +3314,7 @@ signalling that the user has finished interacting with the task.</p>
 <p>A promise that resolves with a <a href="../../type-aliases/Task/">Task</a> object
   containing task metadata and data.</p>
 <h4 id="throws_2">Throws<a class="headerlink" href="#throws_2" title="Permanent link">&para;</a></h4>
-<p>If called from an untrusted origin.</p>
+<p>If the host origin (<code>basedomain</code> query parameter) is missing.</p>
 <h4 id="throws_3">Throws<a class="headerlink" href="#throws_3" title="Permanent link">&para;</a></h4>
 <p>If Action Center does not respond within the allotted timeout.</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
