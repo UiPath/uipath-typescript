@@ -46,7 +46,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.indexes
     - navigation.sections
@@ -59,7 +58,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.sections
     - search.highlight
@@ -231,13 +229,14 @@ nav:
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
   - Plugins:
       - Codex: plugins/codex.md
-  - AI App Builders:
+  - App Builder Integrations:
       - Getting Started: ai-app-builders/getting-started.md
-      - Video Gallery: ai-app-builders/videos.md
-      - Vercel (v0): ai-app-builders/vercel.md
-      - Replit: ai-app-builders/replit.md
-      - Bolt: ai-app-builders/bolt.md
-      - Lovable: ai-app-builders/lovable.md
+      - Guides:
+          - ai-app-builders/guides/index.md
+          - Vercel (v0): ai-app-builders/vercel.md
+          - Replit: ai-app-builders/replit.md
+          - Bolt: ai-app-builders/bolt.md
+          - Lovable: ai-app-builders/lovable.md
   - Sample Apps Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md

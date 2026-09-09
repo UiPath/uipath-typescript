@@ -1,10 +1,10 @@
 ---
-title: AI App Builders Video Gallery
+title: App Builder Integrations Walkthroughs
 hide:
   - toc
 ---
 
-# AI App Builders Video Gallery
+# App Builder Integrations Walkthroughs
 
 The four builder walkthroughs each build the same app — an IT ticketing portal backed by a Data Fabric entity — starting from a plain-language prompt and ending with the app live on a UiPath tenant. Only the builder changes: the UiPath Coded Apps skill, the SDK and the deploy pipeline are identical every time. The Codex clip is a short overview of the UiPath Sites plugin rather than a full build.
 
@@ -149,4 +149,4 @@ The four builder walkthroughs each build the same app — an IT ticketing portal
 
 ## Not using one of these?
 
-Any AI coding tool that can load a skill file can follow the same path. Point it at the [UiPath Coded Apps skill](https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md) and describe what you want built. See [Getting Started](getting-started.md) for the parts that are common to every builder.
+Any AI coding tool that can load a skill file can follow the same path. Point it at the [UiPath Coded Apps skill](https://github.com/UiPath/skills/blob/main/skills/uipath-coded-apps/SKILL.md) and describe what you want built. See [Getting Started](../getting-started.md) for the parts that are common to every builder.

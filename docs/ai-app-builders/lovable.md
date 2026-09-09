@@ -18,7 +18,7 @@ The full build, start to finish — prompt to a live app on a UiPath tenant.
           allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
 </div>
 
-The other builders are in the [video gallery](videos.md).
+The other builders are in [Guides](guides/index.md).
 
 ---
 
@@ -111,7 +111,7 @@ Common to all builders:
 
 ## Related docs
 
-- [AI App Builders → Getting Started](getting-started.md)
+- [App Builder Integrations → Getting Started](getting-started.md)
 - [Coded Apps → Getting Started](../coded-apps/getting-started.md)
 - [Coded Apps → CLI Reference](../coded-apps/cli-reference.md)
 - [CI/CD: GitHub Actions](../coded-apps/ci-cd-github-actions.md)
