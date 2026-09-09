@@ -45,16 +45,21 @@ import { FolderScopedService } from '../folder-scoped';
 export class TaskService extends FolderScopedService implements TaskServiceModel {
   @track('Tasks.Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
+    if (task.type === TaskType.QuickForm && !task.taskSchemaKey) {
+      throw new ValidationError({ message: 'taskSchemaKey is required when creating a QuickForm task.' });
+    }
+
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const externalTask = {
-      ...task,
-      type: TaskType.External //currently only external task is supported
-    };
-    
+
+    const { labels, type, ...rest } = task;
+    const payload: Record<string, unknown> = { ...rest, type: type ?? TaskType.External };
+    if (labels?.length) {
+      payload.tags = labels.map((label): Tag => ({ name: label, displayName: label, displayValue: label }));
+    }
+
     const response = await this.post<TaskCreateResponse>(
       TASK_ENDPOINTS.CREATE_GENERIC_TASK,
-      externalTask,
+      payload,
       { headers }
     );
     // Transform time fields for consistency

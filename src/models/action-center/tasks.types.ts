@@ -43,7 +43,9 @@ export enum TaskType {
   /** A document classification task for categorizing documents */
   DocumentClassification = 'DocumentClassificationTask',
   /** A data labeling task for annotating training data */
-  DataLabeling = 'DataLabelingTask'
+  DataLabeling = 'DataLabelingTask',
+  /** A schema-first HITL task rendered in Action Center via a registered TaskSchema */
+  QuickForm = 'QuickFormTask'
 }
 
 export enum TaskPriority {
@@ -162,10 +164,44 @@ export interface TaskBaseResponse {
   lastModifiedTime: string | null;
 }
 
-export interface TaskCreateOptions {
+/**
+ * Fields common to every task-creation shape.
+ */
+export interface TaskCreateBaseOptions {
   title: string;
   data?: Record<string, unknown>;
   priority?: TaskPriority;
+  /**
+   * Free-form labels shown on the task. Supported for all task types.
+   */
+  labels?: string[];
+}
+
+/**
+ * Options for creating a task.
+ *
+ * `type` defaults to {@link TaskType.External} when omitted. For a schema-first
+ * HITL task, set `type: TaskType.QuickForm` and provide `taskSchemaKey` and
+ * `schema`: the schema is registered under `taskSchemaKey` on first use and
+ * reused (not updated) on later calls with the same key (keys are unique per
+ * tenant).
+ */
+export interface TaskCreateOptions extends TaskCreateBaseOptions {
+  /** Task type. Defaults to {@link TaskType.External} when omitted. */
+  type?: TaskType;
+  /**
+   * Schema key for a QuickForm task. Required when `type` is
+   * {@link TaskType.QuickForm}; ignored for other task types.
+   */
+  taskSchemaKey?: string;
+  /** Inline schema body for a QuickForm task, registered under `taskSchemaKey` on first use. */
+  schema?: Record<string, unknown>;
+  /** Enables actionable (e.g. Outlook) notifications for a QuickForm task. */
+  isActionableMessageEnabled?: boolean;
+  /** When omitted on a QuickForm task, the backend derives it from the referenced schema. */
+  actionableMessageMetaData?: Record<string, unknown>;
+  /** Identifies the job that triggered the schema creation (paired with `schema`). */
+  creatorJobKey?: string;
 }
 
 export interface RawTaskCreateResponse extends TaskBaseResponse {
@@ -272,6 +308,7 @@ export type TaskCompleteOptions =
   | { type: TaskType.DataLabeling; data?: any; action?: string }
   | { type: TaskType.Form; data: any; action: string }
   | { type: TaskType.App; data: any; action: string }
+  | { type: TaskType.QuickForm; data: any; action: string }
 
 /**
  * Options for completing a task when called from the service
