@@ -264,7 +264,8 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
       const instance = await processInstances.getById(job.key, config.folderKey);
       expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
-      // 120s: the wait-for-Running poll alone spans up to 60s (20 × 3s) before the cancel
+      // 120s: the wait-for-Running poll alone spans ~40-60s (20 polls at 2s intervals
+      // plus per-request latency) before the cancel
       // call and verification, and CI runs have timed this test out at 60s under load
     }, 120_000);
   });
