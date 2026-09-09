@@ -3,12 +3,10 @@ import {
   ValidationStation,
   ValidationStationLanguage,
   type IValidationStationOptions,
-  type IVsSaveExceptionReportRequest,
   type IVsSaveValidatedDataAsDraftRequest,
   type IVsSaveValidatedDataRequest,
   type SaveValidatedDataResult,
 } from '@uipath/ui-widgets-validation-station';
-import { OrchestratorDuModule } from '@uipath/uipath-typescript/orchestrator-du-module';
 import type { DuFramework } from '@uipath/uipath-typescript/document-understanding';
 import { MessageSeverity, Theme } from '@uipath/coded-action-app';
 import { codedActionApp, sdk } from '../uipath';
@@ -21,24 +19,20 @@ interface ActionInputs {
   contentValidationData?: DuFramework.ContentValidationData | null;
 }
 
-// Makes the web component emit its in-memory extraction state as the reviewer edits, which
-// is what the built-in "Save as draft" button uploads. Without it that button is a no-op.
 const VALIDATION_STATION_OPTIONS: IValidationStationOptions = {
+  // Makes the web component emit its in-memory extraction state as the reviewer edits, which
+  // is what the built-in "Save as draft" button uploads. Without it that button is a no-op.
   emitDtoStateChanges: true,
+
+  // "Report as exception" is hidden: recording one needs submitExceptionReport, which takes
+  // a Document Understanding validation task id. This action is an app task, so that call
+  // always fails. See below if you want the button anyway.
+  hideReportAsExceptionButton: true,
 };
 
-// The only outcome declared in action-schema.json, and only the submit flow uses it: a
-// validation action is finished or it is not, so there is no approve/reject decision to
-// record. Reporting an exception deliberately does not complete the action - see below.
+// The only outcome declared in action-schema.json: a validation action is finished or it is
+// not, so there is no approve/reject decision to record.
 const SUBMIT_OUTCOME = 'Submit';
-
-/** Work this app does after the widget has handed back control and gone idle. */
-type PendingAction = 'submit' | 'report';
-
-const PENDING_LABELS: Record<PendingAction, string> = {
-  submit: 'Completing the action…',
-  report: 'Reporting the exception…',
-};
 
 const resolveTheme = (theme: Theme): WidgetTheme => {
   switch (theme) {
@@ -69,15 +63,12 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   // The task's whole input bag is kept, not just the payload the widget needs: it has to be
   // handed back verbatim on completion, or Action Center records the task with empty data.
   const [taskData, setTaskData] = useState<ActionInputs | null>(null);
-  const [taskId, setTaskId] = useState<number | null>(null);
   const [folderId, setFolderId] = useState<number | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
   const [theme, setTheme] = useState<WidgetTheme>('light');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
-
-  const duModule = useMemo(() => new OrchestratorDuModule(sdk), []);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // The widget scopes its bucket calls to the folder named on the payload, so fill in the
   // task's folder when the payload arrived without one.
@@ -93,7 +84,6 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       .getTask()
       .then((task) => {
         setTaskData((task.data as ActionInputs | null) ?? null);
-        setTaskId(task.taskId);
         setFolderId(task.folderId);
         setIsReadonly(task.isReadOnly);
 
@@ -125,7 +115,7 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
         return;
       }
 
-      setPendingAction('submit');
+      setIsCompleting(true);
       try {
         // The whole input bag goes back: completeTask REPLACES the task's data, so anything
         // left out is recorded as empty.
@@ -137,7 +127,7 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
           );
         }
       } finally {
-        setPendingAction(null);
+        setIsCompleting(false);
       }
     },
     [taskData],
@@ -156,50 +146,30 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
     [],
   );
 
-  // The widget makes no API call when the reviewer reports an exception - it just hands the
-  // host the document id and reason. Persisting it is this app's job.
+  // Want the button back? It still cannot record a real exception report, so the usual
+  // fallback is to tell the reviewer and close the action. Drop hideReportAsExceptionButton
+  // above, re-add `type IVsSaveExceptionReportRequest` to the import, uncomment this, and
+  // pass onReportException={handleReportException} to <ValidationStation /> below.
   //
-  // This flow does NOT complete the action: SubmitExceptionReport completes the task server-side,
-  // so calling completeTask as well would close an already-closed task.
-  const handleReportException = useCallback(
-    async (request: IVsSaveExceptionReportRequest) => {
-      if (taskId === null || folderId === null) return;
-
-      // `exceptionReport` is typed `unknown` on the widget's contract - it carries the
-      // IReportAsExceptionDTO shape, of which the reason is the only part this app needs.
-      const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
-
-      setPendingAction('report');
-      try {
-        const response = await duModule.submitExceptionReport(
-          taskId,
-          request.documentId,
-          Reason || 'Reported via Validation Station',
-          { folderId },
-        );
-
-        if (!response.IsSuccessful) {
-          codedActionApp.showMessage(
-            response.ErrorMessage ?? 'Failed to report the exception.',
-            MessageSeverity.Error,
-          );
-          return;
-        }
-
-        // The task is already closed; Action Center's pane won't reflect that until it reloads,
-        // so the message is the only feedback the reviewer gets.
-        codedActionApp.showMessage('Exception reported.', MessageSeverity.Success);
-      } catch (err: unknown) {
-        codedActionApp.showMessage(
-          errorMessage(err, 'Failed to report the exception.'),
-          MessageSeverity.Error,
-        );
-      } finally {
-        setPendingAction(null);
-      }
-    },
-    [duModule, taskId, folderId],
-  );
+  // const handleReportException = useCallback(
+  //   async (request: IVsSaveExceptionReportRequest) => {
+  //     // Nothing stores the reason - write it somewhere of your own if you need it.
+  //     const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
+  //     console.warn('Exception reported:', Reason);
+  //
+  //     codedActionApp.showMessage('Exception noted. Closing the action.', MessageSeverity.Warning);
+  //
+  //     // Drop the rest to leave the action open instead. SUBMIT_OUTCOME is reused because it
+  //     // is the only outcome in action-schema.json - add another to tell the two apart.
+  //     setIsCompleting(true);
+  //     try {
+  //       await codedActionApp.completeTask(SUBMIT_OUTCOME, taskData);
+  //     } finally {
+  //       setIsCompleting(false);
+  //     }
+  //   },
+  //   [taskData],
+  // );
 
   if (isLoading) {
     return <p className="validation-status">Loading the action…</p>;
@@ -223,7 +193,7 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   }
 
   // No toolbar of our own: the widget ships its own action bar (submit, save as draft,
-  // discard, report as exception) and adding a second set would render every action twice.
+  // discard) and adding a second set would render every action twice.
   return (
     <div className="validation-host">
       <ValidationStation
@@ -235,12 +205,11 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
         options={VALIDATION_STATION_OPTIONS}
         onSubmit={handleSubmit}
         onSaveAsDraft={handleSaveAsDraft}
-        onReportException={handleReportException}
       />
-      {pendingAction && (
+      {isCompleting && (
         <div className="validation-busy" role="status" aria-live="polite">
           <span className="validation-busy__spinner" aria-hidden="true" />
-          {PENDING_LABELS[pendingAction]}
+          Completing the action…
         </div>
       )}
     </div>

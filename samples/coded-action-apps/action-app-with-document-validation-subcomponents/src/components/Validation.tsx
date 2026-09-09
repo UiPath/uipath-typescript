@@ -9,12 +9,10 @@ import {
   ValidationStationLanguage,
   type DuSaveCallbacks,
   type IValidationStationOptions,
-  type IVsSaveExceptionReportRequest,
   type IVsSaveValidatedDataAsDraftRequest,
   type IVsSaveValidatedDataRequest,
   type SaveValidatedDataResult,
 } from '@uipath/ui-widgets-validation-station';
-import { OrchestratorDuModule } from '@uipath/uipath-typescript/orchestrator-du-module';
 import type { DuFramework } from '@uipath/uipath-typescript/document-understanding';
 import { MessageSeverity, Theme } from '@uipath/coded-action-app';
 import { codedActionApp, sdk } from '../uipath';
@@ -28,25 +26,23 @@ interface ActionInputs {
   contentValidationData?: DuFramework.ContentValidationData | null;
 }
 
-// The doc-type field and business rules are rendered as their own panels below, so the fields
-// form drops its built-in copies. emitDtoStateChanges is what makes "Save as draft" work.
 const FIELDS_FORM_OPTIONS: IValidationStationOptions = {
+  // The doc-type field and business rules are rendered as their own panels below, so the
+  // fields form drops its built-in copies. emitDtoStateChanges is what makes "Save as draft"
+  // work.
   hideBusinessRules: true,
   hideDocumentTypeField: true,
   emitDtoStateChanges: true,
+
+  // "Report as exception" is hidden: recording one needs submitExceptionReport, which takes
+  // a Document Understanding validation task id. This action is an app task, so that call
+  // always fails. See below if you want the button anyway.
+  hideReportAsExceptionButton: true,
 };
 
-// The only outcome declared in action-schema.json, and only the submit flow uses it.
-// Reporting an exception deliberately does not complete the action - see below.
+// The only outcome declared in action-schema.json: a validation action is finished or it is
+// not, so there is no approve/reject decision to record.
 const SUBMIT_OUTCOME = 'Submit';
-
-/** Work this app does after the fields form has handed back control. */
-type PendingAction = 'submit' | 'report';
-
-const PENDING_LABELS: Record<PendingAction, string> = {
-  submit: 'Completing the action…',
-  report: 'Reporting the exception…',
-};
 
 const resolveTheme = (theme: Theme): WidgetTheme => {
   switch (theme) {
@@ -76,15 +72,12 @@ interface ValidationProps {
 const Validation = ({ onInitTheme }: ValidationProps) => {
   // Keep the bag: contentValidationData has to go back to completeTask untouched.
   const [taskData, setTaskData] = useState<ActionInputs | null>(null);
-  const [taskId, setTaskId] = useState<number | null>(null);
   const [folderId, setFolderId] = useState<number | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
   const [theme, setTheme] = useState<WidgetTheme>('light');
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
-
-  const duModule = useMemo(() => new OrchestratorDuModule(sdk), []);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // The artifacts fetch scopes itself to the folder named on the payload, so fill in the
   // task's folder when the payload arrived without one.
@@ -101,7 +94,6 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       .then((task) => {
         // task.data is typed `unknown`; it is the inputs bag from action-schema.json.
         setTaskData((task.data as ActionInputs | null) ?? null);
-        setTaskId(task.taskId);
         setFolderId(task.folderId);
         setIsReadonly(task.isReadOnly);
 
@@ -133,7 +125,7 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
         return;
       }
 
-      setPendingAction('submit');
+      setIsCompleting(true);
       try {
         // completeTask REPLACES the task's data, so the whole bag goes back:
         // contentValidationData exactly as getTask() gave it, plus anything the reviewer
@@ -146,7 +138,7 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
           );
         }
       } finally {
-        setPendingAction(null);
+        setIsCompleting(false);
       }
     },
     [taskData],
@@ -165,48 +157,31 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
     [],
   );
 
-  // The fields form makes no API call when the reviewer reports an exception - it just hands
-  // the host the document id and reason. Persisting it is this app's job.
+  // Want the button back? It still cannot record a real exception report, so the usual
+  // fallback is to tell the reviewer and close the action. Drop hideReportAsExceptionButton
+  // above, re-add `type IVsSaveExceptionReportRequest` to the import, uncomment this, and
+  // put onReportException back on WorkspaceProps (drop the Omit), <Workspace /> and
+  // <CompactFieldsForm />.
   //
-  // This flow does NOT complete the action: SubmitExceptionReport completes the task server-side,
-  // so calling completeTask as well would close an already-closed task.
-  const handleReportException = useCallback(
-    async (request: IVsSaveExceptionReportRequest) => {
-      if (taskId === null || folderId === null) return;
-
-      // `exceptionReport` is typed `unknown` on the widget's contract - it carries the
-      // IReportAsExceptionDTO shape, of which the reason is the only part this app needs.
-      const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
-
-      setPendingAction('report');
-      try {
-        const response = await duModule.submitExceptionReport(
-          taskId,
-          request.documentId,
-          Reason || 'Reported via Validation Station',
-          { folderId },
-        );
-
-        if (!response.IsSuccessful) {
-          codedActionApp.showMessage(
-            response.ErrorMessage ?? 'Failed to report the exception.',
-            MessageSeverity.Error,
-          );
-          return;
-        }
-
-        codedActionApp.showMessage('Exception reported.', MessageSeverity.Success);
-      } catch (err: unknown) {
-        codedActionApp.showMessage(
-          errorMessage(err, 'Failed to report the exception.'),
-          MessageSeverity.Error,
-        );
-      } finally {
-        setPendingAction(null);
-      }
-    },
-    [duModule, taskId, folderId],
-  );
+  // const handleReportException = useCallback(
+  //   async (request: IVsSaveExceptionReportRequest) => {
+  //     // Nothing stores the reason - write it somewhere of your own if you need it.
+  //     const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
+  //     console.warn('Exception reported:', Reason);
+  //
+  //     codedActionApp.showMessage('Exception noted. Closing the action.', MessageSeverity.Warning);
+  //
+  //     // Drop the rest to leave the action open instead. SUBMIT_OUTCOME is reused because it
+  //     // is the only outcome in action-schema.json - add another to tell the two apart.
+  //     setIsCompleting(true);
+  //     try {
+  //       await codedActionApp.completeTask(SUBMIT_OUTCOME, taskData);
+  //     } finally {
+  //       setIsCompleting(false);
+  //     }
+  //   },
+  //   [taskData],
+  // );
 
   if (isLoading) {
     return <p className="validation-status">Loading the action…</p>;
@@ -234,21 +209,21 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
       data={data}
       theme={theme}
       isReadonly={isReadonly}
-      pendingAction={pendingAction}
+      isCompleting={isCompleting}
       onSubmit={handleSubmit}
       onSaveAsDraft={handleSaveAsDraft}
-      onReportException={handleReportException}
     />
   );
 };
 
-// The three save callbacks are the widget's own `DuSaveCallbacks`, required rather than
-// optional: the fields form is the only panel that persists, so all three must be wired.
-interface WorkspaceProps extends Required<DuSaveCallbacks> {
+// The two save callbacks are the widget's own `DuSaveCallbacks`, required rather than
+// optional: the fields form is the only panel that persists, so both must be wired.
+// `onReportException` is omitted because that button is hidden - see the block above.
+interface WorkspaceProps extends Required<Omit<DuSaveCallbacks, 'onReportException'>> {
   data: DuFramework.ContentValidationData;
   theme: WidgetTheme;
   isReadonly: boolean;
-  pendingAction: PendingAction | null;
+  isCompleting: boolean;
 }
 
 /**
@@ -264,10 +239,9 @@ const Workspace = ({
   data,
   theme,
   isReadonly,
-  pendingAction,
+  isCompleting,
   onSubmit,
   onSaveAsDraft,
-  onReportException,
 }: WorkspaceProps) => {
   // Fetched here, in the parent, and shared. Calling this per subcomponent would download
   // the same unchanged document once per panel.
@@ -318,7 +292,6 @@ const Workspace = ({
             options={FIELDS_FORM_OPTIONS}
             onSubmit={onSubmit}
             onSaveAsDraft={onSaveAsDraft}
-            onReportException={onReportException}
           />
         </Panel>
 
@@ -331,10 +304,10 @@ const Workspace = ({
         </Panel>
       </div>
 
-      {pendingAction && (
+      {isCompleting && (
         <div className="validation-busy" role="status" aria-live="polite">
           <span className="validation-busy__spinner" aria-hidden="true" />
-          {PENDING_LABELS[pendingAction]}
+          Completing the action…
         </div>
       )}
     </div>
