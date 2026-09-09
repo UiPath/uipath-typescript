@@ -7,7 +7,7 @@ import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { ActionCenterTokenManager } from './action-center-token-manager';
 import { EmbeddedTokenManager } from './embedded-token-manager';
-import { trustedEmbeddingOrigin } from './host-token-request';
+import { hostEmbeddingOrigin } from './host-token-request';
 import { telemetryClient } from '../telemetry';
 import { extractUserIdFromToken } from '../../utils/encoding';
 
@@ -37,8 +37,8 @@ export class TokenManager {
     if (isInActionCenter) {
       this.actionCenterTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
       this.isOAuth = false;
-    } else if (trustedEmbeddingOrigin) {
-      this.embeddedTokenManager = new EmbeddedTokenManager(trustedEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
+    } else if (hostEmbeddingOrigin) {
+      this.embeddedTokenManager = new EmbeddedTokenManager(hostEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
       this.isOAuth = false;
     }
   }

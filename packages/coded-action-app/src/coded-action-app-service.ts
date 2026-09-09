@@ -50,7 +50,7 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
    * 
    * @returns A promise that resolves with a {@link TaskCompleteResponse} object
    *   containing success and error message if any.
-   * @throws {Error} If called from an untrusted origin.
+   * @throws {Error} If the host origin (`basedomain` query parameter) is missing.
    * @throws {Error} If a completeTask call is already in progress.
    */
   @track('CodedActionApp.CompleteTask')
@@ -63,9 +63,9 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
     const content = { data, action: actionTaken };
 
     return new Promise<TaskCompleteResponse>((resolve, reject) => {
-      if (!this.isValidOrigin(this.parentOrigin)) {
+      if (!this.parentOrigin) {
         this.isCompletingTask = false;
-        reject(new Error('Discarding event from invalid origin'));
+        reject(new Error('Cannot complete task: basedomain query parameter is missing'));
         return;
       }
 
@@ -102,14 +102,14 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
    *
    * @returns A promise that resolves with a {@link Task} object
    *   containing task metadata and data.
-   * @throws {Error} If called from an untrusted origin.
+   * @throws {Error} If the host origin (`basedomain` query parameter) is missing.
    * @throws {Error} If Action Center does not respond within the allotted timeout.
    */
   @track('CodedActionApp.GetTask')
   getTask(): Promise<Task> {
     return new Promise((resolve, reject) => {
-      if (!this.isValidOrigin(this.parentOrigin)) {
-        reject(new Error('Discarding event from invalid origin'));
+      if (!this.parentOrigin) {
+        reject(new Error('Cannot get task: basedomain query parameter is missing'));
         return;
       }
 
@@ -145,19 +145,19 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
   }
 
   /** 
-   * Posts a structured message to the parent (Action Center) frame.
-   * Skips the call if the parent origin is not trusted.
+   * Posts a structured message to the parent (Action Center) frame, pinned to the
+   * `basedomain` origin. Skips the call if `basedomain` is absent.
    * On serialisation errors, forwards an error event which displays an error toast in Action Center
    *
    * @param eventType - The {@link ActionCenterEventNames} event identifier to send.
    * @param content - Optional payload to include with the event.
    */
   private sendMessageToParent(eventType: string, content?: unknown): void {
-    if (window.parent && this.isValidOrigin(this.parentOrigin)) {
+    if (window.parent && this.parentOrigin) {
       try {
         window.parent.postMessage(
           { eventType, content },
-          this.parentOrigin!,
+          this.parentOrigin,
         );
       } catch (error) {
         window.parent.postMessage(
@@ -167,35 +167,10 @@ export class CodedActionAppService implements CodedActionAppServiceModel {
               errorData: error,
             }
           },
-          this.parentOrigin!
+          this.parentOrigin
         );
       }
     }
   }
 
-  /** 
-   * Validates that the given origin is a known UiPath environment or a local development server,
-   * guarding against cross-origin message spoofing.
-   *
-   * @param origin - The origin string to validate, sourced from the `basedomain` query parameter.
-   * @returns `true` if the origin is trusted, `false` otherwise.
-   */
-  private isValidOrigin(origin: string | null): boolean {
-    const ALLOWED_ORIGINS = ['https://alpha.uipath.com', 'https://staging.uipath.com', 'https://cloud.uipath.com'];
-
-    if (!origin) {
-      return false;
-    }
-
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return true;
-    }
-
-    try {
-      const url = new URL(origin);
-      return url.hostname === 'localhost';
-    } catch {
-      return false;
-    }
-  }
 }

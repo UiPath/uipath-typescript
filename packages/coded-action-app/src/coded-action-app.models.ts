@@ -36,7 +36,7 @@ export interface CodedActionAppServiceModel {
    *
    * @returns A promise that resolves with a {@link TaskCompleteResponse} object
    *   containing success and error message if any.
-   * @throws {Error} If called from an untrusted origin.
+   * @throws {Error} If the host origin (`basedomain` query parameter) is missing.
    * @throws {Error} If a completeTask call is already in progress.
    * @example
    * ```typescript
@@ -79,7 +79,7 @@ export interface CodedActionAppServiceModel {
    *
    * @returns A promise that resolves with a {@link Task} object
    *   containing task metadata and data.
-   * @throws {Error} If called from an untrusted origin.
+   * @throws {Error} If the host origin (`basedomain` query parameter) is missing.
    * @throws {Error} If Action Center does not respond within the allotted timeout.
    * @example
    * ```typescript

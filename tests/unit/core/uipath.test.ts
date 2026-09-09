@@ -57,19 +57,11 @@ const { mockPlatform } = vi.hoisted(() => ({
 }));
 vi.mock('../../../src/utils/platform', () => mockPlatform);
 
-// Mock host-token-request. getTrustedEmbeddingOrigin is computed from the mocked
+// Mock host-token-request. hostEmbeddingOrigin is computed from the mocked
 // platform flags so tests keep driving the scenario via mockPlatform.
-const { mockIsValidHostOrigin } = vi.hoisted(() => ({
-  mockIsValidHostOrigin: vi.fn((origin: string) =>
-    ['https://cloud.uipath.com', 'https://alpha.uipath.com', 'https://staging.uipath.com'].includes(origin)
-  ),
-}));
 vi.mock('../../../src/core/auth/host-token-request', () => ({
-  isValidHostOrigin: mockIsValidHostOrigin,
-  get trustedEmbeddingOrigin() {
-    return mockPlatform.isHostEmbedded && mockPlatform.embeddingOrigin && mockIsValidHostOrigin(mockPlatform.embeddingOrigin)
-      ? mockPlatform.embeddingOrigin
-      : null;
+  get hostEmbeddingOrigin() {
+    return mockPlatform.isHostEmbedded && mockPlatform.embeddingOrigin ? mockPlatform.embeddingOrigin : null;
   },
 }));
 
@@ -474,7 +466,7 @@ describe('UiPath Core', () => {
       mockPlatform.embeddingOrigin = null;
     });
 
-    it('seeds a token and sets isInitialized() when host-embedded with a trusted embeddingOrigin', () => {
+    it('seeds a token and sets isInitialized() when host-embedded with an embeddingOrigin', () => {
       mockPlatform.isHostEmbedded = true;
       mockPlatform.embeddingOrigin = PARENT_ORIGIN;
 
@@ -495,14 +487,15 @@ describe('UiPath Core', () => {
       expect(sdk.isInitialized()).toBe(true);
     });
 
-    it('does NOT seed when host-embedded but embeddingOrigin is not a trusted UiPath origin', () => {
+    // Host origins are customer-configurable and follow no fixed pattern, so any
+    // embeddingOrigin the host supplies seeds the token.
+    it('seeds when host-embedded with a non-uipath.com embeddingOrigin', () => {
       mockPlatform.isHostEmbedded = true;
-      mockPlatform.embeddingOrigin = 'https://evil.example.com';
+      mockPlatform.embeddingOrigin = 'https://automation.customer-sf.internal';
 
       const sdk = new UiPath(oauthConfig);
 
-      // Not seeded → isInitialized() stays false (normal OAuth path)
-      expect(sdk.isInitialized()).toBe(false);
+      expect(sdk.isInitialized()).toBe(true);
     });
 
     it('does NOT seed when host-embedded but embeddingOrigin is null', () => {
