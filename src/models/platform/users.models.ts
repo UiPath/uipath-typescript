@@ -53,9 +53,6 @@ export interface PlatformUserServiceModel {
    *
    * const users = new Users(sdk);
    * const allUsers = await users.getAll();
-   * for (const user of allUsers.items) {
-   *   console.log(`${user.email}: member of ${user.groupIds.length} groups`);
-   * }
    * ```
    *
    * @example Search and paginate
@@ -96,7 +93,6 @@ export interface PlatformUserServiceModel {
    * const { items } = await users.getAll();
    *
    * const user = await users.getById(items[0].id);
-   * console.log(`${user.userName} last signed in at ${user.lastLoginTime}`);
    * ```
    */
   getById(userId: string): Promise<PlatformUserGetResponse>;
