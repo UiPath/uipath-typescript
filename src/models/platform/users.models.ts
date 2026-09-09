@@ -90,16 +90,13 @@ export interface PlatformUserServiceModel {
    * @param userId - GUID of the user
    * @returns The user, as a {@link PlatformUserGetResponse}
    *
-   * @example Basic usage
+   * @example
    * ```typescript
-   * const user = await users.getById('<userId>');
-   * console.log(`${user.userName} last signed in at ${user.lastLoginTime}`);
-   * ```
+   * // Get a user id from the listing first
+   * const { items } = await users.getAll();
    *
-   * @example Find the user id by email first
-   * ```typescript
-   * const { items } = await users.getAll({ searchTerm: 'sarah@example.com' });
    * const user = await users.getById(items[0].id);
+   * console.log(`${user.userName} last signed in at ${user.lastLoginTime}`);
    * ```
    */
   getById(userId: string): Promise<PlatformUserGetResponse>;
@@ -123,8 +120,8 @@ export interface PlatformUserServiceModel {
    *
    * @example Add a user to a group
    * ```typescript
-   * // Find the user first, e.g. by email
-   * const { items } = await users.getAll({ searchTerm: 'sarah@example.com' });
+   * // Get a user id from the listing first
+   * const { items } = await users.getAll();
    *
    * await users.updateById(items[0].id, {
    *   groupIdsToAdd: ['<groupId>'],
