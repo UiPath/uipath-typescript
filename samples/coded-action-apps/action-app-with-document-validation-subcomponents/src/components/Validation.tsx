@@ -168,8 +168,8 @@ const Validation = ({ onInitTheme }: ValidationProps) => {
   // The fields form makes no API call when the reviewer reports an exception - it just hands
   // the host the document id and reason. Persisting it is this app's job.
   //
-  // This flow does NOT complete the action: submitExceptionReport transitions the task on the
-  // Document Understanding side, so completing it here as well would be a second close.
+  // This flow does NOT complete the action: SubmitExceptionReport completes the task server-side,
+  // so calling completeTask as well would close an already-closed task.
   const handleReportException = useCallback(
     async (request: IVsSaveExceptionReportRequest) => {
       if (taskId === null || folderId === null) return;
