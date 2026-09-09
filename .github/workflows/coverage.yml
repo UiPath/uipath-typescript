@@ -217,7 +217,6 @@ jobs:
           echo "Minted a user access token; user-token suites will run, and either-credential suites will run under both."
 
       - name: Run Integration Tests
-        # Network-bound suite: vitest's CPU-based default serializes on this 2-vCPU runner; 2 workers balances speed against tenant stall exposure.
         run: npm run test:integration:coverage -- --run --maxWorkers=2
 
       # Runners are reused, so the config file — which holds the minted token —
