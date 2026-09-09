@@ -40,6 +40,22 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Enforcing sign-in through the organization's identity provider
+
+By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them straight to the organization's configured identity provider instead.
+
+```
+const sdk = new UiPath({ enforceSso: true });
+```
+
+Only where everyone signs in through SSO
+
+Users who sign in with a UiPath account do not exist in the organization's identity provider and will be rejected by it.
+
+Needs the organization id
+
+This uses the organization id, which the platform and `uipath.json` supply for you. If you instead pass configuration directly to the constructor, set `orgName` to the organization id, otherwise `enforceSso` is ignored and a warning is logged.
+
 ## Secret-based Authentication
 
 ```
@@ -88,13 +104,73 @@ No refresh tokens
 
 The client-credentials flow does **not** support refresh tokens. To refresh, request a new token directly using the External App's client-credentials.
 
+## Coded Functions
+
+A coded function receives its platform coordinates as the handler's `ctx`. Pass that straight to the SDK — it maps the context itself, so the handler names no credential fields and never touches the workload token:
+
+```
+import { defineFunction } from '@uipath/coded-functions-js-sdk';
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+export default defineFunction({
+  name: 'list-entities',
+  handler: async (_input, ctx) => {
+    const sdk = new UiPath(ctx);
+
+    const entities = await new Entities(sdk).getAll();
+    return { entityCount: entities.length };
+  },
+});
+```
+
+Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
+
+## Server-side and scripts (environment contract)
+
+Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+```
+
+```
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=<organization>          # an id works here as well as a name
+UIPATH_TENANT_NAME=<tenant>
+UIPATH_ACCESS_TOKEN=<accessToken>       # PAT or bearer token
+```
+
+These are the names this SDK already uses elsewhere for the same values, so one `.env` serves a script and a test run alike.
+
+The variables are read from `process.env` or `Deno.env`, whichever the runtime provides.
+
+To state the configuration explicitly instead, pass it to the constructor — this takes precedence over both the environment and meta tags:
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: '<organizationId>',   // an id works here as well as a name
+  tenantName: '<tenantId>',
+  secret: '<accessToken>'        // any bearer token
+});
+```
+
+The access token is consumed internally and is never exposed on `sdk.config`.
+
+Precedence
+
+Constructor arguments win over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
+
 ## SDK Initialization - The initialize() Method
 
 ### When to Use initialize()
 
 The `initialize()` method completes the authentication process for the SDK:
 
-- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**. This covers `secret`, `accessToken`, a coded function's `ctx`, and the environment contract.
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
 ### Example: Secret Authentication (Auto-initialized)
@@ -189,7 +265,7 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
-- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass `sdk.logout({ endSession: true })` to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 
 ## Quick Test Script
