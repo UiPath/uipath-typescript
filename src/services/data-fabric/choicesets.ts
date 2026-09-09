@@ -16,8 +16,9 @@ import {
 } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+import { FOLDER_KEY, UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
+import type { IUiPath } from '../../core/types';
 import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
@@ -28,6 +29,10 @@ import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from 
 import { ValidationError, NotFoundError } from '../../core/errors';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
+  constructor(instance: IUiPath) {
+    super(instance, { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK });
+  }
+
   @track('Choicesets.GetAll')
   async getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
     return this.fetchAllChoiceSets(options);

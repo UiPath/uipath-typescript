@@ -18,8 +18,10 @@ import {
   RawDataFabricDirectoryListResponse,
 } from '../../models/data-fabric/directory.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
+import { UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
+import type { IUiPath } from '../../core/types';
 
 const DEFAULT_DIRECTORY_PAGE_SIZE = 100;
 const MAX_DIRECTORY_PAGE_SIZE = 100;
@@ -144,6 +146,10 @@ function clampDirectoryPageSize(pageSize?: number): number {
  * @internal
  */
 export class DataFabricDirectoryService extends BaseService implements DataFabricDirectoryServiceModel {
+  constructor(instance: IUiPath) {
+    super(instance, { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK });
+  }
+
   private async fetchAllEntries(options: DataFabricDirectoryGetAllOptions = {}): Promise<DataFabricDirectoryEntry[]> {
     const top = clampDirectoryPageSize(options.pageSize);
     const entries: DataFabricDirectoryEntry[] = [];
