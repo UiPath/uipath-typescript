@@ -1,4 +1,4 @@
-import { JobState, RequestOptions, BaseOptions, FolderScopedOptions, ResourceRef } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -250,13 +250,19 @@ export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartReque
 /**
  * Selects a process by exactly one identifier. Used by `ProcessServiceModel.start`.
  *
- * - `{ id }` — numeric process id. Requires `folderId` in `options`.
  * - `{ name }` — process name. Requires a folder scope (`folderId` / `folderKey` /
  *   `folderPath`) to disambiguate across folders.
  * - `{ key }` — process GUID. A folder scope is still required so the job routes
  *   to the right folder.
+ *
+ * `{ id }` is intentionally not supported: the StartJobs API accepts `ReleaseName`
+ * or `ReleaseKey` only, so an id-based ref would need an extra lookup to translate
+ * it — and every `ProcessGetResponse` already exposes `key` alongside `id`, so
+ * callers can pass `{ key: process.key }` directly.
  */
-export type ProcessRef = ResourceRef<number>;
+export type ProcessRef =
+  | { name: string; key?: never }
+  | { key: string; name?: never };
 
 /**
  * Options for the ref-based `start(processRef, options?)` signature. Combines folder

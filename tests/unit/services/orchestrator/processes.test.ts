@@ -598,60 +598,6 @@ describe('ProcessService Unit Tests', () => {
       }
     });
 
-    it('accepts an { id } ProcessRef, looks up the release key via getById, then starts', async () => {
-      // First call: getById → returns a process with the release key.
-      mockApiClient.get.mockResolvedValue(createMockRawOrchestratorProcess());
-      mockApiClient.post.mockResolvedValue(
-        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
-      );
-
-      await service.start(
-        { id: PROCESS_TEST_CONSTANTS.PROCESS_ID } as ProcessRef,
-        { folderId: TEST_CONSTANTS.FOLDER_ID },
-      );
-
-      // The internal getById fires on the by-id release endpoint.
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
-        expect.any(Object),
-      );
-      // Then StartJobs body carries the resolved ReleaseKey.
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        PROCESS_ENDPOINTS.START_PROCESS,
-        expect.objectContaining({
-          startInfo: expect.objectContaining({
-            releaseKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
-          }),
-        }),
-        expect.anything(),
-      );
-    });
-
-    it('rejects { id } ProcessRef without folderId (Process getById is folderId-scoped)', async () => {
-      await expect(
-        service.start({ id: PROCESS_TEST_CONSTANTS.PROCESS_ID } as ProcessRef, { folderPath: 'Shared/Live' }),
-      ).rejects.toBeInstanceOf(ValidationError);
-
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
-
-    it('propagates the failure and skips the POST when { id } ProcessRef lookup fails (e.g. release not found)', async () => {
-      // fetchProcessById is called internally to resolve the release key. Its failure must bubble
-      // up to the caller and prevent the StartJobs POST from firing.
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.get.mockRejectedValue(error);
-
-      await expect(
-        service.start(
-          { id: PROCESS_TEST_CONSTANTS.PROCESS_ID } as ProcessRef,
-          { folderId: TEST_CONSTANTS.FOLDER_ID },
-        ),
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
-
     it('rejects an empty ProcessRef with ValidationError before hitting the API', async () => {
       await expect(
         service.start({} as ProcessRef, { folderId: TEST_CONSTANTS.FOLDER_ID }),

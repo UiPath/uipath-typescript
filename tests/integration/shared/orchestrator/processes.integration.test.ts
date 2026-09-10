@@ -208,30 +208,6 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
       }
     });
 
-    it('should start a process using the ref-based { id } form (resolves the release key first)', async () => {
-      const { processes } = getServices();
-      const config = getTestConfig();
-
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
-      if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured to test the ref-based { id } start');
-      }
-
-      // Discover an existing release id — the { id } branch triggers an internal by-id lookup.
-      const allProcesses = await processes.getAll({ folderId, pageSize: 1 });
-      if (allProcesses.items.length === 0) {
-        throw new Error('No processes available to test the ref-based { id } start');
-      }
-      const existing = allProcesses.items[0];
-
-      const result = await processes.start({ id: existing.id }, { folderId });
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      if (result.length > 0) {
-        expect(result[0].id).toBeDefined();
-      }
-    });
   });
 
   describe('getByName', () => {

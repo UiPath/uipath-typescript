@@ -74,14 +74,14 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     optionsOrFolderId?: ProcessStartRefOptions | ProcessStartOptions | number,
     legacyOptions?: RequestOptions,
   ): Promise<ProcessStartResponse[]> {
-    // A ProcessRef declares exactly one of `id`/`name`/`key` and NEVER carries
+    // A ProcessRef declares exactly one of `name`/`key` and NEVER carries
     // `processKey`/`processName`. That combination cleanly separates the ref
     // form from the legacy `ProcessStartRequest` form at runtime.
     const looksLikeRef = isProcessRef(firstArg);
     const looksLikeLegacy = isLegacyStartRequest(firstArg);
     if (!looksLikeRef && !looksLikeLegacy) {
       throw new ValidationError({
-        message: 'Processes.start: first argument must be a ProcessRef (`{ id }`, `{ name }`, or `{ key }`) or a ProcessStartRequest (`{ processKey }` or `{ processName }`).',
+        message: 'Processes.start: first argument must be a ProcessRef (`{ name }` or `{ key }`) or a ProcessStartRequest (`{ processKey }` or `{ processName }`).',
       });
     }
 
@@ -117,7 +117,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     // Resolve the effective identity + folderPath. Overrides apply to name/key on both the
     // new ref form and the legacy processName/processKey path — matching Assets and Queues.
     const identity = looksLikeRef
-      ? await this.resolveProcessRefIdentity(firstArg as ProcessRef, folderId, folderPath)
+      ? resolveProcessRefIdentity(firstArg as ProcessRef, folderPath)
       : resolveLegacyIdentity(firstArg as ProcessStartRequest, folderPath);
 
     const headers = resolveFolderHeaders({
@@ -165,63 +165,8 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformedProcess;
   }
 
-  /**
-   * Resolves a {@link ProcessRef} into the wire identity fields the StartJobs body accepts.
-   * `{ name }` and `{ key }` route through {@link resolveOverride} so a runtime redirect steers
-   * both the wire identity AND the follow-up folderPath header. `{ id }` triggers a getById
-   * lookup and reuses the returned release key. Returns the identity fragment plus the effective
-   * folderPath (populated only when an override applied a redirect).
-   */
-  private async resolveProcessRefIdentity(
-    processRef: ProcessRef,
-    folderId: number | undefined,
-    folderPath: string | undefined,
-  ): Promise<{ identity: Record<string, string>; folderPath?: string }> {
-    if (processRef && 'name' in processRef && processRef.name) {
-      const override = resolveOverride('Process', processRef.name, folderPath);
-      return {
-        identity: { processName: override?.name ?? processRef.name },
-        folderPath: override?.folderPath,
-      };
-    }
-    if (processRef && 'key' in processRef && processRef.key) {
-      // Overrides on stable keys are unusual but not forbidden — same shape as `{name}`.
-      const override = resolveOverride('Process', processRef.key, folderPath);
-      return {
-        identity: override?.name
-          // Override redirected key → name: switch wire identity accordingly.
-          ? { processName: override.name }
-          : { processKey: processRef.key },
-        folderPath: override?.folderPath,
-      };
-    }
-    if (processRef && 'id' in processRef && processRef.id != null) {
-      if (folderId == null) {
-        throw new ValidationError({
-          message: 'Processes.start: `{ id }` refs require `folderId` in options — Process getById is folderId-scoped.',
-        });
-      }
-      // Call the un-tracked shared helper — going through the public `@track`-decorated
-      // `getById` would double-fire telemetry (Processes.Start + Processes.GetById).
-      const process = await this.fetchProcessById(processRef.id, folderId);
-      return { identity: { processKey: process.key } };
-    }
-    throw new ValidationError({
-      message: 'Processes.start: processRef must supply exactly one of `id`, `name`, or `key`.',
-    });
-  }
-
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
-    return this.fetchProcessById(id, folderId, options);
-  }
-
-  /**
-   * Reads a process by numeric id — shared by public `getById` (with `@track`) and the
-   * `{ id }` branch of `start`'s ref resolution. Kept un-tracked so calling it from within
-   * another `@track`-decorated method does not double-fire telemetry.
-   */
-  private async fetchProcessById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const apiFieldOptions = transformOptions(options, ProcessMap);
@@ -235,9 +180,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       }
     );
 
-    const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-
-    return transformedProcess;
+    return transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
   }
 
   @track('Processes.GetByName')
@@ -256,14 +199,47 @@ export class ProcessService extends FolderScopedService implements ProcessServic
 
 /**
  * Discriminates a {@link ProcessRef} argument from a legacy `ProcessStartRequest`. Only refs
- * carry `id` / `name` / `key`; only requests carry `processKey` / `processName`. Presence of
- * either request field on the argument rules out the ref form.
+ * carry `name` / `key`; only requests carry `processKey` / `processName`. Presence of either
+ * request field on the argument rules out the ref form.
  */
 function isProcessRef(arg: unknown): boolean {
   if (arg == null || typeof arg !== 'object') return false;
   const obj = arg as Record<string, unknown>;
   if ('processKey' in obj || 'processName' in obj) return false;
-  return 'id' in obj || 'name' in obj || 'key' in obj;
+  return 'name' in obj || 'key' in obj;
+}
+
+/**
+ * Resolves a {@link ProcessRef} into the wire identity the StartJobs body accepts. Both
+ * branches route through {@link resolveOverride} so a runtime redirect steers the wire
+ * identity AND the follow-up folderPath header. Returns the identity fragment plus the
+ * effective folderPath (populated only when an override applied a redirect).
+ */
+function resolveProcessRefIdentity(
+  processRef: ProcessRef,
+  folderPath: string | undefined,
+): { identity: Record<string, string>; folderPath?: string } {
+  if ('name' in processRef && processRef.name) {
+    const override = resolveOverride('Process', processRef.name, folderPath);
+    return {
+      identity: { processName: override?.name ?? processRef.name },
+      folderPath: override?.folderPath,
+    };
+  }
+  if ('key' in processRef && processRef.key) {
+    // Overrides on stable keys are unusual but not forbidden — same shape as `{name}`.
+    const override = resolveOverride('Process', processRef.key, folderPath);
+    return {
+      identity: override?.name
+        // Override redirected key → name: switch wire identity accordingly.
+        ? { processName: override.name }
+        : { processKey: processRef.key },
+      folderPath: override?.folderPath,
+    };
+  }
+  throw new ValidationError({
+    message: 'Processes.start: processRef must supply exactly one of `name` or `key`.',
+  });
 }
 
 /** True when the argument carries a legacy `ProcessStartRequest` identity field. */

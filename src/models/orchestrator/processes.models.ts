@@ -105,12 +105,12 @@ export interface ProcessServiceModel {
 
   /**
    * Starts a process. First fetch the process via `processes.getAll()` or
-   * `processes.getByName()` to obtain an id, name, or key to pass in `processRef`.
+   * `processes.getByName()` to obtain a name or key to pass in `processRef`.
    *
    * Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`,
-   * `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on the
-   * `{ name }` and `{ key }` branches — a cross-folder redirect steers both the identity
-   * and the folder scoping to the override target.
+   * `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on both
+   * `{ name }` and `{ key }` — a cross-folder redirect steers both the identity and the
+   * folder scoping to the override target.
    *
    * @param processRef - Process identifier — see {@link ProcessRef} for the variants and their folder-scope requirements
    * @param options - Folder scoping + startInfo fields + optional OData query
@@ -119,9 +119,6 @@ export interface ProcessServiceModel {
    * @example
    * ```typescript
    * import { JobPriority } from '@uipath/uipath-typescript/processes';
-   *
-   * // By process id
-   * await processes.start({ id: <processId> }, { folderId: <folderId> });
    *
    * // By process name + folder path
    * await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
