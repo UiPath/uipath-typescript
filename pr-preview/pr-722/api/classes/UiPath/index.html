@@ -3270,13 +3270,9 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
 </blockquote>
 <p>Creates a UiPath SDK instance.</p>
-<p>Precedence is per field: the constructor argument wins, then meta tags,
-then the environment — so every field the argument omits is inherited from
-the layer beneath. Naming one authentication method (<code>secret</code>, or all of
-<code>clientId</code>, <code>redirectUri</code> and <code>scope</code>) drops the other method's inherited
-fields. Ending up with <code>secret</code> alongside a complete OAuth set — whether
-you wrote both halves or wrote one and inherited the other — is a fatal
-configuration error; a stray OAuth field no layer completes is dropped.</p>
+<p>Precedence is per field: the constructor argument wins, then meta tags, then
+the environment. Naming one authentication method drops the other's inherited
+fields; <code>secret</code> beside a complete OAuth set is a fatal configuration error.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
