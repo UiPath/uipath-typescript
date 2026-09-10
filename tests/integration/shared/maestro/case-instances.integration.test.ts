@@ -82,15 +82,33 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     }
   }, 120_000);
 
-  /** Prefers the instance seeded for this run; falls back to any running instance. */
+  /**
+   * Prefers the instance seeded for this run; falls back to any running instance.
+   * The seeded instance can die on its own between tests (observed live: a transient
+   * platform fault moved it Running→Faulted, making the next pause fail with an invalid
+   * state transition), so its status is re-verified on every resolve and a replacement
+   * is seeded when it is no longer Running.
+   */
   const resolveRunningInstance = async (): Promise<{
     instanceId: string;
     folderKey: string;
   } | null> => {
-    if (seededInstance) {
-      return seededInstance;
-    }
     const { caseInstances } = getServices();
+
+    if (seededInstance) {
+      const current = await caseInstances.getById(
+        seededInstance.instanceId,
+        seededInstance.folderKey
+      );
+      if (current.latestRunStatus === InstanceStatus.RUNNING) {
+        return seededInstance;
+      }
+      seededInstance = await seedRunningInstance();
+      if (seededInstance) {
+        return seededInstance;
+      }
+    }
+
     const instances = await caseInstances.getAll({ pageSize: 20 });
     const found = instances.items.find(
       (inst) => inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey
@@ -380,7 +398,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           { itemData: { taskNames: [`sdk-integration-${generateRandomString(8)}`] } }
         )
       ).resolves.toBeUndefined();
-    });
+      // 120s: resolveRunningInstance may re-seed a dead fixture (up to ~90s)
+    }, 120_000);
   });
 
   describe('close', () => {
@@ -402,7 +421,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         // Consumed the seeded instance; afterAll must not close it again
         seededInstance = null;
       }
-    });
+      // 120s: resolveRunningInstance may re-seed a dead fixture (up to ~90s)
+    }, 120_000);
   });
 
   // Reopen requires a Completed instance (close produces Cancelled, which PIMS rejects),
