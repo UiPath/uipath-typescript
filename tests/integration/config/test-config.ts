@@ -41,10 +41,9 @@ export interface IntegrationConfig {
   dataFabricTestFolderEntityId?: string;
   dataFabricTestChoiceSetId?: string;
   dataFabricTestAttachmentField?: string;
-  // Cross-entity join fixture for the queryRecordsById join test. The three
-  // join-key fields are required (the test throws when any is missing);
-  // dataFabricTestJoinEntityName is optional and defaults to the queried entity.
-  dataFabricTestJoinEntityName?: string;
+  // Cross-entity join fixture for the queryRecordsById join tests. All three
+  // fields are required (the tests throw when any is missing); the join's base
+  // entity always defaults to the queried entity.
   dataFabricTestJoinFieldName?: string;
   dataFabricTestJoinRelatedEntityName?: string;
   dataFabricTestJoinRelatedFieldName?: string;
@@ -133,7 +132,6 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestFolderEntityId: typeof rawConfig.dataFabricTestFolderEntityId === 'string' ? rawConfig.dataFabricTestFolderEntityId : undefined,
     dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
-    dataFabricTestJoinEntityName: typeof rawConfig.dataFabricTestJoinEntityName === 'string' ? rawConfig.dataFabricTestJoinEntityName : undefined,
     dataFabricTestJoinFieldName: typeof rawConfig.dataFabricTestJoinFieldName === 'string' ? rawConfig.dataFabricTestJoinFieldName : undefined,
     dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
     dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
@@ -187,7 +185,6 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestFolderEntityId: process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || undefined,
     dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
-    dataFabricTestJoinEntityName: process.env.DATA_FABRIC_TEST_JOIN_ENTITY_NAME || undefined,
     dataFabricTestJoinFieldName: process.env.DATA_FABRIC_TEST_JOIN_FIELD_NAME || undefined,
     dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
     dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,

@@ -1837,6 +1837,8 @@ describe("EntityService Unit Tests", () => {
           queryFilters: [
             { fieldName: "region", operator: QueryFilterOperator.In, valueList: ["east", "west"] },
             { fieldName: "isActive", operator: QueryFilterOperator.Equals, value: "true" },
+            // Both set: valueList wins per its documented In/NotIn contract.
+            { fieldName: "status", operator: QueryFilterOperator.In, value: "stale", valueList: ["open"] },
           ],
           filterGroups: [
             {
@@ -1856,6 +1858,7 @@ describe("EntityService Unit Tests", () => {
           queryFilters: [
             { fieldName: "region", operator: "in", value: '["east","west"]' },
             { fieldName: "isActive", operator: "=", value: "true" },
+            { fieldName: "status", operator: "in", value: '["open"]' },
           ],
           filterGroups: [
             {

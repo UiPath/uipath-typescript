@@ -313,11 +313,6 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
           (item) => item[`${relatedEntity}.${relatedFieldName}`] != null,
         );
         expect(matchedRows.length).toBeGreaterThan(0);
-        // LEFT keeps unmatched base rows too: the seeded no-match row survives.
-        const unmatchedRows = result.items.filter(
-          (item) => item[`${baseEntityName}.${joinFieldName}`] === baseOnlyValue,
-        );
-        expect(unmatchedRows.length).toBeGreaterThan(0);
         expect(hasValidPagination(result)).toBe(true);
       });
 
@@ -343,10 +338,14 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         });
 
         // INNER keeps only matched rows, while LEFT also keeps the seeded
-        // no-match row — so the two must differ, and no INNER row may carry
-        // the base-only value or lack the related entity's qualified keys.
+        // no-match row — exactly one row apart. Compare totalCount, not
+        // items.length: both pages cap at pageSize, so item counts converge
+        // as the fixture grows and the contrast would silently vanish.
+        expect(inner.totalCount).toBeGreaterThan(0);
+        expect(left.totalCount).toBe((inner.totalCount ?? 0) + 1);
+        // No INNER row may carry the seeded no-match value or lack the
+        // related entity's qualified keys.
         expect(inner.items.length).toBeGreaterThan(0);
-        expect(inner.items.length).toBeLessThan(left.items.length);
         inner.items.forEach((item) => {
           expect(item[`${baseEntityName}.${joinFieldName}`]).not.toBe(baseOnlyValue);
           expect(Object.keys(item).some((key) => key.startsWith(`${relatedEntity}.`))).toBe(true);
