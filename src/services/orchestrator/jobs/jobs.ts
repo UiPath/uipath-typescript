@@ -104,8 +104,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     // Public (anonymous) mode: the gateway checks this session owns the job (404 if
     // not), mints the app token, and returns the output — no folderId, no user token.
     if (this.publicApp) {
-      const result = await this.publicApp.getJobOutput(jobKey) as { output?: Record<string, unknown> | null } | null;
-      return result?.output ?? null;
+      const job = (await this.publicApp.invoke('orchestrator.getJob', { resourceId: jobKey })) as
+        | { OutputArguments?: string | null }
+        | null;
+      return job?.OutputArguments ? (JSON.parse(job.OutputArguments) as Record<string, unknown>) : null;
     }
 
     if (folderId === undefined) {

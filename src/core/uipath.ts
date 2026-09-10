@@ -120,8 +120,8 @@ export class UiPath implements IUiPath {
     this.#config = internalConfig;
 
     // In public mode, build the gateway client the supported services route through.
-    const publicAppClient = publicMode
-      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appId!)
+    const publicAppClient = isPublicMode(config)
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, config.appId)
       : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
