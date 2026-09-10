@@ -18,6 +18,8 @@ import {
   EntityUpdateResponse,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
+  EntityUpsertMultiEntityTransactionOptions,
+  EntityUpsertMultiEntityTransactionResponse,
   EntityRecord,
   RawEntityGetResponse,
   FieldMetaData,
@@ -66,7 +68,7 @@ import {
   ENTITY_TYPE_IDS,
   MAX_QUERY_JOINS,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, RawEntityUpsertMultiEntityTransactionResponse } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /** Wire values for join types on the name-based multi-entity query route. */
@@ -115,6 +117,23 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
   throw new ValidationError({
     message: `${callerLabel}: entityRef must supply exactly one of 'id' or 'name'.`,
   });
+}
+
+/**
+ * Whether a payload nests child records. Mirrors the server's own routing test, so a payload
+ * this rejects is one the server would not have applied as a transaction either.
+ *
+ * An empty array stays a field value — that is how a multi-choiceset is cleared.
+ */
+function hasChildRecords(data: Record<string, any>): boolean {
+  return Object.values(data).some(
+    (value) =>
+      Array.isArray(value) &&
+      value.length > 0 &&
+      typeof value[0] === 'object' &&
+      value[0] !== null &&
+      !Array.isArray(value[0])
+  );
 }
 
 /**
@@ -215,6 +234,26 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.UpdateRecordsById')
   async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
     return this.updateRecordsImpl(true, id, data, options);
+  }
+
+  @track('Entities.UpsertMultiEntityTransaction')
+  async upsertMultiEntityTransaction(
+    entityRef: EntityRef,
+    data: Record<string, any>,
+    options: EntityUpsertMultiEntityTransactionOptions = {}
+  ): Promise<EntityUpsertMultiEntityTransactionResponse> {
+    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.upsertMultiEntityTransaction');
+    // Validate before resolving the name, so a bad payload costs no request.
+    if (!hasChildRecords(data)) {
+      throw new ValidationError({
+        message:
+          'Entities.upsertMultiEntityTransaction: data must nest child records under their entity name. '
+          + 'Use insertRecord or updateRecord to write a single record.',
+      });
+    }
+    // The route is name-only, so an id ref costs a lookup.
+    const entityName = byId ? await this.resolveEntityName(identifier, options.folderKey) : identifier;
+    return this.upsertMultiEntityTransactionImpl(entityName, data, options);
   }
 
   @track('Entities.DeleteRecords')
@@ -935,6 +974,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );
     return response.data;
+  }
+
+  private async upsertMultiEntityTransactionImpl(
+    entityName: string,
+    data: Record<string, any>,
+    options: EntityUpsertMultiEntityTransactionOptions
+  ): Promise<EntityUpsertMultiEntityTransactionResponse> {
+    const response = await this.post<RawEntityUpsertMultiEntityTransactionResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(entityName),
+      data,
+      { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+    );
+    // No case conversion — the transaction tree already arrives camelCase. Picking the two
+    // fields drops the composite-only envelope keys, which are always empty on this route.
+    return { Id: response.data.Id, transaction: response.data.transaction };
   }
 
   private async deleteRecordsImpl(byId: boolean, identifier: string, recordIds: string[], options: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {

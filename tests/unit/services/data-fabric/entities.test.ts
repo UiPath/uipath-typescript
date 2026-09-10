@@ -16,6 +16,7 @@ import {
   createMockEntityWithNestedReferences,
   createMockEntityWithSqlFieldTypes,
   createMockEntityWithDisplayTypeFields,
+  createMockUpsertMultiEntityTransactionResponse,
 } from "../../../utils/mocks/entities";
 import {
   createServiceTestDependencies,
@@ -39,6 +40,7 @@ import {
   EntityFieldDataType,
   EntityAggregateFunction,
   EntityHavingOperator,
+  EntityMultiEntityWriteOperation,
   EntityType,
   ExternalField,
   FieldDisplayType,
@@ -2430,6 +2432,196 @@ describe("EntityService Unit Tests", () => {
             name: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
           } as EntityRef,
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("upsertMultiEntityTransaction", () => {
+    // An id ref has to be resolved to a name first — the upsert route is name-only.
+    const mockEntityNameLookup = (name: string) =>
+      mockApiClient.get.mockResolvedValue({ name });
+
+    it("should write a record tree successfully", async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockUpsertMultiEntityTransactionResponse(),
+      );
+
+      const result = await entityService.upsertMultiEntityTransaction(
+        { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+        ),
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        { headers: {} },
+      );
+      expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID);
+      expect(result.transaction.totalRecordsAffected).toBe(3);
+    });
+
+    it("should return the transaction tree intact at every nesting level", async () => {
+      const raw = createMockUpsertMultiEntityTransactionResponse();
+      mockApiClient.post.mockResolvedValue(raw);
+
+      const result = await entityService.upsertMultiEntityTransaction(
+        { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+      );
+
+      // The API already sends camelCase here, so the tree passes through unchanged
+      expect(result.transaction).toEqual(raw.transaction);
+
+      // Root node
+      expect(result.transaction.entityName).toBe(
+        ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+      );
+      expect(result.transaction.op).toBe(EntityMultiEntityWriteOperation.Insert);
+      expect(result.transaction.affectedRows).toBe(1);
+      expect(result.transaction.noOp).toBe(false);
+      expect(result.transaction.version).toBe(
+        ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+      );
+
+      // Child and grandchild survive with their own ids
+      const child = result.transaction.members[0];
+      expect(child.entityName).toBe(ENTITY_TEST_CONSTANTS.TREE_CHILD_ENTITY_NAME);
+      expect(child.id).toBe(ENTITY_TEST_CONSTANTS.TREE_CHILD_RECORD_ID);
+      expect(child.members[0].entityName).toBe(
+        ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_ENTITY_NAME,
+      );
+      expect(child.members[0].id).toBe(
+        ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_RECORD_ID,
+      );
+      // A leaf sends an empty array, never an omitted key
+      expect(child.members[0].members).toEqual([]);
+    });
+
+    it("should drop the composite-only envelope keys from the response", async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockUpsertMultiEntityTransactionResponse(),
+      );
+
+      const result = await entityService.upsertMultiEntityTransaction(
+        { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+      );
+
+      expect(Object.keys(result).sort()).toEqual(["Id", "transaction"]);
+      expect((result as any).children).toBeUndefined();
+      expect((result as any).cascadeDeletedChildren).toBeUndefined();
+      expect((result as any).deletedCount).toBeUndefined();
+    });
+
+    it("should send the folderKey header when provided", async () => {
+      mockApiClient.post.mockResolvedValue(
+        createMockUpsertMultiEntityTransactionResponse(),
+      );
+
+      await entityService.upsertMultiEntityTransaction(
+        { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+        ),
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
+
+    it("should resolve the entity name before writing when given an id ref", async () => {
+      mockEntityNameLookup(ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME);
+      mockApiClient.post.mockResolvedValue(
+        createMockUpsertMultiEntityTransactionResponse(),
+      );
+
+      await entityService.upsertMultiEntityTransaction(
+        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.any(Object),
+      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(
+          ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+        ),
+        ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        expect.any(Object),
+      );
+    });
+
+    it("should handle API errors", async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it("should reject with a ValidationError when the data nests no child records", async () => {
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("should reject a childless payload on an id ref without resolving the name", async () => {
+      // Validation runs before name resolution, so no request is made at all
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("should reject with a ValidationError when the only array is empty", async () => {
+      // An empty array clears a multi-choiceset field; it is not a set of child records
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          { name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA_EMPTY_CHILD_ARRAY,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          {} as EntityRef,
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("should reject with a ValidationError when the ref supplies both id and name", async () => {
+      await expect(
+        entityService.upsertMultiEntityTransaction(
+          {
+            id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+            name: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+          } as EntityRef,
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
         ),
       ).rejects.toBeInstanceOf(ValidationError);
     });

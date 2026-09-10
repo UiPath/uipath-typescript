@@ -34,6 +34,8 @@ import {
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
   EntityGetByNameOptions,
+  EntityUpsertMultiEntityTransactionOptions,
+  EntityUpsertMultiEntityTransactionResponse,
   EntityRef,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -546,6 +548,69 @@ export interface EntityServiceModel {
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
+
+  /**
+   * Writes a record and its related child records as a single transaction
+   *
+   * Nest child records under a key named for their entity. Every record in the payload is
+   * written together or not at all. A record carrying an `Id` updates that row; one without
+   * an `Id` creates a new row, and the service fills in the foreign keys linking it to its
+   * parent — do not set them yourself.
+   *
+   * The payload must nest at least one array of child records. A single record on its own is
+   * not a transaction and is rejected before any request is made — use {@link insertRecord} or
+   * {@link updateRecord} for that.
+   *
+   * Returns the root record's ID plus a `transaction` tree mirroring the payload, so each
+   * result can be matched back to the record that produced it. Because it reports per-record
+   * outcomes rather than field values, the response carries no entity field data.
+   *
+   * Applies to native entities only. Case and templated entities are written one record at a
+   * time — use {@link insertRecord} or {@link updateRecord} for those.
+   *
+   * Limits: 500 records in total, 3 levels of nesting, and 6 distinct entities per request.
+   * Passing `__Version__` in a record opts that row into a version check, which fails the whole
+   * transaction if the row changed in the meantime.
+   *
+   * Prefer `{ name }` over `{ id }` — the underlying route addresses entities by name, so an
+   * `{ id }` ref costs an extra lookup to resolve the name first.
+   *
+   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`) for the root record's entity
+   * @param data - Root record's fields, with child records nested under their entity name
+   * @param options - Upsert options. The `folderKey` property is **experimental**.
+   * @returns Promise resolving to the root record ID and the per-record results ({@link EntityUpsertMultiEntityTransactionResponse})
+   * @example
+   * ```typescript
+   * // Create a report with two expenses, one of which has a line item
+   * const result = await entities.upsertMultiEntityTransaction({ name: "Report" }, {
+   *   assignee: "assignee1",
+   *   totalReportAmount: 25,
+   *   Expense: [
+   *     { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+   *     { vendor: "Vendor 2", totalExpense: 5 }
+   *   ]
+   * });
+   *
+   * console.log(result.transaction.totalRecordsAffected); // 4
+   * console.log(result.transaction.members[0].id);        // generated expense record ID
+   * ```
+   * @example
+   * ```typescript
+   * // Update an existing report and add one expense to it in the same transaction
+   * await entities.upsertMultiEntityTransaction({ name: "Report" }, {
+   *   Id: "<reportRecordId>",
+   *   totalReportAmount: 45,
+   *   Expense: [{ vendor: "Vendor 3", totalExpense: 20 }]
+   * }, { folderKey: "<folderKey>" });
+   * ```
+   *
+   * @experimental Requires the multi-entity write feature to be enabled for your tenant.
+   */
+  upsertMultiEntityTransaction(
+    entityRef: EntityRef,
+    data: Record<string, any>,
+    options?: EntityUpsertMultiEntityTransactionOptions
+  ): Promise<EntityUpsertMultiEntityTransactionResponse>;
 
   /**
    * Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
@@ -1157,6 +1222,20 @@ export interface EntityMethods {
   updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
   /**
+   * Write a record and its related child records to this entity as a single transaction
+   *
+   * @param data - Root record's fields, with child records nested under their entity name
+   * @param options - Upsert options
+   * @returns Promise resolving to the root record ID and the per-record results
+   *
+   * @experimental Requires the multi-entity write feature to be enabled for your tenant.
+   */
+  upsertMultiEntityTransaction(
+    data: Record<string, any>,
+    options?: EntityUpsertMultiEntityTransactionOptions
+  ): Promise<EntityUpsertMultiEntityTransactionResponse>;
+
+  /**
    * Delete data from this entity
    *
    * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
@@ -1442,6 +1521,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.updateRecords({ id: entityData.id }, data, options);
+    },
+
+    // Passes `{ name }` where the other delegates pass `{ id }`: the upsert route addresses
+    // entities by name, so an id ref would make the service resolve the name we already hold.
+    async upsertMultiEntityTransaction(
+      data: Record<string, any>,
+      options?: EntityUpsertMultiEntityTransactionOptions
+    ): Promise<EntityUpsertMultiEntityTransactionResponse> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+      return service.upsertMultiEntityTransaction({ name: entityData.name }, data, options);
     },
 
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {

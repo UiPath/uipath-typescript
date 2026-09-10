@@ -1,4 +1,4 @@
-import { EntityType, FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
+import { EntityType, FieldDisplayType, EntityRecord, EntityMultiEntityWriteResponse, ReferenceType, SqlType } from './entities.types';
 
 /**
  * Write-side payload shape for creating a new field in a schema upsert call.
@@ -104,4 +104,20 @@ export enum SqlFieldType {
   DECIMAL = 'DECIMAL',
   MULTILINE = 'MULTILINE',
   MULTILINE_MAX = 'MULTILINE_MAX',
+}
+
+/**
+ * Wire shape of the multi-entity transactional upsert response.
+ *
+ * The transaction subtree already arrives camelCase, so no case conversion is applied to it;
+ * the root `Id` is the one PascalCase key. `children`, `cascadeDeletedChildren` and
+ * `deletedCount` are composite-entity concerns the envelope always sends and this route always
+ * leaves empty — the service drops them rather than surfacing three dead fields.
+ */
+export interface RawEntityUpsertMultiEntityTransactionResponse {
+  Id: string;
+  transaction: EntityMultiEntityWriteResponse;
+  children: Record<string, unknown>;
+  cascadeDeletedChildren: Record<string, number>;
+  deletedCount: number;
 }
