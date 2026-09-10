@@ -2953,10 +2953,9 @@
 <li><code>{ key }</code> — process GUID. A folder scope is still required so the job routes
   to the right folder.</li>
 </ul>
-<p><code>{ id }</code> is intentionally not supported: the StartJobs API accepts <code>ReleaseName</code>
-or <code>ReleaseKey</code> only, so an id-based ref would need an extra lookup to translate
-it — and every <code>ProcessGetResponse</code> already exposes <code>key</code> alongside <code>id</code>, so
-callers can pass <code>{ key: process.key }</code> directly.</p>
+<p><code>{ id }</code> is intentionally not supported. Every <a href="../../interfaces/ProcessGetResponse/">ProcessGetResponse</a>
+already exposes <code>key</code> alongside <code>id</code>, so any caller that has the id has the
+key too — pass <code>{ key: process.key }</code> directly.</p>
 
 
 
