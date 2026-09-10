@@ -250,8 +250,7 @@ export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartReque
 /**
  * Selects a process by exactly one identifier. Used by `ProcessServiceModel.start`.
  *
- * - `{ id }` — numeric process id. Requires `folderId` in `options` (the underlying
- *   lookup is folder-scoped).
+ * - `{ id }` — numeric process id. Requires `folderId` in `options`.
  * - `{ name }` — process name. Requires a folder scope (`folderId` / `folderKey` /
  *   `folderPath`) to disambiguate across folders.
  * - `{ key }` — process GUID. A folder scope is still required so the job routes
