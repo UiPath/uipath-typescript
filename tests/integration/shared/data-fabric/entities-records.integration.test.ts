@@ -187,7 +187,6 @@ async function resolveImportedRecordIds(
   return ids;
 }
 
-describeIntegration('Data Fabric Entities Records - Integration Tests', 'any', modes, () => {
 describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', modes, (mode) => {
 
   let testEntityId: string | null = null;
@@ -1327,4 +1326,4 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       await cleanupTestEntityRecords(entityId, createdRecordIds);
     }
   }, 90_000);
-});
+}, { timeout: 90_000 });
