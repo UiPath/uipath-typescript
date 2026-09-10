@@ -74,7 +74,7 @@ describe('conflictingAuthMessage', () => {
     expect(message).toContain('Remove clientId, scope from the constructor argument');
   });
 
-  it('falls back to generic guidance when no layer named an OAuth field', () => {
+  it('falls back to generic guidance when the constructor argument named no OAuth field', () => {
     const message = conflictingAuthMessage({
       environment: { secret: TOKEN },
       metaConfig: { ...OAUTH },
