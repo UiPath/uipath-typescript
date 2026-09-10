@@ -2944,16 +2944,19 @@
   <h1>ProcessRef</h1>
 
 <blockquote>
-<p><strong>ProcessRef</strong> = <a href="../ResourceRef/"><code>ResourceRef</code></a>&lt;<code>number</code>&gt;</p>
+<p><strong>ProcessRef</strong> = { <code>key?</code>: <code>never</code>; <code>name</code>: <code>string</code>; } | { <code>key</code>: <code>string</code>; <code>name?</code>: <code>never</code>; }</p>
 </blockquote>
 <p>Selects a process by exactly one identifier. Used by <code>ProcessServiceModel.start</code>.</p>
 <ul>
-<li><code>{ id }</code> — numeric process id. Requires <code>folderId</code> in <code>options</code>.</li>
 <li><code>{ name }</code> — process name. Requires a folder scope (<code>folderId</code> / <code>folderKey</code> /
   <code>folderPath</code>) to disambiguate across folders.</li>
 <li><code>{ key }</code> — process GUID. A folder scope is still required so the job routes
   to the right folder.</li>
 </ul>
+<p><code>{ id }</code> is intentionally not supported: the StartJobs API accepts <code>ReleaseName</code>
+or <code>ReleaseKey</code> only, so an id-based ref would need an extra lookup to translate
+it — and every <code>ProcessGetResponse</code> already exposes <code>key</code> alongside <code>id</code>, so
+callers can pass <code>{ key: process.key }</code> directly.</p>
 
 
 
