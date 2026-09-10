@@ -3557,18 +3557,10 @@ takes precedence over both the environment and meta tags:</p>
 <p>Constructor arguments win over meta tags, which win over the environment.
 Meta tags apply in the browser only; the environment contract applies
 outside it.</p>
-<p>Precedence is per field: every field you do <strong>not</strong> pass to the constructor
-is inherited from the meta tags or the environment. In a coded app, a config
-that passes only <code>secret</code> therefore starts out inheriting the injected
-<code>clientId</code>, <code>redirectUri</code> and <code>scope</code> as well.</p>
-<p>Naming one method is enough to settle it. Pass <code>secret</code> and the SDK drops
-the inherited OAuth fields; pass <code>clientId</code>/<code>redirectUri</code>/<code>scope</code> and it
-drops the inherited <code>secret</code>. Naming fields of <strong>both</strong> methods is a fatal
-configuration error whenever the merged result still ends up carrying
-<code>secret</code> alongside a <strong>complete</strong> OAuth set (<code>clientId</code>, <code>redirectUri</code> and
-<code>scope</code>) — the constructor throws, listing every auth field it found and
-where it came from. A stray OAuth field that no layer completes is simply
-dropped.</p>
+<p>Precedence is per field, so a config passing only <code>secret</code> still inherits any
+injected <code>clientId</code>, <code>redirectUri</code> and <code>scope</code>. Naming one method drops the
+other's inherited fields. If the merge still carries <code>secret</code> beside a
+<strong>complete</strong> OAuth set, the constructor throws, naming each field and its source.</p>
 </div>
 <h2 id="sdk-initialization-the-initialize-method">SDK Initialization - The initialize() Method<a class="headerlink" href="#sdk-initialization-the-initialize-method" title="Permanent link">&para;</a></h2>
 <h3 id="when-to-use-initialize">When to Use initialize()<a class="headerlink" href="#when-to-use-initialize" title="Permanent link">&para;</a></h3>
