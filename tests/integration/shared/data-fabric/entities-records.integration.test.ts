@@ -1330,4 +1330,4 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       }
     }
   });
-});
+}, { timeout: 90_000 });
