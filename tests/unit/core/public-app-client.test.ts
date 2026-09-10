@@ -22,17 +22,18 @@ describe('PublicAppClient', () => {
   const json = (status: number, body: unknown) =>
     new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-  it('startProcess POSTs to the gateway route with credentials and returns the job', async () => {
-    fetchMock.mockResolvedValueOnce(json(201, { jobKey: 'J-1', state: 'Pending' }));
+  it('startProcess POSTs the body as sent to the gateway route with credentials, and returns the response', async () => {
+    fetchMock.mockResolvedValueOnce(json(201, { value: [{ Key: 'J-1', State: 'Pending' }] }));
 
-    const job = await client.startProcess('proc-1', { amount: 5 });
+    const body = { startInfo: { releaseKey: 'proc-1', inputArguments: '{"amount":5}' } };
+    const started = await client.startProcess('proc-1', body);
 
-    expect(job).toEqual({ jobKey: 'J-1', state: 'Pending' });
+    expect(started).toEqual({ value: [{ Key: 'J-1', State: 'Pending' }] });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe(`${gateway}/orchestrator/processes/proc-1/jobs`);
     expect(init.method).toBe('POST');
     expect(init.credentials).toBe('include');
-    expect(JSON.parse(init.body)).toEqual({ inputArguments: { amount: 5 } });
+    expect(JSON.parse(init.body)).toEqual(body);
   });
 
   it('getJobOutput GETs the output route', async () => {
@@ -53,7 +54,7 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 })) // POST /session
       .mockResolvedValueOnce(json(201, { jobKey: 'J-2' }));        // retry
 
-    const job = await client.startProcess('proc-1');
+    const job = await client.startProcess('proc-1', { startInfo: { releaseKey: 'proc-1' } });
 
     expect(job).toEqual({ jobKey: 'J-2' });
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -66,7 +67,7 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 })); // /session denied
 
-    await expect(client.startProcess('proc-1')).rejects.toBeTruthy();
+    await expect(client.startProcess('proc-1', { startInfo: { releaseKey: 'proc-1' } })).rejects.toBeTruthy();
   });
 
   it('surfaces a 404 on job output (session does not own the job)', async () => {
