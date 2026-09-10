@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { BusinessApps } from '../../../../src/services/maestro/business-apps';
 import type { BusinessAppGetResponse } from '../../../../src/models/maestro';
 import { generateRandomString } from '../../utils/helpers';
@@ -21,8 +21,7 @@ const newAppName = () => `sdk-it-${generateRandomString(10)}`;
 // suite authenticates with — PIMS accepts the token but the tenant-scoped ORCHESTRATOR.APPS.*
 // permission check (TenantPermissionHandler) rejects create/update/delete with a 403. Re-enable
 // once the credential this suite uses can hold that permission (see PR #671 discussion).
-describe.skip.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Business Apps - Integration Tests', 'both', modes, () => {
 
   let businessApps!: BusinessApps;
   const createdAppIds: string[] = [];
@@ -240,4 +239,4 @@ describe.skip.each(modes)('Business Apps - Integration Tests [%s]', (mode) => {
       await expect(businessApps.getById(app.id)).rejects.toThrow();
     });
   });
-});
+}, { skip: true });

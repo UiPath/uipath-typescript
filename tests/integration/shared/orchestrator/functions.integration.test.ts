@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Functions } from '../../../../src/services/orchestrator/functions';
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
 
 // New modular service — v1 init only.
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Functions - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Functions - Integration Tests', 'both', modes, () => {
   let functions!: Functions;
   let folderId!: number;
   let functionName!: string;

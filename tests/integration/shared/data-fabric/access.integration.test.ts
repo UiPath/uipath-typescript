@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getServices,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 
@@ -10,8 +10,7 @@ const modes: InitMode[] = ['v0', 'v1'];
 // Skipped: Data Fabric role and directory APIs require DataFabric.Data.Read
 // and DataFabric.Data.Write scopes on the test external app/PAT. The standard
 // CI tenant currently returns 403 for these APIs.
-describe.skip.each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Access - Integration Tests', 'both', modes, () => {
 
   describe('roles.getAll', () => {
     it('should retrieve Data Fabric roles', async () => {
@@ -76,4 +75,4 @@ describe.skip.each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) 
     });
   });
 
-});
+}, { skip: true });
