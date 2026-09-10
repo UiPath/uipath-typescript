@@ -14,8 +14,6 @@ export default defineConfig({
     include: ["tests/integration/**/*.integration.test.ts"],
     testTimeout: 30000,
     hookTimeout: 30000,
-    // Live-service suite: absorb one transient 504/timeout per test.
-    retry: 1,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html", "lcov"],
