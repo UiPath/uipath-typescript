@@ -8,8 +8,11 @@ import { CONTENT_TYPES } from '../../utils/constants/headers';
  * In public mode the browser holds no token — the visitor is identified only by an
  * opaque, HttpOnly session cookie, and the app's own identity is minted server-side
  * by the Apps gateway. So this client is deliberately separate from {@link ApiClient}
- * (which always attaches a PKCE Bearer): it sends `credentials: 'include'`, never an
- * Authorization header, and talks to the gateway's REST surface rather than raw OData.
+ * (which always attaches a PKCE Bearer): it sends `credentials: 'include'` and never an
+ * Authorization header.
+ *
+ * It is a transport only. Request and response bodies are the same ones the direct path uses, so the callers keep one
+ * shape in both modes and the Apps service stays a gate that forwards to Orchestrator untouched.
  *
  * All requests are same-origin, routed by the edge to the Apps service:
  *   `{baseUrl}/{orgName}/apps_/integrations/codedapp/{appId}/...`
@@ -29,9 +32,15 @@ export class PublicAppClient {
     this.gatewayBase = `${base}/${orgName}/apps_/integrations/codedapp/${appId}`;
   }
 
-  /** Starts a process and returns the created job. The gateway records it in this session's owned-set. */
-  async startProcess(processKey: string, inputArguments?: unknown): Promise<unknown> {
-    return this.request('POST', `/orchestrator/processes/${encodeURIComponent(processKey)}/jobs`, { inputArguments });
+  /**
+   * Starts a process and returns Orchestrator's StartJobs response as sent.
+   *
+   * The body is the same one the direct (authenticated) path builds, so the caller keeps ownership of the request and
+   * response shape and the Apps service only gates and forwards it. Its `releaseKey` must be the process in the path.
+   * The gateway records the created job in this session's owned-set.
+   */
+  async startProcess(processKey: string, body: unknown): Promise<unknown> {
+    return this.request('POST', `/orchestrator/processes/${encodeURIComponent(processKey)}/jobs`, body);
   }
 
   /** Reads a job's output. Returns 404 (→ error) if this session doesn't own the job. */

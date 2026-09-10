@@ -70,15 +70,15 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     optionsOrFolderId?: ProcessStartOptions | number,
     legacyOptions?: RequestOptions,
   ): Promise<ProcessStartResponse[]> {
-    // Public (anonymous) mode: the gateway resolves folder + identity from the
-    // deployment, so folder context and the OData shape don't apply here — send the
-    // process key + inputs and let the gateway forward StartJobs as the app.
+    // Public (anonymous) mode: the same body and response as below, sent to the Apps service instead of Orchestrator.
+    // It resolves folder and identity from the deployment, so only folder context drops out here.
     if (this.publicApp) {
       if (!request.processKey) {
         throw new ValidationError({ message: 'processKey is required to start a process in public mode' });
       }
-      const job = await this.publicApp.startProcess(request.processKey, request.inputArguments);
-      return (job ? [job] : []) as ProcessStartResponse[];
+      const publicBody = { startInfo: transformRequest(request, ProcessMap) };
+      const response = await this.publicApp.startProcess(request.processKey, publicBody);
+      return toProcessStartResponses((response as CollectionResponse<ProcessStartResponse>)?.value);
     }
 
     // Normalize the two overload forms into a single internal shape.
@@ -130,11 +130,7 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       }
     );
 
-    const transformedProcess = response.data?.value.map(process =>
-      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
-    );
-
-    return transformedProcess;
+    return toProcessStartResponses(response.data?.value);
   }
 
   @track('Processes.GetById')
@@ -168,4 +164,11 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       ProcessMap,
     );
   }
+}
+
+/** The started jobs from a StartJobs response, in SDK field names. Shared so both modes return the same shape. */
+function toProcessStartResponses(value?: ProcessStartResponse[]): ProcessStartResponse[] {
+  return (value ?? []).map(process =>
+    transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
+  );
 }
