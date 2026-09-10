@@ -9,6 +9,7 @@ export enum UiPathMetaTags {
   CLIENT_ID = 'uipath:client-id',
   SCOPE = 'uipath:scope',
   ORG_NAME = 'uipath:org-name',
+  ORG_ID = 'uipath:org-id',
   TENANT_NAME = 'uipath:tenant-name',
   BASE_URL = 'uipath:base-url',
   REDIRECT_URI = 'uipath:redirect-uri',

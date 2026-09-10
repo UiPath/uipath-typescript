@@ -6,6 +6,7 @@
 import { UiPathConfig } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
+import type { OrganizationIdResolver } from '../organization/organization-id-resolver';
 
 /**
  * Private SDK components used by services.
@@ -25,4 +26,10 @@ export interface PrivateSDK {
    * Not user-settable via the SDK constructor.
    */
   folderKey?: string;
+  /**
+   * Organization GUID resolver, created lazily by
+   * `SDKInternalsRegistry.getOrganizationIdResolver()` and cached here so every
+   * service built on the instance shares one resolution.
+   */
+  organizationIdResolver?: OrganizationIdResolver;
 }

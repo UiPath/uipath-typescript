@@ -87,10 +87,11 @@ export class UiPath implements IUiPath {
   // SDK can flow it through to BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
   // Org/tenant ids captured from the meta tags before the constructor config
-  // is merged in. The `uipath:org-name`/`uipath:tenant-name` meta tags always
-  // carry org/tenant *ids* in coded-app deployments, whereas a
-  // constructor-supplied `orgName`/`tenantName` may be actual names — so the
-  // telemetry ids must be read from the meta tags.
+  // is merged in. Deployments inject the organization GUID as `uipath:org-id`
+  // (`uipath:org-name` is the logical name) and the tenant GUID as
+  // `uipath:tenant-name`; a constructor-supplied `orgName`/`tenantName` may be
+  // actual names — so the telemetry ids must be read from the meta tags. The
+  // `org-name` fallback covers deployments that predate the dedicated id tag.
   #metaOrgId?: string;
   #metaTenantId?: string;
 
@@ -112,7 +113,7 @@ export class UiPath implements IUiPath {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
     this.#metaFolderKey = configFromMetaTags?.folderKey;
-    this.#metaOrgId = configFromMetaTags?.orgName;
+    this.#metaOrgId = configFromMetaTags?.organizationId ?? configFromMetaTags?.orgName;
     this.#metaTenantId = configFromMetaTags?.tenantName;
 
     // Merge configuration: constructor config overrides meta tags, which
@@ -138,6 +139,7 @@ export class UiPath implements IUiPath {
       baseUrl: normalizeBaseUrl(config.baseUrl),
       orgName: config.orgName,
       tenantName: config.tenantName,
+      organizationId: config.organizationId,
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
@@ -237,7 +239,7 @@ export class UiPath implements IUiPath {
     // runs at all.
     const metaConfig = loadFromMetaTags();
     this.#metaFolderKey = metaConfig?.folderKey;
-    this.#metaOrgId = metaConfig?.orgName;
+    this.#metaOrgId = metaConfig?.organizationId ?? metaConfig?.orgName;
     this.#metaTenantId = metaConfig?.tenantName;
 
     // Constructor config overrides meta tags, which override the environment.

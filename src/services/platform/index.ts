@@ -34,4 +34,5 @@
 export { PlatformService as Platform } from './platform';
 
 // Models (types, response shapes)
-export * from '../../models/platform';
+export * from '../../models/platform/platform.types';
+export * from '../../models/platform/platform.models';

@@ -530,6 +530,22 @@ describe('UiPath Core', () => {
       mockLoadFromMetaTags.mockReset();
     });
 
+    it('reports the dedicated org-id meta tag as orgId when the deployment injects one', () => {
+      mockLoadFromMetaTags.mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: 'meta-org-name',
+        organizationId: 'meta-org-guid',
+        tenantName: 'meta-tenant-id',
+      });
+
+      const sdk = new UiPath({ secret: TEST_CONSTANTS.CLIENT_SECRET });
+      expect(sdk).toBeInstanceOf(UiPath);
+
+      const context = initializeSpy.mock.calls[0][0] as TelemetryContext;
+      expect(context.orgId).toBe('meta-org-guid');
+      expect(context.orgName).toBe('meta-org-name');
+    });
+
     it('reports the meta-tag org/tenant values as orgId/tenantId and the merged config as orgName/tenantName', () => {
       mockLoadFromMetaTags.mockReturnValue({
         baseUrl: TEST_CONSTANTS.BASE_URL,
