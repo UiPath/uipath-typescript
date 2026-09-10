@@ -62,6 +62,11 @@ export interface IntegrationConfig {
   dataFabricTestJoinFieldName?: string;
   dataFabricTestJoinRelatedEntityName?: string;
   dataFabricTestJoinRelatedFieldName?: string;
+  // Parent/child fixture for the multi-entity transactional upsert test. Both are
+  // required (the test throws when either is missing): the child entity must hold an
+  // active foreign key to the parent, and both must be native entities.
+  dataFabricTestTreeEntityName?: string;
+  dataFabricTestTreeChildEntityName?: string;
   orchestratorAttachmentId?: string;
   /**
    * Name of a dedicated queue used by the queue item / transaction
@@ -169,6 +174,8 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestJoinFieldName: typeof rawConfig.dataFabricTestJoinFieldName === 'string' ? rawConfig.dataFabricTestJoinFieldName : undefined,
     dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
     dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
+    dataFabricTestTreeEntityName: typeof rawConfig.dataFabricTestTreeEntityName === 'string' ? rawConfig.dataFabricTestTreeEntityName : undefined,
+    dataFabricTestTreeChildEntityName: typeof rawConfig.dataFabricTestTreeChildEntityName === 'string' ? rawConfig.dataFabricTestTreeChildEntityName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     queuesTestQueueName: typeof rawConfig.queuesTestQueueName === 'string' ? rawConfig.queuesTestQueueName : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
@@ -226,6 +233,8 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestJoinFieldName: process.env.DATA_FABRIC_TEST_JOIN_FIELD_NAME || undefined,
     dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
     dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
+    dataFabricTestTreeEntityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || undefined,
+    dataFabricTestTreeChildEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     queuesTestQueueName: process.env.QUEUES_TEST_QUEUE_NAME || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
