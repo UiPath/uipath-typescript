@@ -239,8 +239,6 @@ jobs:
           echo "Minted a user access token; user-token suites will run, and either-credential suites will run under both."
 
       - name: Run Integration Tests
-        # SCRATCH ONLY: tolerate test failures so the sonar job actually runs.
-        continue-on-error: true
         env:
           INTEGRATION_AUTH_MODE: ${{ matrix.auth }}
         run: npm run test:integration:coverage -- --run --maxWorkers=2
