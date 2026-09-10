@@ -79,6 +79,33 @@ export const ENTITY_TEST_CONSTANTS = {
   TEST_UPDATED_NAME: 'Updated',
   TEST_INVALID_ID: 'invalid-id',
   
+  // Multi-entity transactional upsert
+  TREE_ROOT_ENTITY_NAME: 'Report',
+  TREE_CHILD_ENTITY_NAME: 'Expense',
+  TREE_GRANDCHILD_ENTITY_NAME: 'ExpenseLineItem',
+  TREE_ROOT_RECORD_ID: 'a9f1c2a4-1111-4c3b-8a11-000000000001',
+  TREE_CHILD_RECORD_ID: 'a2f10000-2222-4c3b-8a11-000000000002',
+  TREE_GRANDCHILD_RECORD_ID: 'c4d30000-4444-4c3b-8a11-000000000004',
+  TREE_ROOT_VERSION: 4,
+  // Root record with one child, which itself has one child — exercises two nesting levels.
+  // Field names are camelCase; the nested keys are entity names.
+  TEST_TREE_RECORD_DATA: {
+    assignee: 'assignee1',
+    totalReportAmount: 25,
+    Expense: [
+      {
+        vendor: 'Vendor 1',
+        totalExpense: 20,
+        ExpenseLineItem: [{ expenseAmount: 5 }],
+      },
+    ],
+  },
+  // An empty array is a cleared multi-choiceset field, not a set of child records
+  TEST_TREE_RECORD_DATA_EMPTY_CHILD_ARRAY: {
+    assignee: 'assignee1',
+    tags: [],
+  },
+
   // Operation Options
   EXPANSION_LEVEL: 1,
   FAIL_ON_FIRST: true,
