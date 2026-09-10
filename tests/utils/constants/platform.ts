@@ -97,3 +97,34 @@ export const PLATFORM_DIRECTORY_TEST_CONSTANTS = {
   // Error messages
   ERROR_DIRECTORY_FORBIDDEN: 'Caller is not authorized to search the organization directory',
 } as const;
+
+/**
+ * Platform role test constants.
+ *
+ * Field values mirror a real Authorization service response captured during
+ * onboarding: camelCase wire fields, UPPER-case role type strings, `createdOn`
+ * timestamp naming.
+ */
+export const PLATFORM_ROLE_TEST_CONSTANTS = {
+  ROLE_ID: '587d79d6-85de-4ee7-819b-1eb19b85009b',
+  ROLE_NAME: 'Access Administrator',
+  ROLE_DESCRIPTION: 'Access Administrator',
+  SCOPE_TYPE_ORGANIZATION: 'ORGANIZATION',
+  CREATED_BY: '7f36fcc2-b822-430b-ae30-5ecfbacac186',
+  // Distinctive value so rename tests verify value preservation, not just field presence
+  CREATED_ON: '2025-12-09T08:20:56.7703633+00:00',
+  EMPTY_GUID: '00000000-0000-0000-0000-000000000000',
+  OWNER_SERVICE_ID: '225374a7-f966-4e77-ba9e-588d18c51b76',
+  OWNER_SERVICE_NAME: 'AuthZ',
+  ACTION_ID: '2aa62290-e290-4478-807e-c94bb8aa2fc1',
+  ACTION_NAME: 'AUTHZ.ACTION.READ',
+  ASSIGNMENT_ID: 'eeaffca2-5456-408b-99f3-5910e800a37d',
+  ASSIGNMENT_SCOPE: '/',
+  PRINCIPAL_DISPLAY_NAME: 'Jo Doe',
+  ROLES_TOTAL_COUNT: 86,
+  CSV_EXPORT_HEADER: 'Id,RoleName,RoleId',
+
+  // Error messages
+  ERROR_ROLE_NOT_FOUND: 'Role with given ID does not exist.',
+  ERROR_ROLES_FORBIDDEN: 'Caller is not authorized to manage roles for the organization',
+} as const;
