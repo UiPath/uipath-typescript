@@ -173,19 +173,10 @@ The access token is consumed internally and is never exposed on `sdk.config`.
     Meta tags apply in the browser only; the environment contract applies
     outside it.
 
-    Precedence is per field: every field you do **not** pass to the constructor
-    is inherited from the meta tags or the environment. In a coded app, a config
-    that passes only `secret` therefore starts out inheriting the injected
-    `clientId`, `redirectUri` and `scope` as well.
-
-    Naming one method is enough to settle it. Pass `secret` and the SDK drops
-    the inherited OAuth fields; pass `clientId`/`redirectUri`/`scope` and it
-    drops the inherited `secret`. Naming fields of **both** methods is a fatal
-    configuration error whenever the merged result still ends up carrying
-    `secret` alongside a **complete** OAuth set (`clientId`, `redirectUri` and
-    `scope`) — the constructor throws, listing every auth field it found and
-    where it came from. A stray OAuth field that no layer completes is simply
-    dropped.
+    Precedence is per field, so a config passing only `secret` still inherits any
+    injected `clientId`, `redirectUri` and `scope`. Naming one method drops the
+    other's inherited fields. If the merge still carries `secret` beside a
+    **complete** OAuth set, the constructor throws, naming each field and its source.
 
 ## SDK Initialization - The initialize() Method
 
