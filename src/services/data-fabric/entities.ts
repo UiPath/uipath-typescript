@@ -28,6 +28,7 @@ import {
   EntityDeleteAttachmentOptions,
   EntityDeleteAttachmentResponse,
   EntityQueryRecordsOptions,
+  EntityQueryFilterGroup,
   EntityJoin,
   JoinType,
   EntityImportRecordsResponse,
@@ -91,6 +92,22 @@ function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload
       left: qualifyJoinField(join.entityName ?? baseEntityName, join.joinFieldName),
       right: qualifyJoinField(join.relatedEntityName, join.relatedFieldName),
     },
+  };
+}
+
+/**
+ * The multi-entity (joins) query parser reads only `value` and ignores `valueList`,
+ * unlike the single-entity routes — serialize `valueList` into the JSON-array
+ * `value` form that parser expects, recursing into nested groups. When both are
+ * set, `valueList` wins, matching its documented contract for In/NotIn.
+ */
+function toWireFilterGroup(group: EntityQueryFilterGroup): EntityQueryFilterGroup {
+  return {
+    ...group,
+    queryFilters: group.queryFilters?.map(({ valueList, ...filter }) =>
+      valueList ? { ...filter, value: JSON.stringify(valueList) } : filter
+    ),
+    filterGroups: group.filterGroups?.map(toWireFilterGroup),
   };
 }
 
@@ -993,6 +1010,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
     if (options?.joins && options.joins.length > 0) {
       const baseEntityName = byId ? await this.resolveEntityName(identifier, folderKey) : identifier;
       (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));
+      if (options.filterGroup) {
+        (rest as Record<string, unknown>).filterGroup = toWireFilterGroup(options.filterGroup);
+      }
       getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(baseEntityName);
     }
     const downstreamOptions = options === undefined ? undefined : (rest as T);

@@ -5,11 +5,14 @@ import {
   setupUnifiedTests,
   InitMode,
 } from '../../config/unified-setup';
-import { hasValidPagination } from '../../utils/helpers';
+import { hasValidPagination, generateRandomString, awaitRecordVisible } from '../../utils/helpers';
+import { registerResource } from '../../utils/cleanup';
 import {
   EntityAggregateFunction,
   EntityHavingOperator,
+  EntityQueryFilterGroup,
   JoinType,
+  QueryFilterOperator,
 } from '../../../../src/models/data-fabric/entities.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -186,98 +189,168 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
     // key returns a perfectly normal envelope, so envelope-shape assertions
     // alone cannot fail for the exact defect they exist to catch (this is how
     // the original non-functional joins wiring shipped).
-    it('should return related-entity fields for a cross-entity LEFT join', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-      if (!entityId) {
-        throw new Error('No entity ID available for testing');
-      }
-      if (
-        !config.dataFabricTestJoinFieldName ||
-        !config.dataFabricTestJoinRelatedEntityName ||
-        !config.dataFabricTestJoinRelatedFieldName
-      ) {
-        throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join test');
-      }
-      const relatedEntity = config.dataFabricTestJoinRelatedEntityName;
+    describe('cross-entity joins', () => {
+      let joinEntityId!: string;
+      let baseEntityName!: string;
+      let relatedEntity!: string;
+      let joinFieldName!: string;
+      let relatedFieldName!: string;
+      let baseOnlyValue!: string;
+      let filterGroup!: EntityQueryFilterGroup;
+      let selectedFields!: string[];
 
-      const result = await entities.queryRecordsById(entityId, {
+      beforeAll(async () => {
+        const { entities } = getServices();
+        const config = getTestConfig();
+        const entityId = config.dataFabricTestEntityId || testEntityId;
+        if (!entityId) {
+          throw new Error('No entity ID available for testing');
+        }
+        if (
+          !config.dataFabricTestJoinFieldName ||
+          !config.dataFabricTestJoinRelatedEntityName ||
+          !config.dataFabricTestJoinRelatedFieldName
+        ) {
+          throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join tests');
+        }
+        joinEntityId = entityId;
+        // The SDK defaults the join's base entity to the queried entity; the
+        // name is still needed here to address the entity-qualified keys the
+        // multi-entity route returns for base columns.
+        baseEntityName = (await entities.getById(entityId)).name;
+        relatedEntity = config.dataFabricTestJoinRelatedEntityName;
+        joinFieldName = config.dataFabricTestJoinFieldName;
+        relatedFieldName = config.dataFabricTestJoinRelatedFieldName;
+
+        // Address the seeded match directly instead of assuming it lands in
+        // the first page — leaked records on the shared fixture once pushed it
+        // past pageSize, making these tests fail deterministically. Filtering
+        // the base query to the related entity's own join values (plus one
+        // seeded no-match value, below) keeps the assertions fixture-driven
+        // and page-independent.
+        const relatedRecords = await entities.getRecordsByName(relatedEntity, { pageSize: 50 });
+        const relatedValues = relatedRecords.items
+          .map((r) => r[relatedFieldName])
+          .filter((v): v is string => typeof v === 'string' && v.length > 0);
+        if (relatedValues.length === 0) {
+          throw new Error(`Join fixture ${relatedEntity} has no ${relatedFieldName} values`);
+        }
+
+        // Seed one base row whose join value matches nothing on the related
+        // entity, so LEFT and INNER produce provably different row sets.
+        baseOnlyValue = `sdk-join-base-only-${generateRandomString()}`;
+        const inserted = await entities.insertRecordById(joinEntityId, { [joinFieldName]: baseOnlyValue });
+        registerResource('entityRecords', { entityId: joinEntityId, recordIds: [inserted.Id] });
+        await awaitRecordVisible(entities, joinEntityId, inserted.Id);
+
+        filterGroup = {
+          queryFilters: [
+            {
+              fieldName: joinFieldName,
+              operator: QueryFilterOperator.In,
+              valueList: [...relatedValues, baseOnlyValue],
+            },
+          ],
+        };
         // Join queries require a projection; select the two join keys — the
-        // base-entity key unqualified (non-ambiguous), the related key qualified.
-        selectedFields: [
-          config.dataFabricTestJoinFieldName,
-          `${relatedEntity}.${config.dataFabricTestJoinRelatedFieldName}`,
-        ],
-        joins: [
-          {
-            entityName: config.dataFabricTestJoinEntityName,
-            joinType: JoinType.LeftJoin,
-            joinFieldName: config.dataFabricTestJoinFieldName,
-            relatedEntityName: relatedEntity,
-            relatedFieldName: config.dataFabricTestJoinRelatedFieldName,
-          },
-        ],
-        pageSize: 25,
+        // multi-entity route returns every column entity-qualified
+        // ("Entity.Field"), including the base entity's.
+        selectedFields = [joinFieldName, `${relatedEntity}.${relatedFieldName}`];
+
+        // getRecordById readiness does not guarantee the query index has
+        // caught up; poll the exact query shape the tests run until the
+        // seeded row appears.
+        for (let attempt = 1; attempt <= 8; attempt++) {
+          const probe = await entities.queryRecordsById(joinEntityId, {
+            selectedFields,
+            joins: [
+              {
+                joinType: JoinType.LeftJoin,
+                joinFieldName,
+                relatedEntityName: relatedEntity,
+                relatedFieldName,
+              },
+            ],
+            filterGroup: {
+              queryFilters: [
+                { fieldName: joinFieldName, operator: QueryFilterOperator.In, valueList: [baseOnlyValue] },
+              ],
+            },
+            pageSize: 5,
+          });
+          if (probe.items.length > 0) return;
+          console.warn(`[joins beforeAll] seeded base-only row not yet queryable (attempt ${attempt}/8)`);
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+        throw new Error(`Seeded base-only record never became queryable on ${baseEntityName}`);
+      }, 90_000);
+
+      it('should return related-entity fields for a cross-entity LEFT join', async () => {
+        const { entities } = getServices();
+
+        const result = await entities.queryRecordsById(joinEntityId, {
+          selectedFields,
+          joins: [
+            {
+              joinType: JoinType.LeftJoin,
+              joinFieldName,
+              relatedEntityName: relatedEntity,
+              relatedFieldName,
+            },
+          ],
+          filterGroup,
+          pageSize: 25,
+        });
+
+        expect(Array.isArray(result.items)).toBe(true);
+        expect(result.items.length).toBeGreaterThan(0);
+        // Multi-entity result rows use entity-qualified keys ("Entity.Field").
+        // At least one base record has a matching related record, so at least
+        // one row must carry the related entity's join key with a value — this
+        // is the assertion that fails when the backend ignores the `joins`
+        // clause.
+        const matchedRows = result.items.filter(
+          (item) => item[`${relatedEntity}.${relatedFieldName}`] != null,
+        );
+        expect(matchedRows.length).toBeGreaterThan(0);
+        // LEFT keeps unmatched base rows too: the seeded no-match row survives.
+        const unmatchedRows = result.items.filter(
+          (item) => item[`${baseEntityName}.${joinFieldName}`] === baseOnlyValue,
+        );
+        expect(unmatchedRows.length).toBeGreaterThan(0);
+        expect(hasValidPagination(result)).toBe(true);
       });
 
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(result.items.length).toBeGreaterThan(0);
-      // Multi-entity result rows use entity-qualified keys ("Entity.Field").
-      // At least one base record has a matching related record, so at least one
-      // row must carry a key qualified with the related entity's name — this is
-      // the assertion that fails when the backend ignores the `joins` clause.
-      const joinedRows = result.items.filter(item =>
-        Object.keys(item).some(key => key.startsWith(`${relatedEntity}.`)),
-      );
-      expect(joinedRows.length).toBeGreaterThan(0);
-      expect(hasValidPagination(result)).toBe(true);
-    });
+      it('should return only matched rows for an INNER join', async () => {
+        const { entities } = getServices();
+        const join = {
+          joinFieldName,
+          relatedEntityName: relatedEntity,
+          relatedFieldName,
+        };
 
-    it('should return only matched rows for an INNER join', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-      if (!entityId) {
-        throw new Error('No entity ID available for testing');
-      }
-      if (
-        !config.dataFabricTestJoinFieldName ||
-        !config.dataFabricTestJoinRelatedEntityName ||
-        !config.dataFabricTestJoinRelatedFieldName
-      ) {
-        throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join test');
-      }
-      const relatedEntity = config.dataFabricTestJoinRelatedEntityName;
-      const join = {
-        entityName: config.dataFabricTestJoinEntityName,
-        joinFieldName: config.dataFabricTestJoinFieldName,
-        relatedEntityName: relatedEntity,
-        relatedFieldName: config.dataFabricTestJoinRelatedFieldName,
-      };
-      const selectedFields = [
-        config.dataFabricTestJoinFieldName,
-        `${relatedEntity}.${config.dataFabricTestJoinRelatedFieldName}`,
-      ];
+        const left = await entities.queryRecordsById(joinEntityId, {
+          selectedFields,
+          joins: [{ ...join, joinType: JoinType.LeftJoin }],
+          filterGroup,
+          pageSize: 25,
+        });
+        const inner = await entities.queryRecordsById(joinEntityId, {
+          selectedFields,
+          joins: [{ ...join, joinType: JoinType.InnerJoin }],
+          filterGroup,
+          pageSize: 25,
+        });
 
-      const left = await entities.queryRecordsById(entityId, {
-        selectedFields,
-        joins: [{ ...join, joinType: JoinType.LeftJoin }],
-        pageSize: 25,
-      });
-      const inner = await entities.queryRecordsById(entityId, {
-        selectedFields,
-        joins: [{ ...join, joinType: JoinType.InnerJoin }],
-        pageSize: 25,
-      });
-
-      // INNER keeps only matched rows; LEFT keeps every base row. The fixture
-      // guarantees at least one match, and every INNER row must carry the
-      // related entity's qualified keys.
-      expect(inner.items.length).toBeGreaterThan(0);
-      expect(inner.items.length).toBeLessThanOrEqual(left.items.length);
-      inner.items.forEach(item => {
-        expect(Object.keys(item).some(key => key.startsWith(`${relatedEntity}.`))).toBe(true);
+        // INNER keeps only matched rows, while LEFT also keeps the seeded
+        // no-match row — so the two must differ, and no INNER row may carry
+        // the base-only value or lack the related entity's qualified keys.
+        expect(inner.items.length).toBeGreaterThan(0);
+        expect(inner.items.length).toBeLessThan(left.items.length);
+        inner.items.forEach((item) => {
+          expect(item[`${baseEntityName}.${joinFieldName}`]).not.toBe(baseOnlyValue);
+          expect(Object.keys(item).some((key) => key.startsWith(`${relatedEntity}.`))).toBe(true);
+        });
       });
     });
 
