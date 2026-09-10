@@ -255,10 +255,9 @@ export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartReque
  * - `{ key }` — process GUID. A folder scope is still required so the job routes
  *   to the right folder.
  *
- * `{ id }` is intentionally not supported: the StartJobs API accepts `ReleaseName`
- * or `ReleaseKey` only, so an id-based ref would need an extra lookup to translate
- * it — and every `ProcessGetResponse` already exposes `key` alongside `id`, so
- * callers can pass `{ key: process.key }` directly.
+ * `{ id }` is intentionally not supported. Every {@link ProcessGetResponse}
+ * already exposes `key` alongside `id`, so any caller that has the id has the
+ * key too — pass `{ key: process.key }` directly.
  */
 export type ProcessRef =
   | { name: string; key?: never }
