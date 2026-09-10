@@ -35,6 +35,22 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       return null;
     }
 
+    // Reuse an existing Running instance of the fixture process before starting a new
+    // one — interrupted runs leave them Running indefinitely (the human task never
+    // completes), so scavenging them curbs instance growth in the tenant, where
+    // terminal instances cannot be deleted via API.
+    const existing = await caseInstances.getAll({
+      processKey: config.maestroCaseProcessKey,
+      pageSize: 20,
+    });
+    const runningOrphan = existing.items.find(
+      (inst) =>
+        inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey === config.folderKey
+    );
+    if (runningOrphan) {
+      return { instanceId: runningOrphan.instanceId, folderKey: runningOrphan.folderKey };
+    }
+
     const [job] = await processes.start(
       { processKey: config.maestroCaseProcessKey },
       { folderId: Number(config.folderId) }
@@ -61,16 +77,32 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   let seededCompletedJobKey: string | null = null;
 
   beforeAll(async () => {
-    const { processes } = getServices();
+    const { processes, caseInstances } = getServices();
     const config = getTestConfig();
 
-    // Fire-and-forget the reopen fixture first so its completion overlaps the suite
-    if (config.maestroCompletedCaseProcessKey && config.folderId) {
-      const [job] = await processes.start(
-        { processKey: config.maestroCompletedCaseProcessKey },
-        { folderId: Number(config.folderId) }
+    // Provide the reopen fixture first so any completion wait overlaps the suite.
+    // Reuse a Completed timer instance from an interrupted run before starting a new
+    // one — reuse keeps instance growth down, and an existing Completed instance means
+    // the reopen test has zero wait.
+    if (config.maestroCompletedCaseProcessKey && config.folderId && config.folderKey) {
+      const existing = await caseInstances.getAll({
+        processKey: config.maestroCompletedCaseProcessKey,
+        pageSize: 20,
+      });
+      const completedOrphan = existing.items.find(
+        (inst) =>
+          inst.latestRunStatus === InstanceStatus.COMPLETED &&
+          inst.folderKey === config.folderKey
       );
-      seededCompletedJobKey = job.key;
+      if (completedOrphan) {
+        seededCompletedJobKey = completedOrphan.instanceId;
+      } else {
+        const [job] = await processes.start(
+          { processKey: config.maestroCompletedCaseProcessKey },
+          { folderId: Number(config.folderId) }
+        );
+        seededCompletedJobKey = job.key;
+      }
     }
 
     seededInstance = await seedRunningInstance();
