@@ -47,3 +47,35 @@ https://cloud.uipath.com/identity_/web/?errorCode=invalid_request&errorId=eyJDcm
   }
 }
 ```
+
+### Scope Changes Not Taking Effect
+
+**Scenario**: You grant a new scope to the External Application, but calls still fail with a permission error.
+
+**Cause**: Two things hold on to the old scopes.
+
+First, the app requests the scopes it had when it was last deployed. What you need to change depends on how those scopes are set:
+
+| How scopes are set | What to do after granting the scope |
+| --- | --- |
+| `uipath.json` with no `scope` field | Redeploy. Every scope granted to the client is picked up automatically at deploy time, so no code change is needed. |
+| `uipath.json` with `scope` set | Add the scope to `scope`, then rebuild, pack, publish, and deploy. |
+| `scope` passed to `UiPath()` in code | Add the scope in the code, then rebuild, pack, publish, and deploy. |
+
+Second, the token is cached in `sessionStorage`. The SDK only checks that it is well formed and not expired, never that its scopes still match, so an open session keeps using the old token.
+
+**Solution**:
+
+1. Add the scope in **Admin → External Applications**.
+2. Update and deploy the app as shown in the table above.
+3. Sign out and sign back in, or close the browser tab and reopen the app.
+
+```typescript
+// Sign out (clears the cached token)
+sdk.logout();
+
+// Sign out of UiPath as well, so the next sign in asks for credentials
+sdk.logout({ endSession: true });
+```
+
+Refreshing the page won't help. `sessionStorage` belongs to the browser tab and survives reloads, including a hard reload. Closing the tab clears it, as does **DevTools → Application → Clear site data**.
