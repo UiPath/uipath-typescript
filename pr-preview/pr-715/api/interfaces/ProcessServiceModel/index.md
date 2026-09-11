@@ -161,6 +161,17 @@ await processes.start(
   { name: 'InvoiceReview' },
   { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
 );
+// With startInfo options
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
+);
+
+// With expand to include related entities
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', expand: 'Robot,Machine' },
+);
 ```
 
 #### Call Signature
