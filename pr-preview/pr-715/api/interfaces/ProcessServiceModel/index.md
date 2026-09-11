@@ -134,10 +134,10 @@ Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`
 
 ##### Parameters
 
-| Parameter    | Type                     | Description                                                                                                                |
-| ------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `processRef` | `ProcessRef`             | Process identifier — see [ProcessRef](../../type-aliases/ProcessRef/) for the variants and their folder-scope requirements |
-| `options?`   | `ProcessStartRefOptions` | Folder scoping + startInfo fields + optional OData query                                                                   |
+| Parameter    | Type                     | Description                                                                             |
+| ------------ | ------------------------ | --------------------------------------------------------------------------------------- |
+| `processRef` | `ProcessRef`             | Process identifier — see the variants for their folder-scope requirements               |
+| `options?`   | `ProcessStartRefOptions` | Folder scoping + startInfo fields + optional `expand` / `select` / `filter` / `orderby` |
 
 ##### Returns
 
