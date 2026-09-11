@@ -10,6 +10,7 @@
 
 import type { PrivateSDK } from './types';
 import { missingConfigMessage } from '../config/config-utils';
+import { OrganizationIdResolver } from '../organization/organization-id-resolver';
 
 // Global symbol key to ensure WeakMap is shared across module instances
 // This prevents issues when core and service modules are bundled separately
@@ -77,5 +78,15 @@ export class SDKInternalsRegistry {
       );
     }
     return internals;
+  }
+
+  /**
+   * Retrieve the instance's organization GUID resolver, creating it on first use.
+   * Cached on the registered internals so all services share one resolution.
+   */
+  static getOrganizationIdResolver(instance: object): OrganizationIdResolver {
+    const internals = this.get(instance);
+    internals.organizationIdResolver ??= new OrganizationIdResolver(internals.config, internals.tokenManager);
+    return internals.organizationIdResolver;
   }
 }

@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -254,6 +254,16 @@
             "require": {
                 "types": "./dist/business-apps/index.d.ts",
                 "default": "./dist/business-apps/index.cjs"
+            }
+        },
+        "./users": {
+            "import": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.cjs"
             }
         }
     },

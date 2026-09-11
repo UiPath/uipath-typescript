@@ -11,10 +11,24 @@ import type {
 } from './platform.types';
 
 /**
- * Public surface of the Platform service. JSDoc on this interface drives
- * the generated API reference documentation.
+ * Public surface of the Platform service.
  *
  * Every operation is user-scoped: `userId` identifies whose settings are read or written.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Platform, PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+ *
+ * const platform = new Platform(sdk);
+ * const settings = await platform.getUserSettings(
+ *   [PlatformSettingKey.UserTheme],
+ *   '<userId>',
+ *   { organizationId: '<organizationId>' }
+ * );
+ * ```
  */
 export interface PlatformServiceModel {
   /**

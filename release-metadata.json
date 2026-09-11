@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.7.0",
+  "sdkVersion": "1.7.1",
   "services": [
     {
       "name": "AgentMemory",
@@ -117,8 +117,16 @@
           "since": null
         },
         {
+          "name": "getByKey",
+          "since": "1.7.1"
+        },
+        {
           "name": "getByName",
           "since": null
+        },
+        {
+          "name": "updateValue",
+          "since": "1.7.1"
         },
         {
           "name": "updateValueById",
@@ -366,8 +374,16 @@
           "since": "1.7.0"
         },
         {
+          "name": "deleteRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "deleteRecordById",
           "since": null
+        },
+        {
+          "name": "deleteRecords",
+          "since": "1.7.1"
         },
         {
           "name": "deleteRecordsById",
@@ -390,12 +406,28 @@
           "since": null
         },
         {
+          "name": "getByName",
+          "since": "1.7.1"
+        },
+        {
           "name": "getRecordById",
           "since": null
         },
         {
+          "name": "getRecordByName",
+          "since": "1.7.1"
+        },
+        {
           "name": "getRecordsById",
           "since": null
+        },
+        {
+          "name": "getRecordsByName",
+          "since": "1.7.1"
+        },
+        {
+          "name": "importRecords",
+          "since": "1.7.1"
         },
         {
           "name": "importRecordsById",
@@ -406,12 +438,24 @@
           "since": null
         },
         {
+          "name": "insertRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "insertRecordById",
           "since": null
         },
         {
+          "name": "insertRecords",
+          "since": "1.7.1"
+        },
+        {
           "name": "insertRecordsById",
           "since": null
+        },
+        {
+          "name": "queryRecords",
+          "since": "1.7.1"
         },
         {
           "name": "queryRecordsById",
@@ -422,8 +466,16 @@
           "since": "1.7.0"
         },
         {
+          "name": "updateRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "updateRecordById",
           "since": null
+        },
+        {
+          "name": "updateRecords",
+          "since": "1.7.1"
         },
         {
           "name": "updateRecordsById",

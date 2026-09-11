@@ -3,6 +3,11 @@ export interface BaseConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  /**
+   * Organization (partition) GUID. Optional — the SDK derives it from the access token
+   * or looks it up from `orgName`; set it to skip that lookup or to override the result.
+   */
+  organizationId?: string;
 }
 
 // OAuth specific fields

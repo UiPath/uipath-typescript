@@ -25,6 +25,7 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
+import { Users } from '../../../src/services/platform/users';
 import { BusinessApps } from '../../../src/services/maestro/business-apps';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
@@ -75,6 +76,7 @@ export interface TestServices {
   functions?: Functions;
   platform?: Platform;
   businessApps?: BusinessApps;
+  platformUsers?: Users;
 }
 
 /**
@@ -171,6 +173,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     functions: new Functions(sdk),
     platform: new Platform(sdk),
     businessApps: new BusinessApps(sdk),
+    platformUsers: new Users(sdk),
   };
 }
 
