@@ -1,0 +1,30 @@
+{
+  "name": "connections-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sample React + TypeScript Coded App that browses UiPath connectors, inspects their connections and activities, and executes an activity against a live connection.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource/roboto": "^5.2.9",
+    "@mui/material": "^7.3.5",
+    "@uipath/uipath-typescript": "1.7.0-beta.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@uipath/coded-apps-dev": "^1.0.0-beta.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "~5.8.3",
+    "vite": "^8.1.0"
+  }
+}
