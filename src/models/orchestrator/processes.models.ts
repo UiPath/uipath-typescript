@@ -112,8 +112,8 @@ export interface ProcessServiceModel {
    * `{ name }` and `{ key }` — a cross-folder redirect steers both the identity and the
    * folder scoping to the override target.
    *
-   * @param processRef - Process identifier — see {@link ProcessRef} for the variants and their folder-scope requirements
-   * @param options - Folder scoping + startInfo fields + optional OData query
+   * @param processRef - Process identifier — see the variants for their folder-scope requirements
+   * @param options - Folder scoping + startInfo fields + optional `expand` / `select` / `filter` / `orderby`
    * @returns Promise resolving to an array of started process instances of {@link ProcessStartResponse}
    *
    * @example

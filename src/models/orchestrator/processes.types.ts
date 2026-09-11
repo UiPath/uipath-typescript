@@ -265,10 +265,10 @@ export type ProcessRef =
 
 /**
  * Options for the ref-based `start(processRef, options?)` signature. Combines folder
- * scoping (`folderId` / `folderKey` / `folderPath`), OData query shape (`expand`,
- * `select`, `filter`, `orderby`) and every `BaseProcessStartRequest` startInfo
- * field. Identity fields (`processKey` / `processName`) do not appear here — they
- * come from the `ProcessRef` argument.
+ * scoping (`folderId` / `folderKey` / `folderPath`), response-shape controls
+ * (`expand`, `select`, `filter`, `orderby`) and every `BaseProcessStartRequest`
+ * startInfo field. Identity fields (`processKey` / `processName`) do not appear
+ * here — they come from the `ProcessRef` argument.
  */
 export interface ProcessStartRefOptions extends ProcessStartOptions, BaseProcessStartRequest {}
 
