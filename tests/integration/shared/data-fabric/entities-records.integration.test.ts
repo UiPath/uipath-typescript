@@ -16,6 +16,7 @@ import {
   QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
+import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 
 // Cache for choice set values to avoid repeated API calls within a test run
@@ -587,20 +588,25 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
   describe('Entity-level methods (via getById)', () => {
     const entityMethodRecordIds: string[] = [];
+    let entity!: EntityGetResponse;
+    let entityId!: string;
 
-    it('should insert a single record via entity.insertRecord', async () => {
+    // One shared getById for the whole block (rules.md: shared lookups belong in
+    // beforeAll). Re-fetching inside each test also spent part of every write
+    // test's timeout budget on a read that can itself hit a tenant stall.
+    beforeAll(async () => {
       const { entities } = getServices();
       const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId) {
+      const resolved = config.dataFabricTestEntityId || testEntityId;
+      if (!resolved) {
         throw new Error('No entity ID available for testing');
       }
-
-      const entity = await entities.getById(entityId);
+      entityId = resolved;
+      entity = await entities.getById(entityId);
       entityMetadata = entity;
+    }, 90_000);
 
+    it('should insert a single record via entity.insertRecord', async () => {
       const testData = await buildDummyRecord(entity);
       const result = await entity.insertRecord(testData);
 
@@ -613,21 +619,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         entityId,
         recordIds: [result.Id],
       });
-    });
+    }, 90_000);
 
     it('should insert multiple records via entity.insertRecords', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId) {
-        throw new Error('No entity ID available for testing');
-      }
-
-      const entity = await entities.getById(entityId);
-      entityMetadata = entity;
-
       const testData = await Promise.all([buildDummyRecord(entity), buildDummyRecord(entity)]);
       const result = await entity.insertRecords(testData);
 
@@ -644,19 +638,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         entityId,
         recordIds: insertedIds,
       });
-    });
+    }, 90_000);
 
     it('should retrieve all records via entity.getAllRecords', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId) {
-        throw new Error('No entity ID available for testing');
-      }
-
-      const entity = await entities.getById(entityId);
       const result = await entity.getAllRecords({ pageSize: 5 });
 
       expect(result).toBeDefined();
@@ -666,16 +650,10 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
     });
 
     it('should retrieve a single record via entity.getRecord', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId || entityMethodRecordIds.length === 0) {
+      if (entityMethodRecordIds.length === 0) {
         throw new Error('No records available to test getRecord');
       }
 
-      const entity = await entities.getById(entityId);
       const recordId = entityMethodRecordIds[0];
       const record = await entity.getRecord(recordId);
 
@@ -684,17 +662,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
     });
 
     it('should update records via entity.updateRecords', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId || entityMethodRecordIds.length === 0) {
+      if (entityMethodRecordIds.length === 0) {
         throw new Error('No records available to update');
       }
-
-      const entity = await entities.getById(entityId);
-      entityMetadata = entity;
 
       const updateField = getWritableFields(entity.fields).find(
         (f) =>
@@ -714,19 +684,13 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(result).toBeDefined();
       expect(result.successRecords).toBeDefined();
       expect(Array.isArray(result.successRecords)).toBe(true);
-    });
+    }, 90_000);
 
     it('should delete records via entity.deleteRecords', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-
-      if (!entityId || entityMethodRecordIds.length === 0) {
+      if (entityMethodRecordIds.length === 0) {
         throw new Error('No records available to delete');
       }
 
-      const entity = await entities.getById(entityId);
       const result = await entity.deleteRecords(entityMethodRecordIds);
 
       expect(result).toBeDefined();
@@ -739,7 +703,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         }
       }
       entityMethodRecordIds.length = 0;
-    });
+    }, 90_000);
   });
 
   describe('updateRecordById', () => {
