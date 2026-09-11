@@ -33,7 +33,7 @@ export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods
  *
  * A connection represents an authenticated link to a third-party system (Salesforce,
  * Slack, OneDrive, ...) inside a UiPath folder. Use this service to list connections,
- * inspect a single connection, check connectivity, or trigger re-authentication.
+ * inspect a single connection, or check connectivity.
  *
  * ### Usage
  *

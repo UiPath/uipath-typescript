@@ -55,31 +55,6 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     this.connectionsService = new ConnectionsService(instance);
   }
 
-  /**
-   * List all connectors available on this tenant.
-   *
-   * Returns a plain array — the Integration Service does not paginate this endpoint.
-   *
-   * @param options - Optional filter (e.g. limit to connectors exposing HTTP Request activities)
-   * @returns Promise resolving to an array of {@link ConnectorGetResponse}
-   * @example
-   * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
-   *
-   * const connectors = new Connectors(sdk);
-   *
-   * const all = await connectors.getAll();
-   * for (const connector of all) {
-   *   console.log(`${connector.key} — ${connector.name} (${connector.lifeCycleStage})`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Only connectors that expose an HTTP Request activity
-   * const httpEnabled = await connectors.getAll({ hasHttpRequest: true });
-   * ```
-   */
   @track('Connectors.GetAll')
   async getAll(options?: ConnectorGetAllOptions): Promise<ConnectorGetResponse[]> {
     const response = await this.get<RawConnectorGetResponse[]>(CONNECTOR_ENDPOINTS.GET_ALL, {
@@ -88,21 +63,6 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     return response.data ?? [];
   }
 
-  /**
-   * Get a single connector by key or numeric ID.
-   *
-   * @param keyOrId - Connector key (e.g. `uipath-slack`) or numeric ID as a string
-   * @returns Promise resolving to a {@link ConnectorGetResponse}
-   * @example
-   * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
-   *
-   * const connectors = new Connectors(sdk);
-   *
-   * const slack = await connectors.getById('uipath-slack');
-   * console.log(slack.name, slack.authentication?.type);
-   * ```
-   */
   @track('Connectors.GetById')
   async getById(keyOrId: string): Promise<ConnectorGetResponse> {
     if (!keyOrId) {
@@ -112,31 +72,6 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     return response.data;
   }
 
-  /**
-   * Get the default connection for a connector in the current folder.
-   *
-   * Each connector may have a single connection marked as default per folder;
-   * use this to resolve "which connection should I use for Slack?" without
-   * paging through the full list.
-   *
-   * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving to a {@link ConnectionGetResponse}
-   * @example
-   * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
-   *
-   * const connectors = new Connectors(sdk);
-   *
-   * const defaultSlack = await connectors.getDefaultConnection('uipath-slack', {
-   *   folderPath: 'Shared/Finance',
-   * });
-   *
-   * // Use bound methods directly on the entity
-   * const status = await defaultSlack.ping();
-   * console.log(status.status);
-   * ```
-   */
   @track('Connectors.GetDefaultConnection')
   async getDefaultConnection(
     keyOrId: string,
@@ -160,43 +95,6 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     return createConnectionWithMethods(response.data, this.connectionsService);
   }
 
-  /**
-   * List all connections for a connector.
-   *
-   * Returns a plain array — the Integration Service uses page-indexed
-   * pagination (no continuation cursor). Increment `pageIndex` to walk pages.
-   *
-   * @param keyOrId - Connector key or numeric ID as a string
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, and sorting options
-   * @returns Promise resolving to an array of {@link ConnectionGetResponse}
-   * @example
-   * ```typescript
-   * import { Connectors } from '@uipath/uipath-typescript/connections';
-   *
-   * const connectors = new Connectors(sdk);
-   *
-   * // First page of Slack connections in a folder
-   * const slackConnections = await connectors.getConnections('uipath-slack', {
-   *   folderKey: '<folderKey>',
-   *   pageSize: 25,
-   * });
-   *
-   * for (const conn of slackConnections) {
-   *   const status = await conn.ping();
-   *   console.log(`${conn.name}: ${status.status}`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Walk subsequent pages
-   * const page2 = await connectors.getConnections('uipath-slack', {
-   *   folderId: 123,
-   *   pageSize: 25,
-   *   pageIndex: 2,
-   * });
-   * ```
-   */
   @track('Connectors.GetConnections')
   async getConnections(
     keyOrId: string,
