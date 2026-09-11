@@ -72,7 +72,7 @@ const sdk = new UiPath({
 ```
 
 !!! info "Using externally obtained tokens"
-    If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.
+    If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side. In a deployed coded app the platform has already injected OAuth meta tags; passing `secret` still selects secret authentication and those injected fields are dropped.
 
 To Generate a PAT Token:
 
@@ -172,6 +172,11 @@ The access token is consumed internally and is never exposed on `sdk.config`.
     Constructor arguments win over meta tags, which win over the environment.
     Meta tags apply in the browser only; the environment contract applies
     outside it.
+
+    Precedence is per field, so a config passing only `secret` still inherits any
+    injected `clientId`, `redirectUri` and `scope`. Naming one method drops the
+    other's inherited fields. If the merge still carries `secret` beside a
+    **complete** OAuth set, the constructor throws, naming each field and its source.
 
 ## SDK Initialization - The initialize() Method
 
