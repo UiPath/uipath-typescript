@@ -1529,9 +1529,28 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+    
+    
+      
         
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1_10" id="__nav_2_1_10_label" tabindex="0">
+            
   
   
   <span class="md-ellipsis">
@@ -1545,7 +1564,79 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platform
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interfaces/PlatformServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interfaces/PlatformUserServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Users
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2771,6 +2862,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Authentication Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope-changes-not-taking-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope Changes Not Taking Effect
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3031,6 +3139,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Authentication Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scope-changes-not-taking-effect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope Changes Not Taking Effect
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3091,6 +3216,46 @@
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">}</span>
 </code></pre></div></li>
 </ol>
+<h3 id="scope-changes-not-taking-effect">Scope Changes Not Taking Effect<a class="headerlink" href="#scope-changes-not-taking-effect" title="Permanent link">&para;</a></h3>
+<p><strong>Scenario</strong>: You grant a new scope to the External Application, but calls still fail with a permission error.</p>
+<p><strong>Cause</strong>: Two things hold on to the old scopes.</p>
+<p>First, the app requests the scopes it had when it was last deployed. What you need to change depends on how those scopes are set:</p>
+<table>
+<thead>
+<tr>
+<th>How scopes are set</th>
+<th>What to do after granting the scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uipath.json</code> with no <code>scope</code> field</td>
+<td>Redeploy. Every scope granted to the client is picked up automatically at deploy time, so no code change is needed.</td>
+</tr>
+<tr>
+<td><code>uipath.json</code> with <code>scope</code> set</td>
+<td>Add the scope to <code>scope</code>, then rebuild, pack, publish, and deploy.</td>
+</tr>
+<tr>
+<td><code>scope</code> passed to <code>UiPath()</code> in code</td>
+<td>Add the scope in the code, then rebuild, pack, publish, and deploy.</td>
+</tr>
+</tbody>
+</table>
+<p>Second, the token is cached in <code>sessionStorage</code>. The SDK only checks that it is well formed and not expired, never that its scopes still match, so an open session keeps using the old token.</p>
+<p><strong>Solution</strong>:</p>
+<ol type="1">
+<li>Add the scope in <strong>Admin → External Applications</strong>.</li>
+<li>Update and deploy the app as shown in the table above.</li>
+<li>Sign out and sign back in, or close the browser tab and reopen the app.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Sign out (clears the cached token)</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">();</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Sign out of UiPath as well, so the next sign in asks for credentials</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">logout</span><span class="p">({</span><span class="w"> </span><span class="nx">endSession</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<p>Refreshing the page won't help. <code>sessionStorage</code> belongs to the browser tab and survives reloads, including a hard reload. Closing the tab clears it, as does <strong>DevTools → Application → Clear site data</strong>.</p>
 
 
 
