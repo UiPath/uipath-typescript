@@ -37,6 +37,7 @@ Every new method must also have an integration test in `tests/integration/shared
 
 - Use `getServices()` and `getTestConfig()` from `tests/integration/config/unified-setup.ts`
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
+- **When adding a new resource type to `ResourceRegistry` in `tests/integration/utils/cleanup.ts`, also add a `cleanupTest{Entity}()` exported helper and a corresponding delete loop in `cleanupAllTestResources()`** — a new registry slot without a matching cleanup entry means `registerResource()` calls are inert and orphaned resources from a mid-run crash are never deleted by global cleanup. Follow the pattern of `cleanupTestBusinessApp` (a typed standalone helper) wired into the loop and reset at the bottom of `cleanupAllTestResources()`.
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
 - Tests run in both `v0` and `v1` init modes via `describe.each(modes)` — **only if the service is registered in both modes in `unified-setup.ts`**. New services that only support `v1` init should use `['v1']` only.
 - **Always `throw new Error()` when test preconditions are not met** — whether it's missing config (e.g., no `folderId`) or missing test data (e.g., no running jobs). Never use `console.warn()` + `return` to silently skip — silent skips hide unrunnable tests and make CI green when tests aren't actually exercised.
@@ -57,6 +58,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Use `@example` with fenced TypeScript blocks, `@param`, `@returns`, `{@link TypeName}`.
 - Tag internal code with `@internal` or `@ignore`.
 - When adding methods, update `docs/oauth-scopes.md` with required OAuth scopes. **NEVER** skip this — missing scopes break the OAuth integration guide. **Exception: methods tagged `@internal` in their JSDoc do not get an OAuth scope entry** — they are not part of the public API surface and do not appear in the OAuth integration guide. Similarly, `mkdocs.yml` nav entries and docs site pages are not needed for services where every public-facing method is tagged `@internal` (i.e., the service has no user-visible API).
+- **NEVER** include RBAC permissions in `docs/oauth-scopes.md` — that page documents OAuth scopes only. RBAC requirements (UiPath app roles or platform-level permissions) are authorization policies managed outside OAuth and must not appear in the scope table.
 - Run `npm run docs:api` to regenerate.
 
 **JSDoc quality rules:**
@@ -86,7 +88,9 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 
 ### Samples & Template Gallery
 
-- Every app under `samples/` must ship a **preview GIF** at `samples/<app>/screenshots/` (e.g. `preview.gif`) showing the app in use. The app README and the docs Template Gallery both render it — a missing GIF leaves an empty poster tile in the gallery.
+- Every app under `samples/` must ship a **preview GIF** at `samples/<app>/screenshots/` (e.g. `preview.gif`) showing the app in use. The app README and the docs Template Gallery both render it — a missing GIF leaves an empty poster tile in the gallery. GIFs must be high quality/HD — a blurry or low-resolution preview reflects poorly on the SDK.
+- **NEVER** hardcode environment-specific values (folder IDs, tenant URLs, queue names, etc.) in sample app source code or config files — users must be able to clone and run the app by supplying their own values. Provide a `uipath.json.example` template file with placeholder values (e.g., `<your-client-id>`) committed to the repo, and ensure `.gitignore` excludes `uipath.json` (the live copy), not `uipath.json.example`. Apply to new samples; update existing samples opportunistically.
+- **NEVER** surface internal SDK errors, raw exception messages, or implementation details in user-facing sample UI (e.g., toast notifications, error banners) — catch errors and display a concise, user-friendly message instead.
 - **NEVER** reference UiPath alpha, staging, or internal non-production environments in sample READMEs or docs (e.g., alpha tenant URLs, staging cloud URLs) — always use production URLs and instructions. These URLs are inaccessible to external SDK consumers and become stale as UiPath infrastructure evolves. Note: advising users to configure their *own* apps for multiple environments (e.g., OAuth redirect URIs for a staging deployment) is legitimate and not covered by this rule.
 - The **Template Gallery** (`docs/samples/index.md`) is the browsable, searchable index of `samples/` published on the docs site. When you **add, rename, remove, or re-scope a sample, update the gallery in the same PR** so the site stays in sync. Edit the inline app list (the `#tg-data` JSON block) — add or adjust an entry:
 
