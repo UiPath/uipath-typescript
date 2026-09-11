@@ -2,15 +2,13 @@ import { describe, it, expect } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../config/unified-setup';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('SDK Initialization - Smoke Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
   describe('Configuration', () => {
     it('should load valid configuration from environment', () => {
       const config = getTestConfig();

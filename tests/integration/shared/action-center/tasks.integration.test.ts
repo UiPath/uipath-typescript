@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   cleanupTestTask,
   InitMode,
 } from '../../config/unified-setup';
@@ -12,9 +12,7 @@ import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '..
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (mode) => {
   let createdTaskId: number | null = null;
   const testTaskTitle = generateTestResourceName(`Task_${mode}`);
 
@@ -480,11 +478,9 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       await cleanupTestTask(createdTaskId);
     }
   });
-}, 120000);
+}, { timeout: 120000 });
 
-describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Tasks (extended) - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;
@@ -612,9 +608,7 @@ describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integratio
   });
 });
 
-describe.each(['v1'] as InitMode[])('Action Center Task Comments - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Task Comments - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;

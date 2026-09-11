@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { awaitRecordVisible } from '../../utils/helpers';
 
@@ -29,10 +29,11 @@ const hasAttachmentConfig = !!(
 
 const modes: InitMode[] = ['v1'];
 
-describe.skipIf(!hasAttachmentConfig).each(modes)(
-  'Entity Attachment - Integration Tests [%s]',
-  (mode) => {
-    setupUnifiedTests(mode);
+describeIntegration(
+  'Entity Attachment - Integration Tests',
+  'both',
+  modes,
+  () => {
 
     let entityName!: string;
     const recordIds: string[] = [];
@@ -229,5 +230,6 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         expect(deleteResult).toBeDefined();
       });
     });
-  }
+  },
+  { skip: !hasAttachmentConfig },
 );

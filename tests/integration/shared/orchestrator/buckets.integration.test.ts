@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   cleanupTestBucketFile,
   InitMode,
 } from '../../config/unified-setup';
@@ -42,9 +42,7 @@ async function getBucketForTest(testName: string): Promise<{ bucketId: number; f
   };
 }
 
-describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Orchestrator Buckets - Integration Tests', 'both', modes, (mode) => {
   const uploadedFiles: Array<{ bucketId: number; path: string; folderId: number }> = [];
 
   function trackUploadedFile(bucketId: number, path: string, folderId: number): void {

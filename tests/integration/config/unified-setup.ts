@@ -27,9 +27,13 @@ import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
 import { Users } from '../../../src/services/platform/users';
 import { BusinessApps } from '../../../src/services/maestro/business-apps';
-import { loadIntegrationConfig, IntegrationConfig } from './test-config';
+import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequirement, AuthMode,
+  resolveBaseUrl,
+} from './test-config';
+export { resolveAuthModes } from './test-config';
+export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
-import { afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe } from 'vitest';
 
 // Re-export cleanup functions from cleanup.ts for convenience
 export {
@@ -86,19 +90,42 @@ export interface TestServices {
  */
 export type InitMode = 'v0' | 'v1';
 
+
 let servicesInstance: TestServices | null = null;
 let testConfig: IntegrationConfig | null = null;
 let currentMode: InitMode | null = null;
+let currentAuthMode: AuthMode | null = null;
+
+/**
+ * Picks the bearer token for the requested auth mode.
+ *
+ * @throws {Error} If user-token auth is requested but no token is configured
+ */
+function resolveToken(config: IntegrationConfig, authMode: AuthMode): string {
+  if (authMode === 'pat') {
+    return config.secret;
+  }
+
+  if (!config.userToken) {
+    throw new Error(
+      'User-token auth was requested but UIPATH_USER_TOKEN is not set. Suites that ' +
+      'require it must be declared with `describeIntegration(name, requirement, ...)` so they skip ' +
+      'instead of failing when the token is unavailable.'
+    );
+  }
+
+  return config.userToken;
+}
 
 /**
  * Creates services using V0 pattern (legacy SDK property access)
  */
-function createV0Services(config: IntegrationConfig): TestServices {
+function createV0Services(config: IntegrationConfig, token: string, baseUrl: string): TestServices {
   const sdk = new LegacyUiPath({
-    baseUrl: config.baseUrl,
+    baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
-    secret: config.secret,
+    secret: token,
   });
 
   if (!sdk.isAuthenticated()) {
@@ -129,12 +156,12 @@ function createV0Services(config: IntegrationConfig): TestServices {
 /**
  * Creates services using V1 pattern (modular instantiation)
  */
-function createV1Services(config: IntegrationConfig): TestServices {
+function createV1Services(config: IntegrationConfig, token: string, baseUrl: string): TestServices {
   const sdk = new UiPath({
-    baseUrl: config.baseUrl,
+    baseUrl,
     orgName: config.orgName,
     tenantName: config.tenantName,
-    secret: config.secret,
+    secret: token,
   });
 
   if (!sdk.isAuthenticated()) {
@@ -178,20 +205,30 @@ function createV1Services(config: IntegrationConfig): TestServices {
 }
 
 /**
- * Initialize services in the specified mode
+ * Initialize services in the specified init mode and auth mode.
+ *
+ * The cached instance is keyed on both — a suite running under one credential
+ * must never be handed the SDK built for the other.
  */
-export async function initializeServices(mode: InitMode): Promise<TestServices> {
-  if (servicesInstance && currentMode === mode) {
+export async function initializeServices(
+  mode: InitMode,
+  authMode: AuthMode,
+): Promise<TestServices> {
+  if (servicesInstance && currentMode === mode && currentAuthMode === authMode) {
     return servicesInstance;
   }
 
   testConfig = loadIntegrationConfig();
   currentMode = mode;
+  currentAuthMode = authMode;
+
+  const token = resolveToken(testConfig, authMode);
+  const baseUrl = resolveBaseUrl(testConfig, authMode);
 
   if (mode === 'v0') {
-    servicesInstance = createV0Services(testConfig);
+    servicesInstance = createV0Services(testConfig, token, baseUrl);
   } else {
-    servicesInstance = createV1Services(testConfig);
+    servicesInstance = createV1Services(testConfig, token, baseUrl);
   }
 
   return servicesInstance;
@@ -227,22 +264,96 @@ export function getCurrentMode(): InitMode | null {
 }
 
 /**
+ * Get the credential the current services instance authenticates with
+ */
+export function getCurrentAuthMode(): AuthMode | null {
+  return currentAuthMode;
+}
+
+/**
+ * Credential and host for the running cell, for tests that bypass the SDK and
+ * use a raw `fetch`. Reading `config` directly picks what is *configured* rather
+ * than what this cell is *using*, which sends the wrong token once a suite runs
+ * under both. Safe from a suite's `afterAll` — `cleanupServices()` runs last.
+ */
+export function getActiveAuth(): { token: string; baseUrl: string } {
+  const authMode = getCurrentAuthMode();
+  if (!authMode) {
+    throw new Error(
+      'No active credential. getActiveAuth() runs inside a cell, after the harness ' +
+      'beforeAll has initialised services.'
+    );
+  }
+  const config = getTestConfig();
+  return { token: resolveToken(config, authMode), baseUrl: resolveBaseUrl(config, authMode) };
+}
+
+/**
  * Cleanup services
  */
 export function cleanupServices(): void {
   servicesInstance = null;
   currentMode = null;
+  currentAuthMode = null;
 }
 
 /**
- * Setup hooks for unified tests with a specific mode
+ * Setup hooks for one cell: one init mode, one credential. Takes the resolved
+ * credential so only `describeIntegration` decides it — resolving again here
+ * would let the skip guard and the setup disagree.
  */
-export function setupUnifiedTests(mode: InitMode): void {
+export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
   beforeAll(async () => {
-    await initializeServices(mode);
+    await initializeServices(mode, authMode);
   });
 
   afterAll(() => {
     cleanupServices();
   });
+}
+
+/** Extra knobs for {@link describeIntegration}. */
+export interface DescribeIntegrationOptions {
+  /** Skip regardless of credentials — disabled on purpose, or fixture-gated. */
+  skip?: boolean;
+  /** Per-suite timeout in ms, passed through to vitest. Applies to every cell. */
+  timeout?: number;
+}
+
+/**
+ * Declares a suite and expands it over init modes x credentials, naming cells
+ * `[initMode][authMode]` so a failure says which credential failed. The
+ * requirement drives the credentials, the host, and whether the suite is
+ * collected; when nothing satisfies it the suite reports as skipped.
+ *
+ * @example
+ * describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => { ... });
+ * describeIntegration('Notifications - Integration Tests', 'user', modes, () => { ... });
+ */
+export function describeIntegration(
+  name: string,
+  requirement: AuthRequirement,
+  modes: InitMode[],
+  body: (mode: InitMode, authMode: AuthMode) => void,
+  options: DescribeIntegrationOptions = {},
+): void {
+  const authModes = resolveAuthModes(requirement);
+  const skip = options.skip === true || authModes.length === 0;
+
+  // `describe.each([])` emits nothing, hiding the suite instead of marking it
+  // skipped, so a skipped suite still needs a cell. Never used to authenticate.
+  const placeholder: AuthMode = requirement === 'both' ? 'pat' : requirement;
+  const effectiveAuthModes: AuthMode[] = authModes.length > 0 ? authModes : [placeholder];
+  const cells: [InitMode, AuthMode][] = modes.flatMap(
+    (mode) => effectiveAuthModes.map((authMode): [InitMode, AuthMode] => [mode, authMode]),
+  );
+
+  describe.skipIf(skip).each(cells)(
+    `${name} [%s][%s]`,
+    (mode, authMode) => {
+      setupUnifiedTests(mode, authMode);
+      body(mode, authMode);
+    },
+    options.timeout,
+  );
 }

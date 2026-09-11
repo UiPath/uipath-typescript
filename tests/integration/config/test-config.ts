@@ -6,10 +6,25 @@ config({ path: path.resolve(__dirname, '../../.env.integration') });
 
 export interface IntegrationConfig {
   baseUrl: string;
+  /**
+   * Base URL for suites authenticating with a user token. The CORS proxy in
+   * front of `baseUrl` whitelists paths per service, which suites reaching
+   * newer services would have to be added to; user-token suites therefore
+   * talk to the platform host directly. Falls back to `baseUrl` when unset.
+   */
+  minterBaseUrl?: string;
   orgName: string;
   tenantName: string;
   tenantId?: string;
   secret: string;
+  /**
+   * User access token, minted by a browser login (Minter) rather than issued to
+   * an external application. Required by services that reject PAT and
+   * client-credentials tokens outright: everything under `insightsrtm_` (Agents,
+   * Agent Memory, Agent Traces, Governance) and the notification service.
+   * Unset by default — suites that need it skip rather than fail.
+   */
+  userToken?: string;
   timeout: number;
   skipCleanup: boolean;
   folderId?: string;
@@ -60,6 +75,11 @@ export interface IntegrationConfig {
   tasksTestUserId?: string;
   casTestAgentId?: string;
   casTestFolderId?: string;
+  /**
+   * Trace GUID used by the Agent Traces span tests. The trace must exist in the
+   * test tenant and have at least one span; suites guard on it and throw when unset.
+   */
+  tracesTestTraceId?: string;
   functionsTestFolderId?: string;
   functionsTestFunctionName?: string;
   /**
@@ -101,6 +121,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
   if (typeof rawConfig.baseUrl !== 'string' || !isValidUrl(rawConfig.baseUrl)) {
     errors.push('  - baseUrl: UIPATH_BASE_URL must be a valid URL');
   }
+  if (rawConfig.minterBaseUrl !== undefined &&
+      (typeof rawConfig.minterBaseUrl !== 'string' || !isValidUrl(rawConfig.minterBaseUrl))) {
+    errors.push('  - minterBaseUrl: MINTER_BASE_URL must be a valid URL when set');
+  }
   if (typeof rawConfig.orgName !== 'string' || rawConfig.orgName.length === 0) {
     errors.push('  - orgName: UIPATH_ORG_NAME is required');
   }
@@ -121,10 +145,14 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
 
   return {
     baseUrl: rawConfig.baseUrl as string,
+    minterBaseUrl: typeof rawConfig.minterBaseUrl === 'string' ? rawConfig.minterBaseUrl : undefined,
     orgName: rawConfig.orgName as string,
     tenantName: rawConfig.tenantName as string,
     tenantId: typeof rawConfig.tenantId === 'string' ? rawConfig.tenantId : undefined,
     secret: rawConfig.secret as string,
+    userToken: typeof rawConfig.userToken === 'string' && rawConfig.userToken.length > 0
+      ? rawConfig.userToken
+      : undefined,
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
@@ -150,6 +178,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     casTestAgentId: typeof rawConfig.casTestAgentId === 'string' ? rawConfig.casTestAgentId : undefined,
     casTestFolderId: typeof rawConfig.casTestFolderId === 'string' ? rawConfig.casTestFolderId : undefined,
+    tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
     organizationId: typeof rawConfig.organizationId === 'string' ? rawConfig.organizationId : undefined,
@@ -174,10 +203,12 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
   const rawConfig = {
     baseUrl: process.env.UIPATH_BASE_URL,
+    minterBaseUrl: process.env.MINTER_BASE_URL || undefined,
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
-    tenantId: process.env.UIPATH_TENANT_ID_DEV || undefined,
+    tenantId: process.env.UIPATH_TENANT_ID || undefined,
     secret: process.env.UIPATH_SECRET,
+    userToken: process.env.UIPATH_USER_TOKEN || undefined,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
       : 30000,
@@ -205,6 +236,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     casTestAgentId: process.env.CAS_TEST_AGENT_ID || undefined,
     casTestFolderId: process.env.CAS_TEST_FOLDER_ID || undefined,
+    tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
     organizationId: process.env.UIPATH_ORGANIZATION_ID || undefined,
@@ -214,6 +246,49 @@ export function loadIntegrationConfig(): IntegrationConfig {
 
   cachedConfig = validateConfig(rawConfig);
   return cachedConfig;
+}
+
+/**
+ * What a suite needs from its credential:
+ * - 'pat'  — the external-application identity
+ * - 'user' — a user access token (insightsrtm_, notification service)
+ * - 'both' — either works; runs once under each configured credential
+ */
+export type AuthRequirement = 'pat' | 'user' | 'both';
+
+/** The credential actually used for a run. */
+export type AuthMode = 'pat' | 'user';
+
+/**
+ * Every configured credential satisfying the requirement; a suite runs once per
+ * entry, and an empty array means it skips.
+ *
+ * Reads `process.env` directly and without side effects so it can run at
+ * collection time. `INTEGRATION_AUTH_MODE=pat|user` narrows the result rather
+ * than forcing it, so a suite needing the excluded credential skips.
+ */
+export function resolveAuthModes(requirement: AuthRequirement): AuthMode[] {
+  const configured: AuthMode[] = [];
+  if (process.env.UIPATH_SECRET) configured.push('pat');
+  if (process.env.UIPATH_USER_TOKEN) configured.push('user');
+
+  const wanted: AuthMode[] = requirement === 'both' ? ['pat', 'user'] : [requirement];
+
+  const restriction = process.env.INTEGRATION_AUTH_MODE;
+  const allowed = restriction === 'pat' || restriction === 'user'
+    ? wanted.filter((mode) => mode === restriction)
+    : wanted;
+
+  return allowed.filter((mode) => configured.includes(mode));
+}
+
+/**
+ * Host for a run. User-token cells use `MINTER_BASE_URL` when set — the default
+ * host sits behind a CORS proxy that whitelists paths per service, and these
+ * cells reach services missing from it.
+ */
+export function resolveBaseUrl(config: IntegrationConfig, authMode: AuthMode): string {
+  return authMode === 'user' ? config.minterBaseUrl ?? config.baseUrl : config.baseUrl;
 }
 
 /**
