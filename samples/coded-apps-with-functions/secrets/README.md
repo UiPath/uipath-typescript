@@ -68,7 +68,7 @@ uip login
 uip admin external-apps create "Secrets Sample" \
   --non-confidential \
   --redirect-uri "http://localhost:5173,https://<org>.uipath.host/secrets-sample" \
-  --user-scope "OR.Assets,OR.Execution,OR.Folders,OR.Jobs"
+  --user-scope "OR.Execution,OR.Folders,OR.Jobs"
 ```
 
 Put the returned client id in the deploy config:
@@ -77,6 +77,11 @@ Put the returned client id in the deploy config:
 uip solution deploy config set deploy-config.json secrets-app externalClientId <client-id>
 ```
 
+> **No `OR.Assets`, even though this sample reads an asset.** The *function* does that, with its own
+> robot token, inside the job. The app's token only ever resolves and invokes a function, so granting
+> it asset access would contradict the point of the sample — and it is not needed: these three scopes
+> are verified working against a hosted deployment.
+>
 > A hosted Coded App requests the scopes from **this registration**, captured when the app is
 > deployed. The `scope` field in `uipath.json` applies to local development only (step 5).
 

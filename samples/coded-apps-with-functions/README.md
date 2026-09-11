@@ -13,9 +13,9 @@ deploy.
 
 | Sample | Use it when… | Demonstrates | OAuth scopes |
 |--------|--------------|--------------|--------------|
-| [`secrets`](./secrets) | A **credential or secret** must never reach the browser | Reading a Credential asset with the function's own robot identity, and an allowlist that stops the function becoming a confused deputy | `OR.Assets`, `OR.Execution`, `OR.Folders`, `OR.Jobs` |
+| [`secrets`](./secrets) | A **credential or secret** must never reach the browser | Reading a Credential asset with the function's own robot identity, and an allowlist that stops the function becoming a confused deputy | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
 | `identities` _(planned)_ | You need to know **which identity** a call runs as | The two identities every function gets — `ctx.user` and `ctx.robot` — and what each one can and cannot do | — |
-| `rest-backend` _(planned)_ | The front end expects a **REST API** | Functions shaped as resource routes: path params, status codes, the shapes a web developer expects | — |
+| [`rest-backend`](./rest-backend) | The front end expects a **REST API** | Three functions shaped as REST resources — a collection, an item, and a nested sub-resource — with path params, query filters and 404s that name what would have worked | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
 | `connections` _(planned)_ | The app must call a **third-party system** | Integration Service connections: the shared-connection pattern that needs a function, and the personal-connection pattern that will not | — |
 | `calling-mode` _(planned)_ | The work is **slow** | HTTP semantics for short synchronous work against running a job for long asynchronous work | — |
 | `big-payloads` _(planned)_ | The payload is **large** | Where each transport stops carrying data, in both directions | — |

@@ -1,0 +1,43 @@
+{
+  "resources": [
+    {
+      "kind": "app",
+      "name": "rest-backend-app",
+      "resourceKey": "25f853b7-10ca-43f1-a32c-ff007dd7dbee",
+      "folderPaths": [
+        "solution_folder"
+      ],
+      "configuration": {
+        "description": "Coded App for the rest-backend sample",
+        "routingName": "rest-backend-sample",
+        "externalClientId": "<your-oauth-external-app-client-id>"
+      }
+    },
+    {
+      "kind": "process",
+      "name": "rest-backend-functions",
+      "resourceKey": "5c28c97e-2f3a-4c6e-a92b-5f4e7177a1af",
+      "folderPaths": [
+        "solution_folder"
+      ],
+      "configuration": {
+        "referencedAssets": null,
+        "description": null,
+        "packageName": null,
+        "inputArguments": null,
+        "hiddenForAttendedUser": false,
+        "alwaysRunning": false,
+        "autoStartProcess": false,
+        "environmentVariables": null,
+        "retentionAction": "Delete",
+        "retentionPeriod": 30,
+        "retentionBucketRef": null,
+        "staleRetentionAction": "Delete",
+        "staleRetentionPeriod": 180,
+        "staleRetentionBucketRef": null,
+        "connections": null,
+        "tags": []
+      }
+    }
+  ]
+}
