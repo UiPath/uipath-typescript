@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
   setupUnifiedTests,
+  cleanupTestEntityRecords,
   InitMode,
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString, awaitRecordVisible } from '../../utils/helpers';
@@ -198,6 +199,7 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
       let baseOnlyValue!: string;
       let filterGroup!: EntityQueryFilterGroup;
       let selectedFields!: string[];
+      const seededRecordIds: string[] = [];
 
       beforeAll(async () => {
         const { entities } = getServices();
@@ -240,6 +242,7 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         // entity, so LEFT and INNER produce provably different row sets.
         baseOnlyValue = `sdk-join-base-only-${generateRandomString()}`;
         const inserted = await entities.insertRecordById(joinEntityId, { [joinFieldName]: baseOnlyValue });
+        seededRecordIds.push(inserted.Id);
         registerResource('entityRecords', { entityId: joinEntityId, recordIds: [inserted.Id] });
         await awaitRecordVisible(entities, joinEntityId, inserted.Id);
 
@@ -284,6 +287,17 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         }
         throw new Error(`Seeded base-only record never became queryable on ${baseEntityName}`);
       }, 90_000);
+
+      // These tests seed into the shared fixture, so they must delete what they
+      // wrote — an unswept row here is exactly the bloat that broke the page-
+      // bound assertions these tests replaced.
+      afterAll(async () => {
+        if (seededRecordIds.length === 0) {
+          return;
+        }
+        await cleanupTestEntityRecords(joinEntityId, seededRecordIds);
+        seededRecordIds.length = 0;
+      }, 60_000);
 
       it('should return related-entity fields for a cross-entity LEFT join', async () => {
         const { entities } = getServices();
@@ -350,7 +364,9 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
           expect(item[`${baseEntityName}.${joinFieldName}`]).not.toBe(baseOnlyValue);
           expect(Object.keys(item).some((key) => key.startsWith(`${relatedEntity}.`))).toBe(true);
         });
-      });
+        // Two sequential queries share this budget; the 30s default leaves no
+        // room for a single tenant stall.
+      }, 60_000);
     });
 
     it('should reject a join to a nonexistent entity', async () => {
