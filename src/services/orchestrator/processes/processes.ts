@@ -219,14 +219,24 @@ function resolveProcessRefIdentity(
   processRef: ProcessRef,
   folderPath: string | undefined,
 ): { identity: Record<string, string>; folderPath?: string } {
-  if ('name' in processRef && processRef.name) {
+  if ('name' in processRef) {
+    if (!processRef.name) {
+      throw new ValidationError({
+        message: 'Processes.start: processRef.name must be a non-empty string.',
+      });
+    }
     const override = resolveOverride('Process', processRef.name, folderPath);
     return {
       identity: { processName: override?.name ?? processRef.name },
       folderPath: override?.folderPath,
     };
   }
-  if ('key' in processRef && processRef.key) {
+  if ('key' in processRef) {
+    if (!processRef.key) {
+      throw new ValidationError({
+        message: 'Processes.start: processRef.key must be a non-empty string.',
+      });
+    }
     // Overrides on stable keys are unusual but not forbidden — same shape as `{name}`.
     const override = resolveOverride('Process', processRef.key, folderPath);
     return {

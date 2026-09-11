@@ -606,6 +606,28 @@ describe('ProcessService Unit Tests', () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
+    it('rejects ProcessRef with empty-string name via ValidationError before hitting the API', async () => {
+      await expect(
+        service.start(
+          { name: '' } as ProcessRef,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('rejects ProcessRef with empty-string key via ValidationError before hitting the API', async () => {
+      await expect(
+        service.start(
+          { key: '' } as ProcessRef,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
     it('redirects both the wire ReleaseName and folderPath header when a runtime override matches the { name } ProcessRef', async () => {
       // Publish a cross-folder override: PROCESS_NAME in Shared/Apps → TARGET_NAME in TARGET_FOLDER_PATH.
       const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
