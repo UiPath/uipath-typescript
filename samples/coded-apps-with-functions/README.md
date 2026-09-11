@@ -17,8 +17,7 @@ deploy.
 | `identities` _(planned)_ | You need to know **which identity** a call runs as | The two identities every function gets — `ctx.user` and `ctx.robot` — and what each one can and cannot do | — |
 | [`rest-backend`](./rest-backend) | The front end expects a **REST API** | Three functions shaped as REST resources — a collection, an item, and a nested sub-resource — with path params, query filters and 404s that name what would have worked | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
 | `connections` _(planned)_ | The app must call a **third-party system** | Integration Service connections: the shared-connection pattern that needs a function, and the personal-connection pattern that will not | — |
-| `calling-mode` _(planned)_ | The work is **slow** | HTTP semantics for short synchronous work against running a job for long asynchronous work | — |
-| `big-payloads` _(planned)_ | The payload is **large** | Where each transport stops carrying data, in both directions | — |
+| [`calling-mode`](./calling-mode) | You need to choose **how** a function is called | Two functions with identical handlers — one with `method` + `path`, one without — and what each channel can carry: HTTP fails over ~10 KB in and returns an empty `200` over ~512 KB out, where a job uses attachments and handles megabytes | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
 
 ## Common prerequisites
 

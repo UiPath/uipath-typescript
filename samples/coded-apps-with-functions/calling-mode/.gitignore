@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-ssr
+*.local
+.uipath
+*.nupkg
+out/
+
+# The repo root ignores `lib/` as an SDK build output; here it is source.
+!calling-mode-functions/lib/
+!calling-mode-functions/lib/**
+
+# Local OAuth config for `npm run dev` — copy from uipath.json.example.
+calling-mode-app/source/uipath.json
+
+.vscode/*
+.idea
+.DS_Store
+*.env
