@@ -1,4 +1,8 @@
-import type { SaveValidatedDataResult } from '@uipath/ui-widgets-validation-station';
+import type {
+  IVsSaveValidatedDataAsDraftRequest,
+  IVsSaveValidatedDataRequest,
+  SaveValidatedDataResult,
+} from '@uipath/ui-widgets-validation-station';
 import { OrchestratorDuModule } from '@uipath/uipath-typescript/orchestrator-du-module';
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks';
 import { Tasks, TaskStatus, TaskType } from '@uipath/uipath-typescript/tasks';
@@ -13,12 +17,9 @@ interface Notification {
   severity: 'success' | 'error';
 }
 
-function buildFilter(): string {
-  return (
-    `Type eq '${TaskType.DocumentValidation}' and IsDeleted eq false ` +
-    `and (Status eq '${TaskStatus.Pending}' or Status eq '${TaskStatus.Unassigned}')`
-  );
-}
+const PENDING_TASK_FILTER =
+  `Type eq '${TaskType.DocumentValidation}' and IsDeleted eq false ` +
+  `and (Status eq '${TaskStatus.Pending}' or Status eq '${TaskStatus.Unassigned}')`;
 
 /**
  * Owns the review workflow: lists pending document validation tasks, hydrates
@@ -59,7 +60,7 @@ function ReviewInbox() {
     void (async () => {
       try {
         const result = await tasks.getAll({
-          filter: buildFilter(),
+          filter: PENDING_TASK_FILTER,
           orderby: 'Priority desc,CreationTime asc',
           pageSize: 30,
         });
@@ -132,9 +133,13 @@ function ReviewInbox() {
   // Submit: the fields form has already run ProcessExtractedData and uploaded
   // the validated result to the bucket. On success we complete the task; the
   // validated data lives in the bucket, so no payload is sent here.
+  //
+  // `result` is only populated when the form owned the write-back, which it does here
+  // because it is the one subcomponent given `sdk` + `data`. No result means nothing was
+  // persisted - treated as a failure, rather than completing the task over unsaved edits.
   const handleSubmitComplete = useCallback(
-    async (result: SaveValidatedDataResult) => {
-      if (!result.success) {
+    async (_request: IVsSaveValidatedDataRequest, result?: SaveValidatedDataResult) => {
+      if (!result?.success) {
         notify('Submit failed', 'error');
         return;
       }
@@ -158,10 +163,11 @@ function ReviewInbox() {
   // Save-as-draft: the form already uploaded the in-progress data to the bucket.
   // Nothing to complete — leave the task open and surface success/failure.
   const handleSaveAsDraftComplete = useCallback(
-    (result: SaveValidatedDataResult) => {
+    (_request: IVsSaveValidatedDataAsDraftRequest, result?: SaveValidatedDataResult) => {
+      const saved = result?.success === true;
       notify(
-        result.success ? 'Draft saved' : 'Failed to save draft',
-        result.success ? 'success' : 'error',
+        saved ? 'Draft saved' : 'Failed to save draft',
+        saved ? 'success' : 'error',
       );
     },
     [notify],

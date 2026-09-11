@@ -1,0 +1,23 @@
+/* A definite height, not `min-height`: the Validation Station fills its host, so an
+   auto-height ancestor would collapse the document viewer to nothing. */
+.app-shell {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Keeps the widget off the action pane's left edge. Border-box sizing (set in index.css)
+     takes it out of the content width, so the height above is unaffected. */
+  padding-left: 12px;
+  /* Painted with the widget's own surface colour so the gutter reads as part of it rather
+     than as a strip beside it. The widget takes this from `--color-background`, but defines
+     that token on `:host(.light)` / `:host(.dark)` in the stylesheet it adopts into its
+     shadow root — so the value cannot be read from the document and is mirrored here. Its
+     high-contrast themes reuse the same two surfaces, so light/dark covers all four. */
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+body.dark .app-shell {
+  background: #182027;
+}

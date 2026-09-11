@@ -4,13 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "stage-du-wc": "node scripts/stage-du-wc.mjs",
+    "predev": "npm run stage-du-wc",
     "dev": "vite",
+    "prebuild": "npm run stage-du-wc",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/ui-widgets-validation-station": "1.0.0",
+    "@uipath/ui-widgets-validation-station": "1.1.0",
     "@uipath/uipath-typescript": "^1.4.2",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.5.15",
@@ -24,6 +27,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@uipath/coded-apps-dev": "^1.0.0-beta.1",
+    "@uipath/du-validation-station-wc": "1.0.0-rc.1",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
