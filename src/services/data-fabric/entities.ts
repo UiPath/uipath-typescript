@@ -568,15 +568,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
     if (!metadata.fields?.length) return;
 
     metadata.fields = metadata.fields.map(field => {
-      // Rename sqlType to fieldDataType
+      // Snapshot the raw sqlType before transformData/mutation — the rename below aliases
+      // sqlType to fieldDataType (same object reference) and we then overwrite its .name.
+      const rawSqlType = field.sqlType ? { ...field.sqlType } : undefined;
       let transformedField = transformData(field, EntityMap);
 
       // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const mapped = this.tryResolveFieldDataType(transformedField.fieldDisplayType, field.sqlType?.name);
+        const mapped = this.tryResolveFieldDataType(transformedField.fieldDisplayType, rawSqlType?.name);
         if (mapped) {
           transformedField.fieldDataType.name = mapped;
         }
+      }
+
+      if (rawSqlType) {
+        transformedField.sqlType = rawSqlType;
       }
 
       this.transformNestedReferences(transformedField);
@@ -629,7 +635,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
         externalSource.fields = externalSource.fields.map(field => {
           const transformedField = transformData(field, EntityMap);
           if (transformedField.fieldMetaData) {
+            const rawSqlType = transformedField.fieldMetaData.sqlType
+              ? { ...transformedField.fieldMetaData.sqlType }
+              : undefined;
             transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
+            if (rawSqlType) {
+              transformedField.fieldMetaData.sqlType = rawSqlType;
+            }
             this.transformNestedReferences(transformedField.fieldMetaData);
           }
           return transformedField;

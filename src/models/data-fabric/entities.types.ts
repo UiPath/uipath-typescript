@@ -728,7 +728,11 @@ export interface FieldMetaData {
   fieldDataType: FieldDataType;
   createdTime: string;
   createdBy: string;
-  /** Raw SQL type from API — present on raw GET responses, used on write payloads */
+  /**
+   * Raw SQL type as returned by the API (e.g., `NVARCHAR`, `INT`,
+   * `UNIQUEIDENTIFIER`). Preserved alongside {@link FieldMetaData.fieldDataType},
+   * which exposes the friendly {@link EntityFieldDataType} name.
+   */
   sqlType?: SqlType;
   updatedTime?: string;
   updatedBy?: string;
