@@ -1,0 +1,14 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/uipath",
+  "packOptions": {
+    "fileExtensionsIncluded": [],
+    "filesIncluded": [],
+    "filesExcluded": [],
+    "directoriesExcluded": [],
+    "includeLockFile": true
+  },
+  "functions": {
+    "read-credential": "functions/read-credential.ts:default"
+  },
+  "projectId": "0757af70-f271-4fbe-9921-e596f2c18806"
+}

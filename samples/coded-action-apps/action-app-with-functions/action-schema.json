@@ -1,0 +1,34 @@
+{
+    "inputs": {
+        "type": "object",
+        "properties": {}
+    },
+    "outputs": {
+        "type": "object",
+        "properties": {
+            "selectedAssetName": {
+                "type": "string",
+                "required": true,
+                "description": "Name of the Orchestrator asset the reviewer verified"
+            },
+            "reviewerComments": {
+                "type": "string"
+            }
+        }
+    },
+    "inOuts": {
+        "type": "object",
+        "properties": {}
+    },
+    "outcomes": {
+        "type": "object",
+        "properties": {
+            "Approve": {
+                "type": "string"
+            },
+            "Reject": {
+                "type": "string"
+            }
+        }
+    }
+}
