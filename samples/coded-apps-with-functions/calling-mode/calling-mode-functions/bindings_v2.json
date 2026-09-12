@@ -1,0 +1,25 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/bindings",
+  "version": "2.0",
+  "resources": [
+    {
+      "resource": "HttpTrigger",
+      "key": "b6c9a341-dcb5-43fe-8b03-8174498b18b9",
+      "id": "f829e4e0-0868-4352-b275-5c5466768b13",
+      "value": {
+        "EntryPointUniqueId": {
+          "DefaultValue": "049a144e-b7fd-4f07-8945-37059fbee4f5",
+          "IsExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.1",
+        "Name": "echo",
+        "Method": "POST",
+        "Slug": "/echo",
+        "CallingMode": "LongPolling",
+        "Description": "Echo text over an HTTP trigger. Synchronous."
+      }
+    }
+  ]
+}

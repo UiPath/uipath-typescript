@@ -1,0 +1,58 @@
+/*
+ * Apollo design system.
+ *
+ * Import apollo-wind's Tailwind *source* rather than its pre-compiled
+ * styles.css: the pre-compiled bundle only contains the classes apollo-wind's
+ * own components use, so any utility this app composes inline would be missing.
+ * `tailwind.css` brings Tailwind v4 base/utilities plus Apollo's tokens
+ * (semantic colours, typography, radii) and the `.dark` overrides that
+ * next-themes toggles.
+ */
+@import '@uipath/apollo-wind/tailwind.css';
+
+/* Tailwind v4 skips node_modules, so point it at apollo-wind's dist to
+   regenerate the classes its components rely on, then at this app's source. */
+@source '../node_modules/@uipath/apollo-wind/dist';
+@source './';
+
+/* ---------------------------------------------------------------------------
+ * App-specific decoration. Everything else comes from Apollo's tokens.
+ * ------------------------------------------------------------------------ */
+
+/* Faint grid behind the hero. Gives the page a floor without competing with
+   the content, masked so it fades out rather than ending on a hard line. */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+/* Cards arrive in sequence rather than all at once. The delay is set inline
+   per card so it survives filtering and re-ordering. */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+.card-in {
+  animation: card-in 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* A discount arriving is the one moment worth animating. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise-in { animation: rise-in 220ms ease-out; }
+
+/* A total that changes should read as changed, not just redrawn. */
+@keyframes flash-value {
+  0%   { background-color: color-mix(in srgb, currentColor 14%, transparent); }
+  100% { background-color: transparent; }
+}
+.flash-value { animation: flash-value 620ms ease-out; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card-in, .rise-in, .flash-value { animation: none; }
+}

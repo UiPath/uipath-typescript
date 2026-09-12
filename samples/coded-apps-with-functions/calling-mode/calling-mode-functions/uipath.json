@@ -1,0 +1,14 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/uipath",
+  "packOptions": {
+    "fileExtensionsIncluded": [],
+    "filesIncluded": [],
+    "filesExcluded": [],
+    "directoriesExcluded": [],
+    "includeLockFile": true
+  },
+  "functions": {
+    "echo": "functions/echo.ts:default",
+    "bulk": "functions/bulk.ts:default"
+  }
+}

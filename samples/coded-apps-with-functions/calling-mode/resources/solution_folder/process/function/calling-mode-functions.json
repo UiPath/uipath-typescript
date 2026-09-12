@@ -1,0 +1,53 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "calling-mode-functions",
+    "kind": "process",
+    "type": "function",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "a7e71b50-b7e4-4b1e-a05f-b2826a2c6719",
+    "isOverridable": true,
+    "dependencies": [
+      {
+        "kind": "package",
+        "name": "calling-mode-functions"
+      }
+    ],
+    "runtimeDependencies": [
+      {
+        "bindingType": "HttpTrigger",
+        "bindingKey": "b6c9a341-dcb5-43fe-8b03-8174498b18b9",
+        "bindingValues": {
+          "entryPointUniqueId": {
+            "defaultValue": "",
+            "isExpression": false
+          }
+        },
+        "bindingMetadata": {
+          "bindingsVersion": "2.1"
+        },
+        "resourceKind": "Unknown"
+      }
+    ],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "type": "Function",
+      "name": "calling-mode-functions",
+      "package": {
+        "key": "bf7b9ab8-5ebe-4d5b-9476-9d84e8a3bd20"
+      },
+      "targetFrameworkValue": "Portable",
+      "retentionAction": "Delete",
+      "retentionPeriod": 30,
+      "staleRetentionAction": "Delete",
+      "staleRetentionPeriod": 180
+    },
+    "locks": [],
+    "key": "9c305df1-1435-4af0-bc30-f69b57a1c266",
+    "files": []
+  }
+}
