@@ -7,7 +7,7 @@ import type { ReadCredentialOutput } from '../api';
 /**
  * Proof of use, never the secret.
  *
- * The function returns a username, a length and a non-reversible fingerprint.
+ * The function returns a username, a length and a short fingerprint.
  * That is enough to show the credential resolved and was used — without the
  * page ever holding it, which is the whole reason the read happens in a
  * function instead of here.

@@ -213,7 +213,7 @@ One function, defined in `secrets-functions/functions/read-credential.ts`. Its t
 | `httpStatus` | number | Yes | Status returned by that route |
 | `username` | string \| null | No | The credential's username — safe to show |
 | `secretLength` | number | Yes | Length of the secret, as evidence it resolved |
-| `secretFingerprint` | string \| null | No | Non-reversible hash of the secret |
+| `secretFingerprint` | string \| null | No | Short checksum of the secret — a change indicator, not a digest to publish |
 | `verified` | boolean | Yes | Whether a non-empty secret came back |
 | `verdict` | string | Yes | Plain-language summary of what happened |
 

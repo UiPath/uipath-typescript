@@ -6,7 +6,7 @@ import { Processes } from '@uipath/uipath-typescript/processes';
 import {
   FUNCTIONS_PACKAGE,
   FUNCTION_NAMES,
-  INPUT_INLINE_LIMIT_KB,
+  INPUT_INLINE_LIMIT_CHARS,
   OUTPUT_INLINE_LIMIT_KB,
   entryPointPath,
   makeText,
@@ -27,7 +27,7 @@ import {
  */
 
 export type { CallOutput };
-export { INPUT_INLINE_LIMIT_KB, OUTPUT_INLINE_LIMIT_KB };
+export { INPUT_INLINE_LIMIT_CHARS, OUTPUT_INLINE_LIMIT_KB };
 
 export function errorMessage(e: unknown): string {
   if (e && typeof e === 'object' && 'message' in e) return String((e as { message: unknown }).message);
@@ -65,7 +65,7 @@ async function folderId(sdk: UiPath): Promise<number> {
 
   const { baseUrl, orgName, tenantName } = sdk.config;
   const res = await fetch(
-    `${baseUrl.replace(/\/+$/, '')}/${orgName}/${tenantName}/orchestrator_/odata/Folders?$filter=Key eq ${key}&$top=1&$select=Id`,
+    `${baseUrl.replace(/\/+$/, '')}/${orgName}/${tenantName}/orchestrator_/odata/Folders?$filter=Key%20eq%20${encodeURIComponent(key)}&$top=1&$select=Id`,
     { headers: { Authorization: `Bearer ${sdk.getToken()}` } },
   );
   if (!res.ok) throw new Error(`Could not resolve the folder id: ${res.status}`);
@@ -116,7 +116,7 @@ export function createApi(sdk: UiPath) {
       const folder = await folderId(sdk);
       const payload = input(sendKb, askKb, `${sendKb} KB in / ${askKb} KB out`);
       const json = JSON.stringify(payload);
-      const tooBig = json.length > INPUT_INLINE_LIMIT_KB * 1024;
+      const tooBig = json.length > INPUT_INLINE_LIMIT_CHARS;
 
       // Creates the attachment and uploads the bytes.
       const inputFile = tooBig

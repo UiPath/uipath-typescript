@@ -11,7 +11,7 @@
  * endpoint: the route a robot uses to resolve its own assets while executing,
  * which a caller cannot reach on its own behalf. It needs no Orchestrator
  * setting switched on, and the page never holds the secret — only a username, a
- * length and a non-reversible fingerprint come back.
+ * length and a short fingerprint come back.
  *
  * THE VERB TRAP, because this endpoint is easy to write off as missing:
  * it is a POST with a JSON body. Issued as a GET with inline OData parameters

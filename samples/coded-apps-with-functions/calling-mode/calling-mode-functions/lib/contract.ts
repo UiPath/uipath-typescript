@@ -25,7 +25,7 @@ export interface CallOutput {
  * measured: 9.7 KB answers 200, 10 KB answers
  * `500 errorCode 4801 "JobArguments length should be less than 10000 characters"`.
  */
-export const INPUT_INLINE_LIMIT_KB = 10
+export const INPUT_INLINE_LIMIT_CHARS = 10_000
 
 /**
  * Both channels carry about 512 KB of output inline, and past it they differ.

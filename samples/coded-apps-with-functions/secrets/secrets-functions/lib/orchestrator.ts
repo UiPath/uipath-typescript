@@ -77,7 +77,8 @@ export async function assetFolderHeaders(
       const body = (await res.json()) as { value?: Array<{ Id?: number }> }
       id = body.value?.[0]?.Id ?? null
     }
-  } catch {
+  } catch (err) {
+    console.warn("assetFolderHeaders: folder-id lookup failed, continuing without the numeric id", err)
     id = null
   }
   return {
@@ -122,7 +123,14 @@ export async function readRobotAsset(
   return { status: res.status, ok: res.ok, text: await res.text() }
 }
 
-/** Non-reversible, and never the secret itself. */
+/**
+ * A short checksum, so a reader can tell that swapping the credential changed
+ * the value being read.
+ *
+ * NOT a digest that is safe to publish: 32 unkeyed bits are cheap to enumerate
+ * against a guessable password, so this is a change indicator and nothing more.
+ * What keeps the secret safe here is that it never leaves the function.
+ */
 export function fingerprint(secret: string): string {
   let h = 0
   for (const ch of secret) h = (Math.imul(31, h) + ch.charCodeAt(0)) | 0

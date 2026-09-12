@@ -8,7 +8,7 @@ import type { UiPath } from '@uipath/uipath-typescript/core';
 import {
   createApi,
   errorMessage,
-  INPUT_INLINE_LIMIT_KB,
+  INPUT_INLINE_LIMIT_CHARS,
   OUTPUT_INLINE_LIMIT_KB,
   type Run,
 } from './api';
@@ -174,10 +174,10 @@ function CallingMode({ sdk }: { sdk: UiPath }) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            {sendKb > INPUT_INLINE_LIMIT_KB || askKb > OUTPUT_INLINE_LIMIT_KB ? (
+            {sendKb * 1024 >= INPUT_INLINE_LIMIT_CHARS || askKb >= OUTPUT_INLINE_LIMIT_KB ? (
               <>
                 At this size HTTP will fail and the job will use attachments. Over{' '}
-                {INPUT_INLINE_LIMIT_KB} KB in, the trigger answers{' '}
+                {INPUT_INLINE_LIMIT_CHARS.toLocaleString()} characters in, the trigger answers{' '}
                 <code>500 errorCode 4801</code>; over {OUTPUT_INLINE_LIMIT_KB} KB out, it answers{' '}
                 <code>200</code> with an empty body.
               </>
