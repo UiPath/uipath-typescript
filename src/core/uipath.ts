@@ -1,7 +1,8 @@
 import { UiPathConfig } from './config/config';
-import { ExecutionContext } from './context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
+import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -397,6 +398,27 @@ export class UiPath implements IUiPath {
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.#authService?.updateToken(tokenInfo);
+  }
+
+  /**
+   * Sets the debug context applied to all subsequent API requests made through this instance.
+   * While set, requests carry the parent job key so the platform routes runs they trigger as
+   * debug sub-jobs of that session — use it when the app is hosted inside a platform debug run
+   * (for example, a coded action app opened from a debug task in Action Center).
+   * Pass `null` to clear the context and return to normal request behavior.
+   *
+   * @param context - The debug context ({@link DebugContext}) with the parent job key, or `null` to clear it
+   *
+   * @example
+   * ```typescript
+   * const task = await codedActionApp.getTask();
+   * if (task.isDebug && task.jobKey) {
+   *   sdk.setDebugContext({ jobKey: task.jobKey });
+   * }
+   * ```
+   */
+  public setDebugContext(context: DebugContext | null): void {
+    SDKInternalsRegistry.get(this).context.set(DEBUG_CONTEXT_KEY, context ?? undefined);
   }
 
 }

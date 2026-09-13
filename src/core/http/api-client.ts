@@ -1,11 +1,12 @@
 import { Config } from '../config/config';
-import { ExecutionContext } from '../context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../context/execution';
+import { DebugContext } from '../../models/common/types';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { ServerError } from '../errors/server';
-import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
+import { CONTENT_TYPES, JOB_KEY, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 import { toSearchParams } from '../../utils/http/params';
 import { fetchWithRetry } from '../../utils/http/fetch-with-retry';
 import { DEFAULT_API_CLIENT_RETRY, resolveRetryOptions } from '../../utils/http/retry-policy';
@@ -79,8 +80,13 @@ export class ApiClient {
     const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
     const traceparentValue = `00-${traceId}-${spanId}-01`;
 
+    // While a debug context is set, the platform routes runs triggered by these
+    // requests as debug sub-jobs of the parent job (JIT debug).
+    const debugContext = this.executionContext.get<DebugContext>(DEBUG_CONTEXT_KEY);
+
     const headers: Record<string, string> = {
       ...defaultHeaders,
+      ...(debugContext?.jobKey ? { [JOB_KEY]: debugContext.jobKey } : {}),
       [TRACEPARENT]: traceparentValue,
       [UIPATH_TRACEPARENT_ID]: traceparentValue,
       ...options.headers
