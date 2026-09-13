@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../../src/core/context/execution';
 import { ServerError } from '../../../../src/core/errors/server';
 import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -17,7 +18,7 @@ const mockConfig = {
   tenantName: TEST_CONSTANTS.TENANT_ID,
 };
 
-const mockExecutionContext = {};
+const mockExecutionContext = { get: vi.fn() };
 
 let capturedHeaders: Record<string, string> = {};
 let capturedUrl = '';
@@ -93,6 +94,51 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient debug context', () => {
+  function createClientWithContext(context: ExecutionContext) {
+    return new ApiClient(
+      mockConfig as any,
+      context,
+      mockTokenManager as any,
+      {},
+    );
+  }
+
+  it('injects X-UIPATH-JobKey while a debug context is set', async () => {
+    const context = new ExecutionContext();
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+
+    await createClientWithContext(context).get('/test');
+
+    expect(capturedHeaders['X-UIPATH-JobKey']).toBe('debug-job-key-1');
+  });
+
+  it('omits X-UIPATH-JobKey when no debug context is set', async () => {
+    await createClientWithContext(new ExecutionContext()).get('/test');
+
+    expect(capturedHeaders['X-UIPATH-JobKey']).toBeUndefined();
+  });
+
+  it('omits X-UIPATH-JobKey after the debug context is cleared', async () => {
+    const context = new ExecutionContext();
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+    context.set(DEBUG_CONTEXT_KEY, undefined);
+
+    await createClientWithContext(context).get('/test');
+
+    expect(capturedHeaders['X-UIPATH-JobKey']).toBeUndefined();
+  });
+
+  it('lets per-request options.headers override the debug job key', async () => {
+    const context = new ExecutionContext();
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+
+    await createClientWithContext(context).get('/test', { headers: { 'X-UIPATH-JobKey': 'explicit-key' } });
+
+    expect(capturedHeaders['X-UIPATH-JobKey']).toBe('explicit-key');
   });
 });
 

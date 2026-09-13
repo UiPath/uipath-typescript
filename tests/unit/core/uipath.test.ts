@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { TelemetryContext } from '@uipath/core-telemetry';
 import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
-import { ExecutionContext } from '../../../src/core/context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
 import { SessionLicense } from '../../../src/core/licensing/session-license';
 import { AuthService } from '../../../src/core/auth/service';
@@ -152,6 +152,16 @@ describe('UiPath Core', () => {
     it('should provide access token', () => {
       const token = sdk.getToken();
       expect(token).toBe('mock-access-token');
+    });
+
+    it('should store and clear the debug context on the execution context', () => {
+      const context = getContext(sdk);
+
+      sdk.setDebugContext({ jobKey: 'debug-job-key-1' });
+      expect(context.get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: 'debug-job-key-1' });
+
+      sdk.setDebugContext(null);
+      expect(context.get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
   });
 
