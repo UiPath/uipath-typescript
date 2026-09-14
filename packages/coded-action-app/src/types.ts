@@ -33,6 +33,14 @@ export type Task = {
   folderName: string;
   /** UI theme that Action Center is currently using. */
   theme: Theme;
+  /** Key of the job behind the task, when a running process created it. `null` otherwise. */
+  jobKey?: string | null;
+  /** Whether the task was created by a debug run. Pass `jobKey` to the SDK's `setDebugContext` so the app's calls join the debug session. */
+  isDebug?: boolean;
+  /** Solution id of the debug session, when the task is a debug task of a solution the app belongs to. */
+  solutionId?: string | null;
+  /** Design project id of the app, when the task is a debug task of a solution the app belongs to. */
+  appProjectKey?: string | null;
 };
 
 /** UI theme applied to Action Center, passed to the coded action app on load. */
