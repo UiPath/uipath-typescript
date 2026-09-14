@@ -108,7 +108,15 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
-    bucketRef: BucketRef | number,
+    bucketRef: BucketRef,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  >;
+  getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -195,7 +203,13 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   uploadFile(
-    bucketRef: BucketRef | number,
+    bucketRef: BucketRef,
+    path: string,
+    content: Blob | Uint8Array<ArrayBuffer> | File,
+    options?: BucketUploadFileRequestOptions,
+  ): Promise<BucketUploadResponse>;
+  uploadFile(
+    bucketId: number,
     path: string,
     content: Blob | Uint8Array<ArrayBuffer> | File,
     options?: BucketUploadFileRequestOptions,
@@ -281,7 +295,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   getReadUri(
-    bucketRef: BucketRef | number,
+    bucketRef: BucketRef,
+    path: string,
+    options?: BucketGetReadUriRequestOptions,
+  ): Promise<BucketGetUriResponse>;
+  getReadUri(
+    bucketId: number,
     path: string,
     options?: BucketGetReadUriRequestOptions,
   ): Promise<BucketGetUriResponse>;
@@ -438,6 +457,22 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     return transformedData;
   }
 
+  getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
+    bucketRef: BucketRef,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketFile>
+      : NonPaginatedResponse<BucketFile>
+  >;
+  getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
+    bucketId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketFile>
+      : NonPaginatedResponse<BucketFile>
+  >;
   @track('Buckets.GetFiles')
   async getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
     bucketIdOrRef: number | BucketRef,
@@ -493,6 +528,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }, { ...apiRestOptions, directory: '/', recursive: true }) as any;
   }
 
+  deleteFile(bucketRef: BucketRef, path: string, options?: BucketDeleteFileOptions): Promise<void>;
+  deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void>;
   @track('Buckets.DeleteFile')
   async deleteFile(bucketIdOrRef: number | BucketRef, path: string, options?: BucketDeleteFileOptions): Promise<void> {
     if (!path) {
