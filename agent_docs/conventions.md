@@ -42,6 +42,7 @@
   - `{Entity}{Operation}Options` — bag of **optional** fields. Always the last parameter. Always marked `?`. Contains only optional fields.
   - `{Entity}{Operation}Request` — bag of **required** fields. Pairs naturally with the existing `{Entity}{Operation}Response`. Convention param name is `request`. Use this **only** when a method has **4+ required values that semantically cluster** (e.g., a process scope + time range). Below that threshold, keep required params positional.
   - **NEVER** use `Request` as the suffix for an optional-fields bag — that slot is `Options`. The two suffixes are not interchangeable.
+  - **NEVER** use a union type (`TypeA | TypeB`) as an options parameter — union types break callers who assign the options object to a typed variable before the call (TypeScript requires the literal to satisfy exactly one union member), and consumers cannot extend union members. Flatten all variants into a single interface with optional fields instead.
 - **Required parameters: positional by default, `Request` object only at 4+.**
   - 1–3 required params → positional. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`; `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
   - 4+ required params that cluster semantically → single `{Entity}{Operation}Request` object. E.g., `getElementStats(request: ProcessStatsRequest)` where `ProcessStatsRequest` bundles `processKey`, `packageId`, `packageVersion`, `startTime`, `endTime`.
@@ -250,7 +251,7 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 
 ## BaseService
 
-**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this.
+**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this. **NEVER** add domain-specific helpers to `BaseService` — especially helpers that make external network calls. Adding such methods to `BaseService` silently gives every service access to functionality (and external API calls) it doesn't need. Domain-specific resolution logic (e.g., looking up an organization ID via Identity) belongs in a dedicated resolver class or the specific service that needs it.
 
 ## Folder-scoped services
 
