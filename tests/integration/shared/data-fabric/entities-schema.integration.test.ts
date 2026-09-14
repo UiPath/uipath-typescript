@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
@@ -20,8 +20,7 @@ import {
 // wiring stays covered by the records/query suites, which run dual-mode.
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Data Fabric Entities Schema - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', modes, () => {
 
   const createdEntityIds: string[] = [];
 

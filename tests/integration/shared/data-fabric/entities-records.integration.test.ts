@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   cleanupTestEntityRecords,
   InitMode,
 } from '../../config/unified-setup';
@@ -152,8 +152,7 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', modes, (mode) => {
 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;
@@ -1331,4 +1330,4 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       }
     }
   });
-});
+}, { timeout: 90_000 });

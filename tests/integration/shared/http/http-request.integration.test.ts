@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { it, expect, beforeAll } from 'vitest';
+import { getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { httpRequest } from '../../../../src/index';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants';
 
@@ -16,8 +16,7 @@ const UNKNOWN_PATH = '/this-path-does-not-exist-sdk-probe';
  * suite runs against several environments, and a WAF or identity config can change 404 into 403
  * without anything being wrong with the helper.
  */
-describe.each(modes)('httpRequest - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
+describeIntegration('httpRequest - Integration Tests', 'both', modes, () => {
 
   let baseUrl!: string;
 

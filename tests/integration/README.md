@@ -135,6 +135,17 @@ npm run test:integration:v0
 npm run test:integration:v1
 ```
 
+### Run by credential
+
+Suites that accept either credential run once per configured credential. To narrow a run
+to one half — reproducing a failure, or skipping the slower half while iterating:
+
+```bash
+INTEGRATION_AUTH_MODE=pat npm run test:integration
+```
+
+See [Authentication modes](#authentication-modes) for what each credential covers.
+
 ### Run Specific Test Suites
 
 ```bash
@@ -220,6 +231,154 @@ Tests skip gracefully when:
 - PAT token lacks necessary permissions (e.g., Maestro scope)
 - Pre-existing resources don't exist in tenant
 - Prerequisites aren't met
+- A suite needs a user token and `UIPATH_USER_TOKEN` is not set (see below)
+
+## Authentication modes
+
+Two credentials reach the platform, and **we run both on purpose** — they find
+different things:
+
+- **PAT** (`UIPATH_SECRET`) authenticates as an *external application*, so it exercises
+  the OAuth scope model: a method calling an endpoint the app was never granted fails
+  here and nowhere else. It is also the credential most SDK consumers use.
+- **User token** (`UIPATH_USER_TOKEN`) carries a signed-in user's own permissions, so it
+  reaches strictly more of the API and exercises the general surface — including
+  services that reject external-application tokens outright.
+
+Neither subsumes the other, so a suite that works with either runs **twice**.
+
+A suite declares what it *needs* from a credential:
+
+| Requirement | Runs under | Declared by |
+|-------------|-----------|-------------|
+| `both` | **Every configured credential** — both, when both are set | Every suite unless noted below |
+| `user` | The user token only | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions, CAS Connections |
+| `pat` | The PAT only | None currently — `auth-errors` builds its own SDK instances directly |
+
+`resolveAuthModes(requirement)` returns the list, and `describeIntegration` expands the
+suite over it. Cells are named `[initMode][authMode]`, so a failure says which
+credential failed:
+
+```
+✓ Orchestrator Assets - Integration Tests [v1][pat] › getAll › should retrieve all assets
+✗ Orchestrator Assets - Integration Tests [v1][user] › getAll › should retrieve all assets
+```
+
+When nothing configured satisfies the requirement the suite is still collected and
+reported as **skipped** — it does not silently vanish — and the cell is labelled with
+the credential it wanted.
+
+**Locally, Minter is not required.** With only `UIPATH_SECRET` set, `both` suites run
+PAT-only and `user` suites skip, which is what a developer machine looks like by
+default. CI mints a user token, so CI gets both.
+
+`INTEGRATION_AUTH_MODE=pat|user` narrows a whole run to one credential without editing
+any suite — useful for reproducing a single failing half. It *restricts* rather than
+forces: a suite that requires the excluded credential skips rather than running under
+the wrong one.
+
+Both credentials are sent as plain bearer tokens; the SDK's `secret` config field takes
+either.
+
+### Choosing the credential for a suite
+
+Declare it once, as the second argument to `describeIntegration`:
+
+```ts
+// Either works — runs under both when both are configured. This is the default.
+describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => { ... });
+
+// Needs a user token — skips when none is configured.
+describeIntegration('Notifications - Integration Tests', 'user', modes, () => { ... });
+
+// Needs the external application specifically.
+describeIntegration('Some suite', 'pat', modes, () => { ... });
+```
+
+`describeIntegration` derives everything from that one word: the credentials the suite
+runs under, whether it is collected, and the host each run talks to. **Do not call
+`setupUnifiedTests` directly** — it takes an already-resolved credential and exists only
+for `describeIntegration` to call. Resolving the credential in two places lets the guard
+and the setup disagree, and nothing catches that.
+
+A fifth argument carries the rare extras:
+
+```ts
+describeIntegration('Entity Attachment - Integration Tests', 'both', modes, () => {
+  ...
+}, { skip: !hasAttachmentConfig, timeout: 120000 });
+```
+
+`skip` is for a suite gated on fixture configuration as well as a credential, or one
+disabled on purpose. `timeout` is the per-suite timeout vitest would otherwise take as a
+trailing positional argument.
+
+### Host per credential
+
+User-token suites use `MINTER_BASE_URL` when it is set; everything else uses
+`UIPATH_BASE_URL`. The default host sits behind a CORS proxy whose path whitelist
+must name every service a suite touches — a service missing from it is rejected
+before the request reaches the platform. Suites on the user token reach services
+that are not on that list, so they talk to the platform host directly. The proxy
+exists for browser callers; tests run in Node, where it buys nothing.
+
+`MINTER_BASE_URL` is optional and falls back to `UIPATH_BASE_URL`, so leaving it
+unset keeps the previous single-host behaviour.
+
+### Getting a user token
+
+The token comes from [Minter](https://uipath.atlassian.net/wiki/spaces/CLD/pages/87134404744),
+a Portal-team tool that performs a headless browser login and exports the resulting
+tokens:
+
+```bash
+az acr login -n pltnonprodacr
+docker run --rm -v "$PWD/out:/out" pltnonprodacr.azurecr.io/uipath-minter:latest \
+  npm run generate -- -u <email> -p <password> -n <org> -t <tenant> -e <env> -v basic -o /out/tokens.json
+```
+
+Copy the `accessToken` field from `out/tokens.json` into `UIPATH_USER_TOKEN`.
+
+In CI this is automated: `coverage.yml` logs in to the registry with a scoped pull
+token, pulls the Minter image, and appends the minted token to
+`tests/.env.integration` before the integration run. The step is gated on `MINTER_ENABLED` and marked
+`continue-on-error`, so a Minter outage, a fork PR, or absent secrets all degrade to
+"user-token suites skip" rather than a failed build. It requires these repository
+secrets:
+
+| Secret | Purpose |
+|--------|---------|
+| `ACR_USERNAME`, `ACR_PASSWORD` | ACR scoped token with pull-only access to the `uipath-minter` repository on `pltnonprodacr` |
+| `MINTER_USERNAME`, `MINTER_PASSWORD` | The test account Minter signs in as — must use email/password auth, not SSO |
+
+The registry credential is a scoped token rather than a federated Azure identity
+because granting `AcrPull` requires role-assignment rights on `pltnonprodacr`, which
+lives in a subscription where the SDK team only has Contributor. Federation is the
+better long-term shape — no stored password to rotate — and the swap is a small one
+once that role assignment can be made.
+
+Two caveats. The account must sign in with an email and password — federated (SSO)
+and Google accounts cannot be driven by Minter. And the token is short-lived: the
+SDK treats a token supplied as `secret` as non-expiring and never refreshes it, so
+a run that outlives the token will start failing with 401s partway through.
+
+### Writing a suite that needs a user token
+
+Declare the requirement with `describeIntegration`:
+
+```typescript
+import { describeIntegration, InitMode } from '../../config/unified-setup';
+
+const modes: InitMode[] = ['v1'];
+
+describeIntegration('My Suite', 'user', modes, () => {
+  // ...
+});
+```
+
+That one word is the whole declaration — the suite runs only under the user token and
+skips, visibly, wherever none is configured. A suite that works with either credential
+passes `'both'` and runs under both.
 
 ## Environment Variables Reference
 
@@ -236,6 +395,8 @@ Tests skip gracefully when:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `UIPATH_USER_TOKEN` | User access token for services that reject PATs — see [Authentication modes](#authentication-modes) | (those suites skip) |
+| `MINTER_BASE_URL` | Base URL for user-token suites — see [Host per credential](#host-per-credential) | (falls back to `UIPATH_BASE_URL`) |
 | `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |
@@ -280,25 +441,27 @@ If tests fail before cleanup, manually delete resources with names starting with
    import {
      getServices,
      getTestConfig,
-     setupUnifiedTests,
+     describeIntegration,
      InitMode
    } from '../../config/unified-setup';
    import { generateTestResourceName } from '../../utils/helpers';
    ```
 
-2. **Test both SDK modes**: Use `describe.each` to run tests against v0 and v1
+2. **Declare the suite with `describeIntegration`**: it expands over both SDK init
+   modes and every credential the requirement allows
    ```typescript
    const modes: InitMode[] = ['v0', 'v1'];
 
-   describe.each(modes)('My Integration Tests [%s]', (mode) => {
-     setupUnifiedTests(mode);
-
+   describeIntegration('My Integration Tests', 'both', modes, () => {
      it('should do something', () => {
        const { tasks, entities } = getServices();
        // ... test code using services
      });
    });
    ```
+   With both credentials configured this yields four runs: `[v0][pat]`, `[v0][user]`,
+   `[v1][pat]`, `[v1][user]`. Take the `mode` / `authMode` callback arguments only if
+   the body actually branches on them.
 
 3. **Track created resources**: Register resources for cleanup
    ```typescript
@@ -480,11 +643,12 @@ Example GitHub Actions workflow:
 When adding new integration tests:
 
 1. Follow existing patterns and structure
-2. **Test both v0 and v1 modes** using `describe.each(modes)` pattern
-3. Use `setupUnifiedTests(mode)` and `getServices()` from `config/unified-setup`
+2. **Declare the suite with `describeIntegration(name, requirement, modes, body)`** — it
+   covers both v0/v1 init modes and every credential the requirement allows
+3. Use `getServices()` and `getTestConfig()` from `config/unified-setup`
 4. Use helper functions from `utils/helpers`
 5. Implement proper cleanup using functions from `config/unified-setup`
-6. Add meaningful test descriptions with `[%s]` placeholder for mode
+6. Let `describeIntegration` add the `[initMode][authMode]` suffix — do not hand-write it
 7. Handle optional configurations gracefully
 8. Document any prerequisites in test comments
 9. Update this README if adding new test categories
