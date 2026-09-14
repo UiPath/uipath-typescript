@@ -1,0 +1,10 @@
+{
+  "name": "action-app-with-functions-fn",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Coded functions for the action-app-with-functions sample",
+  "devDependencies": {
+    "@uipath/coded-functions-js-sdk": "^0.6.0",
+    "typescript": "^5.7.0"
+  }
+}
