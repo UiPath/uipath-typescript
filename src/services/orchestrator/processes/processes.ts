@@ -219,28 +219,27 @@ function resolveProcessRefIdentity(
   processRef: ProcessRef,
   folderPath: string | undefined,
 ): { identity: Record<string, string>; folderPath?: string } {
-  if ('name' in processRef) {
-    if (!processRef.name) {
-      throw new ValidationError({
-        message: 'Processes.start: processRef.name must be a non-empty string.',
-      });
-    }
-    const override = resolveOverride('Process', processRef.name, folderPath);
+  // Value-based dispatch (not key presence) — `{ key: 'K', name: undefined }` is a common
+  // shape from callers doing `{...maybeName, key: 'K'}`, and it should route to the key
+  // branch cleanly instead of throwing about an empty name. Mirrors `resolve-ref.ts`.
+  const name = 'name' in processRef ? processRef.name : undefined;
+  const key = 'key' in processRef ? processRef.key : undefined;
+
+  if (name) {
+    const override = resolveOverride('Process', name, folderPath);
     return {
-      identity: { processName: override?.name ?? processRef.name },
+      identity: { processName: override?.name ?? name },
       folderPath: override?.folderPath,
     };
   }
-  // Discriminated union narrows to `{ key: string }` here — `isProcessRef` guarantees
-  // one of `name` / `key` before this helper is called, so no trailing throw is needed.
-  if (!processRef.key) {
-    throw new ValidationError({
-      message: 'Processes.start: processRef.key must be a non-empty string.',
-    });
+  if (key) {
+    // Keys are stable GUIDs; overrides are keyed by design-time names (PLT-92768), so
+    // no lookup applies. Pass the caller's key through verbatim.
+    return { identity: { processKey: key } };
   }
-  // Keys are stable GUIDs; overrides are keyed by design-time names (PLT-92768), so no
-  // lookup applies. Pass the caller's key through verbatim.
-  return { identity: { processKey: processRef.key } };
+  throw new ValidationError({
+    message: 'Processes.start: processRef must supply a non-empty `name` or `key`.',
+  });
 }
 
 /** True when the argument carries a legacy `ProcessStartRequest` identity field. */

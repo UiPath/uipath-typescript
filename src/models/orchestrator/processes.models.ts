@@ -143,23 +143,16 @@ export interface ProcessServiceModel {
   /**
    * Starts a process — legacy `ProcessStartRequest` form.
    *
+   * @hidden
    * @deprecated Use the ref-based form: `start(processRef, options?)`. See {@link ProcessRef}
    * and {@link ProcessStartRefOptions} for the recommended shape.
-   *
-   * @param request - Process start configuration
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters
-   * @returns Promise resolving to array of started process instances
    */
   start(request: ProcessStartRequest, options?: ProcessStartOptions): Promise<ProcessStartResponse[]>;
   /**
    * Starts a process — positional `folderId` form.
    *
+   * @hidden
    * @deprecated Use the ref-based form: `start(processRef, { folderId })`. See {@link ProcessRef}.
-   *
-   * @param request - Process start configuration
-   * @param folderId - Required folder ID (numeric)
-   * @param options - Optional request options
-   * @returns Promise resolving to array of started process instances
    */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 }
