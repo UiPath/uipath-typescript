@@ -14,6 +14,7 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { OVERRIDE_TEST_CONSTANTS } from '../../../utils/constants/overrides';
 import type { BucketGetByIdOptions, BucketGetAllOptions, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetResponse, BlobItem, BucketGetFilesOptions, BucketFile } from '../../../../src/models/orchestrator/buckets.types';
 import { BucketOptions } from '../../../../src/models/orchestrator/buckets.types';
 import { BUCKET_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -594,7 +595,7 @@ describe('BucketService Unit Tests', () => {
 
     it('should throw ValidationError when bucketId is missing', async () => {
       await expect(bucketService.getFileMetaData(null as any, TEST_CONSTANTS.FOLDER_ID))
-        .rejects.toThrow('bucketId is required for getFileMetaData');
+        .rejects.toThrow('Buckets.getFileMetaData: bucketId must be a positive number.');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -629,6 +630,40 @@ describe('BucketService Unit Tests', () => {
           filter: "fullPath eq '/data/file.pdf'",
         }),
       );
+    });
+
+    it('redirects both the internal name-lookup and the meta-data pagination call when a runtime override matches the { name } BucketRef', async () => {
+      // Sibling to the deleteFile override test — every file op wires resolveBucketRef differently,
+      // so each needs its own guard per the "sibling methods share a pattern" convention.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`bucket.${BUCKET_TEST_CONSTANTS.BUCKET_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue({
+          value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME }],
+        });
+        vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+        await bucketService.getFileMetaData(
+          { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+          { folderPath: 'Shared/Apps' },
+        );
+
+        // Lookup GET is scoped to the redirected folder.
+        const [, getOpts] = mockApiClient.get.mock.calls[0];
+        expect(getOpts?.params?.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(getOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+        // The pagination call's headers carry the same redirected folder.
+        const [paginationConfig] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+        expect((paginationConfig as { headers?: Record<string, string> }).headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
@@ -856,7 +891,7 @@ describe('BucketService Unit Tests', () => {
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH,
         content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT])
-      })).rejects.toThrow('bucketId is required for uploadFile');
+      })).rejects.toThrow('Buckets.uploadFile: bucketId must be a positive number.');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -979,6 +1014,47 @@ describe('BucketService Unit Tests', () => {
         content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT])
       })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('redirects the internal write-URI GET folder header when a runtime override matches the { name } BucketRef', async () => {
+      // Sibling to the deleteFile override test — each file op wires resolveBucketRef differently.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`bucket.${BUCKET_TEST_CONSTANTS.BUCKET_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        // First GET = name lookup; second GET = write-URI fetch inside _getWriteUri.
+        mockApiClient.get
+          .mockResolvedValueOnce({
+            value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME }],
+          })
+          .mockResolvedValueOnce(createMockWriteUriApiResponse({
+            RequiresAuth: false,
+            Headers: { Keys: [], Values: [] },
+          }));
+        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 201 }));
+
+        await bucketService.uploadFile(
+          { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, lookupOpts] = mockApiClient.get.mock.calls[0];
+        expect(lookupOpts?.params?.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(lookupOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+        // The write-URI GET scopes to the same redirected folder.
+        const [writeUriEndpoint, writeUriOpts] = mockApiClient.get.mock.calls[1];
+        expect(writeUriEndpoint).toBe(BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID));
+        expect(writeUriOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
   });
 
   describe('uploadFile — positional form', () => {
@@ -1070,7 +1146,7 @@ describe('BucketService Unit Tests', () => {
           new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         ),
-      ).rejects.toThrow('bucketId is required for uploadFile');
+      ).rejects.toThrow('Buckets.uploadFile: bucketId must be a positive number.');
     });
 
     it('should throw ValidationError when positional path is missing', async () => {
@@ -1134,7 +1210,7 @@ describe('BucketService Unit Tests', () => {
         bucketId: null as any,
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH
-      })).rejects.toThrow('bucketId is required for getUri');
+      })).rejects.toThrow('Buckets.getReadUri: bucketId must be a positive number.');
     });
 
     it('should throw ValidationError when no folder context can be resolved', async () => {
@@ -1210,7 +1286,7 @@ describe('BucketService Unit Tests', () => {
         bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: null as any
-      })).rejects.toThrow('path is required for getUri');
+      })).rejects.toThrow('path is required for getReadUri');
     });
 
     it('should handle API errors', async () => {
@@ -1242,6 +1318,42 @@ describe('BucketService Unit Tests', () => {
           }),
         }),
       );
+    });
+
+    it('redirects the internal read-URI GET folder header when a runtime override matches the { name } BucketRef', async () => {
+      // Sibling to the deleteFile override test — each file op wires resolveBucketRef differently.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`bucket.${BUCKET_TEST_CONSTANTS.BUCKET_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        // First GET = name lookup; second GET = read-URI fetch inside _getUri.
+        mockApiClient.get
+          .mockResolvedValueOnce({
+            value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME }],
+          })
+          .mockResolvedValueOnce(createMockReadUriApiResponse());
+
+        await bucketService.getReadUri(
+          { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, lookupOpts] = mockApiClient.get.mock.calls[0];
+        expect(lookupOpts?.params?.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(lookupOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+        // The read-URI GET scopes to the same redirected folder.
+        const [readUriEndpoint, readUriOpts] = mockApiClient.get.mock.calls[1];
+        expect(readUriEndpoint).toBe(BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID));
+        expect(readUriOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
@@ -1317,7 +1429,7 @@ describe('BucketService Unit Tests', () => {
           BUCKET_TEST_CONSTANTS.FILE_PATH,
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         ),
-      ).rejects.toThrow('bucketId is required for getUri');
+      ).rejects.toThrow('Buckets.getReadUri: bucketId must be a positive number.');
     });
 
     it('should throw ValidationError when positional path is missing', async () => {
@@ -1327,7 +1439,7 @@ describe('BucketService Unit Tests', () => {
           null as any,
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         ),
-      ).rejects.toThrow('path is required for getUri');
+      ).rejects.toThrow('path is required for getReadUri');
     });
   });
 
@@ -1376,7 +1488,7 @@ describe('BucketService Unit Tests', () => {
         null as any,
         BUCKET_TEST_CONSTANTS.FILE_PATH,
         { folderId: TEST_CONSTANTS.FOLDER_ID },
-      )).rejects.toThrow('bucketId is required for deleteFile');
+      )).rejects.toThrow('Buckets.deleteFile: bucketId must be a positive number.');
       expect(mockApiClient.delete).not.toHaveBeenCalled();
     });
 
@@ -1406,6 +1518,71 @@ describe('BucketService Unit Tests', () => {
         BUCKET_TEST_CONSTANTS.FILE_PATH,
         { folderId: TEST_CONSTANTS.FOLDER_ID },
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('accepts a { name } BucketRef, resolves the bucket id via getByName, then deletes', async () => {
+      // First call: the getByNameLookup GET (OData $filter=Name eq ...) → returns the bucket row.
+      mockApiClient.get.mockResolvedValue({
+        value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: BUCKET_TEST_CONSTANTS.BUCKET_NAME }],
+      });
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await bucketService.deleteFile(
+        { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      // getByNameLookup fires the OData Name eq filter.
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_BY_FOLDER,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${BUCKET_TEST_CONSTANTS.BUCKET_NAME}'`,
+          }),
+        }),
+      );
+      // Then delete targets the resolved bucket id.
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.DELETE_FILE(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: { path: BUCKET_TEST_CONSTANTS.FILE_PATH },
+        }),
+      );
+    });
+
+    it('redirects the follow-up DELETE folder header when a runtime override matches the { name } BucketRef', async () => {
+      // Cross-folder override representative for all 5 file ops — they all share the same
+      // `_resolveBucketRef` helper. One test guards the shared code path.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`bucket.${BUCKET_TEST_CONSTANTS.BUCKET_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue({
+          value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME }],
+        });
+        mockApiClient.delete.mockResolvedValue(undefined);
+
+        await bucketService.deleteFile(
+          { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          { folderPath: 'Shared/Apps' },
+        );
+
+        // Both the lookup GET and the follow-up DELETE header scope to the redirected folder.
+        const [, getOpts] = mockApiClient.get.mock.calls[0];
+        expect(getOpts?.params?.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(getOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+        const [, deleteOpts] = mockApiClient.delete.mock.calls[0];
+        expect(deleteOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 
@@ -1555,7 +1732,13 @@ describe('BucketService Unit Tests', () => {
 
     it('should throw ValidationError when bucketId is missing', async () => {
       await expect(bucketService.getFiles(null as any, { folderId: TEST_CONSTANTS.FOLDER_ID }))
-        .rejects.toThrow('bucketId is required for getFiles');
+        .rejects.toThrow('Buckets.getFiles: bucketId must be a positive number.');
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when bucketId is negative', async () => {
+      await expect(bucketService.getFiles(-1, { folderId: TEST_CONSTANTS.FOLDER_ID }))
+        .rejects.toThrow('Buckets.getFiles: bucketId must be a positive number.');
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
@@ -1590,6 +1773,38 @@ describe('BucketService Unit Tests', () => {
           filter: "fullPath eq '/folder/file.pdf' and verb eq 'GET'",
         }),
       );
+    });
+
+    it('redirects both the internal name-lookup and the getFiles pagination call when a runtime override matches the { name } BucketRef', async () => {
+      // Sibling to the deleteFile override test — each file op wires resolveBucketRef differently.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`bucket.${BUCKET_TEST_CONSTANTS.BUCKET_NAME}.Shared/Apps`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue({
+          value: [{ Id: BUCKET_TEST_CONSTANTS.BUCKET_ID, Name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME }],
+        });
+        vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+        await bucketService.getFiles(
+          { name: BUCKET_TEST_CONSTANTS.BUCKET_NAME },
+          { folderPath: 'Shared/Apps' },
+        );
+
+        const [, lookupOpts] = mockApiClient.get.mock.calls[0];
+        expect(lookupOpts?.params?.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(lookupOpts?.headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+        // Pagination config's headers scope to the same redirected folder.
+        const [paginationConfig] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+        expect((paginationConfig as { headers?: Record<string, string> }).headers?.[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
     });
   });
 });
