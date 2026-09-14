@@ -568,6 +568,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getFiles()`               | ✅ Yes                 |
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
+| Users                             | `getAll()`                 | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `getRecordsByName()`       | ✅ Yes                 |
 | Entities                          | `queryRecords()`           | ✅ Yes                 |
@@ -1822,31 +1823,59 @@ const allBuckets = await buckets.getAll();
 
 ### deleteFile()
 
-> **deleteFile**(`bucketRef`: `number` | `BucketRef`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
+#### Call Signature
+
+> **deleteFile**(`bucketRef`: `BucketRef`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
 
 Deletes a file from a bucket
 
-#### Parameters
+##### Parameters
 
-- `bucketRef`: `number` | `BucketRef` — Bucket ref (`{ id }` or `{ name }`). A raw numeric bucket id is also accepted as a shorthand for `{ id }`. `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.
-- `path`: `string` — The full path to the file to delete
-- `options?`: `BucketDeleteFileOptions` — Folder scoping (`folderId` / `folderKey` / `folderPath`)
+| Parameter   | Type                      | Description                                                                                                                                               |
+| ----------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`               | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                  | The full path to the file to delete                                                                                                                       |
+| `options?`  | `BucketDeleteFileOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`)                                                                                                  |
 
-#### Returns
+##### Returns
 
 `Promise`\<`void`>
 
 Promise resolving when the file is deleted
 
-#### Example
+##### Example
 
 ```
-// By bucket id (either as raw number or { id })
+// By bucket id
 await buckets.deleteFile({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
 
 // By bucket name
 await buckets.deleteFile({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
 ```
+
+#### Call Signature
+
+> **deleteFile**(`bucketId`: `number`, `path`: `string`, `options?`: `BucketDeleteFileOptions`): `Promise`\<`void`>
+
+Deletes a file from a bucket — numeric bucket id form.
+
+##### Parameters
+
+| Parameter  | Type                      | Description                                              |
+| ---------- | ------------------------- | -------------------------------------------------------- |
+| `bucketId` | `number`                  | The ID of the bucket                                     |
+| `path`     | `string`                  | The full path to the file to delete                      |
+| `options?` | `BucketDeleteFileOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+
+##### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the file is deleted
+
+##### Deprecated
+
+Use the ref-based form: `deleteFile({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### getAll()
 
@@ -1963,7 +1992,7 @@ await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
 
 #### Call Signature
 
-> **getFileMetaData**\<`T`>(`bucketRef`: `number` | `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+> **getFileMetaData**\<`T`>(`bucketRef`: `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
 
 Gets metadata for files in a bucket with optional filtering and pagination.
 
@@ -1982,10 +2011,10 @@ The method returns either:
 
 ##### Parameters
 
-| Parameter   | Type     | Description                                                                                                   |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `bucketRef` | `number` | `BucketRef`                                                                                                   |
-| `options?`  | `T`      | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination |
+| Parameter   | Type        | Description                                                                                                                                               |
+| ----------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef` | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `options?`  | `T`         | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination                                             |
 
 ##### Returns
 
@@ -1996,7 +2025,7 @@ Promise resolving to either an array of files metadata NonPaginatedResponse or a
 ##### Example
 
 ```
-// By bucket id (either as raw number or { id })
+// By bucket id
 const fileMetadata = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId> });
 
 // By bucket name (folder scoping applies to both the name lookup and the meta-data read)
@@ -2013,6 +2042,35 @@ if (page1.hasNextPage) {
   const page2 = await buckets.getFileMetaData({ id: <bucketId> }, { folderId: <folderId>, cursor: page1.nextCursor });
 }
 ```
+
+#### Call Signature
+
+> **getFileMetaData**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+
+Gets metadata for files in a bucket — numeric bucket id form.
+
+##### Type Parameters
+
+| Type Parameter                                             | Default type                                 |
+| ---------------------------------------------------------- | -------------------------------------------- |
+| `T` *extends* `BucketGetFileMetaDataWithPaginationOptions` | `BucketGetFileMetaDataWithPaginationOptions` |
+
+##### Parameters
+
+| Parameter  | Type     | Description                                                                                                   |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `bucketId` | `number` | The ID of the bucket to get file metadata from                                                                |
+| `options?` | `T`      | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for filtering and pagination |
+
+##### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BlobItem`> : `NonPaginatedResponse`\<`BlobItem`>>
+
+Promise resolving to either an array of files metadata NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BlobItem](../BlobItem/)
+
+##### Deprecated
+
+Use the ref-based form: `getFileMetaData({ id: bucketId }, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -2042,11 +2100,13 @@ Promise resolving to either an array of files metadata NonPaginatedResponse or a
 
 ##### Deprecated
 
-Use the options-object form: `getFileMetaData(bucketId, { folderId })`. See [BucketGetFileMetaDataWithPaginationOptions](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) for the supported options.
+Use the ref-based form: `getFileMetaData({ id: bucketId }, { folderId })`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### getFiles()
 
-> **getFiles**\<`T`>(`bucketRef`: `number` | `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+#### Call Signature
+
+> **getFiles**\<`T`>(`bucketRef`: `BucketRef`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
 
 Lists all files in a bucket.
 
@@ -2057,25 +2117,29 @@ The method returns either:
 - A NonPaginatedResponse with items array (when no pagination parameters are provided)
 - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
 
-#### Type Parameters
+##### Type Parameters
 
-- `T` *extends* `BucketGetFilesOptions` = `BucketGetFilesOptions`
+| Type Parameter                        | Default type            |
+| ------------------------------------- | ----------------------- |
+| `T` *extends* `BucketGetFilesOptions` | `BucketGetFilesOptions` |
 
-#### Parameters
+##### Parameters
 
-- `bucketRef`: `number` | `BucketRef` — Bucket ref (`{ id }` or `{ name }`). A raw numeric bucket id is also accepted as a shorthand for `{ id }`. `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.
-- `options?`: `T` — Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/)
+| Parameter   | Type        | Description                                                                                                                                                                                            |
+| ----------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketRef` | `BucketRef` | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders.                                              |
+| `options?`  | `T`         | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/) |
 
-#### Returns
+##### Returns
 
 `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
 
 Promise resolving to either an array of files NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketFile](../BucketFile/)
 
-#### Example
+##### Example
 
 ```
-// By bucket id (either as raw number or { id })
+// By bucket id
 const files = await buckets.getFiles({ id: <bucketId> }, { folderId: <folderId> });
 
 // By bucket name (folder scoping applies to both the name lookup and the listing)
@@ -2103,11 +2167,40 @@ const page5 = await buckets.getFiles({ id: <bucketId> }, {
 });
 ```
 
+#### Call Signature
+
+> **getFiles**\<`T`>(`bucketId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+
+Lists all files in a bucket — numeric bucket id form.
+
+##### Type Parameters
+
+| Type Parameter                        | Default type            |
+| ------------------------------------- | ----------------------- |
+| `T` *extends* `BucketGetFilesOptions` | `BucketGetFilesOptions` |
+
+##### Parameters
+
+| Parameter  | Type     | Description                                                                                                                                                                                            |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bucketId` | `number` | The ID of the bucket                                                                                                                                                                                   |
+| `options?` | `T`      | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination [BucketGetFilesOptions](../../type-aliases/BucketGetFilesOptions/) |
+
+##### Returns
+
+`Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`BucketFile`> : `NonPaginatedResponse`\<`BucketFile`>>
+
+Promise resolving to either an array of files NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketFile](../BucketFile/)
+
+##### Deprecated
+
+Use the ref-based form: `getFiles({ id: bucketId }, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
+
 ### getReadUri()
 
 #### Call Signature
 
-> **getReadUri**(`bucketRef`: `number` | `BucketRef`, `path`: `string`, `options?`: `BucketGetReadUriRequestOptions`): `Promise`\<`BucketGetUriResponse`>
+> **getReadUri**(`bucketRef`: `BucketRef`, `path`: `string`, `options?`: `BucketGetReadUriRequestOptions`): `Promise`\<`BucketGetUriResponse`>
 
 Gets a direct download URL for a file in the bucket.
 
@@ -2115,11 +2208,11 @@ Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in th
 
 ##### Parameters
 
-| Parameter   | Type                             | Description                                                                             |
-| ----------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `bucketRef` | `number`                         | `BucketRef`                                                                             |
-| `path`      | `string`                         | The full path to the file                                                               |
-| `options?`  | `BucketGetReadUriRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes` |
+| Parameter   | Type                             | Description                                                                                                                                               |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`                      | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                         | The full path to the file                                                                                                                                 |
+| `options?`  | `BucketGetReadUriRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes`                                                                   |
 
 ##### Returns
 
@@ -2130,12 +2223,36 @@ Promise resolving to blob file access information [BucketGetUriResponse](../Buck
 ##### Example
 
 ```
-// By bucket id (either as raw number or { id })
+// By bucket id
 await buckets.getReadUri({ id: <bucketId> }, '/folder/file.pdf', { folderId: <folderId> });
 
 // By bucket name (folder scoping applies to both the name lookup and the read)
 await buckets.getReadUri({ name: 'MyBucket' }, '/folder/file.pdf', { folderPath: 'Shared/Finance' });
 ```
+
+#### Call Signature
+
+> **getReadUri**(`bucketId`: `number`, `path`: `string`, `options?`: `BucketGetReadUriRequestOptions`): `Promise`\<`BucketGetUriResponse`>
+
+Gets a direct download URL for a file in the bucket — numeric bucket id form.
+
+##### Parameters
+
+| Parameter  | Type                             | Description                                                                             |
+| ---------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `bucketId` | `number`                         | The ID of the bucket                                                                    |
+| `path`     | `string`                         | The full path to the file                                                               |
+| `options?` | `BucketGetReadUriRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional `expiryInMinutes` |
+
+##### Returns
+
+`Promise`\<`BucketGetUriResponse`>
+
+Promise resolving to blob file access information [BucketGetUriResponse](../BucketGetUriResponse/)
+
+##### Deprecated
+
+Use the ref-based form: `getReadUri({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -2157,13 +2274,13 @@ Promise resolving to blob file access information [BucketGetUriResponse](../Buck
 
 ##### Deprecated
 
-Use the positional form: `getReadUri(bucketId, path, options?)`. See [BucketGetReadUriRequestOptions](../BucketGetReadUriRequestOptions/) for the supported options.
+Use the ref-based form: `getReadUri({ id: bucketId }, path, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 ### uploadFile()
 
 #### Call Signature
 
-> **uploadFile**(`bucketRef`: `number` | `BucketRef`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
+> **uploadFile**(`bucketRef`: `BucketRef`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
 
 Uploads a file to a bucket.
 
@@ -2171,12 +2288,12 @@ Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` in th
 
 ##### Parameters
 
-| Parameter   | Type                             | Description                                              |
-| ----------- | -------------------------------- | -------------------------------------------------------- |
-| `bucketRef` | `number`                         | `BucketRef`                                              |
-| `path`      | `string`                         | Path where the file should be stored in the bucket       |
-| `content`   | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                   |
-| `options?`  | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+| Parameter   | Type                             | Description                                                                                                                                               |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bucketRef` | `BucketRef`                      | Bucket ref (`{ id }` or `{ name }`). `{ name }` triggers an internal name lookup where runtime resource overrides may redirect the target across folders. |
+| `path`      | `string`                         | Path where the file should be stored in the bucket                                                                                                        |
+| `content`   | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                                                                                                                    |
+| `options?`  | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`)                                                                                                  |
 
 ##### Returns
 
@@ -2187,7 +2304,7 @@ Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadR
 ##### Example
 
 ```
-// By bucket id (either as raw number or { id })
+// By bucket id
 const file = new File(['file content'], 'example.txt');
 await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', file, { folderId: <folderId> });
 
@@ -2198,6 +2315,31 @@ await buckets.uploadFile({ name: 'MyBucket' }, '/folder/example.txt', file, { fo
 const content = new TextEncoder().encode('file content');
 await buckets.uploadFile({ id: <bucketId> }, '/folder/example.txt', content, { folderId: <folderId> });
 ```
+
+#### Call Signature
+
+> **uploadFile**(`bucketId`: `number`, `path`: `string`, `content`: `Uint8Array`\<`ArrayBuffer`> | `Blob` | `File`, `options?`: `BucketUploadFileRequestOptions`): `Promise`\<`BucketUploadResponse`>
+
+Uploads a file to a bucket — numeric bucket id form.
+
+##### Parameters
+
+| Parameter  | Type                             | Description                                              |
+| ---------- | -------------------------------- | -------------------------------------------------------- |
+| `bucketId` | `number`                         | The ID of the bucket                                     |
+| `path`     | `string`                         | Path where the file should be stored in the bucket       |
+| `content`  | `Uint8Array`\<`ArrayBuffer`>     | `Blob`                                                   |
+| `options?` | `BucketUploadFileRequestOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) |
+
+##### Returns
+
+`Promise`\<`BucketUploadResponse`>
+
+Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadResponse/)
+
+##### Deprecated
+
+Use the ref-based form: `uploadFile({ id: bucketId }, path, content, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 #### Call Signature
 
@@ -2219,7 +2361,7 @@ Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadR
 
 ##### Deprecated
 
-Use the positional form: `uploadFile(bucketId, path, content, options?)`. See [BucketUploadFileRequestOptions](../BucketUploadFileRequestOptions/) for the supported options.
+Use the ref-based form: `uploadFile({ id: bucketId }, path, content, options?)`. See [BucketRef](../../type-aliases/BucketRef/).
 
 Service for managing UiPath Action Center
 
