@@ -42,6 +42,7 @@
   - `{Entity}{Operation}Options` — bag of **optional** fields. Always the last parameter. Always marked `?`. Contains only optional fields.
   - `{Entity}{Operation}Request` — bag of **required** fields. Pairs naturally with the existing `{Entity}{Operation}Response`. Convention param name is `request`. Use this **only** when a method has **4+ required values that semantically cluster** (e.g., a process scope + time range). Below that threshold, keep required params positional.
   - **NEVER** use `Request` as the suffix for an optional-fields bag — that slot is `Options`. The two suffixes are not interchangeable.
+  - **NEVER** use a union type (`TypeA | TypeB`) as an options parameter — union types break callers who assign the options object to a typed variable before the call (TypeScript requires the literal to satisfy exactly one union member), and consumers cannot extend union members. Flatten all variants into a single interface with optional fields instead.
 - **Required parameters: positional by default, `Request` object only at 4+.**
   - 1–3 required params → positional. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`; `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
   - 4+ required params that cluster semantically → single `{Entity}{Operation}Request` object. E.g., `getElementStats(request: ProcessStatsRequest)` where `ProcessStatsRequest` bundles `processKey`, `packageId`, `packageVersion`, `startTime`, `endTime`.
@@ -250,7 +251,7 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 
 ## BaseService
 
-**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this.
+**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this. **NEVER** add domain-specific helpers to `BaseService` — especially helpers that make external network calls. Adding such methods to `BaseService` silently gives every service access to functionality (and external API calls) it doesn't need. Domain-specific resolution logic (e.g., looking up an organization ID via Identity) belongs in a dedicated resolver class or the specific service that needs it.
 
 ## Folder-scoped services
 
@@ -262,6 +263,8 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
 **Folder-aware options** — extend `FolderScopedOptions` (`src/models/common/types.ts`) instead of declaring custom folder fields; it extends `BaseOptions` and bundles `folderId`/`folderKey`/`folderPath`. Used across Orchestrator, Maestro, and Action Center. **Do NOT extend `FolderScopedOptions` for services whose endpoints do not accept OData query params** — because `FolderScopedOptions` inherits `expand` and `select` from `BaseOptions`, extending it for a non-OData service (e.g., Integration Service) causes those fields to leak into query parameters and request bodies the API never expects. Create a service-specific scoping type (e.g., `{ folderId?: string; folderPath?: string }`) for such services.
+
+**Ref resolution must carry the resolved folder through to mutations** — applies to folder-scoped services that implement name- or key-based ref resolution via `resolveRefToId` (`src/utils/validation/resolve-ref.ts`) and the `getByNameLookup` / `getByKeyLookup` helpers on `FolderScopedService` (`src/services/folder-scoped.ts`). When the lookup resolves, it returns an `effectiveFolder` alongside the resolved ID. Use `effectiveFolder` as the **left (primary) side** of `??` when constructing the mutation's folder headers — `effectiveFolder.folderId ?? options?.folderId` — so the resolved folder wins over the caller's original options when non-empty. For ID-based refs (where no lookup ran), `effectiveFolder` is empty and `??` falls through to the caller's options as intended. **NEVER** invert the order (`options?.folderId ?? effectiveFolder.folderId`) — that would ignore a folder redirect and target the wrong folder. See `src/services/orchestrator/assets/assets.ts` for the reference implementation.
 
 ## OperationResponse pattern
 
@@ -295,5 +298,5 @@ Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None`
 
 - **NEVER** leave unused code — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure.
+- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure. Additionally, when the same regex is needed across two or more service files, extract it to a shared constant in `src/utils/` rather than duplicating it — duplicated patterns silently diverge when one copy is updated.
 - **Silent catches must emit a `console.warn`** — when a `try/catch` swallows an error without re-throwing (e.g., best-effort reads from an ambient channel or optional DOM lookup), always call `console.warn(error)` so issues remain observable in the runtime console (browser, Node.js, and Workers). A completely silent catch makes failures invisible during development and debugging.
