@@ -3413,7 +3413,6 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </code></pre></div>
 <hr />
 <h3 id="start">start()<a class="headerlink" href="#start" title="Permanent link">&para;</a></h3>
-<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>start</strong>(<code>processRef</code>: <a href="../../type-aliases/ProcessRef/"><code>ProcessRef</code></a>, <code>options?</code>: <a href="../ProcessStartRefOptions/"><code>ProcessStartRefOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
 </blockquote>
@@ -3423,7 +3422,7 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 <code>inputArguments</code>, etc.) live in <code>options</code>. Runtime resource overrides apply on both
 <code>{ name }</code> and <code>{ key }</code> — a cross-folder redirect steers both the identity and the
 folder scoping to the override target.</p>
-<h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3445,10 +3444,10 @@ folder scoping to the override target.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h5>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
 <p>Promise resolving to an array of started process instances of <a href="../ProcessStartResponse/">ProcessStartResponse</a></p>
-<h5 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h5>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">JobPriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/processes&#39;</span><span class="p">;</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// By process name + folder path</span>
@@ -3469,76 +3468,6 @@ folder scoping to the override target.</p>
 <a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Live&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">expand</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Robot,Machine&#39;</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="p">);</span>
 </code></pre></div>
-<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
-<blockquote>
-<p><strong>start</strong>(<code>request</code>: <a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a>, <code>options?</code>: <a href="../ProcessStartOptions/"><code>ProcessStartOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-</blockquote>
-<p>Starts a process — legacy <code>ProcessStartRequest</code> form.</p>
-<h5 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h5>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>request</code></td>
-<td><a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a></td>
-<td>Process start configuration</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../ProcessStartOptions/"><code>ProcessStartOptions</code></a></td>
-<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional query parameters</td>
-</tr>
-</tbody>
-</table>
-<h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
-<p><code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-<p>Promise resolving to array of started process instances</p>
-<h5 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h5>
-<p>Use the ref-based form: <code>start(processRef, options?)</code>. See <a href="../../type-aliases/ProcessRef/">ProcessRef</a>
-and <a href="../ProcessStartRefOptions/">ProcessStartRefOptions</a> for the recommended shape.</p>
-<h4 id="call-signature_2">Call Signature<a class="headerlink" href="#call-signature_2" title="Permanent link">&para;</a></h4>
-<blockquote>
-<p><strong>start</strong>(<code>request</code>: <a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../RequestOptions/"><code>RequestOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-</blockquote>
-<p>Starts a process — positional <code>folderId</code> form.</p>
-<h5 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h5>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>request</code></td>
-<td><a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a></td>
-<td>Process start configuration</td>
-</tr>
-<tr>
-<td><code>folderId</code></td>
-<td><code>number</code></td>
-<td>Required folder ID (numeric)</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../RequestOptions/"><code>RequestOptions</code></a></td>
-<td>Optional request options</td>
-</tr>
-</tbody>
-</table>
-<h5 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h5>
-<p><code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-<p>Promise resolving to array of started process instances</p>
-<h5 id="deprecated_1">Deprecated<a class="headerlink" href="#deprecated_1" title="Permanent link">&para;</a></h5>
-<p>Use the ref-based form: <code>start(processRef, { folderId })</code>. See <a href="../../type-aliases/ProcessRef/">ProcessRef</a>.</p>
 
 
 
