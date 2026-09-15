@@ -6,7 +6,7 @@
  * - `Groups` — manage an organization's groups and their members
  *
  * Every `Platform` settings operation is user-scoped — see {@link PlatformSettingKey}.
- * `Groups` operations are organization-scoped and require `organizationId`.
+ * `Groups` operations are organization-scoped; the organization is resolved from the SDK configuration.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *

@@ -15,7 +15,7 @@ import {
   PLATFORM_GROUP_TEST_CONSTANTS,
   PLATFORM_USER_TEST_CONSTANTS,
 } from '../../../utils/mocks';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { IDENTITY_GROUP_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 
 // ===== MOCKING =====
@@ -33,7 +33,7 @@ describe('Platform Groups Service Unit Tests', () => {
   const groupId = PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID;
 
   beforeEach(() => {
-    const { instance } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies({ organizationId });
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
@@ -54,10 +54,23 @@ describe('Platform Groups Service Unit Tests', () => {
   });
 
   describe('getAll', () => {
+    it('should share one organization id resolver between services built on the same instance', async () => {
+      const { instance } = createServiceTestDependencies({ organizationId });
+      mockApiClient.get.mockResolvedValue([createBasicRawPlatformGroup()]);
+
+      await new Groups(instance).getAll();
+      const resolver = getPrivateSDK(instance).organizationIdResolver;
+      await new Groups(instance).getAll();
+
+      expect(resolver).toBeDefined();
+      expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
+      expect(mockApiClient.get.mock.calls[1][0]).toBe(IDENTITY_GROUP_ENDPOINTS.GET_ALL(organizationId));
+    });
+
     it('should retrieve all groups from the organization group listing endpoint', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformGroup()]);
 
-      const result = await groupsService.getAll(organizationId);
+      const result = await groupsService.getAll();
 
       expect(mockApiClient.get).toHaveBeenCalledWith(IDENTITY_GROUP_ENDPOINTS.GET_ALL(organizationId), {});
       expect(result).toHaveLength(1);
@@ -67,7 +80,7 @@ describe('Platform Groups Service Unit Tests', () => {
     it('should apply the full transform pipeline to each group', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformGroup()]);
 
-      const [group] = await groupsService.getAll(organizationId);
+      const [group] = await groupsService.getAll();
 
       // Semantic renames carry their values (distinctive timestamps, not null defaults)
       expect(group.createdTime).toBe(PLATFORM_GROUP_TEST_CONSTANTS.CREATION_TIME);
@@ -81,14 +94,12 @@ describe('Platform Groups Service Unit Tests', () => {
       expect((group as any).scope).toBeUndefined();
       // Numeric code is mapped to the enum
       expect(group.type).toBe(PlatformGroupType.BuiltIn);
-      // Organization scope is enriched from the request
-      expect(group.organizationId).toBe(organizationId);
     });
 
     it('should map the custom group type code', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformGroup({ type: 1 })]);
 
-      const [group] = await groupsService.getAll(organizationId);
+      const [group] = await groupsService.getAll();
 
       expect(group.type).toBe(PlatformGroupType.Custom);
     });
@@ -96,22 +107,18 @@ describe('Platform Groups Service Unit Tests', () => {
     it('should attach bound methods to each group', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformGroup()]);
 
-      const [group] = await groupsService.getAll(organizationId);
+      const [group] = await groupsService.getAll();
 
       expect(typeof group.update).toBe('function');
       expect(typeof group.delete).toBe('function');
       expect(typeof group.getMembers).toBe('function');
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(groupsService.getAll('')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUPS_FORBIDDEN));
 
-      await expect(groupsService.getAll(organizationId)).rejects.toThrow(
+      await expect(groupsService.getAll()).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUPS_FORBIDDEN
       );
     });
@@ -121,7 +128,7 @@ describe('Platform Groups Service Unit Tests', () => {
     it('should retrieve a group by ID with the transform pipeline applied', async () => {
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformGroup());
 
-      const group = await groupsService.getById(groupId, organizationId);
+      const group = await groupsService.getById(groupId);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId),
@@ -130,33 +137,28 @@ describe('Platform Groups Service Unit Tests', () => {
       expect(group.id).toBe(groupId);
       expect(group.createdTime).toBe(PLATFORM_GROUP_TEST_CONSTANTS.CREATION_TIME);
       expect((group as any).creationTime).toBeUndefined();
-      expect(group.organizationId).toBe(organizationId);
     });
 
     it('should throw ValidationError when groupId is empty', async () => {
-      await expect(groupsService.getById('', organizationId)).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.getById('')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(groupsService.getById(groupId, '')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 
-      await expect(groupsService.getById(groupId, organizationId)).rejects.toThrow(
+      await expect(groupsService.getById(groupId)).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND
       );
     });
   });
 
   describe('create', () => {
-    it('should POST the new group with a client-generated GUID and the organization in the body', async () => {
+    it('should POST the new group with a client-generated GUID and the resolved organization in the body', async () => {
       mockApiClient.post.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
 
-      const group = await groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, organizationId);
+      const group = await groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT);
 
       expect(mockApiClient.post).toHaveBeenCalledTimes(1);
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
@@ -171,7 +173,7 @@ describe('Platform Groups Service Unit Tests', () => {
     it('should send initial members under the wire directoryUserMemberIDs name', async () => {
       mockApiClient.post.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
 
-      await groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, organizationId, {
+      await groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, {
         memberUserIds: [PLATFORM_USER_TEST_CONSTANTS.USER_ID],
       });
 
@@ -181,33 +183,26 @@ describe('Platform Groups Service Unit Tests', () => {
     });
 
     it('should throw ValidationError when name is empty', async () => {
-      await expect(groupsService.create('', organizationId)).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.create('')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(
-        groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, '')
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUPS_FORBIDDEN));
 
       await expect(
-        groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, organizationId)
+        groupsService.create(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT)
       ).rejects.toThrow(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUPS_FORBIDDEN);
     });
   });
 
   describe('updateById', () => {
-    it('should PUT the name and member changes under wire names with the organization in the body', async () => {
+    it('should PUT the name and member changes under wire names with the resolved organization in the body', async () => {
       mockApiClient.put.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
 
       const group = await groupsService.updateById(
         groupId,
-        organizationId,
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT,
         {
           memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID],
@@ -223,28 +218,24 @@ describe('Platform Groups Service Unit Tests', () => {
       expect(body.directoryUserIDsToRemove).toEqual([PLATFORM_USER_TEST_CONSTANTS.USER_ID_ALT]);
       expect(body).not.toHaveProperty('memberUserIdsToAdd');
       expect(body).not.toHaveProperty('memberUserIdsToRemove');
-      expect(group.organizationId).toBe(organizationId);
+      expect(typeof group.update).toBe('function');
     });
 
     it('should throw ValidationError when name is empty — the API requires it on every update', async () => {
-      await expect(groupsService.updateById(groupId, organizationId, '')).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.updateById(groupId, '')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when groupId is empty', async () => {
-      await expect(groupsService.updateById('', organizationId, 'x')).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.updateById('', 'x')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(groupsService.updateById(groupId, '', 'x')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.put.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 
-      await expect(groupsService.updateById(groupId, organizationId, 'x')).rejects.toThrow(
+      await expect(groupsService.updateById(groupId, 'x')).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND
       );
     });
@@ -254,7 +245,7 @@ describe('Platform Groups Service Unit Tests', () => {
     it('should DELETE the group URL', async () => {
       mockApiClient.delete.mockResolvedValue(undefined);
 
-      await groupsService.deleteById(groupId, organizationId);
+      await groupsService.deleteById(groupId);
 
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId),
@@ -263,19 +254,15 @@ describe('Platform Groups Service Unit Tests', () => {
     });
 
     it('should throw ValidationError when groupId is empty', async () => {
-      await expect(groupsService.deleteById('', organizationId)).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.deleteById('')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.delete).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(groupsService.deleteById(groupId, '')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.delete).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.delete.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 
-      await expect(groupsService.deleteById(groupId, organizationId)).rejects.toThrow(
+      await expect(groupsService.deleteById(groupId)).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND
       );
     });
@@ -290,7 +277,7 @@ describe('Platform Groups Service Unit Tests', () => {
         .mockResolvedValueOnce(createRawPlatformGroupMembersResponse(firstPage, 3))
         .mockResolvedValueOnce(createRawPlatformGroupMembersResponse([createBasicRawPlatformGroupMember()], 3));
 
-      const result = await groupsService.getMembers(groupId, organizationId);
+      const result = await groupsService.getMembers(groupId);
 
       expect(result.items).toHaveLength(3);
       expect(result.totalCount).toBe(3);
@@ -305,7 +292,7 @@ describe('Platform Groups Service Unit Tests', () => {
         createRawPlatformGroupMembersResponse([createBasicRawPlatformGroupMember({ type: 4 })])
       );
 
-      const result = await groupsService.getMembers(groupId, organizationId);
+      const result = await groupsService.getMembers(groupId);
 
       expect(result.items[0].type).toBe(PlatformUserType.RobotAccount);
       expect(result.items[0].id).toBe(PLATFORM_USER_TEST_CONSTANTS.USER_ID);
@@ -319,7 +306,7 @@ describe('Platform Groups Service Unit Tests', () => {
         )
       );
 
-      const page = await groupsService.getMembers(groupId, organizationId, { pageSize: 1 });
+      const page = await groupsService.getMembers(groupId, { pageSize: 1 });
 
       expect(page.totalCount).toBe(PLATFORM_GROUP_TEST_CONSTANTS.MEMBERS_TOTAL_COUNT);
       expect(page.hasNextPage).toBe(true);
@@ -330,19 +317,15 @@ describe('Platform Groups Service Unit Tests', () => {
     });
 
     it('should throw ValidationError when groupId is empty', async () => {
-      await expect(groupsService.getMembers('', organizationId)).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.getMembers('')).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(groupsService.getMembers(groupId, '')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 
-      await expect(groupsService.getMembers(groupId, organizationId)).rejects.toThrow(
+      await expect(groupsService.getMembers(groupId)).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND
       );
     });
