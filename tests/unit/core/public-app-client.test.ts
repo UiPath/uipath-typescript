@@ -1,20 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { PublicAppClient } from '@/core/http/public-app-client';
 
-/**
- * PublicAppClient: same-origin, cookie-credentialed calls to the Apps gateway for
- * anonymous coded apps, with single-flight session bootstrap on 401.
- */
 describe('PublicAppClient', () => {
-  const base = 'https://cloud.uipath.com';
-  const gateway = `${base}/my_org/apps_/integrations/codedapp/app-123`;
-  let fetchMock: ReturnType<typeof vi.fn>;
+  const baseUrl = 'https://alpha.api.uipath.com';
+  const orgName = 'acme';
+  const appKey = 'uapp_testkey';
+  const integrationBase = `${baseUrl}/${orgName}/apps_/default/api/v1/default/integrations/codedapp`;
+
   let client: PublicAppClient;
+  let fetchMock: any;
 
   beforeEach(() => {
+    client = new PublicAppClient(baseUrl, orgName, appKey);
     fetchMock = vi.fn();
-    (globalThis as any).fetch = fetchMock;
-    client = new PublicAppClient(base, 'my_org', 'app-123');
+    vi.stubGlobal('fetch', fetchMock);
   });
 
   afterEach(() => vi.restoreAllMocks());
@@ -22,43 +21,51 @@ describe('PublicAppClient', () => {
   const json = (status: number, body: unknown) =>
     new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-  it('startProcess POSTs to the gateway route with credentials and returns the job', async () => {
-    fetchMock.mockResolvedValueOnce(json(201, { jobKey: 'J-1', state: 'Pending' }));
+  it('posts to the single invoke route, on the path the Apps service is actually mounted at', async () => {
+    fetchMock.mockResolvedValueOnce(json(201, { value: [{ Key: 'J-1' }] }));
 
-    const job = await client.startProcess('proc-1', { amount: 5 });
+    const started = await client.invoke('orchestrator.startJob', {
+      resource: { type: 'process', key: 'InvoiceBinding' },
+      payload: { startInfo: { releaseKey: 'InvoiceBinding' } },
+    });
 
-    expect(job).toEqual({ jobKey: 'J-1', state: 'Pending' });
+    expect(started).toEqual({ value: [{ Key: 'J-1' }] });
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${gateway}/orchestrator/processes/proc-1/jobs`);
+    expect(url).toBe(`${integrationBase}/invoke`);
     expect(init.method).toBe('POST');
     expect(init.credentials).toBe('include');
-    expect(JSON.parse(init.body)).toEqual({ inputArguments: { amount: 5 } });
+    expect(init.headers['X-UiPath-App-Key']).toBe(appKey);
+    expect(JSON.parse(init.body)).toEqual({
+      operation: 'orchestrator.startJob',
+      resource: { type: 'process', key: 'InvoiceBinding' },
+      payload: { startInfo: { releaseKey: 'InvoiceBinding' } },
+    });
   });
 
-  it('getJobOutput GETs the output route', async () => {
-    fetchMock.mockResolvedValueOnce(json(200, { output: { result: 42 } }));
+  it('names the operation and the resource id for a read, without a payload', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, { OutputArguments: '{"total":5}' }));
 
-    const out = await client.getJobOutput('J-1');
+    await client.invoke('orchestrator.getJob', { resourceId: 'J-1' });
 
-    expect(out).toEqual({ output: { result: 42 } });
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${gateway}/orchestrator/jobs/J-1/output`);
-    expect(init.method).toBe('GET');
-    expect(init.credentials).toBe('include');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      operation: 'orchestrator.getJob',
+      resourceId: 'J-1',
+    });
   });
 
   it('on 401 it bootstraps a session then retries the original request once', async () => {
     fetchMock
       .mockResolvedValueOnce(new Response(null, { status: 401 })) // first call: no session
       .mockResolvedValueOnce(new Response(null, { status: 204 })) // POST /session
-      .mockResolvedValueOnce(json(201, { jobKey: 'J-2' }));        // retry
+      .mockResolvedValueOnce(json(201, { value: [{ Key: 'J-2' }] })); // retry
 
-    const job = await client.startProcess('proc-1');
+    const started = await client.invoke('orchestrator.startJob', { resource: { type: 'process', key: 'p' } });
 
-    expect(job).toEqual({ jobKey: 'J-2' });
+    expect(started).toEqual({ value: [{ Key: 'J-2' }] });
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[1][0]).toBe(`${gateway}/session`);
+    expect(fetchMock.mock.calls[1][0]).toBe(`${integrationBase}/session`);
     expect(fetchMock.mock.calls[1][1].method).toBe('POST');
+    expect(fetchMock.mock.calls[1][1].headers['X-UiPath-App-Key']).toBe(appKey);
   });
 
   it('throws if session bootstrap fails (app not public / feature off)', async () => {
@@ -66,11 +73,12 @@ describe('PublicAppClient', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }))
       .mockResolvedValueOnce(new Response(null, { status: 404 })); // /session denied
 
-    await expect(client.startProcess('proc-1')).rejects.toBeTruthy();
+    await expect(client.invoke('orchestrator.startJob', { resource: { type: 'process', key: 'p' } })).rejects.toBeTruthy();
   });
 
-  it('surfaces a 404 on job output (session does not own the job)', async () => {
+  it('surfaces a 404 (the session does not own the resource)', async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
-    await expect(client.getJobOutput('someone-elses-job')).rejects.toBeTruthy();
+
+    await expect(client.invoke('orchestrator.getJob', { resourceId: 'someone-elses-job' })).rejects.toBeTruthy();
   });
 });

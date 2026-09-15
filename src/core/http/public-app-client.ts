@@ -2,54 +2,76 @@ import { ErrorFactory } from '../errors/error-factory';
 import { errorResponseParser } from '../errors/parser';
 import { CONTENT_TYPES } from '../../utils/constants/headers';
 
+/** The Apps service is mounted per sub-tenant and environment; both are `default` for coded apps. */
+const APPS_INTEGRATION_BASE = 'apps_/default/api/v1/default/integrations/codedapp';
+
+/** Identifies the app to the Apps service. Unguessable, minted once at deploy, injected as a meta tag. */
+const APP_KEY_HEADER = 'X-UiPath-App-Key';
+
+export interface PublicAppOperationRequest {
+  /** The declared resource the call targets, as `{type, key}` from the app's bindings. */
+  resource?: { type: string; key: string };
+  /** The runtime resource being read, e.g. a job key. Checked against what this session created. */
+  resourceId?: string;
+  /** The downstream request body, forwarded as sent apart from the fields the server owns. */
+  payload?: unknown;
+  /** Query parameters for the downstream call, forwarded as sent. */
+  query?: Record<string, unknown>;
+}
+
 /**
  * HTTP client for **public (anonymous) coded apps**.
  *
  * In public mode the browser holds no token — the visitor is identified only by an
  * opaque, HttpOnly session cookie, and the app's own identity is minted server-side
- * by the Apps gateway. So this client is deliberately separate from {@link ApiClient}
- * (which always attaches a PKCE Bearer): it sends `credentials: 'include'`, never an
- * Authorization header, and talks to the gateway's REST surface rather than raw OData.
+ * by the Apps service. So this client is deliberately separate from {@link ApiClient}
+ * (which always attaches a PKCE Bearer): it sends `credentials: 'include'` and never an
+ * Authorization header.
  *
- * All requests are same-origin, routed by the edge to the Apps service:
- *   `{baseUrl}/{orgName}/apps_/integrations/codedapp/{appId}/...`
+ * It is a transport only. Every call goes to one endpoint, naming an operation the Apps service defines; request and
+ * response bodies are the same ones the direct path uses, so callers keep one shape in both modes.
  *
- * Session lifecycle: the first call may 401 (no cookie yet, or the Redis session
+ *   `{baseUrl}/{orgName}/apps_/default/api/v1/default/integrations/codedapp/invoke`
+ *
+ * Session lifecycle: the first call may 401 (no cookie yet, or the session
  * expired/was evicted). On a 401 the client bootstraps a session via `POST /session`
  * (which Set-Cookies) and retries the original request once. Bootstrap is single-flight
  * so concurrent calls share one `/session` round-trip.
  */
 export class PublicAppClient {
-  private readonly gatewayBase: string;
+  private readonly integrationBase: string;
+  private readonly appKey: string;
   // In-flight session bootstrap, shared so N concurrent 401s trigger one /session call.
   private sessionBootstrap: Promise<void> | null = null;
 
-  constructor(baseUrl: string, orgName: string, appId: string) {
+  constructor(baseUrl: string, orgName: string, appKey: string) {
     const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    this.gatewayBase = `${base}/${orgName}/apps_/integrations/codedapp/${appId}`;
-  }
-
-  /** Starts a process and returns the created job. The gateway records it in this session's owned-set. */
-  async startProcess(processKey: string, inputArguments?: unknown): Promise<unknown> {
-    return this.request('POST', `/orchestrator/processes/${encodeURIComponent(processKey)}/jobs`, { inputArguments });
-  }
-
-  /** Reads a job's output. Returns 404 (→ error) if this session doesn't own the job. */
-  async getJobOutput(jobId: string): Promise<unknown> {
-    return this.request('GET', `/orchestrator/jobs/${encodeURIComponent(jobId)}/output`);
+    this.integrationBase = `${base}/${orgName}/${APPS_INTEGRATION_BASE}`;
+    this.appKey = appKey;
   }
 
   /**
-   * Bootstraps the anonymous session. Idempotent and single-flight: the gateway
+   * Runs one operation the Apps service defines, and returns the downstream response as sent.
+   *
+   * The caller names the operation; it never describes one. Which downstream is called, what is fenced and how
+   * ownership applies are decided server-side, so a browser cannot widen its own access.
+   */
+  async invoke(operation: string, request: PublicAppOperationRequest = {}): Promise<unknown> {
+    return this.send('/invoke', { operation, ...request });
+  }
+
+  /**
+   * Bootstraps the anonymous session. Idempotent and single-flight: the service
    * responds 204 with a `Set-Cookie`. A non-2xx here is terminal (the app is not
    * public/open, or the feature is off) and surfaces as an error.
    */
   private async ensureSession(): Promise<void> {
     if (!this.sessionBootstrap) {
       this.sessionBootstrap = (async () => {
-        const response = await fetch(`${this.gatewayBase}/session`, {
+        const response = await fetch(`${this.integrationBase}/session`, {
           method: 'POST',
           credentials: 'include',
+          headers: { [APP_KEY_HEADER]: this.appKey },
         });
         if (!response.ok) {
           const errorInfo = await errorResponseParser.parse(response);
@@ -64,13 +86,13 @@ export class PublicAppClient {
     return this.sessionBootstrap;
   }
 
-  private async request(method: string, subPath: string, body?: unknown): Promise<unknown> {
+  private async send(subPath: string, body: unknown): Promise<unknown> {
     const doFetch = () =>
-      fetch(`${this.gatewayBase}${subPath}`, {
-        method,
+      fetch(`${this.integrationBase}${subPath}`, {
+        method: 'POST',
         credentials: 'include',
-        headers: body === undefined ? undefined : { 'Content-Type': CONTENT_TYPES.JSON },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: { 'Content-Type': CONTENT_TYPES.JSON, [APP_KEY_HEADER]: this.appKey },
+        body: JSON.stringify(body),
       });
 
     let response: Response;
