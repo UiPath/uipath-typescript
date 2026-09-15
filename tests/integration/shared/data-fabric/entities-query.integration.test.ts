@@ -212,7 +212,9 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
       const queryJoined = (joinType: JoinType, value: string) =>
         getServices().entities.queryRecordsById(joinEntityId, {
           selectedFields,
-          joins: [{ joinType, joinFieldName, relatedEntityName: relatedEntity, relatedFieldName }],
+          // entityName is passed explicitly so the optional join parameter is
+          // exercised against the live API, not just in unit tests.
+          joins: [{ entityName: baseEntityName, joinType, joinFieldName, relatedEntityName: relatedEntity, relatedFieldName }],
           filterGroup: equals(value),
           pageSize: 25,
         });
@@ -232,10 +234,11 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
           throw new Error('DATA_FABRIC_TEST_JOIN_* env vars are required for the join tests');
         }
         joinEntityId = entityId;
-        // The SDK defaults the join's base entity to the queried entity; the
-        // name is still needed here to address the entity-qualified keys the
-        // multi-entity route returns for base columns.
-        baseEntityName = (await entities.getById(entityId)).name;
+        // Names the join's base entity and the entity-qualified keys the
+        // multi-entity route returns for base columns. Prefer the configured
+        // fixture name; fall back to the entity's own name so the tests still
+        // run where that env var is unset.
+        baseEntityName = config.dataFabricTestJoinEntityName || (await entities.getById(entityId)).name;
         relatedEntity = config.dataFabricTestJoinRelatedEntityName;
         joinFieldName = config.dataFabricTestJoinFieldName;
         relatedFieldName = config.dataFabricTestJoinRelatedFieldName;

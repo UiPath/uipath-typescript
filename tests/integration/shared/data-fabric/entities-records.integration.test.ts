@@ -470,7 +470,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         entityId,
         recordIds: [result.Id],
       });
-    });
+    }, 90_000);
 
     it('should verify inserted record via getRecordById', async () => {
       const { entities } = getServices();
@@ -520,7 +520,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         entityId,
         recordIds: insertedIds,
       });
-    });
+    }, 90_000);
 
     it('should update records using updateRecordsById', async () => {
       const { entities } = getServices();
@@ -558,7 +558,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(result).toBeDefined();
       expect(result.successRecords).toBeDefined();
       expect(Array.isArray(result.successRecords)).toBe(true);
-    });
+    }, 90_000);
 
     it('should delete records using deleteRecordsById', async () => {
       const { entities } = getServices();
@@ -583,7 +583,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         }
       }
       serviceLevelRecordIds.length = 0;
-    });
+    }, 90_000);
   });
 
   describe('Entity-level methods (via getById)', () => {
@@ -891,11 +891,14 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       createdRecordIds.push(inserted.Id);
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
 
+      // Deleting straight after the insert races record propagation, which the
+      // platform surfaces as a 403 rather than a 404.
+      await awaitRecordVisible(entities, entityId, inserted.Id);
       await entity.deleteRecord(inserted.Id);
 
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
-    });
+    }, 90_000);
   });
 
   // ─── Folder-scoped record CRUD ────────────────────────────────────────────
