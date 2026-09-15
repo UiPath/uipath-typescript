@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
 import {
   Users,
   PlatformUserSortField,
@@ -12,9 +12,7 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Platform Users - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Platform Users - Integration Tests', 'both', modes, () => {
   let users!: Users;
   /** Read-only account — never mutated. */
   let readOnlyUserId!: string;
