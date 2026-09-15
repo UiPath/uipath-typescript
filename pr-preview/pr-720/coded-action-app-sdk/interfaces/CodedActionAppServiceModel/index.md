@@ -31,7 +31,7 @@ A promise that resolves with a [TaskCompleteResponse](../../type-aliases/TaskCom
 
 #### Throws
 
-If called from an untrusted origin.
+If the host origin (`basedomain` query parameter) is missing.
 
 #### Throws
 
@@ -71,7 +71,7 @@ A promise that resolves with a [Task](../../type-aliases/Task/) object containin
 
 #### Throws
 
-If called from an untrusted origin.
+If the host origin (`basedomain` query parameter) is missing.
 
 #### Throws
 
