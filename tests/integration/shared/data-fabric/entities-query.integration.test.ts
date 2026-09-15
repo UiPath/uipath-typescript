@@ -105,32 +105,35 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         ],
       };
 
-      // Every group has at least one record, so `cnt >= 1` must return every group.
-      const all = await entities.queryRecordsById(entityId, {
-        ...base,
-        havingFilter: {
-          aggregateFilters: [
-            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThanOrEqual, value: '1' },
-          ],
-        },
-      });
+      // The two queries are independent, so issue them together: one stall
+      // window sits inside the budget instead of two in series.
+      const [all, none] = await Promise.all([
+        // Every group has at least one record, so `cnt >= 1` must return every group.
+        entities.queryRecordsById(entityId, {
+          ...base,
+          havingFilter: {
+            aggregateFilters: [
+              { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThanOrEqual, value: '1' },
+            ],
+          },
+        }),
+        // An unsatisfiable threshold must return no groups. A backend that ignores
+        // havingFilter returns every group here — that is the failing signal.
+        entities.queryRecordsById(entityId, {
+          ...base,
+          havingFilter: {
+            aggregateFilters: [
+              { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThan, value: '1000000000' },
+            ],
+          },
+        }),
+      ]);
       expect(all.items.length).toBeGreaterThan(0);
       all.items.forEach(item => {
         expect((item as Record<string, unknown>).cnt).toBeGreaterThanOrEqual(1);
       });
-
-      // An unsatisfiable threshold must return no groups. A backend that ignores
-      // havingFilter returns every group here — that is the failing signal.
-      const none = await entities.queryRecordsById(entityId, {
-        ...base,
-        havingFilter: {
-          aggregateFilters: [
-            { aggregateAlias: 'cnt', operator: EntityHavingOperator.GreaterThan, value: '1000000000' },
-          ],
-        },
-      });
       expect(none.items).toHaveLength(0);
-    });
+    }, 60_000);
 
     // Regression guard: DF reads `expansionLevel` only from the URL on POST record endpoints.
     // If the SDK sends it in the body, DF silently ignores it and every level collapses to L0.

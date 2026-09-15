@@ -153,6 +153,40 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
 
 const modes: InitMode[] = ['v0', 'v1'];
 
+/**
+ * The import response carries counts, not record IDs — resolve the IDs of the
+ * rows an import created so the afterAll cleanup can delete them. Untracked
+ * imports accumulate on the shared test entity forever. The query index lags
+ * the import, so poll briefly until every value is queryable; rows that never
+ * surface are reported rather than silently left behind.
+ */
+async function resolveImportedRecordIds(
+  entityId: string,
+  fieldName: string,
+  values: string[],
+  label: string,
+): Promise<string[]> {
+  const { entities } = getServices();
+  let ids: string[] = [];
+  for (let attempt = 1; attempt <= 5 && ids.length < values.length; attempt++) {
+    if (attempt > 1) {
+      await wait(1500);
+    }
+    const found = await Promise.all(
+      values.map((value) =>
+        entities.queryRecordsById(entityId, {
+          filterGroup: { queryFilters: [{ fieldName, operator: QueryFilterOperator.Equals, value }] },
+        }),
+      ),
+    );
+    ids = found.flatMap((r) => r.items.map((item) => item.Id));
+  }
+  if (ids.length < values.length) {
+    console.warn(`${label}: only ${ids.length}/${values.length} imported rows became queryable — untracked rows may remain on the test entity`);
+  }
+  return ids;
+}
+
 describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
@@ -463,6 +497,9 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       expect(result).toBeDefined();
       expect(result.Id).toBeDefined();
+      // Later tests read and update this record; a fresh record is not
+      // addressable until it has propagated (the platform reports 403, not 404).
+      await awaitRecordVisible(entities, entityId, result.Id);
 
       serviceLevelRecordIds.push(result.Id);
       createdRecordIds.push(result.Id);
@@ -514,6 +551,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       const insertedIds = result.successRecords
         .filter((r) => r.Id)
         .map((r) => r.Id);
+      await Promise.all(insertedIds.map((id) => awaitRecordVisible(entities, entityId, id)));
       serviceLevelRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -612,6 +650,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       expect(result).toBeDefined();
       expect(result.Id).toBeDefined();
+      await awaitRecordVisible(getServices().entities, entityId, result.Id);
 
       entityMethodRecordIds.push(result.Id);
       createdRecordIds.push(result.Id);
@@ -632,6 +671,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       const insertedIds = result.successRecords
         .filter((r) => r.Id)
         .map((r) => r.Id);
+      await Promise.all(insertedIds.map((id) => awaitRecordVisible(getServices().entities, entityId, id)));
       entityMethodRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -729,6 +769,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       if (!updateTestRecordId) {
         throw new Error('Could not get inserted record ID');
       }
+      await awaitRecordVisible(entities, entityId, updateTestRecordId);
 
       createdRecordIds.push(updateTestRecordId);
       registerResource('entityRecords', {
@@ -795,32 +836,10 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(typeof result.insertedRecords).toBe('number');
       expect(result.totalRecords).toBeGreaterThanOrEqual(0);
 
-      // The import response carries counts, not record IDs — resolve the IDs of
-      // the rows this test created so the afterAll cleanup can delete them.
-      // Untracked imports previously accumulated in the test entity forever.
-      // The query index lags the import, so poll briefly until both rows appear.
-      let importedIds: string[] = [];
-      for (let attempt = 1; attempt <= 5 && importedIds.length < importedValues.length; attempt++) {
-        if (attempt > 1) {
-          await wait(1500);
-        }
-        const importedRecords = await Promise.all(
-          importedValues.map((value) =>
-            entities.queryRecordsById(entityId, {
-              filterGroup: {
-                queryFilters: [{ fieldName, operator: QueryFilterOperator.Equals, value }],
-              },
-            }),
-          ),
-        );
-        importedIds = importedRecords.flatMap((r) => r.items.map((item) => item.Id));
-      }
-      if (importedIds.length < importedValues.length) {
-        console.warn(`importRecordsById test: only ${importedIds.length}/${importedValues.length} imported rows became queryable — untracked rows may remain on the test entity`);
-      }
+      const importedIds = await resolveImportedRecordIds(entityId, fieldName, importedValues, 'importRecordsById test');
       createdRecordIds.push(...importedIds);
       registerResource('entityRecords', { entityId, recordIds: importedIds });
-    });
+    }, 90_000);
   });
 
   // ─── Single Record Delete ─────────────────────────────────────────────────
@@ -847,6 +866,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       expect(inserted.Id).toBeDefined();
       createdRecordIds.push(inserted.Id);
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+      await awaitRecordVisible(entities, entityId, inserted.Id);
 
       await entities.deleteRecordById(entityId, inserted.Id);
 
@@ -942,7 +962,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       // Later tests read this record immediately; wait out the write-to-read
       // propagation so they exercise their own subject, not index lag.
       await awaitRecordVisible(entities, folderEntityId, result.Id, { folderKey });
-    });
+    }, 90_000);
 
     it('should batch-insert records with folderKey via insertRecordsById', async () => {
       const { entities } = getServices();
@@ -960,7 +980,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
       folderRecordIds.push(...ids);
 
       await Promise.all(ids.map((id) => awaitRecordVisible(entities, folderEntityId, id, { folderKey })));
-    });
+    }, 90_000);
 
     it('should get a single record with folderKey via getRecordById', async () => {
       const { entities } = getServices();
@@ -1003,7 +1023,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       expect(result).toBeDefined();
       expect(result.Id).toBe(folderRecordIds[0]);
-    });
+    }, 90_000);
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
       const { entities } = getServices();
@@ -1021,7 +1041,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       expect(result.successRecords).toBeDefined();
       expect(result.successRecords.length).toBe(updates.length);
-    });
+    }, 90_000);
 
     it('should delete a single record with folderKey via deleteRecordById', async () => {
       const { entities } = getServices();
@@ -1039,7 +1059,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         },
       });
       expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
-    });
+    }, 90_000);
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {
       const { entities } = getServices();
@@ -1055,7 +1075,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
       expect(result.successRecords).toBeDefined();
       folderRecordIds.length = 0;
-    });
+    }, 90_000);
 
     afterAll(async () => {
       const config = getTestConfig();
@@ -1145,6 +1165,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         expect(result).toBeDefined();
         expect(result.Id).toBeDefined();
 
+        await awaitRecordVisible(entities, byNameEntityId, result.Id);
         byNameRecordIds.push(result.Id);
         createdRecordIds.push(result.Id);
         registerResource('entityRecords', { entityId: byNameEntityId, recordIds: [result.Id] });
@@ -1177,6 +1198,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         expect(Array.isArray(result.successRecords)).toBe(true);
 
         const insertedIds = result.successRecords.filter((r) => r.Id).map((r) => r.Id);
+        await Promise.all(insertedIds.map((id) => awaitRecordVisible(entities, byNameEntityId, id)));
         byNameRecordIds.push(...insertedIds);
         createdRecordIds.push(...insertedIds);
         registerResource('entityRecords', { entityId: byNameEntityId, recordIds: insertedIds });
@@ -1255,6 +1277,7 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         expect(inserted.Id).toBeDefined();
         createdRecordIds.push(inserted.Id);
 
+        await awaitRecordVisible(entities, byNameEntityId, inserted.Id);
         await entities.deleteRecord({ name: byNameEntityName }, inserted.Id);
 
         // Removed — drop from the shared tracking list so afterAll doesn't re-delete.
@@ -1276,7 +1299,8 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         }
 
         const fieldName = writableFields[0].name;
-        const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+        const importedValues = [`BulkImport_${generateRandomString(8)}`, `BulkImport_${generateRandomString(8)}`];
+        const csvContent = `${fieldName}\n${importedValues.join('\n')}`;
         const csvBlob = new Blob([csvContent], { type: 'text/csv' });
 
         const result = await entities.importRecords({ name: byNameEntityName }, csvBlob);
@@ -1284,7 +1308,11 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
         expect(result).toBeDefined();
         expect(typeof result.totalRecords).toBe('number');
         expect(typeof result.insertedRecords).toBe('number');
-      });
+
+        const importedIds = await resolveImportedRecordIds(byNameEntityId, fieldName, importedValues, 'importRecords by-name test');
+        createdRecordIds.push(...importedIds);
+        registerResource('entityRecords', { entityId: byNameEntityId, recordIds: importedIds });
+      }, 90_000);
     });
   });
 
@@ -1292,10 +1320,11 @@ describe.each(modes)('Data Fabric Entities Records - Integration Tests [%s]', (m
 
   afterAll(async () => {
     const config = getTestConfig();
-    if (!config.skipCleanup) {
-      if (createdRecordIds.length > 0 && testEntityId) {
-        await cleanupTestEntityRecords(testEntityId, createdRecordIds);
-      }
+    // Resolve the entity the same way the tests do — depending on a variable that
+    // an earlier test sets would silently skip cleanup in filtered runs.
+    const entityId = config.dataFabricTestEntityId || testEntityId;
+    if (!config.skipCleanup && createdRecordIds.length > 0 && entityId) {
+      await cleanupTestEntityRecords(entityId, createdRecordIds);
     }
-  });
+  }, 90_000);
 });
