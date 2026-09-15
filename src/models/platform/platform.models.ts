@@ -7,7 +7,6 @@ import type {
   PlatformSetting,
   PlatformSettingKey,
   PlatformSettingUpsert,
-  PlatformSettingGetOptions,
 } from './platform.types';
 
 /**
@@ -41,7 +40,6 @@ export interface PlatformServiceModel {
    *
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
-   * @param options - Organization scoping; supply `organizationId` unless you intend the host partition
    * @returns The user's stored settings for the requested keys, as {@link PlatformSetting} rows
    *
    * @example Basic usage
@@ -53,13 +51,11 @@ export interface PlatformServiceModel {
    * await sdk.initialize();
    *
    * const platform = new Platform(sdk);
-   * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
-   *   organizationId: '<organizationId>',
-   * });
+   * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
    * const theme = settings.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
    * ```
    *
-   * @example Fetch several keys, naming the organization explicitly
+   * @example Fetch several keys at once
    * ```typescript
    * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
    *
@@ -69,8 +65,7 @@ export interface PlatformServiceModel {
    *     PlatformSettingKey.UserAccessibility,
    *     PlatformSettingKey.UserCasePinnedInstancesByTenant,
    *   ],
-   *   '<userId>',
-   *   { organizationId: '<organizationId>' }
+   *   '<userId>'
    * );
    *
    * // Structured settings arrive as a JSON string
@@ -78,11 +73,7 @@ export interface PlatformServiceModel {
    * const parsed = pinned ? JSON.parse(pinned.value) : {};
    * ```
    */
-  getUserSettings(
-    keys: PlatformSettingKey[],
-    userId: string,
-    options?: PlatformSettingGetOptions
-  ): Promise<PlatformSetting[]>;
+  getUserSettings(keys: PlatformSettingKey[], userId: string): Promise<PlatformSetting[]>;
 
   /**
    * Creates or updates a user's platform settings in bulk.
@@ -92,27 +83,17 @@ export interface PlatformServiceModel {
    * there is no need to send back the settings you are not changing. Returns the stored
    * rows as they are after the write, including their generated `id`.
    *
-   * The organization must be supplied — on a write it is a required argument, and on a read
-   * omitting it targets the host partition instead. Read a setting first if you do not have
-   * it: every {@link PlatformSetting} carries its `organizationId`.
-   *
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
-   * @param organizationId - Organization (account) GUID to write to
    * @returns The settings as stored after the write, as {@link PlatformSetting} rows
    *
    * @example Update a setting
    * ```typescript
    * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
    *
-   * const [current] = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
-   *   organizationId: '<organizationId>',
-   * });
-   *
    * const updated = await platform.updateUserSettings(
    *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
-   *   current.userId,
-   *   current.organizationId
+   *   '<userId>'
    * );
    * ```
    *
@@ -125,14 +106,12 @@ export interface PlatformServiceModel {
    *     { key: PlatformSettingKey.UserTheme, value: 'dark' },
    *     { key: PlatformSettingKey.UserAccessibility, value: 'true' },
    *   ],
-   *   '<userId>',
-   *   '<organizationId>'
+   *   '<userId>'
    * );
    * ```
    */
   updateUserSettings(
     settings: PlatformSettingUpsert[],
-    userId: string,
-    organizationId: string
+    userId: string
   ): Promise<PlatformSetting[]>;
 }
