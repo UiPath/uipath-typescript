@@ -22,6 +22,7 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "scripts/fetch-js-functions-docs.sh"
       - ".github/workflows/docs-pr-preview.yml"
 
 permissions:
@@ -67,8 +68,27 @@ jobs:
           source docs-env/bin/activate
           pip install -r docs/requirements.txt
 
+      - name: Mint JS Functions docs token
+        # Same-repo PRs only: fork PRs run without secrets, so the App id and
+        # private key would both be empty and this action would fail the step.
+        # Skipped, its token output is empty, and the fetch falls back to
+        # placeholder pages rather than failing this build gate.
+        id: js_functions_docs_token
+        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          app-id: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
+          private-key: ${{ secrets.CODED_FUNCTIONS_DOCS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: coded-functions-js
+
       - name: Generate API documentation
+        # docs:api also fetches the JS Functions pages from
+        # UiPath/coded-functions-js using the token minted above, when there is
+        # one.
         if: github.event.action != 'closed'
+        env:
+          CODED_FUNCTIONS_DOCS_TOKEN: ${{ steps.js_functions_docs_token.outputs.token }}
         run: npm run docs:api
 
       - name: Build MkDocs site (CI gate)
