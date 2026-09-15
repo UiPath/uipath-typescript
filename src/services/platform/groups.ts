@@ -4,6 +4,9 @@
 
 import { track } from '../../core/telemetry';
 import { ValidationError } from '../../core/errors';
+import type { IUiPath } from '../../core/types';
+import { SDKInternalsRegistry } from '../../core/internals';
+import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
 import { BaseService } from '../base';
 
 import type {
@@ -46,43 +49,46 @@ import {
  * the basis of access management: put users in groups, then grant roles to the groups.
  */
 export class PlatformGroupService extends BaseService implements PlatformGroupServiceModel {
+  readonly #organizationIdResolver: OrganizationIdResolver;
+
+  /**
+   * Creates an instance of the Groups service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    // Identity keys on the organization GUID; resolved once per SDK instance and shared
+    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
+  }
+
   @track('PlatformGroups.GetAll')
-  async getAll(organizationId: string): Promise<PlatformGroupGetResponse[]> {
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for getAll' });
-    }
+  async getAll(): Promise<PlatformGroupGetResponse[]> {
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const response = await this.get<RawPlatformGroup[]>(IDENTITY_GROUP_ENDPOINTS.GET_ALL(organizationId));
-    return response.data.map(group => this.toGroup(group, organizationId));
+    return response.data.map(group => this.toGroup(group));
   }
 
   @track('PlatformGroups.GetById')
-  async getById(groupId: string, organizationId: string): Promise<PlatformGroupGetResponse> {
+  async getById(groupId: string): Promise<PlatformGroupGetResponse> {
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for getById' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for getById' });
-    }
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const response = await this.get<RawPlatformGroup>(
       IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId)
     );
-    return this.toGroup(response.data, organizationId);
+    return this.toGroup(response.data);
   }
 
   @track('PlatformGroups.Create')
-  async create(
-    name: string,
-    organizationId: string,
-    options?: PlatformGroupCreateOptions
-  ): Promise<PlatformGroupGetResponse> {
+  async create(name: string, options?: PlatformGroupCreateOptions): Promise<PlatformGroupGetResponse> {
     if (!name) {
       throw new ValidationError({ message: 'name is required for create' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for create' });
-    }
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const body = {
       partitionGlobalId: organizationId,
@@ -92,26 +98,23 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
       ...transformRequest(options ?? {}, PlatformGroupCreateMap),
     };
     const response = await this.post<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.CREATE, body);
-    return this.toGroup(response.data, organizationId);
+    return this.toGroup(response.data);
   }
 
   @track('PlatformGroups.UpdateById')
   async updateById(
     groupId: string,
-    organizationId: string,
     name: string,
     options?: PlatformGroupMembershipOptions
   ): Promise<PlatformGroupGetResponse> {
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for updateById' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for updateById' });
-    }
     // The API rejects updates without a name — it is required even for pure membership edits
     if (!name) {
       throw new ValidationError({ message: 'name is required for updateById' });
     }
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const body = {
       partitionGlobalId: organizationId,
@@ -119,17 +122,15 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
       ...transformRequest(options ?? {}, PlatformGroupUpdateMap),
     };
     const response = await this.put<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.UPDATE(groupId), body);
-    return this.toGroup(response.data, organizationId);
+    return this.toGroup(response.data);
   }
 
   @track('PlatformGroups.DeleteById')
-  async deleteById(groupId: string, organizationId: string): Promise<void> {
+  async deleteById(groupId: string): Promise<void> {
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for deleteById' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for deleteById' });
-    }
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     await this.delete<void>(IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId));
   }
@@ -137,7 +138,6 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
   @track('PlatformGroups.GetMembers')
   async getMembers<T extends PaginationOptions = PaginationOptions>(
     groupId: string,
-    organizationId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -147,9 +147,7 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for getMembers' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for getMembers' });
-    }
+    const organizationId = await this.#organizationIdResolver.resolve();
     const opts = options ?? ({} as T);
 
     // The API always pages (default page size 10, max 1000), so without pagination
@@ -218,10 +216,10 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
 
   /**
    * Transforms a wire group into the public SDK shape: drops internal fields,
-   * applies semantic renames, maps numeric type codes to the enum, adds the
-   * organization scope, and attaches entity methods.
+   * applies semantic renames, maps numeric type codes to the enum, and attaches
+   * entity methods.
    */
-  private toGroup(raw: RawPlatformGroup, organizationId: string): PlatformGroupGetResponse {
+  private toGroup(raw: RawPlatformGroup): PlatformGroupGetResponse {
     const wire: Record<string, unknown> = { ...raw };
     // `members` is present but always empty — membership is served by getMembers();
     // `mappedRole`/`scope` are undocumented internals.
@@ -231,7 +229,6 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
 
     let data = transformData(wire, PlatformGroupMap) as Record<string, unknown>;
     data = applyDataTransforms(data, { field: 'type', valueMap: PlatformGroupTypeMap });
-    data.organizationId = organizationId;
 
     return createPlatformGroupWithMethods(data as unknown as RawPlatformGroupGetResponse, this);
   }
