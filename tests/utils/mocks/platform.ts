@@ -10,7 +10,16 @@ import type {
   RawPlatformUserListResponse,
   RawPlatformUserUpdateResult,
 } from '../../../src/models/platform/users.internal-types';
-import { PLATFORM_TEST_CONSTANTS, PLATFORM_USER_TEST_CONSTANTS } from '../constants/platform';
+import type {
+  RawPlatformGroup,
+  RawPlatformGroupMember,
+  RawPlatformGroupMembersResponse,
+} from '../../../src/models/platform/groups.internal-types';
+import {
+  PLATFORM_TEST_CONSTANTS,
+  PLATFORM_USER_TEST_CONSTANTS,
+  PLATFORM_GROUP_TEST_CONSTANTS,
+} from '../constants/platform';
 
 /**
  * Builds a single setting row in the raw wire shape — the service renames
@@ -89,4 +98,47 @@ export const createRawPlatformUserUpdateResult = (
   succeeded: true,
   errors: [],
   ...overrides,
+});
+
+/**
+ * Builds a single group in the raw wire shape: camelCase fields, numeric `type`
+ * code, and the internal fields the service drops (`members`, `mappedRole`, `scope`).
+ */
+export const createBasicRawPlatformGroup = (
+  overrides?: Partial<RawPlatformGroup>
+): RawPlatformGroup => ({
+  id: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
+  name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  displayName: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  type: 0,
+  creationTime: PLATFORM_GROUP_TEST_CONSTANTS.CREATION_TIME,
+  lastModificationTime: PLATFORM_GROUP_TEST_CONSTANTS.LAST_MODIFICATION_TIME,
+  members: [],
+  mappedRole: null,
+  scope: null,
+  ...overrides,
+});
+
+/**
+ * Builds a single group member reference in the raw wire shape — numeric `type` code.
+ */
+export const createBasicRawPlatformGroupMember = (
+  overrides?: Partial<RawPlatformGroupMember>
+): RawPlatformGroupMember => ({
+  id: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  type: 0,
+  ...overrides,
+});
+
+/**
+ * Builds the paged group members response in the raw wire shape. `totalCount`
+ * defaults to the number of members so single-page mocks satisfy the service's
+ * fetch-all loop; pass it explicitly to simulate further pages.
+ */
+export const createRawPlatformGroupMembersResponse = (
+  members: RawPlatformGroupMember[] = [createBasicRawPlatformGroupMember()],
+  totalCount: number = members.length
+): RawPlatformGroupMembersResponse => ({
+  totalCount,
+  results: members,
 });
