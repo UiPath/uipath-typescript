@@ -246,7 +246,7 @@ export class UiPath implements IUiPath {
     const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
     if (!merged || !isCompleteConfig(merged)) {
-      throw new Error(missingConfigMessage());
+      throw new Error(missingConfigMessage(merged));
     }
 
     return merged;
