@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#methods" class="md-skip">
+        <a href="#usage" class="md-skip">
           Skip to content
         </a>
       
@@ -1707,6 +1707,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3194,6 +3205,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3298,16 +3320,22 @@
 
   <h1>Groups</h1>
 
-<p>Public surface of the platform Groups service. JSDoc on this interface drives
-the generated API reference documentation.</p>
+<p>Public surface of the Groups service.</p>
 <p>Groups are organization-scoped containers of users. Together with users they form
 the basis of access management: put users in groups, then grant roles to the groups.
 Membership can be edited from the group side (this service) or from the user side
 (<code>users.updateById()</code> with <code>groupIdsToAdd</code> / <code>groupIdsToRemove</code>).</p>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
+<p>Prerequisites: Initialize the SDK first - see <a href="/uipath-typescript/getting-started/#import-initialize">Getting Started</a></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/platform&#39;</span><span class="p">;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Groups</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+</code></pre></div>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformGroupCreateOptions/"><code>PlatformGroupCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+<p><strong>create</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformGroupCreateOptions/"><code>PlatformGroupCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Creates a local group.</p>
 <p>Members can be added at creation through <code>memberUserIds</code>, or later — from the
@@ -3328,11 +3356,6 @@ group side with <code>updateById()</code>, or from the user side with <code>user
 <td>Name of the new group</td>
 </tr>
 <tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID to create the group in</td>
-</tr>
-<tr>
 <td><code>options?</code></td>
 <td><a href="../PlatformGroupCreateOptions/"><code>PlatformGroupCreateOptions</code></a></td>
 <td>Initial members</td>
@@ -3343,16 +3366,16 @@ group side with <code>updateById()</code>, or from the user side with <code>user
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 <p>The created group, as a <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a></p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Ticket Admins&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Ticket Admins&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Ticket Admins&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">memberUserIds</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;Ticket Admins&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">memberUserIds</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="deletebyid">deleteById()<a class="headerlink" href="#deletebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>deleteById</strong>(<code>groupId</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p><strong>deleteById</strong>(<code>groupId</code>: <code>string</code>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Deletes a local group. Built-in groups cannot be deleted.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
@@ -3370,65 +3393,43 @@ group side with <code>updateById()</code>, or from the user side with <code>user
 <td><code>string</code></td>
 <td>GUID of the group to delete</td>
 </tr>
-<tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID the group belongs to</td>
-</tr>
 </tbody>
 </table>
 <h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Resolves when the group has been deleted</p>
 <h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAll</strong>(<code>organizationId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>[]&gt;</p>
+<p><strong>getAll</strong>(): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>[]&gt;</p>
 </blockquote>
-<p>Gets all local and built-in groups of an organization.</p>
+<p>Gets all local and built-in groups of the organization the SDK is configured for.</p>
 <p>Returns every group with its type (built-in or custom) and timestamps. Built-in
 groups (Everyone, Administrators, …) cannot be modified or deleted.</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID to list groups from</td>
-</tr>
-</tbody>
-</table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>[]&gt;</p>
 <p>All groups, as <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a> items</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/platform&#39;</span><span class="p">;</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Groups</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(</span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">admins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allGroups</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">g</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Administrators&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/platform&#39;</span><span class="p">;</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Groups</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">admins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">allGroups</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">g</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Administrators&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getById</strong>(<code>groupId</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+<p><strong>getById</strong>(<code>groupId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a group by ID.</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3443,24 +3444,21 @@ groups (Everyone, Administrators, …) cannot be modified or deleted.</p>
 <td><code>string</code></td>
 <td>GUID of the group</td>
 </tr>
-<tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID the group belongs to</td>
-</tr>
 </tbody>
 </table>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 <p>The group, as a <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a></p>
 <h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">group</span><span class="p">.</span><span class="nx">displayName</span><span class="si">}</span><span class="sb"> (</span><span class="si">${</span><span class="nx">group</span><span class="p">.</span><span class="kr">type</span><span class="si">}</span><span class="sb">)`</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Get a group id from the listing first</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">allGroups</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getmembers">getMembers()<a class="headerlink" href="#getmembers" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getMembers</strong>&lt;<code>T</code>&gt;(<code>groupId</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt;&gt;</p>
+<p><strong>getMembers</strong>&lt;<code>T</code>&gt;(<code>groupId</code>: <code>string</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets the local members of a group, with optional pagination.</p>
 <p>Returns member references (<code>id</code> and account type). Fetch full profiles with
@@ -3481,7 +3479,7 @@ Everyone) is not materialized — they report no local members.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3497,11 +3495,6 @@ Everyone) is not materialized — they report no local members.</p>
 <td>GUID of the group</td>
 </tr>
 <tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID the group belongs to</td>
-</tr>
-<tr>
 <td><code>options?</code></td>
 <td><code>T</code></td>
 <td>Pagination options</td>
@@ -3512,25 +3505,24 @@ Everyone) is not materialized — they report no local members.</p>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt;&gt;</p>
 <p>All members when no pagination options are given, one page otherwise, as <a href="../PlatformGroupMember/">PlatformGroupMember</a> items</p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">members</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">members</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="sb"> members`</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">members</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">50</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">50</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getMembers</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateById</strong>(<code>groupId</code>: <code>string</code>, <code>organizationId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformGroupMembershipOptions/"><code>PlatformGroupMembershipOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+<p><strong>updateById</strong>(<code>groupId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformGroupMembershipOptions/"><code>PlatformGroupMembershipOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Updates a local group.</p>
 <p>The group's name must be sent on every update — pass the current name when
 only editing membership (the bound <code>group.update()</code> fills it in automatically).
 Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <code>memberUserIdsToRemove</code>. Built-in groups cannot be updated.</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3544,11 +3536,6 @@ Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <td><code>groupId</code></td>
 <td><code>string</code></td>
 <td>GUID of the group to update</td>
-</tr>
-<tr>
-<td><code>organizationId</code></td>
-<td><code>string</code></td>
-<td>Organization (account) GUID the group belongs to</td>
 </tr>
 <tr>
 <td><code>name</code></td>
@@ -3566,13 +3553,13 @@ Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 <p>The group as stored after the update, as a <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a></p>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Ticket Managers&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Ticket Managers&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&lt;organizationId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">group</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">group</span><span class="p">.</span><span class="nx">organizationId</span><span class="p">,</span><span class="w"> </span><span class="nx">group</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nx">memberUserIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nx">memberUserIdsToRemove</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;otherUserId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">group</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">group</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">memberUserIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nx">memberUserIdsToRemove</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;otherUserId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">});</span>
 </code></pre></div>
 
 
