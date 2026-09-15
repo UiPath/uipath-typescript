@@ -58,6 +58,9 @@ jobs:
     runs-on: uipath-ubuntu-latest
     strategy:
       fail-fast: false
+      # The two legs share one tenant and mutate the same fixtures (assets, bucket
+      # files); run them one at a time so they cannot clobber each other's writes.
+      max-parallel: 1
       matrix:
         auth: [pat, user]
     env:
