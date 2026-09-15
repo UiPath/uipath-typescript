@@ -4,6 +4,9 @@
 
 import { track } from '../../core/telemetry';
 import { ValidationError } from '../../core/errors';
+import type { IUiPath } from '../../core/types';
+import { SDKInternalsRegistry } from '../../core/internals';
+import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
 import { BaseService } from '../base';
 
 import type {
@@ -30,6 +33,20 @@ import { transformData } from '../../utils/transform';
  * read-only / write-only access).
  */
 export class PlatformService extends BaseService implements PlatformServiceModel {
+  readonly #organizationIdResolver: OrganizationIdResolver;
+
+  /**
+   * Creates an instance of the Platform service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    // Identity scopes settings by organization GUID, not by the org name in the URL;
+    // resolved once per SDK instance and shared
+    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
+  }
+
   @track('Platform.GetUserSettings')
   async getUserSettings(
     keys: PlatformSettingKey[],
@@ -42,7 +59,13 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       throw new ValidationError({ message: 'userId is required for getUserSettings' });
     }
 
-    const params: Record<string, string | PlatformSettingKey[]> = { key: keys, userId };
+    const organizationId = await this.#organizationIdResolver.resolve();
+    // Scope travels in the query string on reads, but in the body on writes
+    const params: Record<string, string | PlatformSettingKey[]> = {
+      key: keys,
+      userId,
+      partitionGlobalId: organizationId,
+    };
 
     const response = await this.get<RawPlatformSetting[]>(
       PLATFORM_SETTING_ENDPOINTS.SETTINGS,
@@ -63,8 +86,11 @@ export class PlatformService extends BaseService implements PlatformServiceModel
       throw new ValidationError({ message: 'userId is required for updateUserSettings' });
     }
 
+    const organizationId = await this.#organizationIdResolver.resolve();
+
     const response = await this.put<RawPlatformSetting[]>(PLATFORM_SETTING_ENDPOINTS.SETTINGS, {
       settings,
+      partitionGlobalId: organizationId,
       userId,
     });
     return transformData(response.data, PlatformSettingMap) as unknown as PlatformSetting[];
