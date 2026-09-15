@@ -67,13 +67,13 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       // Resolve the entity name once so by-name attachment tests can address it.
       const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
       entityName = entity.name;
-    });
+    }, 90_000);
 
     afterAll(async () => {
       if (recordIds.length === 0) return;
       const { entities } = getServices();
       await entities.deleteRecordsById(ATTACHMENT_CONFIG.entityId, recordIds);
-    });
+    }, 90_000);
 
     describe('uploadAttachment', () => {
       it('should upload an attachment via service method', async () => {
@@ -90,7 +90,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload an attachment via entity method', async () => {
         const recordId = await createFreshRecord();
@@ -106,7 +106,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('deleteAttachment', () => {
@@ -130,7 +130,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload and then delete an attachment via entity method', async () => {
         const recordId = await createFreshRecord();
@@ -151,7 +151,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('downloadAttachment', () => {
@@ -175,7 +175,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(downloadedFile).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload and then download an attachment via entity method', async () => {
         const recordId = await createFreshRecord();
@@ -196,7 +196,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(downloadedFile).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('attachment by name', () => {
@@ -227,7 +227,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
           ATTACHMENT_CONFIG.fieldName,
         );
         expect(deleteResult).toBeDefined();
-      });
+      }, 90_000);
     });
   }
 );
