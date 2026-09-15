@@ -1,0 +1,2031 @@
+# UiPath TypeScript SDK
+
+# JS Functions
+
+# UiPath JS Functions
+
+**JS Functions** lets you write server-side TypeScript or JavaScript with typed input and output that **runs as a UiPath job** — callable from any UiPath surface: as a **Job**, from a **Trigger**, a **Maestro** process, or a **Flow** (the same execution model as [Python Functions](https://uipath.github.io/uipath-python/)). Functions integrate natively with the platform: they receive the caller's identity, can call Orchestrator on behalf of the user or with a workload token, and are deployed as `.nupkg` packages to any process feed.
+
+A function can *additionally* declare **HTTP semantics** — an HTTP `method` and `path` — which exposes it as an HTTP endpoint. This is the primary use case for **Coded Apps** backends and API-style integrations, and it's what powers local `serve` for development.
+
+## What you build
+
+A function is a single exported `defineFunction` call. The CLI scaffolds the project, runs a local dev server with hot reload, and packs + publishes to Orchestrator.
+
+**With HTTP semantics** — callable as a job *and* over HTTP (Coded Apps, APIs):
+
+```
+import { defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface HelloInput {
+  /** @default "World" */
+  name?: string;
+}
+
+interface HelloOutput {
+  message: string;
+}
+
+export default defineFunction({
+  name: "hello",
+  method: "POST",
+  path: "/hello",
+  input: defineSchema<HelloInput>(),
+  output: defineSchema<HelloOutput>(),
+  handler: async (input) => ({ message: `Hello, ${input.name}!` }),
+});
+```
+
+Contracts are declared **schema-first**: in TypeScript as a type via `defineSchema<T>()` (lowered to a JSON Schema at build time), in JavaScript as a JSON Schema literal — see [defineFunction — Declaring contracts](api/define-function/#declaring-contracts). Nothing executes to extract a contract, and validation runs in the platform runtime.
+
+**Job-only** — omit `method` and `path` for a function invoked purely as a job (Trigger, Maestro, Flow, Orchestrator):
+
+```
+import { defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface ProcessInvoiceInput {
+  invoiceId: string;
+}
+
+interface ProcessInvoiceOutput {
+  status: string;
+}
+
+export default defineFunction({
+  name: "process-invoice",
+  input: defineSchema<ProcessInvoiceInput>(),
+  output: defineSchema<ProcessInvoiceOutput>(),
+  handler: async (input, ctx) => {
+    // When run by the platform, ctx.robot?.accessToken is available for Orchestrator calls.
+    return { status: "processed" };
+  },
+});
+```
+
+## How it fits together
+
+```
+Your .ts files
+     │
+     ▼
+uip functions serve   ←  local dev (hot reload, Node or Deno)
+uip functions pack    ←  builds .nupkg
+uip functions publish ←  uploads to Orchestrator feed
+uip functions push    ←  syncs to Studio Web project
+```
+
+## Packages
+
+| Package                               | Purpose                                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| `@uipath/coded-functions-js-sdk`      | `defineFunction`, `FunctionError`, `FunctionContext` types, response helpers |
+| `@uipath/functions-tool`              | Functions plugin for the `uip` CLI — `uip functions <cmd>`                   |
+| `@uipath/coded-functions-js-packager` | Shared packager (used internally by the CLI)                                 |
+
+## JS Functions vs Python Functions
+
+UiPath supports two Functions runtimes. Both **run as jobs** and are invoked the same way from the platform (Job, Trigger, Maestro, Flow), but they target different developer profiles and use cases. JS Functions additionally support **HTTP semantics** for Coded Apps backends.
+
+|                          | JS Functions (this site)                                | [Python Functions](https://uipath.github.io/uipath-python/) |
+| ------------------------ | ------------------------------------------------------- | ----------------------------------------------------------- |
+| Language                 | TypeScript / JavaScript                                 | Python                                                      |
+| Runs as a job            | Yes (Job, Trigger, Maestro, Flow)                       | Yes (Job, Trigger, Maestro, Flow)                           |
+| HTTP semantics           | Yes — Coded Apps backends, APIs                         | —                                                           |
+| Use when                 | Coded Apps backends, HTTP APIs, integrations            | Data processing, ML inference, scripting                    |
+| Contracts                | TS types via `defineSchema<T>()` / JSON Schema literals | pydantic / dataclasses                                      |
+| Local dev                | `uip functions serve` (Node or Deno, hot reload)        | `uip functions run main.py`                                 |
+| Same `uip functions` CLI | Yes                                                     | Yes                                                         |
+
+## Next steps
+
+- [Getting Started](getting-started/) — scaffold, run, deploy
+- [Platform Context](platform-context/) — tokens, identity, context forwarding
+- [Calling Orchestrator](calling-orchestrator/) — asset access patterns
+- [Deployment](deployment/) — pack, publish, trigger URL, Orchestrator sync
+- [Production Rules](production-rules/) — import paths, dependencies, no-Buffer, etc.
+- [CLI Reference](cli-reference/) — all commands and options
+
+# Getting Started
+
+## Prerequisites
+
+- Node.js v20+
+- UiPath CLI with the functions tool installed:
+
+```
+npm install -g @uipath/cli
+uip tools install --package-name @uipath/functions-tool
+```
+
+## 1. Create a project
+
+```
+uip functions new my-functions -l ts
+cd my-functions
+```
+
+This scaffolds a TypeScript project with a `hello` function, installs dependencies, and creates `uipath.json`. Use `-l js` for JavaScript.
+
+Python Functions
+
+`uip functions new` also supports `--language py` for Python projects. Python Functions are a separate runtime with different capabilities — see the [Python Functions documentation](https://uipath.github.io/uipath-python/) for that path.
+
+Options:
+
+| Flag                    | Description                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `-l, --language <lang>` | `ts` (default) or `js` for this guide; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
+| `--empty`               | Skip the hello world function (JS/TS only)                                                                           |
+
+The generated project structure:
+
+```
+my-functions/
+├── functions/
+│   └── hello.ts          # your functions go here — one function per file
+├── uipath.json           # maps function names → entry points
+├── package.json
+└── tsconfig.json
+```
+
+`uipath.json` example:
+
+```
+{
+  "functions": {
+    "hello": "functions/hello.ts:default"
+  }
+}
+```
+
+### The `functions/` folder is authoritative
+
+You do not maintain the `functions` map by hand. `serve`, `debug`, `pack` and `push` all rewrite it from the folder contents first, so **hand edits are overwritten** — including in the deployed container, which re-syncs from the packaged `functions/` folder when it starts the server.
+
+The rules discovery applies, in full:
+
+|                              |                                                                                                                                   |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Registered as a function** | every `.ts`/`.js` file directly inside `functions/`                                                                               |
+| **Skipped**                  | names starting with `_` (e.g. `_helpers.ts`), and `.d.ts` files                                                                   |
+| **Not discovered at all**    | subfolders — `functions/lib/util.ts` is never registered, and a hand-written map entry pointing at one is pruned on the next sync |
+| **Key**                      | the filename without its extension, so `functions/create-order.ts` → `"create-order"`                                             |
+
+Discovery is by filename, not by content: a file lands in the map whether or not it defines a function. Every registered file must therefore default-export its function definition, normally the result of `defineFunction(...)`; only the default export is served. The call may sit behind your own helper (`export default appFunction({...})` where `appFunction` returns `defineFunction(...)`); the CLI then reads the contract by executing the module instead of statically, and the runtime rejects the file by name if what it exports is not a function definition. `defineSchema<T>()` markers are lowered only inside a literal `defineFunction(...)` call — behind a helper, declare `input`/`output` as a JSON Schema literal or a zod schema.
+
+Anything else that lives next to your functions is a **helper**, and needs to be either `_`-prefixed or moved out of `functions/` (e.g. to `lib/`). Both work; the `_` prefix is handy when you want the helper to stay beside its function.
+
+```
+functions/
+├── create-order.ts       # registered → "create-order"
+├── _validate.ts          # skipped (helper)
+└── types.d.ts            # skipped
+lib/
+└── http.ts               # not in functions/, so never registered
+```
+
+`serve`, `debug`, `pack` and `push` check for the default export and **fail with the offending file named** before generating or uploading anything, so a stray helper cannot reach a deployment. Left unchecked it would break the whole package rather than one route: the generated aggregator imports every registered file, and one unloadable import takes down every endpoint.
+
+## 2. Run locally
+
+```
+uip functions serve
+```
+
+Starts a hot-reload server on `http://localhost:7070`. The function is immediately callable:
+
+```
+curl -X POST http://localhost:7070/hello \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice"}'
+# {"message":"Hello, Alice!"}
+```
+
+For local access to Orchestrator, your function handlers read credentials from environment variables (`UIPATH_ACCESS_TOKEN`, `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID`). Set them in your shell before starting the server.
+
+**Option A — Deno runtime (recommended for local dev with credentials):**
+
+```
+uip functions serve --runtime deno
+```
+
+Deno reads `.env` natively. Create a `.env` file:
+
+```
+UIPATH_ACCESS_TOKEN=<OAuth token>
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_ID=<org-UUID>
+UIPATH_TENANT_ID=<tenant-UUID>
+```
+
+**Option B — Node runtime, load env vars in shell first:**
+
+```
+Get-Content .env | ForEach-Object {
+  if ($_ -match '^\s*([^#][^=]*)=(.*)$') {
+    [System.Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim(), 'Process')
+  }
+}
+uip functions serve
+```
+
+```
+set -a && source .env && set +a
+uip functions serve
+```
+
+Known limitation
+
+`uip functions serve` (Node runtime) cannot auto-load `.env` via `--env-file` in some environments. If you see `node: --env-file= is not allowed in NODE_OPTIONS`, use Option A (Deno) or Option B (manual shell loading).
+
+## 3. Pack
+
+```
+uip functions pack
+```
+
+Creates `.uipath/<name>.<version>.nupkg` from `package.json` `name` and `version`. Re-packing the same version overwrites the file.
+
+## 4. Publish to Orchestrator
+
+Log in first — `uip login` stores your session and publish picks it up automatically:
+
+```
+uip login
+uip functions publish
+```
+
+Fetches available process feeds and prompts for selection. For CI, pass credentials explicitly and skip the interactive picker with `--feed-id`:
+
+```
+uip functions publish \
+  --url https://cloud.uipath.com \
+  --org <org> \
+  --tenant <tenant> \
+  --token $UIPATH_ACCESS_TOKEN \
+  --feed-id <feed-uuid>
+```
+
+After publishing, go to **Orchestrator → Automations → Processes**, find your package, and update the release to the latest version. This triggers Orchestrator to read the new manifest and sync API Triggers. See [Deployment — After publish](../deployment/#after-publish-update-the-function-release).
+
+## 5. Push to Studio Web (optional)
+
+```
+uip functions push --project-id <studio-web-project-id>
+```
+
+Diffs local files against the Studio Web project and uploads only what changed. Create the project in Studio Web first to get the project ID.
+
+## Full workflow
+
+```
+uip functions new my-functions -l ts && cd my-functions
+uip functions serve                    # develop
+uip functions pack
+uip login
+uip functions publish
+```
+
+# Platform Context
+
+Every function handler receives a [`FunctionContext`](../api/function-context/) as its second argument. This page explains what the platform injects and what you must forward yourself.
+
+## FunctionContext at a glance
+
+```
+handler: async (input, ctx) => {
+  ctx.user?.accessToken         // caller's OAuth token (forwarded from Authorization header)
+  ctx.user?.sub                 // caller's user ID
+  ctx.user?.email               // caller's email (if present in claims)
+  ctx.robot?.accessToken        // platform-issued workload token (~24h RS256 JWT)
+  ctx.robot?.key                // serverless robot key (for Orchestrator per-robot endpoints)
+  ctx.platform?.baseUrl         // bare authority, e.g. "https://cloud.uipath.com"
+  ctx.platform?.orgId           // organization id (GUID)
+  ctx.platform?.tenantId        // tenant id (GUID)
+  ctx.platform?.folderKey       // folder key of the invocation, if any
+  ctx.params                    // URL path params: { id: "INV-001" } for /invoices/:id
+  ctx.headers                   // request headers, lowercase keys
+}
+```
+
+`ctx.user` is `null` if the platform cannot identify the caller (e.g. unauthenticated local call), and always `null` for job invocations — jobs have no caller. `ctx.robot` is `null` on local runs.
+
+## The workload token (`ctx.robot.accessToken`)
+
+`ctx.robot.accessToken` is a platform-issued RS256 JWT granted to the function's service account. It is populated **only when the function is invoked in a deployed environment** (HTTP trigger or job). It is absent in local `serve` mode.
+
+Token characteristics:
+
+| Property    | Value                   |
+| ----------- | ----------------------- |
+| Algorithm   | RS256                   |
+| `sub_type`  | `robot.user`            |
+| `client_id` | platform service client |
+| TTL         | ~24 hours               |
+
+Use this token to call Orchestrator with the function's own service account identity (not the calling user). See [Calling Orchestrator — Secret Vault pattern](../calling-orchestrator/#pattern-1--secret-vault).
+
+**Local dev fallback** — the token is absent locally. Set `UIPATH_ACCESS_TOKEN` before starting the server. Deno runtime reads `.env` natively; for Node, load env vars in your shell — see [Getting Started — local dev](../getting-started/#2-run-locally).
+
+```
+UIPATH_ACCESS_TOKEN=<OAuth token with Assets.View on the target folder>
+```
+
+Then in your handler:
+
+```
+const workloadToken =
+  ctx.robot?.accessToken ||
+  process.env["UIPATH_ACCESS_TOKEN"] ||
+  ""
+```
+
+## accessToken
+
+`ctx.user.accessToken` is the OAuth token from the caller's `Authorization: Bearer <token>` header. The caller's own Orchestrator permissions apply when you use this token.
+
+Use this for delegated access patterns where the calling user should already have the required permissions. See [Calling Orchestrator — Delegated pattern](../calling-orchestrator/#pattern-2--delegated-access).
+
+## Org / tenant context (`ctx.platform`)
+
+The runtime injects trusted platform coordinates as `ctx.platform`:
+
+```
+handler: async (input, ctx) => {
+  if (!ctx.platform) {
+    throw new FunctionError("Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID", 500);
+  }
+  const { baseUrl, orgId, tenantId, folderKey } = ctx.platform;
+  const sdk = new UiPath({ baseUrl, orgName: orgId, tenantName: tenantId, secret: token });
+}
+```
+
+Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [FunctionContext — platform](../api/function-context/#platform) for the full contract.
+
+**Local dev fallback** — no handler runs locally, so the runtime reads these environment variables instead. They are consulted only when the request carries no `X-UiPath-*` platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.
+
+```
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_ID=<org-UUID>
+UIPATH_TENANT_ID=<tenant-UUID>
+```
+
+**Job invocations** — `ctx.platform` requires a handler version that writes the platform fields into the runtime context; on older handlers it is `null`.
+
+### Deprecated: caller-forwarded `_baseUrl` / `_orgId` / `_tenantId`
+
+Before `ctx.platform`, functions declared `_baseUrl`, `_orgId`, `_tenantId` as input fields and callers forwarded them explicitly. This pattern is **deprecated**: the values are caller-controlled, so a malicious caller could redirect the function's outbound Orchestrator calls. Existing functions keep working, but should migrate to `ctx.platform` and drop the `_*` input fields.
+
+## Path parameters
+
+Use `:param` syntax in the `path` field of `defineFunction`:
+
+```
+defineFunction({
+  path: "/invoices/:id/approve",
+  handler: async (input, ctx) => {
+    const invoiceId = ctx.params.id;
+  },
+})
+```
+
+Path parameters work identically in local `serve` and when deployed. `path` becomes the HTTP trigger's slug verbatim — pattern segments included — and the deployed trigger is resolved by route matching, not exact-string comparison.
+
+### Slug pattern syntax
+
+| Pattern         | Matches                       | Example                                                                        |
+| --------------- | ----------------------------- | ------------------------------------------------------------------------------ |
+| `:param`        | exactly one segment           | `/users/:id` ← `/users/42` → `ctx.params.id === "42"`                          |
+| `:param{regex}` | one segment, constrained      | `/users/:id{[0-9]+}/avatar` matches `/users/42/avatar`, not `/users/me/avatar` |
+| `:param?`       | the segment, or nothing       | `/list/:filter?` matches both `/list` and `/list/open`                         |
+| `*`             | one or more trailing segments | `/users/:id/*` matches `/users/42/settings/email`                              |
+
+Params land in `ctx.params` as strings, keyed by name. A `*` match is not exposed as a named param — use it for catch-all routes rather than to capture values.
+
+### Matching rules
+
+- **More specific routes win**, regardless of declaration order: with both `/users/me` and `/users/:id` registered, `GET /users/me` hits the literal route.
+
+- **A path that matches nothing returns `404`** with `errorCode 1623`:
+
+  ```
+  { "message": "HTTP trigger not found for path 'my-functions/invoices/a/b'.", "errorCode": 1623 }
+  ```
+
+- **Extra segments are not absorbed silently.** `/list/:filter?` takes at most one extra segment, so `/list/a/b` is a `1623`, not a match with `filter = "a"`. Add an explicit `*` route if you want a catch-all.
+
+- **Query parameters remain available** and are independent of path matching — they are validated against the function's `input` schema. Use them for optional filters; use path params for identity.
+
+## Request headers
+
+`ctx.headers` contains all request headers with lowercase keys:
+
+```
+const contentType = ctx.headers["content-type"];
+const authHeader  = ctx.headers["authorization"];
+```
+
+# Calling Orchestrator
+
+Two patterns for reading Orchestrator assets from a JS Function. Choose based on whether the asset is sensitive.
+
+```
+Is the asset sensitive (credentials, API keys, shared secrets)?
+│
+├─ Yes → Pattern 1: Secret Vault
+│         Function reads with its own platform token.
+│         Calling user has zero folder access required.
+│
+└─ No  → Pattern 2: Delegated access
+          Function reads on behalf of the calling user.
+          User must have Assets.View on the folder.
+```
+
+______________________________________________________________________
+
+## Pattern 1 — Secret Vault
+
+The function uses `ctx.robot.accessToken` — a platform-issued RS256 JWT (~24h TTL). The calling user has no folder access; the function's service account is the only principal that reads the restricted folder.
+
+### Orchestrator setup
+
+1. Create a dedicated folder (e.g. `Restricted-Secrets`).
+1. Add assets to that folder.
+1. Find the JS Function runtime service account in Orchestrator → Robots / Machines.
+1. Grant that service account **Assets.View** on the restricted folder only.
+1. Do **not** add the calling user to that folder.
+
+### Function code
+
+```
+import { defineFunction, FunctionError, defineSchema } from "@uipath/coded-functions-js-sdk";
+import { UiPath } from "@uipath/uipath-typescript/core";
+import { Assets } from "@uipath/uipath-typescript/assets";
+import type { AssetGetResponse } from "@uipath/uipath-typescript/assets";
+
+interface GetAssetInput {
+  assetName: string;
+  /** Required — without it the SDK returns null values. */
+  folderId: number;
+}
+
+export default defineFunction({
+  name: "get-asset-secret-vault",
+  method: "POST",
+  path: "/get-asset-secret-vault",
+  input: defineSchema<GetAssetInput>(),
+  handler: async (inp, ctx) => {
+    const workloadToken =
+      ctx.robot?.accessToken ||             // populated by platform when deployed
+      process.env["UIPATH_ACCESS_TOKEN"] || // local dev fallback
+      "";
+
+    if (!workloadToken) {
+      throw new FunctionError(
+        "Workload token not available — ctx.robot.accessToken is absent (local dev: set UIPATH_ACCESS_TOKEN in your shell)",
+        500,
+      );
+    }
+
+    if (!ctx.platform) {
+      throw new FunctionError(
+        "Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID",
+        500,
+      );
+    }
+    const { baseUrl, orgId, tenantId } = ctx.platform;
+
+    const sdk = new UiPath({ baseUrl, orgName: orgId, tenantName: tenantId, secret: workloadToken });
+    await sdk.initialize(); // no-op in secret mode
+
+    const escaped = inp.assetName.replace(/'/g, "''");
+    const response = await new Assets(sdk).getAll({
+      filter: `Name eq '${escaped}'`,
+      folderId: inp.folderId,
+    }) as { items: AssetGetResponse[] };
+
+    return { value: response.items[0]?.value ?? null };
+  },
+});
+```
+
+### package.json layout
+
+`@uipath/uipath-typescript` must be in `dependencies`, not `devDependencies`. The production worker runs `npm install --omit=dev` — if the package lands in `devDependencies` the import fails silently at cold start and all functions hang with no logs.
+
+```
+{
+  "dependencies": {
+    "@uipath/uipath-typescript": "^1.x"
+  },
+  "devDependencies": {
+    "@uipath/coded-functions-js-sdk": "^0.x",
+    "@uipath/functions-tool": "...",
+    "typescript": "..."
+  }
+}
+```
+
+### Local dev
+
+`ctx.robot` and `ctx.platform` are `null` locally. Set these variables before starting the server — the runtime builds `ctx.platform` from the `UIPATH_BASE_URL`/`UIPATH_ORG_ID`/`UIPATH_TENANT_ID` fallback, and your code reads `UIPATH_ACCESS_TOKEN` for the token. Deno runtime reads `.env` natively; for Node, load env vars in your shell — see [Getting Started — local dev](../getting-started/#2-run-locally).
+
+```
+UIPATH_ACCESS_TOKEN=<valid OAuth token with Assets.View on the folder>
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_ID=<org-UUID>
+UIPATH_TENANT_ID=<tenant-UUID>
+```
+
+______________________________________________________________________
+
+## Pattern 2 — Delegated access
+
+The function uses `ctx.user.accessToken` — the same OAuth token the caller sent in the `Authorization` header. The caller's Orchestrator permissions apply.
+
+### Orchestrator setup
+
+The calling user must have **Assets.View** on the folder containing the asset.
+
+### Function code
+
+```
+import { defineFunction, FunctionError, defineSchema } from "@uipath/coded-functions-js-sdk";
+import { UiPath } from "@uipath/uipath-typescript/core";
+import { Assets } from "@uipath/uipath-typescript/assets";
+import type { AssetGetResponse } from "@uipath/uipath-typescript/assets";
+
+interface GetAssetInput {
+  assetName: string;
+  folderId: number;
+}
+
+export default defineFunction({
+  name: "get-asset-delegated",
+  method: "POST",
+  path: "/get-asset-delegated",
+  input: defineSchema<GetAssetInput>(),
+  handler: async (inp, ctx) => {
+    if (!ctx.user?.accessToken) {
+      throw new FunctionError(
+        "User access token not available — invoke from a logged-in coded app",
+        403,
+      );
+    }
+
+    if (!ctx.platform) {
+      throw new FunctionError(
+        "Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID",
+        500,
+      );
+    }
+    const { baseUrl, orgId, tenantId } = ctx.platform;
+
+    const sdk = new UiPath({ baseUrl, orgName: orgId, tenantName: tenantId, secret: ctx.user.accessToken });
+    await sdk.initialize(); // no-op in secret mode
+
+    const escaped = inp.assetName.replace(/'/g, "''");
+    const response = await new Assets(sdk).getAll({
+      filter: `Name eq '${escaped}'`,
+      folderId: inp.folderId,
+    }) as { items: AssetGetResponse[] };
+
+    return { value: response.items[0]?.value ?? null };
+  },
+});
+```
+
+______________________________________________________________________
+
+## Rules that apply to both patterns
+
+### folderId is required
+
+`Assets.getAll()` without `folderId` calls `GetAssetsAcrossFolders` (metadata only) and silently returns `null` for all value fields. Always pass `folderId` to switch to `GetFiltered`, which returns actual values.
+
+### AllowDirectApiAccess flag
+
+This flag is **irrelevant** for OData endpoints. It is only enforced on `/api/Assets/name/{name}/value`, which the SDK never calls. Do not add it to your Orchestrator setup.
+
+### External App minimum configuration
+
+When calling a function from a PKCE External App, the scope string must include `OR.Default`:
+
+```
+openid profile email offline_access OR.Default
+```
+
+`OR.Default` is auto-granted to any registered External App but must be explicit in the PKCE scope string. If omitted, the HTTP trigger returns 403.
+
+### Security boundary
+
+Folder RBAC is the only effective security boundary. `OR.Default` (required for function invocation) already grants broad Orchestrator API access. Reducing External App scopes does not prevent users from reading assets if they have folder access.
+
+### OData filter: single-quote string and GUID values
+
+All string and GUID comparisons in OData `$filter` must use single quotes. Missing quotes cause `400 Bad Request` which the SDK or raw fetch may silently return as an empty list.
+
+```
+// ❌ 400 Bad Request — GUID treated as unquoted token
+const filter = `CreatorUserKey eq ${userId}`;
+
+// ✅ correct
+const escaped = value.replace(/'/g, "''");   // escape embedded single quotes
+const filter  = `Name eq '${escaped}'`;
+const filter2 = `CreatorUserKey eq '${userId}'`;
+```
+
+### Starting a job from a function
+
+Use `Processes.start()` from `@uipath/uipath-typescript/processes`. The function delegates job creation to Orchestrator using the caller's token (`ctx.user.accessToken`):
+
+```
+import { defineFunction, FunctionError, defineSchema } from "@uipath/coded-functions-js-sdk";
+import { UiPath } from "@uipath/uipath-typescript/core";
+import { Processes } from "@uipath/uipath-typescript/processes";
+
+interface StartJobInput {
+  /** ReleaseKey UUID from /odata/Releases. */
+  releaseKey: string;
+  /** Arbitrary job input arguments — `unknown` values accept any JSON. */
+  args?: Record<string, unknown>;
+  folderId: number;
+}
+
+export default defineFunction({
+  name: "start-job",
+  method: "POST",
+  path: "/start-job",
+  input: defineSchema<StartJobInput>(),
+  handler: async (inp, ctx) => {
+    if (!ctx.user?.accessToken) {
+      throw new FunctionError("User access token not available", 403);
+    }
+
+    if (!ctx.platform) {
+      throw new FunctionError(
+        "Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID",
+        500,
+      );
+    }
+    const { baseUrl, orgId, tenantId } = ctx.platform;
+
+    const sdk = new UiPath({ baseUrl, orgName: orgId, tenantName: tenantId, secret: ctx.user.accessToken });
+    await sdk.initialize(); // no-op in secret mode
+
+    const results = await new Processes(sdk).start(
+      {
+        processKey:     inp.releaseKey,
+        inputArguments: JSON.stringify(inp.args ?? {}),
+        strategy:       "ModernJobsCount",
+        jobsCount:       1,
+      },
+      inp.folderId,   // numeric folder ID — sets X-UIPATH-OrganizationUnitId automatically
+    );
+
+    return { jobId: results?.[0]?.id ?? null };
+  },
+});
+```
+
+**Note on folder scoping for job queries:** When listing jobs with `GET /odata/Jobs`, do **not** set `X-UIPATH-OrganizationUnitId` if the jobs may span multiple folders (e.g. when a Maestro process runs in a different folder than your storage bucket). Without the header, Orchestrator searches globally across all accessible folders.
+
+### Platform context comes from `ctx.platform`
+
+The runtime injects `baseUrl`, `orgId`, and `tenantId` as `ctx.platform` — callers do not need to forward them. See [Platform Context](../platform-context/#org--tenant-context-ctxplatform).
+
+Forwarding them as `_baseUrl`/`_orgId`/`_tenantId` input fields is **deprecated**: those values are caller-controlled and can redirect the function's Orchestrator calls.
+
+# Production Rules
+
+Rules that apply when deploying JS Functions. Violations typically cause silent failures or 15-minute hangs at cold start with no logs.
+
+______________________________________________________________________
+
+## Prefer `FunctionError` over plain `Error` for meaningful error responses
+
+Every thrown error forwards its message — but a plain `Error` renders as a 500 with no error code, while a `FunctionError` lets you pick the status (and, in the job error info, a machine-readable code):
+
+```
+// ⚠️ HTTP caller sees 500 {"error":"Asset not found"}; job error info: code JsCodedFunction.HandlerError
+throw new Error("Asset not found");
+
+// ✅ HTTP caller sees 404 {"error":"Asset not found"}; job error info: code ASSET_NOT_FOUND, status 404
+throw new FunctionError("Asset not found", 404, "ASSET_NOT_FOUND");
+```
+
+See [FunctionError](../api/function-error/).
+
+______________________________________________________________________
+
+## Functions must complete within ~20 seconds
+
+The platform times out HTTP trigger calls at 25 seconds and issues an `HTTP 303 See Other` redirect to a polling URL. The redirect target is served from the `api.*` subdomain and sends `Access-Control-Allow-Origin: *`, so a browser follows it transparently and still receives the result.
+
+Keep every function well under 20 seconds anyway: the redirect turns a fast call into a slow one, any intermediate proxy or client timeout in the path can still cut the connection, and work that legitimately runs longer belongs in a job-mode function (omit `method` and `path`), which has no gateway in front of it at all.
+
+For any external API call, enforce a timeout:
+
+```
+const result = await fetch(url, {
+  signal: AbortSignal.timeout(8_000),  // 8s per external call
+});
+```
+
+For the overall handler:
+
+```
+handler: async (input, ctx) => Promise.race([
+  actualHandler(input, ctx),
+  new Promise<never>((_, reject) =>
+    AbortSignal.timeout(18_000).addEventListener("abort", () =>
+      reject(new FunctionError("Function timed out", 504))
+    )
+  ),
+])
+```
+
+______________________________________________________________________
+
+## GET functions: query-string coercion is automatic for schema-first contracts
+
+Query string values always arrive as strings. With a schema-first contract — `defineSchema<T>()` or a JSON Schema literal — the runtime coerces them to the declared type before validation, so this just works:
+
+```
+interface ListInput {
+  folderId: number;   // "123" arrives as a string; the runtime coerces it to 123
+}
+
+input: defineSchema<ListInput>()
+```
+
+Only functions still using a **zod** schema must opt into coercion themselves — a plain `z.number()` fails validation on any GET input:
+
+```
+// ❌ validation error with zod — "123" is a string, not a number
+input: z.object({ folderId: z.number() })
+
+// ✅ zod-authored functions need z.coerce
+input: z.object({ folderId: z.coerce.number() })
+```
+
+This does not apply to POST functions — JSON body values preserve their types.
+
+______________________________________________________________________
+
+## Always send `body: '{}'` for POST functions with empty input
+
+The platform gateway always parses the body as JSON when `Content-Type: application/json` is set. A POST request with no body returns `400 { "errorCode": 4804, "message": "Could not parse body as json." }` even when the function declares an empty input object.
+
+```
+// ❌ 400 errorCode 4804
+await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" } });
+
+// ✅ send empty object
+await fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: "{}",
+});
+```
+
+______________________________________________________________________
+
+## Regenerate the lockfile after any dependency change
+
+The `.nupkg` includes the project's lock file — `package-lock.json` or `bun.lock`. The production worker installs from it with bun, which reads either format. A stale lockfile causes production install failures (errorCode 4801 on all routes), and `pack` now refuses one that no longer matches `package.json`.
+
+```
+npm install   # or `bun install` — always run this before pack after any package.json change
+uip functions pack
+```
+
+______________________________________________________________________
+
+## Import paths must include `.ts` extension
+
+```
+// ✅ correct
+import { helper } from "./lib/helper.ts";
+
+// ❌ hangs silently in production
+import { helper } from "./lib/helper";
+```
+
+The local dev server (`tsx`) resolves extensionless imports. The production runtime does not. A broken import crashes the entire function runtime at cold start — all functions in the package hang with no logs.
+
+______________________________________________________________________
+
+## Runtime dependencies must be in `dependencies`, not `devDependencies`
+
+The production worker runs `npm install --omit=dev`. Any package imported by your functions must be in `dependencies`.
+
+```
+{
+  "dependencies": {
+    "@uipath/uipath-typescript": "^1.x"   // ← must be here if your functions import it
+  },
+  "devDependencies": {
+    "@uipath/coded-functions-js-sdk": "^0.x",
+    "@uipath/functions-tool": "...",
+    "typescript": "..."
+  }
+}
+```
+
+Schema-first contracts (`defineSchema<T>()` / JSON Schema literals) need **no** runtime dependency — validation lives in the platform runtime. Only packages your handlers actually import belong in `dependencies` (including a validator like `zod`, if you still use one for contracts).
+
+If an import fails silently at cold start, all functions in the package hang for up to 15 minutes with no logs.
+
+______________________________________________________________________
+
+## No `Buffer` global
+
+The production runtime does not polyfill Node.js globals. `Buffer` is not available. Use `Uint8Array` or `TextEncoder`/`TextDecoder` instead.
+
+______________________________________________________________________
+
+## Declare contracts schema-first
+
+Declare `input`/`output` as a `defineSchema<T>()` marker (TypeScript) or a JSON Schema literal (JavaScript) — see [defineFunction — Declaring contracts](../api/define-function/#declaring-contracts). These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.
+
+Validator schemas remain supported for backwards compatibility: any object implementing both [Standard Schema](https://standardschema.dev/) and Standard JSON Schema works (`zod` >= 4.2, `arktype` >= 2.1.28, `valibot` >= 1.2 via `@valibot/to-json-schema` >= 1.5), but the contract can then only be obtained by executing the module, and the validator must ship in `dependencies`.
+
+______________________________________________________________________
+
+## The workload token is absent locally
+
+`ctx.robot` is only populated by the platform in a deployed environment. In local `serve` mode it is `null`, so `ctx.robot?.accessToken` is `undefined`. Always provide an environment variable fallback:
+
+```
+const token =
+  ctx.robot?.accessToken ||
+  process.env["UIPATH_ACCESS_TOKEN"] ||
+  "";
+```
+
+Set `UIPATH_ACCESS_TOKEN` in your shell before starting the server (see [Getting Started — local dev](../getting-started/#2-run-locally)). The `uip functions serve` Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in the shell manually.
+
+______________________________________________________________________
+
+## Read Orchestrator coordinates from `ctx.platform`, not input
+
+The runtime injects `baseUrl`, `orgId`, and `tenantId` as `ctx.platform`. Do not accept them as input fields (`_baseUrl`/`_orgId`/`_tenantId` — deprecated): input is caller-controlled and can redirect the function's outbound Orchestrator calls. Environment variables are only a local-dev fallback and are `undefined` in production. See [Platform Context](../platform-context/#org--tenant-context-ctxplatform).
+
+______________________________________________________________________
+
+## Re-packing the same version overwrites the .nupkg
+
+`uip functions pack` overwrites `.uipath/<name>.<version>.nupkg` if the file already exists. Older version files stay in `.uipath/`. The `publish` command picks the most recently modified file by mtime.
+
+______________________________________________________________________
+
+## `uip functions serve --production`
+
+When run in the production container, pass `--production` to skip the server-runner dependency install and the `freePort` check. The CLI detects this flag and skips both steps if the server-runner directory already exists.
+
+# Deployment
+
+From `defineFunction` to a live HTTP trigger — what happens at each stage and what you need to do.
+
+## The pipeline
+
+```
+defineFunction() calls in .ts files
+         │
+         ▼
+  uip functions pack
+         │
+         ├─ generates entry-points.json      (one entry per function)
+         ├─ generates bindings_v2.json       (one HttpTrigger per function)
+         └─ produces .uipath/<name>.<ver>.nupkg
+                          │
+                          ▼
+             uip functions publish
+                          │
+                          ▼
+              Orchestrator reads the .nupkg
+              → creates / updates one API Trigger per function
+```
+
+______________________________________________________________________
+
+## Pack
+
+`uip functions pack` reads your `defineFunction` calls and generates two manifest files before zipping everything into a `.nupkg`.
+
+### What pack generates
+
+#### entry-points.json
+
+One entry per function. The `uniqueId` is stable across re-packs — preserved from the previous file if one exists. Re-packing does not create duplicate triggers; Orchestrator updates existing ones in place.
+
+```
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
+  "$id": "entry-points.json",
+  "entryPoints": [
+    {
+      "filePath": "content/functions/hello.ts",
+      "uniqueId": "a1b2c3d4-…",
+      "type": "function",
+      "input":  { "type": "object", "properties": { "name": { "type": "string" } } },
+      "output": { "type": "object", "properties": { "message": { "type": "string" } } }
+    }
+  ]
+}
+```
+
+#### bindings_v2.json
+
+One `HttpTrigger` resource per function. Non-HttpTrigger resources (Storage, Queue, etc.) and non-function entries are preserved verbatim and never overwritten.
+
+```
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/bindings",
+  "version": "2.0",
+  "resources": [
+    {
+      "resource": "HttpTrigger",
+      "key": "stable-uuid-…",
+      "id":  "stable-uuid-…",
+      "value": {
+        "EntryPointUniqueId": {
+          "DefaultValue": "a1b2c3d4-…",
+          "IsExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.1",
+        "Name":        "hello",
+        "Method":      "POST",
+        "Slug":        "/hello",
+        "CallingMode": "LongPolling",
+        "Description": "Returns a greeting message."
+      }
+    }
+  ]
+}
+```
+
+### defineFunction → API Trigger field mapping
+
+Each `defineFunction` call maps directly to one API Trigger in Orchestrator:
+
+| `defineFunction` field | Orchestrator API Trigger field                 |
+| ---------------------- | ---------------------------------------------- |
+| `name`                 | Trigger name (display name in Orchestrator)    |
+| `method`               | Verb (GET, POST, PUT, …)                       |
+| `path`                 | Slug (appears in the trigger URL)              |
+| `description`          | Description                                    |
+| `input` schema         | Input JSON Schema (shown in Runtime Arguments) |
+| `output` schema        | Output JSON Schema                             |
+| source file path       | Entry point (`content/functions/my-fn.ts`)     |
+
+Calling mode is always **Sync (long-polling)**. Account is always **Run as HTTP Caller**.
+
+### When you add, rename, or remove a function
+
+| Change                          | What happens on next publish                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| New `defineFunction`            | New entry-point + new binding → Orchestrator creates a new API Trigger                      |
+| Renamed `name` or `path`        | Existing binding drops, new one appears → Orchestrator deletes old trigger, creates new one |
+| Removed `defineFunction`        | Entry-point and binding removed → Orchestrator deletes the trigger                          |
+| Changed `input`/`output` schema | Updated JSON Schema in entry-points.json → Orchestrator updates trigger Input/Output        |
+
+### Lockfile
+
+The `.nupkg` always includes the project's lock file — `package-lock.json` or `bun.lock` — and it is the only lock file that ships: the production worker installs from it with bun, which reads either format. `pack` refuses to run when the lock is missing or no longer matches `package.json`, and `publish` refuses a package that carries no lock. Always re-run your package manager's install locally after any `package.json` change before packing.
+
+______________________________________________________________________
+
+## Publish
+
+```
+uip functions publish
+```
+
+Uploads the `.nupkg` to an Orchestrator process feed. After upload, **Orchestrator does not immediately sync triggers** — you must update the Function Release manually (see below).
+
+______________________________________________________________________
+
+## After publish: update the Function Release
+
+Publishing uploads a new `.nupkg` version, but the **Function Release** in Orchestrator may still be pinned to the previous version. After every publish:
+
+1. Go to **Orchestrator → Automations → Processes**
+1. Find your package
+1. Update the release to the latest version
+
+> **API note:** The Orchestrator UI calls these "Processes" but the REST API endpoint is `/odata/Releases`.
+
+Orchestrator then re-reads the manifest and syncs triggers (adds new ones, removes deleted ones, updates changed schemas).
+
+```
+uip functions publish  →  nupkg uploaded
+                           ↓
+                    Orchestrator: new version available
+                           ↓  (manual step today)
+                    Update Function Release to latest version
+                           ↓
+                    Triggers created / updated / deleted
+```
+
+______________________________________________________________________
+
+## Calling your function
+
+Once the Function Release is updated, each function is reachable at its HTTP trigger URL.
+
+### Trigger URL
+
+```
+https://<api-host>/<org>/<tenant>/orchestrator_/t/<folder-key>/<package-id>/<slug>
+```
+
+- `<api-host>`: the `api.*` subdomain — **not** the portal domain (see warning below)
+- `<org>` / `<tenant>`: org and tenant identifiers — UUIDs are recommended for browser-callable URLs; slugs also work from `curl`
+- `<folder-key>`: the **Key of the folder the function is published into** (a GUID). For the Personal-Workspace flow, this is the Personal Workspace folder's Key. It is **not** a per-trigger or per-tenant key — see the note below on how to discover it.
+- `<package-id>`: your `package.json` `name` (sanitized)
+- `<slug>`: the `path` from your `defineFunction`, **without** the leading slash (e.g. `hello`)
+
+`<package-id>` and `<slug>` are **two separate path segments** (e.g. `.../t/<folder-key>/my-functions/hello`).
+
+Always send `Content-Type: application/json` and a JSON body — send `{}` for a function that takes no input. A `GET`-verb function receives its input as query-string parameters instead of a body.
+
+```
+curl -X POST \
+  "https://api.uipath.com/<org>/<tenant>/orchestrator_/t/<folder-key>/my-functions/hello" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice"}'
+# → {"message":"Hello, Alice!"}
+```
+
+The portal domain maps to the API domain:
+
+| Portal domain      | API domain (use this) |
+| ------------------ | --------------------- |
+| `cloud.uipath.com` | `api.uipath.com`      |
+
+Portal domain causes CORS errors in the browser
+
+The trigger URL shown in the Orchestrator UI uses the portal domain and org/tenant slugs. Calling that URL from a browser (coded app) produces a CORS error — the portal domain has no `Access-Control-Allow-Origin` header. The `api.*` subdomain does. Prefer UUIDs over slugs in the browser-callable URL. `curl` does not enforce CORS, so the portal URL works from the command line.
+
+Discovering the folder key and slug
+
+`<folder-key>` is the **Key of the folder** the function is published into. It is the same for every function in that folder — it is *not* generated per trigger. Discover it (and each function's slug) from the folder's HTTP triggers:
+
+```
+GET /orchestrator_/odata/HttpTriggers
+X-UIPATH-OrganizationUnitId: <folder-id>
+```
+
+Each row exposes:
+
+- `Method` and `Slug` — the function's HTTP verb and slug
+- `Release.Name` — the `<package-id>`
+- `ExternalReference` — of the form `<Method> <package-id>/<slug> <FOLDER-KEY>`; the trailing GUID is the `<folder-key>` you put in the URL
+
+Do **not** use the trigger's own `Id` as `<folder-key>` — that returns `404 {"errorCode": 1623, "message": "HTTP trigger not found..."}`.
+
+The older `odata/ApiTriggers` discovery query does **not** work: `ApiTriggerDto` has no `ProcessKey`, `Key`, or `Url` property, so `?$filter=ProcessKey eq '…'&$select=Key,Name,Url` fails with `400 {"errorCode": 1000}`.
+
+# CLI Reference
+
+`@uipath/functions-tool` is a plugin for the UiPath unified CLI (`uip`). Install the CLI first, then install the functions tool:
+
+```
+npm install -g @uipath/cli
+uip tools install --package-name @uipath/functions-tool
+uip functions --help
+```
+
+______________________________________________________________________
+
+## `new`
+
+Scaffold a new JS/TS Functions project.
+
+```
+uip functions new [name] [options]
+```
+
+| Option                  | Default        | Description                                                                                                     |
+| ----------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `[name]`                | `my-functions` | Project name and directory                                                                                      |
+| `--name <name>`         |                | Alias for positional name                                                                                       |
+| `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
+| `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
+
+Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with the package manager the machine resolves to: npm when both npm and bun are present, and that manager writes the project's lock file.
+
+______________________________________________________________________
+
+## `serve`
+
+Start local function server with hot reload.
+
+```
+uip functions serve [options]
+```
+
+| Option                   | Default | Description                                                                    |
+| ------------------------ | ------- | ------------------------------------------------------------------------------ |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                             |
+| `--port <port>`          | `7070`  | Port to listen on                                                              |
+| `--production`           |         | Skip server-runner install and freePort check (used by the platform container) |
+
+Auto-syncs the `functions` map in `uipath.json` before starting. Deno runtime reads `.env` natively; Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in your shell before running `serve` (see [Getting Started — local dev](../getting-started/#2-run-locally)).
+
+______________________________________________________________________
+
+## `run`
+
+Execute a single coded function once (one-shot job) and report the result. Unlike `serve`, this runs the function directly without a long-lived HTTP server — the same code path the platform uses to execute a job.
+
+```
+uip functions run [options]
+```
+
+| Option                   | Default | Description                                                                                   |
+| ------------------------ | ------- | --------------------------------------------------------------------------------------------- |
+| `--runtime <node\|deno>` | `node`  | JavaScript runtime                                                                            |
+| `--entrypoint <path>`    |         | Path to the function file                                                                     |
+| `--function <name>`      |         | Function name resolved via `uipath.json`                                                      |
+| `--input <json>`         | `{}`    | JSON input payload                                                                            |
+| `--input-file <path>`    |         | Path to a JSON input file (takes priority over `--input`)                                     |
+| `--context <json>`       |         | JSON runtime-context payload (used when `--context-file` is absent)                           |
+| `--context-file <path>`  |         | Path to the runtime-context JSON file (takes priority over `--context`)                       |
+| `--production`           |         | Run under production context; skip the `.uipath/server-runner` install when it already exists |
+
+Provide the target with exactly one of `--entrypoint` (path to the file) or `--function` (name resolved through `uipath.json`). Bootstraps runtime dependencies into `.uipath/server-runner` on first run. The process exit code reflects the job outcome (non-zero on failure).
+
+```
+uip functions run --function hello --input '{"name":"world"}'
+```
+
+______________________________________________________________________
+
+## `invoke`
+
+Invoke a function against the local `serve` endpoint over HTTP (dev convenience). Requires `uip functions serve` to be running.
+
+```
+uip functions invoke <path> [options]
+```
+
+| Option           | Default | Description                                                                                      |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `<path>`         |         | The function's HTTP `path`, e.g. `/hello` or `/invoices/INV-1` (leading `/` optional). Required. |
+| `--port <port>`  | `7070`  | Port the local server is running on                                                              |
+| `--input <json>` | `{}`    | JSON request body                                                                                |
+
+Sends `POST http://localhost:<port>/<path>` with the JSON body and prints the response status and body. It always uses `POST`; for `GET`/`PUT`/`PATCH`/`DELETE` routes use a tool like `curl`. Exits non-zero if the server is unreachable or the function returns a non-2xx status.
+
+```
+uip functions invoke /hello --input '{"name":"world"}'
+```
+
+______________________________________________________________________
+
+## `pack`
+
+Pack the project into a `.nupkg` for deployment.
+
+```
+uip functions pack [options]
+```
+
+| Option     | Description                                                         |
+| ---------- | ------------------------------------------------------------------- |
+| `--nolock` | Deprecated and ignored — the project's lock file is always packaged |
+
+Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>.nupkg`. Re-packing the same version overwrites the file.
+
+The project must be ready to package: `node_modules/` present, exactly one supported lock file — `package-lock.json` (npm) or `bun.lock` (bun) — and that lock still current, which the package manager itself confirms via `npm ci --dry-run` / `bun install --frozen-lockfile --dry-run` (neither installs nor writes anything). When the manager cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it. `serve`, `run` and `debug` do not check the lock at all — Node does not read one.
+
+Steps performed:
+
+1. Check the project is installed
+1. Sync `uipath.json` functions map
+1. Generate aggregator
+1. Extract function manifest → `entry-points.json`, `bindings_v2.json`
+1. Build content folder via packager
+1. Zip to `.nupkg`
+
+______________________________________________________________________
+
+## `publish`
+
+Upload the packed `.nupkg` to an Orchestrator process feed.
+
+```
+uip functions publish [options]
+```
+
+| Option              | Env var                    | Description                                 |
+| ------------------- | -------------------------- | ------------------------------------------- |
+| `--url <url>`       | `UIPATH_URL`               | Platform base URL                           |
+| `--org <org>`       | `UIPATH_ORGANIZATION_NAME` | Organization name                           |
+| `--tenant <tenant>` | `UIPATH_TENANT_NAME`       | Tenant name                                 |
+| `--token <token>`   | `UIPATH_ACCESS_TOKEN`      | Access token                                |
+| `--feed-id <id>`    |                            | Feed ID — skips interactive picker (for CI) |
+
+Picks the most recently modified `.nupkg` in `.uipath/`. Without `--feed-id`, shows an interactive numbered list of available process feeds (press ESC to cancel).
+
+______________________________________________________________________
+
+## `push`
+
+Sync the local project to a Studio Web project.
+
+```
+uip functions push [options]
+```
+
+| Option              | Env var                    | Description                      |
+| ------------------- | -------------------------- | -------------------------------- |
+| `--url <url>`       | `UIPATH_URL`               | Platform base URL                |
+| `--org <org>`       | `UIPATH_ORGANIZATION_NAME` | Organization name                |
+| `--tenant <tenant>` | `UIPATH_TENANT_NAME`       | Tenant name                      |
+| `--token <token>`   | `UIPATH_ACCESS_TOKEN`      | Access token                     |
+| `--project-id <id>` | `UIPATH_PROJECT_ID`        | Studio Web project ID (required) |
+
+Auto-syncs the `functions` map in `uipath.json`, generates `entry-points.json`, diffs local files against remote by hash, and uploads only what changed. Create the project in Studio Web first to get the project ID.
+
+The remote layout mirrors the local project root; Studio Web system files (`project.uiproj`, `.project/`, `.settings/`) are never touched, and neither is anything under `.uipath/` apart from `studio_metadata.json`.
+
+Each push also updates `.uipath/studio_metadata.json`, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.
+
+______________________________________________________________________
+
+## `setup` *(hidden)*
+
+Verify and cache the Node.js runtime.
+
+```
+uip functions setup [--runtime node|deno|both]
+```
+
+Called automatically by `new` as a prerequisite. Run explicitly to set up Deno:
+
+```
+uip functions setup --runtime deno
+```
+
+Requires Node.js v20+. Installs `tsx` globally if not found.
+
+______________________________________________________________________
+
+## Environment variables
+
+All commands that contact the UiPath platform read credentials from environment variables. During `serve`, the Deno runtime reads `.env` automatically; the Node runtime requires env vars to be loaded in your shell first.
+
+| Variable                   | Used by                                                 |
+| -------------------------- | ------------------------------------------------------- |
+| `UIPATH_URL`               | `publish`, `push`                                       |
+| `UIPATH_ORGANIZATION_NAME` | `publish`, `push`                                       |
+| `UIPATH_TENANT_NAME`       | `publish`, `push`                                       |
+| `UIPATH_ACCESS_TOKEN`      | `publish`, `push`, local dev token fallback in handlers |
+| `UIPATH_PROJECT_ID`        | `push`                                                  |
+| `UIPATH_BASE_URL`          | handler fallback for Orchestrator SDK calls             |
+| `UIPATH_ORG_ID`            | handler fallback for Orchestrator SDK calls             |
+| `UIPATH_TENANT_ID`         | handler fallback for Orchestrator SDK calls             |
+
+# API Reference
+
+The `@uipath/coded-functions-js-sdk` package exports:
+
+| Export                                                      | Description                                                                             |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`defineFunction`](define-function/)                        | Declare a function — name, method, path, contract, handler                              |
+| [`defineSchema<T>()`](define-function/#declaring-contracts) | Declare a contract as a TypeScript type — lowered to a JSON Schema at build time        |
+| [`FunctionError`](function-error/)                          | Throw to return a specific HTTP status from a handler                                   |
+| [`FunctionContext`](function-context/)                      | Type for the second handler argument — caller identity, robot identity, params, headers |
+| [Response helpers](response-helpers/)                       | `ok()`, `created()`, `notFound()`, `badRequest()`, etc.                                 |
+
+The canonical "hello" sample used by every scaffolding surface (`uip functions new`, Studio Web) lives in the extractor package, next to the document builders that derive its deployment documents:
+
+| Export                                                                                                                       | Description                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@uipath/coded-functions-js-extractor` → `getSampleProject(options)`                                                         | **The one-call scaffold**: every file a sample project needs as a ready-to-write path → content map; `entry-points.json` and `bindings_v2.json` are derived from the sample source with the extractor at call time — the same pipeline `uip functions push` runs, so scaffolded documents cannot drift from a push |
+| `@uipath/coded-functions-js-extractor/templates` → `HELLO_TS`, `HELLO_JS`, `HELLO_TS_JOB`, `HELLO_JS_JOB`, `getSampleSource` | The inert sample sources (no compiler dependency — safe for synchronous browser bundles)                                                                                                                                                                                                                           |
+| `…/templates` → `getSamplePackageJson`, `getSamplePackageLockJson`, `SAMPLE_TSCONFIG`                                        | The static scaffold manifests, including a pre-resolved lockfile for consumers that cannot run `npm install`                                                                                                                                                                                                       |
+| `…/templates` → `SAMPLE_FUNCTION`, `SDK_VERSION`, `SDK_RANGE`                                                                | The sample's facts, and the SDK version scaffolds pin (test-fenced against the SDK's package.json)                                                                                                                                                                                                                 |
+
+## Installation
+
+```
+npm install @uipath/coded-functions-js-sdk
+```
+
+`@uipath/coded-functions-js-sdk` is a dev dependency. It provides types and the `defineFunction` factory at development time. The production runtime resolves functions by the emitted definition shape — the SDK package itself does not need to ship with your deployed package.
+
+```
+{
+  "devDependencies": {
+    "@uipath/coded-functions-js-sdk": "^0.x"
+  }
+}
+```
+
+# defineFunction
+
+Declares a JS Function. Returns a `FunctionDefinition` that the runtime dispatches on.
+
+```
+import { defineFunction } from "@uipath/coded-functions-js-sdk";
+```
+
+## Signature
+
+```
+function defineFunction<I extends ContractSchema, O extends ContractSchema>(
+  options: DefineFunctionOptions<I, O>
+): FunctionDefinition
+```
+
+## DefineFunctionOptions
+
+| Property      | Type                                              | Required | Description                                                                                                      |
+| ------------- | ------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `name`        | `string`                                          | yes      | Logical name, used in the manifest and Studio                                                                    |
+| `method`      | `"GET" \| "POST" \| "PUT" \| "PATCH" \| "DELETE"` | no\*     | HTTP method. Omit (together with `path`) for a job-only function                                                 |
+| `path`        | `string`                                          | no\*     | URL path, must start with `/`. Supports `:param` segments. Omit (together with `method`) for a job-only function |
+| `input`       | [`ContractSchema`](#declaring-contracts)          | no       | Request contract — validates and types input                                                                     |
+| `output`      | [`ContractSchema`](#declaring-contracts)          | no       | Response contract — types the return value                                                                       |
+| `handler`     | `(input, ctx) => result \| Promise<result>`       | yes      | Business logic                                                                                                   |
+| `description` | `string`                                          | no       | Human-readable description, shown in Studio                                                                      |
+| `tags`        | `string[]`                                        | no       | Tags for grouping in Studio                                                                                      |
+
+*\* `method` and `path` must be provided* *together* *or* *both omitted*\*. Providing one without the other throws.\*
+
+## HTTP vs. job-only functions
+
+Every function **runs as a job** — callable from a Trigger, a Maestro process, a Flow, or the Orchestrator API — regardless of whether it declares HTTP semantics.
+
+- **Declare `method` + `path`** to *additionally* expose the function as an HTTP endpoint. This is what local `serve` routes to, and the use case for **Coded Apps** backends and API-style integrations.
+- **Omit both** for a **job-only** function. It stays in the manifest and is fully invokable as a job, but gets no HTTP route. When run as a job there is no HTTP request, so `ctx.params` and `ctx.headers` are empty.
+
+## handler
+
+```
+handler: async (input: HandlerInput<I>, ctx: FunctionContext) =>
+  | T                  // plain value — serialized as JSON with status 200
+  | FunctionResponse   // { status, body?, headers? } — full control
+  | void               // empty 200 response
+```
+
+The handler's `input` parameter is typed from the declared contract: for `defineSchema<T>()` it is `T`; for a JSON Schema literal it is the type derived from the literal. If `output` is declared, `T` must match it the same way.
+
+## Declaring contracts
+
+A contract is a **curated JSON Schema subset** — inert data, statically extractable without executing your code. Two authoring variants feed the same runtime validation path:
+
+**TypeScript — declare the contract as a type with `defineSchema<T>()`:**
+
+```
+import { defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface CreateOrderInput {
+  customerId: string;
+  items: { sku: string; qty: number }[];
+  note?: string;
+}
+
+export default defineFunction({
+  name: "create-order",
+  method: "POST",
+  path: "/orders",
+  input: defineSchema<CreateOrderInput>(),
+  handler: async (input) => ({ ok: true }), // input is CreateOrderInput
+});
+```
+
+`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest.
+
+**JavaScript — write the JSON Schema literal directly:**
+
+```
+// @ts-check
+import { defineFunction } from "@uipath/coded-functions-js-sdk";
+
+export default defineFunction({
+  name: "create-order",
+  method: "POST",
+  path: "/orders",
+  input: {
+    type: "object",
+    properties: {
+      customerId: { type: "string" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { sku: { type: "string" }, qty: { type: "number" } },
+          required: ["sku", "qty"],
+          additionalProperties: false,
+        },
+      },
+      note: { type: "string" },
+    },
+    required: ["customerId", "items"],
+    additionalProperties: false,
+  },
+  handler: async (input) => ({ ok: true }), // input type is derived from the literal
+});
+```
+
+Both variants above declare the **same contract** — the TS type lowers to exactly that literal.
+
+### How types map to schemas
+
+| TypeScript                                              | JSON Schema                                                                           |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `string` / `number` / `boolean`                         | `{ "type": "string" \| "number" \| "boolean" }`                                       |
+| `"draft" \| "sent"` (literal union)                     | `{ "type": "string", "enum": [...] }` — numeric literal unions likewise               |
+| String / numeric TS `enum`                              | `{ "type": "string" \| "number", "enum": [...] }`                                     |
+| `T[]`                                                   | `{ "type": "array", "items": ... }`                                                   |
+| `interface` / object type                               | closed object — `additionalProperties: false`, non-optional props in `required`       |
+| `foo?: T`                                               | property present, not in `required`                                                   |
+| `Record<string, T>`                                     | `{ "type": "object", "additionalProperties": <schema of T> }`                         |
+| `unknown` (value position)                              | `{}` — accepts any JSON value (e.g. `Record<string, unknown>` for arbitrary job args) |
+| `Date`                                                  | `{ "type": "string", "format": "date-time" }`                                         |
+| `A \| B` (non-literal)                                  | `{ "anyOf": [...] }`                                                                  |
+| `any`, `bigint`, tuples, functions, top-level `unknown` | rejected at build time with an actionable diagnostic                                  |
+
+### JSDoc `@default`
+
+A TS type cannot express a default value, so the derivation reads it from JSDoc:
+
+```
+interface HelloInput {
+  /**
+   * Name to greet — filled in by the runtime when omitted.
+   * @default "World"
+   */
+  name?: string;
+}
+```
+
+This lowers to `{ "type": "string", "default": "World" }`; the runtime fills the field when the caller omits it. The tag text is parsed as JSON (`"World"` → string, `3` → number, `true` → boolean).
+
+### The curated subset
+
+Hand-written literals may use the full subset — including validation keywords a TS type cannot express:
+
+| Group       | Keywords                                                                                            |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| Types       | `type`: `string`, `number`, `integer`, `boolean`, `object`, `array`, `null`                         |
+| Annotations | `title`, `description`, `default`                                                                   |
+| Literals    | `const`, `enum`                                                                                     |
+| Strings     | `format` (`date-time`, `date`, `time`, `email`, `uri`, `uuid`), `minLength`, `maxLength`, `pattern` |
+| Numbers     | `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`                          |
+| Arrays      | `items`, `minItems`, `maxItems`, `uniqueItems`                                                      |
+| Objects     | `properties`, `required`, `additionalProperties`                                                    |
+| Composition | `anyOf`, `oneOf`, `allOf`                                                                           |
+
+No `$ref`/`$defs`, no custom keywords, no custom format functions — a contract stays inert, portable data. The literal must also be **static**: no spreads, computed keys, or identifier references.
+
+### Runtime validation
+
+The runtime compiles the contract with ajv (ajv never appears in your project):
+
+- **Input** is validated before the handler runs; failures return `400` with per-field errors.
+- **GET query strings** are coerced to their schema types (`"42"` → `42`, `"true"` → `true`).
+- **`default`** values are filled into missing input fields.
+- **Output** (when declared) is validated after the handler; failures return `500`.
+
+### Backwards compatibility: validator schemas
+
+`input`/`output` may still be a [Standard Schema](https://standardschema.dev/) object (`zod` >= 4.2, `arktype` >= 2.1.28, `valibot` >= 1.2 with `@valibot/to-json-schema` >= 1.5). These keep working unchanged, but require **executing** your module to obtain the contract — so they don't work with static tooling (Studio Web contract extraction) and need the validator as a runtime dependency. Prefer `defineSchema<T>()` / literals for new functions.
+
+## Examples
+
+### Minimal POST
+
+```
+import { defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface HelloInput {
+  /** @default "World" */
+  name?: string;
+}
+
+interface HelloOutput {
+  message: string;
+}
+
+export default defineFunction({
+  name: "hello",
+  method: "POST",
+  path: "/hello",
+  input: defineSchema<HelloInput>(),
+  output: defineSchema<HelloOutput>(),
+  handler: async (input) => ({ message: `Hello, ${input.name}!` }),
+});
+```
+
+### Job-only (no HTTP route)
+
+Omit `method` and `path` for a function invoked purely as a job — from a Trigger, Maestro, Flow, or the Orchestrator API. Run it locally with [`uip functions run`](../../cli-reference/#run).
+
+```
+import { defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface ProcessInvoiceInput {
+  invoiceId: string;
+}
+
+interface ProcessInvoiceOutput {
+  status: string;
+}
+
+export default defineFunction({
+  name: "process-invoice",
+  input: defineSchema<ProcessInvoiceInput>(),
+  output: defineSchema<ProcessInvoiceOutput>(),
+  handler: async (input, ctx) => {
+    // Called as a job — ctx.params/ctx.headers are empty and ctx.user is null; ctx.robot?.accessToken is available when provided by the platform.
+    return { status: "processed" };
+  },
+});
+```
+
+### GET with path parameter
+
+```
+export default defineFunction({
+  name: "get-invoice",
+  method: "GET",
+  path: "/invoices/:id",
+  handler: async (input, ctx) => {
+    return { id: ctx.params.id };
+  },
+});
+```
+
+`GET /invoices/INV-001` binds `ctx.params.id` to `"INV-001"` in local `serve` and when deployed alike. The `path` is registered as the trigger's slug verbatim, pattern included, and the deployed trigger resolves it by route matching. See [Platform Context — path parameters](../../platform-context/#path-parameters) for the full pattern syntax and the matching rules.
+
+### Custom status
+
+Return a `FunctionResponse` to control the HTTP status:
+
+```
+handler: async (input) => {
+  return { status: 201, body: { id: "new-id" } };
+}
+```
+
+### FunctionResponse with headers
+
+```
+handler: async (input) => {
+  return {
+    status: 200,
+    body: { ok: true },
+    headers: { "X-Custom-Header": "value" },
+  };
+}
+```
+
+## Validation
+
+`defineFunction` throws at module load time if:
+
+- only one of `method` / `path` is provided (supply both, or omit both for a job-only function)
+- `method` is not one of the five allowed HTTP methods
+- `path` does not start with `/`
+
+# FunctionError
+
+Throw `FunctionError` from a handler to return a specific HTTP status code. The runtime catches it and sends the error response instead of a 500.
+
+```
+import { FunctionError } from "@uipath/coded-functions-js-sdk";
+```
+
+## Constructor
+
+```
+// HTTP-style form
+new FunctionError(errorMessage: string, status: number, errorCode?: string, details?: unknown)
+
+// Status-less form — for job-only functions, where an HTTP status has no meaning
+new FunctionError(errorMessage: string, options?: { status?: number; errorCode?: string; details?: unknown })
+```
+
+| Parameter      | Type      | Required | Description                                                                                           |
+| -------------- | --------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `errorMessage` | `string`  | yes      | Human-readable error message                                                                          |
+| `status`       | `number`  | no       | HTTP status code to return when called over HTTP (defaults to 500 there). Omit for job-only functions |
+| `errorCode`    | `string`  | no       | Machine-readable error code for the caller                                                            |
+| `details`      | `unknown` | no       | Additional structured data (serialized to JSON)                                                       |
+
+## Properties
+
+| Property    | Type                  |
+| ----------- | --------------------- |
+| `message`   | `string`              |
+| `status`    | `number \| undefined` |
+| `errorCode` | `string \| undefined` |
+| `details`   | `unknown`             |
+| `name`      | `"FunctionError"`     |
+
+## Examples
+
+### 404 Not found
+
+```
+throw new FunctionError("Invoice not found", 404);
+```
+
+### 403 with error code
+
+```
+throw new FunctionError("Access denied", 403, "INSUFFICIENT_PERMISSIONS");
+```
+
+### 400 with validation details
+
+```
+throw new FunctionError(
+  "Invalid input",
+  400,
+  "VALIDATION_ERROR",
+  { field: "folderId", reason: "must be a positive integer" },
+);
+```
+
+### Job-only function — no HTTP status to invent
+
+```
+throw new FunctionError("Contract already renewed", { errorCode: "ALREADY_RENEWED" });
+```
+
+### Guard pattern
+
+```
+if (!ctx.user?.accessToken) {
+  throw new FunctionError(
+    "User access token not available — invoke from a logged-in coded app",
+    403,
+  );
+}
+```
+
+## What each surface receives
+
+**HTTP call** — the error body keeps the `{error, details?}` wire contract, with the thrown `status` as the HTTP status (500 when none was given):
+
+```
+{ "error": "Invoice not found", "details": { "invoiceId": "INV-042" } }
+```
+
+A `FunctionError` fills them with the author's message and `details`; an unanticipated throw renders its message with the stack as `details`. (`errorCode` is not part of the HTTP body — it is a job-surface field.)
+
+**Job run** — the job reports `Faulted` and the error is rendered as the standard contract in Orchestrator's job error info:
+
+```
+{ "code": "INVOICE_NOT_FOUND", "title": "Invoice not found", "detail": "...", "category": "User", "status": 404 }
+```
+
+A `FunctionError` populates it deliberately: `errorCode` → `code`, `message` → `title`, `details` (JSON-stringified) → `detail`, `status` → `status`; `category` is `User` — raised by function code.
+
+## Unanticipated errors
+
+Any other throw (a plain `Error`, a failed `fetch`, a string) forwards in full too: over HTTP the caller gets `{"error": "<message>", "details": "<stack>"}` with status 500; on a job run the error info shows `code: "JsCodedFunction.HandlerError"`, the message as `title` and the stack in `detail`. Prefer `FunctionError` anyway — it gives the error a meaningful code and status instead of the generic `HandlerError`/500.
+
+The one exception is a failure of the runtime itself (category `System`): those are reported generically, with the real error kept in the runtime logs.
+
+## Constructor argument order
+
+The arguments are `(message, status)` — not `(status, message)`. Both are valid TypeScript, but the wrong order produces a confusing error:
+
+```
+throw new FunctionError("Not found", 404);   // ✅ correct
+throw new FunctionError(404, "Not found");   // ❌ compiles, misbehaves at runtime
+```
+
+# FunctionContext
+
+The second argument to every handler. Carries caller identity, the function's own platform identity, path parameters, and request headers.
+
+```
+import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+```
+
+## Interface
+
+```
+interface FunctionContext {
+  user: IdentityContext | null;
+  robot: RobotContext | null;
+  platform: PlatformContext | null;
+  params: Record<string, string>;
+  headers: Record<string, string>;
+}
+```
+
+## user
+
+The identity of the caller. `null` if the platform cannot identify the caller (unauthenticated request) — and always `null` for job invocations, which have no caller.
+
+### IdentityContext
+
+```
+interface IdentityContext {
+  sub: string;                     // caller's user ID
+  name?: string;                   // display name, if present in claims
+  email?: string;                  // email, if present in claims
+  accessToken?: string;            // caller's OAuth token (from Authorization header)
+}
+```
+
+#### `accessToken`
+
+The OAuth token from the caller's `Authorization: Bearer` header. Use for delegated calls to Orchestrator — the caller's own folder permissions apply.
+
+```
+if (!ctx.user?.accessToken) {
+  throw new FunctionError("Not authenticated", 403);
+}
+const sdk = new UiPath({ secret: ctx.user.accessToken, ... });
+```
+
+## robot
+
+The function's own platform identity — the serverless robot it runs as. `null` on local runs.
+
+### RobotContext
+
+```
+interface RobotContext {
+  key: string | null;          // serverless robot key
+  accessToken: string | null;  // platform-issued workload token (~24h RS256 JWT)
+}
+```
+
+#### `accessToken`
+
+A platform-issued RS256 JWT (`sub_type: robot.user`, ~24h TTL) for the function's service account. Use for Secret Vault pattern — reads assets without requiring the caller to have folder access.
+
+**Availability:**
+
+| Context                   | Available?                               |
+| ------------------------- | ---------------------------------------- |
+| HTTP trigger (deployed)   | Yes                                      |
+| Job invocation (deployed) | Yes                                      |
+| Local `serve`             | No — use `UIPATH_ACCESS_TOKEN` in `.env` |
+
+```
+const token =
+  ctx.robot?.accessToken ||
+  process.env["UIPATH_ACCESS_TOKEN"] ||
+  "";
+```
+
+#### `key`
+
+The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably Secret asset retrieval via `GetRobotAssetByNameForRobotKey`, the only endpoint that releases Secret asset values.
+
+## platform
+
+Trusted platform coordinates for outbound UiPath calls, injected by the runtime. Use these instead of caller-forwarded input fields — input is caller-controlled and can redirect your Orchestrator calls.
+
+### PlatformContext
+
+```
+interface PlatformContext {
+  baseUrl: string;           // bare authority, e.g. "https://cloud.uipath.com"
+  orgId: string;             // organization id (GUID, not slug)
+  tenantId: string;          // tenant id (GUID, not slug)
+  folderKey: string | null;  // folder key of the invocation, if any
+}
+```
+
+**Availability:**
+
+| Context                   | Available?                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| HTTP trigger (deployed)   | Yes — from handler-authored headers                                                                           |
+| Job invocation (deployed) | Yes — from the runtime context (requires a handler that writes the platform fields; `null` on older handlers) |
+| Local `serve` / `run`     | Only with `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID` set                                          |
+
+`platform` is all-or-nothing: it is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available. `folderKey` can be `null` independently (folderless invocation).
+
+```
+if (!ctx.platform) {
+  throw new FunctionError("Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID", 500);
+}
+const sdk = new UiPath({
+  baseUrl: ctx.platform.baseUrl,
+  orgName: ctx.platform.orgId,
+  tenantName: ctx.platform.tenantId,
+  secret: token,
+});
+```
+
+The org-scoped URL (as sent in `X-UiPath-Url`) is `${baseUrl}/${orgId}/${tenantId}`.
+
+## params
+
+Path parameters from `:param` segments in the function's `path`.
+
+```
+// defineFunction({ path: "/invoices/:id/approve" })
+const invoiceId = ctx.params.id;   // "INV-001"
+```
+
+## headers
+
+All request headers, with lowercase keys.
+
+```
+const auth = ctx.headers["authorization"];   // "Bearer eyJ..."
+const type = ctx.headers["content-type"];
+```
+
+## Importing FunctionContext for helper functions
+
+`FunctionContext` is exported from the SDK. Import it explicitly when you split handler logic into typed helper functions:
+
+```
+import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+
+interface MyInput {
+  id: string;
+}
+
+// The same interface declares the contract (input: defineSchema<MyInput>()) and types the helper.
+async function processItem(input: MyInput, ctx: FunctionContext) {
+  const userId = ctx.user?.sub ?? "anonymous";
+  // ...
+}
+```
+
+Without the explicit import, the only alternative is `ctx: any`, which loses all type safety.
+
+## Usage example
+
+```
+export default defineFunction({
+  name: "example",
+  method: "POST",
+  path: "/example/:id",
+  handler: async (input, ctx) => {
+    // Identity
+    const userId = ctx.user?.sub ?? "anonymous";
+
+    // Path param
+    const resourceId = ctx.params.id;
+
+    // Token selection
+    const token =
+      ctx.robot?.accessToken ||
+      process.env["UIPATH_ACCESS_TOKEN"] ||
+      "";
+
+    return { userId, resourceId };
+  },
+});
+```
+
+# Response helpers
+
+The SDK exports a set of typed response helpers. Use them instead of returning a plain `FunctionResponse` object when you want readable, self-documenting status codes.
+
+```
+import { ok, created, notFound, badRequest } from "@uipath/coded-functions-js-sdk";
+```
+
+## Success helpers
+
+### `ok(body)`
+
+```
+ok<T>(body: T): FunctionResponse<T>
+```
+
+Returns `{ status: 200, body }`.
+
+```
+return ok({ message: "Hello" });
+```
+
+### `created(body)`
+
+```
+created<T>(body: T): FunctionResponse<T>
+```
+
+Returns `{ status: 201, body }`.
+
+```
+return created({ id: "new-resource-id" });
+```
+
+### `accepted(body?)`
+
+```
+accepted<T>(body?: T): FunctionResponse<T | undefined>
+```
+
+Returns `{ status: 202, body }`. Use for long-running operations where the result is not yet available.
+
+### `noContent()`
+
+```
+noContent(): FunctionResponse<undefined>
+```
+
+Returns `{ status: 204 }`. No body.
+
+## Error helpers
+
+These return a `FunctionResponse` — they do **not** throw. Use them when you want to return a structured error response without stopping execution flow with an exception.
+
+For errors that must halt execution (e.g. auth failures, validation errors that prevent the handler from continuing), throw [`FunctionError`](../function-error/) instead.
+
+> **Run-as-job behavior:** when the function runs as a UiPath job (no HTTP caller), returning any response with status ≥ 400 reports the job as **Faulted**, with the message surfaced in Orchestrator's job error info (`{ error }` maps to the error title, `details` to its detail). On the HTTP path the response body is returned to the caller verbatim, exactly as written.
+
+### `badRequest(message?, details?)`
+
+```
+badRequest(message?: string, details?: unknown): FunctionResponse<{ error: string; details?: unknown }>
+```
+
+Returns `{ status: 400, body: { error, details? } }`.
+
+```
+return badRequest("folderId is required");
+return badRequest("Invalid input", { field: "folderId", reason: "must be positive" });
+```
+
+### `unauthorized(message?)`
+
+```
+unauthorized(message?: string): FunctionResponse<{ error: string }>
+```
+
+Returns `{ status: 401, body: { error } }`.
+
+### `forbidden(message?)`
+
+```
+forbidden(message?: string): FunctionResponse<{ error: string }>
+```
+
+Returns `{ status: 403, body: { error } }`.
+
+### `notFound(message?)`
+
+```
+notFound(message?: string): FunctionResponse<{ error: string }>
+```
+
+Returns `{ status: 404, body: { error } }`.
+
+```
+return notFound(`Invoice ${id} not found`);
+```
+
+### `conflict(message?)`
+
+```
+conflict(message?: string): FunctionResponse<{ error: string }>
+```
+
+Returns `{ status: 409, body: { error } }`.
+
+## Generic helper
+
+### `response(status, body?, headers?)`
+
+```
+response<T>(status: number, body?: T, headers?: Record<string, string>): FunctionResponse<T | undefined>
+```
+
+Full control over status, body, and headers.
+
+```
+return response(302, undefined, { Location: "https://example.com" });
+```
+
+## Response helpers vs FunctionError
+
+|                     | Response helpers                                    | `FunctionError`                                         |
+| ------------------- | --------------------------------------------------- | ------------------------------------------------------- |
+| Throws              | No — returns a value                                | Yes — throws an exception                               |
+| Execution continues | Yes                                                 | No                                                      |
+| Use for             | Conditional branches that return different statuses | Auth failures, validation errors, unexpected conditions |
+
+```
+// ✅ FunctionError — stops execution immediately
+if (!ctx.user) throw new FunctionError("Unauthorized", 401);
+
+// ✅ Response helper — returns early from a conditional branch
+if (!record) return notFound(`Record ${id} not found`);
+return ok(record);
+```
