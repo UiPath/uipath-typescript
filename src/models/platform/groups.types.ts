@@ -30,8 +30,6 @@ export interface RawPlatformGroupGetResponse {
   createdTime: string;
   /** When the group was last modified. */
   lastModifiedTime: string | null;
-  /** Organization (account) GUID the group belongs to. Added by the SDK from the request scope. */
-  organizationId: string;
 }
 
 /**

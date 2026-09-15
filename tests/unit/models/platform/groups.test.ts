@@ -4,11 +4,7 @@ import { createPlatformGroupWithMethods } from '../../../../src/models/platform/
 import type { PlatformGroupServiceModel } from '../../../../src/models/platform/groups.models';
 import type { RawPlatformGroupGetResponse } from '../../../../src/models/platform/groups.types';
 import { PlatformGroupType } from '../../../../src/models/platform/groups.types';
-import {
-  PLATFORM_TEST_CONSTANTS,
-  PLATFORM_GROUP_TEST_CONSTANTS,
-  PLATFORM_USER_TEST_CONSTANTS,
-} from '../../../utils/mocks';
+import { PLATFORM_GROUP_TEST_CONSTANTS, PLATFORM_USER_TEST_CONSTANTS } from '../../../utils/mocks';
 
 // ===== HELPERS =====
 const createTransformedGroup = (
@@ -20,7 +16,6 @@ const createTransformedGroup = (
   type: PlatformGroupType.Custom,
   createdTime: PLATFORM_GROUP_TEST_CONSTANTS.CREATION_TIME,
   lastModifiedTime: PLATFORM_GROUP_TEST_CONSTANTS.LAST_MODIFICATION_TIME,
-  organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
   ...overrides,
 });
 
@@ -52,14 +47,13 @@ describe('Platform Group Model Tests', () => {
   });
 
   describe('update', () => {
-    it('should delegate to service.updateById with the captured group ID, organization, and new name', async () => {
+    it('should delegate to service.updateById with the captured group ID and new name', async () => {
       const group = createPlatformGroupWithMethods(createTransformedGroup(), mockService);
 
       await group.update({ name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT });
 
       expect(mockService.updateById).toHaveBeenCalledWith(
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT,
         {}
       );
@@ -73,7 +67,6 @@ describe('Platform Group Model Tests', () => {
 
       expect(mockService.updateById).toHaveBeenCalledWith(
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
         membership
       );
@@ -86,24 +79,15 @@ describe('Platform Group Model Tests', () => {
       expect(mockService.updateById).not.toHaveBeenCalled();
     });
 
-    it('should throw when the organization ID is missing', async () => {
-      const group = createPlatformGroupWithMethods(createTransformedGroup({ organizationId: '' }), mockService);
-
-      await expect(group.update({ name: 'x' })).rejects.toThrow('Group organization ID is undefined');
-      expect(mockService.updateById).not.toHaveBeenCalled();
-    });
   });
 
   describe('delete', () => {
-    it('should delegate to service.deleteById with the captured group ID and organization', async () => {
+    it('should delegate to service.deleteById with the captured group ID', async () => {
       const group = createPlatformGroupWithMethods(createTransformedGroup(), mockService);
 
       await group.delete();
 
-      expect(mockService.deleteById).toHaveBeenCalledWith(
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID
-      );
+      expect(mockService.deleteById).toHaveBeenCalledWith(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID);
     });
 
     it('should throw when the group ID is missing', async () => {
@@ -113,16 +97,10 @@ describe('Platform Group Model Tests', () => {
       expect(mockService.deleteById).not.toHaveBeenCalled();
     });
 
-    it('should throw when the organization ID is missing', async () => {
-      const group = createPlatformGroupWithMethods(createTransformedGroup({ organizationId: '' }), mockService);
-
-      await expect(group.delete()).rejects.toThrow('Group organization ID is undefined');
-      expect(mockService.deleteById).not.toHaveBeenCalled();
-    });
   });
 
   describe('getMembers', () => {
-    it('should delegate to service.getMembers with the captured group ID, organization, and options', async () => {
+    it('should delegate to service.getMembers with the captured group ID and options', async () => {
       const group = createPlatformGroupWithMethods(createTransformedGroup(), mockService);
       const options = { pageSize: 10 };
 
@@ -130,7 +108,6 @@ describe('Platform Group Model Tests', () => {
 
       expect(mockService.getMembers).toHaveBeenCalledWith(
         PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
         options
       );
     });
@@ -142,11 +119,5 @@ describe('Platform Group Model Tests', () => {
       expect(mockService.getMembers).not.toHaveBeenCalled();
     });
 
-    it('should throw when the organization ID is missing', async () => {
-      const group = createPlatformGroupWithMethods(createTransformedGroup({ organizationId: '' }), mockService);
-
-      await expect(group.getMembers()).rejects.toThrow('Group organization ID is undefined');
-      expect(mockService.getMembers).not.toHaveBeenCalled();
-    });
   });
 });
