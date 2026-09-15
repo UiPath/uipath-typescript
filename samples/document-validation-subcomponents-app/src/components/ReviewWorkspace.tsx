@@ -4,37 +4,46 @@ import {
   CompactFieldsForm,
   CompactTableEditor,
   DocumentViewer,
-  useBucketArtifacts,
+  useDuDocumentArtifacts,
   ValidationStationLanguage,
+  type IVsSaveExceptionReportRequest,
+  type IVsSaveValidatedDataAsDraftRequest,
+  type IVsSaveValidatedDataRequest,
   type SaveValidatedDataResult,
 } from '@uipath/ui-widgets-validation-station';
 import type { UiPath } from '@uipath/uipath-typescript/core';
 import type { DuFramework } from '@uipath/uipath-typescript/document-understanding';
 import type { TaskGetResponse } from '@uipath/uipath-typescript/tasks';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import CenteredMessage from './CenteredMessage';
 import Panel from './Panel';
 
 interface ReviewWorkspaceProps {
   sdk: UiPath;
   task: TaskGetResponse;
-  onSubmitComplete: (result: SaveValidatedDataResult) => void;
-  onSaveAsDraftComplete: (result: SaveValidatedDataResult) => void;
+  onSubmitComplete: (
+    request: IVsSaveValidatedDataRequest,
+    result?: SaveValidatedDataResult,
+  ) => void;
+  onSaveAsDraftComplete: (
+    request: IVsSaveValidatedDataAsDraftRequest,
+    result?: SaveValidatedDataResult,
+  ) => void;
   onReportException: (documentId: string, reason: string) => void;
 }
 
 /**
  * The composed review screen. It fetches the document artifacts **once** via
- * `useBucketArtifacts`, then hands the same artifacts to five compact
+ * `useDuDocumentArtifacts`, then hands the same artifacts to five compact
  * subcomponents laid out in a custom grid. Every subcomponent carries the same
  * `instanceId`, so they share one store: selecting a field in the form
  * highlights it in the viewer, selecting the line-items table opens the table
  * editor, and rule clicks focus the offending field — no cross-wiring needed.
  *
- * Only the fields form persists: it receives `sdk` + `data` + `folderId` (in
- * addition to the shared artifacts) so its built-in Submit / Save-draft /
- * Report-exception actions round-trip through the SDK. The other four are fed
- * the pre-fetched artifacts only.
+ * Only the fields form persists: it receives `sdk` + `data` (in addition to the
+ * shared artifacts) so its built-in Submit / Save-draft / Report-exception
+ * actions round-trip through the SDK. The other four are fed the pre-fetched
+ * artifacts only.
  */
 function ReviewWorkspace({
   sdk,
@@ -43,9 +52,16 @@ function ReviewWorkspace({
   onSaveAsDraftComplete,
   onReportException,
 }: ReviewWorkspaceProps) {
-  const data = task.data as DuFramework.ContentValidationData;
-  const folderId = task.folderId;
-  const { artifacts, error } = useBucketArtifacts(sdk, data, folderId);
+  // The artifacts fetch scopes itself to the folder named on the payload, so fill in the
+  // task's folder when the payload arrived without one. Memoised because the fetch keys off
+  // this object's identity - a fresh one each render would refetch the document forever.
+  const data = useMemo(() => {
+    const raw = task.data as DuFramework.ContentValidationData;
+    if (raw.FolderId != null || raw.FolderKey != null || task.folderId == null) return raw;
+    return { ...raw, FolderId: task.folderId };
+  }, [task]);
+
+  const { artifacts, error } = useDuDocumentArtifacts(sdk, data);
   const [status, setStatus] = useState<string>('');
 
   if (error)
@@ -102,7 +118,6 @@ function ReviewWorkspace({
             {...shared}
             sdk={sdk}
             data={data}
-            folderId={folderId}
             options={{
               hideBusinessRules: true,
               hideDocumentTypeField: true,
@@ -112,9 +127,14 @@ function ReviewWorkspace({
               setStatus(`Selected field: ${d.Field?.FieldName ?? '?'}`)
             }
             onDirtyChange={(dirty) => dirty && setStatus('Unsaved changes')}
-            onSubmitComplete={onSubmitComplete}
-            onSaveAsDraftComplete={onSaveAsDraftComplete}
-            onReportExceptionComplete={onReportException}
+            onSubmit={onSubmitComplete}
+            onSaveAsDraft={onSaveAsDraftComplete}
+            onReportException={(request: IVsSaveExceptionReportRequest) => {
+              // `exceptionReport` is typed `unknown` on the widget's contract - it carries
+              // the IReportAsExceptionDTO shape, of which the reason is all this app needs.
+              const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
+              onReportException(request.documentId, Reason ?? '');
+            }}
           />
         </Panel>
 

@@ -3,6 +3,9 @@ import {
   ValidationStation,
   ValidationStationLanguage,
   type IValidationStationOptions,
+  type IVsSaveExceptionReportRequest,
+  type IVsSaveValidatedDataAsDraftRequest,
+  type IVsSaveValidatedDataRequest,
   type SaveValidatedDataResult,
 } from '@uipath/ui-widgets-validation-station';
 import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
@@ -70,23 +73,30 @@ function ValidationPanel({
   // Save-as-draft: the widget has already uploaded the in-progress data to the
   // bucket. Nothing to complete — just clear the pending state and surface any
   // failure (the widget stays silent on its own).
-  const handleSaveAsDraftComplete = useCallback((result: SaveValidatedDataResult) => {
-    setSave(undefined);
-    setPendingAction(null);
-    if (!result.success) {
-      setActionError(result.error ?? 'Failed to save draft');
-    }
-  }, []);
+  const handleSaveAsDraftComplete = useCallback(
+    (_request: IVsSaveValidatedDataAsDraftRequest, result?: SaveValidatedDataResult) => {
+      setSave(undefined);
+      setPendingAction(null);
+      if (!result?.success) {
+        setActionError(result?.error ?? 'Failed to save draft');
+      }
+    },
+    [],
+  );
 
   // Submit: the widget has already run ProcessExtractedData and uploaded the
   // validated result to the bucket. On success we complete the task; the
   // validated data lives in the bucket, so no payload is sent here.
+  //
+  // `result` is only populated when the widget owned the write-back, which it does here
+  // because it was given `sdk` + `data`. No result means nothing was persisted - treated as
+  // a failure, rather than completing the task over unsaved edits.
   const handleSubmitComplete = useCallback(
-    async (result: SaveValidatedDataResult) => {
+    async (_request: IVsSaveValidatedDataRequest, result?: SaveValidatedDataResult) => {
       setSave(undefined);
 
-      if (!result.success) {
-        setActionError(result.error ?? 'Failed to submit document');
+      if (!result?.success) {
+        setActionError(result?.error ?? 'Failed to submit document');
         setPendingAction(null);
         return;
       }
@@ -176,6 +186,15 @@ function ValidationPanel({
     );
   };
 
+  // The widget scopes its bucket calls to the folder named on the payload, so fill in the
+  // task's folder when the payload arrived without one.
+  const validationData = useMemo(() => {
+    const payload = fullTask?.data as DuFramework.ContentValidationData | undefined;
+    if (!payload) return null;
+    if (payload.FolderId != null || payload.FolderKey != null) return payload;
+    return fullTask?.folderId == null ? payload : { ...payload, FolderId: fullTask.folderId };
+  }, [fullTask]);
+
   const displayTask = fullTask ?? task;
   const canAct = !!fullTask && !!fullTask.data && pendingAction === null;
 
@@ -240,26 +259,28 @@ function ValidationPanel({
           <div className="p-6 text-sm text-red-700 whitespace-pre-wrap break-words">
             {loadError}
           </div>
-        ) : !fullTask?.data ? (
+        ) : !validationData ? (
           <div className="p-6 text-sm text-gray-500">
             This task has no validation payload to display.
           </div>
         ) : (
           <ValidationStation
             sdk={sdk}
-            data={fullTask.data as DuFramework.ContentValidationData}
-            folderId={fullTask.folderId}
+            data={validationData}
             theme="light"
             language={ValidationStationLanguage.English}
             isReadonly={isReadonly}
             options={VALIDATION_STATION_OPTIONS}
             save={save}
-            onSaveAsDraftComplete={handleSaveAsDraftComplete}
-            onSubmitComplete={handleSubmitComplete}
-            onReportExceptionComplete={(documentId, reason) => {
+            onSaveAsDraft={handleSaveAsDraftComplete}
+            onSubmit={handleSubmitComplete}
+            onReportException={(request: IVsSaveExceptionReportRequest) => {
+              // `exceptionReport` is typed `unknown` on the widget's contract - it carries
+              // the IReportAsExceptionDTO shape, of which the reason is all this app needs.
+              const { Reason } = (request.exceptionReport ?? {}) as { Reason?: string };
               void reportException(
-                documentId,
-                reason || 'Reported via Validation Station',
+                request.documentId,
+                Reason || 'Reported via Validation Station',
               );
             }}
           />

@@ -228,12 +228,13 @@ When deployed, the platform injects these config tags automatically — the plug
 ```
 
 ### 2. Add Action Center redirect uri in your external application
-Add redirect uri `https://cloud.uipath.com/<orgId>/<tenantId>/actions_` to the external application you are using in `uipath.json`. Ignore if it already exists.
-(It is added automatically the first time any coded action app using this external application is deployed.)
+Add redirect uri `https://<host>/<orgId>/<tenantId>/actions_` to the external application you are using in `uipath.json`, where `<host>` is the environment you sign in to (`cloud.uipath.com`, `alpha.uipath.com`, …).
+
+`<orgId>` and `<tenantId>` are the **GUIDs, not the org and tenant names shown in the browser address bar**. This entry is normally added the first time a coded action app using this external application is deployed, but confirm it is there — a missing or name-based entry fails with `invalid_request` / `Invalid redirect_uri`. To read the exact value your app sends, open it and copy `redirect_uri` from the `/identity_/connect/authorize` request in the browser's network tab.
 
 ### 3. Open Action Center Coded Action App Debug page
 Action Center offers a task-simulation experience for coded action apps running on localhost.
-Open `https://cloud.uipath.com/<orgName>/<tenantName>/actions_/debug/coded-action-app`.
+Open `https://<host>/<orgName>/<tenantName>/actions_/debug/coded-action-app` — this page addresses your org and tenant by **name**, unlike the redirect URI above.
 Fill in the details in the page and load the app.
 
 ![Coded Action App Local Development](../assets/Coded-action-app-local-development.png)

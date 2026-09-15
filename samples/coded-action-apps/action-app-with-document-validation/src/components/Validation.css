@@ -1,0 +1,71 @@
+.validation-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* The widget renders the bare custom element with no styling of its own, so the host sizes
+   it. A custom element is inline by default, which would leave the viewer height-less. */
+.validation-host > ui-du-validation-station-standalone-wc-element {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.validation-status {
+  margin: 0;
+  padding: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.validation-status--error {
+  color: #b42318;
+}
+
+body.dark .validation-status--error {
+  color: #fda29b;
+}
+
+/* Covers the widget between it handing back control and the action actually completing.
+   By that point the widget has gone idle, so without this the reviewer sees a still screen
+   and can keep clicking a document whose fate is already decided. The scrim reuses the
+   widget's own surface colours, for the reason given in App.css. */
+.validation-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+body.dark .validation-busy {
+  background: rgba(24, 32, 39, 0.72);
+}
+
+.validation-busy__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: validation-busy-spin 0.7s linear infinite;
+}
+
+@keyframes validation-busy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .validation-busy__spinner {
+    animation: none;
+  }
+}

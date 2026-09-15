@@ -18,7 +18,7 @@ This template demonstrates how to handle direct file attachments in coded action
   - A non-confidential **External Application** (OAuth client) registered with the following:
     - Scopes:
         - `OR.Folders.Read` (for file attachments)
-    - Redirect URI `https://cloud.uipath.com/<orgId>/<tenantId>/actions_` (It is added automatically the first time any coded action app using this external application is deployed)
+    - Redirect URI `https://<host>/<orgId>/<tenantId>/actions_`, where `<host>` is the environment you sign in to (`cloud.uipath.com`, `alpha.uipath.com`, …) and `<orgId>`/`<tenantId>` are the **GUIDs — not the org and tenant names shown in the browser address bar**. This is normally added the first time a coded action app using this external application is deployed, but confirm it is there: a missing or name-based entry fails with `invalid_request` / `Invalid redirect_uri`. To read the exact value your app sends, open it and copy `redirect_uri` from the `/identity_/connect/authorize` request in the browser's network tab.
 - Install [UiPath CLI](https://github.com/UiPath/cli#installation)
   
   ```bash
