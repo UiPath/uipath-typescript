@@ -5,7 +5,8 @@
  * - `Platform` — bulk read and bulk create/update of a user's setting key/value pairs
  * - `Groups` — manage an organization's groups and their members
  *
- * Every operation is user-scoped — see {@link PlatformSettingKey}.
+ * Every `Platform` settings operation is user-scoped — see {@link PlatformSettingKey}.
+ * `Groups` operations are organization-scoped and require `organizationId`.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *
