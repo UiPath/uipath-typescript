@@ -18,6 +18,8 @@ import {
   EntityUpdateResponse,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
+  EntityUpsertOptions,
+  EntityUpsertResponse,
   EntityRecord,
   RawEntityGetResponse,
   FieldMetaData,
@@ -215,6 +217,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.UpdateRecordsById')
   async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
     return this.updateRecordsImpl(true, id, data, options);
+  }
+
+  @track('Entities.Upsert')
+  async upsert(
+    entityRef: EntityRef,
+    data: Record<string, any>,
+    options: EntityUpsertOptions = {}
+  ): Promise<EntityUpsertResponse> {
+    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.upsert');
+    // The route is name-only, so an id ref costs a lookup.
+    const entityName = byId ? await this.resolveEntityName(identifier, options.folderKey) : identifier;
+    return this.upsertImpl(entityName, data, options);
   }
 
   @track('Entities.DeleteRecords')
@@ -931,6 +945,22 @@ export class EntityService extends BaseService implements EntityServiceModel {
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_NAME(identifier),
+      data,
+      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+    );
+    return response.data;
+  }
+
+  private async upsertImpl(
+    entityName: string,
+    data: Record<string, any>,
+    options: EntityUpsertOptions
+  ): Promise<EntityUpsertResponse> {
+    const params = createParams({ expansionLevel: options.expansionLevel });
+    // Returned as sent: the envelope is already camelCase, and which fields come back depends
+    // on the form the server applied, so reshaping here would drop one form's payload.
+    const response = await this.post<EntityUpsertResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(entityName),
       data,
       { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );
