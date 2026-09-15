@@ -289,7 +289,12 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
       }, 60_000);
 
       it('should return related-entity fields for a cross-entity LEFT join', async () => {
-        const matched = await queryJoined(JoinType.LeftJoin, matchedValue);
+        // The two queries are independent, so issue them together: one stall
+        // window sits inside the budget instead of two in series.
+        const [matched, unmatched] = await Promise.all([
+          queryJoined(JoinType.LeftJoin, matchedValue),
+          queryJoined(JoinType.LeftJoin, baseOnlyValue),
+        ]);
 
         // Multi-entity result rows use entity-qualified keys ("Entity.Field").
         // The related entity's join key must come back carrying a value — this
@@ -301,7 +306,6 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         expect(hasValidPagination(matched)).toBe(true);
 
         // LEFT also keeps base rows with no match, without related columns.
-        const unmatched = await queryJoined(JoinType.LeftJoin, baseOnlyValue);
         expect(unmatched.items.length).toBeGreaterThan(0);
         unmatched.items.forEach((item) => {
           expect(item[`${baseEntityName}.${joinFieldName}`]).toBe(baseOnlyValue);
@@ -310,14 +314,17 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
       }, 60_000);
 
       it('should return only matched rows for an INNER join', async () => {
+        const [unmatched, matched] = await Promise.all([
+          queryJoined(JoinType.InnerJoin, baseOnlyValue),
+          queryJoined(JoinType.InnerJoin, matchedValue),
+        ]);
+
         // The same seeded row LEFT keeps, INNER must drop — a direct check of
         // INNER semantics that needs no row arithmetic and cannot be skewed by
         // fixture size.
-        const unmatched = await queryJoined(JoinType.InnerJoin, baseOnlyValue);
         expect(unmatched.items).toHaveLength(0);
 
         // INNER still returns matched rows, each carrying the related columns.
-        const matched = await queryJoined(JoinType.InnerJoin, matchedValue);
         expect(matched.items.length).toBeGreaterThan(0);
         matched.items.forEach((item) => {
           expect(item[`${relatedEntity}.${relatedFieldName}`]).toBe(matchedValue);
