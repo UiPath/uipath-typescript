@@ -235,10 +235,9 @@ describe.each(modes)('Data Fabric Entities Query - Integration Tests [%s]', (mod
         }
         joinEntityId = entityId;
         // Names the join's base entity and the entity-qualified keys the
-        // multi-entity route returns for base columns. Prefer the configured
-        // fixture name; fall back to the entity's own name so the tests still
-        // run where that env var is unset.
-        baseEntityName = config.dataFabricTestJoinEntityName || (await entities.getById(entityId)).name;
+        // multi-entity route returns for base columns. Read from the entity
+        // itself so it cannot drift from the entity actually being queried.
+        baseEntityName = (await entities.getById(entityId)).name;
         relatedEntity = config.dataFabricTestJoinRelatedEntityName;
         joinFieldName = config.dataFabricTestJoinFieldName;
         relatedFieldName = config.dataFabricTestJoinRelatedFieldName;
