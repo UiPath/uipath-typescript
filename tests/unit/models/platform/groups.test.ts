@@ -112,6 +112,13 @@ describe('Platform Group Model Tests', () => {
       await expect(group.delete()).rejects.toThrow('Group ID is undefined');
       expect(mockService.deleteById).not.toHaveBeenCalled();
     });
+
+    it('should throw when the organization ID is missing', async () => {
+      const group = createPlatformGroupWithMethods(createTransformedGroup({ organizationId: '' }), mockService);
+
+      await expect(group.delete()).rejects.toThrow('Group organization ID is undefined');
+      expect(mockService.deleteById).not.toHaveBeenCalled();
+    });
   });
 
   describe('getMembers', () => {
@@ -132,6 +139,13 @@ describe('Platform Group Model Tests', () => {
       const group = createPlatformGroupWithMethods(createTransformedGroup({ id: '' }), mockService);
 
       await expect(group.getMembers()).rejects.toThrow('Group ID is undefined');
+      expect(mockService.getMembers).not.toHaveBeenCalled();
+    });
+
+    it('should throw when the organization ID is missing', async () => {
+      const group = createPlatformGroupWithMethods(createTransformedGroup({ organizationId: '' }), mockService);
+
+      await expect(group.getMembers()).rejects.toThrow('Group organization ID is undefined');
       expect(mockService.getMembers).not.toHaveBeenCalled();
     });
   });
