@@ -118,10 +118,12 @@ jobs:
     if: ${{ !inputs.github_packages_only }}
     needs: publish-sdk
     uses: ./.github/workflows/docs.yml
-    # Called workflows receive no secrets by default; the docs build needs
-    # CODED_FUNCTIONS_DOCS_APP_ID and CODED_FUNCTIONS_DOCS_PRIVATE_KEY to mint
-    # a token for the JS Functions pages.
-    secrets: inherit
+    # Called workflows receive no secrets by default. Pass just the two the docs
+    # build needs to mint a token for the JS Functions pages -- `inherit` would
+    # hand over the entire repository secret store.
+    secrets:
+      CODED_FUNCTIONS_DOCS_APP_ID: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
+      CODED_FUNCTIONS_DOCS_PRIVATE_KEY: ${{ secrets.CODED_FUNCTIONS_DOCS_PRIVATE_KEY }}
     permissions:
       contents: write
       pages: write

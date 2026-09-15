@@ -63,27 +63,50 @@ secrets, and for local builds without the token exported.
 PLACEHOLDER
 }
 
+# Resolve the expected page list before anything destructive runs. A process
+# substitution cannot report failure to the caller, so an unreadable config
+# would otherwise yield an empty list -- silently wiping $TARGET and turning the
+# integrity check below into a no-op.
+if [ ! -f "$CONFIG" ]; then
+  echo "::error::${CONFIG} not found -- run this from the repository root." >&2
+  exit 1
+fi
+
+pages=()
+while IFS= read -r page; do
+  pages+=("$page")
+done < <(referenced_pages)
+
+if [ ${#pages[@]} -eq 0 ]; then
+  echo "::error::${CONFIG} references no js-functions pages; expected the JS Functions nav and llmstxt entries. Refusing to touch ${TARGET}." >&2
+  exit 1
+fi
+
 if [ -z "${CODED_FUNCTIONS_DOCS_TOKEN:-}" ]; then
   echo "::warning::CODED_FUNCTIONS_DOCS_TOKEN is unset -- skipping the ${REPO} docs fetch. Writing placeholder pages so the build still completes; the JS Functions section will not show real content."
   rm -rf "$TARGET"
-  while IFS= read -r page; do
+  for page in "${pages[@]}"; do
     write_placeholder "$page"
-  done < <(referenced_pages)
+  done
   exit 0
 fi
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
 
-# Tarball over `git clone` so the token travels in an Authorization header
-# rather than inside a remote URL, where it would surface in git output.
+# Tarball over `git clone` so the token travels in a header rather than inside a
+# remote URL, where it would surface in git output. The header itself goes in
+# through a --config file on stdin, keeping the token out of curl's argv, which
+# any other process on the runner can read via `ps`.
 echo "Fetching ${REPO}@${REF} docs..."
-curl --fail --silent --show-error --location \
-  --header "Authorization: Bearer ${CODED_FUNCTIONS_DOCS_TOKEN}" \
-  --header "Accept: application/vnd.github+json" \
-  --header "X-GitHub-Api-Version: 2022-11-28" \
-  "https://api.github.com/repos/${REPO}/tarball/${REF}" \
-  --output "${workdir}/source.tar.gz"
+printf 'header = "Authorization: Bearer %s"\n' "$CODED_FUNCTIONS_DOCS_TOKEN" \
+  | curl --config - \
+      --fail --silent --show-error --location \
+      --retry 3 --retry-delay 2 \
+      --header "Accept: application/vnd.github+json" \
+      --header "X-GitHub-Api-Version: 2022-11-28" \
+      "https://api.github.com/repos/${REPO}/tarball/${REF}" \
+      --output "${workdir}/source.tar.gz"
 
 # The tarball's single top-level directory is <org>-<repo>-<sha>; strip it.
 mkdir -p "${workdir}/source"
@@ -116,13 +139,22 @@ find "$TARGET" -name '*.md.bak' -type f -delete
 # placeholder: the last good site stays live, and the nav plus the llmstxt block
 # in mkdocs.yml get updated to match.
 missing=()
-while IFS= read -r page; do
+for page in "${pages[@]}"; do
   [ -f "${TARGET}/${page}" ] || missing+=("$page")
-done < <(referenced_pages)
+done
 
 if [ ${#missing[@]} -gt 0 ]; then
   echo "::error::${REPO}@${REF} no longer provides these pages, which ${CONFIG} still references: ${missing[*]}. Update the JS Functions nav and llmstxt entries in ${CONFIG}." >&2
   exit 1
 fi
+
+# Drift the other way: a page added upstream renders at a live URL but sits in
+# neither the nav nor the llmstxt block. Warn rather than fail -- a new upstream
+# page should not block a release, but it should not stay invisible either.
+referenced_list="$(printf '%s\n' "${pages[@]}")"
+while IFS= read -r found; do
+  printf '%s\n' "$referenced_list" | grep -qxF "$found" \
+    || echo "::warning::${REPO}@${REF} provides ${found}, which ${CONFIG} does not reference. It renders at a URL no nav entry points to -- add it to the JS Functions nav and llmstxt entries."
+done < <(cd "$TARGET" && find . -name '*.md' -type f | sed 's|^\./||' | sort)
 
 echo "Fetched $(find "$TARGET" -name '*.md' -type f | wc -l | tr -d ' ') markdown pages into ${TARGET}/"

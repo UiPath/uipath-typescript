@@ -1,6 +1,14 @@
 name: Deploy Documentation
 on:
   workflow_call:
+    # Declared rather than inherited, so a caller hands over these two secrets
+    # and nothing else. Not required: without them the JS Functions fetch falls
+    # back to placeholder pages instead of failing the build.
+    secrets:
+      CODED_FUNCTIONS_DOCS_APP_ID:
+        required: false
+      CODED_FUNCTIONS_DOCS_PRIVATE_KEY:
+        required: false
   workflow_dispatch:
   # Sent by UiPath/coded-functions-js when its docs/ changes on main, so the
   # JS Functions section refreshes without waiting for the next SDK release.

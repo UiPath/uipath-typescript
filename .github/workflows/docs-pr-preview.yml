@@ -22,6 +22,7 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "package.json"
       - "scripts/fetch-js-functions-docs.sh"
       - ".github/workflows/docs-pr-preview.yml"
 
@@ -36,6 +37,10 @@ concurrency:
 jobs:
   build-and-preview:
     runs-on: uipath-ubuntu-latest
+    env:
+      # Surfaced as env because the `secrets` context is unavailable in `if:`.
+      # Lets the minting step below detect an absent credential.
+      JS_FUNCTIONS_DOCS_APP_ID: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
@@ -69,12 +74,15 @@ jobs:
           pip install -r docs/requirements.txt
 
       - name: Mint JS Functions docs token
-        # Same-repo PRs only: fork PRs run without secrets, so the App id and
-        # private key would both be empty and this action would fail the step.
-        # Skipped, its token output is empty, and the fetch falls back to
-        # placeholder pages rather than failing this build gate.
+        # Same-repo PRs with the credential configured only. Fork PRs run
+        # without secrets by design, and the App credential can also be absent
+        # or rotated out; in either case this action would fail on an empty
+        # app-id. Skipped, its token output is empty and the fetch falls back to
+        # placeholder pages rather than reding this build gate. docs.yml does
+        # not get the same treatment on purpose -- placeholders must never reach
+        # the live site.
         id: js_functions_docs_token
-        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository && env.JS_FUNCTIONS_DOCS_APP_ID != ''
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
         with:
           app-id: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
