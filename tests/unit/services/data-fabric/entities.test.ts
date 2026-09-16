@@ -2477,7 +2477,7 @@ describe("EntityService Unit Tests", () => {
       const tx = result.transaction!;
 
       // The API already sends camelCase here, so the tree passes through unchanged
-      expect(result.transaction).toEqual(raw.transaction);
+      expect(tx).toEqual(raw.transaction);
 
       // Root node
       expect(tx.entityName).toBe(

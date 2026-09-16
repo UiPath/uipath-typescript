@@ -1365,9 +1365,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(result.transaction).toBeDefined();
       const tx = result.transaction!;
 
-      expect(result).toBeDefined();
       expect(result.Id).toBeDefined();
-      expect(result.transaction).toBeDefined();
       expect(tx.entityName).toBe(treeEntityName);
       expect(tx.op).toBe(EntityMultiEntityWriteOperation.Insert);
       expect(tx.id).toBe(result.Id);

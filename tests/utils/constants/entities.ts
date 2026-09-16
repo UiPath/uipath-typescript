@@ -100,11 +100,6 @@ export const ENTITY_TEST_CONSTANTS = {
       },
     ],
   },
-  // An empty array is a cleared multi-choiceset field, not a set of child records
-  TEST_TREE_RECORD_DATA_EMPTY_CHILD_ARRAY: {
-    assignee: 'assignee1',
-    tags: [],
-  },
 
   // Operation Options
   EXPANSION_LEVEL: 1,
