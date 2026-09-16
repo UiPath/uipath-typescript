@@ -2624,9 +2624,14 @@ Use this to retrieve the schema a QuickForm task was created with — the `taskS
 
 `Promise`\<`TaskSchemaGetResponse`>
 
-Promise resolving to [TaskSchemaGetResponse](../TaskSchemaGetResponse/)
+Promise resolving to a [TaskSchemaGetResponse](../TaskSchemaGetResponse/) containing the schema `key`, `name`, and JSON `schema` body, along with folder (`folderId`) and creation metadata (`createdTime`).
 
-#### Example
+#### Examples
+
+```
+const schema = await tasks.getSchema('<taskSchemaKey>', { folderId: <folderId> });
+console.log(schema.name, schema.schema);
+```
 
 ```
 const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
