@@ -3084,6 +3084,9 @@
 <p>A single-record upsert returns the written record's fields. A transactional write across
 related entities reports its outcome in <a href="#transaction">transaction</a> instead, and carries no field
 values — the per-record IDs there are the result.</p>
+<p>The response envelope also carries <code>children</code>, <code>cascadeDeletedChildren</code> and <code>deletedCount</code>.
+Those describe composite entities, which this route never writes, so they arrive empty on
+every call and are left undeclared rather than published as three inert fields.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../EntityRecord/"><code>EntityRecord</code></a></li>
