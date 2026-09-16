@@ -539,10 +539,11 @@ describe('ProcessService Unit Tests', () => {
       );
     });
 
-    it('swaps the wire identity from ReleaseKey to ReleaseName when a runtime override redirects the { key } ProcessRef to a name', async () => {
-      // Two code paths in resolveProcessRefIdentity's { key } branch: no override → ReleaseKey,
-      // override.name present → ReleaseName. This guards the second path (already covered for
-      // { name } but the { key } → name swap has its own branch).
+    it('ignores runtime overrides on the { key } ProcessRef — keys are stable GUIDs, not overridable identities', async () => {
+      // Overrides are keyed by design-time names (PLT-92768) — asking the SDK to look up
+      // `process.<guid>` in the override table is a category error. Even when the table
+      // happens to contain that key, the { key } branch bypasses the lookup and passes the
+      // caller's key through to the wire.
       const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
       (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
         [`process.${PROCESS_TEST_CONSTANTS.PROCESS_KEY}`]: {
@@ -561,9 +562,9 @@ describe('ProcessService Unit Tests', () => {
         );
 
         const [, body] = mockApiClient.post.mock.calls[0];
-        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
-        // The original key must not leak onto the wire when redirected to a name.
-        expect(body.startInfo.releaseKey).toBeUndefined();
+        // The caller's key rides through unchanged; the "override" table entry is inert.
+        expect(body.startInfo.releaseKey).toBe(PROCESS_TEST_CONSTANTS.PROCESS_KEY);
+        expect(body.startInfo.releaseName).toBeUndefined();
       } finally {
         delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
       }
@@ -587,6 +588,39 @@ describe('ProcessService Unit Tests', () => {
 
         await service.start(
           { processKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY } as ProcessStartRequest,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        );
+
+        const [, body] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_NAME);
+        expect(body.startInfo.releaseKey).toBeUndefined();
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
+    it('drops a caller-supplied processKey when a legacy { processName } override redirects to a different name', async () => {
+      // Mixed-identity request `{ processName, processKey }` was previously left with a stale
+      // `ReleaseKey` on the wire after a processName redirect — the redirected name pointed
+      // at process A while the untouched key still pointed at process B. `dropProcessKey`
+      // now scrubs the stale key so the wire body carries only the redirected identity.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+        },
+      });
+
+      try {
+        mockApiClient.post.mockResolvedValue(
+          createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+        );
+
+        await service.start(
+          {
+            processName: PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+            processKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
+          } as ProcessStartRequest,
           { folderId: TEST_CONSTANTS.FOLDER_ID },
         );
 

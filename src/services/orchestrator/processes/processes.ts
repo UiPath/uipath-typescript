@@ -231,25 +231,16 @@ function resolveProcessRefIdentity(
       folderPath: override?.folderPath,
     };
   }
-  if ('key' in processRef) {
-    if (!processRef.key) {
-      throw new ValidationError({
-        message: 'Processes.start: processRef.key must be a non-empty string.',
-      });
-    }
-    // Overrides on stable keys are unusual but not forbidden — same shape as `{name}`.
-    const override = resolveOverride('Process', processRef.key, folderPath);
-    return {
-      identity: override?.name
-        // Override redirected key → name: switch wire identity accordingly.
-        ? { processName: override.name }
-        : { processKey: processRef.key },
-      folderPath: override?.folderPath,
-    };
+  // Discriminated union narrows to `{ key: string }` here — `isProcessRef` guarantees
+  // one of `name` / `key` before this helper is called, so no trailing throw is needed.
+  if (!processRef.key) {
+    throw new ValidationError({
+      message: 'Processes.start: processRef.key must be a non-empty string.',
+    });
   }
-  throw new ValidationError({
-    message: 'Processes.start: processRef must supply exactly one of `name` or `key`.',
-  });
+  // Keys are stable GUIDs; overrides are keyed by design-time names (PLT-92768), so no
+  // lookup applies. Pass the caller's key through verbatim.
+  return { identity: { processKey: processRef.key } };
 }
 
 /** True when the argument carries a legacy `ProcessStartRequest` identity field. */
@@ -275,10 +266,17 @@ function resolveLegacyIdentity(
   if ((request as { processName?: string }).processName) {
     const name = (request as { processName: string }).processName;
     const override = resolveOverride('Process', name, folderPath);
-    return {
-      identity: override?.name ? { processName: override.name } : {},
-      folderPath: override?.folderPath,
-    };
+    if (override?.name) {
+      // A name→name override redirect must also strip any caller-supplied processKey — the
+      // stale key still points at the ORIGINAL process, so keeping it alongside the redirected
+      // ReleaseName sends an ambiguous body the server resolves against the caller's intent.
+      return {
+        identity: { processName: override.name },
+        folderPath: override?.folderPath,
+        dropProcessKey: true,
+      };
+    }
+    return { identity: {}, folderPath: override?.folderPath };
   }
   if ((request as { processKey?: string }).processKey) {
     const key = (request as { processKey: string }).processKey;
