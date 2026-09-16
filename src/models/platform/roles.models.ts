@@ -23,13 +23,35 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export type PlatformRoleGetResponse = RawPlatformRoleGetResponse & PlatformRoleMethods;
 
 /**
- * Public surface of the platform Roles service. JSDoc on this interface drives
- * the generated API reference documentation.
+ * Public surface of the Roles service.
  *
- * Roles bundle permissions (actions) and are granted to principals — users,
- * groups, external applications — through role assignments. Together with users
- * and groups this completes the RBAC model: put users in groups, grant roles to
- * the groups, and ask `getEffectiveAccess()` what a principal can do.
+ * A role bundles permissions (actions) and is granted to a principal — a user, a group,
+ * or an external application — through a role assignment. Together with users and groups
+ * this completes role-based access control (RBAC): put users in groups, grant roles to the
+ * groups, then ask what a principal can do.
+ *
+ * The service covers four areas:
+ *
+ * - **Roles** — `getAll()`, `getById()`, `upsert()`, `deleteById()` manage the organization's
+ *   role catalog. Built-in roles are read-only; custom roles can be created, changed, and deleted.
+ * - **Permissions** — `getActions()` lists the permission definitions a custom role can grant.
+ * - **Assignments** — `getAssignments()`, `updateAssignments()`, `exportAssignments()` grant
+ *   and revoke roles on principals, and export the current grants.
+ * - **Effective access** — `getEffectiveAccess()` resolves what a principal can do in a tenant,
+ *   including roles inherited through group membership.
+ *
+ * Every operation is scoped to the organization the SDK is configured for.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Roles } from '@uipath/uipath-typescript/platform';
+ *
+ * const roles = new Roles(sdk);
+ * const allRoles = await roles.getAll();
+ * ```
  */
 export interface PlatformRoleServiceModel {
   /**
@@ -51,9 +73,6 @@ export interface PlatformRoleServiceModel {
    *
    * const roles = new Roles(sdk);
    * const allRoles = await roles.getAll();
-   * for (const role of allRoles.items) {
-   *   console.log(`${role.name} (${role.type}) — ${role.actionDetails.length} permissions`);
-   * }
    * ```
    *
    * @example Filter to custom roles of a service
@@ -83,8 +102,10 @@ export interface PlatformRoleServiceModel {
    *
    * @example
    * ```typescript
-   * const role = await roles.getById('<roleId>');
-   * console.log(role.actionDetails.map(a => a.name));
+   * // Get a role id from the listing first
+   * const allRoles = await roles.getAll();
+   *
+   * const role = await roles.getById(allRoles.items[0].id);
    * ```
    */
   getById(roleId: string): Promise<PlatformRoleGetResponse>;
@@ -131,6 +152,10 @@ export interface PlatformRoleServiceModel {
    * Gets the organization's role assignments grouped by principal, with
    * optional filtering and pagination.
    *
+   * Each item is one principal (user, group, or application) with every role assigned
+   * to it at the given scope. Assignments carry their own GUID, which is what
+   * `updateAssignments()` uses to revoke them.
+   *
    * @param scope - The scope to list assignments for; `/` means the whole organization
    * @param options - Filtering and pagination options
    * @returns All assignment groups when no pagination options are given, one page otherwise, as {@link PlatformPrincipalRoleAssignments} items
@@ -138,9 +163,6 @@ export interface PlatformRoleServiceModel {
    * @example Basic usage
    * ```typescript
    * const assignments = await roles.getAssignments('/');
-   * for (const principal of assignments.items) {
-   *   console.log(`${principal.displayName}: ${principal.roleAssignments.map(a => a.roleName)}`);
-   * }
    * ```
    *
    * @example Assignments of one principal
@@ -196,12 +218,15 @@ export interface PlatformRoleServiceModel {
   /**
    * Exports all direct role assignments of the organization as CSV.
    *
+   * The first row is the header; each following row is one assignment (role and
+   * principal). Group-inherited access is not expanded — use `getEffectiveAccess()`
+   * for a single principal's full picture.
+   *
    * @returns The CSV document as a string
    *
    * @example
    * ```typescript
    * const csv = await roles.exportAssignments();
-   * console.log(csv.split('\n')[0]); // header row
    * ```
    */
   exportAssignments(): Promise<string>;
@@ -210,9 +235,9 @@ export interface PlatformRoleServiceModel {
    * Computes the roles a principal effectively holds in a tenant — directly
    * and through group membership.
    *
-   * This is the RBAC question "what can this user do here": the response
-   * groups every effective role with the assignments granting it, plus
-   * metadata for the granted services and roles.
+   * This answers "what can this principal do here": the response lists every
+   * effective role together with the assignments granting it, plus metadata for
+   * the granted services and roles. Pass exactly one of `userId` or `groupId`.
    *
    * @param request - The principal and tenant scope to compute access for
    * @returns The principal's effective access, as a {@link PlatformEffectiveAccessResponse}
@@ -241,9 +266,6 @@ export interface PlatformRoleServiceModel {
    * @example
    * ```typescript
    * const actions = await roles.getActions({ serviceName: 'AuthZ' });
-   * for (const action of actions) {
-   *   console.log(`${action.name}: ${action.description}`);
-   * }
    * ```
    */
   getActions(options?: PlatformRoleActionGetAllOptions): Promise<PlatformRoleAction[]>;
