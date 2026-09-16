@@ -11,6 +11,7 @@ import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRa
 import {
   EntityFieldDataType,
   EntityMultiEntityWriteOperation,
+  EntityMultiEntityWriteResponseNode,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -150,6 +151,14 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
   }
 
   return record;
+}
+
+/**
+ * Collects every non-root record id in an upsert transaction, deepest first.
+ * Cleanup deletes in this order: a parent still referenced by a child is refused.
+ */
+function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[] {
+  return node.members.flatMap((m) => [...collectDescendantIds(m), m.id]);
 }
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -1324,6 +1333,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
     let treeMetadata!: EntityGetResponse;
     let treeChildMetadata!: EntityGetResponse;
     const treeRootRecordIds: string[] = [];
+    const treeChildRecordIds: string[] = [];
 
     beforeAll(async () => {
       const { entities } = getServices();
@@ -1379,6 +1389,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       treeRootRecordIds.push(result.Id);
       registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
       registerResource('entityRecords', { entityId: treeChildMetadata.id, recordIds: [child.id] });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
     }, 60_000);
 
     it('should update the root and insert another child in the same transaction', async () => {
@@ -1399,6 +1410,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         entityId: treeChildMetadata.id,
         recordIds: [seed.transaction!.members[0].id],
       });
+      treeChildRecordIds.push(...collectDescendantIds(seed.transaction!));
 
       const rootRecordId = seed.Id;
       await awaitRecordVisible(entities, treeMetadata.id, rootRecordId);
@@ -1423,6 +1435,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         entityId: treeChildMetadata.id,
         recordIds: [tx.members[0].id],
       });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
     }, 60_000);
 
     it('should return typed transaction fields for every node', async () => {
@@ -1457,6 +1470,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         entityId: treeChildMetadata.id,
         recordIds: [tx.members[0].id],
       });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
     }, 60_000);
 
     it('should write a tree through the bound method on the entity', async () => {
@@ -1480,6 +1494,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         entityId: treeChildMetadata.id,
         recordIds: [tx.members[0].id],
       });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
     }, 60_000);
 
     afterAll(async () => {
@@ -1488,7 +1503,13 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const { entities } = getServices();
 
       // These live in the tree entity, not testEntityId, so the shared afterAll
-      // cannot delete them. Children cascade with their parent.
+      // cannot delete them. Children first: a root still referenced by a child is
+      // refused ("a record is still referenced by another record"), not cascaded.
+      if (treeChildRecordIds.length > 0) {
+        await entities
+          .deleteRecords({ name: treeChildEntityName }, treeChildRecordIds)
+          .catch((error) => console.warn(error));
+      }
       if (treeRootRecordIds.length > 0) {
         await entities
           .deleteRecords({ name: treeEntityName }, treeRootRecordIds)
