@@ -1459,6 +1459,10 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(typeof tx.members[0].entityName).toBe('string');
       expect(typeof tx.members[0].affectedRows).toBe('number');
 
+      // `noOp` is typed as required — the service always sets it, never omits it
+      expect(typeof tx.noOp).toBe('boolean');
+      expect(typeof tx.members[0].noOp).toBe('boolean');
+
       // A tree write reports outcomes, not field values
       expect(tx.members[0].id).toBeDefined();
 

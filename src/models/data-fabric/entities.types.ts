@@ -649,8 +649,11 @@ export interface EntityMultiEntityWriteResponseNode {
   id: string;
   /** Number of rows the write affected */
   affectedRows: number;
-  /** Set only when an update carried no field values and merely verified the row exists */
-  noOp?: boolean;
+  /**
+   * `true` when the update carried no changed values and merely verified the row exists;
+   * `false` for all creates and regular updates.
+   */
+  noOp: boolean;
   /** Row version after the write. Absent when the entity has no version field. */
   version?: number;
   /** Results for the child records nested under this one */
