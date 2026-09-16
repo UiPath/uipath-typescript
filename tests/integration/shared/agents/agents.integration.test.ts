@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
 import { AgentType, AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { JobState } from '../../../../src/models/common/types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
+import { recentWindow } from '../../utils/helpers';
 
 /**
  * Integration tests for Agents (`/insightsrtm_/Agents/*`).
@@ -14,12 +15,11 @@ import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-// skip: insightsrtm_ endpoints reject PAT tokens entirely (401 regardless of scopes) and require OAuth.
-// Skipped at the outer level so the live-auth setup (setupUnifiedTests + beforeAll) does not run.
-describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+// insightsrtm_ rejects PAT tokens entirely (401 regardless of scopes), so this
+// suite authenticates with a user token and skips when one is not configured.
+describeIntegration('Agents - Integration Tests', 'user', modes, () => {
   let agents!: Agents;
+  let folderKey!: string;
 
   beforeAll(() => {
     const services = getServices();
@@ -27,11 +27,19 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       throw new Error('Agents service not initialized');
     }
     agents = services.agents;
+
+    const configuredFolderKey = getTestConfig().folderKey;
+    if (!configuredFolderKey) {
+      throw new Error(
+        'INTEGRATION_TEST_FOLDER_KEY is not configured. The folder filter tests need a ' +
+        'folder the caller can access — an inaccessible folder key returns 403.',
+      );
+    }
+    folderKey = configuredFolderKey;
   });
 
   describe('getAll', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the agent list with aggregate totals', async () => {
       const result = await agents.getAll(startTime, endTime);
@@ -90,8 +98,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getErrors', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve a non-paginated list of errors', async () => {
       const result = await agents.getErrors(startTime, endTime);
@@ -150,8 +157,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getErrorsTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the errors timeline', async () => {
       const result = await agents.getErrorsTimeline(startTime, endTime);
@@ -180,8 +186,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getConsumptionTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the Agent Units consumption timeline', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime);
@@ -200,7 +205,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
     it('should scope to a single folder', async () => {
       const result = await agents.getConsumptionTimeline(startTime, endTime, {
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
       });
 
       expect(Array.isArray(result)).toBe(true);
@@ -208,8 +213,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getLatencyTimeline', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve the per-percentile latency timeline', async () => {
       const result = await agents.getLatencyTimeline(startTime, endTime);
@@ -238,8 +242,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getTopErrorCount', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve top-N agents ranked by error count', async () => {
       const result = await agents.getTopErrorCount(startTime, endTime);
@@ -277,8 +280,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getTopConsumption', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve top-N consuming agents with aggregate totals', async () => {
       const result = await agents.getTopConsumption(startTime, endTime);
@@ -316,8 +318,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getIncidentDistribution', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve incident counts across categories without a pagination field', async () => {
       const result = await agents.getIncidentDistribution(startTime, endTime);
@@ -335,7 +336,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
     it('should scope to a single folder', async () => {
       const result = await agents.getIncidentDistribution(startTime, endTime, {
-        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        folderKeys: [folderKey],
       });
 
       expect(result).toBeDefined();
@@ -343,8 +344,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getSummary', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve an aggregate summary with a per-agent breakdown', async () => {
       const result = await agents.getSummary(startTime, endTime);
@@ -376,8 +376,7 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getUnitConsumptionSummary', () => {
-    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
-    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const { startTime, endTime } = recentWindow();
 
     it('should retrieve an aggregate Agent Units and Platform Units summary with a per-agent breakdown', async () => {
       const result = await agents.getUnitConsumptionSummary(startTime, endTime);

@@ -1,17 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { Governance } from '../../../../src/services/governance';
 import { PolicyEvaluationResult } from '../../../../src/models/governance/governance.types';
 
 const modes: InitMode[] = ['v1'];
 
-// Skipped: the governance API is served by insightsrtm_, which rejects PAT tokens
-// with 401 regardless of scopes and requires OAuth. Integration tests in CI
-// authenticate with a PAT, so these would fail unconditionally. Re-enable by
-// removing `.skip` once OAuth support is wired into the integration test harness.
-describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+// The governance API is served by insightsrtm_, which rejects PAT tokens with 401
+// regardless of scopes. This suite authenticates with a user token and skips when
+// one is not configured. Endpoints also require an organization-admin caller.
+describeIntegration('Governance - Integration Tests', 'user', modes, () => {
   let governance!: Governance;
   // Start time wide enough to cover historical traces in the test tenant.
   const startTime = new Date('2024-01-01T00:00:00Z');
@@ -54,7 +51,9 @@ describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
       expect(Array.isArray(result.items)).toBe(true);
     });
 
-    it('should round-trip a cursor to fetch the next page', async () => {
+    // skip: needs at least two policy traces in the test tenant, which requires a deployed
+    // access policy and runs against it.
+    it.skip('should round-trip a cursor to fetch the next page', async () => {
       const page1 = await governance.getPolicyTraces(startTime, { pageSize: 1, fullOrganization: true });
 
       if (!page1.hasNextPage || !page1.nextCursor) {
