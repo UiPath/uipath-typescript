@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessRequest/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessPrincipal/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>PlatformEffectiveAccessRequest - UiPath TypeScript SDK</title>
+        <title>PlatformEffectiveAccessPrincipal - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PlatformEffectiveAccessRequest
+              PlatformEffectiveAccessPrincipal
             
           </span>
         </div>
@@ -3086,10 +3086,10 @@
   
 
 
-  <h1>PlatformEffectiveAccessRequest</h1>
+  <h1>PlatformEffectiveAccessPrincipal</h1>
 
-<p>A request for <code>roles.getEffectiveAccess()</code> — the principal and tenant scope
-to compute access for.</p>
+<p>The principal to compute access for in <code>roles.getEffectiveAccess()</code>.
+Provide exactly one of <code>userId</code> / <code>groupId</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3103,17 +3103,12 @@ to compute access for.</p>
 <tr>
 <td><a id="groupid"></a> <code>groupId?</code></td>
 <td><code>string</code></td>
-<td>GUID of the group to check. Provide exactly one of <code>userId</code> / <code>groupId</code>.</td>
-</tr>
-<tr>
-<td><a id="tenantid"></a> <code>tenantId</code></td>
-<td><code>string</code></td>
-<td>Tenant GUID to compute access in.</td>
+<td>GUID of the group to check.</td>
 </tr>
 <tr>
 <td><a id="userid"></a> <code>userId?</code></td>
 <td><code>string</code></td>
-<td>GUID of the user to check. Provide exactly one of <code>userId</code> / <code>groupId</code>.</td>
+<td>GUID of the user to check.</td>
 </tr>
 </tbody>
 </table>
