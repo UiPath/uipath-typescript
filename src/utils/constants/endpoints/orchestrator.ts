@@ -131,7 +131,8 @@ export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
  * Orchestrator Folder Endpoints
  */
 export const FOLDER_ENDPOINTS = {
-  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Folders`,
+  GET_BY_KEY: (identifier: string) =>
+    `${ORCHESTRATOR_BASE}/odata/Folders/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
   GET_BY_ID: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Folders(${folderId})`,
 } as const;
 

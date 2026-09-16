@@ -1,6 +1,5 @@
 import { track } from '../../../core/telemetry';
-import { NotFoundError, ValidationError } from '../../../core/errors';
-import type { CollectionResponse } from '../../../models/common/types';
+import { ValidationError } from '../../../core/errors';
 import type { FolderGetByKeyOptions, FolderGetResponse } from '../../../models/orchestrator/folders.types';
 import type { FolderServiceModel } from '../../../models/orchestrator/folders.models';
 import { FOLDER_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -12,7 +11,7 @@ import { BaseService } from '../../base';
 /**
  * Service for looking up UiPath Orchestrator folders.
  *
- * The `odata/Folders` collection is not folder-scoped, so this service extends
+ * The Folders GetByKey action is not folder-scoped, so this service extends
  * {@link BaseService} directly and sends no folder headers.
  */
 export class FolderService extends BaseService implements FolderServiceModel {
@@ -23,21 +22,13 @@ export class FolderService extends BaseService implements FolderServiceModel {
       throw new ValidationError({ message: 'Folders.getByKey: key must be a GUID.' });
     }
 
-    const apiOptions = {
-      ...addPrefixToKeys(options, ODATA_PREFIX, Object.keys(options)),
-      '$filter': `Key eq ${trimmedKey}`,
-      '$top': '1',
-    };
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, Object.keys(options));
 
-    const response = await this.get<CollectionResponse<Record<string, unknown>>>(FOLDER_ENDPOINTS.GET_ALL, {
-      params: apiOptions,
-    });
+    const response = await this.get<Record<string, unknown>>(
+      FOLDER_ENDPOINTS.GET_BY_KEY(trimmedKey),
+      { params: apiOptions },
+    );
 
-    const items = response.data?.value;
-    if (!items?.length) {
-      throw new NotFoundError({ message: `Folder with key '${trimmedKey}' not found.` });
-    }
-
-    return pascalToCamelCaseKeys(items[0]) as FolderGetResponse;
+    return pascalToCamelCaseKeys(response.data) as FolderGetResponse;
   }
 }

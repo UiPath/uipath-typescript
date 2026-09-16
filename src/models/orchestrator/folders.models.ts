@@ -21,9 +21,9 @@ export interface FolderServiceModel {
   /**
    * Gets a single folder by its key (GUID).
    *
-   * Queries the `odata/Folders` collection with `$filter=Key eq <key>` and
-   * `$top=1`. Unlike most Orchestrator reads this lookup is not folder-scoped:
-   * no folder headers are sent.
+   * Calls `odata/Folders/UiPath.Server.Configuration.OData.GetByKey`. Unlike
+   * most Orchestrator reads this lookup is not folder-scoped: no folder
+   * headers are sent.
    *
    * @param key - Folder key (GUID).
    * @param options - Optional OData query options (`$select` / `$expand`).
