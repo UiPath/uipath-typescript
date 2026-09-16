@@ -28,19 +28,8 @@ export type PlatformRoleGetResponse = RawPlatformRoleGetResponse & PlatformRoleM
  * A role bundles permissions (actions) and is granted to a principal — a user, a group,
  * or an external application — through a role assignment. Together with users and groups
  * this completes role-based access control (RBAC): put users in groups, grant roles to the
- * groups, then ask what a principal can do.
- *
- * The service covers four areas:
- *
- * - **Roles** — `getAll()`, `getById()`, `upsert()`, `deleteById()` manage the organization's
- *   role catalog. Built-in roles are read-only; custom roles can be created, changed, and deleted.
- * - **Permissions** — `getActions()` lists the permission definitions a custom role can grant.
- * - **Assignments** — `getAssignments()`, `updateAssignments()`, `exportAssignments()` grant
- *   and revoke roles on principals, and export the current grants.
- * - **Effective access** — `getEffectiveAccess()` resolves what a principal can do in a tenant,
- *   including roles inherited through group membership.
- *
- * Every operation is scoped to the organization the SDK is configured for.
+ * groups, then ask what a principal can do. Built-in roles are read-only; custom roles
+ * can be created, changed, and deleted.
  *
  * ### Usage
  *
