@@ -196,6 +196,16 @@
                 "default": "./dist/orchestrator-du-module/index.cjs"
             }
         },
+        "./document-understanding-validation": {
+            "import": {
+                "types": "./dist/document-understanding-validation/index.d.ts",
+                "default": "./dist/document-understanding-validation/index.mjs"
+            },
+            "require": {
+                "types": "./dist/document-understanding-validation/index.d.ts",
+                "default": "./dist/document-understanding-validation/index.cjs"
+            }
+        },
         "./agents": {
             "import": {
                 "types": "./dist/agents/index.d.ts",
