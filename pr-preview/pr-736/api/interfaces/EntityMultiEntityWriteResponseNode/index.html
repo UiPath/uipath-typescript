@@ -3106,9 +3106,9 @@ Mirrors the request, so each node can be matched back to the record that produce
 <td>Results for the child records nested under this one</td>
 </tr>
 <tr>
-<td><a id="noop"></a> <code>noOp?</code></td>
+<td><a id="noop"></a> <code>noOp</code></td>
 <td><code>boolean</code></td>
-<td>Set only when an update carried no field values and merely verified the row exists</td>
+<td><code>true</code> when the update carried no changed values and merely verified the row exists; <code>false</code> for all creates and regular updates.</td>
 </tr>
 <tr>
 <td><a id="op"></a> <code>op</code></td>
