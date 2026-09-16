@@ -10,6 +10,13 @@ import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/mo
 
 const modes: InitMode[] = ['v0', 'v1'];
 
+// Terminal states in which an instance has stopped mutating and its history is complete.
+const SETTLED_STATUSES: ReadonlySet<string> = new Set([
+  InstanceStatus.COMPLETED,
+  InstanceStatus.FAULTED,
+  InstanceStatus.CANCELLED,
+]);
+
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
@@ -357,14 +364,33 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       let executionHistory!: ProcessInstanceExecutionHistoryResponse[];
 
       beforeAll(async () => {
-        if (!testInstanceId || !testFolderKey) {
-          throw new Error('No instance available for testing');
+        if (!testFolderKey) {
+          throw new Error('No folder key available — cannot test getExecutionHistory');
         }
 
         const { processInstances } = getServices();
 
-        executionHistory = await processInstances.getExecutionHistory(testInstanceId, testFolderKey);
-      });
+        // getAll lists newest first, and the newest instance is often one another suite
+        // cancelled before it executed a single element, leaving an empty history. Read
+        // from a settled instance that has actually run something instead.
+        const { items } = await processInstances.getAll({ pageSize: 20 });
+        const settled = items.filter(
+          (inst) =>
+            inst.folderKey === testFolderKey &&
+            inst.instanceId !== seededFaultedJobKey &&
+            SETTLED_STATUSES.has(inst.latestRunStatus)
+        );
+        for (const inst of settled.slice(0, 5)) {
+          const history = await processInstances.getExecutionHistory(inst.instanceId, inst.folderKey);
+          if (history.length > 0) {
+            executionHistory = history;
+            return;
+          }
+        }
+        throw new Error(
+          'No settled process instance with execution history found — cannot test getExecutionHistory'
+        );
+      }, 60_000);
 
       it('should retrieve execution history', () => {
         expect(executionHistory).toBeDefined();
