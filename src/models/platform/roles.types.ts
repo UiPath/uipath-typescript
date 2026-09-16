@@ -123,8 +123,8 @@ export interface PlatformRoleAssignment {
   securityPrincipalId: string;
   /** The kind of principal. */
   securityPrincipalType: PlatformPrincipalType;
-  /** How the assignment was created (`BuiltIn` or `Custom`). */
-  type: string;
+  /** Whether the assignment is built-in or custom. */
+  type: PlatformRoleType;
   /** The scope the role is granted at (`/` = whole organization). */
   scope: string;
   /** GUID of the granted role. */

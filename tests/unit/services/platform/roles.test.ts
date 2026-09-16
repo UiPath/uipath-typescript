@@ -329,6 +329,8 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(principal.roleAssignments[0].createdTime).toBe(PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON);
       expect((principal.roleAssignments[0] as any).createdOn).toBeUndefined();
       expect(principal.roleAssignments[0].roleType).toBe(PlatformRoleType.BuiltIn);
+      // The assignment's own type is normalized too (wire sends `Custom`)
+      expect(principal.roleAssignments[0].type).toBe(PlatformRoleType.Custom);
     });
 
     it('should throw ValidationError when scope is empty', async () => {
