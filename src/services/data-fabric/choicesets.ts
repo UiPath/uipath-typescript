@@ -195,11 +195,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     // Use the un-tracked helper directly so we don't fire a duplicate
     // `Choicesets.GetAll` telemetry event for every insertValueById /
     // updateValueById call.
-    const all = await this.fetchAllChoiceSets(
-      folderOptions?.folderKey === undefined && folderOptions?.folderPath === undefined
-        ? undefined
-        : { folderKey: folderOptions.folderKey, folderPath: folderOptions.folderPath }
-    );
+    const all = await this.fetchAllChoiceSets(folderOptions);
     const match = all.find(cs => cs.id === choiceSetId);
     if (!match) {
       throw new NotFoundError({ message: `Choice set with id '${choiceSetId}' not found.` });
