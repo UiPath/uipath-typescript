@@ -69,10 +69,16 @@ export type ChoiceSetGetByIdOptions = PaginationOptions & EntityFolderScopedOpti
 /**
  * Options for creating a new choice set.
  *
- * `folderPath` is intentionally excluded: the create body carries a
+ * `folderPath` is intentionally not accepted: the create body carries a
  * `folderId` Guid that cannot be derived from a path SDK-side.
  */
-export interface ChoiceSetCreateOptions extends Omit<EntityFolderScopedOptions, 'folderPath'> {
+export interface ChoiceSetCreateOptions {
+  /**
+   * Key identifying the folder the choice set is created in. Omit for tenant-level choice sets.
+   *
+   * @experimental Folder-scoped Data Fabric is in preview — the contract may change.
+   */
+  folderKey?: string;
   /** Human-readable display name */
   displayName?: string;
   /** Optional choice set description */
