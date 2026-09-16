@@ -24,6 +24,11 @@ export const AUTOPILOT_BASE = 'autopilotforeveryone_';
 export const LLMOPS_BASE = 'llmopstenant_';
 export const INSIGHTS_RTM_BASE = 'insightsrtm_';
 /**
+ * Document Understanding framework base. The validation-framework API is addressed
+ * relative to the caller's Automation Cloud host (`du_/api/framework/...`).
+ */
+export const DU_FRAMEWORK_BASE = 'du_/api/framework';
+/**
  * Notification service base. The notification service is routed at the **organization**
  * level — its URLs do not include a tenant segment (unlike most UiPath services).
  *
