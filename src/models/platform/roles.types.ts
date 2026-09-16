@@ -103,8 +103,6 @@ export interface PlatformRoleUpsertRequest {
   roleName: string;
   /** Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`). */
   roleScopeType: string;
-  /** Organization (account) GUID the role belongs to. */
-  organizationId: string;
   /** Human-readable description. */
   roleDescription: string;
   /** Name of the service that owns the role. */
