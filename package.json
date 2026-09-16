@@ -275,6 +275,16 @@
                 "types": "./dist/connections/index.d.ts",
                 "default": "./dist/connections/index.cjs"
             }
+        },
+        "./roles": {
+            "import": {
+                "types": "./dist/roles/index.d.ts",
+                "default": "./dist/roles/index.mjs"
+            },
+            "require": {
+                "types": "./dist/roles/index.d.ts",
+                "default": "./dist/roles/index.cjs"
+            }
         }
     },
     "files": [
