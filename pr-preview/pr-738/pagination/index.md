@@ -124,8 +124,8 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets                           | `getFileMetaData()`        | ❌ No                  |
 | Jobs                              | `getAll()`                 | ✅ Yes                 |
 | Users                             | `getAll()`                 | ✅ Yes                 |
-| Platform Roles                    | `getAll()`                 | ✅ Yes                 |
-| Platform Roles                    | `getAssignments()`         | ✅ Yes                 |
+| Roles                             | `getAll()`                 | ✅ Yes                 |
+| Roles                             | `getAssignments()`         | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `getRecordsByName()`       | ✅ Yes                 |
 | Entities                          | `queryRecords()`           | ✅ Yes                 |
