@@ -10,7 +10,7 @@ import type {
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
-  PlatformEffectiveAccessRequest,
+  PlatformEffectiveAccessPrincipal,
   PlatformEffectiveAccessResponse,
   PlatformRoleAction,
   PlatformRoleActionGetAllOptions,
@@ -114,9 +114,9 @@ export interface PlatformRoleServiceModel {
    * const actions = await roles.getActions({ serviceName: 'AuthZ' });
    *
    * const role = await roles.upsert({
-   *   roleName: 'Ticket Auditor',
-   *   roleScopeType: 'ORGANIZATION',
-   *   roleDescription: 'Read-only access for ticket audits',
+   *   name: 'Ticket Auditor',
+   *   scopeType: 'ORGANIZATION',
+   *   description: 'Read-only access for ticket audits',
    *   actionsGrantedByRole: [actions[0].name],
    * });
    * ```
@@ -227,19 +227,25 @@ export interface PlatformRoleServiceModel {
    * effective role together with the assignments granting it, plus metadata for
    * the granted services and roles. Pass exactly one of `userId` or `groupId`.
    *
-   * @param request - The principal and tenant scope to compute access for
+   * @param tenantId - GUID of the tenant to compute access in
+   * @param principal - The user or group to check (exactly one of `userId` / `groupId`)
    * @returns The principal's effective access, as a {@link PlatformEffectiveAccessResponse}
    *
-   * @example
+   * @example Check a user
    * ```typescript
-   * const access = await roles.getEffectiveAccess({
-   *   tenantId: '<tenantId>',
-   *   userId: '<userId>',
-   * });
+   * const access = await roles.getEffectiveAccess('<tenantId>', { userId: '<userId>' });
    * const isAdmin = access.roles.some(r => r.roleName === 'Administrator');
    * ```
+   *
+   * @example Check a group
+   * ```typescript
+   * const access = await roles.getEffectiveAccess('<tenantId>', { groupId: '<groupId>' });
+   * ```
    */
-  getEffectiveAccess(request: PlatformEffectiveAccessRequest): Promise<PlatformEffectiveAccessResponse>;
+  getEffectiveAccess(
+    tenantId: string,
+    principal: PlatformEffectiveAccessPrincipal
+  ): Promise<PlatformEffectiveAccessResponse>;
 
   /**
    * Gets the catalog of permission (action) definitions roles can grant,

@@ -25,6 +25,25 @@ export const PlatformRoleTypeMap: { [key: string]: PlatformRoleType } = {
 };
 
 /**
+ * Outbound renames for `roles.upsert()` — the SDK's `name`/`description`/`scopeType`
+ * become the API's `role*` names. Used with `transformRequest()`, which reverses the
+ * map (SDK name → wire name).
+ */
+export const PlatformRoleUpsertMap = {
+  roleName: 'name',
+  roleDescription: 'description',
+  roleScopeType: 'scopeType',
+} as const;
+
+/**
+ * Semantic renames applied to effective-access role groups — the nested
+ * assignment list becomes `assignments`.
+ */
+export const PlatformEffectiveRoleMap = {
+  roleAssignments: 'assignments',
+} as const;
+
+/**
  * Semantic renames applied to per-principal assignment groups — drops the
  * `Dto` wire jargon.
  */

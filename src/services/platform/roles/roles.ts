@@ -17,7 +17,7 @@ import type {
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
-  PlatformEffectiveAccessRequest,
+  PlatformEffectiveAccessPrincipal,
   PlatformEffectiveAccessResponse,
   PlatformRoleAction,
   PlatformRoleActionGetAllOptions,
@@ -33,6 +33,7 @@ import type {
   RawPlatformRoleAssignmentListResponse,
   RawPlatformEffectiveAccessResponse,
   RawPlatformEffectiveRole,
+  RawPlatformEffectiveRoleAssignment,
 } from '../../../models/platform/roles.internal-types';
 import type { PlatformRoleServiceModel } from '../../../models/platform/roles.models';
 import { PlatformRoleGetResponse, createPlatformRoleWithMethods } from '../../../models/platform/roles.models';
@@ -41,6 +42,8 @@ import {
   PlatformRoleTypeMap,
   PlatformPrincipalRoleAssignmentsMap,
   PlatformRoleAssignmentChangesMap,
+  PlatformRoleUpsertMap,
+  PlatformEffectiveRoleMap,
 } from '../../../models/platform/roles.constants';
 
 import { AUTHORIZATION_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -60,6 +63,11 @@ import {
   NonPaginatedResponse,
   HasPaginationOptions,
 } from '../../../utils/pagination';
+
+/** The only export format the assignments export endpoint serves. */
+const EXPORT_OUTPUT_TYPE_CSV = 'Csv';
+/** Effective access is always computed for a tenant scope. */
+const EFFECTIVE_ACCESS_SCOPE_TYPE = 'Tenant';
 
 /**
  * Service for managing the organization's roles and role assignments, and for
@@ -81,6 +89,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     // The role write body needs the organization GUID; resolved once per SDK instance and shared
     this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
   }
+
   @track('PlatformRoles.GetAll')
   async getAll<T extends PlatformRoleGetAllOptions = PlatformRoleGetAllOptions>(
     options?: T
@@ -93,9 +102,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
 
     // The API always pages (max top=1000), so without pagination options every
     // page is fetched — a single request would silently truncate.
-    const hasPaginationOptions =
-      opts.pageSize !== undefined || opts.cursor !== undefined || opts.jumpToPage !== undefined;
-    if (!hasPaginationOptions) {
+    if (!PaginationHelpers.hasPaginationParameters(opts)) {
       return this.getAllRolePages(opts) as Promise<
         T extends HasPaginationOptions<T>
           ? PaginatedResponse<PlatformRoleGetResponse>
@@ -136,21 +143,21 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
 
   @track('PlatformRoles.Upsert')
   async upsert(request: PlatformRoleUpsertRequest): Promise<PlatformRoleGetResponse> {
-    if (!request?.roleName) {
-      throw new ValidationError({ message: 'roleName is required for upsert' });
+    if (!request?.name) {
+      throw new ValidationError({ message: 'name is required for upsert' });
     }
-    if (!request.roleScopeType) {
-      throw new ValidationError({ message: 'roleScopeType is required for upsert' });
+    if (!request.scopeType) {
+      throw new ValidationError({ message: 'scopeType is required for upsert' });
     }
-    if (!request.roleDescription) {
-      throw new ValidationError({ message: 'roleDescription is required for upsert' });
+    if (!request.description) {
+      throw new ValidationError({ message: 'description is required for upsert' });
     }
 
+    const organizationId = await this.#organizationIdResolver.resolve();
     // The write returns only the role ID — follow up with a read so callers
     // get the stored role
-    const organizationId = await this.#organizationIdResolver.resolve();
     const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
-      ...request,
+      ...transformRequest(request, PlatformRoleUpsertMap),
       organizationId,
     });
     return this.fetchRole(response.data.createdRoleId);
@@ -182,9 +189,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     // The API always pages (and rejects top above 10 on this endpoint), so
     // without pagination options every page is fetched — a single request
     // would silently truncate.
-    const hasPaginationOptions =
-      opts.pageSize !== undefined || opts.cursor !== undefined || opts.jumpToPage !== undefined;
-    if (!hasPaginationOptions) {
+    if (!PaginationHelpers.hasPaginationParameters(opts)) {
       return this.getAllAssignmentPages(scope, opts) as Promise<
         T extends HasPaginationOptions<T>
           ? PaginatedResponse<PlatformPrincipalRoleAssignments>
@@ -234,31 +239,34 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     // The endpoint streams CSV — request it as a blob so the client does not
     // attempt JSON parsing
     const response = await this.get<Blob>(AUTHORIZATION_ENDPOINTS.ROLE_ASSIGNMENT.EXPORT, {
-      params: { exportOutputType: 'Csv' },
+      params: { exportOutputType: EXPORT_OUTPUT_TYPE_CSV },
       responseType: RESPONSE_TYPES.BLOB,
     });
     return response.data.text();
   }
 
   @track('PlatformRoles.GetEffectiveAccess')
-  async getEffectiveAccess(request: PlatformEffectiveAccessRequest): Promise<PlatformEffectiveAccessResponse> {
-    if (!request?.tenantId) {
+  async getEffectiveAccess(
+    tenantId: string,
+    principal: PlatformEffectiveAccessPrincipal
+  ): Promise<PlatformEffectiveAccessResponse> {
+    if (!tenantId) {
       throw new ValidationError({ message: 'tenantId is required for getEffectiveAccess' });
     }
-    if (!request.userId && !request.groupId) {
+    if (!principal?.userId && !principal?.groupId) {
       throw new ValidationError({ message: 'one of userId or groupId is required for getEffectiveAccess' });
     }
-    if (request.userId && request.groupId) {
+    if (principal.userId && principal.groupId) {
       throw new ValidationError({ message: 'provide only one of userId or groupId for getEffectiveAccess' });
     }
 
     const body = {
       scopeIdentifier: {
-        scopeType: 'Tenant',
-        value: { id: request.tenantId, tenantId: request.tenantId },
+        scopeType: EFFECTIVE_ACCESS_SCOPE_TYPE,
+        value: { id: tenantId, tenantId },
       },
-      ...(request.userId !== undefined && { userId: request.userId }),
-      ...(request.groupId !== undefined && { groupId: request.groupId }),
+      ...(principal.userId !== undefined && { userId: principal.userId }),
+      ...(principal.groupId !== undefined && { groupId: principal.groupId }),
     };
     const response = await this.post<RawPlatformEffectiveAccessResponse>(
       AUTHORIZATION_ENDPOINTS.EFFECTIVE_ACCESS,
@@ -366,10 +374,10 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
       actionDetails: (raw.actionDetails ?? []).map(action => this.toAction(action)),
     };
 
-    let data = transformData(wire, PlatformRoleMap) as Record<string, unknown>;
-    data = applyDataTransforms(data, { field: 'type', valueMap: PlatformRoleTypeMap });
+    const typed = transformData(wire, PlatformRoleMap) as unknown as RawPlatformRoleGetResponse;
+    const data = applyDataTransforms(typed, { field: 'type', valueMap: PlatformRoleTypeMap });
 
-    return createPlatformRoleWithMethods(data as unknown as RawPlatformRoleGetResponse, this);
+    return createPlatformRoleWithMethods(data, this);
   }
 
   /**
@@ -401,16 +409,23 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
   }
 
   /**
-   * Transforms one wire effective-role group: renames the nested assignment
-   * list to `assignments` and applies the timestamp rename to each entry.
+   * Transforms one wire effective-role group: normalizes the role type, renames
+   * the nested assignment list to `assignments`, and transforms each entry.
    */
   private toEffectiveRole(raw: RawPlatformEffectiveRole): PlatformEffectiveRole {
-    const { roleAssignments, ...role } = raw;
-    return {
-      ...role,
-      assignments: (roleAssignments ?? []).map(assignment =>
-        transformData({ ...assignment }, PlatformRoleMap) as unknown as PlatformEffectiveRoleAssignment
-      ),
+    const wire: Record<string, unknown> = {
+      ...applyDataTransforms({ ...raw }, { field: 'roleType', valueMap: PlatformRoleTypeMap }),
+      roleAssignments: (raw.roleAssignments ?? []).map(assignment => this.toEffectiveAssignment(assignment)),
     };
+    return transformData(wire, PlatformEffectiveRoleMap) as unknown as PlatformEffectiveRole;
+  }
+
+  /**
+   * Transforms one wire effective-access assignment: normalizes the role type
+   * and applies the timestamp rename.
+   */
+  private toEffectiveAssignment(raw: RawPlatformEffectiveRoleAssignment): PlatformEffectiveRoleAssignment {
+    const normalized = applyDataTransforms({ ...raw }, { field: 'roleType', valueMap: PlatformRoleTypeMap });
+    return transformData(normalized, PlatformRoleMap) as unknown as PlatformEffectiveRoleAssignment;
   }
 }
