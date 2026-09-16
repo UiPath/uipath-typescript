@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
 import { Roles } from '../../../../src/services/platform/roles';
-import { PlatformRoleType, PlatformPrincipalType } from '../../../../src/models/platform';
+import { PlatformRoleType, PlatformRoleScopeType, PlatformPrincipalType } from '../../../../src/models/platform';
 import type { PlatformRoleAction } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';
 
@@ -87,32 +87,51 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
     });
   });
 
-  describe('upsert, getById, deleteById', () => {
+  describe('create, getById, updateById, deleteById', () => {
     it('should round-trip a custom role lifecycle', async () => {
       const roleName = `sdk-it-${generateRandomString(8)}`;
 
       // Create — actions are referenced by fully qualified name
-      const created = await roles.upsert(roleName, 'ORGANIZATION', 'SDK integration probe role', {
+      const created = await roles.create({
+        name: roleName,
+        scopeType: PlatformRoleScopeType.Organization,
+        description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);
       expect(created.name).toBe(roleName);
       expect(created.type).toBe(PlatformRoleType.Custom);
+      expect(created.scopeType).toBe(PlatformRoleScopeType.Organization);
 
       // Read back
       const fetched = await roles.getById(created.id);
       expect(fetched.id).toBe(created.id);
       expect(fetched.actionDetails.map((a) => a.name)).toContain(probeAction.name);
 
+      // Update one field — the API replaces the whole role, so omitted fields must survive the merge
+      const updated = await roles.updateById(created.id, { description: 'SDK integration probe role (updated)' });
+      expect(updated.description).toBe('SDK integration probe role (updated)');
+      expect(updated.name).toBe(roleName);
+      expect(updated.scopeType).toBe(PlatformRoleScopeType.Organization);
+      expect(updated.actionDetails.map((a) => a.name)).toEqual(fetched.actionDetails.map((a) => a.name));
+
+      // Rename through the bound method
+      const renamed = await updated.update({ name: `${roleName}-renamed` });
+      expect(renamed.name).toBe(`${roleName}-renamed`);
+      expect(renamed.actionDetails.map((a) => a.name)).toContain(probeAction.name);
+
       // Delete via bound method
-      await fetched.delete();
+      await renamed.delete();
       createdRoleIds.splice(createdRoleIds.indexOf(created.id), 1);
     });
   });
 
   describe('assignments', () => {
     it('should grant and revoke a role assignment for a user', async () => {
-      const created = await roles.upsert(`sdk-it-${generateRandomString(8)}`, 'ORGANIZATION', 'SDK integration probe role', {
+      const created = await roles.create({
+        name: `sdk-it-${generateRandomString(8)}`,
+        scopeType: PlatformRoleScopeType.Organization,
+        description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);

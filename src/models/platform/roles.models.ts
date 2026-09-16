@@ -6,7 +6,8 @@
 import type {
   RawPlatformRoleGetResponse,
   PlatformRoleGetAllOptions,
-  PlatformRoleUpsertOptions,
+  PlatformRoleCreateRequest,
+  PlatformRoleUpdateOptions,
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
@@ -44,12 +45,12 @@ export type PlatformRoleGetResponse = RawPlatformRoleGetResponse & PlatformRoleM
  */
 export interface PlatformRoleServiceModel {
   /**
-   * Gets the organization's roles, built-ins included, with optional filtering
-   * and pagination.
+   * Gets the organization's roles, built-ins included, with optional filtering,
+   * sorting, and pagination.
    *
    * Each role carries the permissions it grants (`actionDetails`).
    *
-   * @param options - Filtering and pagination options
+   * @param options - Filtering, sorting, and pagination options
    * @returns All roles when no pagination options are given, one page otherwise, as {@link PlatformRoleGetResponse} items
    *
    * @example Basic usage
@@ -64,13 +65,15 @@ export interface PlatformRoleServiceModel {
    * const allRoles = await roles.getAll();
    * ```
    *
-   * @example Filter to custom roles of a service
+   * @example Filter, sort, and paginate
    * ```typescript
-   * import { PlatformRoleType } from '@uipath/uipath-typescript/roles';
+   * import { PlatformRoleType, PlatformRoleSortField, PlatformRoleSortOrder } from '@uipath/uipath-typescript/roles';
    *
    * const customRoles = await roles.getAll({
    *   roleType: PlatformRoleType.Custom,
    *   contains: 'Ticket',
+   *   sortBy: PlatformRoleSortField.Name,
+   *   sortOrder: PlatformRoleSortOrder.Ascending,
    *   pageSize: 20,
    * });
    * ```
@@ -100,46 +103,55 @@ export interface PlatformRoleServiceModel {
   getById(roleId: string): Promise<PlatformRoleGetResponse>;
 
   /**
-   * Creates or updates a custom role.
+   * Creates a custom role.
    *
-   * Omit `options.id` to create a new role; pass it to overwrite an existing
-   * custom role. Built-in roles cannot be changed. Actions are referenced by
-   * their fully qualified names — pick them from `getActions()`.
+   * Actions are referenced by their fully qualified names — pick them from
+   * `getActions()`. The name must be unique in the organization.
    *
-   * @param name - Role name
-   * @param scopeType - Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`)
-   * @param description - Human-readable description
-   * @param options - Role id (to update), owning service, tenant, and granted actions
-   * @returns The role as stored after the write, as a {@link PlatformRoleGetResponse}
+   * @param request - The role to create
+   * @returns The created role as stored, as a {@link PlatformRoleGetResponse}
    *
-   * @example Create a custom role
+   * @example
    * ```typescript
-   * const role = await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Read-only access for ticket audits');
-   * ```
+   * import { PlatformRoleScopeType } from '@uipath/uipath-typescript/roles';
    *
-   * @example Create a role that grants actions
-   * ```typescript
    * const actions = await roles.getActions({ serviceName: 'AuthZ' });
    *
-   * const role = await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Read-only access for ticket audits', {
+   * const role = await roles.create({
+   *   name: 'Ticket Auditor',
+   *   scopeType: PlatformRoleScopeType.Organization,
+   *   description: 'Read-only access for ticket audits',
    *   actionsGrantedByRole: [actions[0].name],
    * });
    * ```
+   */
+  create(request: PlatformRoleCreateRequest): Promise<PlatformRoleGetResponse>;
+
+  /**
+   * Updates a custom role.
    *
-   * @example Update an existing custom role
+   * Only the fields present in `update` are changed — omitted fields keep their
+   * current values, including the granted actions. Passing `actionsGrantedByRole`
+   * replaces the full set. Built-in roles cannot be updated.
+   *
+   * @param roleId - GUID of the role to update
+   * @param update - The fields to change
+   * @returns The role as stored after the update, as a {@link PlatformRoleGetResponse}
+   *
+   * @example Rename a role
    * ```typescript
-   * await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Audit tickets and comments', {
-   *   id: role.id,
-   *   actionsGrantedByRole: role.actionDetails.map(a => a.name),
+   * const updated = await roles.updateById('<roleId>', { name: 'Ticket Managers' });
+   * ```
+   *
+   * @example Grant an additional action
+   * ```typescript
+   * const role = await roles.getById('<roleId>');
+   * await roles.updateById(role.id, {
+   *   actionsGrantedByRole: [...role.actionDetails.map(a => a.name), 'AUTHZ.ROLE.READ'],
    * });
    * ```
    */
-  upsert(
-    name: string,
-    scopeType: string,
-    description: string,
-    options?: PlatformRoleUpsertOptions
-  ): Promise<PlatformRoleGetResponse>;
+  updateById(roleId: string, update: PlatformRoleUpdateOptions): Promise<PlatformRoleGetResponse>;
 
   /**
    * Deletes a custom role. Built-in roles cannot be deleted.
@@ -160,7 +172,7 @@ export interface PlatformRoleServiceModel {
    *
    * Each item is one principal (user, group, or application) with every role assigned
    * to it at the given scope. Assignments carry their own GUID, which is what
-   * `updateAssignments()` uses to revoke them.
+   * `updateAssignments()` uses to revoke them. `pageSize` may not exceed 100.
    *
    * @param scope - The scope to list assignments for; `/` means the whole organization
    * @param options - Filtering and pagination options
@@ -243,10 +255,10 @@ export interface PlatformRoleServiceModel {
    *
    * This answers "what can this principal do here": the response lists every
    * effective role together with the assignments granting it, plus metadata for
-   * the granted services and roles. Pass exactly one of `userId` or `groupId`.
+   * the granted services and roles.
    *
    * @param tenantId - GUID of the tenant to compute access in
-   * @param principal - The user or group to check (exactly one of `userId` / `groupId`)
+   * @param principal - The user or group to check
    * @returns The principal's effective access, as a {@link PlatformEffectiveAccessResponse}
    *
    * @example Check a user
@@ -267,10 +279,10 @@ export interface PlatformRoleServiceModel {
 
   /**
    * Gets the catalog of permission (action) definitions roles can grant,
-   * optionally filtered by owning service or scope level.
+   * optionally filtered by owning service or level.
    *
-   * Use it to pick the `actionsGrantedByRole` names when creating a custom
-   * role with `upsert()`.
+   * Use it to pick the `actionsGrantedByRole` names when creating or updating a
+   * custom role.
    *
    * @param options - Filtering options
    * @returns The action definitions, as {@link PlatformRoleAction} items
@@ -287,6 +299,14 @@ export interface PlatformRoleServiceModel {
  * Methods attached to role objects returned by the Roles service.
  */
 export interface PlatformRoleMethods {
+  /**
+   * Updates this role. Only the fields present in `update` are changed.
+   *
+   * @param update - The fields to change
+   * @returns Promise resolving to the role as stored after the update
+   */
+  update(update: PlatformRoleUpdateOptions): Promise<PlatformRoleGetResponse>;
+
   /**
    * Deletes this role. Built-in roles cannot be deleted.
    *
@@ -307,6 +327,12 @@ function createPlatformRoleMethods(
   service: PlatformRoleServiceModel
 ): PlatformRoleMethods {
   return {
+    async update(update: PlatformRoleUpdateOptions): Promise<PlatformRoleGetResponse> {
+      if (!roleData.id) throw new Error('Role ID is undefined');
+
+      return service.updateById(roleData.id, update);
+    },
+
     async delete(): Promise<void> {
       if (!roleData.id) throw new Error('Role ID is undefined');
 

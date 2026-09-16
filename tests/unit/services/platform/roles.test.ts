@@ -2,7 +2,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // Imported through the subpath barrel, the way consumers reach it — this also catches a
 // barrel that stops re-exporting the class or the enums as runtime values.
-import { Roles, PlatformRoleType, PlatformPrincipalType } from '../../../../src/services/platform/roles';
+import {
+  Roles,
+  PlatformRoleType,
+  PlatformPrincipalType,
+  PlatformRoleScopeType,
+  PlatformRoleSortField,
+} from '../../../../src/services/platform/roles';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import {
@@ -19,6 +25,10 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { AUTHORIZATION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import {
+  AUTHORIZATION_ROLES_MAX_PAGE_SIZE,
+  AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE,
+} from '../../../../src/utils/constants/common';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -53,21 +63,50 @@ describe('Platform Roles Service Unit Tests', () => {
 
   describe('getAll', () => {
     it('should fetch every page when no pagination options are given', async () => {
-      const firstPage = Array.from({ length: 2 }, (_, i) =>
+      const fullPage = Array.from({ length: AUTHORIZATION_ROLES_MAX_PAGE_SIZE }, (_, i) =>
         createBasicRawPlatformRole({ id: `${roleId}-${i}` })
       );
       mockApiClient.get
-        .mockResolvedValueOnce(createRawPlatformRoleListResponse(firstPage, 3))
-        .mockResolvedValueOnce(createRawPlatformRoleListResponse([createBasicRawPlatformRole()], 3));
+        .mockResolvedValueOnce(createRawPlatformRoleListResponse(fullPage, AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1))
+        .mockResolvedValueOnce(createRawPlatformRoleListResponse([createBasicRawPlatformRole()], AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1));
+
+      const result = await rolesService.getAll();
+
+      expect(result.items).toHaveLength(AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1);
+      expect(result.totalCount).toBe(AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
+      expect(secondCall.params.skip).toBe(AUTHORIZATION_ROLES_MAX_PAGE_SIZE);
+    });
+
+    it('should stop after a short page and not refetch', async () => {
+      const shortPage = Array.from({ length: 3 }, (_, i) => createBasicRawPlatformRole({ id: `${roleId}-${i}` }));
+      // totalCount overcounts (e.g. stale index) — a short page must still be terminal
+      mockApiClient.get.mockResolvedValueOnce(createRawPlatformRoleListResponse(shortPage, 5));
 
       const result = await rolesService.getAll();
 
       expect(result.items).toHaveLength(3);
-      expect(result.totalCount).toBe(3);
-      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
-      // Advances by returned count, not requested page size — short pages must not skip records
-      expect(secondCall.params.skip).toBe(2);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('should dedupe roles that appear on two pages', async () => {
+      const straddler = `${roleId}-${AUTHORIZATION_ROLES_MAX_PAGE_SIZE - 1}`;
+      const fullPage = Array.from({ length: AUTHORIZATION_ROLES_MAX_PAGE_SIZE }, (_, i) =>
+        createBasicRawPlatformRole({ id: `${roleId}-${i}` })
+      );
+      // The last record of page one is served again at the top of page two
+      mockApiClient.get
+        .mockResolvedValueOnce(createRawPlatformRoleListResponse(fullPage, AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1))
+        .mockResolvedValueOnce(createRawPlatformRoleListResponse(
+          [createBasicRawPlatformRole({ id: straddler }), createBasicRawPlatformRole({ id: `${roleId}-new` })],
+          AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1
+        ));
+
+      const result = await rolesService.getAll();
+
+      expect(result.items).toHaveLength(AUTHORIZATION_ROLES_MAX_PAGE_SIZE + 1);
+      expect(result.items.filter((r) => r.id === straddler)).toHaveLength(1);
     });
 
     it('should apply the full transform pipeline to each role', async () => {
@@ -97,7 +136,9 @@ describe('Platform Roles Service Unit Tests', () => {
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params.contains).toBe('Ticket');
       expect(spec.params.roleType).toBe('CUSTOM');
-      expect(spec.params.top).toBe(1000);
+      expect(spec.params.top).toBe(AUTHORIZATION_ROLES_MAX_PAGE_SIZE);
+      // Fetch-all defaults to a stable sort so offsets stay consistent across pages
+      expect(spec.params.sortBy).toBe(PlatformRoleSortField.Id);
     });
 
     it('should send filters without an OData prefix on the paginated path', async () => {
@@ -158,14 +199,22 @@ describe('Platform Roles Service Unit Tests', () => {
     });
   });
 
-  describe('upsert', () => {
+  describe('create', () => {
+    const request = {
+      name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+      scopeType: PlatformRoleScopeType.Organization,
+      description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+      actionsGrantedByRole: [PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME],
+    };
+
     it('should share one organization id resolver between services built on the same instance', async () => {
       const { instance } = createServiceTestDependencies({ organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID });
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
-      await new Roles(instance).upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
+
+      await new Roles(instance).create(request);
       const resolver = getPrivateSDK(instance).organizationIdResolver;
-      await new Roles(instance).upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
+      await new Roles(instance).create(request);
 
       expect(resolver).toBeDefined();
       expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
@@ -176,57 +225,96 @@ describe('Platform Roles Service Unit Tests', () => {
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
 
-      const role = await rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION, {
-        actionsGrantedByRole: [PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME],
-      });
+      const role = await rolesService.create({ ...request, ownerServiceName: PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_NAME });
 
       const [endpoint, body] = mockApiClient.put.mock.calls[0];
       expect(endpoint).toBe(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL);
       // SDK names are mapped to the API's role* names
       expect(body.roleName).toBe(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME);
-      expect(body.roleScopeType).toBe(PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION);
+      expect(body.roleScopeType).toBe(PlatformRoleScopeType.Organization);
       expect(body.roleDescription).toBe(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
+      expect(body.roleService).toBe(PLATFORM_ROLE_TEST_CONSTANTS.OWNER_SERVICE_NAME);
       expect(body).not.toHaveProperty('name');
       expect(body).not.toHaveProperty('scopeType');
       expect(body).not.toHaveProperty('description');
+      expect(body).not.toHaveProperty('ownerServiceName');
+      expect(body).not.toHaveProperty('id');
       // The organization is resolved by the SDK, not passed by the caller
       expect(body.organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
-      expect(body).not.toHaveProperty('partitionGlobalId');
       expect(body.actionsGrantedByRole).toEqual([PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME]);
       // The write returns only {createdRoleId} — the service follows up with a read
       expect(mockApiClient.get).toHaveBeenCalledWith(AUTHORIZATION_ENDPOINTS.ROLE.GET_BY_ID(roleId), {});
       expect(role.type).toBe(PlatformRoleType.Custom);
+      expect(typeof role.update).toBe('function');
       expect(typeof role.delete).toBe('function');
     });
 
-    it('should throw ValidationError when name is missing', async () => {
-      await expect(
-        rolesService.upsert('', PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
-    });
-
-    it('should throw ValidationError when scopeType is missing', async () => {
-      await expect(
-        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, '', PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
-    });
-
-
-    it('should throw ValidationError when description is missing', async () => {
-      await expect(
-        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, '')
-      ).rejects.toBeInstanceOf(ValidationError);
+    it.each([
+      ['name', { ...request, name: '' }],
+      ['scopeType', { ...request, scopeType: '' as PlatformRoleScopeType }],
+      ['description', { ...request, description: '' }],
+      ['actionsGrantedByRole', { ...request, actionsGrantedByRole: [] }],
+    ])('should throw ValidationError when %s is missing', async (_field, invalid) => {
+      await expect(rolesService.create(invalid)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should propagate API errors', async () => {
       mockApiClient.put.mockRejectedValue(createMockError(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN));
 
-      await expect(
-        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
-      ).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
+      await expect(rolesService.create(request)).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
+    });
+  });
+
+  describe('updateById', () => {
+    it('should read the role, merge the changes, and PUT the full role with its id', async () => {
+      const current = createBasicRawPlatformRole({ type: 'CUSTOM' });
+      mockApiClient.get.mockResolvedValue(current);
+      mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
+
+      const role = await rolesService.updateById(roleId, { description: 'Updated' });
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(AUTHORIZATION_ENDPOINTS.ROLE.GET_BY_ID(roleId));
+      const [endpoint, body] = mockApiClient.put.mock.calls[0];
+      expect(endpoint).toBe(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL);
+      expect(body.id).toBe(roleId);
+      expect(body.roleDescription).toBe('Updated');
+      // Omitted fields keep their current values — the API replaces the whole role on write
+      expect(body.roleName).toBe(current.name);
+      expect(body.roleScopeType).toBe(current.scopeType);
+      expect(body.actionsGrantedByRole).toEqual(current.actionDetails.map((a) => a.name));
+      // Owner service and tenant are only sent when the caller changes them
+      expect(body).not.toHaveProperty('roleService');
+      expect(body).not.toHaveProperty('tenantId');
+      expect(body.organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(role.id).toBe(roleId);
+    });
+
+    it('should replace the granted actions when actionsGrantedByRole is given', async () => {
+      mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
+      mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
+
+      await rolesService.updateById(roleId, { actionsGrantedByRole: ['AUTHZ.ROLE.READ'] });
+
+      const [, body] = mockApiClient.put.mock.calls[0];
+      expect(body.actionsGrantedByRole).toEqual(['AUTHZ.ROLE.READ']);
+    });
+
+    it('should throw ValidationError when roleId is empty', async () => {
+      await expect(rolesService.updateById('', { name: 'x' })).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when the update has no fields', async () => {
+      await expect(rolesService.updateById(roleId, {})).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLE_NOT_FOUND));
+
+      await expect(rolesService.updateById(roleId, { name: 'x' })).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLE_NOT_FOUND);
     });
   });
 
@@ -279,8 +367,33 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(spec.params.scope).toBe('/');
       expect(spec.params.securityPrincipalId).toBe(PLATFORM_USER_TEST_CONSTANTS.USER_ID);
       expect(spec.params.roleIds).toEqual([roleId]);
-      // This endpoint rejects top above 10
-      expect(spec.params.top).toBe(10);
+      // This endpoint caps top at 100
+      expect(spec.params.top).toBe(AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE);
+    });
+
+    it('should fetch every page, stopping after a short page, and dedupe principals seen twice', async () => {
+      const straddler = `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE - 1}`;
+      const fullPage = Array.from({ length: AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE }, (_, i) =>
+        createBasicRawPlatformPrincipalRoleAssignments({ securityPrincipalId: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
+      );
+      mockApiClient.get
+        .mockResolvedValueOnce(createRawPlatformRoleAssignmentListResponse(fullPage, AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE + 5))
+        .mockResolvedValueOnce(createRawPlatformRoleAssignmentListResponse(
+          [
+            createBasicRawPlatformPrincipalRoleAssignments({ securityPrincipalId: straddler }),
+            createBasicRawPlatformPrincipalRoleAssignments({ securityPrincipalId: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-new` }),
+          ],
+          AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE + 5
+        ));
+
+      const result = await rolesService.getAssignments('/');
+
+      // Second page is short, so no third request even though totalCount says more
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
+      expect(secondCall.params.skip).toBe(AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE);
+      expect(result.items).toHaveLength(AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE + 1);
+      expect(result.items.filter((p) => p.securityPrincipalId === straddler)).toHaveLength(1);
     });
 
     it('should keep the scope param on the paginated path too', async () => {
@@ -446,15 +559,6 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when both userId and groupId are given', async () => {
-      await expect(
-        rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {
-          userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
-          groupId: PLATFORM_USER_TEST_CONSTANTS.GROUP_ID,
-        })
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN));

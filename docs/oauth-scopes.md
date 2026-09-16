@@ -267,22 +267,22 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 ## Roles
 
-The Authorization service does not publish dedicated OAuth scopes yet — access is
-governed by the caller's own platform roles (verified with personal access token
-authentication; the caller needs organization-level role management permissions
-for the write operations).
+The Authorization service does not publish dedicated OAuth scopes. Access is governed by
+the caller's own platform roles: reads need role read permission and writes need
+organization-level role management permission.
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | — (caller's platform roles apply) |
-| `getById()` | — (caller's platform roles apply) |
-| `upsert()` | — (caller's platform roles apply) |
-| `deleteById()` | — (caller's platform roles apply) |
-| `getAssignments()` | — (caller's platform roles apply) |
-| `updateAssignments()` | — (caller's platform roles apply) |
-| `exportAssignments()` | — (caller's platform roles apply) |
-| `getEffectiveAccess()` | — (caller's platform roles apply) |
-| `getActions()` | — (caller's platform roles apply) |
+| `getAll()` | None — caller's platform roles govern access |
+| `getById()` | None — caller's platform roles govern access |
+| `create()` | None — caller's platform roles govern access |
+| `updateById()` | None — caller's platform roles govern access |
+| `deleteById()` | None — caller's platform roles govern access |
+| `getAssignments()` | None — caller's platform roles govern access |
+| `updateAssignments()` | None — caller's platform roles govern access |
+| `exportAssignments()` | None — caller's platform roles govern access |
+| `getEffectiveAccess()` | None — caller's platform roles govern access |
+| `getActions()` | None — caller's platform roles govern access |
 
 ## Processes
 

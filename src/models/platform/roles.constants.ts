@@ -14,25 +14,28 @@ export const PlatformRoleMap = {
 
 /**
  * Normalizes the role-type strings to {@link PlatformRoleType}. The API is
- * inconsistent across endpoints — lists return `BUILTIN`/`CUSTOM` while
- * single-role reads return `BuiltIn`/`Custom` (live-verified).
+ * inconsistent across endpoints — lists return `BUILTIN`/`PLATFORM`/`CUSTOM`
+ * while single-role reads and assignments return `BuiltIn`/`Custom` (live-verified).
  */
 export const PlatformRoleTypeMap: { [key: string]: PlatformRoleType } = {
   BUILTIN: PlatformRoleType.BuiltIn,
+  PLATFORM: PlatformRoleType.Platform,
   CUSTOM: PlatformRoleType.Custom,
   BuiltIn: PlatformRoleType.BuiltIn,
+  Platform: PlatformRoleType.Platform,
   Custom: PlatformRoleType.Custom,
 };
 
 /**
- * Outbound renames for `roles.upsert()` — the SDK's `name`/`description`/`scopeType`
- * become the API's `role*` names. Used with `transformRequest()`, which reverses the
- * map (SDK name → wire name).
+ * Outbound renames for `roles.create()` and `roles.updateById()` — the SDK's
+ * `name`/`description`/`scopeType`/`ownerServiceName` become the API's `role*`
+ * names. Used with `transformRequest()`, which reverses the map (SDK name → wire name).
  */
-export const PlatformRoleUpsertMap = {
+export const PlatformRoleWriteMap = {
   roleName: 'name',
   roleDescription: 'description',
   roleScopeType: 'scopeType',
+  roleService: 'ownerServiceName',
 } as const;
 
 /**
