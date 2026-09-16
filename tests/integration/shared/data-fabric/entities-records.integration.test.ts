@@ -161,6 +161,18 @@ function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[
   return node.members.flatMap((m) => [...collectDescendantIds(m), m.id]);
 }
 
+/**
+ * The multi-entity upsert suite needs a parent/child entity pair and the tenant's
+ * multi-entity write feature. Neither is provisioned everywhere, so the suite is
+ * gated on the fixture rather than failing where it cannot run — same treatment as
+ * the attachment suite.
+ */
+const TREE_CONFIG = {
+  entityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || '',
+  childEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || '',
+};
+const hasTreeConfig = !!(TREE_CONFIG.entityName && TREE_CONFIG.childEntityName);
+
 const modes: InitMode[] = ['v0', 'v1'];
 
 /**
@@ -1327,7 +1339,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
 
   // ─── Multi-entity transactional upsert ────────────────────────────────────
 
-  describe('upsert', () => {
+  describe.skipIf(!hasTreeConfig)('upsert', () => {
     let treeEntityName!: string;
     let treeChildEntityName!: string;
     let treeMetadata!: EntityGetResponse;
@@ -1337,17 +1349,10 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
 
     beforeAll(async () => {
       const { entities } = getServices();
-      const config = getTestConfig();
 
-      if (!config.dataFabricTestTreeEntityName || !config.dataFabricTestTreeChildEntityName) {
-        throw new Error(
-          'Multi-entity upsert tests require a parent/child entity pair. Set '
-          + 'DATA_FABRIC_TEST_TREE_ENTITY_NAME and DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME.',
-        );
-      }
-
-      treeEntityName = config.dataFabricTestTreeEntityName;
-      treeChildEntityName = config.dataFabricTestTreeChildEntityName;
+      // Non-empty: the suite is skipped otherwise.
+      treeEntityName = TREE_CONFIG.entityName;
+      treeChildEntityName = TREE_CONFIG.childEntityName;
       treeMetadata = await entities.getByName(treeEntityName);
       treeChildMetadata = await entities.getByName(treeChildEntityName);
     });
