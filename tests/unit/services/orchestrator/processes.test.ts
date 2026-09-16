@@ -640,6 +640,24 @@ describe('ProcessService Unit Tests', () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
+    it('accepts ProcessRef with a key when name is explicitly undefined (spread-shape input)', async () => {
+      // `{ ...maybeName, key: 'K' }` where maybeName is empty produces `{ name: undefined, key: 'K' }`.
+      // Value-based dispatch routes cleanly to the key branch; presence-based dispatch would
+      // have thrown a misleading "processRef.name must be a non-empty string" error.
+      mockApiClient.post.mockResolvedValue(
+        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+      );
+
+      await service.start(
+        { name: undefined, key: PROCESS_TEST_CONSTANTS.PROCESS_KEY } as unknown as ProcessRef,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.startInfo.releaseKey).toBe(PROCESS_TEST_CONSTANTS.PROCESS_KEY);
+      expect(body.startInfo.releaseName).toBeUndefined();
+    });
+
     it('rejects ProcessRef with empty-string name via ValidationError before hitting the API', async () => {
       await expect(
         service.start(
