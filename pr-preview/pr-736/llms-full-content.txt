@@ -4382,8 +4382,8 @@ const result = await entities.upsert({ name: "Report" }, {
   ]
 }, { folderKey: "<folderKey>" });
 
-console.log(result.transaction.totalRecordsAffected); // 4
-console.log(result.transaction.members[0].id);        // generated expense record ID
+console.log(result.transaction!.totalRecordsAffected); // 4
+console.log(result.transaction!.members[0].id);        // generated expense record ID
 ```
 
 Writing across related entities requires the multi-entity write feature to be enabled for your tenant.
