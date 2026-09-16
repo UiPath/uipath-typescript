@@ -3,17 +3,7 @@ import type {
   StartExtractionValidationTaskRequestV2_0,
   StartValidationTaskResponse,
 } from './framework/validation.types';
-
-/**
- * Options for the Document Understanding validation-station methods.
- *
- * (Declared here rather than in `framework/validation.types.ts` because that file
- * is generated from the OpenAPI spec and must not be edited manually.)
- */
-export interface DuValidationRequestOptions {
-  /** DU framework API version sent as the `api-version` query param. Defaults to `'1.1'`. */
-  apiVersion?: string;
-}
+import type { DuValidationRequestOptions } from './validation.types';
 
 /**
  * Service for the Document Understanding validation-station flow.
@@ -26,12 +16,12 @@ export interface DuValidationRequestOptions {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { DocumentUnderstandingValidation } from '@uipath/uipath-typescript/document-understanding-validation';
+ * import { DuValidation } from '@uipath/uipath-typescript/document-understanding';
  *
- * const validation = new DocumentUnderstandingValidation(sdk);
+ * const validation = new DuValidation(sdk);
  * ```
  */
-export interface DocumentUnderstandingValidationServiceModel {
+export interface DuValidationServiceModel {
   /**
    * Starts a validation action for an extraction result.
    *

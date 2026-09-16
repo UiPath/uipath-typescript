@@ -211,7 +211,7 @@ const serviceEntries = [
   },
   {
     name: 'document-understanding',
-    input: 'src/models/document-understanding/index.ts',
+    input: 'src/services/document-understanding/index.ts',
     output: 'document-understanding/index'
   },
   {

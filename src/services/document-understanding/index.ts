@@ -1,19 +1,19 @@
 /**
- * Document Understanding Validation Module
+ * Document Understanding Module
  *
- * Provides access to the UiPath Document Understanding validation-station flow:
- * start a human validation action for an extraction result, then poll the
- * long-running operation for the validated result.
+ * Framework contracts plus the validation-station service: start a human
+ * validation action for an extraction result, then poll the long-running
+ * operation for the validated result.
  *
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { DocumentUnderstandingValidation } from '@uipath/uipath-typescript/document-understanding-validation';
+ * import { DuValidation } from '@uipath/uipath-typescript/document-understanding';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const validation = new DocumentUnderstandingValidation(sdk);
+ * const validation = new DuValidation(sdk);
  * const { OperationId } = await validation.startExtractionValidation(
  *   '<projectId>',
  *   '<tag>',
@@ -26,8 +26,8 @@
  */
 
 export {
-  DocumentUnderstandingValidationService as DocumentUnderstandingValidation,
-  DocumentUnderstandingValidationService,
+  DuValidationService as DuValidation,
+  DuValidationService,
 } from './validation';
 
-export * from '../../models/document-understanding/validation.models';
+export * from '../../models/document-understanding';

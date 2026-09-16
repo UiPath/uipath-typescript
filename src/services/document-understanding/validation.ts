@@ -5,10 +5,8 @@ import type {
   StartExtractionValidationTaskRequestV2_0,
   StartValidationTaskResponse,
 } from '../../models/document-understanding/framework/validation.types';
-import type {
-  DocumentUnderstandingValidationServiceModel,
-  DuValidationRequestOptions,
-} from '../../models/document-understanding/validation.models';
+import type { DuValidationServiceModel } from '../../models/document-understanding/validation.models';
+import type { DuValidationRequestOptions } from '../../models/document-understanding/validation.types';
 import { DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
 import { BaseService } from '../base';
 
@@ -17,11 +15,11 @@ const DEFAULT_API_VERSION = '1.1';
 /**
  * Service for the Document Understanding validation-station flow.
  */
-export class DocumentUnderstandingValidationService
+export class DuValidationService
   extends BaseService
-  implements DocumentUnderstandingValidationServiceModel
+  implements DuValidationServiceModel
 {
-  @track('DocumentUnderstandingValidation.StartExtractionValidation')
+  @track('DuValidation.StartExtractionValidation')
   async startExtractionValidation(
     projectId: string,
     tag: string,
@@ -50,7 +48,7 @@ export class DocumentUnderstandingValidationService
     return response.data;
   }
 
-  @track('DocumentUnderstandingValidation.GetExtractionValidationResult')
+  @track('DuValidation.GetExtractionValidationResult')
   async getExtractionValidationResult(
     projectId: string,
     tag: string,

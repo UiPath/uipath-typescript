@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DocumentUnderstandingValidationService } from '@/services/document-understanding/validation';
+import { DuValidationService } from '@/services/document-understanding/validation';
 import { ApiClient } from '@/core/http/api-client';
 import { DU_VALIDATION_ENDPOINTS } from '@/utils/constants/endpoints';
 import type {
@@ -40,8 +40,8 @@ const RESULT_RESPONSE: GetExtractionValidationTaskResponse = {
 };
 
 // ===== TEST SUITE =====
-describe('DocumentUnderstandingValidationService Unit Tests', () => {
-  let service: DocumentUnderstandingValidationService;
+describe('DuValidationService Unit Tests', () => {
+  let service: DuValidationService;
   let mockApiClient: any;
 
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe('DocumentUnderstandingValidationService Unit Tests', () => {
 
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
-    service = new DocumentUnderstandingValidationService(instance);
+    service = new DuValidationService(instance);
   });
 
   afterEach(() => {
