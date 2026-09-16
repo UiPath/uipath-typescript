@@ -16,7 +16,7 @@
         <link rel="prev" href="../PlatformServiceModel/">
       
       
-        <link rel="next" href="../PlatformGroupServiceModel/">
+        <link rel="next" href="../PlatformRoleServiceModel/">
       
       
         
@@ -1544,10 +1544,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1747,62 +1743,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Groups
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Directory
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -3434,7 +3374,7 @@ membership check against a known group needs no extra call.</p>
 current values. Group membership is edited incrementally through
 <code>groupIdsToAdd</code> / <code>groupIdsToRemove</code>, which makes this the call for granting or
 revoking a user's access ("add user to the Administrators group").</p>
-<p>First, get group IDs with <code>groups.getAll()</code> (from <code>@uipath/uipath-typescript/platform</code>).</p>
+<p>Group IDs can be read from any user's <code>groupIds</code> (e.g. via <code>users.getById()</code>).</p>
 <p>Resolves once the change is applied. Input Identity rejects (for example an email
 that is already taken) surfaces as a <code>ValidationError</code> carrying the reason.</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
@@ -3529,13 +3469,13 @@ that is already taken) surfaces as a <code>ValidationError</code> carrying the r
         
         
           
-          <a href="../PlatformGroupServiceModel/" class="md-footer__link md-footer__link--next" aria-label="Next: Groups">
+          <a href="../PlatformRoleServiceModel/" class="md-footer__link md-footer__link--next" aria-label="Next: Roles">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Groups
+                Roles
               </div>
             </div>
             <div class="md-footer__button md-icon">
