@@ -467,12 +467,6 @@ describe('ChoiceSetService Unit Tests', () => {
       );
     });
 
-    it('should reject folderPath without folderKey — body needs folderId', async () => {
-      await expect(
-        choiceSetService.create('expense_types', { folderPath: 'Shared/Finance' }),
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
   });
 
   describe('updateById', () => {

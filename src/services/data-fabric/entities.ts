@@ -373,11 +373,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
-    if (opts.folderPath && !opts.folderKey) {
-      throw new ValidationError({
-        message: 'entities.create requires folderKey when creating a folder-scoped entity — the create body carries a folderId that cannot be derived from folderPath.',
-      });
-    }
     const fieldPayloads = await this.buildFieldsWithReferenceMeta(fields);
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),

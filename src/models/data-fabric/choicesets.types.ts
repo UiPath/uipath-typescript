@@ -67,9 +67,12 @@ export interface ChoiceSetGetAllOptions extends EntityFolderScopedOptions {
 export type ChoiceSetGetByIdOptions = PaginationOptions & EntityFolderScopedOptions;
 
 /**
- * Options for creating a new choice set
+ * Options for creating a new choice set.
+ *
+ * `folderPath` is intentionally excluded: the create body carries a
+ * `folderId` Guid that cannot be derived from a path SDK-side.
  */
-export interface ChoiceSetCreateOptions extends EntityFolderScopedOptions {
+export interface ChoiceSetCreateOptions extends Omit<EntityFolderScopedOptions, 'folderPath'> {
   /** Human-readable display name */
   displayName?: string;
   /** Optional choice set description */

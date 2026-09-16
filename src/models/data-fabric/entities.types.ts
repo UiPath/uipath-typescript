@@ -476,9 +476,12 @@ export interface EntityGetByNameOptions extends EntityGetByIdOptions {}
 export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
 
 /**
- * Options for creating a new Data Fabric entity
+ * Options for creating a new Data Fabric entity.
+ *
+ * `folderPath` is intentionally excluded: the create body carries a
+ * `folderId` Guid that cannot be derived from a path SDK-side.
  */
-export interface EntityCreateOptions extends EntityFolderScopedOptions {
+export interface EntityCreateOptions extends Omit<EntityFolderScopedOptions, 'folderPath'> {
   /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
   displayName?: string;
   /** Optional entity description */

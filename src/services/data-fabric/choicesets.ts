@@ -101,11 +101,6 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   @track('Choicesets.Create')
   async create(name: string, options?: ChoiceSetCreateOptions): Promise<string> {
     const opts = options ?? {};
-    if (opts.folderPath && !opts.folderKey) {
-      throw new ValidationError({
-        message: 'choicesets.create requires folderKey when creating a folder-scoped choice set — the create body carries a folderId that cannot be derived from folderPath.',
-      });
-    }
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
       ...(opts.displayName !== undefined && { displayName: opts.displayName }),
