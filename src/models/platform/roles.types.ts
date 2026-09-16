@@ -100,11 +100,11 @@ export interface PlatformRoleUpsertRequest {
   /** GUID of the role to update; omit to create a new role. */
   id?: string;
   /** Role name. */
-  roleName: string;
+  name: string;
   /** Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`). */
-  roleScopeType: string;
+  scopeType: string;
   /** Human-readable description. */
-  roleDescription: string;
+  description: string;
   /** Name of the service that owns the role. */
   roleService?: string;
   /** Tenant the role belongs to, for tenant-scoped roles. */
@@ -122,7 +122,7 @@ export interface PlatformRoleAssignment {
   /** GUID of the principal (user, group, external app, or robot). */
   securityPrincipalId: string;
   /** The kind of principal. */
-  securityPrincipalType: string;
+  securityPrincipalType: PlatformPrincipalType;
   /** How the assignment was created (`BuiltIn` or `Custom`). */
   type: string;
   /** The scope the role is granted at (`/` = whole organization). */
@@ -202,15 +202,13 @@ export interface PlatformRoleAssignmentChanges {
 }
 
 /**
- * A request for `roles.getEffectiveAccess()` — the principal and tenant scope
- * to compute access for.
+ * The principal to compute access for in `roles.getEffectiveAccess()`.
+ * Provide exactly one of `userId` / `groupId`.
  */
-export interface PlatformEffectiveAccessRequest {
-  /** Tenant GUID to compute access in. */
-  tenantId: string;
-  /** GUID of the user to check. Provide exactly one of `userId` / `groupId`. */
+export interface PlatformEffectiveAccessPrincipal {
+  /** GUID of the user to check. */
   userId?: string;
-  /** GUID of the group to check. Provide exactly one of `userId` / `groupId`. */
+  /** GUID of the group to check. */
   groupId?: string;
 }
 
@@ -223,7 +221,7 @@ export interface PlatformEffectiveRole {
   /** Name of the role. */
   roleName: string | null;
   /** Whether the role is built-in or custom. */
-  roleType: string | null;
+  roleType: PlatformRoleType | null;
   /** Tenant the role applies in. */
   tenantId: string | null;
   /** Name of the service that owns the role. */
@@ -251,9 +249,9 @@ export interface PlatformEffectiveRoleAssignment {
   /** Name of the granted role. */
   roleName: string | null;
   /** The kind of principal the role is granted to. */
-  securityPrincipalType: string | null;
+  securityPrincipalType: PlatformPrincipalType | null;
   /** Whether the granted role is built-in or custom. */
-  roleType: string | null;
+  roleType: PlatformRoleType | null;
   /** Name of the service that owns the role. */
   serviceName: string | null;
   /** GUID of the service that owns the role. */

@@ -93,9 +93,9 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
       // Create — actions are referenced by fully qualified name
       const created = await roles.upsert({
-        roleName,
-        roleScopeType: 'ORGANIZATION',
-        roleDescription: 'SDK integration probe role',
+        name: roleName,
+        scopeType: 'ORGANIZATION',
+        description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);
@@ -116,9 +116,9 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
   describe('assignments', () => {
     it('should grant and revoke a role assignment for a user', async () => {
       const created = await roles.upsert({
-        roleName: `sdk-it-${generateRandomString(8)}`,
-        roleScopeType: 'ORGANIZATION',
-        roleDescription: 'SDK integration probe role',
+        name: `sdk-it-${generateRandomString(8)}`,
+        scopeType: 'ORGANIZATION',
+        description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);
@@ -169,7 +169,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
   describe('getEffectiveAccess', () => {
     it('should compute effective access for a user in the tenant', async () => {
-      const access = await roles.getEffectiveAccess({ tenantId, userId: mutableUserId });
+      const access = await roles.getEffectiveAccess(tenantId, { userId: mutableUserId });
 
       // The reshaped envelope is always present, even when the principal holds nothing
       expect(Array.isArray(access.roles)).toBe(true);

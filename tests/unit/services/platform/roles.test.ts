@@ -105,7 +105,7 @@ describe('Platform Roles Service Unit Tests', () => {
         createRawPlatformRoleListResponse([createBasicRawPlatformRole()], PLATFORM_ROLE_TEST_CONSTANTS.ROLES_TOTAL_COUNT)
       );
 
-      await rolesService.getAll({
+      const result = await rolesService.getAll({
         roleType: PlatformRoleType.Custom,
         contains: 'Ticket',
         pageSize: 5,
@@ -117,6 +117,13 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(spec.params.top).toBe(5);
       expect(spec.params).not.toHaveProperty('$roleType');
       expect(spec.params).not.toHaveProperty('$count');
+      // The paginated path has its own transform closure — verify it too
+      const role = result.items[0];
+      expect(role.createdTime).toBe(PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON);
+      expect((role as any).createdOn).toBeUndefined();
+      expect(role.type).toBe(PlatformRoleType.BuiltIn);
+      expect((role.actionDetails[0] as any).originalResourceAction).toBeUndefined();
+      expect(typeof role.delete).toBe('function');
     });
 
     it('should propagate API errors', async () => {
@@ -157,9 +164,9 @@ describe('Platform Roles Service Unit Tests', () => {
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
       const request = {
-        roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-        roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-        roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+        name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+        scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+        description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
       };
 
       await new Roles(instance).upsert(request);
@@ -171,20 +178,26 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(mockApiClient.put.mock.calls[1][1].organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
     });
 
-    it('should PUT the role, then fetch the stored role by the returned ID', async () => {
+    it('should PUT the role under wire names, then fetch the stored role by the returned ID', async () => {
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
 
       const role = await rolesService.upsert({
-        roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-        roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-        roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+        name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+        scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+        description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         actionsGrantedByRole: [PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME],
       });
 
       const [endpoint, body] = mockApiClient.put.mock.calls[0];
       expect(endpoint).toBe(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL);
+      // SDK names are mapped to the API's role* names
       expect(body.roleName).toBe(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME);
+      expect(body.roleScopeType).toBe(PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION);
+      expect(body.roleDescription).toBe(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
+      expect(body).not.toHaveProperty('name');
+      expect(body).not.toHaveProperty('scopeType');
+      expect(body).not.toHaveProperty('description');
       // The organization is resolved by the SDK, not passed by the caller
       expect(body.organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
       expect(body).not.toHaveProperty('partitionGlobalId');
@@ -195,35 +208,35 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(typeof role.delete).toBe('function');
     });
 
-    it('should throw ValidationError when roleName is missing', async () => {
+    it('should throw ValidationError when name is missing', async () => {
       await expect(
         rolesService.upsert({
-          roleName: '',
-          roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+          name: '',
+          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when roleScopeType is missing', async () => {
+    it('should throw ValidationError when scopeType is missing', async () => {
       await expect(
         rolesService.upsert({
-          roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          roleScopeType: '',
-            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+          scopeType: '',
+            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
 
-    it('should throw ValidationError when roleDescription is missing', async () => {
+    it('should throw ValidationError when description is missing', async () => {
       await expect(
         rolesService.upsert({
-          roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            roleDescription: '',
+          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+            description: '',
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
@@ -234,9 +247,9 @@ describe('Platform Roles Service Unit Tests', () => {
 
       await expect(
         rolesService.upsert({
-          roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
     });
@@ -300,7 +313,7 @@ describe('Platform Roles Service Unit Tests', () => {
         createRawPlatformRoleAssignmentListResponse([createBasicRawPlatformPrincipalRoleAssignments()], 40)
       );
 
-      await rolesService.getAssignments('/', {
+      const result = await rolesService.getAssignments('/', {
         securityPrincipalId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
         pageSize: 10,
       });
@@ -310,6 +323,12 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(spec.params.securityPrincipalId).toBe(PLATFORM_USER_TEST_CONSTANTS.USER_ID);
       expect(spec.params.top).toBe(10);
       expect(spec.params).not.toHaveProperty('$scope');
+      // The paginated path has its own transform closure — verify it too
+      const principal = result.items[0];
+      expect((principal as any).roleAssignmentDtos).toBeUndefined();
+      expect(principal.roleAssignments[0].createdTime).toBe(PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON);
+      expect((principal.roleAssignments[0] as any).createdOn).toBeUndefined();
+      expect(principal.roleAssignments[0].roleType).toBe(PlatformRoleType.BuiltIn);
     });
 
     it('should throw ValidationError when scope is empty', async () => {
@@ -399,8 +418,7 @@ describe('Platform Roles Service Unit Tests', () => {
     it('should POST the tenant scope and reshape the envelope', async () => {
       mockApiClient.post.mockResolvedValue(createRawPlatformEffectiveAccessResponse());
 
-      const access = await rolesService.getEffectiveAccess({
-        tenantId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
+      const access = await rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {
         userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
       });
 
@@ -418,6 +436,9 @@ describe('Platform Roles Service Unit Tests', () => {
       expect(access.roles[0].assignments[0].createdTime).toBe(PLATFORM_ROLE_TEST_CONSTANTS.CREATED_ON);
       expect((access.roles[0].assignments[0] as any).createdOn).toBeUndefined();
       expect((access.roles[0] as any).roleAssignments).toBeUndefined();
+      // Role types are normalized to the enum at both levels
+      expect(access.roles[0].roleType).toBe(PlatformRoleType.BuiltIn);
+      expect(access.roles[0].assignments[0].roleType).toBe(PlatformRoleType.BuiltIn);
       expect(access.grantedRoles).toHaveLength(1);
       expect(access.grantedServices).toEqual([]);
     });
@@ -425,8 +446,7 @@ describe('Platform Roles Service Unit Tests', () => {
     it('should check groups when groupId is given', async () => {
       mockApiClient.post.mockResolvedValue(createRawPlatformEffectiveAccessResponse());
 
-      await rolesService.getEffectiveAccess({
-        tenantId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
+      await rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {
         groupId: PLATFORM_USER_TEST_CONSTANTS.GROUP_ID,
       });
 
@@ -437,22 +457,21 @@ describe('Platform Roles Service Unit Tests', () => {
 
     it('should throw ValidationError when tenantId is missing', async () => {
       await expect(
-        rolesService.getEffectiveAccess({ tenantId: '', userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID })
+        rolesService.getEffectiveAccess('', { userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when no principal is given', async () => {
       await expect(
-        rolesService.getEffectiveAccess({ tenantId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID })
+        rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {})
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when both userId and groupId are given', async () => {
       await expect(
-        rolesService.getEffectiveAccess({
-          tenantId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
+        rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {
           userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
           groupId: PLATFORM_USER_TEST_CONSTANTS.GROUP_ID,
         })
@@ -464,8 +483,7 @@ describe('Platform Roles Service Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(createMockError(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN));
 
       await expect(
-        rolesService.getEffectiveAccess({
-          tenantId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
+        rolesService.getEffectiveAccess(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID, {
           userId: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
         })
       ).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
