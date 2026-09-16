@@ -17,7 +17,7 @@ import {
   PLATFORM_USER_TEST_CONSTANTS,
   PLATFORM_ROLE_TEST_CONSTANTS,
 } from '../../../utils/mocks';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { AUTHORIZATION_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 
 // ===== MOCKING =====
@@ -31,7 +31,7 @@ describe('Platform Roles Service Unit Tests', () => {
   const roleId = PLATFORM_ROLE_TEST_CONSTANTS.ROLE_ID;
 
   beforeEach(() => {
-    const { instance } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies({ organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID });
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
@@ -152,6 +152,25 @@ describe('Platform Roles Service Unit Tests', () => {
   });
 
   describe('upsert', () => {
+    it('should share one organization id resolver between services built on the same instance', async () => {
+      const { instance } = createServiceTestDependencies({ organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID });
+      mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
+      mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
+      const request = {
+        roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
+        roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
+        roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+      };
+
+      await new Roles(instance).upsert(request);
+      const resolver = getPrivateSDK(instance).organizationIdResolver;
+      await new Roles(instance).upsert(request);
+
+      expect(resolver).toBeDefined();
+      expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
+      expect(mockApiClient.put.mock.calls[1][1].organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+    });
+
     it('should PUT the role, then fetch the stored role by the returned ID', async () => {
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
@@ -159,7 +178,6 @@ describe('Platform Roles Service Unit Tests', () => {
       const role = await rolesService.upsert({
         roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
         roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-        organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
         roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         actionsGrantedByRole: [PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME],
       });
@@ -167,7 +185,9 @@ describe('Platform Roles Service Unit Tests', () => {
       const [endpoint, body] = mockApiClient.put.mock.calls[0];
       expect(endpoint).toBe(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL);
       expect(body.roleName).toBe(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME);
+      // The organization is resolved by the SDK, not passed by the caller
       expect(body.organizationId).toBe(PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID);
+      expect(body).not.toHaveProperty('partitionGlobalId');
       expect(body.actionsGrantedByRole).toEqual([PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME]);
       // The write returns only {createdRoleId} — the service follows up with a read
       expect(mockApiClient.get).toHaveBeenCalledWith(AUTHORIZATION_ENDPOINTS.ROLE.GET_BY_ID(roleId), {});
@@ -180,8 +200,7 @@ describe('Platform Roles Service Unit Tests', () => {
         rolesService.upsert({
           roleName: '',
           roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-          organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-          roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
@@ -192,32 +211,19 @@ describe('Platform Roles Service Unit Tests', () => {
         rolesService.upsert({
           roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
           roleScopeType: '',
-          organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-          roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is missing', async () => {
-      await expect(
-        rolesService.upsert({
-          roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-          organizationId: '',
-          roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
-        })
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
-    });
 
     it('should throw ValidationError when roleDescription is missing', async () => {
       await expect(
         rolesService.upsert({
           roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
           roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-          organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-          roleDescription: '',
+            roleDescription: '',
         })
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
@@ -230,8 +236,7 @@ describe('Platform Roles Service Unit Tests', () => {
         rolesService.upsert({
           roleName: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
           roleScopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-          organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID,
-          roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+            roleDescription: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
         })
       ).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
     });

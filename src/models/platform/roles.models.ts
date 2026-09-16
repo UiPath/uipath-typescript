@@ -116,7 +116,6 @@ export interface PlatformRoleServiceModel {
    * const role = await roles.upsert({
    *   roleName: 'Ticket Auditor',
    *   roleScopeType: 'ORGANIZATION',
-   *   organizationId: '<organizationId>',
    *   roleDescription: 'Read-only access for ticket audits',
    *   actionsGrantedByRole: [actions[0].name],
    * });

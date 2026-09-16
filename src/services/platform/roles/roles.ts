@@ -5,6 +5,9 @@
 
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { OrganizationIdResolver } from '../../../core/organization/organization-id-resolver';
 import { BaseService } from '../../base';
 
 import type {
@@ -62,10 +65,22 @@ import {
  * Service for managing the organization's roles and role assignments, and for
  * computing a principal's effective access.
  *
- * The caller's organization is resolved from the token — no organization
- * parameter travels in these calls.
+ * The organization is resolved by the SDK — no organization parameter travels in
+ * these calls.
  */
 export class PlatformRoleService extends BaseService implements PlatformRoleServiceModel {
+  readonly #organizationIdResolver: OrganizationIdResolver;
+
+  /**
+   * Creates an instance of the Roles service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    // The role write body needs the organization GUID; resolved once per SDK instance and shared
+    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
+  }
   @track('PlatformRoles.GetAll')
   async getAll<T extends PlatformRoleGetAllOptions = PlatformRoleGetAllOptions>(
     options?: T
@@ -127,16 +142,17 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     if (!request.roleScopeType) {
       throw new ValidationError({ message: 'roleScopeType is required for upsert' });
     }
-    if (!request.organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for upsert' });
-    }
     if (!request.roleDescription) {
       throw new ValidationError({ message: 'roleDescription is required for upsert' });
     }
 
     // The write returns only the role ID — follow up with a read so callers
     // get the stored role
-    const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, request);
+    const organizationId = await this.#organizationIdResolver.resolve();
+    const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
+      ...request,
+      organizationId,
+    });
     return this.fetchRole(response.data.createdRoleId);
   }
 

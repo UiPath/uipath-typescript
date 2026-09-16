@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
 import { Roles } from '../../../../src/services/platform/roles';
 import { PlatformRoleType, PlatformPrincipalType } from '../../../../src/models/platform';
 import type { PlatformRoleAction } from '../../../../src/models/platform';
@@ -7,11 +7,8 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Platform Roles - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
   let roles!: Roles;
-  let organizationId!: string;
   let tenantId!: string;
   let mutableUserId!: string;
   /** An action to grant on probe roles, picked from the live catalog. */
@@ -26,14 +23,13 @@ describe.each(modes)('Platform Roles - Integration Tests [%s]', (mode) => {
     }
     roles = service;
 
-    const { organizationId: configuredOrganizationId, tenantId: configuredTenantId, identityMutableTestUserId } = getTestConfig();
-    if (!configuredOrganizationId || !identityMutableTestUserId) {
-      throw new Error('UIPATH_ORGANIZATION_ID and IDENTITY_MUTABLE_TEST_USER_ID must be configured for the Roles suite.');
+    const { tenantId: configuredTenantId, identityMutableTestUserId } = getTestConfig();
+    if (!identityMutableTestUserId) {
+      throw new Error('IDENTITY_MUTABLE_TEST_USER_ID must be configured for the Roles suite.');
     }
     if (!configuredTenantId) {
       throw new Error('UIPATH_TENANT_ID must be configured for the effective-access test.');
     }
-    organizationId = configuredOrganizationId;
     tenantId = configuredTenantId;
     mutableUserId = identityMutableTestUserId;
 
@@ -99,7 +95,6 @@ describe.each(modes)('Platform Roles - Integration Tests [%s]', (mode) => {
       const created = await roles.upsert({
         roleName,
         roleScopeType: 'ORGANIZATION',
-        organizationId,
         roleDescription: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
@@ -123,7 +118,6 @@ describe.each(modes)('Platform Roles - Integration Tests [%s]', (mode) => {
       const created = await roles.upsert({
         roleName: `sdk-it-${generateRandomString(8)}`,
         roleScopeType: 'ORGANIZATION',
-        organizationId,
         roleDescription: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
