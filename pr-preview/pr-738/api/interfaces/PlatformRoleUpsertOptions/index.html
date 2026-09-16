@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleUpsertRequest/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleUpsertOptions/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>PlatformRoleUpsertRequest - UiPath TypeScript SDK</title>
+        <title>PlatformRoleUpsertOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PlatformRoleUpsertRequest
+              PlatformRoleUpsertOptions
             
           </span>
         </div>
@@ -3086,9 +3086,9 @@
   
 
 
-  <h1>PlatformRoleUpsertRequest</h1>
+  <h1>PlatformRoleUpsertOptions</h1>
 
-<p>A custom role to create or update via <code>roles.upsert()</code>.</p>
+<p>Options for <code>roles.upsert()</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3105,29 +3105,14 @@
 <td>Fully qualified names of the actions the role grants (e.g. <code>AUTHZ.ROLE.READ</code>) — pick them from <code>roles.getActions()</code>.</td>
 </tr>
 <tr>
-<td><a id="description"></a> <code>description</code></td>
-<td><code>string</code></td>
-<td>Human-readable description.</td>
-</tr>
-<tr>
 <td><a id="id"></a> <code>id?</code></td>
 <td><code>string</code></td>
 <td>GUID of the role to update; omit to create a new role.</td>
 </tr>
 <tr>
-<td><a id="name"></a> <code>name</code></td>
-<td><code>string</code></td>
-<td>Role name.</td>
-</tr>
-<tr>
 <td><a id="roleservice"></a> <code>roleService?</code></td>
 <td><code>string</code></td>
 <td>Name of the service that owns the role.</td>
-</tr>
-<tr>
-<td><a id="scopetype"></a> <code>scopeType</code></td>
-<td><code>string</code></td>
-<td>Scope level the role applies at (e.g. <code>ORGANIZATION</code>, <code>TENANT</code>).</td>
 </tr>
 <tr>
 <td><a id="tenantid"></a> <code>tenantId?</code></td>

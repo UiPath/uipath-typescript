@@ -3714,10 +3714,10 @@ service (<code>users.getAll()</code> / <code>groups.getAll()</code>).</p>
 <hr />
 <h3 id="upsert">upsert()<a class="headerlink" href="#upsert" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>upsert</strong>(<code>request</code>: <a href="../PlatformRoleUpsertRequest/"><code>PlatformRoleUpsertRequest</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+<p><strong>upsert</strong>(<code>name</code>: <code>string</code>, <code>scopeType</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformRoleUpsertOptions/"><code>PlatformRoleUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Creates or updates a custom role.</p>
-<p>Omit <code>request.id</code> to create a new role; pass it to overwrite an existing
+<p>Omit <code>options.id</code> to create a new role; pass it to overwrite an existing
 custom role. Built-in roles cannot be changed. Actions are referenced by
 their fully qualified names — pick them from <code>getActions()</code>.</p>
 <h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
@@ -3731,24 +3731,43 @@ their fully qualified names — pick them from <code>getActions()</code>.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>request</code></td>
-<td><a href="../PlatformRoleUpsertRequest/"><code>PlatformRoleUpsertRequest</code></a></td>
-<td>The role to create or update</td>
+<td><code>name</code></td>
+<td><code>string</code></td>
+<td>Role name</td>
+</tr>
+<tr>
+<td><code>scopeType</code></td>
+<td><code>string</code></td>
+<td>Scope level the role applies at (e.g. <code>ORGANIZATION</code>, <code>TENANT</code>)</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>string</code></td>
+<td>Human-readable description</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../PlatformRoleUpsertOptions/"><code>PlatformRoleUpsertOptions</code></a></td>
+<td>Role id (to update), owning service, tenant, and granted actions</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
 <p>The role as stored after the write, as a <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></p>
-<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">({</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nx">scopeType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">,</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">actions</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">],</span>
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="p">});</span>
+<h4 id="examples_4">Examples<a class="headerlink" href="#examples_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">);</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">actions</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">],</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">});</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Audit tickets and comments&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">role.id</span><span class="p">,</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="kt">role.actionDetails.map</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">name</span><span class="p">),</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="p">});</span>
 </code></pre></div>
 
 
