@@ -7,8 +7,9 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
+import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
 import {
+  EntityCreateFieldOptions,
   EntityFieldDataType,
   EntityMultiEntityWriteOperation,
   EntityMultiEntityWriteResponseNode,
@@ -20,6 +21,7 @@ import {
 } from '../../../../src/models/data-fabric/entities.types';
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { isNotFoundError } from '../../../../src/core/errors/guards';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -170,6 +172,45 @@ const TREE_CONFIG = {
   entityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || '',
   childEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || '',
 };
+
+/**
+ * Returns the named entity, creating it first when the tenant does not have it yet.
+ *
+ * The upsert suite needs a parent/child pair with a foreign key between them, which not
+ * every tenant has seeded. Provisioning it here keeps the suite runnable on a fresh tenant
+ * without a manual setup step. Existing entities are used as-is — `fields` only describes
+ * what to create, never what to enforce.
+ */
+async function ensureEntity(
+  name: string,
+  fields: EntityCreateFieldOptions[],
+): Promise<EntityGetResponse> {
+  const { entities } = getServices();
+  try {
+    return await entities.getByName(name);
+  } catch (error) {
+    // A name that does not exist comes back as a 400 naming it, not a 404, so the
+    // status alone cannot distinguish "absent" from "malformed request".
+    const absent = isNotFoundError(error)
+      || (error instanceof Error && /not found/i.test(error.message));
+    if (!absent) throw error;
+  }
+
+  try {
+    const entityId = await createEntityAwaitingReady(entities, name, fields);
+    return await entities.getById(entityId);
+  } catch (createError) {
+    // A parallel suite cell may have created it between the read and the write. If it did
+    // not, the creation failure is the useful error — re-reading would only report the
+    // entity as absent again and bury the reason.
+    console.warn(createError);
+    try {
+      return await entities.getByName(name);
+    } catch {
+      throw createError;
+    }
+  }
+}
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -1353,12 +1394,31 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         );
       }
 
-      const { entities } = getServices();
-
       treeEntityName = TREE_CONFIG.entityName;
       treeChildEntityName = TREE_CONFIG.childEntityName;
-      treeMetadata = await entities.getByName(treeEntityName);
-      treeChildMetadata = await entities.getByName(treeChildEntityName);
+
+      treeMetadata = await ensureEntity(treeEntityName, [
+        { name: 'subject', type: EntityFieldDataType.STRING },
+        { name: 'totalAmount', type: EntityFieldDataType.DECIMAL },
+      ]);
+
+      // The child's foreign key to the parent is what makes this a tree the server will
+      // accept — the write path resolves the ancestor edge from it and fills it in itself.
+      const parentPk = treeMetadata.fields.find((f) => f.isPrimaryKey);
+      if (!parentPk?.id) {
+        throw new Error(`Entity ${treeEntityName} has no primary-key field to bind a foreign key to`);
+      }
+
+      treeChildMetadata = await ensureEntity(treeChildEntityName, [
+        { name: 'vendor', type: EntityFieldDataType.STRING },
+        { name: 'totalAmount', type: EntityFieldDataType.DECIMAL },
+        {
+          name: 'parent',
+          type: EntityFieldDataType.RELATIONSHIP,
+          referenceEntityId: treeMetadata.id,
+          referenceFieldId: parentPk.id,
+        },
+      ]);
     });
 
     it('should write a parent and its children in one transaction', async () => {
