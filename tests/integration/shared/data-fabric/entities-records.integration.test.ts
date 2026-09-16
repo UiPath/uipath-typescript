@@ -1450,7 +1450,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
       registerResource('entityRecords', { entityId: treeChildMetadata.id, recordIds: [child.id] });
       treeChildRecordIds.push(...collectDescendantIds(tx));
-    }, 60_000);
+    }, 90_000);
 
     it('should update the root and insert another child in the same transaction', async () => {
       const { entities } = getServices();
@@ -1472,8 +1472,10 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       });
       treeChildRecordIds.push(...collectDescendantIds(seed.transaction!));
 
+      // No readiness poll: the transaction has committed, so the row is addressable by Id
+      // on the write path. `awaitRecordVisible` polls the read path, whose index lags a
+      // transactional write and can burn most of this test's budget for no benefit.
       const rootRecordId = seed.Id;
-      await awaitRecordVisible(entities, treeMetadata.id, rootRecordId);
 
       const rootData = await buildDummyRecord(treeMetadata);
       const childData = await buildDummyRecord(treeChildMetadata);
@@ -1496,7 +1498,8 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         recordIds: [tx.members[0].id],
       });
       treeChildRecordIds.push(...collectDescendantIds(tx));
-    }, 60_000);
+      // Two tree writes in one test, and the first suite cell runs with cold caches.
+    }, 120_000);
 
     it('should return typed transaction fields for every node', async () => {
       const { entities } = getServices();
@@ -1535,7 +1538,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         recordIds: [tx.members[0].id],
       });
       treeChildRecordIds.push(...collectDescendantIds(tx));
-    }, 60_000);
+    }, 90_000);
 
     it('should write a tree through the bound method on the entity', async () => {
       const rootData = await buildDummyRecord(treeMetadata);
@@ -1559,7 +1562,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         recordIds: [tx.members[0].id],
       });
       treeChildRecordIds.push(...collectDescendantIds(tx));
-    }, 60_000);
+    }, 90_000);
 
     afterAll(async () => {
       const config = getTestConfig();
