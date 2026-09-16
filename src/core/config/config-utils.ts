@@ -3,6 +3,17 @@ import { isBrowser } from '../../utils/platform';
 import { UiPathMetaTags } from '../../utils/runtime/constants';
 import { UiPathEnvVars } from './environment';
 
+/** The base fields every configuration needs, whichever authentication method it carries. */
+const BASE_FIELDS = ['baseUrl', 'orgName', 'tenantName'] as const;
+
+/** The three fields that together make one complete OAuth configuration. */
+const OAUTH_FIELDS = ['clientId', 'redirectUri', 'scope'] as const;
+
+/** The fields that decide the authentication method. */
+const AUTH_FIELDS = ['secret', ...OAUTH_FIELDS] as const;
+
+type AuthField = typeof AUTH_FIELDS[number];
+
 /**
  * Check if config has all required base fields
  */
@@ -48,7 +59,7 @@ export function normalizeBaseUrl(url: string): string {
 
 function describeGaps(found: PartialUiPathConfig): string {
   const gaps: string[] = [];
-  const missingBase = (['baseUrl', 'orgName', 'tenantName'] as const).filter((field) => !found[field]);
+  const missingBase = BASE_FIELDS.filter((field) => !found[field]);
   if (missingBase.length > 0) gaps.push(`missing ${missingBase.join(', ')}`);
 
   // Read both first: chaining the predicates leaves the second nothing to test.
@@ -57,10 +68,10 @@ function describeGaps(found: PartialUiPathConfig): string {
 
   // An auth gap only when NEITHER method is complete — otherwise the clause names nothing.
   if (!foundSecret && !foundOAuth) {
-    const named = (['clientId', 'redirectUri', 'scope'] as const).filter((field) => found[field]);
+    const named = OAUTH_FIELDS.filter((field) => found[field]);
     gaps.push(named.length > 0
       ? `the OAuth configuration is incomplete — ${named.join(', ')} set, ` +
-        `${(['clientId', 'redirectUri', 'scope'] as const).filter((f) => !found[f]).join(', ')} missing`
+        `${OAUTH_FIELDS.filter((field) => !found[field]).join(', ')} missing`
       : 'no authentication method set (needs `secret`, or clientId, redirectUri and scope)');
   }
 
@@ -86,11 +97,6 @@ export function missingConfigMessage(found?: PartialUiPathConfig): string {
   if (!found) return `UiPath SDK configuration not found. ${guidance}`;
   return `UiPath SDK configuration is incomplete: ${describeGaps(found)}. ${guidance}`;
 }
-
-/** The fields that decide the authentication method. */
-const AUTH_FIELDS = ['secret', 'clientId', 'redirectUri', 'scope'] as const;
-
-type AuthField = typeof AUTH_FIELDS[number];
 
 /**
  * Non-constructor source per auth field. `secret` has no meta tag and no OAuth field
