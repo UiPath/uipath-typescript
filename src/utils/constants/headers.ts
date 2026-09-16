@@ -37,6 +37,12 @@ export const RESPONSE_TYPES = {
 export const EXTERNAL_USER_ID = 'x-uipath-external-user-id';
 
 /**
+ * Header carrying the normalized model name for AgentHub LLM gateway chat
+ * completions. Sent alongside the OpenAI-compatible request body.
+ */
+export const LLM_GATEWAY_MODEL_NAME = 'X-UiPath-LlmGateway-NormalizedApi-ModelName';
+
+/**
  * Optional identifier used in UiPath logs to identify the implementing service
  * of requests. External consumers do not need to set it; the server logs
  * missing values as "unknown".

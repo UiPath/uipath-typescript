@@ -17,6 +17,7 @@ export * from './models/orchestrator';
 export * from './models/action-center';
 export * from './models/conversational-agent';
 export * from './models/agents';
+export * from './models/agenthub';
 export * as DuFramework from './models/document-understanding/framework';
 export * from './models/governance';
 export * from './models/platform';
@@ -32,5 +33,3 @@ export { wait } from './utils/http/fetch-with-retry';
 
 // Export telemetry
 export * from './core/telemetry';
-
-
