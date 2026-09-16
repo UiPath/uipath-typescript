@@ -849,7 +849,23 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformActionScopeType/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformPrincipalType/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformRoleScopeType/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformRoleSortField/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformRoleSortOrder/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
@@ -2429,10 +2445,6 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessPrincipal/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessResponse/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
@@ -2469,6 +2481,10 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleCreateRequest/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleMetadata/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
@@ -2481,7 +2497,7 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleUpsertOptions/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleUpdateOptions/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
@@ -3254,6 +3270,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PartialUiPathConfig/</loc>
+         <lastmod>2026-09-16</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PlatformEffectiveAccessPrincipal/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>

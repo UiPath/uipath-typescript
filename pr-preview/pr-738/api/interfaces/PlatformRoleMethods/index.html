@@ -3078,6 +3078,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update()
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3115,6 +3126,32 @@
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving when the role has been deleted</p>
+<hr />
+<h3 id="update">update()<a class="headerlink" href="#update" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>update</strong>(<code>update</code>: <a href="../PlatformRoleUpdateOptions/"><code>PlatformRoleUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Updates this role. Only the fields present in <code>update</code> are changed.</p>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>update</code></td>
+<td><a href="../PlatformRoleUpdateOptions/"><code>PlatformRoleUpdateOptions</code></a></td>
+<td>The fields to change</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+<p>Promise resolving to the role as stored after the update</p>
 
 
 

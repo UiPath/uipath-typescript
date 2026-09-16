@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleAssignment/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleCreateRequest/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>PlatformRoleAssignment - UiPath TypeScript SDK</title>
+        <title>PlatformRoleCreateRequest - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              PlatformRoleAssignment
+              PlatformRoleCreateRequest
             
           </span>
         </div>
@@ -3086,9 +3086,9 @@
   
 
 
-  <h1>PlatformRoleAssignment</h1>
+  <h1>PlatformRoleCreateRequest</h1>
 
-<p>A role assignment — a role granted to a principal at a scope.</p>
+<p>A custom role to create via <code>roles.create()</code>.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3100,64 +3100,34 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="createdby"></a> <code>createdBy</code></td>
+<td><a id="actionsgrantedbyrole"></a> <code>actionsGrantedByRole</code></td>
+<td><code>string</code>[]</td>
+<td>Fully qualified names of the actions the role grants (e.g. <code>AUTHZ.ROLE.READ</code>) — pick them from <code>roles.getActions()</code>.</td>
+</tr>
+<tr>
+<td><a id="description"></a> <code>description</code></td>
 <td><code>string</code></td>
-<td>GUID of the user who created the assignment.</td>
+<td>Human-readable description.</td>
 </tr>
 <tr>
-<td><a id="createdtime"></a> <code>createdTime</code></td>
+<td><a id="name"></a> <code>name</code></td>
 <td><code>string</code></td>
-<td>When the assignment was created.</td>
+<td>Role name; must be unique in the organization.</td>
 </tr>
 <tr>
-<td><a id="id"></a> <code>id</code></td>
+<td><a id="ownerservicename"></a> <code>ownerServiceName?</code></td>
 <td><code>string</code></td>
-<td>GUID of the assignment.</td>
+<td>Name of the service that owns the role.</td>
 </tr>
 <tr>
-<td><a id="inherited"></a> <code>inherited</code></td>
-<td><code>boolean</code></td>
-<td>Whether the assignment is inherited from a wider scope.</td>
+<td><a id="scopetype"></a> <code>scopeType</code></td>
+<td><a href="../../enumerations/PlatformRoleScopeType/"><code>PlatformRoleScopeType</code></a></td>
+<td>Level the role applies at.</td>
 </tr>
 <tr>
-<td><a id="mutable"></a> <code>mutable</code></td>
-<td><code>boolean</code></td>
-<td>Whether the assignment can be removed.</td>
-</tr>
-<tr>
-<td><a id="roleid"></a> <code>roleId</code></td>
+<td><a id="tenantid"></a> <code>tenantId?</code></td>
 <td><code>string</code></td>
-<td>GUID of the granted role.</td>
-</tr>
-<tr>
-<td><a id="rolename"></a> <code>roleName</code></td>
-<td><code>string</code></td>
-<td>Name of the granted role.</td>
-</tr>
-<tr>
-<td><a id="roletype"></a> <code>roleType</code></td>
-<td><a href="../../enumerations/PlatformRoleType/"><code>PlatformRoleType</code></a></td>
-<td>Who defines the granted role.</td>
-</tr>
-<tr>
-<td><a id="scope"></a> <code>scope</code></td>
-<td><code>string</code></td>
-<td>The scope the role is granted at (<code>/</code> = whole organization).</td>
-</tr>
-<tr>
-<td><a id="securityprincipalid"></a> <code>securityPrincipalId</code></td>
-<td><code>string</code></td>
-<td>GUID of the principal (user, group, external app, or robot).</td>
-</tr>
-<tr>
-<td><a id="securityprincipaltype"></a> <code>securityPrincipalType</code></td>
-<td><a href="../../enumerations/PlatformPrincipalType/"><code>PlatformPrincipalType</code></a></td>
-<td>The kind of principal.</td>
-</tr>
-<tr>
-<td><a id="type"></a> <code>type</code></td>
-<td><a href="../../enumerations/PlatformRoleType/"><code>PlatformRoleType</code></a></td>
-<td>Who created the assignment: the platform (built-in) or an administrator (custom). Independent of <code>roleType</code>, which describes the granted role — an administrator can assign a built-in role, giving a custom assignment of a built-in role.</td>
+<td>Tenant the role belongs to, for tenant-scoped roles.</td>
 </tr>
 </tbody>
 </table>

@@ -1730,6 +1730,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deletebyid" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1818,10 +1829,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#upsert" class="md-nav__link">
+  <a href="#updatebyid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        upsert()
+        updateById()
       
     </span>
   </a>
@@ -3261,6 +3272,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deletebyid" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3349,10 +3371,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#upsert" class="md-nav__link">
+  <a href="#updatebyid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        upsert()
+        updateById()
       
     </span>
   </a>
@@ -3400,12 +3422,52 @@ can be created, changed, and deleted.</p>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
+<h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>create</strong>(<code>request</code>: <a href="../PlatformRoleCreateRequest/"><code>PlatformRoleCreateRequest</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Creates a custom role.</p>
+<p>Actions are referenced by their fully qualified names — pick them from
+<code>getActions()</code>. The name must be unique in the organization.</p>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>request</code></td>
+<td><a href="../PlatformRoleCreateRequest/"><code>PlatformRoleCreateRequest</code></a></td>
+<td>The role to create</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+<p>The created role as stored, as a <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></p>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PlatformRoleScopeType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">scopeType</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformRoleScopeType.Organization</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">actions</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">],</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">});</span>
+</code></pre></div>
+<hr />
 <h3 id="deletebyid">deleteById()<a class="headerlink" href="#deletebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>deleteById</strong>(<code>roleId</code>: <code>string</code>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Deletes a custom role. Built-in roles cannot be deleted.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3422,11 +3484,11 @@ can be created, changed, and deleted.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Resolves when the role has been deleted</p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">);</span>
+<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">deleteById</span><span class="p">(</span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="exportassignments">exportAssignments()<a class="headerlink" href="#exportassignments" title="Permanent link">&para;</a></h3>
@@ -3437,11 +3499,11 @@ can be created, changed, and deleted.</p>
 <p>The first row is the header; each following row is one assignment (role and
 principal). Group-inherited access is not expanded — use <code>getEffectiveAccess()</code>
 for a single principal's full picture.</p>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>string</code>&gt;</p>
 <p>The CSV document as a string</p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">csv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">exportAssignments</span><span class="p">();</span>
+<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">csv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">exportAssignments</span><span class="p">();</span>
 </code></pre></div>
 <hr />
 <h3 id="getactions">getActions()<a class="headerlink" href="#getactions" title="Permanent link">&para;</a></h3>
@@ -3449,10 +3511,10 @@ for a single principal's full picture.</p>
 <p><strong>getActions</strong>(<code>options?</code>: <a href="../PlatformRoleActionGetAllOptions/"><code>PlatformRoleActionGetAllOptions</code></a>): <code>Promise</code>&lt;<a href="../PlatformRoleAction/"><code>PlatformRoleAction</code></a>[]&gt;</p>
 </blockquote>
 <p>Gets the catalog of permission (action) definitions roles can grant,
-optionally filtered by owning service or scope level.</p>
-<p>Use it to pick the <code>actionsGrantedByRole</code> names when creating a custom
-role with <code>upsert()</code>.</p>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+optionally filtered by owning service or level.</p>
+<p>Use it to pick the <code>actionsGrantedByRole</code> names when creating or updating a
+custom role.</p>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3469,19 +3531,19 @@ role with <code>upsert()</code>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../PlatformRoleAction/"><code>PlatformRoleAction</code></a>[]&gt;</p>
 <p>The action definitions, as <a href="../PlatformRoleAction/">PlatformRoleAction</a> items</p>
-<h4 id="example_2">Example<a class="headerlink" href="#example_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;&gt;</p>
 </blockquote>
-<p>Gets the organization's roles, built-ins included, with optional filtering
-and pagination.</p>
+<p>Gets the organization's roles, built-ins included, with optional filtering,
+sorting, and pagination.</p>
 <p>Each role carries the permissions it grants (<code>actionDetails</code>).</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
 <table>
@@ -3498,7 +3560,7 @@ and pagination.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3511,30 +3573,32 @@ and pagination.</p>
 <tr>
 <td><code>options?</code></td>
 <td><code>T</code></td>
-<td>Filtering and pagination options</td>
+<td>Filtering, sorting, and pagination options</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;&gt;</p>
 <p>All roles when no pagination options are given, one page otherwise, as <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a> items</p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Roles</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">roles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Roles</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Roles</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">roles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Roles</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PlatformRoleType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nx">roleType</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformRoleType.Custom</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nx">contains</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket&#39;</span><span class="p">,</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PlatformRoleType</span><span class="p">,</span><span class="w"> </span><span class="nx">PlatformRoleSortField</span><span class="p">,</span><span class="w"> </span><span class="nx">PlatformRoleSortOrder</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nx">roleType</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformRoleType.Custom</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nx">contains</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nx">sortBy</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformRoleSortField.Name</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nx">sortOrder</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformRoleSortOrder.Ascending</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="getassignments">getAssignments()<a class="headerlink" href="#getassignments" title="Permanent link">&para;</a></h3>
@@ -3545,7 +3609,7 @@ and pagination.</p>
 optional filtering and pagination.</p>
 <p>Each item is one principal (user, group, or application) with every role assigned
 to it at the given scope. Assignments carry their own GUID, which is what
-<code>updateAssignments()</code> uses to revoke them.</p>
+<code>updateAssignments()</code> uses to revoke them. <code>pageSize</code> may not exceed 100.</p>
 <h4 id="type-parameters_1">Type Parameters<a class="headerlink" href="#type-parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3561,7 +3625,7 @@ to it at the given scope. Assignments carry their own GUID, which is what
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3583,15 +3647,15 @@ to it at the given scope. Assignments carry their own GUID, which is what
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformPrincipalRoleAssignments/"><code>PlatformPrincipalRoleAssignments</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformPrincipalRoleAssignments/"><code>PlatformPrincipalRoleAssignments</code></a>&gt;&gt;</p>
 <p>All assignment groups when no pagination options are given, one page otherwise, as <a href="../PlatformPrincipalRoleAssignments/">PlatformPrincipalRoleAssignments</a> items</p>
 <h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">assignments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAssignments</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">assignments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAssignments</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">assignments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAssignments</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nx">securityPrincipalId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">assignments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAssignments</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nx">securityPrincipalId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
@@ -3599,7 +3663,7 @@ to it at the given scope. Assignments carry their own GUID, which is what
 <p><strong>getById</strong>(<code>roleId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a role by ID, built-ins included.</p>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3616,26 +3680,26 @@ to it at the given scope. Assignments carry their own GUID, which is what
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
 <p>The role with its permissions, as a <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></p>
-<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// Get a role id from the listing first</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">allRoles</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">);</span>
+<h4 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Get a role id from the listing first</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allRoles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="nx">allRoles</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="geteffectiveaccess">getEffectiveAccess()<a class="headerlink" href="#geteffectiveaccess" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getEffectiveAccess</strong>(<code>tenantId</code>: <code>string</code>, <code>principal</code>: <a href="../PlatformEffectiveAccessPrincipal/"><code>PlatformEffectiveAccessPrincipal</code></a>): <code>Promise</code>&lt;<a href="../PlatformEffectiveAccessResponse/"><code>PlatformEffectiveAccessResponse</code></a>&gt;</p>
+<p><strong>getEffectiveAccess</strong>(<code>tenantId</code>: <code>string</code>, <code>principal</code>: <a href="../../type-aliases/PlatformEffectiveAccessPrincipal/"><code>PlatformEffectiveAccessPrincipal</code></a>): <code>Promise</code>&lt;<a href="../PlatformEffectiveAccessResponse/"><code>PlatformEffectiveAccessResponse</code></a>&gt;</p>
 </blockquote>
 <p>Computes the roles a principal effectively holds in a tenant — directly
 and through group membership.</p>
 <p>This answers "what can this principal do here": the response lists every
 effective role together with the assignments granting it, plus metadata for
-the granted services and roles. Pass exactly one of <code>userId</code> or <code>groupId</code>.</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+the granted services and roles.</p>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3652,19 +3716,19 @@ the granted services and roles. Pass exactly one of <code>userId</code> or <code
 </tr>
 <tr>
 <td><code>principal</code></td>
-<td><a href="../PlatformEffectiveAccessPrincipal/"><code>PlatformEffectiveAccessPrincipal</code></a></td>
-<td>The user or group to check (exactly one of <code>userId</code> / <code>groupId</code>)</td>
+<td><a href="../../type-aliases/PlatformEffectiveAccessPrincipal/"><code>PlatformEffectiveAccessPrincipal</code></a></td>
+<td>The user or group to check</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../PlatformEffectiveAccessResponse/"><code>PlatformEffectiveAccessResponse</code></a>&gt;</p>
 <p>The principal's effective access, as a <a href="../PlatformEffectiveAccessResponse/">PlatformEffectiveAccessResponse</a></p>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getEffectiveAccess</span><span class="p">(</span><span class="s1">&#39;&lt;tenantId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">isAdmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">access</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">roleName</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Administrator&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getEffectiveAccess</span><span class="p">(</span><span class="s1">&#39;&lt;tenantId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">isAdmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">access</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">roleName</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Administrator&#39;</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getEffectiveAccess</span><span class="p">(</span><span class="s1">&#39;&lt;tenantId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">access</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getEffectiveAccess</span><span class="p">(</span><span class="s1">&#39;&lt;tenantId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">groupId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="updateassignments">updateAssignments()<a class="headerlink" href="#updateassignments" title="Permanent link">&para;</a></h3>
@@ -3677,7 +3741,7 @@ assignment GUID (from <code>getAssignments()</code>). If a removal fails, added
 assignments are rolled back on a best-effort basis.</p>
 <p>First, get role IDs with <code>getAll()</code> and principal IDs from the Users or Groups
 service (<code>users.getAll()</code> / <code>groups.getAll()</code>).</p>
-<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3694,33 +3758,33 @@ service (<code>users.getAll()</code> / <code>groups.getAll()</code>).</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
+<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Resolves when the changes have been applied</p>
 <h4 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PlatformPrincipalType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateAssignments</span><span class="p">({</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nx">toAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nx">roleId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="nx">securityPrincipalId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">    </span><span class="nx">securityPrincipalType</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformPrincipalType.Group</span><span class="p">,</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="p">}],</span>
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PlatformPrincipalType</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/roles&#39;</span><span class="p">;</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateAssignments</span><span class="p">({</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="nx">toAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="nx">roleId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">    </span><span class="nx">securityPrincipalId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">    </span><span class="nx">securityPrincipalType</span><span class="o">:</span><span class="w"> </span><span class="kt">PlatformPrincipalType.Group</span><span class="p">,</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">    </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="p">,</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">  </span><span class="p">}],</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateAssignments</span><span class="p">({</span><span class="w"> </span><span class="nx">toDelete</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;roleAssignmentId&gt;&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateAssignments</span><span class="p">({</span><span class="w"> </span><span class="nx">toDelete</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;roleAssignmentId&gt;&#39;</span><span class="p">]</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <hr />
-<h3 id="upsert">upsert()<a class="headerlink" href="#upsert" title="Permanent link">&para;</a></h3>
+<h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>upsert</strong>(<code>name</code>: <code>string</code>, <code>scopeType</code>: <code>string</code>, <code>description</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformRoleUpsertOptions/"><code>PlatformRoleUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
+<p><strong>updateById</strong>(<code>roleId</code>: <code>string</code>, <code>update</code>: <a href="../PlatformRoleUpdateOptions/"><code>PlatformRoleUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
 </blockquote>
-<p>Creates or updates a custom role.</p>
-<p>Omit <code>options.id</code> to create a new role; pass it to overwrite an existing
-custom role. Built-in roles cannot be changed. Actions are referenced by
-their fully qualified names — pick them from <code>getActions()</code>.</p>
-<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
+<p>Updates a custom role.</p>
+<p>Only the fields present in <code>update</code> are changed — omitted fields keep their
+current values, including the granted actions. Passing <code>actionsGrantedByRole</code>
+replaces the full set. Built-in roles cannot be updated.</p>
+<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -3731,42 +3795,26 @@ their fully qualified names — pick them from <code>getActions()</code>.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>name</code></td>
+<td><code>roleId</code></td>
 <td><code>string</code></td>
-<td>Role name</td>
+<td>GUID of the role to update</td>
 </tr>
 <tr>
-<td><code>scopeType</code></td>
-<td><code>string</code></td>
-<td>Scope level the role applies at (e.g. <code>ORGANIZATION</code>, <code>TENANT</code>)</td>
-</tr>
-<tr>
-<td><code>description</code></td>
-<td><code>string</code></td>
-<td>Human-readable description</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../PlatformRoleUpsertOptions/"><code>PlatformRoleUpsertOptions</code></a></td>
-<td>Role id (to update), owning service, tenant, and granted actions</td>
+<td><code>update</code></td>
+<td><a href="../PlatformRoleUpdateOptions/"><code>PlatformRoleUpdateOptions</code></a></td>
+<td>The fields to change</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h4>
+<h4 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformRoleGetResponse/"><code>PlatformRoleGetResponse</code></a>&gt;</p>
-<p>The role as stored after the write, as a <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></p>
+<p>The role as stored after the update, as a <a href="../../type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></p>
 <h4 id="examples_4">Examples<a class="headerlink" href="#examples_4" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket Managers&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getActions</span><span class="p">({</span><span class="w"> </span><span class="nx">serviceName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;AuthZ&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Read-only access for ticket audits&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">actions</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">name</span><span class="p">],</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">});</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">upsert</span><span class="p">(</span><span class="s1">&#39;Ticket Auditor&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ORGANIZATION&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Audit tickets and comments&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">role.id</span><span class="p">,</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="kt">role.actionDetails.map</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">name</span><span class="p">),</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">role</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;roleId&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">roles</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">role</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nx">actionsGrantedByRole</span><span class="o">:</span><span class="w"> </span><span class="p">[...</span><span class="nx">role</span><span class="p">.</span><span class="nx">actionDetails</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">name</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;AUTHZ.ROLE.READ&#39;</span><span class="p">],</span>
 <a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="p">});</span>
 </code></pre></div>
 

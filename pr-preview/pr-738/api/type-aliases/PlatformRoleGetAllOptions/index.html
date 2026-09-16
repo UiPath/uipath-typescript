@@ -3112,6 +3112,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sortby" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sortBy?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sortorder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sortOrder?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tenantid" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3150,7 +3172,7 @@
   <h1>PlatformRoleGetAllOptions</h1>
 
 <blockquote>
-<p><strong>PlatformRoleGetAllOptions</strong> = <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; { <code>contains?</code>: <code>string</code>; <code>roleType?</code>: <a href="../../enumerations/PlatformRoleType/"><code>PlatformRoleType</code></a>; <code>scopeType?</code>: <code>string</code>; <code>serviceName?</code>: <code>string</code>; <code>tenantId?</code>: <code>string</code>; }</p>
+<p><strong>PlatformRoleGetAllOptions</strong> = <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; { <code>contains?</code>: <code>string</code>; <code>roleType?</code>: <a href="../../enumerations/PlatformRoleType/"><code>PlatformRoleType</code></a>; <code>scopeType?</code>: <a href="../../enumerations/PlatformRoleScopeType/"><code>PlatformRoleScopeType</code></a>; <code>serviceName?</code>: <code>string</code>; <code>sortBy?</code>: <a href="../../enumerations/PlatformRoleSortField/"><code>PlatformRoleSortField</code></a>; <code>sortOrder?</code>: <a href="../../enumerations/PlatformRoleSortOrder/"><code>PlatformRoleSortOrder</code></a>; <code>tenantId?</code>: <code>string</code>; }</p>
 </blockquote>
 <p>Options for <code>roles.getAll()</code>.</p>
 <h2 id="type-declaration">Type Declaration<a class="headerlink" href="#type-declaration" title="Permanent link">&para;</a></h2>
@@ -3163,17 +3185,27 @@
 <blockquote>
 <p><code>optional</code> <strong>roleType</strong>: <a href="../../enumerations/PlatformRoleType/"><code>PlatformRoleType</code></a></p>
 </blockquote>
-<p>Returns only built-in or only custom roles.</p>
+<p>Returns only roles of this type.</p>
 <h3 id="scopetype">scopeType?<a class="headerlink" href="#scopetype" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><code>optional</code> <strong>scopeType</strong>: <code>string</code></p>
+<p><code>optional</code> <strong>scopeType</strong>: <a href="../../enumerations/PlatformRoleScopeType/"><code>PlatformRoleScopeType</code></a></p>
 </blockquote>
-<p>Returns only roles applying at this scope level (e.g. <code>ORGANIZATION</code>, <code>TENANT</code>).</p>
+<p>Returns only roles applying at this level.</p>
 <h3 id="servicename">serviceName?<a class="headerlink" href="#servicename" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>serviceName</strong>: <code>string</code></p>
 </blockquote>
 <p>Returns only roles owned by this service.</p>
+<h3 id="sortby">sortBy?<a class="headerlink" href="#sortby" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>sortBy</strong>: <a href="../../enumerations/PlatformRoleSortField/"><code>PlatformRoleSortField</code></a></p>
+</blockquote>
+<p>Field to sort by.</p>
+<h3 id="sortorder">sortOrder?<a class="headerlink" href="#sortorder" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>sortOrder</strong>: <a href="../../enumerations/PlatformRoleSortOrder/"><code>PlatformRoleSortOrder</code></a></p>
+</blockquote>
+<p>Sort direction.</p>
 <h3 id="tenantid">tenantId?<a class="headerlink" href="#tenantid" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>tenantId</strong>: <code>string</code></p>

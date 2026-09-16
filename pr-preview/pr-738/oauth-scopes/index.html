@@ -4627,10 +4627,9 @@
 </tbody>
 </table>
 <h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
-<p>The Authorization service does not publish dedicated OAuth scopes yet — access is
-governed by the caller's own platform roles (verified with personal access token
-authentication; the caller needs organization-level role management permissions
-for the write operations).</p>
+<p>The Authorization service does not publish dedicated OAuth scopes. Access is governed by
+the caller's own platform roles: reads need role read permission and writes need
+organization-level role management permission.</p>
 <table>
 <thead>
 <tr>
@@ -4641,39 +4640,43 @@ for the write operations).</p>
 <tbody>
 <tr>
 <td><code>getAll()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>getById()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
-<td><code>upsert()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td><code>create()</code></td>
+<td>None — caller's platform roles govern access</td>
+</tr>
+<tr>
+<td><code>updateById()</code></td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>deleteById()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>getAssignments()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>updateAssignments()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>exportAssignments()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>getEffectiveAccess()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 <tr>
 <td><code>getActions()</code></td>
-<td>— (caller's platform roles apply)</td>
+<td>None — caller's platform roles govern access</td>
 </tr>
 </tbody>
 </table>
