@@ -138,6 +138,48 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
 
       registerResource('tasks', { id: result.id, folderId });
     });
+
+    it('exposes the schema via getSchema and the taskSchemaKey via getDataById', async () => {
+      const { tasks } = getServices();
+      const config = getTestConfig();
+      if (!config.folderId) {
+        throw new Error('QuickForm integration test requires folderId — set FOLDER_ID in the test environment');
+      }
+      const folderId = Number(config.folderId);
+
+      const taskSchemaKey = crypto.randomUUID();
+      const schema = {
+        id: taskSchemaKey,
+        fields: [{ id: 'note', label: 'Reviewer Note', type: 'text', direction: 'input' }],
+        outcomes: [{ id: 'approve', name: 'Approve', type: 'string', isPrimary: true }],
+      };
+
+      const created = await tasks.create({
+        type: TaskType.QuickForm,
+        title: generateTestResourceName(`QuickFormSchema_${mode}`),
+        taskSchemaKey,
+        schema,
+        data: { note: 'schema read-back check' },
+        priority: TaskPriority.Medium,
+      }, folderId);
+      registerResource('tasks', { id: created.id, folderId });
+
+      // getSchema returns the registered schema for that key
+      const fetchedSchema = await tasks.getSchema(taskSchemaKey, { folderId });
+      expect(fetchedSchema).toBeDefined();
+      expect(fetchedSchema.key).toBe(taskSchemaKey);
+      expect(fetchedSchema.schema).toBeDefined();
+      // Transform completeness: SDK field names must be present, wire names absent
+      expect(fetchedSchema.folderId).toBeDefined();
+      expect((fetchedSchema as any).organizationUnitId).toBeUndefined();
+      expect(fetchedSchema.createdTime).toBeDefined();
+      expect((fetchedSchema as any).creationTime).toBeUndefined();
+
+      // getDataById surfaces the taskSchemaKey linking the task to its schema
+      const taskData = await tasks.getDataById(created.id, { folderId });
+      expect(taskData.taskSchemaKey).toBe(taskSchemaKey);
+      expect(taskData.data).toMatchObject({ note: 'schema read-back check' });
+    });
   });
 
   describe('getById', () => {

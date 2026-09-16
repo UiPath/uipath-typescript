@@ -1,6 +1,7 @@
 import type {
   RawTaskCreateResponse,
   RawTaskDataGetResponse,
+  RawTaskSchemaGetResponse,
   RawTaskGetResponse,
   RawTaskCommentGetResponse,
   Tag,
@@ -371,6 +372,32 @@ export interface TaskServiceModel {
   getDataByKey(key: string, options?: FolderScopedOptions): Promise<TaskDataGetResponse>;
 
   /**
+   * Gets a task schema by its key.
+   *
+   * Use this to retrieve the schema a QuickForm task was created with — the
+   * `taskSchemaKey` surfaced on a task's {@link TaskDataGetResponse} is the key
+   * to pass here.
+   *
+   * @param taskSchemaKey - The schema key (a task's `taskSchemaKey`)
+   * @param options - Folder scope (folderId, folderKey, or folderPath)
+   * @returns Promise resolving to a {@link TaskSchemaGetResponse} containing the schema `key`, `name`, and JSON `schema` body, along with folder (`folderId`) and creation metadata (`createdTime`).
+   * @example
+   * ```typescript
+   * const schema = await tasks.getSchema('<taskSchemaKey>', { folderId: <folderId> });
+   * console.log(schema.name, schema.schema);
+   * ```
+   * @example Chaining from getDataById
+   * ```typescript
+   * const task = await tasks.getDataById(<taskId>, { folderId: <folderId> });
+   * if (task.taskSchemaKey) {
+   *   const schema = await tasks.getSchema(task.taskSchemaKey, { folderId: <folderId> });
+   *   console.log(schema.name, schema.schema);
+   * }
+   * ```
+   */
+  getSchema(taskSchemaKey: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse>;
+
+  /**
    * Saves a task's data (form/task payload), replacing the existing payload.
    *
    * Routes to the correct save endpoint by task type: Form and App tasks use their own endpoints, everything else uses the generic one. If `type` is not passed, it is looked up automatically (one extra read). When called on a task object returned by the SDK, the type is already known, so no lookup happens.
@@ -552,6 +579,11 @@ export type TaskCreateResponse = RawTaskCreateResponse & TaskMethods;
  * A task's data payload + core metadata, as returned by `getDataById` / `getDataByKey`.
  */
 export interface TaskDataGetResponse extends RawTaskDataGetResponse {}
+
+/**
+ * A task schema returned by `getSchema`.
+ */
+export interface TaskSchemaGetResponse extends RawTaskSchemaGetResponse {}
 
 /**
  * A task comment as returned by the service.

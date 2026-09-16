@@ -5,6 +5,7 @@ import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptio
 import {
   TaskCreateResponse,
   TaskDataGetResponse,
+  TaskSchemaGetResponse,
   TaskGetResponse,
   TaskCommentGetResponse,
   TaskServiceModel,
@@ -308,6 +309,21 @@ export class TaskService extends FolderScopedService implements TaskServiceModel
 
     const headers = this.resolveFolder(options, 'Tasks.getDataByKey');
     return this.fetchTaskData(TASK_ENDPOINTS.GET_GENERIC_TASK_BY_KEY, { taskKey: key }, headers);
+  }
+
+  @track('Tasks.GetSchema')
+  async getSchema(taskSchemaKey: string, options?: FolderScopedOptions): Promise<TaskSchemaGetResponse> {
+    if (!taskSchemaKey) {
+      throw new ValidationError({ message: 'taskSchemaKey is required for getSchema' });
+    }
+
+    const headers = this.resolveFolder(options, 'Tasks.getSchema');
+    const response = await this.get<Record<string, unknown>>(
+      TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+      { params: { key: taskSchemaKey }, headers }
+    );
+    // The schema endpoint returns camelCase; TaskMap renames creationTime → createdTime and organizationUnitId → folderId.
+    return transformData(response.data, TaskMap) as unknown as TaskSchemaGetResponse;
   }
 
   private async fetchTaskData(endpoint: string, params: Record<string, string | number>, headers: Record<string, string>): Promise<TaskDataGetResponse> {
