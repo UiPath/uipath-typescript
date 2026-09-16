@@ -44,3 +44,6 @@ export * from './governance';
 
 // Notification endpoints
 export * from './notification';
+
+// Document Understanding framework endpoints
+export * from './document-understanding';

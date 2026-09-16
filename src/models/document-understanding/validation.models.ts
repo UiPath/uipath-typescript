@@ -37,8 +37,8 @@ export interface DocumentUnderstandingValidationServiceModel {
    *
    * @param projectId - DU project (modern project) identifier.
    * @param tag - Project version tag the document type belongs to.
-   * @param request - Extraction result plus the action metadata (title, catalog, storage).
    * @param documentTypeId - Document type identifier within the project.
+   * @param request - Extraction result plus the action metadata (title, catalog, storage).
    * @param options - Optional framework API version override.
    * @returns Promise resolving to a {@link StartValidationTaskResponse} carrying the `OperationId` to poll.
    *
