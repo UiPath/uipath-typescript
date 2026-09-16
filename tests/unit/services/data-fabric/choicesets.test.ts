@@ -466,6 +466,13 @@ describe('ChoiceSetService Unit Tests', () => {
         { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
       );
     });
+
+    it('should reject folderPath without folderKey — body needs folderId', async () => {
+      await expect(
+        choiceSetService.create('expense_types', { folderPath: 'Shared/Finance' }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateById', () => {

@@ -54,6 +54,7 @@ import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../uti
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { FOLDER_KEY, RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
+import { buildDataFabricFolderHeaders } from '../../utils/folder/folder-headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
 import {
@@ -123,12 +124,12 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
 export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.GetById')
   async getById(id: string, options?: EntityGetByIdOptions): Promise<EntityGetResponse> {
-    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id), options?.folderKey);
+    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id), options);
   }
 
   @track('Entities.GetByName')
   async getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
-    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(entityName), options?.folderKey);
+    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(entityName), options);
   }
 
   @track('Entities.GetAllRecords')
@@ -241,18 +242,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // folderKey is preferred over includeFolderEntities: when present, scope to that folder
-    // via the v1 endpoint + header. Only when no folderKey is given AND includeFolderEntities
-    // is explicitly true does the SDK switch to the v2 endpoint (returns tenant + folder
-    // entities together). Default (no options or includeFolderEntities omitted) stays on
-    // the v1 endpoint = tenant only.
-    const endpoint = !options?.folderKey && options?.includeFolderEntities
+    // folderKey/folderPath are preferred over includeFolderEntities: when either is present,
+    // scope to that folder via the v1 endpoint + header. Only when no folder scope is given
+    // AND includeFolderEntities is explicitly true does the SDK switch to the v2 endpoint
+    // (returns tenant + folder entities together). Default (no options or includeFolderEntities
+    // omitted) stays on the v1 endpoint = tenant only.
+    const endpoint = !options?.folderKey && !options?.folderPath && options?.includeFolderEntities
       ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
 
     const response = await this.get<RawEntityGetResponse[]>(
       endpoint,
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+      { headers: buildDataFabricFolderHeaders(options) }
     );
     
     // Apply transformations
@@ -304,7 +305,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         : DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(identifier, recordId, fieldName),
       {
         responseType: RESPONSE_TYPES.BLOB,
-        headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }),
+        headers: buildDataFabricFolderHeaders(options),
       }
     );
 
@@ -330,7 +331,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       formData,
       {
         params,
-        headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }),
+        headers: buildDataFabricFolderHeaders(options),
       }
     );
 
@@ -344,7 +345,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(identifier, recordId, fieldName)
         : DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(identifier, recordId, fieldName),
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+      { headers: buildDataFabricFolderHeaders(options) },
     );
 
     return response.data;
@@ -372,6 +373,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
+    if (opts.folderPath && !opts.folderKey) {
+      throw new ValidationError({
+        message: 'entities.create requires folderKey when creating a folder-scoped entity — the create body carries a folderId that cannot be derived from folderPath.',
+      });
+    }
     const fieldPayloads = await this.buildFieldsWithReferenceMeta(fields);
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
@@ -388,7 +394,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.post<string>(
       DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
       payload,
-      { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
+      { headers: buildDataFabricFolderHeaders(opts) },
     );
     return response.data;
   }
@@ -397,7 +403,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void> {
     await this.delete(
       DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(id),
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+      { headers: buildDataFabricFolderHeaders(options) },
     );
   }
 
@@ -424,7 +430,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(opts.description !== undefined && { description: opts.description }),
           ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
         },
-        { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
+        { headers: buildDataFabricFolderHeaders(opts) },
       );
     }
   }
@@ -436,8 +442,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param options - Field changes to apply
    * @private
    */
-  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields' | 'folderKey'>): Promise<void> {
-    const folderHeaders = createHeaders({ [FOLDER_KEY]: options.folderKey });
+  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields' | 'folderKey' | 'folderPath'>): Promise<void> {
+    const folderHeaders = buildDataFabricFolderHeaders(options);
     const entityResponse = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId),
       { headers: folderHeaders },
@@ -536,13 +542,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * double telemetry (see conventions.md, delegation anti-pattern).
    *
    * @param id - Entity ID to resolve
-   * @param folderKey - Optional folder key sent as the X-UIPATH-FolderKey header
+   * @param folderOptions - Optional folder scope (folderKey and/or folderPath)
    * @private
    */
-  private async resolveEntityName(id: string, folderKey?: string): Promise<string> {
+  private async resolveEntityName(id: string, folderOptions?: { folderKey?: string; folderPath?: string }): Promise<string> {
     const response = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+      { headers: buildDataFabricFolderHeaders(folderOptions) }
     );
     return transformData(response.data, EntityMap).name;
   }
@@ -830,10 +836,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
   }
 
-  private async fetchEntityMetadata(endpoint: string, folderKey?: string): Promise<EntityGetResponse> {
+  private async fetchEntityMetadata(endpoint: string, folderOptions?: { folderKey?: string; folderPath?: string }): Promise<EntityGetResponse> {
     const response = await this.get<RawEntityGetResponse>(
       endpoint,
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+      { headers: buildDataFabricFolderHeaders(folderOptions) }
     );
     const metadata = transformData(response.data as RawEntityGetResponse, EntityMap);
     this.applyFieldMappings(metadata);
@@ -849,16 +855,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
-    // folderKey is header-only — destructure it out so PaginationHelpers doesn't serialise it
-    // into the query string as $folderKey.
-    const { folderKey, ...rest } = options ?? {};
+    // folderKey/folderPath are header-only — destructure them out so PaginationHelpers doesn't
+    // serialise them into the query string.
+    const { folderKey, folderPath, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(identifier),
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers: buildDataFabricFolderHeaders({ folderKey, folderPath }),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
@@ -884,7 +890,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(identifier, recordId)
         : DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_NAME(identifier, recordId),
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -896,7 +902,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_NAME(identifier),
       data,
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -908,7 +914,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_NAME(identifier),
       data,
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -920,7 +926,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(identifier, recordId)
         : DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_NAME(identifier, recordId),
       data,
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -932,7 +938,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_NAME(identifier),
       data,
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -944,7 +950,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_NAME(identifier),
       recordIds,
-      { params, headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+      { params, headers: buildDataFabricFolderHeaders(options) }
     );
     return response.data;
   }
@@ -954,7 +960,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(identifier, recordId)
         : DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_NAME(identifier, recordId),
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+      { headers: buildDataFabricFolderHeaders(options) },
     );
   }
 
@@ -982,8 +988,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
         message: 'havingFilter requires aggregates and groupBy — conditions reference declared aggregate aliases; use filterGroup for row-level conditions',
       });
     }
-    // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
-    const { folderKey, expansionLevel, ...rest } = options ?? {};
+    // folderKey/folderPath are header-only; expansionLevel must be sent as a query param by PaginationHelpers.
+    const { folderKey, folderPath, expansionLevel, ...rest } = options ?? {};
     // The multi-entity (joins) contract only exists on the name-based query route —
     // the ID-based route silently drops the `joins` body key. When addressing by id, resolve
     // the name (by name, it is already known); then translate each join to the wire shape.
@@ -991,7 +997,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ? DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(identifier)
       : DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(identifier);
     if (options?.joins && options.joins.length > 0) {
-      const baseEntityName = byId ? await this.resolveEntityName(identifier, folderKey) : identifier;
+      const baseEntityName = byId ? await this.resolveEntityName(identifier, { folderKey, folderPath }) : identifier;
       (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));
       getEndpoint = () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(baseEntityName);
     }
@@ -1000,7 +1006,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint,
       method: HTTP_METHODS.POST,
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers: buildDataFabricFolderHeaders({ folderKey, folderPath }),
       queryParams: createParams({ expansionLevel }),
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -1029,7 +1035,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         ? DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(identifier)
         : DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_NAME(identifier),
       formData,
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+      { headers: buildDataFabricFolderHeaders(options) },
     );
 
     return response.data;

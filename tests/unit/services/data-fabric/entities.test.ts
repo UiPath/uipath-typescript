@@ -3418,6 +3418,13 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
+    it("should reject folderPath without folderKey — body needs folderId", async () => {
+      await expect(
+        entityService.create("my_entity", [], { folderPath: "Shared/Finance" }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
     describe("advanced field options", () => {
       beforeEach(() => {
         mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
