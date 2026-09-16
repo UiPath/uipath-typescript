@@ -6,7 +6,7 @@
 import type {
   RawPlatformRoleGetResponse,
   PlatformRoleGetAllOptions,
-  PlatformRoleUpsertRequest,
+  PlatformRoleUpsertOptions,
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
@@ -102,26 +102,44 @@ export interface PlatformRoleServiceModel {
   /**
    * Creates or updates a custom role.
    *
-   * Omit `request.id` to create a new role; pass it to overwrite an existing
+   * Omit `options.id` to create a new role; pass it to overwrite an existing
    * custom role. Built-in roles cannot be changed. Actions are referenced by
    * their fully qualified names — pick them from `getActions()`.
    *
-   * @param request - The role to create or update
+   * @param name - Role name
+   * @param scopeType - Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`)
+   * @param description - Human-readable description
+   * @param options - Role id (to update), owning service, tenant, and granted actions
    * @returns The role as stored after the write, as a {@link PlatformRoleGetResponse}
    *
    * @example Create a custom role
    * ```typescript
+   * const role = await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Read-only access for ticket audits');
+   * ```
+   *
+   * @example Create a role that grants actions
+   * ```typescript
    * const actions = await roles.getActions({ serviceName: 'AuthZ' });
    *
-   * const role = await roles.upsert({
-   *   name: 'Ticket Auditor',
-   *   scopeType: 'ORGANIZATION',
-   *   description: 'Read-only access for ticket audits',
+   * const role = await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Read-only access for ticket audits', {
    *   actionsGrantedByRole: [actions[0].name],
    * });
    * ```
+   *
+   * @example Update an existing custom role
+   * ```typescript
+   * await roles.upsert('Ticket Auditor', 'ORGANIZATION', 'Audit tickets and comments', {
+   *   id: role.id,
+   *   actionsGrantedByRole: role.actionDetails.map(a => a.name),
+   * });
+   * ```
    */
-  upsert(request: PlatformRoleUpsertRequest): Promise<PlatformRoleGetResponse>;
+  upsert(
+    name: string,
+    scopeType: string,
+    description: string,
+    options?: PlatformRoleUpsertOptions
+  ): Promise<PlatformRoleGetResponse>;
 
   /**
    * Deletes a custom role. Built-in roles cannot be deleted.

@@ -13,7 +13,7 @@ import { BaseService } from '../../base';
 import type {
   RawPlatformRoleGetResponse,
   PlatformRoleGetAllOptions,
-  PlatformRoleUpsertRequest,
+  PlatformRoleUpsertOptions,
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
@@ -142,14 +142,19 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
   }
 
   @track('PlatformRoles.Upsert')
-  async upsert(request: PlatformRoleUpsertRequest): Promise<PlatformRoleGetResponse> {
-    if (!request?.name) {
+  async upsert(
+    name: string,
+    scopeType: string,
+    description: string,
+    options?: PlatformRoleUpsertOptions
+  ): Promise<PlatformRoleGetResponse> {
+    if (!name) {
       throw new ValidationError({ message: 'name is required for upsert' });
     }
-    if (!request.scopeType) {
+    if (!scopeType) {
       throw new ValidationError({ message: 'scopeType is required for upsert' });
     }
-    if (!request.description) {
+    if (!description) {
       throw new ValidationError({ message: 'description is required for upsert' });
     }
 
@@ -157,7 +162,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     // The write returns only the role ID — follow up with a read so callers
     // get the stored role
     const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
-      ...transformRequest(request, PlatformRoleUpsertMap),
+      ...transformRequest({ name, scopeType, description, ...options }, PlatformRoleUpsertMap),
       organizationId,
     });
     return this.fetchRole(response.data.createdRoleId);
