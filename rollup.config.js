@@ -225,6 +225,11 @@ const serviceEntries = [
     output: 'agents/index'
   },
   {
+    name: 'agenthub',
+    input: 'src/services/agenthub/index.ts',
+    output: 'agenthub/index'
+  },
+  {
     name: 'governance',
     input: 'src/services/governance/index.ts',
     output: 'governance/index'
