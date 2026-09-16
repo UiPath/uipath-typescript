@@ -163,15 +163,9 @@ describe('Platform Roles Service Unit Tests', () => {
       const { instance } = createServiceTestDependencies({ organizationId: PLATFORM_TEST_CONSTANTS.ORGANIZATION_ID });
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
-      const request = {
-        name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-        scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-        description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
-      };
-
-      await new Roles(instance).upsert(request);
+      await new Roles(instance).upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
       const resolver = getPrivateSDK(instance).organizationIdResolver;
-      await new Roles(instance).upsert(request);
+      await new Roles(instance).upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION);
 
       expect(resolver).toBeDefined();
       expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
@@ -182,10 +176,7 @@ describe('Platform Roles Service Unit Tests', () => {
       mockApiClient.put.mockResolvedValue({ createdRoleId: roleId });
       mockApiClient.get.mockResolvedValue(createBasicRawPlatformRole({ type: 'CUSTOM' }));
 
-      const role = await rolesService.upsert({
-        name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-        scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-        description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
+      const role = await rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION, {
         actionsGrantedByRole: [PLATFORM_ROLE_TEST_CONSTANTS.ACTION_NAME],
       });
 
@@ -210,22 +201,14 @@ describe('Platform Roles Service Unit Tests', () => {
 
     it('should throw ValidationError when name is missing', async () => {
       await expect(
-        rolesService.upsert({
-          name: '',
-          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
-        })
+        rolesService.upsert('', PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when scopeType is missing', async () => {
       await expect(
-        rolesService.upsert({
-          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          scopeType: '',
-            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
-        })
+        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, '', PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
@@ -233,11 +216,7 @@ describe('Platform Roles Service Unit Tests', () => {
 
     it('should throw ValidationError when description is missing', async () => {
       await expect(
-        rolesService.upsert({
-          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            description: '',
-        })
+        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, '')
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
@@ -246,11 +225,7 @@ describe('Platform Roles Service Unit Tests', () => {
       mockApiClient.put.mockRejectedValue(createMockError(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN));
 
       await expect(
-        rolesService.upsert({
-          name: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME,
-          scopeType: PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION,
-            description: PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION,
-        })
+        rolesService.upsert(PLATFORM_ROLE_TEST_CONSTANTS.ROLE_NAME, PLATFORM_ROLE_TEST_CONSTANTS.SCOPE_TYPE_ORGANIZATION, PLATFORM_ROLE_TEST_CONSTANTS.ROLE_DESCRIPTION)
       ).rejects.toThrow(PLATFORM_ROLE_TEST_CONSTANTS.ERROR_ROLES_FORBIDDEN);
     });
   });

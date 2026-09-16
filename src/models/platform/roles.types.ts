@@ -94,17 +94,11 @@ export type PlatformRoleGetAllOptions = PaginationOptions & {
 };
 
 /**
- * A custom role to create or update via `roles.upsert()`.
+ * Options for `roles.upsert()`.
  */
-export interface PlatformRoleUpsertRequest {
+export interface PlatformRoleUpsertOptions {
   /** GUID of the role to update; omit to create a new role. */
   id?: string;
-  /** Role name. */
-  name: string;
-  /** Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`). */
-  scopeType: string;
-  /** Human-readable description. */
-  description: string;
   /** Name of the service that owns the role. */
   roleService?: string;
   /** Tenant the role belongs to, for tenant-scoped roles. */

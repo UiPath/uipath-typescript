@@ -92,10 +92,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
       const roleName = `sdk-it-${generateRandomString(8)}`;
 
       // Create — actions are referenced by fully qualified name
-      const created = await roles.upsert({
-        name: roleName,
-        scopeType: 'ORGANIZATION',
-        description: 'SDK integration probe role',
+      const created = await roles.upsert(roleName, 'ORGANIZATION', 'SDK integration probe role', {
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);
@@ -115,10 +112,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
   describe('assignments', () => {
     it('should grant and revoke a role assignment for a user', async () => {
-      const created = await roles.upsert({
-        name: `sdk-it-${generateRandomString(8)}`,
-        scopeType: 'ORGANIZATION',
-        description: 'SDK integration probe role',
+      const created = await roles.upsert(`sdk-it-${generateRandomString(8)}`, 'ORGANIZATION', 'SDK integration probe role', {
         actionsGrantedByRole: [probeAction.name],
       });
       createdRoleIds.push(created.id);
