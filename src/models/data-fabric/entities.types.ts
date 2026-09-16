@@ -674,6 +674,10 @@ export interface EntityMultiEntityWriteResponse extends EntityMultiEntityWriteRe
  * A single-record upsert returns the written record's fields. A transactional write across
  * related entities reports its outcome in {@link transaction} instead, and carries no field
  * values — the per-record IDs there are the result.
+ *
+ * The response envelope also carries `children`, `cascadeDeletedChildren` and `deletedCount`.
+ * Those describe composite entities, which this route never writes, so they arrive empty on
+ * every call and are left undeclared rather than published as three inert fields.
  */
 export interface EntityUpsertResponse extends EntityRecord {
   /**
