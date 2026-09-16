@@ -164,16 +164,6 @@ function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[
 }
 
 /**
- * Parent/child entity pair for the multi-entity upsert suite. The child must hold an
- * active foreign key to the parent and both must be native entities. The suite also
- * needs the tenant's multi-entity write feature enabled.
- */
-const TREE_CONFIG = {
-  entityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || '',
-  childEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || '',
-};
-
-/**
  * Returns the named entity, creating it first when the tenant does not have it yet.
  *
  * The upsert suite needs a parent/child pair with a foreign key between them, which not
@@ -1387,15 +1377,17 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
     const treeChildRecordIds: string[] = [];
 
     beforeAll(async () => {
-      if (!TREE_CONFIG.entityName || !TREE_CONFIG.childEntityName) {
+      const config = getTestConfig();
+
+      if (!config.dataFabricTestTreeEntityName || !config.dataFabricTestTreeChildEntityName) {
         throw new Error(
           'DATA_FABRIC_TEST_TREE_ENTITY_NAME and DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME '
           + 'must be set to run the upsert integration tests',
         );
       }
 
-      treeEntityName = TREE_CONFIG.entityName;
-      treeChildEntityName = TREE_CONFIG.childEntityName;
+      treeEntityName = config.dataFabricTestTreeEntityName;
+      treeChildEntityName = config.dataFabricTestTreeChildEntityName;
 
       treeMetadata = await ensureEntity(treeEntityName, [
         { name: 'subject', type: EntityFieldDataType.STRING },
