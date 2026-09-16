@@ -391,18 +391,17 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
 
   /**
    * Transforms one principal's wire assignment group: renames
-   * `roleAssignmentDtos` to `roleAssignments` and applies the timestamp rename
-   * to each assignment.
+   * `roleAssignmentDtos` to `roleAssignments`, applies the timestamp rename to
+   * each assignment, and normalizes both type fields to the enum.
    */
   private toPrincipalAssignments(raw: RawPlatformPrincipalRoleAssignments): PlatformPrincipalRoleAssignments {
     const wire: Record<string, unknown> = {
       ...raw,
-      roleAssignmentDtos: (raw.roleAssignmentDtos ?? []).map(assignment =>
-        applyDataTransforms(
-          transformData({ ...assignment }, PlatformRoleMap) as Record<string, unknown>,
-          { field: 'roleType', valueMap: PlatformRoleTypeMap }
-        )
-      ),
+      roleAssignmentDtos: (raw.roleAssignmentDtos ?? []).map(assignment => {
+        const renamed = transformData({ ...assignment }, PlatformRoleMap);
+        const withRoleType = applyDataTransforms(renamed, { field: 'roleType', valueMap: PlatformRoleTypeMap });
+        return applyDataTransforms(withRoleType, { field: 'type', valueMap: PlatformRoleTypeMap });
+      }),
     };
 
     return transformData(wire, PlatformPrincipalRoleAssignmentsMap) as unknown as PlatformPrincipalRoleAssignments;
