@@ -861,14 +861,6 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformPrincipalType/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformRoleType/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/PlatformSettingKey/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
@@ -1082,10 +1074,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/functions/createPlatformGroupWithMethods/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/functions/createPlatformRoleWithMethods/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
@@ -2461,22 +2449,6 @@
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessRequest/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveAccessResponse/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveRole/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformEffectiveRoleAssignment/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformGroupCreateOptions/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
@@ -2498,50 +2470,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformGroupUpdateOptions/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformPrincipalRoleAssignments/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleAction/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleActionGetAllOptions/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleAssignment/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleAssignmentAdd/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleAssignmentChanges/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleMetadata/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleMethods/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleServiceModel/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformRoleUpsertRequest/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/PlatformServiceMetadata/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
@@ -2766,10 +2694,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawPlatformGroupGetResponse/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/RawPlatformRoleGetResponse/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
@@ -3318,18 +3242,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PlatformGroupGetResponse/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PlatformRoleAssignmentGetAllOptions/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PlatformRoleGetAllOptions/</loc>
-         <lastmod>2026-09-16</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/PlatformRoleGetResponse/</loc>
          <lastmod>2026-09-16</lastmod>
     </url>
     <url>
