@@ -162,16 +162,14 @@ function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[
 }
 
 /**
- * The multi-entity upsert suite needs a parent/child entity pair and the tenant's
- * multi-entity write feature. Neither is provisioned everywhere, so the suite is
- * gated on the fixture rather than failing where it cannot run — same treatment as
- * the attachment suite.
+ * Parent/child entity pair for the multi-entity upsert suite. The child must hold an
+ * active foreign key to the parent and both must be native entities. The suite also
+ * needs the tenant's multi-entity write feature enabled.
  */
 const TREE_CONFIG = {
   entityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || '',
   childEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || '',
 };
-const hasTreeConfig = !!(TREE_CONFIG.entityName && TREE_CONFIG.childEntityName);
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -1339,7 +1337,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
 
   // ─── Multi-entity transactional upsert ────────────────────────────────────
 
-  describe.skipIf(!hasTreeConfig)('upsert', () => {
+  describe('upsert', () => {
     let treeEntityName!: string;
     let treeChildEntityName!: string;
     let treeMetadata!: EntityGetResponse;
@@ -1348,9 +1346,15 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
     const treeChildRecordIds: string[] = [];
 
     beforeAll(async () => {
+      if (!TREE_CONFIG.entityName || !TREE_CONFIG.childEntityName) {
+        throw new Error(
+          'DATA_FABRIC_TEST_TREE_ENTITY_NAME and DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME '
+          + 'must be set to run the upsert integration tests',
+        );
+      }
+
       const { entities } = getServices();
 
-      // Non-empty: the suite is skipped otherwise.
       treeEntityName = TREE_CONFIG.entityName;
       treeChildEntityName = TREE_CONFIG.childEntityName;
       treeMetadata = await entities.getByName(treeEntityName);
