@@ -3,9 +3,9 @@
  * (Authorization service).
  */
 
-import { track } from '../../core/telemetry';
-import { ValidationError } from '../../core/errors';
-import { BaseService } from '../base';
+import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import { BaseService } from '../../base';
 
 import type {
   RawPlatformRoleGetResponse,
@@ -20,7 +20,7 @@ import type {
   PlatformRoleActionGetAllOptions,
   PlatformEffectiveRole,
   PlatformEffectiveRoleAssignment,
-} from '../../models/platform/roles.types';
+} from '../../../models/platform/roles.types';
 import type {
   RawPlatformRole,
   RawPlatformRoleAction,
@@ -30,33 +30,33 @@ import type {
   RawPlatformRoleAssignmentListResponse,
   RawPlatformEffectiveAccessResponse,
   RawPlatformEffectiveRole,
-} from '../../models/platform/roles.internal-types';
-import type { PlatformRoleServiceModel } from '../../models/platform/roles.models';
-import { PlatformRoleGetResponse, createPlatformRoleWithMethods } from '../../models/platform/roles.models';
+} from '../../../models/platform/roles.internal-types';
+import type { PlatformRoleServiceModel } from '../../../models/platform/roles.models';
+import { PlatformRoleGetResponse, createPlatformRoleWithMethods } from '../../../models/platform/roles.models';
 import {
   PlatformRoleMap,
   PlatformRoleTypeMap,
   PlatformPrincipalRoleAssignmentsMap,
   PlatformRoleAssignmentChangesMap,
-} from '../../models/platform/roles.constants';
+} from '../../../models/platform/roles.constants';
 
-import { AUTHORIZATION_ENDPOINTS } from '../../utils/constants/endpoints';
+import { AUTHORIZATION_ENDPOINTS } from '../../../utils/constants/endpoints';
 import {
   AUTHORIZATION_PAGINATION,
   AUTHORIZATION_OFFSET_PARAMS,
   AUTHORIZATION_ROLES_MAX_PAGE_SIZE,
   AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE,
-} from '../../utils/constants/common';
-import { RESPONSE_TYPES } from '../../utils/constants/headers';
-import { transformData, transformRequest, applyDataTransforms } from '../../utils/transform';
-import { createParams } from '../../utils/http/params';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
+} from '../../../utils/constants/common';
+import { RESPONSE_TYPES } from '../../../utils/constants/headers';
+import { transformData, transformRequest, applyDataTransforms } from '../../../utils/transform';
+import { createParams } from '../../../utils/http/params';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
 import {
   PaginatedResponse,
   NonPaginatedResponse,
   HasPaginationOptions,
-} from '../../utils/pagination';
+} from '../../../utils/pagination';
 
 /**
  * Service for managing the organization's roles and role assignments, and for

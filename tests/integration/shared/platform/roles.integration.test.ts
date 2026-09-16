@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { Roles } from '../../../../src/services/platform';
+import { Roles } from '../../../../src/services/platform/roles';
 import { PlatformRoleType, PlatformPrincipalType } from '../../../../src/models/platform';
 import type { PlatformRoleAction } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';

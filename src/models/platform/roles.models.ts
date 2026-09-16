@@ -36,7 +36,7 @@ export type PlatformRoleGetResponse = RawPlatformRoleGetResponse & PlatformRoleM
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Roles } from '@uipath/uipath-typescript/platform';
+ * import { Roles } from '@uipath/uipath-typescript/roles';
  *
  * const roles = new Roles(sdk);
  * const allRoles = await roles.getAll();
@@ -55,7 +55,7 @@ export interface PlatformRoleServiceModel {
    * @example Basic usage
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Roles } from '@uipath/uipath-typescript/platform';
+   * import { Roles } from '@uipath/uipath-typescript/roles';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
@@ -66,7 +66,7 @@ export interface PlatformRoleServiceModel {
    *
    * @example Filter to custom roles of a service
    * ```typescript
-   * import { PlatformRoleType } from '@uipath/uipath-typescript/platform';
+   * import { PlatformRoleType } from '@uipath/uipath-typescript/roles';
    *
    * const customRoles = await roles.getAll({
    *   roleType: PlatformRoleType.Custom,
@@ -177,15 +177,15 @@ export interface PlatformRoleServiceModel {
    * assignment GUID (from `getAssignments()`). If a removal fails, added
    * assignments are rolled back on a best-effort basis.
    *
-   * First, get role IDs with `getAll()` and principal IDs with `users.getAll()`
-   * or `groups.getAll()` (from `@uipath/uipath-typescript/platform`).
+   * First, get role IDs with `getAll()` and principal IDs from the Users or Groups
+   * service (`users.getAll()` / `groups.getAll()`).
    *
    * @param changes - The assignments to add and remove
    * @returns Resolves when the changes have been applied
    *
    * @example Grant a role to a group
    * ```typescript
-   * import { PlatformPrincipalType } from '@uipath/uipath-typescript/platform';
+   * import { PlatformPrincipalType } from '@uipath/uipath-typescript/roles';
    *
    * await roles.updateAssignments({
    *   toAdd: [{
