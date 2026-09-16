@@ -363,6 +363,6 @@ export const AUTHORIZATION_ROLES_MAX_PAGE_SIZE = 1000;
 
 /**
  * Authorization role-assignments maximum page size — the API rejects `top`
- * above 10 on `userroleassignments` (unlike `roles`, which allows 1000).
+ * above 100 (live-verified: "Page size cannot be greater than 100!").
  */
-export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 10;
+export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 100;

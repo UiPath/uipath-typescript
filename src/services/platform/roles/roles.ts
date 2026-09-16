@@ -13,7 +13,8 @@ import { BaseService } from '../../base';
 import type {
   RawPlatformRoleGetResponse,
   PlatformRoleGetAllOptions,
-  PlatformRoleUpsertOptions,
+  PlatformRoleCreateRequest,
+  PlatformRoleUpdateOptions,
   PlatformRoleAssignmentGetAllOptions,
   PlatformPrincipalRoleAssignments,
   PlatformRoleAssignmentChanges,
@@ -24,6 +25,7 @@ import type {
   PlatformEffectiveRole,
   PlatformEffectiveRoleAssignment,
 } from '../../../models/platform/roles.types';
+import { PlatformRoleSortField } from '../../../models/platform/roles.types';
 import type {
   RawPlatformRole,
   RawPlatformRoleAction,
@@ -42,7 +44,7 @@ import {
   PlatformRoleTypeMap,
   PlatformPrincipalRoleAssignmentsMap,
   PlatformRoleAssignmentChangesMap,
-  PlatformRoleUpsertMap,
+  PlatformRoleWriteMap,
   PlatformEffectiveRoleMap,
 } from '../../../models/platform/roles.constants';
 
@@ -141,31 +143,46 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     return this.fetchRole(roleId);
   }
 
-  @track('PlatformRoles.Upsert')
-  async upsert(
-    name: string,
-    scopeType: string,
-    description: string,
-    options?: PlatformRoleUpsertOptions
-  ): Promise<PlatformRoleGetResponse> {
-    if (!name) {
-      throw new ValidationError({ message: 'name is required for upsert' });
+  @track('PlatformRoles.Create')
+  async create(request: PlatformRoleCreateRequest): Promise<PlatformRoleGetResponse> {
+    if (!request?.name) {
+      throw new ValidationError({ message: 'name is required for create' });
     }
-    if (!scopeType) {
-      throw new ValidationError({ message: 'scopeType is required for upsert' });
+    if (!request.scopeType) {
+      throw new ValidationError({ message: 'scopeType is required for create' });
     }
-    if (!description) {
-      throw new ValidationError({ message: 'description is required for upsert' });
+    if (!request.description) {
+      throw new ValidationError({ message: 'description is required for create' });
+    }
+    if (!request.actionsGrantedByRole?.length) {
+      throw new ValidationError({ message: 'actionsGrantedByRole must contain at least one action for create' });
     }
 
-    const organizationId = await this.#organizationIdResolver.resolve();
-    // The write returns only the role ID — follow up with a read so callers
-    // get the stored role
-    const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
-      ...transformRequest({ name, scopeType, description, ...options }, PlatformRoleUpsertMap),
-      organizationId,
+    return this.writeRole(request);
+  }
+
+  @track('PlatformRoles.UpdateById')
+  async updateById(roleId: string, update: PlatformRoleUpdateOptions): Promise<PlatformRoleGetResponse> {
+    if (!roleId) {
+      throw new ValidationError({ message: 'roleId is required for updateById' });
+    }
+    if (!update || Object.keys(update).length === 0) {
+      throw new ValidationError({ message: 'update must contain at least one field to change' });
+    }
+
+    // The API replaces the whole role on write, so read it first and merge —
+    // otherwise every omitted field (including the granted actions) would be wiped
+    const current = await this.fetchRole(roleId);
+    const { actionsGrantedByRole, ...fields } = update;
+    return this.writeRole({
+      id: roleId,
+      name: fields.name ?? current.name,
+      scopeType: fields.scopeType ?? current.scopeType,
+      description: fields.description ?? current.description,
+      actionsGrantedByRole: actionsGrantedByRole ?? current.actionDetails.map(action => action.name),
+      ...(fields.ownerServiceName !== undefined && { ownerServiceName: fields.ownerServiceName }),
+      ...(fields.tenantId !== undefined && { tenantId: fields.tenantId }),
     });
-    return this.fetchRole(response.data.createdRoleId);
   }
 
   @track('PlatformRoles.DeleteById')
@@ -191,9 +208,8 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     }
     const opts = options ?? ({} as T);
 
-    // The API always pages (and rejects top above 10 on this endpoint), so
-    // without pagination options every page is fetched — a single request
-    // would silently truncate.
+    // The API always pages (max top=100), so without pagination options every
+    // page is fetched — a single request would silently truncate.
     if (!PaginationHelpers.hasPaginationParameters(opts)) {
       return this.getAllAssignmentPages(scope, opts) as Promise<
         T extends HasPaginationOptions<T>
@@ -258,11 +274,9 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     if (!tenantId) {
       throw new ValidationError({ message: 'tenantId is required for getEffectiveAccess' });
     }
+    // The type allows only one of the two; the guard covers untyped callers
     if (!principal?.userId && !principal?.groupId) {
       throw new ValidationError({ message: 'one of userId or groupId is required for getEffectiveAccess' });
-    }
-    if (principal.userId && principal.groupId) {
-      throw new ValidationError({ message: 'provide only one of userId or groupId for getEffectiveAccess' });
     }
 
     const body = {
@@ -296,12 +310,25 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
   }
 
   /**
-   * Fetches one role and transforms it — shared by `getById` and `upsert` so
-   * both stay singly tracked.
+   * Fetches one role and transforms it — shared by `getById`, `create`, and
+   * `updateById` so each stays singly tracked.
    */
   private async fetchRole(roleId: string): Promise<PlatformRoleGetResponse> {
     const response = await this.get<RawPlatformRole>(AUTHORIZATION_ENDPOINTS.ROLE.GET_BY_ID(roleId));
     return this.toRole(response.data);
+  }
+
+  /**
+   * Sends the create-or-replace write for a role and returns the stored role.
+   * The write answers with the role ID only, so it is followed by a read.
+   */
+  private async writeRole(role: PlatformRoleCreateRequest & { id?: string }): Promise<PlatformRoleGetResponse> {
+    const organizationId = await this.#organizationIdResolver.resolve();
+    const response = await this.put<RawPlatformRoleUpsertResult>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
+      ...transformRequest(role, PlatformRoleWriteMap),
+      organizationId,
+    });
+    return this.fetchRole(response.data.createdRoleId);
   }
 
   /**
@@ -310,27 +337,36 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
   private async getAllRolePages(
     opts: PlatformRoleGetAllOptions
   ): Promise<NonPaginatedResponse<PlatformRoleGetResponse>> {
-    const { scopeType, serviceName, contains, tenantId, roleType } = opts;
-    const items: PlatformRoleGetResponse[] = [];
+    const { scopeType, serviceName, contains, tenantId, roleType, sortOrder } = opts;
+    // Stable sort keeps record offsets consistent across pages so roles are not skipped or duplicated.
+    const sortBy = opts.sortBy ?? PlatformRoleSortField.Id;
+    const rolesById = new Map<string, PlatformRoleGetResponse>();
     let totalCount = 0;
     let skip = 0;
 
     for (;;) {
       const response = await this.get<RawPlatformRoleListResponse>(AUTHORIZATION_ENDPOINTS.ROLE.GET_ALL, {
-        params: createParams({ scopeType, serviceName, contains, tenantId, roleType, top: AUTHORIZATION_ROLES_MAX_PAGE_SIZE, skip }),
+        params: createParams({
+          scopeType, serviceName, contains, tenantId, roleType, sortBy, sortOrder,
+          top: AUTHORIZATION_ROLES_MAX_PAGE_SIZE, skip,
+        }),
       });
       const { results, totalCount: reportedTotal } = response.data;
       totalCount = reportedTotal;
-      items.push(...results.map(role => this.toRole(role)));
+      for (const raw of results) {
+        const role = this.toRole(raw);
+        // Dedupe by id — a record straddling a page boundary must not count twice or hide a real role.
+        rolesById.set(role.id, role);
+      }
 
-      if (results.length === 0 || items.length >= totalCount) {
+      // A short page is terminal for a record offset; the count check stops a full final page early.
+      if (results.length < AUTHORIZATION_ROLES_MAX_PAGE_SIZE || rolesById.size >= totalCount) {
         break;
       }
-      // Advance by what was actually returned — a short non-final page must not skip records
-      skip += results.length;
+      skip += AUTHORIZATION_ROLES_MAX_PAGE_SIZE;
     }
 
-    return { items, totalCount };
+    return { items: [...rolesById.values()], totalCount };
   }
 
   /**
@@ -341,7 +377,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
     opts: PlatformRoleAssignmentGetAllOptions
   ): Promise<NonPaginatedResponse<PlatformPrincipalRoleAssignments>> {
     const { serviceName, securityPrincipalId, noInheritance } = opts;
-    const items: PlatformPrincipalRoleAssignments[] = [];
+    const assignmentsByPrincipal = new Map<string, PlatformPrincipalRoleAssignments>();
     let totalCount = 0;
     let skip = 0;
 
@@ -357,16 +393,20 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
       );
       const { results, totalCount: reportedTotal } = response.data;
       totalCount = reportedTotal;
-      items.push(...results.map(group => this.toPrincipalAssignments(group)));
+      for (const raw of results) {
+        const principal = this.toPrincipalAssignments(raw);
+        // Dedupe by principal — a record straddling a page boundary must not count twice or hide a real one.
+        assignmentsByPrincipal.set(principal.securityPrincipalId, principal);
+      }
 
-      if (results.length === 0 || items.length >= totalCount) {
+      // A short page is terminal for a record offset; the count check stops a full final page early.
+      if (results.length < AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE || assignmentsByPrincipal.size >= totalCount) {
         break;
       }
-      // Advance by what was actually returned — a short non-final page must not skip records
-      skip += results.length;
+      skip += AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE;
     }
 
-    return { items, totalCount };
+    return { items: [...assignmentsByPrincipal.values()], totalCount };
   }
 
   /**
@@ -391,7 +431,7 @@ export class PlatformRoleService extends BaseService implements PlatformRoleServ
    */
   private toAction(raw: RawPlatformRoleAction): PlatformRoleAction {
     const { originalResourceAction: _originalResourceAction, ...action } = raw;
-    return action;
+    return action as PlatformRoleAction;
   }
 
   /**

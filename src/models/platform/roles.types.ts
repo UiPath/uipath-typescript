@@ -6,13 +6,48 @@
 import type { PaginationOptions } from '../../utils/pagination';
 
 /**
- * Whether a role ships with the platform or was created in the organization.
+ * Who defines a role.
  */
 export enum PlatformRoleType {
   /** Ships with the platform; cannot be modified or deleted. */
   BuiltIn = 'BUILTIN',
+  /** Provided by the platform for cross-service access; cannot be modified or deleted. */
+  Platform = 'PLATFORM',
   /** Created in the organization. */
   Custom = 'CUSTOM',
+}
+
+/**
+ * The level a role applies at.
+ */
+export enum PlatformRoleScopeType {
+  /** Applies across the whole organization. */
+  Organization = 'ORGANIZATION',
+  /** Applies within one tenant. */
+  Tenant = 'TENANT',
+  /** Applies within one project. */
+  Project = 'PROJECT',
+  /** Applies within one process. */
+  Process = 'PROCESS',
+  /** Applies within one app. */
+  App = 'APP',
+  /** Grants permissions at more than one level. */
+  Mixed = 'MIXED',
+}
+
+/**
+ * The level a permission (action) applies at.
+ */
+export enum PlatformActionScopeType {
+  /** Can be granted at any level. */
+  Any = 'ANY',
+  /** Not tied to a level. */
+  None = 'NONE',
+  Organization = 'ORGANIZATION',
+  Tenant = 'TENANT',
+  Folder = 'FOLDER',
+  Project = 'PROJECT',
+  Process = 'PROCESS',
 }
 
 /**
@@ -23,6 +58,34 @@ export enum PlatformPrincipalType {
   Group = 'Group',
   ExternalApplication = 'ExternalApplication',
   Robot = 'Robot',
+}
+
+/**
+ * Fields roles can be sorted by in `roles.getAll()`.
+ */
+export enum PlatformRoleSortField {
+  Id = 'Id',
+  Name = 'OriginalRoleName',
+  UniqueName = 'UniqueName',
+  Description = 'Description',
+  Type = 'Type',
+  ScopeType = 'ScopeType',
+  OrganizationId = 'OrganizationId',
+  TenantId = 'TenantId',
+  OwnerService = 'OwnerService',
+  OwnerServiceId = 'OwnerServiceId',
+  CreatedBy = 'CreatedBy',
+  CreatedTime = 'CreatedOn',
+  UpdatedBy = 'UpdatedBy',
+  UpdatedTime = 'UpdatedOn',
+}
+
+/**
+ * Sort direction for `roles.getAll()`.
+ */
+export enum PlatformRoleSortOrder {
+  Ascending = 'Asc',
+  Descending = 'Desc',
 }
 
 /**
@@ -45,8 +108,8 @@ export interface PlatformRoleAction {
   resourceGroup: string;
   /** Human-readable description. */
   description: string;
-  /** Scope level the action applies at; `null` when unrestricted. */
-  scopeType: string | null;
+  /** Level the action applies at; `null` when unrestricted. */
+  scopeType: PlatformActionScopeType | null;
 }
 
 /**
@@ -59,10 +122,10 @@ export interface RawPlatformRoleGetResponse {
   name: string;
   /** Human-readable description. */
   description: string;
-  /** Whether the role is built-in or custom. */
+  /** Who defines the role. */
   type: PlatformRoleType;
-  /** Scope level the role applies at (e.g. `ORGANIZATION`, `TENANT`). */
-  scopeType: string;
+  /** Level the role applies at. */
+  scopeType: PlatformRoleScopeType;
   /** GUID of the user who created the role. */
   createdBy: string;
   /** When the role was created. */
@@ -81,30 +144,57 @@ export interface RawPlatformRoleGetResponse {
  * Options for `roles.getAll()`.
  */
 export type PlatformRoleGetAllOptions = PaginationOptions & {
-  /** Returns only roles applying at this scope level (e.g. `ORGANIZATION`, `TENANT`). */
-  scopeType?: string;
+  /** Returns only roles applying at this level. */
+  scopeType?: PlatformRoleScopeType;
   /** Returns only roles owned by this service. */
   serviceName?: string;
   /** Returns only roles whose name contains the text. */
   contains?: string;
   /** Returns only roles of this tenant. */
   tenantId?: string;
-  /** Returns only built-in or only custom roles. */
+  /** Returns only roles of this type. */
   roleType?: PlatformRoleType;
+  /** Field to sort by. */
+  sortBy?: PlatformRoleSortField;
+  /** Sort direction. */
+  sortOrder?: PlatformRoleSortOrder;
 };
 
 /**
- * Options for `roles.upsert()`.
+ * A custom role to create via `roles.create()`.
  */
-export interface PlatformRoleUpsertOptions {
-  /** GUID of the role to update; omit to create a new role. */
-  id?: string;
+export interface PlatformRoleCreateRequest {
+  /** Role name; must be unique in the organization. */
+  name: string;
+  /** Level the role applies at. */
+  scopeType: PlatformRoleScopeType;
+  /** Human-readable description. */
+  description: string;
+  /** Fully qualified names of the actions the role grants (e.g. `AUTHZ.ROLE.READ`) — pick them from `roles.getActions()`. */
+  actionsGrantedByRole: string[];
   /** Name of the service that owns the role. */
-  roleService?: string;
+  ownerServiceName?: string;
   /** Tenant the role belongs to, for tenant-scoped roles. */
   tenantId?: string;
-  /** Fully qualified names of the actions the role grants (e.g. `AUTHZ.ROLE.READ`) — pick them from `roles.getActions()`. */
+}
+
+/**
+ * Fields to change on a custom role via `roles.updateById()`. Only the fields
+ * present are changed — omitted fields keep their current values.
+ */
+export interface PlatformRoleUpdateOptions {
+  /** New role name. */
+  name?: string;
+  /** New level the role applies at. */
+  scopeType?: PlatformRoleScopeType;
+  /** New description. */
+  description?: string;
+  /** Replaces the full set of granted actions — pick names from `roles.getActions()`. */
   actionsGrantedByRole?: string[];
+  /** Name of the service that owns the role. */
+  ownerServiceName?: string;
+  /** Tenant the role belongs to, for tenant-scoped roles. */
+  tenantId?: string;
 }
 
 /**
@@ -117,7 +207,11 @@ export interface PlatformRoleAssignment {
   securityPrincipalId: string;
   /** The kind of principal. */
   securityPrincipalType: PlatformPrincipalType;
-  /** Whether the assignment is built-in or custom. */
+  /**
+   * Who created the assignment: the platform (built-in) or an administrator (custom).
+   * Independent of `roleType`, which describes the granted role — an administrator can
+   * assign a built-in role, giving a custom assignment of a built-in role.
+   */
   type: PlatformRoleType;
   /** The scope the role is granted at (`/` = whole organization). */
   scope: string;
@@ -125,7 +219,7 @@ export interface PlatformRoleAssignment {
   roleId: string;
   /** Name of the granted role. */
   roleName: string;
-  /** Whether the granted role is built-in or custom. */
+  /** Who defines the granted role. */
   roleType: PlatformRoleType;
   /** GUID of the user who created the assignment. */
   createdBy: string;
@@ -156,7 +250,7 @@ export interface PlatformPrincipalRoleAssignments {
 }
 
 /**
- * Options for `roles.getAssignments()`.
+ * Options for `roles.getAssignments()`. `pageSize` may not exceed 100.
  */
 export type PlatformRoleAssignmentGetAllOptions = PaginationOptions & {
   /** Returns only assignments for roles owned by this service. */
@@ -196,15 +290,20 @@ export interface PlatformRoleAssignmentChanges {
 }
 
 /**
- * The principal to compute access for in `roles.getEffectiveAccess()`.
- * Provide exactly one of `userId` / `groupId`.
+ * The principal to compute access for in `roles.getEffectiveAccess()` — a user
+ * or a group, never both.
  */
-export interface PlatformEffectiveAccessPrincipal {
-  /** GUID of the user to check. */
-  userId?: string;
-  /** GUID of the group to check. */
-  groupId?: string;
-}
+export type PlatformEffectiveAccessPrincipal =
+  | {
+      /** GUID of the user to check. */
+      userId: string;
+      groupId?: never;
+    }
+  | {
+      /** GUID of the group to check. */
+      groupId: string;
+      userId?: never;
+    };
 
 /**
  * A role a principal effectively holds, with the assignments granting it.
@@ -214,7 +313,7 @@ export interface PlatformEffectiveRole {
   roleId: string;
   /** Name of the role. */
   roleName: string | null;
-  /** Whether the role is built-in or custom. */
+  /** Who defines the role. */
   roleType: PlatformRoleType | null;
   /** Tenant the role applies in. */
   tenantId: string | null;
@@ -244,7 +343,7 @@ export interface PlatformEffectiveRoleAssignment {
   roleName: string | null;
   /** The kind of principal the role is granted to. */
   securityPrincipalType: PlatformPrincipalType | null;
-  /** Whether the granted role is built-in or custom. */
+  /** Who defines the granted role. */
   roleType: PlatformRoleType | null;
   /** Name of the service that owns the role. */
   serviceName: string | null;
@@ -301,6 +400,6 @@ export interface PlatformEffectiveAccessResponse {
 export interface PlatformRoleActionGetAllOptions {
   /** Returns only actions owned by this service. */
   serviceName?: string;
-  /** Returns only actions applying at this scope level. */
-  scopeType?: string;
+  /** Returns only actions applying at this level. */
+  scopeType?: PlatformActionScopeType;
 }
