@@ -727,6 +727,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#platform-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#platform-groups" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1936,6 +1947,8 @@
       
         
       
+        
+      
     
     
     
@@ -2021,6 +2034,34 @@
     
   
     Users
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interfaces/PlatformRoleServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles
   
 
     
@@ -3730,6 +3771,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#platform-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platform Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#platform-groups" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4623,6 +4675,57 @@
 <tr>
 <td><code>updateById()</code></td>
 <td><code>PM.User</code> or <code>PM.User.Write</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="platform-roles">Platform Roles<a class="headerlink" href="#platform-roles" title="Permanent link">&para;</a></h2>
+<p>The Authorization service does not publish dedicated OAuth scopes yet — access is
+governed by the caller's own platform roles (verified with personal access token
+authentication; the caller needs organization-level role management permissions
+for the write operations).</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>OAuth Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getAll()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>getById()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>upsert()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>deleteById()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>getAssignments()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>updateAssignments()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>exportAssignments()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>getEffectiveAccess()</code></td>
+<td>— (caller's platform roles apply)</td>
+</tr>
+<tr>
+<td><code>getActions()</code></td>
+<td>— (caller's platform roles apply)</td>
 </tr>
 </tbody>
 </table>
