@@ -336,8 +336,8 @@ export const createMockSingleInsertResponse = (
  * Shape verified against a live alpha response: the transaction tree is camelCase throughout,
  * the root `Id` is the one PascalCase key, every node carries `noOp` and `version`, and a leaf
  * sends `members: []` rather than omitting the key. `children`, `cascadeDeletedChildren` and
- * `deletedCount` are always sent empty on this route and are included so the mock exercises
- * the service dropping them.
+ * `deletedCount` are always sent empty on this route and are included to match the real wire
+ * shape.
  */
 export const createMockUpsertTreeResponse =
   (): EntityUpsertResponse => ({

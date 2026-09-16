@@ -596,8 +596,8 @@ export interface EntityServiceModel {
    *   ]
    * }, { folderKey: "<folderKey>" });
    *
-   * console.log(result.transaction.totalRecordsAffected); // 4
-   * console.log(result.transaction.members[0].id);        // generated expense record ID
+   * console.log(result.transaction!.totalRecordsAffected); // 4
+   * console.log(result.transaction!.members[0].id);        // generated expense record ID
    * ```
    *
    * @experimental Writing across related entities requires the multi-entity write feature to be

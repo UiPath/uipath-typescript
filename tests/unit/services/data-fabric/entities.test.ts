@@ -2623,7 +2623,7 @@ describe("EntityService Unit Tests", () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
-                it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
+    it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
       await expect(
         entityService.upsert(
           {} as EntityRef,
