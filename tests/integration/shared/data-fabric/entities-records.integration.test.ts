@@ -196,7 +196,8 @@ async function ensureEntity(
     console.warn(createError);
     try {
       return await entities.getByName(name);
-    } catch {
+    } catch (retryError) {
+      console.warn(retryError);
       throw createError;
     }
   }
