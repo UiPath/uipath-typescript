@@ -287,6 +287,15 @@ function render(name, entry) {
   return chosen.flatMap((d) => renderOne(name, d, sf));
 }
 
+const tag = (subs) => `   [${Array.from(subs).sort().join(', ')}]`;
+
+// Sort by declaration name so members stay under their container, with the
+// full line as a tiebreak to keep output stable.
+const sortKey = (l) => {
+  const m = l.match(/^(?:interface|class|type|enum|function|const)\s+([\w$.]+)/);
+  return `${(m ? m[1] : l).toLowerCase()}\u0000${l}`;
+};
+
 function main() {
   const entries = readEntries();
   // One symbol can be reachable from several subpaths (most are also re-exported
@@ -319,12 +328,6 @@ function main() {
       }
     }
   }
-
-  const tag = (subs) => `   [${Array.from(subs).sort().join(', ')}]`;
-  const sortKey = (l) => {
-    const m = l.match(/^(?:interface|class|type|enum|function|const)\s+([\w$.]+)/);
-    return `${(m ? m[1] : l).toLowerCase()}\u0000${l}`;
-  };
 
   const out = [
     '## @uipath/uipath-typescript -- public API surface',
