@@ -38,8 +38,6 @@ jobs:
   build-and-preview:
     runs-on: uipath-ubuntu-latest
     env:
-      # Surfaced as env because the `secrets` context is unavailable in `if:`.
-      # Lets the minting step below detect an absent credential.
       JS_FUNCTIONS_DOCS_APP_ID: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
     steps:
       - name: Checkout
