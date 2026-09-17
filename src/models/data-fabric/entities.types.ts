@@ -98,6 +98,16 @@ export interface EntityGetRecordByIdOptions extends EntityFolderScopedOptions {
 export interface EntityGetRecordByNameOptions extends EntityGetRecordByIdOptions {}
 
 /**
+ * Identifies a record to read by entity name.
+ */
+export interface EntityGetRecordByNameRequest {
+  /** Entity name */
+  entityName: string;
+  /** Record id */
+  recordId: string;
+}
+
+/**
  * Common options for entity operations that modify multiple records
  */
 export interface EntityOperationOptions extends EntityFolderScopedOptions {
