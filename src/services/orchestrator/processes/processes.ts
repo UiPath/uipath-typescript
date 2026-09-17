@@ -102,7 +102,16 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       folderId = fid;
       folderKey = fkey;
       folderPath = fpath;
-      queryOptions = { expand, select, filter, orderby };
+      // Only carry OData keys the caller actually supplied — mirrors the two legacy branches'
+      // rest-spread shape and stops `addPrefixToKeys` from producing `$expand: undefined` etc.
+      // downstream `toSearchParams` filters undefined, so this is defence-in-depth against a
+      // future serializer that doesn't.
+      queryOptions = {
+        ...(expand !== undefined && { expand }),
+        ...(select !== undefined && { select }),
+        ...(filter !== undefined && { filter }),
+        ...(orderby !== undefined && { orderby }),
+      };
       startInfoExtras = restStartInfo;
     } else {
       // Legacy form: start(request, options?)

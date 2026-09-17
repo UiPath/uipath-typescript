@@ -640,6 +640,28 @@ describe('ProcessService Unit Tests', () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
+    it('does not send empty $expand/$select/$filter/$orderby params when the caller omits OData options on a ref call', async () => {
+      // Ref form previously built `queryOptions = { expand, select, filter, orderby }` with all
+      // four keys — even when undefined. `addPrefixToKeys` propagates that, and only the HTTP
+      // serializer's undefined-filter kept `?$expand=&$select=&…` off the wire. Guard the
+      // request-spec shape directly so a future serializer change can't silently regress.
+      mockApiClient.post.mockResolvedValue(
+        createMockProcessStartApiResponse([createMockProcessStartResponse()]),
+      );
+
+      await service.start(
+        { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      const params = requestSpec?.params ?? {};
+      expect(params).not.toHaveProperty('$expand');
+      expect(params).not.toHaveProperty('$select');
+      expect(params).not.toHaveProperty('$filter');
+      expect(params).not.toHaveProperty('$orderby');
+    });
+
     it('accepts ProcessRef with a key when name is explicitly undefined (spread-shape input)', async () => {
       // `{ ...maybeName, key: 'K' }` where maybeName is empty produces `{ name: undefined, key: 'K' }`.
       // Value-based dispatch routes cleanly to the key branch; presence-based dispatch would
