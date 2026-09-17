@@ -3120,7 +3120,7 @@ Removes an attachment from a File-type field of an entity record, identified by 
 
 #### Parameters
 
-- `entityId`: `string` — -
+- `entityId`: `string` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
 - `options?`: `EntityDeleteAttachmentOptions` — Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -3147,10 +3147,10 @@ const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
 // Delete attachment by id
-await entities.deleteAttachment({ id: entityId }, recordId, 'Documents');
+await entities.deleteAttachment(entityId, recordId, 'Documents');
 
 // Or by name
-await entities.deleteAttachment({ name: 'Customer' }, recordId, 'Documents');
+await entities.deleteAttachment(entityId, recordId, 'Documents');
 
 // Or delete using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
@@ -3321,7 +3321,7 @@ Downloads an attachment stored in a File-type field of an entity record, identif
 
 #### Parameters
 
-- `entityId`: `string` — -
+- `entityId`: `string` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record containing the attachment
 - `fieldName`: `string` — Name of the File-type field containing the attachment
 - `options?`: `EntityDownloadAttachmentOptions` — Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -3348,10 +3348,10 @@ const records = await entities.getAllRecords(entityId);
 const recordId = records[0].Id;
 
 // Download attachment by id
-const response = await entities.downloadAttachment({ id: entityId }, recordId, 'Documents');
+const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
 
 // Or by name
-const byName = await entities.downloadAttachment({ name: 'Customer' }, recordId, 'Documents');
+const byName = await entities.downloadAttachment(entityId, recordId, 'Documents');
 
 // Or download using entity method (entityId is already known)
 const entity = await entities.getById(entityId);
@@ -4288,7 +4288,7 @@ Uses multipart/form-data to upload the file content to the specified field. Iden
 
 #### Parameters
 
-- `entityId`: `string` — -
+- `entityId`: `string` — Entity ref (`{ id }` (GUID) or `{ name }`)
 - `recordId`: `string` — UUID of the record to upload the attachment to
 - `fieldName`: `string` — Name of the File-type field
 - `file`: `EntityFileType` — File to upload (Blob, File, or Uint8Array)
@@ -4320,15 +4320,15 @@ const fileInput = document.getElementById('file-input') as HTMLInputElement;
 const file = fileInput.files[0];
 
 // By id
-const response = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', file);
+const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
 
 // By name, folder-scoped
-await entities.uploadAttachment({ name: 'Customer' }, recordId, 'Documents', file, { folderKey: "<folderKey>" });
+await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
 
 // Node.js: Upload a file from disk
 const fileBuffer = fs.readFileSync('document.pdf');
 const blob = new Blob([fileBuffer], { type: 'application/pdf' });
-const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
+const uploaded = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
 ```
 
 Service for managing UiPath Data Fabric Choice Sets
