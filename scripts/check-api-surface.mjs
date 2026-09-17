@@ -48,6 +48,19 @@ const declName = (l) => {
   return m ? `${m[1]} ${m[2]}` : l;
 };
 
+const bump = (map, key, sub) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(sub); };
+
+const bumpMem = (map, id, sig, sub, container) => {
+  if (!map.has(id)) map.set(id, { sigs: new Set(), where: new Set(), containers: new Set() });
+  const e = map.get(id);
+  e.sigs.add(sig); e.where.add(sub); e.containers.add(container);
+};
+
+// Signatures that differ only by a stability tag are the same contract.
+const bare = (set) => Array.from(set, (x) => x.replace(/\s\s@[\w @]+$/, '')).sort().join('|');
+const where = (s) => `[${Array.from(s).sort().join(', ')}]`;
+const cnames = (e) => Array.from(e.containers, shortName).sort().join(', ');
+
 function main() {
   const compareOnly = Boolean(argBefore && argAfter);
   const tmp = compareOnly ? null : mkdtempSync(join(tmpdir(), 'api-surface-'));
@@ -60,12 +73,6 @@ function main() {
 
     const changed = new Map(), tagged = new Map(), removedDecls = new Map(), addedDecls = new Map();
     const removedMem = new Map(), addedMem = new Map();
-    const bump = (map, key, sub) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(sub); };
-    const bumpMem = (map, id, field, sig, sub, container) => {
-      if (!map.has(id)) map.set(id, { sigs: new Set(), where: new Set(), containers: new Set() });
-      const e = map.get(id);
-      e.sigs.add(sig); e.where.add(sub); e.containers.add(container);
-    };
 
     for (const sub of new Set([...before.keys(), ...after.keys()])) {
       const b = before.get(sub) ?? new Map();
@@ -73,24 +80,23 @@ function main() {
       for (const [k, v] of b) {
         if (a.has(k)) continue;
         if (v.kind === 'decl') bump(removedDecls, declName(v.line), sub);
-        else bumpMem(removedMem, v.symbol, 'was', v.sig, sub, v.container);
+        else bumpMem(removedMem, v.symbol, v.sig, sub, v.container);
       }
       for (const [k, v] of a) {
         if (b.has(k)) continue;
         if (v.kind === 'decl') bump(addedDecls, declName(v.line), sub);
-        else bumpMem(addedMem, v.symbol, 'now', v.sig, sub, v.container);
+        else bumpMem(addedMem, v.symbol, v.sig, sub, v.container);
       }
     }
 
     // A symbol on both sides with a different signature is a change, not a
     // removal plus an unrelated addition.
-    for (const [id, r] of [...removedMem]) {
+    for (const [id, r] of Array.from(removedMem)) {
       const a = addedMem.get(id);
       if (!a) continue;
       const entry = { was: r.sigs, now: a.sigs, where: new Set([...r.where, ...a.where]), containers: r.containers };
       // Differing only by a stability tag (e.g. newly @deprecated) still
       // compiles everywhere; it is a notice, not a breaking change.
-      const bare = (set) => [...set].map((x) => x.replace(/\s\s@[\w @]+$/, '')).sort().join('|');
       (bare(r.sigs) === bare(a.sigs) ? tagged : changed).set(id, entry);
       removedMem.delete(id); addedMem.delete(id);
     }
@@ -101,8 +107,6 @@ function main() {
     }
 
     const L = [];
-    const where = (s) => `[${[...s].sort().join(', ')}]`;
-    const cnames = (e) => [...e.containers].map(shortName).sort().join(', ');
     const REQUIRED = /^\.?[\w$]*[^?]:/;
 
     L.push(compareOnly ? 'Public API surface difference:' : 'API surface changed, but api-surface/ was not updated.', '');
@@ -110,44 +114,44 @@ function main() {
 
     if (changed.size) {
       L.push('', 'CHANGED — existing call sites may no longer compile');
-      for (const [id, e] of [...changed].sort()) {
+      for (const [id, e] of Array.from(changed).sort()) {
         L.push(`  ${cnames(e)} :: ${id}   ${where(e.where)}`);
-        for (const w of [...e.was].sort()) L.push(`      was  ${w}`);
-        for (const n of [...e.now].sort()) L.push(`      now  ${n}`);
+        for (const w of Array.from(e.was).sort()) L.push(`      was  ${w}`);
+        for (const n of Array.from(e.now).sort()) L.push(`      now  ${n}`);
       }
     }
     if (removedDecls.size || removedMem.size) {
       L.push('', 'REMOVED — consumers can no longer reference these');
-      for (const [n, subs] of [...removedDecls].sort()) L.push(`  ${n}   ${where(subs)}`);
-      for (const [id, e] of [...removedMem].sort()) {
+      for (const [n, subs] of Array.from(removedDecls).sort()) L.push(`  ${n}   ${where(subs)}`);
+      for (const [id, e] of Array.from(removedMem).sort()) {
         L.push(`  ${cnames(e)} :: ${id}   ${where(e.where)}`);
-        for (const w of [...e.sigs].sort()) L.push(`      was  ${w}`);
+        for (const w of Array.from(e.sigs).sort()) L.push(`      was  ${w}`);
       }
     }
     if (tagged.size) {
       L.push('', 'STABILITY TAG ONLY — still compiles, no migration needed');
-      for (const [id, e] of [...tagged].sort()) {
-        const tag = [...e.now].map((x) => x.match(/@[\w @]+$/)?.[0] ?? '(tag removed)').sort().join(', ');
+      for (const [id, e] of Array.from(tagged).sort()) {
+        const tag = Array.from(e.now, (x) => x.match(/@[\w @]+$/)?.[0] ?? '(tag removed)').sort().join(', ');
         L.push(`  ${cnames(e)} :: ${id}   ${tag}   ${where(e.where)}`);
       }
     }
     if (addedDecls.size || addedMem.size) {
       // A new *required* member is backward-incompatible even though it reads
       // as an addition, so it gets its own heading instead of looking safe.
-      const newDecls = new Set([...addedDecls.keys()].map((d) => d.split(' ')[1]));
-      const risky = [...addedMem].filter(
-        ([, e]) => [...e.sigs].some((s) => REQUIRED.test(s)) && [...e.containers].every((c) => !newDecls.has(shortName(c)))
+      const newDecls = new Set(Array.from(addedDecls.keys(), (d) => d.split(' ')[1]));
+      const risky = Array.from(addedMem).filter(
+        ([, e]) => Array.from(e.sigs).some((s) => REQUIRED.test(s)) && Array.from(e.containers).every((c) => !newDecls.has(shortName(c)))
       );
       const riskySet = new Set(risky.map(([id]) => id));
       if (risky.length) {
         L.push('', 'ADDED BUT REQUIRED — breaks callers that omit them');
-        for (const [id, e] of risky.sort()) L.push(`  ${cnames(e)} :: ${id}${[...e.sigs][0]}   ${where(e.where)}`);
+        for (const [id, e] of risky.sort()) L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
       }
       L.push('', 'ADDED — backward compatible');
-      for (const [n, subs] of [...addedDecls].sort()) L.push(`  ${n}   ${where(subs)}`);
-      for (const [id, e] of [...addedMem].sort()) {
+      for (const [n, subs] of Array.from(addedDecls).sort()) L.push(`  ${n}   ${where(subs)}`);
+      for (const [id, e] of Array.from(addedMem).sort()) {
         if (riskySet.has(id)) continue;
-        L.push(`  ${cnames(e)} :: ${id}${[...e.sigs][0]}   ${where(e.where)}`);
+        L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
       }
     }
     if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen && git add api-surface');
