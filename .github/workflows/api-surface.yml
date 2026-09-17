@@ -1,0 +1,33 @@
+name: API Surface
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  api-surface:
+    # Regenerates the committed public-API snapshot and fails if it drifts.
+    # The job does not judge whether a change is breaking — it only makes every
+    # change to a published signature visible as a reviewable diff, which a
+    # 2000-line feature PR otherwise buries.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run api-surface:gen
+      - name: Check for uncommitted API surface changes
+        run: |
+          if ! git diff --quiet -- api-surface; then
+            echo "::error::The public API surface changed but api-surface/ was not updated."
+            echo ""
+            echo "Run 'npm run api-surface:gen' and commit the result."
+            echo "Review the diff below: removed (-) lines are potential breaking changes."
+            echo ""
+            git --no-pager diff -- api-surface
+            exit 1
+          fi
+          echo "API surface matches the committed snapshot."
