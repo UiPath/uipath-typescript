@@ -4,40 +4,41 @@
 // by file. A raw `git diff` of the snapshot repeats the same logical change
 // once per subpath and once per class/interface that declares it, which buries
 // the one line a reviewer actually needs to see.
-import { readFileSync, readdirSync, existsSync, mkdtempSync, rmSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, rmSync, appendFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const COMMITTED = join(ROOT, 'api-surface');
+const COMMITTED = join(ROOT, 'api-surface.txt');
 
 // Default: committed snapshot vs freshly generated (the CI gate).
 // With two directory arguments: compare two snapshots, used by
 // api-surface-replay.sh to run the same report over a historical change.
 const [argBefore, argAfter] = process.argv.slice(2);
 
-function readSnapshot(dir) {
-  const out = new Map();
-  if (!existsSync(dir)) return out;
-  for (const f of readdirSync(dir).filter((x) => x.endsWith('.api.txt')).sort()) {
-    const entries = new Map();
-    let container = null;
-    for (const raw of readFileSync(join(dir, f), 'utf8').split('\n')) {
-      if (!raw.trim() || raw.startsWith('##')) continue;
-      const line = raw.trim();
-      if (!raw.startsWith('  ')) {
-        entries.set(`decl:${line}`, { line, kind: 'decl' });
-        container = line;
-        continue;
-      }
-      const m = line.match(/^([A-Za-z_$][\w$.]*?)\.([A-Za-z_$][\w$]*|\[[^\]]*\])(.*)$/);
-      entries.set(`mem:${line}`, { line, kind: 'mem', container, symbol: m ? m[2] : line, sig: m ? m[3] : '' });
+// Parses the snapshot: one line per declaration or member, each tagged with
+// the subpath exports that expose it.
+function readSnapshot(file) {
+  const entries = new Map();
+  if (!existsSync(file)) return entries;
+  let container = null;
+  for (const raw of readFileSync(file, 'utf8').split('\n')) {
+    if (!raw.trim() || raw.startsWith('##')) continue;
+    const indented = raw.startsWith('  ');
+    const tagAt = raw.lastIndexOf('   [');
+    const body = (tagAt === -1 ? raw : raw.slice(0, tagAt)).trim();
+    const subs = tagAt === -1 ? [] : raw.slice(tagAt + 4).replace(/]\s*$/, '').split(', ');
+    if (!indented) {
+      entries.set(`decl:${body}`, { line: body, kind: 'decl', subs });
+      container = body;
+      continue;
     }
-    out.set(f.replace('.api.txt', ''), entries);
+    const m = body.match(/^([A-Za-z_$][\w$.]*?)\.([A-Za-z_$][\w$]*|\[[^\]]*\])(.*)$/);
+    entries.set(`mem:${body}`, { line: body, kind: 'mem', container, symbol: m ? m[2] : body, sig: m ? m[3] : '', subs });
   }
-  return out;
+  return entries;
 }
 
 // `class Entities extends BaseService implements EntityServiceModel` -> `Entities`
@@ -63,7 +64,8 @@ const cnames = (e) => Array.from(e.containers, shortName).sort().join(', ');
 
 function main() {
   const compareOnly = Boolean(argBefore && argAfter);
-  const tmp = compareOnly ? null : mkdtempSync(join(tmpdir(), 'api-surface-'));
+  const tmpDir = compareOnly ? null : mkdtempSync(join(tmpdir(), 'api-surface-'));
+  const tmp = tmpDir ? join(tmpDir, 'api-surface.txt') : null;
   try {
     if (!compareOnly) {
       execFileSync(process.execPath, [join(ROOT, 'scripts/gen-api-surface.mjs'), ROOT, tmp], { stdio: 'pipe' });
@@ -74,16 +76,16 @@ function main() {
     const changed = new Map(), tagged = new Map(), removedDecls = new Map(), addedDecls = new Map();
     const removedMem = new Map(), addedMem = new Map();
 
-    for (const sub of new Set([...before.keys(), ...after.keys()])) {
-      const b = before.get(sub) ?? new Map();
-      const a = after.get(sub) ?? new Map();
-      for (const [k, v] of b) {
-        if (a.has(k)) continue;
+    for (const [k, v] of before) {
+      if (after.has(k)) continue;
+      for (const sub of v.subs.length ? v.subs : ['?']) {
         if (v.kind === 'decl') bump(removedDecls, declName(v.line), sub);
         else bumpMem(removedMem, v.symbol, v.sig, sub, v.container);
       }
-      for (const [k, v] of a) {
-        if (b.has(k)) continue;
+    }
+    for (const [k, v] of after) {
+      if (before.has(k)) continue;
+      for (const sub of v.subs.length ? v.subs : ['?']) {
         if (v.kind === 'decl') bump(addedDecls, declName(v.line), sub);
         else bumpMem(addedMem, v.symbol, v.sig, sub, v.container);
       }
@@ -154,7 +156,7 @@ function main() {
         L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
       }
     }
-    if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen && git add api-surface');
+    if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen\n  git add api-surface.txt && git commit && git push');
     L.push('', 'A removal or a signature change needs a release note and the matching version',
       'bump. Parameter renames and members moved onto a base type are not breaking.');
 
@@ -168,7 +170,7 @@ function main() {
       process.exitCode = 1;
     }
   } finally {
-    if (tmp) rmSync(tmp, { recursive: true, force: true });
+    if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
   }
 }
 
