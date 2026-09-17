@@ -4,7 +4,7 @@
 // by file. A raw `git diff` of the snapshot repeats the same logical change
 // once per subpath and once per class/interface that declares it, which buries
 // the one line a reviewer actually needs to see.
-import { readFileSync, existsSync, mkdtempSync, rmSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, appendFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { resolve, join, dirname } from 'node:path';
@@ -13,10 +13,16 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const COMMITTED = join(ROOT, 'scripts/api-surface.txt');
 
-// Default: committed snapshot vs freshly generated (the CI gate).
-// With two directory arguments: compare two snapshots, used by
-// api-surface-replay.sh to run the same report over a historical change.
-const [argBefore, argAfter] = process.argv.slice(2);
+// Three modes:
+//   (no args)       committed snapshot vs freshly generated -- is it stale?
+//   --base <ref>    <ref>'s surface vs this tree's -- what does this branch
+//                   change about the public API? CI classifies on this, because
+//                   it stays correct whether or not the snapshot was committed.
+//   <dirA> <dirB>   compare two generated snapshots (api-surface-replay).
+const argv = process.argv.slice(2);
+const baseIdx = argv.indexOf('--base');
+const baseRef = baseIdx === -1 ? null : argv[baseIdx + 1];
+const [argBefore, argAfter] = baseRef ? [] : argv;
 
 // Parses the snapshot: one line per declaration or member, each tagged with
 // the subpath exports that expose it.
@@ -67,11 +73,33 @@ function main() {
   const tmpDir = compareOnly ? null : mkdtempSync(join(tmpdir(), 'api-surface-'));
   const tmp = tmpDir ? join(tmpDir, 'api-surface.txt') : null;
   try {
+    let beforeFile = COMMITTED;
     if (!compareOnly) {
       execFileSync(process.execPath, [join(ROOT, 'scripts/gen-api-surface.mjs'), ROOT, tmp], { stdio: 'pipe' });
+      if (baseRef) {
+        // Materialise the base ref's sources and generate its surface, so the
+        // comparison is branch-vs-base and does not depend on whether anyone
+        // committed the snapshot.
+        const src = join(tmpDir, 'base');
+        mkdirSync(src, { recursive: true });
+        execFileSync('bash', ['-c',
+          `git -C '${ROOT}' archive ${baseRef} src rollup.config.js package.json tsconfig.json | tar -x -C '${src}'`
+        ], { stdio: 'pipe' });
+        beforeFile = join(tmpDir, 'base-api-surface.txt');
+        execFileSync(process.execPath, [join(ROOT, 'scripts/gen-api-surface.mjs'), src, beforeFile], { stdio: 'pipe' });
+      }
     }
-    const before = readSnapshot(compareOnly ? resolve(argBefore) : COMMITTED);
+    const before = readSnapshot(compareOnly ? resolve(argBefore) : beforeFile);
     const after = readSnapshot(compareOnly ? resolve(argAfter) : tmp);
+
+    // An empty side means a snapshot could not be produced -- e.g. the base ref
+    // was not fetched. Reporting "no changes" then is the silent no-op this gate
+    // exists to prevent, so fail loudly instead.
+    if (before.size === 0 || after.size === 0) {
+      console.log(`::error::api-surface: one side of the comparison is empty (before=${before.size}, after=${after.size}). Refusing to report "no changes".`);
+      process.exitCode = 3;
+      return;
+    }
 
     const changed = new Map(), tagged = new Map(), removedDecls = new Map(), addedDecls = new Map();
     const removedMem = new Map(), addedMem = new Map();
@@ -104,7 +132,11 @@ function main() {
     }
 
     if (!changed.size && !tagged.size && !removedDecls.size && !addedDecls.size && !removedMem.size && !addedMem.size) {
-      console.log(compareOnly ? 'No public API surface difference.' : 'API surface matches the committed snapshot.');
+      console.log(
+        compareOnly ? 'No public API surface difference.'
+          : baseRef ? `No public API changes versus ${baseRef}.`
+          : 'API surface matches the committed snapshot.'
+      );
       return;
     }
 
@@ -112,7 +144,12 @@ function main() {
     const L = [];
     const REQUIRED = /^\.?[\w$]*[^?]:/;
 
-    L.push(compareOnly ? 'Public API surface difference:' : 'API surface changed, but api-surface/ was not updated.', '');
+    L.push(
+      compareOnly ? 'Public API surface difference:'
+        : baseRef ? `Public API changes versus ${baseRef}:`
+        : 'The committed API surface snapshot is stale.',
+      ''
+    );
     L.push(`  changed: ${changed.size}   removed: ${removedDecls.size + removedMem.size}   added: ${addedDecls.size + addedMem.size}   stability-tag only: ${tagged.size}`);
 
     if (changed.size) {
