@@ -11,7 +11,7 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const COMMITTED = join(ROOT, 'api-surface.txt');
+const COMMITTED = join(ROOT, 'scripts/api-surface.txt');
 
 // Default: committed snapshot vs freshly generated (the CI gate).
 // With two directory arguments: compare two snapshots, used by
@@ -156,7 +156,7 @@ function main() {
         L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
       }
     }
-    if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen\n  git add api-surface.txt && git commit && git push');
+    if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen\n  git add scripts/api-surface.txt && git commit && git push');
     L.push('', 'A removal or a signature change needs a release note and the matching version',
       'bump. Parameter renames and members moved onto a base type are not breaking.');
 

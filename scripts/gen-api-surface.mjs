@@ -14,7 +14,7 @@ import { dirname, resolve, relative } from 'node:path';
 import ts from 'typescript';
 
 const ROOT = process.argv[2] ? resolve(process.argv[2]) : process.cwd();
-const OUT = process.argv[3] ? resolve(process.argv[3]) : resolve(ROOT, 'api-surface.txt');
+const OUT = process.argv[3] ? resolve(process.argv[3]) : resolve(ROOT, 'scripts/api-surface.txt');
 
 const fail = (msg) => { throw new Error(`api-surface: ${msg}`); };
 
