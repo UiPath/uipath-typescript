@@ -1,8 +1,9 @@
 name: API Surface
 
 on:
+  # No branch filter: the gate should run on every pull request, including into
+  # release branches, not just those targeting main.
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
