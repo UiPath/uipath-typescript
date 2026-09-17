@@ -19,18 +19,12 @@ import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
  */
 export interface FolderServiceModel {
   /**
-   * Gets a single folder by its key (GUID).
-   *
-   * Calls `odata/Folders/UiPath.Server.Configuration.OData.GetByKey`. Unlike
-   * most Orchestrator reads this lookup is not folder-scoped: no folder
-   * headers are sent.
+   * Gets a single folder by its key (GUID). Unlike most Orchestrator reads,
+   * this lookup is not folder-scoped: no folder headers are sent.
    *
    * @param key - Folder key (GUID).
-   * @param options - Optional OData query options (`$select` / `$expand`).
-   * @returns Promise resolving to the matching folder.
-   * {@link FolderGetResponse}
-   * @throws ValidationError when `key` is missing or not a GUID.
-   * @throws NotFoundError when no folder matches `key`.
+   * @param options - Optional query options (`select` / `expand`).
+   * @returns Promise resolving to the matching {@link FolderGetResponse}. Rejects with `ValidationError` when `key` is missing or not a GUID, and with `NotFoundError` when no folder matches the key.
    * @example
    * ```typescript
    * // Resolve the fully qualified path for a known folder key
