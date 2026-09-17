@@ -33,7 +33,7 @@ import {
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
-  EntityGetByNameOptions,
+  EntityLookupByNameOptions,
   EntityRef,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -969,7 +969,7 @@ export interface EntityServiceModel {
    * const records = await entity.getAllRecords();
    * ```
    */
-  getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse>;
+  getByName(entityName: string, options?: EntityLookupByNameOptions): Promise<EntityGetResponse>;
 
   /**
    * Creates a new Data Fabric entity with the given schema
