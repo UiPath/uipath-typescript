@@ -76,5 +76,8 @@ docs/conversations/
 docs/coded-action-app-sdk/*
 !docs/coded-action-app-sdk/getting-started.md
 
+# Fetched from UiPath/coded-functions-js by the docs workflows. Regenerate; never commit.
+docs/js-functions/
+
 # Python bytecode cache (created by the mkdocs-llmstxt preprocess hook)
 __pycache__/
