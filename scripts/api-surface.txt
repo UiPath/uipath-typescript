@@ -2652,6 +2652,7 @@ interface EntityGetAllOptions extends EntityFolderScopedOptions   [entities, roo
 type EntityGetAllRecordsOptions = EntityGetRecordsByIdOptions   [entities, root]
 interface EntityGetByIdOptions extends EntityFolderScopedOptions   [entities, root]
 interface EntityGetByNameOptions extends EntityGetByIdOptions   [entities, root]
+  EntityGetByNameOptions.includeArchived?:boolean   [entities, root]
 interface EntityGetRecordByIdOptions extends EntityFolderScopedOptions   [entities, root]
   EntityGetRecordByIdOptions.expansionLevel?:number   [entities, root]
 interface EntityGetRecordByNameOptions extends EntityGetRecordByIdOptions   [entities, root]
