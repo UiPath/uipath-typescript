@@ -62,6 +62,17 @@ export interface DuValidationServiceModel {
    * @param operationId - Operation id returned by {@link startExtractionValidation}.
    * @param options - Optional framework API version override.
    * @returns Promise resolving to the {@link GetExtractionValidationTaskResponse} operation snapshot.
+   *
+   * @example
+   * ```typescript
+   * const result = await validation.getExtractionValidationResult(
+   *   '<projectId>',
+   *   '<tag>',
+   *   '<documentTypeId>',
+   *   operationId,
+   * );
+   * // Poll until result.Status is no longer 'NotStarted' or 'Running'
+   * ```
    */
   getExtractionValidationResult(
     projectId: string,

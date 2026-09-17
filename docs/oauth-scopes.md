@@ -345,3 +345,12 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+
+## Document Understanding Validation
+
+Creating a validation action and polling its result both go through the Document Understanding framework API (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `startExtractionValidation()` | `Du.Validation.Api` |
+| `getExtractionValidationResult()` | `Du.Validation.Api` |

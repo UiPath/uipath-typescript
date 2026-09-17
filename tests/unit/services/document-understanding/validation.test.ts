@@ -10,6 +10,7 @@ import type {
 } from '@/models/document-understanding/framework/validation.types';
 import { ActionStatus } from '@/models/document-understanding/framework/validation.types';
 import { JobStatus } from '@/models/document-understanding/framework/model.types';
+import { ValidationError } from '@/core/errors';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 
@@ -42,13 +43,13 @@ const RESULT_RESPONSE: GetExtractionValidationTaskResponse = {
 // ===== TEST SUITE =====
 describe('DuValidationService Unit Tests', () => {
   let service: DuValidationService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
     service = new DuValidationService(instance);
   });
@@ -94,8 +95,8 @@ describe('DuValidationService Unit Tests', () => {
     });
 
     it('should reject a missing projectId', async () => {
-      await expect(service.startExtractionValidation('', TAG, DOCUMENT_TYPE_ID, START_REQUEST)).rejects.toThrow(
-        'projectId is required',
+      await expect(service.startExtractionValidation('', TAG, DOCUMENT_TYPE_ID, START_REQUEST)).rejects.toBeInstanceOf(
+        ValidationError,
       );
     });
 
@@ -131,8 +132,8 @@ describe('DuValidationService Unit Tests', () => {
     });
 
     it('should reject a missing operationId', async () => {
-      await expect(service.getExtractionValidationResult(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, '')).rejects.toThrow(
-        'operationId is required',
+      await expect(service.getExtractionValidationResult(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, '')).rejects.toBeInstanceOf(
+        ValidationError,
       );
     });
 
