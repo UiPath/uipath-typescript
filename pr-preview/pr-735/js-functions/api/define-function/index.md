@@ -215,7 +215,9 @@ export default defineFunction({
   input: defineSchema<ProcessInvoiceInput>(),
   output: defineSchema<ProcessInvoiceOutput>(),
   handler: async (input, ctx) => {
-    // Called as a job — ctx.params/ctx.headers are empty and ctx.user is null; ctx.robot?.accessToken is available when provided by the platform.
+    // Called as a job — ctx.params/ctx.headers are empty and there is no caller identity
+    // (ctx.user?.accessToken is undefined); use ctx.robot?.accessToken, which the platform
+    // provides for a deployed job.
     return { status: "processed" };
   },
 });

@@ -94,15 +94,7 @@ curl -X POST http://localhost:7070/hello \
 # {"message":"Hello, Alice!"}
 ```
 
-For local access to Orchestrator, your function handlers read credentials from environment variables (`UIPATH_ACCESS_TOKEN`, `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID`). Set them in your shell before starting the server.
-
-**Option A — Deno runtime (recommended for local dev with credentials):**
-
-```
-uip functions serve --runtime deno
-```
-
-Deno reads `.env` natively. Create a `.env` file:
+For local access to Orchestrator, your function handlers read credentials from environment variables (`UIPATH_ACCESS_TOKEN`, `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID`). Put them in a `.env` file at the project root:
 
 ```
 UIPATH_ACCESS_TOKEN=<OAuth token>
@@ -111,25 +103,11 @@ UIPATH_ORG_ID=<org-UUID>
 UIPATH_TENANT_ID=<tenant-UUID>
 ```
 
-**Option B — Node runtime, load env vars in shell first:**
+`serve` loads that file on both runtimes — it passes `--env-file` to Node (through tsx) and to Deno — so no shell preloading is needed. Exporting the variables in your shell instead works just as well.
 
-```
-Get-Content .env | ForEach-Object {
-  if ($_ -match '^\s*([^#][^=]*)=(.*)$') {
-    [System.Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim(), 'Process')
-  }
-}
-uip functions serve
-```
+Note
 
-```
-set -a && source .env && set +a
-uip functions serve
-```
-
-Known limitation
-
-`uip functions serve` (Node runtime) cannot auto-load `.env` via `--env-file` in some environments. If you see `node: --env-file= is not allowed in NODE_OPTIONS`, use Option A (Deno) or Option B (manual shell loading).
+`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [FunctionContext — platform](../api/function-context/#platform).
 
 ## 3. Pack
 

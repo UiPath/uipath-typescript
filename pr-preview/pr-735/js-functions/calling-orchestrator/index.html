@@ -2634,6 +2634,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#credential-assets-need-the-robot-execution-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credential assets need the robot-execution endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2702,10 +2713,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#allowdirectapiaccess-flag" class="md-nav__link">
+  <a href="#allowdirectapiaccess" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AllowDirectApiAccess flag
+        AllowDirectApiAccess
       
     </span>
   </a>
@@ -2728,17 +2739,6 @@
     <span class="md-ellipsis">
       
         Security boundary
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#odata-filter-single-quote-string-and-guid-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OData filter: single-quote string and GUID values
       
     </span>
   </a>
@@ -3780,6 +3780,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#credential-assets-need-the-robot-execution-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credential assets need the robot-execution endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3848,10 +3859,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#allowdirectapiaccess-flag" class="md-nav__link">
+  <a href="#allowdirectapiaccess" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AllowDirectApiAccess flag
+        AllowDirectApiAccess
       
     </span>
   </a>
@@ -3874,17 +3885,6 @@
     <span class="md-ellipsis">
       
         Security boundary
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#odata-filter-single-quote-string-and-guid-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        OData filter: single-quote string and GUID values
       
     </span>
   </a>
@@ -3942,13 +3942,14 @@
 <p>Two patterns for reading Orchestrator assets from a JS Function. Choose based on whether the asset is sensitive.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Is the asset sensitive (credentials, API keys, shared secrets)?
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├─ Yes → Pattern 1: Secret Vault
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│         Function reads with its own platform token.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├─ Yes → Pattern 1: Secret Vault  ← the recommended default
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│         Function reads with its own robot token.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│         Calling user has zero folder access required.
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└─ No  → Pattern 2: Delegated access
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>          Function reads on behalf of the calling user.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>          User must have Assets.View on the folder.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│         The only workable route for a Credential asset.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>└─ No  → Pattern 2: Delegated access
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>          Function reads on behalf of the calling user.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>          User must have Assets.View on the folder.
 </code></pre></div>
 <hr />
 <h2 id="pattern-1-secret-vault">Pattern 1 — Secret Vault<a class="headerlink" href="#pattern-1-secret-vault" title="Permanent link">&para;</a></h2>
@@ -4026,133 +4027,177 @@
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="local-dev">Local dev<a class="headerlink" href="#local-dev" title="Permanent link">&para;</a></h3>
-<p><code>ctx.robot</code> and <code>ctx.platform</code> are <code>null</code> locally. Set these variables before starting the server — the runtime builds <code>ctx.platform</code> from the <code>UIPATH_BASE_URL</code>/<code>UIPATH_ORG_ID</code>/<code>UIPATH_TENANT_ID</code> fallback, and your code reads <code>UIPATH_ACCESS_TOKEN</code> for the token. Deno runtime reads <code>.env</code> natively; for Node, load env vars in your shell — see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>.</p>
+<p><code>ctx.robot</code> and <code>ctx.platform</code> are <code>null</code> locally. Set these variables before starting the server — the runtime builds <code>ctx.platform</code> from the <code>UIPATH_BASE_URL</code>/<code>UIPATH_ORG_ID</code>/<code>UIPATH_TENANT_ID</code> fallback, and your code reads <code>UIPATH_ACCESS_TOKEN</code> for the token. A <code>.env</code> file at the project root is loaded by <code>serve</code> on both runtimes — see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>UIPATH_ACCESS_TOKEN=&lt;valid OAuth token with Assets.View on the folder&gt;
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>UIPATH_BASE_URL=https://cloud.uipath.com
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>UIPATH_ORG_ID=&lt;org-UUID&gt;
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>UIPATH_TENANT_ID=&lt;tenant-UUID&gt;
 </code></pre></div>
+<h3 id="credential-assets-need-the-robot-execution-endpoint">Credential assets need the robot-execution endpoint<a class="headerlink" href="#credential-assets-need-the-robot-execution-endpoint" title="Permanent link">&para;</a></h3>
+<p>The SDK cannot return a Credential's <code>username</code> / <code>password</code> — OData returns those fields
+empty to every token. Reading one means calling Orchestrator's robot-execution endpoint
+yourself, the route a robot uses to resolve its own assets while executing:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Org/tenant-scoped — not ctx.platform.baseUrl, which is the bare authority the UiPath SDK</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1">// constructor takes.</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">baseUrl</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">orgId</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">tenantId</span><span class="si">}</span><span class="sb">/orchestrator_`</span><span class="p">;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="sb">`</span><span class="si">${</span><span class="nx">base</span><span class="si">}</span><span class="sb">/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByNameForRobotKey`</span><span class="p">,</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">      </span><span class="nx">Authorization</span><span class="o">:</span><span class="w"> </span><span class="sb">`Bearer </span><span class="si">${</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">robot</span><span class="p">.</span><span class="nx">accessToken</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">      </span><span class="s2">&quot;Content-Type&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">      </span><span class="s2">&quot;X-UIPATH-OrganizationUnitId&quot;</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="nx">folderId</span><span class="p">),</span><span class="w">  </span><span class="c1">// numeric Id, not the folder Key</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">({</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">      </span><span class="nx">robotKey</span><span class="o">:</span><span class="w"> </span><span class="kt">ctx.robot.key</span><span class="p">,</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">      </span><span class="nx">assetName</span><span class="p">,</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">      </span><span class="nx">supportsCredentialsProxyDisconnected</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span><span class="p">}),</span>
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="p">);</span>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="c1">// -&gt; { CredentialUsername, CredentialPassword, ... }</span>
+</code></pre></div>
+<p><code>ctx.robot</code> is <code>null</code> under local <code>serve</code>, so this is a deployed-only path; it works the same
+for HTTP triggers and jobs.</p>
+<div class="admonition note">
+<p class="admonition-title">The endpoint itself is Orchestrator's</p>
+<p>Its request shape, how to resolve the numeric folder Id from <code>ctx.platform.folderKey</code>, and
+what its error codes mean are Orchestrator API behavior — not this SDK's, and not covered by
+this repo's tests. Check Orchestrator's asset API documentation before debugging a response
+from it.</p>
+</div>
+<p><strong>Allowlist what it can read.</strong> The robot is more privileged than the caller, so a handler
+that fetches whatever <code>assetName</code> arrives in the request is a confused deputy — it will hand
+over any credential the robot can see. Check a fixed set before the call, and return a
+derived result (a username, a length, a verdict) rather than the secret itself.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">ROBOT_READABLE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Set</span><span class="p">([</span><span class="s2">&quot;PartnerApiCredential&quot;</span><span class="p">]);</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ROBOT_READABLE</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">inp</span><span class="p">.</span><span class="nx">assetName</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span><span class="sb">`&quot;</span><span class="si">${</span><span class="nx">inp</span><span class="p">.</span><span class="nx">assetName</span><span class="si">}</span><span class="sb">&quot; is not readable by this function.`</span><span class="p">,</span><span class="w"> </span><span class="mf">403</span><span class="p">);</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
+</code></pre></div>
 <hr />
 <h2 id="pattern-2-delegated-access">Pattern 2 — Delegated access<a class="headerlink" href="#pattern-2-delegated-access" title="Permanent link">&para;</a></h2>
 <p>The function uses <code>ctx.user.accessToken</code> — the same OAuth token the caller sent in the <code>Authorization</code> header. The caller's Orchestrator permissions apply.</p>
 <h3 id="orchestrator-setup_1">Orchestrator setup<a class="headerlink" href="#orchestrator-setup_1" title="Permanent link">&para;</a></h3>
-<p>The calling user must have <strong>Assets.View</strong> on the folder containing the asset.</p>
+<p>The calling user needs <strong>Assets.View</strong> on the folder containing the asset — that is the whole
+requirement. <code>AllowDirectApiAccess</code> does not come into it: the SDK reads through OData
+<code>GetFiltered</code>, which the flag does not gate, and which never returns a Credential's value
+however the flag is set. That is also why this pattern is for non-sensitive assets only —
+a limit of the route, not a setting you could switch on to lift it.</p>
 <h3 id="function-code_1">Function code<a class="headerlink" href="#function-code_1" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">,</span><span class="w"> </span><span class="nx">defineSchema</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/coded-functions-js-sdk&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Assets</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/assets&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">AssetGetResponse</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/assets&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">GetAssetInput</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nx">assetName</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">}</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">({</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;get-asset-delegated&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;/get-asset-delegated&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">  </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">defineSchema</span><span class="o">&lt;</span><span class="nx">GetAssetInput</span><span class="o">&gt;</span><span class="p">(),</span>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">  </span><span class="nx">handler</span><span class="o">:</span><span class="w"> </span><span class="kt">async</span><span class="w"> </span><span class="p">(</span><span class="nx">inp</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">accessToken</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">        </span><span class="s2">&quot;User access token not available — invoke from a logged-in coded app&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">        </span><span class="mf">403</span><span class="p">,</span>
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">      </span><span class="p">);</span>
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">        </span><span class="s2">&quot;Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">        </span><span class="mf">500</span><span class="p">,</span>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">      </span><span class="p">);</span>
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">;</span>
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="kt">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="kt">tenantId</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">ctx.user.accessToken</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span><span class="w"> </span><span class="c1">// no-op in secret mode</span>
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">inp</span><span class="p">.</span><span class="nx">assetName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&#39;/g</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">);</span>
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Assets</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">getAll</span><span class="p">({</span>
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="w">      </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="sb">`Name eq &#39;</span><span class="si">${</span><span class="nx">escaped</span><span class="si">}</span><span class="sb">&#39;`</span><span class="p">,</span>
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="w">      </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">inp.folderId</span><span class="p">,</span>
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">    </span><span class="p">})</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="o">:</span><span class="w"> </span><span class="kt">AssetGetResponse</span><span class="p">[]</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="kt">response.items</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">,</span><span class="w"> </span><span class="nx">defineSchema</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/coded-functions-js-sdk&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Assets</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/assets&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">import</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">AssetGetResponse</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/assets&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">GetAssetInput</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nx">assetName</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="p">}</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">({</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;get-asset-delegated&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">  </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;/get-asset-delegated&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">defineSchema</span><span class="o">&lt;</span><span class="nx">GetAssetInput</span><span class="o">&gt;</span><span class="p">(),</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="nx">handler</span><span class="o">:</span><span class="w"> </span><span class="kt">async</span><span class="w"> </span><span class="p">(</span><span class="nx">inp</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">accessToken</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="s2">&quot;User access token not available — invoke from a logged-in coded app&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">        </span><span class="mf">403</span><span class="p">,</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">      </span><span class="p">);</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="w">        </span><span class="s2">&quot;Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">        </span><span class="mf">500</span><span class="p">,</span>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="w">      </span><span class="p">);</span>
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">;</span>
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="kt">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="kt">tenantId</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">ctx.user.accessToken</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span><span class="w"> </span><span class="c1">// no-op in secret mode</span>
+<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>
+<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">inp</span><span class="p">.</span><span class="nx">assetName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&#39;/g</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">);</span>
+<a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Assets</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">getAll</span><span class="p">({</span>
+<a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a><span class="w">      </span><span class="nx">filter</span><span class="o">:</span><span class="w"> </span><span class="sb">`Name eq &#39;</span><span class="si">${</span><span class="nx">escaped</span><span class="si">}</span><span class="sb">&#39;`</span><span class="p">,</span>
+<a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a><span class="w">      </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">inp.folderId</span><span class="p">,</span>
+<a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a><span class="w">    </span><span class="p">})</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="o">:</span><span class="w"> </span><span class="kt">AssetGetResponse</span><span class="p">[]</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a>
+<a id="__codelineno-6-41" name="__codelineno-6-41" href="#__codelineno-6-41"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">value</span><span class="o">:</span><span class="w"> </span><span class="kt">response.items</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">value</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-6-42" name="__codelineno-6-42" href="#__codelineno-6-42"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-6-43" name="__codelineno-6-43" href="#__codelineno-6-43"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h2 id="rules-that-apply-to-both-patterns">Rules that apply to both patterns<a class="headerlink" href="#rules-that-apply-to-both-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="folderid-is-required">folderId is required<a class="headerlink" href="#folderid-is-required" title="Permanent link">&para;</a></h3>
 <p><code>Assets.getAll()</code> without <code>folderId</code> calls <code>GetAssetsAcrossFolders</code> (metadata only) and silently returns <code>null</code> for all value fields. Always pass <code>folderId</code> to switch to <code>GetFiltered</code>, which returns actual values.</p>
-<h3 id="allowdirectapiaccess-flag">AllowDirectApiAccess flag<a class="headerlink" href="#allowdirectapiaccess-flag" title="Permanent link">&para;</a></h3>
-<p>This flag is <strong>irrelevant</strong> for OData endpoints. It is only enforced on <code>/api/Assets/name/{name}/value</code>, which the SDK never calls. Do not add it to your Orchestrator setup.</p>
+<h3 id="allowdirectapiaccess">AllowDirectApiAccess<a class="headerlink" href="#allowdirectapiaccess" title="Permanent link">&para;</a></h3>
+<p>An Orchestrator per-asset switch over a single route, <code>GET /api/Assets/name/{name}/value</code>.
+<strong>Neither pattern on this page uses that route</strong> — Pattern 1 goes through the
+robot-execution endpoint, Pattern 2 through OData — so neither needs the flag. Leave it off;
+for a Credential asset, off is what keeps the value readable by robots only.</p>
 <h3 id="external-app-minimum-configuration">External App minimum configuration<a class="headerlink" href="#external-app-minimum-configuration" title="Permanent link">&para;</a></h3>
 <p>When calling a function from a PKCE External App, the scope string must include <code>OR.Default</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openid profile email offline_access OR.Default
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openid profile email offline_access OR.Default
 </code></pre></div>
 <p><code>OR.Default</code> is auto-granted to any registered External App but must be explicit in the PKCE scope string. If omitted, the HTTP trigger returns 403.</p>
 <h3 id="security-boundary">Security boundary<a class="headerlink" href="#security-boundary" title="Permanent link">&para;</a></h3>
-<p>Folder RBAC is the only effective security boundary. <code>OR.Default</code> (required for function invocation) already grants broad Orchestrator API access. Reducing External App scopes does not prevent users from reading assets if they have folder access.</p>
-<h3 id="odata-filter-single-quote-string-and-guid-values">OData filter: single-quote string and GUID values<a class="headerlink" href="#odata-filter-single-quote-string-and-guid-values" title="Permanent link">&para;</a></h3>
-<p>All string and GUID comparisons in OData <code>$filter</code> must use single quotes. Missing quotes cause <code>400 Bad Request</code> which the SDK or raw fetch may silently return as an empty list.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// ❌ 400 Bad Request — GUID treated as unquoted token</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`CreatorUserKey eq </span><span class="si">${</span><span class="nx">userId</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// ✅ correct</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">value</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&#39;/g</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">);</span><span class="w">   </span><span class="c1">// escape embedded single quotes</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">filter</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="sb">`Name eq &#39;</span><span class="si">${</span><span class="nx">escaped</span><span class="si">}</span><span class="sb">&#39;`</span><span class="p">;</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">filter2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`CreatorUserKey eq &#39;</span><span class="si">${</span><span class="nx">userId</span><span class="si">}</span><span class="sb">&#39;`</span><span class="p">;</span>
-</code></pre></div>
+<p>For <strong>Pattern 2</strong>, folder RBAC is the only effective security boundary. <code>OR.Default</code> (required for function invocation) already grants broad Orchestrator API access, so reducing External App scopes does not prevent users from reading assets they have folder access to.</p>
+<p><strong>Pattern 1 removes that boundary by design</strong>: the read happens under the robot's identity, so the caller's folder permissions do not apply and nothing outside your handler limits what gets read. The function's own code is the boundary — allowlist what it will fetch, and do not let the caller name the asset.</p>
 <h3 id="starting-a-job-from-a-function">Starting a job from a function<a class="headerlink" href="#starting-a-job-from-a-function" title="Permanent link">&para;</a></h3>
 <p>Use <code>Processes.start()</code> from <code>@uipath/uipath-typescript/processes</code>. The function delegates job creation to Orchestrator using the caller's token (<code>ctx.user.accessToken</code>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">,</span><span class="w"> </span><span class="nx">defineSchema</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/coded-functions-js-sdk&quot;</span><span class="p">;</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Processes</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/processes&quot;</span><span class="p">;</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">StartJobInput</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="cm">/** ReleaseKey UUID from /odata/Releases. */</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nx">releaseKey</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="cm">/** Arbitrary job input arguments — `unknown` values accept any JSON. */</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">({</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;start-job&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;/start-job&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">  </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">defineSchema</span><span class="o">&lt;</span><span class="nx">StartJobInput</span><span class="o">&gt;</span><span class="p">(),</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">  </span><span class="nx">handler</span><span class="o">:</span><span class="w"> </span><span class="kt">async</span><span class="w"> </span><span class="p">(</span><span class="nx">inp</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">accessToken</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span><span class="s2">&quot;User access token not available&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">403</span><span class="p">);</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
-<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="w">        </span><span class="s2">&quot;Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="w">        </span><span class="mf">500</span><span class="p">,</span>
-<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="w">      </span><span class="p">);</span>
-<a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">;</span>
-<a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a>
-<a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="kt">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="kt">tenantId</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">ctx.user.accessToken</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span><span class="w"> </span><span class="c1">// no-op in secret mode</span>
-<a id="__codelineno-7-33" name="__codelineno-7-33" href="#__codelineno-7-33"></a>
-<a id="__codelineno-7-34" name="__codelineno-7-34" href="#__codelineno-7-34"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Processes</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">start</span><span class="p">(</span>
-<a id="__codelineno-7-35" name="__codelineno-7-35" href="#__codelineno-7-35"></a><span class="w">      </span><span class="p">{</span>
-<a id="__codelineno-7-36" name="__codelineno-7-36" href="#__codelineno-7-36"></a><span class="w">        </span><span class="nx">processKey</span><span class="o">:</span><span class="w">     </span><span class="kt">inp.releaseKey</span><span class="p">,</span>
-<a id="__codelineno-7-37" name="__codelineno-7-37" href="#__codelineno-7-37"></a><span class="w">        </span><span class="nx">inputArguments</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">(</span><span class="nx">inp</span><span class="p">.</span><span class="nx">args</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">{}),</span>
-<a id="__codelineno-7-38" name="__codelineno-7-38" href="#__codelineno-7-38"></a><span class="w">        </span><span class="nx">strategy</span><span class="o">:</span><span class="w">       </span><span class="s2">&quot;ModernJobsCount&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-39" name="__codelineno-7-39" href="#__codelineno-7-39"></a><span class="w">        </span><span class="nx">jobsCount</span><span class="o">:</span><span class="w">       </span><span class="kt">1</span><span class="p">,</span>
-<a id="__codelineno-7-40" name="__codelineno-7-40" href="#__codelineno-7-40"></a><span class="w">      </span><span class="p">},</span>
-<a id="__codelineno-7-41" name="__codelineno-7-41" href="#__codelineno-7-41"></a><span class="w">      </span><span class="nx">inp</span><span class="p">.</span><span class="nx">folderId</span><span class="p">,</span><span class="w">   </span><span class="c1">// numeric folder ID — sets X-UIPATH-OrganizationUnitId automatically</span>
-<a id="__codelineno-7-42" name="__codelineno-7-42" href="#__codelineno-7-42"></a><span class="w">    </span><span class="p">);</span>
-<a id="__codelineno-7-43" name="__codelineno-7-43" href="#__codelineno-7-43"></a>
-<a id="__codelineno-7-44" name="__codelineno-7-44" href="#__codelineno-7-44"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">jobId</span><span class="o">:</span><span class="w"> </span><span class="kt">results?.</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-7-45" name="__codelineno-7-45" href="#__codelineno-7-45"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-7-46" name="__codelineno-7-46" href="#__codelineno-7-46"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">,</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">,</span><span class="w"> </span><span class="nx">defineSchema</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/coded-functions-js-sdk&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Processes</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/processes&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">StartJobInput</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="cm">/** ReleaseKey UUID from /odata/Releases. */</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="nx">releaseKey</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="cm">/** Arbitrary job input arguments — `unknown` values accept any JSON. */</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="nx">args?</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">}</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nx">defineFunction</span><span class="p">({</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;start-job&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">  </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;/start-job&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">  </span><span class="nx">input</span><span class="o">:</span><span class="w"> </span><span class="kt">defineSchema</span><span class="o">&lt;</span><span class="nx">StartJobInput</span><span class="o">&gt;</span><span class="p">(),</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">  </span><span class="nx">handler</span><span class="o">:</span><span class="w"> </span><span class="kt">async</span><span class="w"> </span><span class="p">(</span><span class="nx">inp</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">accessToken</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span><span class="s2">&quot;User access token not available&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">403</span><span class="p">);</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">      </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FunctionError</span><span class="p">(</span>
+<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">        </span><span class="s2">&quot;Platform context unavailable — local dev: set UIPATH_BASE_URL/UIPATH_ORG_ID/UIPATH_TENANT_ID&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">        </span><span class="mf">500</span><span class="p">,</span>
+<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">      </span><span class="p">);</span>
+<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantId</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">platform</span><span class="p">;</span>
+<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
+<a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="kt">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="kt">tenantId</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">ctx.user.accessToken</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span><span class="w"> </span><span class="c1">// no-op in secret mode</span>
+<a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>
+<a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Processes</span><span class="p">(</span><span class="nx">sdk</span><span class="p">).</span><span class="nx">start</span><span class="p">(</span>
+<a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="w">      </span><span class="p">{</span>
+<a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="w">        </span><span class="nx">processKey</span><span class="o">:</span><span class="w">     </span><span class="kt">inp.releaseKey</span><span class="p">,</span>
+<a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="w">        </span><span class="nx">inputArguments</span><span class="o">:</span><span class="w"> </span><span class="kt">JSON.stringify</span><span class="p">(</span><span class="nx">inp</span><span class="p">.</span><span class="nx">args</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="p">{}),</span>
+<a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a><span class="w">        </span><span class="nx">strategy</span><span class="o">:</span><span class="w">       </span><span class="s2">&quot;ModernJobsCount&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a><span class="w">        </span><span class="nx">jobsCount</span><span class="o">:</span><span class="w">       </span><span class="kt">1</span><span class="p">,</span>
+<a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="w">      </span><span class="p">},</span>
+<a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a><span class="w">      </span><span class="nx">inp</span><span class="p">.</span><span class="nx">folderId</span><span class="p">,</span><span class="w">   </span><span class="c1">// numeric folder ID — sets X-UIPATH-OrganizationUnitId automatically</span>
+<a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a><span class="w">    </span><span class="p">);</span>
+<a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a>
+<a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">jobId</span><span class="o">:</span><span class="w"> </span><span class="kt">results?.</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">?</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">};</span>
+<a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="p">});</span>
 </code></pre></div>
 <p><strong>Note on folder scoping for job queries:</strong> When listing jobs with <code>GET /odata/Jobs</code>, do <strong>not</strong> set <code>X-UIPATH-OrganizationUnitId</code> if the jobs may span multiple folders (e.g. when a Maestro process runs in a different folder than your storage bucket). Without the header, Orchestrator searches globally across all accessible folders.</p>
 <h3 id="platform-context-comes-from-ctxplatform">Platform context comes from <code>ctx.platform</code><a class="headerlink" href="#platform-context-comes-from-ctxplatform" title="Permanent link">&para;</a></h3>

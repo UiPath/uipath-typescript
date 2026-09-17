@@ -141,9 +141,11 @@ If an import fails silently at cold start, all functions in the package hang for
 
 ______________________________________________________________________
 
-## No `Buffer` global
+## Node globals are available
 
-The production runtime does not polyfill Node.js globals. `Buffer` is not available. Use `Uint8Array` or `TextEncoder`/`TextDecoder` instead.
+`Buffer`, `process`, `setImmediate`, `clearImmediate` and `global` are all present, and `await import("node:buffer")` resolves.
+
+Keep `Buffer` out of declared contracts: a JSON output schema serializes it as `{"type":"Buffer","data":[104,105]}`, not bytes — cross the boundary as base64 or `number[]`.
 
 ______________________________________________________________________
 
@@ -166,7 +168,7 @@ const token =
   "";
 ```
 
-Set `UIPATH_ACCESS_TOKEN` in your shell before starting the server (see [Getting Started — local dev](../getting-started/#2-run-locally)). The `uip functions serve` Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in the shell manually.
+Set `UIPATH_ACCESS_TOKEN` in a `.env` file at the project root or in your shell before starting the server; `serve` loads `.env` on both runtimes (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
 ______________________________________________________________________
 

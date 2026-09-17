@@ -3822,7 +3822,7 @@
 </tr>
 </tbody>
 </table>
-<p>Auto-syncs the <code>functions</code> map in <code>uipath.json</code> before starting. Deno runtime reads <code>.env</code> natively; Node runtime cannot auto-load <code>.env</code> via <code>--env-file</code> in some environments — use <code>--runtime deno</code> or load env vars in your shell before running <code>serve</code> (see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>).</p>
+<p>Auto-syncs the <code>functions</code> map in <code>uipath.json</code> before starting. A <code>.env</code> file at the project root is loaded on both runtimes — <code>serve</code> passes <code>--env-file</code> to Node (through tsx) and to Deno (see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>).</p>
 <hr />
 <h2 id="run"><code>run</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
 <p>Execute a single coded function once (one-shot job) and report the result. Unlike <code>serve</code>, this runs the function directly without a long-lived HTTP server — the same code path the platform uses to execute a job.</p>

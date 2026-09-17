@@ -98,5 +98,5 @@ UiPath supports two Functions runtimes. Both **run as jobs** and are invoked the
 - [Platform Context](platform-context/) — tokens, identity, context forwarding
 - [Calling Orchestrator](calling-orchestrator/) — asset access patterns
 - [Deployment](deployment/) — pack, publish, trigger URL, Orchestrator sync
-- [Production Rules](production-rules/) — import paths, dependencies, no-Buffer, etc.
+- [Production Rules](production-rules/) — import paths, dependencies, runtime globals, etc.
 - [CLI Reference](cli-reference/) — all commands and options

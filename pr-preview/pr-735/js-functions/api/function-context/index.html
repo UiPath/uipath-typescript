@@ -3844,7 +3844,8 @@
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="user">user<a class="headerlink" href="#user" title="Permanent link">&para;</a></h2>
-<p>The identity of the caller. <code>null</code> if the platform cannot identify the caller (unauthenticated request) — and always <code>null</code> for job invocations, which have no caller.</p>
+<p>The identity of the caller. <code>null</code> if the platform cannot identify the caller (unauthenticated request).</p>
+<p>A job invocation has no caller, so <code>ctx.user?.sub</code> and <code>ctx.user?.accessToken</code> are both <code>undefined</code> there. Guard on <code>ctx.user?.accessToken</code> rather than on <code>ctx.user</code> itself, and use <a href="#accesstoken_1"><code>ctx.robot.accessToken</code></a> for a job's outbound calls.</p>
 <h3 id="identitycontext">IdentityContext<a class="headerlink" href="#identitycontext" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">IdentityContext</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">sub</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                     </span><span class="c1">// caller&#39;s user ID</span>
@@ -3899,7 +3900,7 @@
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h4 id="key"><code>key</code><a class="headerlink" href="#key" title="Permanent link">&para;</a></h4>
-<p>The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably Secret asset retrieval via <code>GetRobotAssetByNameForRobotKey</code>, the only endpoint that releases Secret asset values.</p>
+<p>The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably <code>GetRobotAssetByNameForRobotKey</code>, the only endpoint that releases a <strong>Credential</strong> asset's username and password (the OData asset endpoints return those fields empty). See <a href="../../calling-orchestrator/#credential-assets-are-not-readable-through-the-sdk">Calling Orchestrator — Credential assets are not readable through the SDK</a>.</p>
 <h2 id="platform">platform<a class="headerlink" href="#platform" title="Permanent link">&para;</a></h2>
 <p>Trusted platform coordinates for outbound UiPath calls, injected by the runtime. Use these instead of caller-forwarded input fields — input is caller-controlled and can redirect your Orchestrator calls.</p>
 <h3 id="platformcontext">PlatformContext<a class="headerlink" href="#platformcontext" title="Permanent link">&para;</a></h3>
@@ -3928,8 +3929,12 @@
 <td>Yes — from the runtime context (requires a handler that writes the platform fields; <code>null</code> on older handlers)</td>
 </tr>
 <tr>
-<td>Local <code>serve</code> / <code>run</code></td>
+<td>Local <code>serve</code></td>
 <td>Only with <code>UIPATH_BASE_URL</code>, <code>UIPATH_ORG_ID</code>, <code>UIPATH_TENANT_ID</code> set</td>
+</tr>
+<tr>
+<td>Local <code>run</code></td>
+<td>No — <code>run</code> reads the runtime-context file, never the environment</td>
 </tr>
 </tbody>
 </table>

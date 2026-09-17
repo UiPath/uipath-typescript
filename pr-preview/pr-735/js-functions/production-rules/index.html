@@ -2684,10 +2684,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-buffer-global" class="md-nav__link">
+  <a href="#node-globals-are-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Buffer global
+        Node globals are available
       
     </span>
   </a>
@@ -3751,10 +3751,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#no-buffer-global" class="md-nav__link">
+  <a href="#node-globals-are-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        No Buffer global
+        Node globals are available
       
     </span>
   </a>
@@ -3931,8 +3931,9 @@ a machine-readable code):</p>
 <p>Schema-first contracts (<code>defineSchema&lt;T&gt;()</code> / JSON Schema literals) need <strong>no</strong> runtime dependency — validation lives in the platform runtime. Only packages your handlers actually import belong in <code>dependencies</code> (including a validator like <code>zod</code>, if you still use one for contracts).</p>
 <p>If an import fails silently at cold start, all functions in the package hang for up to 15 minutes with no logs.</p>
 <hr />
-<h2 id="no-buffer-global">No <code>Buffer</code> global<a class="headerlink" href="#no-buffer-global" title="Permanent link">&para;</a></h2>
-<p>The production runtime does not polyfill Node.js globals. <code>Buffer</code> is not available. Use <code>Uint8Array</code> or <code>TextEncoder</code>/<code>TextDecoder</code> instead.</p>
+<h2 id="node-globals-are-available">Node globals are available<a class="headerlink" href="#node-globals-are-available" title="Permanent link">&para;</a></h2>
+<p><code>Buffer</code>, <code>process</code>, <code>setImmediate</code>, <code>clearImmediate</code> and <code>global</code> are all present, and <code>await import("node:buffer")</code> resolves.</p>
+<p>Keep <code>Buffer</code> out of declared contracts: a JSON output schema serializes it as <code>{"type":"Buffer","data":[104,105]}</code>, not bytes — cross the boundary as base64 or <code>number[]</code>.</p>
 <hr />
 <h2 id="declare-contracts-schema-first">Declare contracts schema-first<a class="headerlink" href="#declare-contracts-schema-first" title="Permanent link">&para;</a></h2>
 <p>Declare <code>input</code>/<code>output</code> as a <code>defineSchema&lt;T&gt;()</code> marker (TypeScript) or a JSON Schema literal (JavaScript) — see <a href="../api/define-function/#declaring-contracts">defineFunction — Declaring contracts</a>. These are statically extractable (Studio Web reads the contract without executing your code) and add no runtime dependency.</p>
@@ -3945,7 +3946,7 @@ a machine-readable code):</p>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">[</span><span class="s2">&quot;UIPATH_ACCESS_TOKEN&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">||</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="s2">&quot;&quot;</span><span class="p">;</span>
 </code></pre></div>
-<p>Set <code>UIPATH_ACCESS_TOKEN</code> in your shell before starting the server (see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>). The <code>uip functions serve</code> Node runtime cannot auto-load <code>.env</code> via <code>--env-file</code> in some environments — use <code>--runtime deno</code> or load env vars in the shell manually.</p>
+<p>Set <code>UIPATH_ACCESS_TOKEN</code> in a <code>.env</code> file at the project root or in your shell before starting the server; <code>serve</code> loads <code>.env</code> on both runtimes (see <a href="../getting-started/#2-run-locally">Getting Started — local dev</a>).</p>
 <hr />
 <h2 id="read-orchestrator-coordinates-from-ctxplatform-not-input">Read Orchestrator coordinates from <code>ctx.platform</code>, not input<a class="headerlink" href="#read-orchestrator-coordinates-from-ctxplatform-not-input" title="Permanent link">&para;</a></h2>
 <p>The runtime injects <code>baseUrl</code>, <code>orgId</code>, and <code>tenantId</code> as <code>ctx.platform</code>. Do not accept them as input fields (<code>_baseUrl</code>/<code>_orgId</code>/<code>_tenantId</code> — deprecated): input is caller-controlled and can redirect the function's outbound Orchestrator calls. Environment variables are only a local-dev fallback and are <code>undefined</code> in production. See <a href="../platform-context/#org--tenant-context-ctxplatform">Platform Context</a>.</p>

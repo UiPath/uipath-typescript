@@ -20,7 +20,9 @@ interface FunctionContext {
 
 ## user
 
-The identity of the caller. `null` if the platform cannot identify the caller (unauthenticated request) — and always `null` for job invocations, which have no caller.
+The identity of the caller. `null` if the platform cannot identify the caller (unauthenticated request).
+
+A job invocation has no caller, so `ctx.user?.sub` and `ctx.user?.accessToken` are both `undefined` there. Guard on `ctx.user?.accessToken` rather than on `ctx.user` itself, and use [`ctx.robot.accessToken`](#accesstoken_1) for a job's outbound calls.
 
 ### IdentityContext
 
@@ -78,7 +80,7 @@ const token =
 
 #### `key`
 
-The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably Secret asset retrieval via `GetRobotAssetByNameForRobotKey`, the only endpoint that releases Secret asset values.
+The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably `GetRobotAssetByNameForRobotKey`, the only endpoint that releases a **Credential** asset's username and password (the OData asset endpoints return those fields empty). See [Calling Orchestrator — Credential assets are not readable through the SDK](../../calling-orchestrator/#credential-assets-are-not-readable-through-the-sdk).
 
 ## platform
 
@@ -101,7 +103,8 @@ interface PlatformContext {
 | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | HTTP trigger (deployed)   | Yes — from handler-authored headers                                                                           |
 | Job invocation (deployed) | Yes — from the runtime context (requires a handler that writes the platform fields; `null` on older handlers) |
-| Local `serve` / `run`     | Only with `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID` set                                          |
+| Local `serve`             | Only with `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID` set                                          |
+| Local `run`               | No — `run` reads the runtime-context file, never the environment                                              |
 
 `platform` is all-or-nothing: it is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available. `folderKey` can be `null` independently (folderless invocation).
 

@@ -102,7 +102,7 @@ UiPath supports two Functions runtimes. Both **run as jobs** and are invoked the
 - [Platform Context](platform-context/) — tokens, identity, context forwarding
 - [Calling Orchestrator](calling-orchestrator/) — asset access patterns
 - [Deployment](deployment/) — pack, publish, trigger URL, Orchestrator sync
-- [Production Rules](production-rules/) — import paths, dependencies, no-Buffer, etc.
+- [Production Rules](production-rules/) — import paths, dependencies, runtime globals, etc.
 - [CLI Reference](cli-reference/) — all commands and options
 
 # Getting Started
@@ -201,15 +201,7 @@ curl -X POST http://localhost:7070/hello \
 # {"message":"Hello, Alice!"}
 ```
 
-For local access to Orchestrator, your function handlers read credentials from environment variables (`UIPATH_ACCESS_TOKEN`, `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID`). Set them in your shell before starting the server.
-
-**Option A — Deno runtime (recommended for local dev with credentials):**
-
-```
-uip functions serve --runtime deno
-```
-
-Deno reads `.env` natively. Create a `.env` file:
+For local access to Orchestrator, your function handlers read credentials from environment variables (`UIPATH_ACCESS_TOKEN`, `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID`). Put them in a `.env` file at the project root:
 
 ```
 UIPATH_ACCESS_TOKEN=<OAuth token>
@@ -218,25 +210,11 @@ UIPATH_ORG_ID=<org-UUID>
 UIPATH_TENANT_ID=<tenant-UUID>
 ```
 
-**Option B — Node runtime, load env vars in shell first:**
+`serve` loads that file on both runtimes — it passes `--env-file` to Node (through tsx) and to Deno — so no shell preloading is needed. Exporting the variables in your shell instead works just as well.
 
-```
-Get-Content .env | ForEach-Object {
-  if ($_ -match '^\s*([^#][^=]*)=(.*)$') {
-    [System.Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim(), 'Process')
-  }
-}
-uip functions serve
-```
+Note
 
-```
-set -a && source .env && set +a
-uip functions serve
-```
-
-Known limitation
-
-`uip functions serve` (Node runtime) cannot auto-load `.env` via `--env-file` in some environments. If you see `node: --env-file= is not allowed in NODE_OPTIONS`, use Option A (Deno) or Option B (manual shell loading).
+`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [FunctionContext — platform](../api/function-context/#platform).
 
 ## 3. Pack
 
@@ -296,6 +274,7 @@ Every function handler receives a [`FunctionContext`](../api/function-context/) 
 handler: async (input, ctx) => {
   ctx.user?.accessToken         // caller's OAuth token (forwarded from Authorization header)
   ctx.user?.sub                 // caller's user ID
+  ctx.user?.name                // caller's display name (if present in claims)
   ctx.user?.email               // caller's email (if present in claims)
   ctx.robot?.accessToken        // platform-issued workload token (~24h RS256 JWT)
   ctx.robot?.key                // serverless robot key (for Orchestrator per-robot endpoints)
@@ -308,7 +287,9 @@ handler: async (input, ctx) => {
 }
 ```
 
-`ctx.user` is `null` if the platform cannot identify the caller (e.g. unauthenticated local call), and always `null` for job invocations — jobs have no caller. `ctx.robot` is `null` on local runs.
+`ctx.user` is `null` if the platform cannot identify the caller (e.g. unauthenticated local call). `ctx.robot` is `null` on local runs.
+
+A job has no caller, so there is no caller identity to read: on a job invocation `ctx.user?.sub` and `ctx.user?.accessToken` are both `undefined`. Guard on `ctx.user?.accessToken` rather than on `ctx.user` itself, and use `ctx.robot.accessToken` for a job's outbound calls.
 
 ## The workload token (`ctx.robot.accessToken`)
 
@@ -325,7 +306,7 @@ Token characteristics:
 
 Use this token to call Orchestrator with the function's own service account identity (not the calling user). See [Calling Orchestrator — Secret Vault pattern](../calling-orchestrator/#pattern-1--secret-vault).
 
-**Local dev fallback** — the token is absent locally. Set `UIPATH_ACCESS_TOKEN` before starting the server. Deno runtime reads `.env` natively; for Node, load env vars in your shell — see [Getting Started — local dev](../getting-started/#2-run-locally).
+**Local dev fallback** — the token is absent locally. Put `UIPATH_ACCESS_TOKEN` in a `.env` file at the project root (or export it in your shell): `serve` loads `.env` on both runtimes — see [Getting Started — local dev](../getting-started/#2-run-locally).
 
 ```
 UIPATH_ACCESS_TOKEN=<OAuth token with Assets.View on the target folder>
@@ -362,7 +343,9 @@ handler: async (input, ctx) => {
 
 Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [FunctionContext — platform](../api/function-context/#platform) for the full contract.
 
-**Local dev fallback** — no handler runs locally, so the runtime reads these environment variables instead. They are consulted only when the request carries no `X-UiPath-*` platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.
+**Local dev fallback** — no handler runs locally, so `serve` reads these environment variables instead. They are consulted only when the request carries no `X-UiPath-*` platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.
+
+The fallback belongs to the HTTP path only. `uip functions run` builds `ctx.platform` from the runtime-context file its host writes and never consults the environment, so a bare local `run` gets `ctx.platform: null` no matter what is exported.
 
 ```
 UIPATH_BASE_URL=https://cloud.uipath.com
@@ -391,30 +374,62 @@ defineFunction({
 
 Path parameters work identically in local `serve` and when deployed. `path` becomes the HTTP trigger's slug verbatim — pattern segments included — and the deployed trigger is resolved by route matching, not exact-string comparison.
 
+### Path params also reach `input`
+
+`ctx.params` is not the only place they land: the runtime merges them into the raw input before validating it, as `{ ...params, ...body-or-query }`. Two consequences:
+
+- **The body (or query string, on `GET`) wins** on a name collision — the caller's value overrides the path segment of the same name.
+
+- **Declare every path param in the `input` type.** `defineSchema<T>()` derives a *closed* object (`additionalProperties: false` unless the interface has an index signature), so a param the interface omits is rejected as an unknown key:
+
+  ```
+  { "error": "ValidationFailed",
+    "details": { "formErrors": ["must NOT have additional properties"], "fieldErrors": {} } }
+  ```
+
+Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all. Values coerce to the declared type (`id: number` on `/users/:id{[0-9]+}` arrives as a number), whereas `ctx.params` is always strings.
+
+A function with **no** `input` schema receives the path params alone as its input.
+
 ### Slug pattern syntax
 
-| Pattern         | Matches                       | Example                                                                        |
-| --------------- | ----------------------------- | ------------------------------------------------------------------------------ |
-| `:param`        | exactly one segment           | `/users/:id` ← `/users/42` → `ctx.params.id === "42"`                          |
-| `:param{regex}` | one segment, constrained      | `/users/:id{[0-9]+}/avatar` matches `/users/42/avatar`, not `/users/me/avatar` |
-| `:param?`       | the segment, or nothing       | `/list/:filter?` matches both `/list` and `/list/open`                         |
-| `*`             | one or more trailing segments | `/users/:id/*` matches `/users/42/settings/email`                              |
+| Pattern          | Matches                  | Example                                                                        |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------------ |
+| `:param`         | exactly one segment      | `/users/:id` ← `/users/42` → `ctx.params.id === "42"`                          |
+| `:param{regex}`  | one segment, constrained | `/users/:id{[0-9]+}/avatar` matches `/users/42/avatar`, not `/users/me/avatar` |
+| `:param?`        | the segment, or nothing  | `/list/:filter?` matches both `/list` and `/list/open`                         |
+| `:param{regex}?` | both, combined           | still sorts as the least specific param shape — `?` dominates the constraint   |
+| `*` (trailing)   | zero or more segments    | `/users/:id/*` matches `/users/42/settings/email` — and `/users/42` too        |
+| `*` (mid-path)   | exactly one segment      | `/wild/*/card` matches `/wild/12/card`, not `/wild/12/help/card`               |
 
-Params land in `ctx.params` as strings, keyed by name. A `*` match is not exposed as a named param — use it for catch-all routes rather than to capture values.
+Params land in `ctx.params` as strings, keyed by name. A `*` match is not exposed as a named param — use it for catch-all routes rather than to capture values. Because a trailing `*` also matches its bare prefix, `/files/*` answers `/files` as well; register the exact route too if it needs its own handler (it wins on specificity).
+
+> **Calling a path-param function from `@uipath/uipath-typescript`.** `Functions.invoke()` does **not** substitute path params: it builds the URL from the declared slug verbatim and sends the whole input as query parameters (`GET`) or body, so the request arrives as `/invoices/:id?id=INV-001` with `:id` literal in the path. The call still succeeds — `:id` binds as an ordinary segment and the values come from the query string — so the handler receives the right input while `ctx.params.id` is the literal `":id"`. A **regex-constrained param can therefore never match through the SDK**, because `":id"` is not `[0-9]+`. Substitute the params yourself and call the resolved trigger URL if you need the real path.
 
 ### Matching rules
 
 - **More specific routes win**, regardless of declaration order: with both `/users/me` and `/users/:id` registered, `GET /users/me` hits the literal route.
 
-- **A path that matches nothing returns `404`** with `errorCode 1623`:
+- **A path that matches nothing returns `404`.** Deployed, that is Orchestrator's trigger-lookup failure, with `errorCode 1623`:
 
   ```
   { "message": "HTTP trigger not found for path 'my-functions/invoices/a/b'.", "errorCode": 1623 }
   ```
 
+  Local `serve` returns the same status with a plain-text `404 Not Found` body — the routing decision is identical, only the error rendering differs.
+
 - **Extra segments are not absorbed silently.** `/list/:filter?` takes at most one extra segment, so `/list/a/b` is a `1623`, not a match with `filter = "a"`. Add an explicit `*` route if you want a catch-all.
 
-- **Query parameters remain available** and are independent of path matching — they are validated against the function's `input` schema. Use them for optional filters; use path params for identity.
+- **Query parameters are read on `GET` only.** For a `GET`, the query string *is* the raw input and is validated against the `input` schema (independently of path matching) — use it for optional filters and path params for identity. For `POST`/`PUT`/`PATCH`/`DELETE` the input is the JSON body and the query string is **discarded**: there is no `ctx.query`, and `ctx` does not expose the request URL, so a value sent that way is unreachable. Put it in the body or in the path.
+
+- **Same-shape routes are flagged at design time.** Two routes with the same method and the same segment shape (`/users/:id` vs `/users/:name`, or an exact duplicate) match the same requests and are separated only by an ordinal tie-break on the path string. `serve` (without `--production`) and `pack` print a warning naming both and the winner:
+
+  ```
+  Ambiguous route overlap: GET /users/:id (functions/a.ts) and GET /users/:name
+  (functions/b.ts) match the same requests; "/users/:id" wins by deterministic tie-break.
+  ```
+
+Routes separated by specificity (`/order/create` vs `/order/:id`) and same-path routes on different methods are silent.
 
 ## Request headers
 
@@ -425,6 +440,8 @@ const contentType = ctx.headers["content-type"];
 const authHeader  = ctx.headers["authorization"];
 ```
 
+There is no HTTP request behind a job invocation, so `ctx.headers` and `ctx.params` are both `{}` there. Anything a job needs must come from its input or from `ctx.robot` / `ctx.platform`.
+
 # Calling Orchestrator
 
 Two patterns for reading Orchestrator assets from a JS Function. Choose based on whether the asset is sensitive.
@@ -432,9 +449,10 @@ Two patterns for reading Orchestrator assets from a JS Function. Choose based on
 ```
 Is the asset sensitive (credentials, API keys, shared secrets)?
 │
-├─ Yes → Pattern 1: Secret Vault
-│         Function reads with its own platform token.
+├─ Yes → Pattern 1: Secret Vault  ← the recommended default
+│         Function reads with its own robot token.
 │         Calling user has zero folder access required.
+│         The only workable route for a Credential asset.
 │
 └─ No  → Pattern 2: Delegated access
           Function reads on behalf of the calling user.
@@ -528,13 +546,58 @@ export default defineFunction({
 
 ### Local dev
 
-`ctx.robot` and `ctx.platform` are `null` locally. Set these variables before starting the server — the runtime builds `ctx.platform` from the `UIPATH_BASE_URL`/`UIPATH_ORG_ID`/`UIPATH_TENANT_ID` fallback, and your code reads `UIPATH_ACCESS_TOKEN` for the token. Deno runtime reads `.env` natively; for Node, load env vars in your shell — see [Getting Started — local dev](../getting-started/#2-run-locally).
+`ctx.robot` and `ctx.platform` are `null` locally. Set these variables before starting the server — the runtime builds `ctx.platform` from the `UIPATH_BASE_URL`/`UIPATH_ORG_ID`/`UIPATH_TENANT_ID` fallback, and your code reads `UIPATH_ACCESS_TOKEN` for the token. A `.env` file at the project root is loaded by `serve` on both runtimes — see [Getting Started — local dev](../getting-started/#2-run-locally).
 
 ```
 UIPATH_ACCESS_TOKEN=<valid OAuth token with Assets.View on the folder>
 UIPATH_BASE_URL=https://cloud.uipath.com
 UIPATH_ORG_ID=<org-UUID>
 UIPATH_TENANT_ID=<tenant-UUID>
+```
+
+### Credential assets need the robot-execution endpoint
+
+The SDK cannot return a Credential's `username` / `password` — OData returns those fields empty to every token. Reading one means calling Orchestrator's robot-execution endpoint yourself, the route a robot uses to resolve its own assets while executing:
+
+```
+// Org/tenant-scoped — not ctx.platform.baseUrl, which is the bare authority the UiPath SDK
+// constructor takes.
+const { baseUrl, orgId, tenantId } = ctx.platform;
+const base = `${baseUrl}/${orgId}/${tenantId}/orchestrator_`;
+
+const res = await fetch(
+  `${base}/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByNameForRobotKey`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ctx.robot.accessToken}`,
+      "Content-Type": "application/json",
+      "X-UIPATH-OrganizationUnitId": String(folderId),  // numeric Id, not the folder Key
+    },
+    body: JSON.stringify({
+      robotKey: ctx.robot.key,
+      assetName,
+      supportsCredentialsProxyDisconnected: false,
+    }),
+  },
+);
+// -> { CredentialUsername, CredentialPassword, ... }
+```
+
+`ctx.robot` is `null` under local `serve`, so this is a deployed-only path; it works the same for HTTP triggers and jobs.
+
+The endpoint itself is Orchestrator's
+
+Its request shape, how to resolve the numeric folder Id from `ctx.platform.folderKey`, and what its error codes mean are Orchestrator API behavior — not this SDK's, and not covered by this repo's tests. Check Orchestrator's asset API documentation before debugging a response from it.
+
+**Allowlist what it can read.** The robot is more privileged than the caller, so a handler that fetches whatever `assetName` arrives in the request is a confused deputy — it will hand over any credential the robot can see. Check a fixed set before the call, and return a derived result (a username, a length, a verdict) rather than the secret itself.
+
+```
+const ROBOT_READABLE = new Set(["PartnerApiCredential"]);
+
+if (!ROBOT_READABLE.has(inp.assetName)) {
+  throw new FunctionError(`"${inp.assetName}" is not readable by this function.`, 403);
+}
 ```
 
 ______________________________________________________________________
@@ -545,7 +608,7 @@ The function uses `ctx.user.accessToken` — the same OAuth token the caller sen
 
 ### Orchestrator setup
 
-The calling user must have **Assets.View** on the folder containing the asset.
+The calling user needs **Assets.View** on the folder containing the asset — that is the whole requirement. `AllowDirectApiAccess` does not come into it: the SDK reads through OData `GetFiltered`, which the flag does not gate, and which never returns a Credential's value however the flag is set. That is also why this pattern is for non-sensitive assets only — a limit of the route, not a setting you could switch on to lift it.
 
 ### Function code
 
@@ -603,9 +666,9 @@ ______________________________________________________________________
 
 `Assets.getAll()` without `folderId` calls `GetAssetsAcrossFolders` (metadata only) and silently returns `null` for all value fields. Always pass `folderId` to switch to `GetFiltered`, which returns actual values.
 
-### AllowDirectApiAccess flag
+### AllowDirectApiAccess
 
-This flag is **irrelevant** for OData endpoints. It is only enforced on `/api/Assets/name/{name}/value`, which the SDK never calls. Do not add it to your Orchestrator setup.
+An Orchestrator per-asset switch over a single route, `GET /api/Assets/name/{name}/value`. **Neither pattern on this page uses that route** — Pattern 1 goes through the robot-execution endpoint, Pattern 2 through OData — so neither needs the flag. Leave it off; for a Credential asset, off is what keeps the value readable by robots only.
 
 ### External App minimum configuration
 
@@ -619,21 +682,9 @@ openid profile email offline_access OR.Default
 
 ### Security boundary
 
-Folder RBAC is the only effective security boundary. `OR.Default` (required for function invocation) already grants broad Orchestrator API access. Reducing External App scopes does not prevent users from reading assets if they have folder access.
+For **Pattern 2**, folder RBAC is the only effective security boundary. `OR.Default` (required for function invocation) already grants broad Orchestrator API access, so reducing External App scopes does not prevent users from reading assets they have folder access to.
 
-### OData filter: single-quote string and GUID values
-
-All string and GUID comparisons in OData `$filter` must use single quotes. Missing quotes cause `400 Bad Request` which the SDK or raw fetch may silently return as an empty list.
-
-```
-// ❌ 400 Bad Request — GUID treated as unquoted token
-const filter = `CreatorUserKey eq ${userId}`;
-
-// ✅ correct
-const escaped = value.replace(/'/g, "''");   // escape embedded single quotes
-const filter  = `Name eq '${escaped}'`;
-const filter2 = `CreatorUserKey eq '${userId}'`;
-```
+**Pattern 1 removes that boundary by design**: the read happens under the robot's identity, so the caller's folder permissions do not apply and nothing outside your handler limits what gets read. The function's own code is the boundary — allowlist what it will fetch, and do not let the caller name the asset.
 
 ### Starting a job from a function
 
@@ -839,9 +890,11 @@ If an import fails silently at cold start, all functions in the package hang for
 
 ______________________________________________________________________
 
-## No `Buffer` global
+## Node globals are available
 
-The production runtime does not polyfill Node.js globals. `Buffer` is not available. Use `Uint8Array` or `TextEncoder`/`TextDecoder` instead.
+`Buffer`, `process`, `setImmediate`, `clearImmediate` and `global` are all present, and `await import("node:buffer")` resolves.
+
+Keep `Buffer` out of declared contracts: a JSON output schema serializes it as `{"type":"Buffer","data":[104,105]}`, not bytes — cross the boundary as base64 or `number[]`.
 
 ______________________________________________________________________
 
@@ -864,7 +917,7 @@ const token =
   "";
 ```
 
-Set `UIPATH_ACCESS_TOKEN` in your shell before starting the server (see [Getting Started — local dev](../getting-started/#2-run-locally)). The `uip functions serve` Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in the shell manually.
+Set `UIPATH_ACCESS_TOKEN` in a `.env` file at the project root or in your shell before starting the server; `serve` loads `.env` on both runtimes (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
 ______________________________________________________________________
 
@@ -1136,7 +1189,7 @@ uip functions serve [options]
 | `--port <port>`          | `7070`  | Port to listen on                                                              |
 | `--production`           |         | Skip server-runner install and freePort check (used by the platform container) |
 
-Auto-syncs the `functions` map in `uipath.json` before starting. Deno runtime reads `.env` natively; Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in your shell before running `serve` (see [Getting Started — local dev](../getting-started/#2-run-locally)).
+Auto-syncs the `functions` map in `uipath.json` before starting. A `.env` file at the project root is loaded on both runtimes — `serve` passes `--env-file` to Node (through tsx) and to Deno (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
 ______________________________________________________________________
 
@@ -1547,7 +1600,9 @@ export default defineFunction({
   input: defineSchema<ProcessInvoiceInput>(),
   output: defineSchema<ProcessInvoiceOutput>(),
   handler: async (input, ctx) => {
-    // Called as a job — ctx.params/ctx.headers are empty and ctx.user is null; ctx.robot?.accessToken is available when provided by the platform.
+    // Called as a job — ctx.params/ctx.headers are empty and there is no caller identity
+    // (ctx.user?.accessToken is undefined); use ctx.robot?.accessToken, which the platform
+    // provides for a deployed job.
     return { status: "processed" };
   },
 });
@@ -1730,7 +1785,9 @@ interface FunctionContext {
 
 ## user
 
-The identity of the caller. `null` if the platform cannot identify the caller (unauthenticated request) — and always `null` for job invocations, which have no caller.
+The identity of the caller. `null` if the platform cannot identify the caller (unauthenticated request).
+
+A job invocation has no caller, so `ctx.user?.sub` and `ctx.user?.accessToken` are both `undefined` there. Guard on `ctx.user?.accessToken` rather than on `ctx.user` itself, and use [`ctx.robot.accessToken`](#accesstoken_1) for a job's outbound calls.
 
 ### IdentityContext
 
@@ -1788,7 +1845,7 @@ const token =
 
 #### `key`
 
-The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably Secret asset retrieval via `GetRobotAssetByNameForRobotKey`, the only endpoint that releases Secret asset values.
+The serverless robot's key. Required by Orchestrator's per-robot endpoints — notably `GetRobotAssetByNameForRobotKey`, the only endpoint that releases a **Credential** asset's username and password (the OData asset endpoints return those fields empty). See [Calling Orchestrator — Credential assets are not readable through the SDK](../../calling-orchestrator/#credential-assets-are-not-readable-through-the-sdk).
 
 ## platform
 
@@ -1811,7 +1868,8 @@ interface PlatformContext {
 | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | HTTP trigger (deployed)   | Yes — from handler-authored headers                                                                           |
 | Job invocation (deployed) | Yes — from the runtime context (requires a handler that writes the platform fields; `null` on older handlers) |
-| Local `serve` / `run`     | Only with `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID` set                                          |
+| Local `serve`             | Only with `UIPATH_BASE_URL`, `UIPATH_ORG_ID`, `UIPATH_TENANT_ID` set                                          |
+| Local `run`               | No — `run` reads the runtime-context file, never the environment                                              |
 
 `platform` is all-or-nothing: it is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available. `folderKey` can be `null` independently (folderless invocation).
 

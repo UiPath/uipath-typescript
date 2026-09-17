@@ -5,9 +5,10 @@ Two patterns for reading Orchestrator assets from a JS Function. Choose based on
 ```
 Is the asset sensitive (credentials, API keys, shared secrets)?
 │
-├─ Yes → Pattern 1: Secret Vault
-│         Function reads with its own platform token.
+├─ Yes → Pattern 1: Secret Vault  ← the recommended default
+│         Function reads with its own robot token.
 │         Calling user has zero folder access required.
+│         The only workable route for a Credential asset.
 │
 └─ No  → Pattern 2: Delegated access
           Function reads on behalf of the calling user.
@@ -101,13 +102,58 @@ export default defineFunction({
 
 ### Local dev
 
-`ctx.robot` and `ctx.platform` are `null` locally. Set these variables before starting the server — the runtime builds `ctx.platform` from the `UIPATH_BASE_URL`/`UIPATH_ORG_ID`/`UIPATH_TENANT_ID` fallback, and your code reads `UIPATH_ACCESS_TOKEN` for the token. Deno runtime reads `.env` natively; for Node, load env vars in your shell — see [Getting Started — local dev](../getting-started/#2-run-locally).
+`ctx.robot` and `ctx.platform` are `null` locally. Set these variables before starting the server — the runtime builds `ctx.platform` from the `UIPATH_BASE_URL`/`UIPATH_ORG_ID`/`UIPATH_TENANT_ID` fallback, and your code reads `UIPATH_ACCESS_TOKEN` for the token. A `.env` file at the project root is loaded by `serve` on both runtimes — see [Getting Started — local dev](../getting-started/#2-run-locally).
 
 ```
 UIPATH_ACCESS_TOKEN=<valid OAuth token with Assets.View on the folder>
 UIPATH_BASE_URL=https://cloud.uipath.com
 UIPATH_ORG_ID=<org-UUID>
 UIPATH_TENANT_ID=<tenant-UUID>
+```
+
+### Credential assets need the robot-execution endpoint
+
+The SDK cannot return a Credential's `username` / `password` — OData returns those fields empty to every token. Reading one means calling Orchestrator's robot-execution endpoint yourself, the route a robot uses to resolve its own assets while executing:
+
+```
+// Org/tenant-scoped — not ctx.platform.baseUrl, which is the bare authority the UiPath SDK
+// constructor takes.
+const { baseUrl, orgId, tenantId } = ctx.platform;
+const base = `${baseUrl}/${orgId}/${tenantId}/orchestrator_`;
+
+const res = await fetch(
+  `${base}/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByNameForRobotKey`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ctx.robot.accessToken}`,
+      "Content-Type": "application/json",
+      "X-UIPATH-OrganizationUnitId": String(folderId),  // numeric Id, not the folder Key
+    },
+    body: JSON.stringify({
+      robotKey: ctx.robot.key,
+      assetName,
+      supportsCredentialsProxyDisconnected: false,
+    }),
+  },
+);
+// -> { CredentialUsername, CredentialPassword, ... }
+```
+
+`ctx.robot` is `null` under local `serve`, so this is a deployed-only path; it works the same for HTTP triggers and jobs.
+
+The endpoint itself is Orchestrator's
+
+Its request shape, how to resolve the numeric folder Id from `ctx.platform.folderKey`, and what its error codes mean are Orchestrator API behavior — not this SDK's, and not covered by this repo's tests. Check Orchestrator's asset API documentation before debugging a response from it.
+
+**Allowlist what it can read.** The robot is more privileged than the caller, so a handler that fetches whatever `assetName` arrives in the request is a confused deputy — it will hand over any credential the robot can see. Check a fixed set before the call, and return a derived result (a username, a length, a verdict) rather than the secret itself.
+
+```
+const ROBOT_READABLE = new Set(["PartnerApiCredential"]);
+
+if (!ROBOT_READABLE.has(inp.assetName)) {
+  throw new FunctionError(`"${inp.assetName}" is not readable by this function.`, 403);
+}
 ```
 
 ______________________________________________________________________
@@ -118,7 +164,7 @@ The function uses `ctx.user.accessToken` — the same OAuth token the caller sen
 
 ### Orchestrator setup
 
-The calling user must have **Assets.View** on the folder containing the asset.
+The calling user needs **Assets.View** on the folder containing the asset — that is the whole requirement. `AllowDirectApiAccess` does not come into it: the SDK reads through OData `GetFiltered`, which the flag does not gate, and which never returns a Credential's value however the flag is set. That is also why this pattern is for non-sensitive assets only — a limit of the route, not a setting you could switch on to lift it.
 
 ### Function code
 
@@ -176,9 +222,9 @@ ______________________________________________________________________
 
 `Assets.getAll()` without `folderId` calls `GetAssetsAcrossFolders` (metadata only) and silently returns `null` for all value fields. Always pass `folderId` to switch to `GetFiltered`, which returns actual values.
 
-### AllowDirectApiAccess flag
+### AllowDirectApiAccess
 
-This flag is **irrelevant** for OData endpoints. It is only enforced on `/api/Assets/name/{name}/value`, which the SDK never calls. Do not add it to your Orchestrator setup.
+An Orchestrator per-asset switch over a single route, `GET /api/Assets/name/{name}/value`. **Neither pattern on this page uses that route** — Pattern 1 goes through the robot-execution endpoint, Pattern 2 through OData — so neither needs the flag. Leave it off; for a Credential asset, off is what keeps the value readable by robots only.
 
 ### External App minimum configuration
 
@@ -192,21 +238,9 @@ openid profile email offline_access OR.Default
 
 ### Security boundary
 
-Folder RBAC is the only effective security boundary. `OR.Default` (required for function invocation) already grants broad Orchestrator API access. Reducing External App scopes does not prevent users from reading assets if they have folder access.
+For **Pattern 2**, folder RBAC is the only effective security boundary. `OR.Default` (required for function invocation) already grants broad Orchestrator API access, so reducing External App scopes does not prevent users from reading assets they have folder access to.
 
-### OData filter: single-quote string and GUID values
-
-All string and GUID comparisons in OData `$filter` must use single quotes. Missing quotes cause `400 Bad Request` which the SDK or raw fetch may silently return as an empty list.
-
-```
-// ❌ 400 Bad Request — GUID treated as unquoted token
-const filter = `CreatorUserKey eq ${userId}`;
-
-// ✅ correct
-const escaped = value.replace(/'/g, "''");   // escape embedded single quotes
-const filter  = `Name eq '${escaped}'`;
-const filter2 = `CreatorUserKey eq '${userId}'`;
-```
+**Pattern 1 removes that boundary by design**: the read happens under the robot's identity, so the caller's folder permissions do not apply and nothing outside your handler limits what gets read. The function's own code is the boundary — allowlist what it will fetch, and do not let the caller name the asset.
 
 ### Starting a job from a function
 

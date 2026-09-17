@@ -3854,67 +3854,45 @@ endpoint.</p>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;Alice&quot;}&#39;</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># {&quot;message&quot;:&quot;Hello, Alice!&quot;}</span>
 </code></pre></div>
-<p>For local access to Orchestrator, your function handlers read credentials from environment variables (<code>UIPATH_ACCESS_TOKEN</code>, <code>UIPATH_BASE_URL</code>, <code>UIPATH_ORG_ID</code>, <code>UIPATH_TENANT_ID</code>). Set them in your shell before starting the server.</p>
-<p><strong>Option A — Deno runtime (recommended for local dev with credentials):</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve<span class="w"> </span>--runtime<span class="w"> </span>deno
+<p>For local access to Orchestrator, your function handlers read credentials from environment variables (<code>UIPATH_ACCESS_TOKEN</code>, <code>UIPATH_BASE_URL</code>, <code>UIPATH_ORG_ID</code>, <code>UIPATH_TENANT_ID</code>). Put them in a <code>.env</code> file at the project root:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>UIPATH_ACCESS_TOKEN=&lt;OAuth token&gt;
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>UIPATH_BASE_URL=https://cloud.uipath.com
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>UIPATH_ORG_ID=&lt;org-UUID&gt;
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>UIPATH_TENANT_ID=&lt;tenant-UUID&gt;
 </code></pre></div>
-<p>Deno reads <code>.env</code> natively. Create a <code>.env</code> file:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>UIPATH_ACCESS_TOKEN=&lt;OAuth token&gt;
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>UIPATH_BASE_URL=https://cloud.uipath.com
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>UIPATH_ORG_ID=&lt;org-UUID&gt;
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>UIPATH_TENANT_ID=&lt;tenant-UUID&gt;
-</code></pre></div>
-<p><strong>Option B — Node runtime, load env vars in shell first:</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">PowerShell</label><label for="__tabbed_1_2">bash</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">Get-Content</span> <span class="p">.</span><span class="n">env</span> <span class="p">|</span> <span class="k">ForEach</span><span class="n">-Object</span> <span class="p">{</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  <span class="k">if</span> <span class="p">(</span><span class="nv">$_</span> <span class="o">-match</span> <span class="s1">&#39;^\s*([^#][^=]*)=(.*)$&#39;</span><span class="p">)</span> <span class="p">{</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="no">[System.Environment]</span><span class="p">::</span><span class="n">SetEnvironmentVariable</span><span class="p">(</span><span class="nv">$Matches</span><span class="p">[</span><span class="n">1</span><span class="p">].</span><span class="n">Trim</span><span class="p">(),</span> <span class="nv">$Matches</span><span class="p">[</span><span class="n">2</span><span class="p">].</span><span class="n">Trim</span><span class="p">(),</span> <span class="s1">&#39;Process&#39;</span><span class="p">)</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  <span class="p">}</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">}</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">uip</span> <span class="n">functions</span> <span class="n">serve</span>
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">set</span><span class="w"> </span>-a<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>.env<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>+a
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve
-</code></pre></div>
-</div>
-</div>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Known limitation</p>
-<p><code>uip functions serve</code> (Node runtime) cannot auto-load <code>.env</code> via <code>--env-file</code> in some environments. If you see <code>node: --env-file= is not allowed in NODE_OPTIONS</code>, use Option A (Deno) or Option B (manual shell loading).</p>
+<p><code>serve</code> loads that file on both runtimes — it passes <code>--env-file</code> to Node (through tsx) and to Deno — so no shell preloading is needed. Exporting the variables in your shell instead works just as well.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>.env</code> is loaded only by <code>serve</code> (and <code>debug</code>). <code>uip functions run</code> takes its platform coordinates from the runtime-context file the host writes, not from the environment — see <a href="../api/function-context/#platform">FunctionContext — platform</a>.</p>
 </div>
 <h2 id="3-pack">3. Pack<a class="headerlink" href="#3-pack" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
 </code></pre></div>
 <p>Creates <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code> from <code>package.json</code> <code>name</code> and <code>version</code>. Re-packing the same version overwrites the file.</p>
 <h2 id="4-publish-to-orchestrator">4. Publish to Orchestrator<a class="headerlink" href="#4-publish-to-orchestrator" title="Permanent link">&para;</a></h2>
 <p>Log in first — <code>uip login</code> stores your session and publish picks it up automatically:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uip<span class="w"> </span>login
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uip<span class="w"> </span>login
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish
 </code></pre></div>
 <p>Fetches available process feeds and prompts for selection. For CI, pass credentials explicitly and skip the interactive picker with <code>--feed-id</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--url<span class="w"> </span>https://cloud.uipath.com<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--org<span class="w"> </span>&lt;org&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span>--token<span class="w"> </span><span class="nv">$UIPATH_ACCESS_TOKEN</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span>--feed-id<span class="w"> </span>&lt;feed-uuid&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--url<span class="w"> </span>https://cloud.uipath.com<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--org<span class="w"> </span>&lt;org&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--tenant<span class="w"> </span>&lt;tenant&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--token<span class="w"> </span><span class="nv">$UIPATH_ACCESS_TOKEN</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--feed-id<span class="w"> </span>&lt;feed-uuid&gt;
 </code></pre></div>
 <p>After publishing, go to <strong>Orchestrator → Automations → Processes</strong>, find your package, and update the release to the latest version. This triggers Orchestrator to read the new manifest and sync API Triggers. See <a href="../deployment/#after-publish-update-the-function-release">Deployment — After publish</a>.</p>
 <h2 id="5-push-to-studio-web-optional">5. Push to Studio Web (optional)<a class="headerlink" href="#5-push-to-studio-web-optional" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>push<span class="w"> </span>--project-id<span class="w"> </span>&lt;studio-web-project-id&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>push<span class="w"> </span>--project-id<span class="w"> </span>&lt;studio-web-project-id&gt;
 </code></pre></div>
 <p>Diffs local files against the Studio Web project and uploads only what changed. Create the project in Studio Web first to get the project ID.</p>
 <h2 id="full-workflow">Full workflow<a class="headerlink" href="#full-workflow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>new<span class="w"> </span>my-functions<span class="w"> </span>-l<span class="w"> </span>ts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>my-functions
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve<span class="w">                    </span><span class="c1"># develop</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>uip<span class="w"> </span>login
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uip<span class="w"> </span>functions<span class="w"> </span>new<span class="w"> </span>my-functions<span class="w"> </span>-l<span class="w"> </span>ts<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>my-functions
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>serve<span class="w">                    </span><span class="c1"># develop</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>uip<span class="w"> </span>login
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>uip<span class="w"> </span>functions<span class="w"> </span>publish
 </code></pre></div>
 
 

@@ -43,7 +43,7 @@ uip functions serve [options]
 | `--port <port>`          | `7070`  | Port to listen on                                                              |
 | `--production`           |         | Skip server-runner install and freePort check (used by the platform container) |
 
-Auto-syncs the `functions` map in `uipath.json` before starting. Deno runtime reads `.env` natively; Node runtime cannot auto-load `.env` via `--env-file` in some environments — use `--runtime deno` or load env vars in your shell before running `serve` (see [Getting Started — local dev](../getting-started/#2-run-locally)).
+Auto-syncs the `functions` map in `uipath.json` before starting. A `.env` file at the project root is loaded on both runtimes — `serve` passes `--env-file` to Node (through tsx) and to Deno (see [Getting Started — local dev](../getting-started/#2-run-locally)).
 
 ______________________________________________________________________
 
