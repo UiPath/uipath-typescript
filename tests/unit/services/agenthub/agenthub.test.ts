@@ -1,6 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentHubService } from '@/services/agenthub/agenthub';
+import { ValidationError } from '@/core/errors';
 import { ApiClient } from '@/core/http/api-client';
 import { AGENTHUB_ENDPOINTS } from '@/utils/constants/endpoints';
 import { LLM_GATEWAY_MODEL_NAME } from '@/utils/constants/headers';
@@ -93,14 +94,14 @@ describe('AgentHubService Unit Tests', () => {
     it('should reject an empty model', async () => {
       await expect(
         service.createChatCompletion({ ...REQUEST, model: '' }),
-      ).rejects.toThrow('model is required');
+      ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should reject empty messages', async () => {
-      await expect(service.createChatCompletion({ ...REQUEST, messages: [] })).rejects.toThrow(
-        'messages must not be empty',
-      );
+      await expect(
+        service.createChatCompletion({ ...REQUEST, messages: [] }),
+      ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
