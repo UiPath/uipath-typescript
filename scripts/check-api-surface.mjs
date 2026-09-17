@@ -176,7 +176,7 @@ function main() {
         console.log(`\n::error::${breaking} breaking change(s) to the public API. See the report above.`);
         process.exitCode = 1;
       } else {
-        console.log('\n::notice::Public API changed (additions only). Run `npm run api-surface:gen` and commit scripts/api-surface.txt.');
+        console.log('\n::warning::Public API gained new members and scripts/api-surface.txt is stale. Run `npm run api-surface:gen` and commit it so the baseline stays current. Not blocking.');
         process.exitCode = 2;
       }
     }
