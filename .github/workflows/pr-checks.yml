@@ -105,11 +105,17 @@ jobs:
       - name: Classify public API changes
         id: check
         run: |
+          # Classify against the base branch, not the committed snapshot. If we
+          # compared against the snapshot, a PR that already includes the
+          # regenerated file would report no change at all -- and the label would
+          # be dropped on the next push.
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
           # `|| code=$?` is required: the default shell is `bash -e`, which would
           # abort on a non-zero exit before the code could be read.
           # 0 = no public API change, 1 = breaking, 2 = additions only
           code=0
-          node scripts/check-api-surface.mjs > api-surface-report.txt 2>&1 || code=$?
+          node scripts/check-api-surface.mjs --base "origin/${{ github.base_ref }}" \
+            > api-surface-report.txt 2>&1 || code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           cat api-surface-report.txt
 
