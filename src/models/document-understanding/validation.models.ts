@@ -1,9 +1,9 @@
 import type {
-  GetExtractionValidationTaskResponse,
-  StartExtractionValidationTaskRequestV2_0,
-  StartValidationTaskResponse,
-} from './framework/validation.types';
-import type { DuValidationRequestOptions } from './validation.types';
+  DuValidationGetResponse,
+  DuValidationRequestOptions,
+  DuValidationStartRequest,
+  DuValidationStartResponse,
+} from './validation.types';
 
 /**
  * Service for the Document Understanding validation-station flow.
@@ -30,15 +30,15 @@ export interface DuValidationServiceModel {
    * @param documentTypeId - Document type identifier within the project.
    * @param request - Extraction result plus the action metadata (title, catalog, storage).
    * @param options - Optional framework API version override.
-   * @returns Promise resolving to a {@link StartValidationTaskResponse} carrying the `OperationId` to poll.
+   * @returns Promise resolving to a {@link DuValidationStartResponse} carrying the `operationId` to poll.
    *
    * @example
    * ```typescript
-   * const { OperationId } = await validation.startExtractionValidation(
+   * const { operationId } = await validation.startExtractionValidation(
    *   '<projectId>',
    *   '<tag>',
    *   '<documentTypeId>',
-   *   { DocumentId: '<documentId>', ActionTitle: 'Review invoice', ExtractionResult: result },
+   *   { documentId: '<documentId>', actionTitle: 'Review invoice', extractionResult: result },
    * );
    * ```
    */
@@ -46,22 +46,22 @@ export interface DuValidationServiceModel {
     projectId: string,
     tag: string,
     documentTypeId: string,
-    request: StartExtractionValidationTaskRequestV2_0,
+    request: DuValidationStartRequest,
     options?: DuValidationRequestOptions,
-  ): Promise<StartValidationTaskResponse>;
+  ): Promise<DuValidationStartResponse>;
 
   /**
    * Reads the current state of a validation operation started by {@link startExtractionValidation}.
    *
-   * Poll this until `Status` leaves `NotStarted`/`Running`; a `Succeeded` operation
-   * carries the validated extraction result in `Result`.
+   * Poll this until `status` leaves `NotStarted`/`Running`; a `Succeeded` operation
+   * carries the validated extraction result in `result`.
    *
    * @param projectId - DU project (modern project) identifier.
    * @param tag - Project version tag the document type belongs to.
    * @param documentTypeId - Document type identifier within the project.
    * @param operationId - Operation id returned by {@link startExtractionValidation}.
    * @param options - Optional framework API version override.
-   * @returns Promise resolving to the {@link GetExtractionValidationTaskResponse} operation snapshot.
+   * @returns Promise resolving to the {@link DuValidationGetResponse} operation snapshot.
    *
    * @example
    * ```typescript
@@ -71,7 +71,7 @@ export interface DuValidationServiceModel {
    *   '<documentTypeId>',
    *   operationId,
    * );
-   * // Poll until result.Status is no longer 'NotStarted' or 'Running'
+   * // Poll until result.status is no longer 'NotStarted' or 'Running'
    * ```
    */
   getExtractionValidationResult(
@@ -80,5 +80,5 @@ export interface DuValidationServiceModel {
     documentTypeId: string,
     operationId: string,
     options?: DuValidationRequestOptions,
-  ): Promise<GetExtractionValidationTaskResponse>;
+  ): Promise<DuValidationGetResponse>;
 }

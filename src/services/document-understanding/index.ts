@@ -14,11 +14,11 @@
  * await sdk.initialize();
  *
  * const validation = new DuValidation(sdk);
- * const { OperationId } = await validation.startExtractionValidation(
+ * const { operationId } = await validation.startExtractionValidation(
  *   '<projectId>',
  *   '<tag>',
  *   '<documentTypeId>',
- *   { DocumentId: '<documentId>', ActionTitle: 'Review invoice', ExtractionResult: result },
+ *   { documentId: '<documentId>', actionTitle: 'Review invoice', extractionResult: result },
  * );
  * ```
  *

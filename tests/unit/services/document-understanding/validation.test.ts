@@ -3,11 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DuValidationService } from '@/services/document-understanding/validation';
 import { ApiClient } from '@/core/http/api-client';
 import { DU_VALIDATION_ENDPOINTS } from '@/utils/constants/endpoints';
-import type {
-  GetExtractionValidationTaskResponse,
-  StartExtractionValidationTaskRequestV2_0,
-  StartValidationTaskResponse,
-} from '@/models/document-understanding/framework/validation.types';
+import type { DuValidationStartRequest } from '@/models/document-understanding/validation.types';
 import { ActionStatus } from '@/models/document-understanding/framework/validation.types';
 import { JobStatus } from '@/models/document-understanding/framework/model.types';
 import { ValidationError } from '@/core/errors';
@@ -23,21 +19,38 @@ const TAG = 'v1';
 const DOCUMENT_TYPE_ID = '00000000-0000-0000-0000-000000000000';
 const OPERATION_ID = 'op-456';
 const DOCUMENT_ID = '63c21fee-7d65-f111-8fcb-000d3aac42ce';
+const RESULT_URL = `result/${OPERATION_ID}`;
 
-const START_REQUEST: StartExtractionValidationTaskRequestV2_0 = {
+const START_REQUEST: DuValidationStartRequest = {
+  documentId: DOCUMENT_ID,
+  actionTitle: 'Review invoice',
+  extractionResult: { DocumentId: DOCUMENT_ID },
+};
+
+const START_WIRE_BODY = {
   DocumentId: DOCUMENT_ID,
   ActionTitle: 'Review invoice',
   ExtractionResult: { DocumentId: DOCUMENT_ID },
 };
 
-const START_RESPONSE: StartValidationTaskResponse = {
+const START_API_RESPONSE = {
   OperationId: OPERATION_ID,
-  ResultUrl: `result/${OPERATION_ID}`,
+  ResultUrl: RESULT_URL,
 };
 
-const RESULT_RESPONSE: GetExtractionValidationTaskResponse = {
+const START_SDK_RESPONSE = {
+  operationId: OPERATION_ID,
+  resultUrl: RESULT_URL,
+};
+
+const RESULT_API_RESPONSE = {
   Status: JobStatus.Succeeded,
   Result: { ActionStatus: ActionStatus.Pending },
+};
+
+const RESULT_SDK_RESPONSE = {
+  status: JobStatus.Succeeded,
+  result: { actionStatus: ActionStatus.Pending },
 };
 
 // ===== TEST SUITE =====
@@ -60,28 +73,31 @@ describe('DuValidationService Unit Tests', () => {
 
   describe('startExtractionValidation', () => {
     it('should start a validation action and return the operation id', async () => {
-      mockApiClient.post.mockResolvedValue(START_RESPONSE);
+      mockApiClient.post.mockResolvedValue(START_API_RESPONSE);
 
       const result = await service.startExtractionValidation(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, START_REQUEST);
 
-      expect(result).toEqual(START_RESPONSE);
-      expect(result.OperationId).toBe(OPERATION_ID);
+      expect(result).toEqual(START_SDK_RESPONSE);
+      expect(result.operationId).toBe(OPERATION_ID);
+      expect(result.resultUrl).toBe(RESULT_URL);
+      expect((result as Record<string, unknown>).OperationId).toBeUndefined();
+      expect((result as Record<string, unknown>).ResultUrl).toBeUndefined();
     });
 
     it('should POST to the validation start endpoint with api-version 1.1', async () => {
-      mockApiClient.post.mockResolvedValue(START_RESPONSE);
+      mockApiClient.post.mockResolvedValue(START_API_RESPONSE);
 
       await service.startExtractionValidation(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, START_REQUEST);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DU_VALIDATION_ENDPOINTS.START(PROJECT_ID, TAG, DOCUMENT_TYPE_ID),
-        START_REQUEST,
+        START_WIRE_BODY,
         expect.objectContaining({ params: { 'api-version': '1.1' } }),
       );
     });
 
     it('should honor an apiVersion override', async () => {
-      mockApiClient.post.mockResolvedValue(START_RESPONSE);
+      mockApiClient.post.mockResolvedValue(START_API_RESPONSE);
 
       await service.startExtractionValidation(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, START_REQUEST, {
         apiVersion: '2.0',
@@ -89,7 +105,7 @@ describe('DuValidationService Unit Tests', () => {
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
-        START_REQUEST,
+        START_WIRE_BODY,
         expect.objectContaining({ params: { 'api-version': '2.0' } }),
       );
     });
@@ -112,16 +128,19 @@ describe('DuValidationService Unit Tests', () => {
 
   describe('getExtractionValidationResult', () => {
     it('should return the validation operation snapshot', async () => {
-      mockApiClient.get.mockResolvedValue(RESULT_RESPONSE);
+      mockApiClient.get.mockResolvedValue(RESULT_API_RESPONSE);
 
       const result = await service.getExtractionValidationResult(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, OPERATION_ID);
 
-      expect(result).toEqual(RESULT_RESPONSE);
-      expect(result.Status).toBe(JobStatus.Succeeded);
+      expect(result).toEqual(RESULT_SDK_RESPONSE);
+      expect(result.status).toBe(JobStatus.Succeeded);
+      expect(result.result?.actionStatus).toBe(ActionStatus.Pending);
+      expect((result as Record<string, unknown>).Status).toBeUndefined();
+      expect((result as Record<string, unknown>).Result).toBeUndefined();
     });
 
     it('should GET the validation result endpoint with api-version 1.1', async () => {
-      mockApiClient.get.mockResolvedValue(RESULT_RESPONSE);
+      mockApiClient.get.mockResolvedValue(RESULT_API_RESPONSE);
 
       await service.getExtractionValidationResult(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, OPERATION_ID);
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { DuValidation } from '../../../../src/services/document-understanding';
 import { UiPathError } from '../../../../src/core/errors';
-import type { StartExtractionValidationTaskRequestV2_0 } from '../../../../src/models/document-understanding/framework/validation.types';
+import type { DuValidationStartRequest } from '../../../../src/models/document-understanding/validation.types';
 
 /**
  * Integration tests for Document Understanding validation start + result poll.
@@ -21,10 +21,10 @@ const modes: InitMode[] = ['v1'];
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const TAG = 'production';
 
-const START_REQUEST: StartExtractionValidationTaskRequestV2_0 = {
-  DocumentId: UNKNOWN_ID,
-  ActionTitle: 'sdk-it-du-validation',
-  ExtractionResult: { DocumentId: UNKNOWN_ID },
+const START_REQUEST: DuValidationStartRequest = {
+  documentId: UNKNOWN_ID,
+  actionTitle: 'sdk-it-du-validation',
+  extractionResult: { DocumentId: UNKNOWN_ID },
 };
 
 describeIntegration('Document Understanding Validation - Integration Tests', 'both', modes, () => {

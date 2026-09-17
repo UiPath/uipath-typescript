@@ -2,12 +2,17 @@ import { track } from '../../core/telemetry';
 import { ValidationError } from '../../core/errors';
 import type {
   GetExtractionValidationTaskResponse,
-  StartExtractionValidationTaskRequestV2_0,
   StartValidationTaskResponse,
 } from '../../models/document-understanding/framework/validation.types';
 import type { DuValidationServiceModel } from '../../models/document-understanding/validation.models';
-import type { DuValidationRequestOptions } from '../../models/document-understanding/validation.types';
+import type {
+  DuValidationGetResponse,
+  DuValidationRequestOptions,
+  DuValidationStartRequest,
+  DuValidationStartResponse,
+} from '../../models/document-understanding/validation.types';
 import { DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
+import { camelToPascalCaseKeys, pascalToCamelCaseKeys } from '../../utils/transform';
 import { BaseService } from '../base';
 
 const DEFAULT_API_VERSION = '1.1';
@@ -24,9 +29,9 @@ export class DuValidationService
     projectId: string,
     tag: string,
     documentTypeId: string,
-    request: StartExtractionValidationTaskRequestV2_0,
+    request: DuValidationStartRequest,
     options: DuValidationRequestOptions = {},
-  ): Promise<StartValidationTaskResponse> {
+  ): Promise<DuValidationStartResponse> {
     if (!projectId) {
       throw new ValidationError({ message: 'projectId is required for startExtractionValidation' });
     }
@@ -42,10 +47,10 @@ export class DuValidationService
 
     const response = await this.post<StartValidationTaskResponse>(
       DU_VALIDATION_ENDPOINTS.START(projectId, tag, documentTypeId),
-      request,
+      camelToPascalCaseKeys(request),
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
-    return response.data;
+    return pascalToCamelCaseKeys(response.data) as DuValidationStartResponse;
   }
 
   @track('DuValidation.GetExtractionValidationResult')
@@ -55,7 +60,7 @@ export class DuValidationService
     documentTypeId: string,
     operationId: string,
     options: DuValidationRequestOptions = {},
-  ): Promise<GetExtractionValidationTaskResponse> {
+  ): Promise<DuValidationGetResponse> {
     if (!projectId) {
       throw new ValidationError({ message: 'projectId is required for getExtractionValidationResult' });
     }
@@ -73,6 +78,6 @@ export class DuValidationService
       DU_VALIDATION_ENDPOINTS.GET_RESULT(projectId, tag, documentTypeId, operationId),
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
-    return response.data;
+    return pascalToCamelCaseKeys(response.data) as DuValidationGetResponse;
   }
 }
