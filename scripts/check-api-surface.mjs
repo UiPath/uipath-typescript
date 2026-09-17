@@ -158,7 +158,6 @@ function main() {
         L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
       }
     }
-    if (!compareOnly) L.push('', 'If these changes are intended:', '  npm run api-surface:gen\n  git add scripts/api-surface.txt && git commit && git push');
     L.push('', 'A removal or a signature change needs a release note and the matching version',
       'bump. Parameter renames and members moved onto a base type are not breaking.');
 

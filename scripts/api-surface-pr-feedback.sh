@@ -23,6 +23,8 @@ case "${CODE}" in
 
 Existing consumer code may stop compiling. If that is intended, it needs a release note and a major version bump — not a patch. If it is not, keep the old signature as a deprecated overload.
 
+The snapshot was regenerated and committed for you, so the change is visible in this PR's diff. Pull before your next push.
+
 <details><summary>What changed</summary>
 
 \`\`\`
@@ -35,7 +37,7 @@ ${report}
     body="${MARKER}
 Public API gained new members. Nothing breaking.
 
-Run \`npm run api-surface:gen\` and commit \`scripts/api-surface.txt\` so the baseline stays current — otherwise a later removal of these symbols has nothing to compare against.
+The snapshot was regenerated and committed for you, so \`scripts/api-surface.txt\` in this PR is current. Pull before your next push.
 
 <details><summary>What changed</summary>
 
