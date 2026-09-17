@@ -136,4 +136,4 @@ enum ServerlessJobType
   ServerlessJobType.RobotJob = 'RobotJob'
   ServerlessJobType.StudioWebDesigner = 'StudioWebDesigner'
   ServerlessJobType.WebApp = 'WebApp'
-function export function createJobWithMethods(jobData:RawJobGetResponse,service:JobServiceModel):JobGetResponse
+function createJobWithMethods(jobData:RawJobGetResponse,service:JobServiceModel):JobGetResponse

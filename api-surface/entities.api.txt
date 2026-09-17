@@ -536,4 +536,4 @@ interface SqlType
   SqlType.maxValue?:number
   SqlType.minValue?:number
   SqlType.name:string
-function export function createEntityWithMethods(entityData:RawEntityGetResponse,service:EntityServiceModel):EntityGetResponse
+function createEntityWithMethods(entityData:RawEntityGetResponse,service:EntityServiceModel):EntityGetResponse

@@ -17,10 +17,17 @@ interface CodedFunctionPlatform
 interface CodedFunctionRobot
   CodedFunctionRobot.accessToken:string|null
   CodedFunctionRobot.key?:string|null
-const DEFAULT_ITEMS_FIELD
-const DEFAULT_PAGE_SIZE
-const DEFAULT_TOTAL_COUNT_FIELD
+const DEFAULT_ITEMS_FIELD = 'value'
+const DEFAULT_PAGE_SIZE = 50
+const DEFAULT_TOTAL_COUNT_FIELD = '@odata.count'
 const ErrorType
+  ErrorType.AUTHENTICATION = 'AuthenticationError'
+  ErrorType.AUTHORIZATION = 'AuthorizationError'
+  ErrorType.NETWORK = 'NetworkError'
+  ErrorType.NOT_FOUND = 'NotFoundError'
+  ErrorType.RATE_LIMIT = 'RateLimitError'
+  ErrorType.SERVER = 'ServerError'
+  ErrorType.VALIDATION = 'ValidationError'
 type HasPaginationOptions<T> = |(T&{ pageSize:number })|(T&{ cursor:PaginationCursor })|(T&{ jumpToPage:number })
 interface HttpRequestInit
   HttpRequestInit.body?:unknown
@@ -40,9 +47,19 @@ interface HttpResponse
   HttpResponse.statusText:string
   HttpResponse.url:string
 const HttpStatus
+  HttpStatus.BAD_GATEWAY = 502
+  HttpStatus.BAD_REQUEST = 400
+  HttpStatus.FORBIDDEN = 403
+  HttpStatus.GATEWAY_TIMEOUT = 504
+  HttpStatus.INTERNAL_SERVER_ERROR = 500
+  HttpStatus.NOT_FOUND = 404
+  HttpStatus.NOT_IMPLEMENTED = 501
+  HttpStatus.SERVICE_UNAVAILABLE = 503
+  HttpStatus.TOO_MANY_REQUESTS = 429
+  HttpStatus.UNAUTHORIZED = 401
 interface LogoutOptions
   LogoutOptions.endSession?:boolean
-const MAX_PAGE_SIZE
+const MAX_PAGE_SIZE = 1000
 class NetworkError extends UiPathError
   NetworkError.constructor(params:Partial<ErrorParams>= {})  @internal
 interface NonPaginatedResponse<T>
@@ -107,18 +124,20 @@ class UiPathError extends Error
 type UiPathSDKConfig = BaseConfig&LoginFields&(|{ secret:string;clientId?:never;redirectUri?:never;scope?:never }|({ secret?:never }&OAuthFields))
 class ValidationError extends UiPathError
   ValidationError.constructor(params:Partial<ErrorParams>= {})  @internal
-function export function getErrorDetails(error:unknown):{ message:string;statusCode?:number }
-function export function getLimitedPageSize(pageSize?:number):number
-function export async function httpRequest(url:string,init:HttpRequestInit = {}):Promise<HttpResponse>
-function export function isAuthenticationError(error:unknown):error is AuthenticationError
-function export function isAuthorizationError(error:unknown):error is AuthorizationError
-function export function isNetworkError(error:unknown):error is NetworkError
-function export function isNotFoundError(error:unknown):error is NotFoundError
-function export function isRateLimitError(error:unknown):error is RateLimitError
-function export function isServerError(error:unknown):error is ServerError
-function export function isUiPathError(error:unknown):error is UiPathError
-function export function isValidationError(error:unknown):error is ValidationError
+function getErrorDetails(error:unknown):{ message:string;statusCode?:number }
+function getLimitedPageSize(pageSize?:number):number
+function httpRequest(url:string,init:HttpRequestInit = {}):Promise<HttpResponse>
+function isAuthenticationError(error:unknown):error is AuthenticationError
+function isAuthorizationError(error:unknown):error is AuthorizationError
+function isNetworkError(error:unknown):error is NetworkError
+function isNotFoundError(error:unknown):error is NotFoundError
+function isRateLimitError(error:unknown):error is RateLimitError
+function isServerError(error:unknown):error is ServerError
+function isUiPathError(error:unknown):error is UiPathError
+function isValidationError(error:unknown):error is ValidationError
 const telemetryClient  @internal
+  telemetryClient.initialize = ?
+  telemetryClient.setUserId = ?
 const track  @internal
 const trackEvent  @internal
-function export function wait(durationMs:number):Promise<void>
+function wait(durationMs:number):Promise<void>

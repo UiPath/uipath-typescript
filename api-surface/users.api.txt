@@ -68,4 +68,4 @@ class Users extends BaseService implements PlatformUserServiceModel
   Users.getAll<T extends PlatformUserGetAllOptions = PlatformUserGetAllOptions>(options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<PlatformUserGetResponse>:NonPaginatedResponse<PlatformUserGetResponse>>
   Users.getById(userId:string):Promise<PlatformUserGetResponse>
   Users.updateById(userId:string,update:PlatformUserUpdateOptions):Promise<void>
-function export function createPlatformUserWithMethods(userData:RawPlatformUserGetResponse,service:PlatformUserServiceModel):PlatformUserGetResponse
+function createPlatformUserWithMethods(userData:RawPlatformUserGetResponse,service:PlatformUserServiceModel):PlatformUserGetResponse

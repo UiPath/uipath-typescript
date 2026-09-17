@@ -33,4 +33,4 @@ interface RawBusinessAppGetResponse  @internal
   RawBusinessAppGetResponse.lastModifiedTime:string
   RawBusinessAppGetResponse.name:string
   RawBusinessAppGetResponse.processKeys:string[]
-function export function createBusinessAppWithMethods(data:RawBusinessAppGetResponse,service:BusinessAppsServiceModel):BusinessAppGetResponse  @internal
+function createBusinessAppWithMethods(data:RawBusinessAppGetResponse,service:BusinessAppsServiceModel):BusinessAppGetResponse  @internal

@@ -315,4 +315,4 @@ interface UserLoginInfo
   UserLoginInfo.surname:string
   UserLoginInfo.type:TaskUserType
   UserLoginInfo.userName:string
-function export function createTaskWithMethods(taskData:RawTaskGetResponse|RawTaskCreateResponse,service:TaskServiceModel):TaskGetResponse|TaskCreateResponse
+function createTaskWithMethods(taskData:RawTaskGetResponse|RawTaskCreateResponse,service:TaskServiceModel):TaskGetResponse|TaskCreateResponse

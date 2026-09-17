@@ -156,7 +156,6 @@ class ProcessService extends FolderScopedService implements ProcessServiceModel
   ProcessService.getByName(name:string,options:ProcessGetByNameOptions = {}):Promise<ProcessGetResponse>
   ProcessService.start(request:ProcessStartRequest,folderId:number,options?:RequestOptions):Promise<ProcessStartResponse[]>
   ProcessService.start(request:ProcessStartRequest,options?:ProcessStartOptions):Promise<ProcessStartResponse[]>
-  ProcessService.start(request:ProcessStartRequest,optionsOrFolderId?:ProcessStartOptions|number,legacyOptions?:RequestOptions,):Promise<ProcessStartResponse[]>
 interface ProcessServiceModel
   ProcessServiceModel.getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<ProcessGetResponse>:NonPaginatedResponse<ProcessGetResponse>>
   ProcessServiceModel.getById(id:number,folderId:number,options?:ProcessGetByIdOptions):Promise<ProcessGetResponse>
@@ -215,7 +214,6 @@ class Processes extends FolderScopedService implements ProcessServiceModel
   Processes.getByName(name:string,options:ProcessGetByNameOptions = {}):Promise<ProcessGetResponse>
   Processes.start(request:ProcessStartRequest,folderId:number,options?:RequestOptions):Promise<ProcessStartResponse[]>
   Processes.start(request:ProcessStartRequest,options?:ProcessStartOptions):Promise<ProcessStartResponse[]>
-  Processes.start(request:ProcessStartRequest,optionsOrFolderId?:ProcessStartOptions|number,legacyOptions?:RequestOptions,):Promise<ProcessStartResponse[]>
 enum RemoteControlAccess
   RemoteControlAccess.Full = 'Full'
   RemoteControlAccess.None = 'None'

@@ -391,5 +391,5 @@ interface TopQueryOptions
   TopQueryOptions.packageId?:string
   TopQueryOptions.processKey?:string
   TopQueryOptions.version?:string
-function export function createCaseInstanceWithMethods(instanceData:RawCaseInstanceGetResponse,service:CaseInstancesServiceModel):CaseInstanceGetResponse
-function export function createCaseWithMethods(caseData:CaseGetAllResponse,service:CasesServiceModel):CaseGetAllWithMethodsResponse
+function createCaseInstanceWithMethods(instanceData:RawCaseInstanceGetResponse,service:CaseInstancesServiceModel):CaseInstanceGetResponse
+function createCaseWithMethods(caseData:CaseGetAllResponse,service:CasesServiceModel):CaseGetAllWithMethodsResponse

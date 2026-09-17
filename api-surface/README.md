@@ -18,5 +18,16 @@ scripts/api-surface-replay.sh <ref>          # <ref>^ vs <ref>
 scripts/api-surface-replay.sh <refA> <refB>
 ```
 
-Parameter names are kept here for readability; they are not part of the
-positional call contract, so ignore renames when judging impact.
+## Reading the diff
+
+Parameter names are kept for readability. Renaming a *positional* parameter is
+not a breaking change; renaming a field inside an options-object type is.
+
+## What this does not cover
+
+- Runtime behaviour: a changed default, a new throw, a different endpoint behind
+  an unchanged signature.
+- Breaking changes that read as additions -- a newly *required* field or
+  parameter is breaking but appears as a `+` line.
+- Values behind a non-literal initializer (e.g. `new X()`), which render as the
+  name alone.

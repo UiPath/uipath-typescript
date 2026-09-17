@@ -38,4 +38,4 @@ interface RawFunctionGetResponse
   RawFunctionGetResponse.processName:string
   RawFunctionGetResponse.processSlug:string
   RawFunctionGetResponse.slug:string
-function export function createFunctionWithMethods(functionData:RawFunctionGetResponse,service:FunctionServiceModel):FunctionGetResponse
+function createFunctionWithMethods(functionData:RawFunctionGetResponse,service:FunctionServiceModel):FunctionGetResponse

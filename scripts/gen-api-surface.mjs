@@ -1,76 +1,145 @@
 #!/usr/bin/env node
 // Generates a signature-level snapshot of the public API surface, one file per
-// subpath export. The snapshot is committed; CI regenerates and fails on drift,
-// so any change to a published signature shows up as a reviewable diff.
+// subpath export. The snapshot is committed; CI regenerates it and fails on
+// drift, so any change to a published signature shows up as a reviewable diff.
 //
-// Works off source (not dist) via the TypeScript AST, with no type checker and
-// no module resolution, so it can also be run against an arbitrary historical
-// checkout that has no node_modules.
-import { readFileSync, existsSync, mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
+// Reads source through the TypeScript AST with no type checker and no module
+// resolution, so it can also be run against an arbitrary historical checkout
+// that has no node_modules of its own (see api-surface-replay.sh).
+//
+// Every way this could silently under-report is a hole in the gate, so anything
+// unresolvable or empty throws instead of being skipped.
+import { readFileSync, existsSync, statSync, mkdirSync, writeFileSync, rmSync, readdirSync } from 'node:fs';
 import { dirname, resolve, relative } from 'node:path';
 import ts from 'typescript';
 
 const ROOT = process.argv[2] ? resolve(process.argv[2]) : process.cwd();
 const OUT = process.argv[3] ? resolve(process.argv[3]) : resolve(ROOT, 'api-surface');
 
-// Entry points: the root barrel plus every serviceEntries record in rollup.config.js.
+const fail = (msg) => { throw new Error(`api-surface: ${msg}`); };
+
+// --- tsconfig path aliases -------------------------------------------------
+// Barrels re-export through `@/...` as well as relative paths. Treating an
+// alias as external silently drops everything behind it.
+function readAliases() {
+  const p = resolve(ROOT, 'tsconfig.json');
+  if (!existsSync(p)) return [];
+  const raw = readFileSync(p, 'utf8').replace(/\/\/[^\n]*/g, '');
+  let paths;
+  try { paths = JSON.parse(raw)?.compilerOptions?.paths ?? {}; } catch { return []; }
+  return Object.entries(paths)
+    .filter(([k]) => k.endsWith('/*') && k !== '*')
+    .map(([k, v]) => ({ prefix: k.slice(0, -1), targets: v.map((t) => t.replace(/\*$/, '')) }));
+}
+const ALIASES = readAliases();
+
+// --- entry points ----------------------------------------------------------
+// package.json `exports` is the consumer contract; rollup.config.js holds the
+// source entry for each. They must agree, or a subpath goes unmonitored.
 function readEntries() {
+  const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
+  const declared = new Set(
+    Object.keys(pkg.exports ?? {}).filter((k) => k === '.' || k.startsWith('./')).map((k) => (k === '.' ? '.' : k.slice(2)))
+  );
   const entries = [{ name: '.', input: 'src/index.ts' }];
   const cfgPath = resolve(ROOT, 'rollup.config.js');
-  if (existsSync(cfgPath)) {
-    const cfg = readFileSync(cfgPath, 'utf8');
-    const block = cfg.slice(cfg.indexOf('const serviceEntries'));
-    const re = /name:\s*'([^']+)'[\s\S]{0,200}?input:\s*'([^']+)'/g;
-    let m;
-    while ((m = re.exec(block))) entries.push({ name: m[1], input: m[2] });
+  if (!existsSync(cfgPath)) fail('rollup.config.js not found; cannot resolve subpath entry points');
+  const cfg = readFileSync(cfgPath, 'utf8');
+  const at = cfg.indexOf('const serviceEntries');
+  if (at === -1) fail('rollup.config.js has no `const serviceEntries` block');
+  const block = cfg.slice(at);
+  const re = /name:\s*['"`]([^'"`]+)['"`][\s\S]{0,200}?input:\s*['"`]([^'"`]+)['"`]/g;
+  let m;
+  while ((m = re.exec(block))) entries.push({ name: m[1], input: m[2] });
+
+  for (const e of entries) {
+    if (!existsSync(resolve(ROOT, e.input))) fail(`entry point '${e.name}' points at missing file ${e.input}`);
   }
-  return entries.filter((e) => existsSync(resolve(ROOT, e.input)));
+  const found = new Set(entries.map((e) => e.name));
+  const missing = [...declared].filter((d) => !found.has(d));
+  const extra = [...found].filter((f) => !declared.has(f));
+  if (missing.length || extra.length) {
+    fail(
+      `package.json exports and rollup.config.js entry points disagree.\n` +
+      `  exported but not snapshotted: ${missing.join(', ') || '(none)'}\n` +
+      `  snapshotted but not exported: ${extra.join(', ') || '(none)'}`
+    );
+  }
+  return entries;
 }
 
+// --- parsing ---------------------------------------------------------------
+const parsed = new Map();
 function parse(file) {
-  return ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  if (parsed.has(file)) return parsed.get(file);
+  const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
+  // createSourceFile error-recovers instead of throwing: a malformed file would
+  // quietly yield fewer exports.
+  if (sf.parseDiagnostics?.length) {
+    fail(`${relative(ROOT, file)} failed to parse (${sf.parseDiagnostics.length} diagnostics); snapshot would be incomplete`);
+  }
+  parsed.set(file, sf);
+  return sf;
 }
+
+const isFile = (p) => { try { return statSync(p).isFile(); } catch { return false; } };
 
 function resolveSpec(fromFile, spec) {
-  if (!spec.startsWith('.')) return null; // external dependency: not our surface
-  const base = resolve(dirname(fromFile), spec);
-  for (const c of [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, base]) {
-    if (existsSync(c) && !c.endsWith('/')) {
-      try { if (readFileSync(c)) return c; } catch { /* directory */ }
+  let bases = [];
+  if (spec.startsWith('.')) {
+    bases = [resolve(dirname(fromFile), spec)];
+  } else {
+    for (const a of ALIASES) {
+      if (spec.startsWith(a.prefix)) bases.push(...a.targets.map((t) => resolve(ROOT, t + spec.slice(a.prefix.length))));
+    }
+    if (!bases.length) return null; // genuine external dependency
+  }
+  for (const base of bases) {
+    for (const c of [`${base}.ts`, `${base}.tsx`, `${base}.d.ts`, `${base}/index.ts`, `${base}/index.tsx`, base]) {
+      if (isFile(c)) return c;
     }
   }
-  return null;
+  fail(`cannot resolve '${spec}' from ${relative(ROOT, fromFile)} -- symbols behind it would be missing`);
 }
 
-const isExported = (n) =>
-  n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+// --- export collection -----------------------------------------------------
+// name -> { decls: node[], sf, namespace? }. Overload signatures share a name,
+// so declarations accumulate rather than overwrite.
+const memo = new Map();
+const inProgress = new Set();
 
-function declName(n) {
-  if (n.name && ts.isIdentifier(n.name)) return n.name.text;
-  return null;
+function addDecl(map, name, node, sf, extra = {}) {
+  const cur = map.get(name);
+  if (cur && cur.sf === sf) cur.decls.push(node);
+  else map.set(name, { decls: [node], sf, ...extra });
 }
 
-// Collect { exportedName -> declaration node } for a module, following
-// `export *` and `export { x } from` chains.
-function collectExports(file, seen = new Set()) {
+function collectExports(file) {
+  if (memo.has(file)) return memo.get(file);
+  if (inProgress.has(file)) return new Map(); // true import cycle
+  inProgress.add(file);
+
   const out = new Map();
-  if (!file || seen.has(file)) return out;
-  seen.add(file);
-  const sf = parse(file);
   const local = new Map();
+  const sf = parse(file);
+
+  const isExported = (n) => n.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
 
   for (const st of sf.statements) {
     if (
       ts.isInterfaceDeclaration(st) || ts.isClassDeclaration(st) ||
-      ts.isTypeAliasDeclaration(st) || ts.isEnumDeclaration(st) ||
-      ts.isFunctionDeclaration(st)
+      ts.isTypeAliasDeclaration(st) || ts.isEnumDeclaration(st) || ts.isFunctionDeclaration(st)
     ) {
-      const n = declName(st);
-      if (n) { local.set(n, st); if (isExported(st)) out.set(n, { node: st, sf }); }
+      const n = st.name && ts.isIdentifier(st.name) ? st.name.text : null;
+      if (!n) continue;
+      addDecl(local, n, st, sf);
+      if (isExported(st)) addDecl(out, n, st, sf);
     } else if (ts.isVariableStatement(st)) {
       for (const d of st.declarationList.declarations) {
         const n = d.name && ts.isIdentifier(d.name) ? d.name.text : null;
-        if (n) { local.set(n, d); if (isExported(st)) out.set(n, { node: d, sf, varStmt: st }); }
+        if (!n) continue;
+        addDecl(local, n, d, sf);
+        if (isExported(st)) addDecl(out, n, d, sf);
       }
     }
   }
@@ -79,98 +148,143 @@ function collectExports(file, seen = new Set()) {
     if (!ts.isExportDeclaration(st)) continue;
     const spec = st.moduleSpecifier?.text;
     const target = spec ? resolveSpec(file, spec) : null;
-    if (!st.exportClause) {
-      if (target) for (const [k, v] of collectExports(target, seen)) if (!out.has(k)) out.set(k, v);
+    if (spec && !target) continue; // external
+
+    if (!st.exportClause) {                                   // export * from '...'
+      if (target) for (const [k, v] of collectExports(target)) if (!out.has(k)) out.set(k, v);
+      continue;
+    }
+    if (ts.isNamespaceExport(st.exportClause)) {              // export * as NS from '...'
+      const ns = st.exportClause.name.text;
+      if (!target) continue;
+      for (const [k, v] of collectExports(target)) out.set(`${ns}.${k}`, { ...v, namespace: ns });
       continue;
     }
     if (!ts.isNamedExports(st.exportClause)) continue;
-    const fromMod = target ? collectExports(target, new Set(seen)) : null;
-    for (const el of st.exportClause.elements) {
+    for (const el of st.exportClause.elements) {              // export { a, b as c } [from '...']
       const exportedAs = el.name.text;
       const original = el.propertyName ? el.propertyName.text : exportedAs;
-      const found = fromMod ? fromMod.get(original) : (local.has(original) ? { node: local.get(original), sf } : null);
-      if (found) out.set(exportedAs, { ...found, alias: exportedAs !== original ? original : undefined });
+      const found = target ? collectExports(target).get(original) : local.get(original);
+      if (found) out.set(exportedAs, found);
     }
   }
+
+  inProgress.delete(file);
+  memo.set(file, out);
   return out;
 }
 
-// Decorators and `async` are implementation detail, not consumer contract:
-// strip them so a @track label edit never shows up as a surface change.
-const stripNoise = (s) => s.replace(/^\s*(@[A-Za-z_$][\w$]*\s*(\([^)]*\))?\s*)+/, '').replace(/^\s*(public\s+|async\s+|declare\s+)+/, '');
+// --- rendering -------------------------------------------------------------
+// `export`, decorators, `async`, `public` and `declare` are not part of the
+// consumer contract; stripping them keeps a @track label edit from reading as
+// an API change.
+const stripNoise = (s) =>
+  s.replace(/^\s*(@[A-Za-z_$][\w$]*\s*(\([\s\S]*?\))?\s*)+/, '')
+   .replace(/^\s*(export\s+|public\s+|async\s+|declare\s+)+/, '');
 const norm = (s) => stripNoise(s).replace(/\s+/g, ' ').replace(/\s*([<>(),;:|&])\s*/g, '$1').replace(/;$/, '').trim();
 
 function tags(node) {
-  const t = [];
+  const t = new Set();
   for (const tag of ts.getJSDocTags(node) ?? []) {
     const n = tag.tagName.text;
-    if (n === 'deprecated' || n === 'experimental' || n === 'internal' || n === 'alpha' || n === 'beta') t.push(n);
+    if (['deprecated', 'experimental', 'internal', 'alpha', 'beta'].includes(n)) t.add(n);
   }
-  return t.length ? `  @${[...new Set(t)].sort().join(' @')}` : '';
+  return t.size ? `  @${[...t].sort().join(' @')}` : '';
 }
 
-// Signature text without the body. Slicing at the first `{` would clip a
-// default value such as `options: EntityInsertOptions = {}`.
+// Signature without the body. Slicing at the first `{` would clip a default
+// value such as `options: EntityInsertOptions = {}`.
 function sigOf(n) {
   const sf = n.getSourceFile();
   const full = n.getText(sf);
-  if (!n.body) return full;
-  return full.slice(0, n.body.getStart(sf) - n.getStart(sf));
+  return n.body ? full.slice(0, n.body.getStart(sf) - n.getStart(sf)) : full;
 }
 
+const paramsAndReturn = (n) => {
+  const sf = n.getSourceFile();
+  const tp = n.typeParameters ? `<${n.typeParameters.map((p) => p.getText(sf)).join(',')}>` : '';
+  const ps = (n.parameters ?? []).map((p) => p.getText(sf)).join(',');
+  const rt = n.type ? `:${n.type.getText(sf)}` : '';
+  return `${tp}(${ps})${rt}`;
+};
+
 const isPublicMember = (m) =>
-  !m.modifiers?.some((x) =>
-    x.kind === ts.SyntaxKind.PrivateKeyword || x.kind === ts.SyntaxKind.ProtectedKeyword) &&
+  !m.modifiers?.some((x) => x.kind === ts.SyntaxKind.PrivateKeyword || x.kind === ts.SyntaxKind.ProtectedKeyword) &&
   !(m.name && ts.isPrivateIdentifier(m.name));
 
 function renderMembers(name, node) {
+  const members = (node.members ?? []).filter(isPublicMember);
+  // An overload implementation signature is not callable as written; when
+  // sibling overload declarations exist, only those are the contract.
+  const overloaded = new Set(
+    members.filter((m) => (ts.isMethodDeclaration(m) || ts.isMethodSignature(m)) && !m.body && m.name)
+      .map((m) => m.name.getText(m.getSourceFile()))
+  );
   const lines = [];
-  for (const m of node.members ?? []) {
-    if (!isPublicMember(m)) continue;
+  for (const m of members) {
     if (ts.isSemicolonClassElement(m)) continue;
     let text;
-    if (ts.isMethodSignature(m) || ts.isMethodDeclaration(m)) {
+    if (ts.isMethodSignature(m) || ts.isMethodDeclaration(m) || ts.isConstructorDeclaration(m)) {
+      if (m.body && m.name && overloaded.has(m.name.getText(m.getSourceFile()))) continue;
       text = sigOf(m);
     } else if (
-      ts.isPropertySignature(m) || ts.isPropertyDeclaration(m) ||
-      ts.isEnumMember(m) || ts.isConstructSignatureDeclaration(m) ||
-      ts.isCallSignatureDeclaration(m) || ts.isIndexSignatureDeclaration(m)
+      ts.isPropertySignature(m) || ts.isPropertyDeclaration(m) || ts.isEnumMember(m) ||
+      ts.isConstructSignatureDeclaration(m) || ts.isCallSignatureDeclaration(m) || ts.isIndexSignatureDeclaration(m)
     ) {
       text = m.getText(m.getSourceFile());
-    } else if (ts.isConstructorDeclaration(m)) {
-      text = sigOf(m);
     } else continue;
     lines.push(`${name}.${norm(text)}${tags(m)}`);
   }
   return lines.sort();
 }
 
-function render(name, { node, sf, varStmt }) {
-  const lines = [];
+function renderOne(name, node, sf) {
   const T = (n) => n.getText(sf);
-  if (ts.isInterfaceDeclaration(node)) {
-    const heritage = node.heritageClauses?.map((h) => norm(T(h))).join(' ') ?? '';
-    const tp = node.typeParameters ? `<${node.typeParameters.map((p) => norm(T(p))).join(',')}>` : '';
-    lines.push(`interface ${name}${tp}${heritage ? ' ' + heritage : ''}${tags(node)}`);
-    lines.push(...renderMembers(name, node).map((l) => '  ' + l));
-  } else if (ts.isClassDeclaration(node)) {
-    const heritage = node.heritageClauses?.map((h) => norm(T(h))).join(' ') ?? '';
-    const tp = node.typeParameters ? `<${node.typeParameters.map((p) => norm(T(p))).join(',')}>` : '';
-    lines.push(`class ${name}${tp}${heritage ? ' ' + heritage : ''}${tags(node)}`);
-    lines.push(...renderMembers(name, node).map((l) => '  ' + l));
-  } else if (ts.isTypeAliasDeclaration(node)) {
-    const tp = node.typeParameters ? `<${node.typeParameters.map((p) => norm(T(p))).join(',')}>` : '';
-    lines.push(`type ${name}${tp} = ${norm(T(node.type))}${tags(node)}`);
-  } else if (ts.isEnumDeclaration(node)) {
-    lines.push(`enum ${name}${tags(node)}`);
-    lines.push(...renderMembers(name, node).map((l) => '  ' + l));
-  } else if (ts.isFunctionDeclaration(node)) {
-    lines.push(`function ${norm(sigOf(node))}${tags(node)}`);
-  } else {
-    const t = node.type ? `: ${norm(T(node.type))}` : '';
-    lines.push(`const ${name}${t}${tags(varStmt ?? node)}`);
+  const tp = node.typeParameters ? `<${node.typeParameters.map((p) => norm(T(p))).join(',')}>` : '';
+  const heritage = node.heritageClauses?.map((h) => norm(T(h))).join(' ') ?? '';
+
+  if (ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node)) {
+    const kind = ts.isInterfaceDeclaration(node) ? 'interface' : 'class';
+    return [`${kind} ${name}${tp}${heritage ? ' ' + heritage : ''}${tags(node)}`,
+            ...renderMembers(name, node).map((l) => '  ' + l)];
   }
-  return lines;
+  if (ts.isTypeAliasDeclaration(node)) return [`type ${name}${tp} = ${norm(T(node.type))}${tags(node)}`];
+  if (ts.isEnumDeclaration(node)) return [`enum ${name}${tags(node)}`, ...renderMembers(name, node).map((l) => '  ' + l)];
+  // Render from the EXPORTED name, not the declaration's own name, so an
+  // aliased re-export (`export { thing as publicName }`) is tracked.
+  if (ts.isFunctionDeclaration(node)) return [`function ${name}${norm(paramsAndReturn(node))}${tags(node)}`];
+
+  // Variable declaration. With no type annotation (the norm for `as const`
+  // objects and arrow functions) the name alone carries no contract.
+  // Unwrap `as const` / `satisfies` so the object underneath is still rendered.
+  let init = node.initializer;
+  while (init && (ts.isAsExpression(init) || ts.isSatisfiesExpression?.(init) || ts.isParenthesizedExpression(init))) {
+    init = init.expression;
+  }
+  if (node.type) return [`const ${name}:${norm(T(node.type))}${tags(node)}`];
+  if (init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init))) {
+    return [`const ${name}${norm(paramsAndReturn(init))}${tags(node)}`];
+  }
+  if (init && ts.isObjectLiteralExpression(init)) {
+    const props = init.properties
+      .filter((p) => p.name)
+      .map((p) => `  ${name}.${norm(p.name.getText(sf))} = ${ts.isPropertyAssignment(p) ? norm(T(p.initializer)) : '?'}`)
+      .sort();
+    return [`const ${name}${tags(node)}`, ...props];
+  }
+  if (init && ts.isArrayLiteralExpression(init)) return [`const ${name} = ${norm(T(init))}${tags(node)}`];
+  if (init && (ts.isLiteralExpression(init) || init.kind === ts.SyntaxKind.TrueKeyword || init.kind === ts.SyntaxKind.FalseKeyword)) {
+    return [`const ${name} = ${norm(T(init))}${tags(node)}`];
+  }
+  return [`const ${name}${tags(node)}`];
+}
+
+function render(name, entry) {
+  const { decls, sf } = entry;
+  // Overload signatures are the contract; the implementation is not callable.
+  const sigs = decls.filter((d) => ts.isFunctionDeclaration(d) && !d.body);
+  const chosen = sigs.length ? sigs : decls;
+  return chosen.flatMap((d) => renderOne(name, d, sf));
 }
 
 function main() {
@@ -179,14 +293,16 @@ function main() {
   mkdirSync(OUT, { recursive: true });
   let total = 0;
   for (const e of entries) {
-    const file = resolve(ROOT, e.input);
-    const exports = collectExports(file);
-    const body = [...exports.keys()].sort()
-      .flatMap((k) => render(k, exports.get(k)))
-      .join('\n');
+    const exports = collectExports(resolve(ROOT, e.input));
+    // An entry point that resolves to nothing is always a bug, and would make
+    // the gate silently stop watching that subpath.
+    if (exports.size === 0) fail(`entry point '${e.name}' (${e.input}) produced no exports`);
+    const body = [...exports.keys()].sort().flatMap((k) => render(k, exports.get(k))).join('\n');
     const subpath = e.name === '.' ? '@uipath/uipath-typescript' : `@uipath/uipath-typescript/${e.name}`;
-    const header = `## ${subpath}\n## generated by scripts/gen-api-surface.mjs -- do not edit by hand\n\n`;
-    writeFileSync(resolve(OUT, `${e.name === '.' ? 'root' : e.name}.api.txt`), header + body + '\n');
+    writeFileSync(
+      resolve(OUT, `${e.name === '.' ? 'root' : e.name}.api.txt`),
+      `## ${subpath}\n## generated by scripts/gen-api-surface.mjs -- do not edit by hand\n\n${body}\n`
+    );
     total += exports.size;
   }
   console.log(`api-surface: ${entries.length} entry points, ${total} exported symbols -> ${relative(ROOT, OUT) || OUT}`);

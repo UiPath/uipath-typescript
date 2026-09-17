@@ -15,9 +15,12 @@ B="${2:-}"
 if [ -z "$B" ]; then B="$A"; A="$A^"; fi
 SCRATCH="$ROOT/.apihist"
 gen() {
-  local ref="$1" label="$2" d="$SCRATCH/src-$label" out="$SCRATCH/out-$label"
+  local ref="$1"
+  local label="$2"
+  local d="$SCRATCH/src-$label"
+  local out="$SCRATCH/out-$label"
   rm -rf "$d" "$out"; mkdir -p "$d"
-  git -C "$ROOT" archive "$ref" src rollup.config.js | tar -x -C "$d"
+  git -C "$ROOT" archive "$ref" src rollup.config.js package.json tsconfig.json | tar -x -C "$d"
   node "$ROOT/scripts/gen-api-surface.mjs" "$d" "$out" >/dev/null
 }
 gen "$A" before

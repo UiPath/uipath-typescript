@@ -60,13 +60,10 @@ class BucketService extends FolderScopedService implements BucketServiceModel
   BucketService.getByName(name:string,options:BucketGetByNameOptions = {}):Promise<BucketGetResponse>
   BucketService.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,folderId:number,options?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
   BucketService.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,options?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
-  BucketService.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,optionsOrFolderId?:T|number,legacyOptions?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
   BucketService.getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(bucketId:number,options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BucketFile>:NonPaginatedResponse<BucketFile>>
   BucketService.getReadUri(bucketId:number,path:string,options?:BucketGetReadUriRequestOptions,):Promise<BucketGetUriResponse>
-  BucketService.getReadUri(bucketIdOrOptions:number|BucketGetReadUriOptions,path?:string,options?:BucketGetReadUriRequestOptions,):Promise<BucketGetUriResponse>
   BucketService.getReadUri(options:BucketGetReadUriOptions):Promise<BucketGetUriResponse>
   BucketService.uploadFile(bucketId:number,path:string,content:Blob|Uint8Array<ArrayBuffer>|File,options?:BucketUploadFileRequestOptions,):Promise<BucketUploadResponse>
-  BucketService.uploadFile(bucketIdOrOptions:number|BucketUploadFileOptions,path?:string,content?:Blob|Uint8Array<ArrayBuffer>|File,options?:BucketUploadFileRequestOptions,):Promise<BucketUploadResponse>
   BucketService.uploadFile(options:BucketUploadFileOptions):Promise<BucketUploadResponse>
 interface BucketServiceModel
   BucketServiceModel.deleteFile(bucketId:number,path:string,options?:BucketDeleteFileOptions):Promise<void>
@@ -95,12 +92,9 @@ class Buckets extends FolderScopedService implements BucketServiceModel
   Buckets.getByName(name:string,options:BucketGetByNameOptions = {}):Promise<BucketGetResponse>
   Buckets.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,folderId:number,options?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
   Buckets.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,options?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
-  Buckets.getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(bucketId:number,optionsOrFolderId?:T|number,legacyOptions?:T,):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BlobItem>:NonPaginatedResponse<BlobItem>>
   Buckets.getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(bucketId:number,options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<BucketFile>:NonPaginatedResponse<BucketFile>>
   Buckets.getReadUri(bucketId:number,path:string,options?:BucketGetReadUriRequestOptions,):Promise<BucketGetUriResponse>
-  Buckets.getReadUri(bucketIdOrOptions:number|BucketGetReadUriOptions,path?:string,options?:BucketGetReadUriRequestOptions,):Promise<BucketGetUriResponse>
   Buckets.getReadUri(options:BucketGetReadUriOptions):Promise<BucketGetUriResponse>
   Buckets.uploadFile(bucketId:number,path:string,content:Blob|Uint8Array<ArrayBuffer>|File,options?:BucketUploadFileRequestOptions,):Promise<BucketUploadResponse>
-  Buckets.uploadFile(bucketIdOrOptions:number|BucketUploadFileOptions,path?:string,content?:Blob|Uint8Array<ArrayBuffer>|File,options?:BucketUploadFileRequestOptions,):Promise<BucketUploadResponse>
   Buckets.uploadFile(options:BucketUploadFileOptions):Promise<BucketUploadResponse>
 type ResponseDictionary = Record<string,string>

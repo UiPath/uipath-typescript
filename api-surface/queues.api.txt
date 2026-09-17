@@ -104,7 +104,6 @@ class QueueService extends FolderScopedService implements QueueServiceModel
   QueueService.getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<QueueGetWithMethodsResponse>:NonPaginatedResponse<QueueGetWithMethodsResponse>>
   QueueService.getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(queueId:number,options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<QueueItem>:NonPaginatedResponse<QueueItem>>
   QueueService.getById(id:number,folderId:number,options?:QueueGetByIdOptions):Promise<QueueGetResponse>
-  QueueService.getById(id:number,folderIdOrOptions?:number|QueueGetByIdScopedOptions,options:QueueGetByIdOptions = {}):Promise<QueueGetResponse|QueueGetWithMethodsResponse>
   QueueService.getById(id:number,options?:QueueGetByIdScopedOptions):Promise<QueueGetWithMethodsResponse>
   QueueService.getByKey(key:string,options:QueueGetByKeyOptions = {}):Promise<QueueGetWithMethodsResponse>
   QueueService.getByName(name:string,options:QueueGetByNameOptions = {}):Promise<QueueGetWithMethodsResponse>
@@ -129,10 +128,9 @@ class Queues extends FolderScopedService implements QueueServiceModel
   Queues.getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<QueueGetWithMethodsResponse>:NonPaginatedResponse<QueueGetWithMethodsResponse>>
   Queues.getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(queueId:number,options?:T):Promise<T extends HasPaginationOptions<T>? PaginatedResponse<QueueItem>:NonPaginatedResponse<QueueItem>>
   Queues.getById(id:number,folderId:number,options?:QueueGetByIdOptions):Promise<QueueGetResponse>
-  Queues.getById(id:number,folderIdOrOptions?:number|QueueGetByIdScopedOptions,options:QueueGetByIdOptions = {}):Promise<QueueGetResponse|QueueGetWithMethodsResponse>
   Queues.getById(id:number,options?:QueueGetByIdScopedOptions):Promise<QueueGetWithMethodsResponse>
   Queues.getByKey(key:string,options:QueueGetByKeyOptions = {}):Promise<QueueGetWithMethodsResponse>
   Queues.getByName(name:string,options:QueueGetByNameOptions = {}):Promise<QueueGetWithMethodsResponse>
   Queues.insertItemByName(queueName:string,specificData:Record<string,QueueItemValue>,options:QueueInsertItemOptions = {}):Promise<QueueItem>
   Queues.startTransaction(queue:QueueRef,options:QueueStartTransactionOptions = {}):Promise<QueueItem|null>
-function export function createQueueWithMethods(queueData:QueueGetResponse,service:QueueServiceModel):QueueGetWithMethodsResponse
+function createQueueWithMethods(queueData:QueueGetResponse,service:QueueServiceModel):QueueGetWithMethodsResponse
