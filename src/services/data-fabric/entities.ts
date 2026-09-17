@@ -6,9 +6,7 @@ import {
   EntityGetAllRecordsOptions,
   EntityGetRecordByIdOptions,
   EntityGetRecordByNameOptions,
-  EntityInsertOptions,
   EntityInsertRecordOptions,
-  EntityBatchInsertOptions,
   EntityInsertRecordsOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
@@ -361,13 +359,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return this.getAllRecords(entityId, options);
   }
 
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
-    return this.insertRecordById(id, data, options);
-  }
 
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
-    return this.insertRecordsById(id, data, options);
-  }
 
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
