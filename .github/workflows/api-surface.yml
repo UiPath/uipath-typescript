@@ -14,11 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  api-surface:
-    # Regenerates the committed public-API snapshot and fails if it drifts.
-    # The job does not judge whether a change is breaking — it only makes every
-    # change to a published signature visible as a reviewable diff, which a
-    # 2000-line feature PR otherwise buries.
+  breaking:
+    # Required check. Fails only when the public API changed in a way that can
+    # break a consumer: a removed or changed signature, or a newly required
+    # field. Additions alone do not block a merge.
+    name: breaking changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,5 +27,29 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Check the public API surface
+      - name: Check for breaking public API changes
+        run: |
+          # `|| code=$?` is required: the default shell is `bash -e`, which
+          # would abort on a non-zero exit before the code could be read.
+          code=0
+          node scripts/check-api-surface.mjs || code=$?
+          # 1 = breaking. 0 = no change, 2 = additions only (snapshot job's problem)
+          if [ "$code" = "1" ]; then exit 1; fi
+          exit 0
+
+  snapshot:
+    # Advisory check -- do not mark this one required. The snapshot has to be
+    # committed even for additions, or the baseline drifts and a later removal
+    # of a never-recorded symbol becomes invisible. But a forgotten regenerate
+    # on a purely additive change should not block the merge.
+    name: snapshot up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check the snapshot matches the source
         run: node scripts/check-api-surface.mjs

@@ -108,6 +108,7 @@ function main() {
       return;
     }
 
+    let riskyCount = 0;
     const L = [];
     const REQUIRED = /^\.?[\w$]*[^?]:/;
 
@@ -145,6 +146,7 @@ function main() {
         ([, e]) => Array.from(e.sigs).some((s) => REQUIRED.test(s)) && Array.from(e.containers).every((c) => !newDecls.has(shortName(c)))
       );
       const riskySet = new Set(risky.map(([id]) => id));
+      riskyCount = risky.length;
       if (risky.length) {
         L.push('', 'ADDED BUT REQUIRED — breaks callers that omit them');
         for (const [id, e] of risky.sort()) L.push(`  ${cnames(e)} :: ${id}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
@@ -166,8 +168,17 @@ function main() {
       appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## API surface changed\n\n\`\`\`\n${report}\n\`\`\`\n`);
     }
     if (!compareOnly) {
-      console.log('\n::error::API surface changed but api-surface/ was not updated. See the report above.');
-      process.exitCode = 1;
+      // Breaking buckets block a merge. A safe-only change still needs the
+      // snapshot committed -- otherwise the baseline drifts and a later removal
+      // of a never-recorded symbol is invisible -- but it does not block.
+      const breaking = changed.size + removedDecls.size + removedMem.size + riskyCount;
+      if (breaking) {
+        console.log(`\n::error::${breaking} breaking change(s) to the public API. See the report above.`);
+        process.exitCode = 1;
+      } else {
+        console.log('\n::notice::Public API changed (additions only). Run `npm run api-surface:gen` and commit scripts/api-surface.txt.');
+        process.exitCode = 2;
+      }
     }
   } finally {
     if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
