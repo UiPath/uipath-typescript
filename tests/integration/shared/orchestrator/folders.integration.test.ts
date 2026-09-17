@@ -49,7 +49,7 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       }
 
       const folder = await folders.getByKey(config.folderKey, {
-        select: 'Key,FullyQualifiedName',
+        select: 'key,fullyQualifiedName',
       });
 
       expect(folder.key).toBe(config.folderKey);

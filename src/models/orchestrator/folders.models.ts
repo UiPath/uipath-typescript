@@ -28,7 +28,7 @@ export interface FolderServiceModel {
    * @example
    * ```typescript
    * // Resolve the fully qualified path for a known folder key
-   * const folder = await folders.getByKey('<folderKey>', { select: 'FullyQualifiedName' });
+   * const folder = await folders.getByKey('<folderKey>', { select: 'fullyQualifiedName' });
    *
    * console.log(folder.fullyQualifiedName);
    * ```

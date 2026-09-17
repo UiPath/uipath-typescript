@@ -2,8 +2,6 @@ import type { BaseOptions } from '../common/types';
 
 /**
  * Orchestrator folder type.
- *
- * Serialized as a string by the Folders OData API.
  */
 export enum FolderType {
   Standard = 'Standard',
@@ -15,8 +13,6 @@ export enum FolderType {
 
 /**
  * Robot provisioning model for a folder.
- *
- * Serialized as a string by the Folders OData API.
  */
 export enum FolderProvisionType {
   Manual = 'Manual',
@@ -25,8 +21,6 @@ export enum FolderProvisionType {
 
 /**
  * Permission model for a folder.
- *
- * Serialized as a string by the Folders OData API.
  */
 export enum FolderPermissionModel {
   InheritFromTenant = 'InheritFromTenant',
@@ -35,8 +29,6 @@ export enum FolderPermissionModel {
 
 /**
  * Package feed used by a folder.
- *
- * Serialized as a string by the Folders OData API.
  */
 export enum FolderFeedType {
   Undefined = 'Undefined',
@@ -47,10 +39,7 @@ export enum FolderFeedType {
 }
 
 /**
- * A single Orchestrator folder, camelCased from the OData wire format.
- *
- * Matches the serialized `FolderDto` fields (JsonIgnore / SwaggerIgnore
- * properties are omitted).
+ * A single Orchestrator folder returned by {@link FolderServiceModel.getByKey}.
  */
 export interface FolderGetResponse {
   /** Numeric folder id. */
@@ -80,7 +69,7 @@ export interface FolderGetResponse {
 }
 
 /**
- * Query options for `getByKey` (`$expand` / `$select` only — the Folders
- * GetByKey action is not folder-scoped, so no folder headers are sent).
+ * Query options for {@link FolderServiceModel.getByKey} (`expand` / `select` only).
+ * This lookup is not folder-scoped — no folder headers are sent.
  */
 export interface FolderGetByKeyOptions extends BaseOptions {}

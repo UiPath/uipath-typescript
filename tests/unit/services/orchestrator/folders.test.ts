@@ -74,13 +74,13 @@ describe('FolderService Unit Tests', () => {
     it('should call GetByKey with select options and no folder headers', async () => {
       mockApiClient.get.mockResolvedValue(RAW_FOLDER);
 
-      await folderService.getByKey(FOLDER_KEY, { select: 'FullyQualifiedName' });
+      await folderService.getByKey(FOLDER_KEY, { select: 'fullyQualifiedName' });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FOLDER_ENDPOINTS.GET_BY_KEY(FOLDER_KEY),
         expect.objectContaining({
           params: expect.objectContaining({
-            '$select': 'FullyQualifiedName',
+            '$select': 'fullyQualifiedName',
           }),
         }),
       );
