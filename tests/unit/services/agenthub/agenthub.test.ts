@@ -38,7 +38,7 @@ const RESPONSE: AgentHubChatCompletionResponse = {
 // ===== TEST SUITE =====
 describe('AgentHubService Unit Tests', () => {
   let service: AgentHubService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();

@@ -5,10 +5,17 @@ import type {
 } from './agenthub.types';
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Service for AgentHub LLM gateway chat completions.
  *
- * Sends OpenAI-compatible chat completion requests through the
- * `agenthub_/llm/api` gateway, which routes by the normalized model name.
+ * Sends OpenAI-compatible chat completion requests through the AgentHub LLM
+ * gateway, which routes by the normalized model name.
  *
  * Streaming (`stream: true`, SSE) is intentionally not covered: the SDK HTTP
  * layer buffers response bodies, so callers needing token streams should keep
@@ -32,14 +39,15 @@ export interface AgentHubServiceModel {
   /**
    * Creates a non-streaming chat completion via the AgentHub LLM gateway.
    *
-   * POSTs the OpenAI-compatible request body to `chat/completions` with the
-   * `X-UiPath-LlmGateway-NormalizedApi-ModelName` header set to
-   * `request.model`.
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
    *
    * @param request - Model, messages, and generation parameters.
    * @param options - Optional abort signal.
    * @returns Promise resolving to the {@link AgentHubChatCompletionResponse} completion.
-   * @throws ValidationError when `model` or `messages` are missing/empty.
    * @example
    * ```typescript
    * const completion = await agentHub.createChatCompletion({

@@ -12,6 +12,12 @@ import { BaseService } from '../base';
 
 /**
  * Service for AgentHub LLM gateway chat completions (non-streaming).
+ *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This service is experimental and may change or be removed in future releases.
+ * ///
  */
 export class AgentHubService extends BaseService implements AgentHubServiceModel {
   @track('AgentHub.CreateChatCompletion')

@@ -1,6 +1,12 @@
 /**
  * AgentHub Module
  *
+ * @experimental
+ *
+ * /// warning
+ * Preview: This module is experimental and may change or be removed in future releases.
+ * ///
+ *
  * Provides access to the AgentHub LLM gateway chat completions — send
  * OpenAI-compatible requests routed by normalized model name.
  *

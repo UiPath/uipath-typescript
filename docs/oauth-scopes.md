@@ -236,6 +236,12 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getCallsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopSpaces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## AgentHub
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `createChatCompletion()` | `LLMGateway` |
+
 ## Traces
 
 | Method | OAuth Scope |
