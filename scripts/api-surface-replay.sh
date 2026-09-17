@@ -26,4 +26,4 @@ gen() {
 gen "$A" before
 gen "$B" after
 echo "api-surface: $A -> $B"
-diff -ru "$SCRATCH/out-before" "$SCRATCH/out-after" || true
+node "$ROOT/scripts/check-api-surface.mjs" "$SCRATCH/out-before" "$SCRATCH/out-after"

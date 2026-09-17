@@ -27,21 +27,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run api-surface:gen
-      - name: Check for uncommitted API surface changes
-        run: |
-          # Stage first: `git diff` alone ignores untracked files, so a brand-new
-          # subpath export would produce a new snapshot file the check never saw.
-          git add -A -- api-surface
-          if ! git diff --cached --quiet -- api-surface; then
-            echo "::error::The public API surface changed but api-surface/ was not updated."
-            echo ""
-            echo "Run 'npm run api-surface:gen' and commit the result."
-            echo "Review the diff below: removed (-) lines are signatures consumers can"
-            echo "no longer call as written. Additions can also break consumers when they"
-            echo "are newly required fields or parameters."
-            echo ""
-            git --no-pager diff --cached -- api-surface
-            exit 1
-          fi
-          echo "API surface matches the committed snapshot."
+      - name: Check the public API surface
+        run: node scripts/check-api-surface.mjs

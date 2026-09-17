@@ -288,6 +288,7 @@
         "typecheck": "tsc --noEmit",
         "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
         "api-surface:gen": "node scripts/gen-api-surface.mjs",
+        "api-surface:check": "node scripts/check-api-surface.mjs",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",
