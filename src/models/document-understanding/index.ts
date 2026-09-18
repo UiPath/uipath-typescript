@@ -10,3 +10,6 @@ export * from './framework';
 
 // Namespace form, kept for discoverability and back-compat (`DuFramework.X`).
 export * as DuFramework from './framework';
+
+export * from './validation.types';
+export * from './validation.models';
