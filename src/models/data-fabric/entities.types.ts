@@ -932,7 +932,7 @@ export interface ExternalSourceFields {
   fields?: ExternalField[];
   externalObjectDetail?: ExternalObject;
   externalConnectionDetail?: ExternalConnection;
-  /** Set for a Native source (referencing another UiPath entity); see {@link NativeConnectionDetail} */
+  /** Set for a Native source (referencing another UiPath entity); see {@link NativeConnectionDetail}. @experimental */
   nativeConnectionDetail?: NativeConnectionDetail;
 }
 
