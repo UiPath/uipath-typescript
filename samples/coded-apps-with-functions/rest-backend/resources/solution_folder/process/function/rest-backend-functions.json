@@ -1,0 +1,81 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "rest-backend-functions",
+    "kind": "process",
+    "type": "function",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "a2daa14e-a84f-4ac7-b77e-d87a215e0c86",
+    "isOverridable": true,
+    "dependencies": [
+      {
+        "kind": "package",
+        "name": "rest-backend-functions"
+      }
+    ],
+    "runtimeDependencies": [
+      {
+        "bindingType": "HttpTrigger",
+        "bindingKey": "36e3e5f8-d36f-4c9c-be94-264968e574c1",
+        "bindingValues": {
+          "entryPointUniqueId": {
+            "defaultValue": "",
+            "isExpression": false
+          }
+        },
+        "bindingMetadata": {
+          "bindingsVersion": "2.1"
+        },
+        "resourceKind": "Unknown"
+      },
+      {
+        "bindingType": "HttpTrigger",
+        "bindingKey": "0658c71d-c66d-43e9-9ddb-5f6023b2d133",
+        "bindingValues": {
+          "entryPointUniqueId": {
+            "defaultValue": "",
+            "isExpression": false
+          }
+        },
+        "bindingMetadata": {
+          "bindingsVersion": "2.1"
+        },
+        "resourceKind": "Unknown"
+      },
+      {
+        "bindingType": "HttpTrigger",
+        "bindingKey": "41df5f18-d0b4-46d5-bc75-c1a49bb7d59e",
+        "bindingValues": {
+          "entryPointUniqueId": {
+            "defaultValue": "",
+            "isExpression": false
+          }
+        },
+        "bindingMetadata": {
+          "bindingsVersion": "2.1"
+        },
+        "resourceKind": "Unknown"
+      }
+    ],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "type": "Function",
+      "name": "rest-backend-functions",
+      "package": {
+        "key": "a49878eb-1247-434e-8c9a-8ce5dbc99cc7"
+      },
+      "targetFrameworkValue": "Portable",
+      "retentionAction": "Delete",
+      "retentionPeriod": 30,
+      "staleRetentionAction": "Delete",
+      "staleRetentionPeriod": 180
+    },
+    "locks": [],
+    "key": "5c28c97e-2f3a-4c6e-a92b-5f4e7177a1af",
+    "files": []
+  }
+}

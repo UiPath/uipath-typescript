@@ -1,0 +1,17 @@
+{
+  "DocVersion": "1.0.0",
+  "StudioMinVersion": "2025.10.0",
+  "SolutionId": "9c918427-5f50-41d4-be76-6cf3452f9059",
+  "Projects": [
+    {
+      "Type": "AppV2",
+      "ProjectRelativePath": "rest-backend-app/project.uiproj",
+      "Id": "7efa0a6c-37b5-44f0-b1fa-d045e17460cb"
+    },
+    {
+      "Type": "Function",
+      "ProjectRelativePath": "rest-backend-functions/uipath.json",
+      "Id": "a2daa14e-a84f-4ac7-b77e-d87a215e0c86"
+    }
+  ]
+}

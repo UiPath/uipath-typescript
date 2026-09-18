@@ -1,0 +1,63 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/bindings",
+  "version": "2.0",
+  "resources": [
+    {
+      "resource": "HttpTrigger",
+      "key": "36e3e5f8-d36f-4c9c-be94-264968e574c1",
+      "id": "ce839cf4-5b7d-4c83-a575-a4b5d912d875",
+      "value": {
+        "EntryPointUniqueId": {
+          "DefaultValue": "f1a45f69-614d-44db-8554-91ce551cacd8",
+          "IsExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.1",
+        "Name": "invoice-list",
+        "Method": "GET",
+        "Slug": "/invoices",
+        "CallingMode": "LongPolling",
+        "Description": "List invoices, optionally filtered by status. The collection route of a REST-shaped backend."
+      }
+    },
+    {
+      "resource": "HttpTrigger",
+      "key": "0658c71d-c66d-43e9-9ddb-5f6023b2d133",
+      "id": "c6547456-68ac-4b7c-bbcc-f9bf22bea341",
+      "value": {
+        "EntryPointUniqueId": {
+          "DefaultValue": "75cf276c-f44c-4c63-a5db-31247ff6a47a",
+          "IsExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.1",
+        "Name": "invoice-read",
+        "Method": "GET",
+        "Slug": "/invoices/:invoiceId",
+        "CallingMode": "LongPolling",
+        "Description": "Fetch one invoice by id. The item route: a single resource addressed by a path param."
+      }
+    },
+    {
+      "resource": "HttpTrigger",
+      "key": "41df5f18-d0b4-46d5-bc75-c1a49bb7d59e",
+      "id": "d79703a5-f63b-4671-a586-367b2c0c8450",
+      "value": {
+        "EntryPointUniqueId": {
+          "DefaultValue": "6aafe17a-9b5d-467d-b34e-79b2685fb96d",
+          "IsExpression": false
+        }
+      },
+      "metadata": {
+        "BindingsVersion": "2.1",
+        "Name": "invoice-line-read",
+        "Method": "GET",
+        "Slug": "/invoices/:invoiceId/lines/:lineNo",
+        "CallingMode": "LongPolling",
+        "Description": "Fetch one line of one invoice. The sub-resource route: two path params, nested."
+      }
+    }
+  ]
+}

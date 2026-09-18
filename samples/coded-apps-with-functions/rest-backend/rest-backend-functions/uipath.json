@@ -1,0 +1,15 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/uipath",
+  "packOptions": {
+    "fileExtensionsIncluded": [],
+    "filesIncluded": [],
+    "filesExcluded": [],
+    "directoriesExcluded": [],
+    "includeLockFile": true
+  },
+  "functions": {
+    "invoice-list": "functions/invoice-list.ts:default",
+    "invoice-read": "functions/invoice-read.ts:default",
+    "invoice-line-read": "functions/invoice-line-read.ts:default"
+  }
+}

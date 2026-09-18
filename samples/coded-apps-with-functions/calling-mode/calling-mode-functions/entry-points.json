@@ -1,0 +1,102 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
+  "$id": "entry-points.json",
+  "entryPoints": [
+    {
+      "filePath": "content/functions/echo.ts",
+      "uniqueId": "049a144e-b7fd-4f07-8945-37059fbee4f5",
+      "type": "function",
+      "input": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          },
+          "outputKb": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "receivedKb": {
+            "type": "number"
+          },
+          "returnedKb": {
+            "type": "number"
+          },
+          "data": {
+            "type": "string"
+          },
+          "elapsedMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "receivedKb",
+          "returnedKb",
+          "data",
+          "elapsedMs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "filePath": "content/functions/bulk.ts",
+      "uniqueId": "e01c7d25-0610-4bf7-b327-64174439e5ba",
+      "type": "function",
+      "input": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string"
+          },
+          "outputKb": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "receivedKb": {
+            "type": "number"
+          },
+          "returnedKb": {
+            "type": "number"
+          },
+          "data": {
+            "type": "string"
+          },
+          "elapsedMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "receivedKb",
+          "returnedKb",
+          "data",
+          "elapsedMs"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

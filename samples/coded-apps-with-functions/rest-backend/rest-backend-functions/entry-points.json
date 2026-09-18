@@ -1,0 +1,232 @@
+{
+  "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
+  "$id": "entry-points.json",
+  "entryPoints": [
+    {
+      "filePath": "content/functions/invoice-list.ts",
+      "uniqueId": "f1a45f69-614d-44db-8554-91ce551cacd8",
+      "type": "function",
+      "input": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "invoices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "invoiceId": {
+                  "type": "string"
+                },
+                "vendor": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string"
+                },
+                "issuedAt": {
+                  "type": "string"
+                },
+                "dueAt": {
+                  "type": "string"
+                },
+                "totalEur": {
+                  "type": "number"
+                },
+                "lineCount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoiceId",
+                "vendor",
+                "status",
+                "currency",
+                "issuedAt",
+                "dueAt",
+                "totalEur",
+                "lineCount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "totalCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "invoices",
+          "totalCount"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "filePath": "content/functions/invoice-read.ts",
+      "uniqueId": "75cf276c-f44c-4c63-a5db-31247ff6a47a",
+      "type": "function",
+      "input": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoiceId"
+        ],
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": "string"
+          },
+          "poReference": {
+            "type": "string"
+          },
+          "totalEur": {
+            "type": "number"
+          },
+          "lineCount": {
+            "type": "number"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "lineNo": {
+                  "type": "number"
+                },
+                "sku": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number"
+                },
+                "unitPriceEur": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "lineNo",
+                "sku",
+                "description",
+                "quantity",
+                "unitPriceEur"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "invoiceId",
+          "vendor",
+          "status",
+          "currency",
+          "issuedAt",
+          "dueAt",
+          "poReference",
+          "totalEur",
+          "lineCount",
+          "lines"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "filePath": "content/functions/invoice-line-read.ts",
+      "uniqueId": "6aafe17a-9b5d-467d-b34e-79b2685fb96d",
+      "type": "function",
+      "input": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          },
+          "lineNo": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "lineNo"
+        ],
+        "additionalProperties": false
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string"
+          },
+          "lineNo": {
+            "type": "number"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPriceEur": {
+            "type": "number"
+          },
+          "lineTotalEur": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "invoiceId",
+          "lineNo",
+          "sku",
+          "description",
+          "quantity",
+          "unitPriceEur",
+          "lineTotalEur"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "rest-backend-functions",
+    "kind": "package",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "a2daa14e-a84f-4ac7-b77e-d87a215e0c86",
+    "isOverridable": true,
+    "dependencies": [],
+    "runtimeDependencies": [],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "name": "rest-backend-functions"
+    },
+    "locks": [],
+    "key": "a49878eb-1247-434e-8c9a-8ce5dbc99cc7",
+    "files": []
+  }
+}

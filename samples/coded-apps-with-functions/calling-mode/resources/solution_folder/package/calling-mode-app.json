@@ -1,0 +1,23 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "calling-mode-app",
+    "kind": "package",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "e51eb3b4-0dcd-45dc-85f4-8c5f2b5e3a71",
+    "isOverridable": true,
+    "dependencies": [],
+    "runtimeDependencies": [],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "name": "calling-mode-app"
+    },
+    "locks": [],
+    "key": "f64060d6-8cf7-41c2-98b8-0190c63b9a7a",
+    "files": []
+  }
+}

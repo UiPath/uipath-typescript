@@ -1,0 +1,43 @@
+{
+  "resources": [
+    {
+      "kind": "app",
+      "name": "calling-mode-app",
+      "resourceKey": "2d5d7d34-9878-4d18-bf1e-28bf61438634",
+      "folderPaths": [
+        "solution_folder"
+      ],
+      "configuration": {
+        "description": "Coded App for the calling-mode sample",
+        "routingName": "calling-mode-sample",
+        "externalClientId": "<your-oauth-external-app-client-id>"
+      }
+    },
+    {
+      "kind": "process",
+      "name": "calling-mode-functions",
+      "resourceKey": "9c305df1-1435-4af0-bc30-f69b57a1c266",
+      "folderPaths": [
+        "solution_folder"
+      ],
+      "configuration": {
+        "referencedAssets": null,
+        "description": null,
+        "packageName": null,
+        "inputArguments": null,
+        "hiddenForAttendedUser": false,
+        "alwaysRunning": false,
+        "autoStartProcess": false,
+        "environmentVariables": null,
+        "retentionAction": "Delete",
+        "retentionPeriod": 30,
+        "retentionBucketRef": null,
+        "staleRetentionAction": "Delete",
+        "staleRetentionPeriod": 180,
+        "staleRetentionBucketRef": null,
+        "connections": null,
+        "tags": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "docVersion": "1.0.0",
+  "resource": {
+    "name": "rest-backend-app",
+    "kind": "package",
+    "apiVersion": "orchestrator.uipath.com/v1",
+    "projectKey": "7efa0a6c-37b5-44f0-b1fa-d045e17460cb",
+    "isOverridable": true,
+    "dependencies": [],
+    "runtimeDependencies": [],
+    "folders": [
+      {
+        "fullyQualifiedName": "solution_folder"
+      }
+    ],
+    "spec": {
+      "name": "rest-backend-app"
+    },
+    "locks": [],
+    "key": "fc6d723b-0ba0-4258-ac49-8779ad098194",
+    "files": []
+  }
+}

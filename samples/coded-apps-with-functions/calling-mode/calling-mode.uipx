@@ -1,0 +1,17 @@
+{
+  "DocVersion": "1.0.0",
+  "StudioMinVersion": "2025.10.0",
+  "SolutionId": "d44fa034-a1e4-4604-ba61-70e552133e53",
+  "Projects": [
+    {
+      "Type": "AppV2",
+      "ProjectRelativePath": "calling-mode-app/project.uiproj",
+      "Id": "e51eb3b4-0dcd-45dc-85f4-8c5f2b5e3a71"
+    },
+    {
+      "Type": "Function",
+      "ProjectRelativePath": "calling-mode-functions/uipath.json",
+      "Id": "a7e71b50-b7e4-4b1e-a05f-b2826a2c6719"
+    }
+  ]
+}
