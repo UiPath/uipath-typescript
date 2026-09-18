@@ -216,14 +216,11 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
     it('should enable analytics via isAnalyticsEnabled', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [], {
-        displayName: `SDK Analytics ${name}`,
-      });
+      const displayName = `SDK Analytics ${name}`;
+      const entityId = await createEntityAwaitingReady(entities, name, [], { displayName });
       createdEntityIds.push(entityId);
 
-      // Exercises the isAnalyticsEnabled option end to end — the SDK sends it as the
-      // isInsightsEnabled wire field, which the API validates and round-trips back on read.
-      await entities.updateById(entityId, { isAnalyticsEnabled: true });
+      await entities.updateById(entityId, { displayName, isAnalyticsEnabled: true });
 
       const updated = await entities.getById(entityId);
       expect(updated.isAnalyticsEnabled).toBe(true);
