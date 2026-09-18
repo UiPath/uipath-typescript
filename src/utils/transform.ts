@@ -219,6 +219,68 @@ export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
  */
 export function camelToPascalCaseKeys<T extends object>(data: T | T[]): any {
   return transformCaseKeys(data, camelToPascalCase);
+}
+
+/**
+ * Converts a string from snake_case to camelCase
+ * @param str The snake_case string to convert
+ * @returns The camelCase version of the string
+ *
+ * @example
+ * ```typescript
+ * snakeToCamelCase('finish_reason'); // 'finishReason'
+ * snakeToCamelCase('max_tokens'); // 'maxTokens'
+ * ```
+ */
+export function snakeToCamelCase(str: string): string {
+  if (!str) return str;
+  return str.replace(/_([a-z0-9])/gi, (_, char: string) => char.toUpperCase());
+}
+
+/**
+ * Converts a string from camelCase to snake_case
+ * @param str The camelCase string to convert
+ * @returns The snake_case version of the string
+ *
+ * @example
+ * ```typescript
+ * camelToSnakeCase('finishReason'); // 'finish_reason'
+ * camelToSnakeCase('maxTokens'); // 'max_tokens'
+ * ```
+ */
+export function camelToSnakeCase(str: string): string {
+  if (!str) return str;
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/**
+ * Transforms an object's keys from snake_case to camelCase
+ * @param data The object with snake_case keys
+ * @returns A new object with all keys converted to camelCase
+ *
+ * @example
+ * ```typescript
+ * snakeToCamelCaseKeys({ finish_reason: 'stop', max_tokens: 16 });
+ * // Result: { finishReason: 'stop', maxTokens: 16 }
+ * ```
+ */
+export function snakeToCamelCaseKeys<T extends object>(data: T | T[]): any {
+  return transformCaseKeys(data, snakeToCamelCase);
+}
+
+/**
+ * Transforms an object's keys from camelCase to snake_case
+ * @param data The object with camelCase keys
+ * @returns A new object with all keys converted to snake_case
+ *
+ * @example
+ * ```typescript
+ * camelToSnakeCaseKeys({ finishReason: 'stop', maxTokens: 16 });
+ * // Result: { finish_reason: 'stop', max_tokens: 16 }
+ * ```
+ */
+export function camelToSnakeCaseKeys<T extends object>(data: T | T[]): any {
+  return transformCaseKeys(data, camelToSnakeCase);
 } 
 
 /**
