@@ -46,30 +46,6 @@ function requireArg(value: string, name: string, method: string): void {
  * ```
  */
 export class ElementsService extends BaseService implements ElementsServiceModel {
-  /**
-   * List objects (resources) exposed by a connector.
-   *
-   * @param elementKey - Connector key (e.g. `uipath-slack`)
-   * @param options - Filtering options (type, subtype, hasEvents, hasBulk)
-   * @returns Promise resolving to an array of {@link ElementObject}
-   * @example
-   * ```typescript
-   * import { Elements } from '@uipath/uipath-typescript/connections';
-   *
-   * const elements = new Elements(sdk);
-   *
-   * const objects = await elements.getObjects('uipath-slack');
-   * for (const obj of objects) {
-   *   console.log(`${obj.name} — ${obj.displayName}`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Only objects that support events
-   * const eventCapable = await elements.getObjects('uipath-slack', { hasEvents: true });
-   * ```
-   */
   @track('Elements.GetObjects')
   async getObjects(elementKey: string, options?: ElementObjectsGetOptions): Promise<ElementObject[]> {
     requireArg(elementKey, 'elementKey', 'getObjects');
@@ -79,20 +55,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data ?? [];
   }
 
-  /**
-   * List curated activities exposed by a connector.
-   *
-   * @param elementKey - Connector key
-   * @param options - Optional `version` to pin to a specific connector schema
-   * @returns Promise resolving to an array of {@link ElementActivity}
-   * @example
-   * ```typescript
-   * const activities = await elements.getActivities('uipath-slack');
-   * for (const activity of activities) {
-   *   console.log(`${activity.name}: ${activity.operation} on ${activity.objectName}`);
-   * }
-   * ```
-   */
   @track('Elements.GetActivities')
   async getActivities(elementKey: string, options?: ElementActivitiesGetOptions): Promise<ElementActivity[]> {
     requireArg(elementKey, 'elementKey', 'getActivities');
@@ -102,20 +64,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data ?? [];
   }
 
-  /**
-   * Get metadata for a single connector object (field schema, supported methods,
-   * parameters). Connection-independent — returns the standard schema only.
-   *
-   * @param elementKey - Connector key
-   * @param objectName - Object name (e.g. `messages`)
-   * @param options - Optional `version`, `hydrateParameters`, `includeParentArray`
-   * @returns Promise resolving to an {@link ElementObjectMetadataResponse}
-   * @example
-   * ```typescript
-   * const meta = await elements.getObjectMetadata('uipath-slack', 'messages');
-   * console.log(`Fields: ${Object.keys(meta.fields ?? {}).length}`);
-   * ```
-   */
   @track('Elements.GetObjectMetadata')
   async getObjectMetadata(
     elementKey: string,
@@ -131,18 +79,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data;
   }
 
-  /**
-   * List event objects (trigger sources) for a connector's event operation.
-   *
-   * @param elementKey - Connector key
-   * @param operationName - Event operation name (e.g. `INDEX_COMPLETED`)
-   * @param options - Optional `version`
-   * @returns Promise resolving to an array of {@link ElementEventObject}
-   * @example
-   * ```typescript
-   * const events = await elements.getEventObjects('uipath-slack', 'NEW_MESSAGE');
-   * ```
-   */
   @track('Elements.GetEventObjects')
   async getEventObjects(
     elementKey: string,
@@ -158,23 +94,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data ?? [];
   }
 
-  /**
-   * Get metadata for a single event object.
-   *
-   * @param elementKey - Connector key
-   * @param operationName - Event operation name
-   * @param objectName - Event object name
-   * @param options - Optional `version`, `allFields`, `includeParentArray`
-   * @returns Promise resolving to an {@link ElementEventObjectMetadataResponse}
-   * @example
-   * ```typescript
-   * const meta = await elements.getEventObjectMetadata(
-   *   'uipath-slack',
-   *   'NEW_MESSAGE',
-   *   'channels',
-   * );
-   * ```
-   */
   @track('Elements.GetEventObjectMetadata')
   async getEventObjectMetadata(
     elementKey: string,
@@ -192,19 +111,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data;
   }
 
-  /**
-   * List objects exposed by a connection instance (includes connector custom
-   * fields discovered from the live system).
-   *
-   * @param connectionId - Connection GUID
-   * @param elementKey - Connector key
-   * @param options - Filtering options
-   * @returns Promise resolving to an array of {@link ElementObject}
-   * @example
-   * ```typescript
-   * const objects = await elements.getInstanceObjects('<connectionId>', 'uipath-slack');
-   * ```
-   */
   @track('Elements.GetInstanceObjects')
   async getInstanceObjects(
     connectionId: string,
@@ -220,24 +126,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data ?? [];
   }
 
-  /**
-   * Get instance-scoped metadata for a single object — includes connector
-   * custom fields discovered from the live system.
-   *
-   * @param connectionId - Connection GUID
-   * @param elementKey - Connector key
-   * @param objectName - Object name
-   * @param options - Optional `version`, `hydrateParameters`, `includeParentArray`
-   * @returns Promise resolving to an {@link ElementObjectMetadataResponse}
-   * @example
-   * ```typescript
-   * const meta = await elements.getInstanceObjectMetadata(
-   *   '<connectionId>',
-   *   'uipath-salesforce',
-   *   'Account',
-   * );
-   * ```
-   */
   @track('Elements.GetInstanceObjectMetadata')
   async getInstanceObjectMetadata(
     connectionId: string,
@@ -255,23 +143,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data;
   }
 
-  /**
-   * List event objects for a connection instance.
-   *
-   * @param connectionId - Connection GUID
-   * @param elementKey - Connector key
-   * @param operationName - Event operation name
-   * @param options - Optional `version`
-   * @returns Promise resolving to an array of {@link ElementEventObject}
-   * @example
-   * ```typescript
-   * const events = await elements.getInstanceEventObjects(
-   *   '<connectionId>',
-   *   'uipath-slack',
-   *   'NEW_MESSAGE',
-   * );
-   * ```
-   */
   @track('Elements.GetInstanceEventObjects')
   async getInstanceEventObjects(
     connectionId: string,
@@ -289,25 +160,6 @@ export class ElementsService extends BaseService implements ElementsServiceModel
     return response.data ?? [];
   }
 
-  /**
-   * Get instance-scoped metadata for a single event object.
-   *
-   * @param connectionId - Connection GUID
-   * @param elementKey - Connector key
-   * @param operationName - Event operation name
-   * @param objectName - Event object name
-   * @param options - Optional `version`, `allFields`, `includeParentArray`
-   * @returns Promise resolving to an {@link ElementEventObjectMetadataResponse}
-   * @example
-   * ```typescript
-   * const meta = await elements.getInstanceEventObjectMetadata(
-   *   '<connectionId>',
-   *   'uipath-slack',
-   *   'NEW_MESSAGE',
-   *   'channels',
-   * );
-   * ```
-   */
   @track('Elements.GetInstanceEventObjectMetadata')
   async getInstanceEventObjectMetadata(
     connectionId: string,

@@ -9,7 +9,7 @@ import { IS_TEST_CONSTANTS } from '../constants/integration-service';
 import { createMockBaseResponse } from './core';
 import { ConnectionState } from '../../../src/models/integration-service/connections.types';
 import type { RawConnectorGetResponse } from '../../../src/models/integration-service/connectors.types';
-import type { RawConnectionGetResponse } from '../../../src/models/integration-service/connections.types';
+import type { ConnectionGetResponse } from '../../../src/models/integration-service/connections.types';
 
 /**
  * Creates a mock raw Connector response.
@@ -47,9 +47,9 @@ export const createMockConnector = (
  * Creates a mock raw Connection response.
  */
 export const createMockConnection = (
-  overrides: Partial<RawConnectionGetResponse> = {},
-): RawConnectionGetResponse => {
-  return createMockBaseResponse<RawConnectionGetResponse>(
+  overrides: Partial<ConnectionGetResponse> = {},
+): ConnectionGetResponse => {
+  return createMockBaseResponse<ConnectionGetResponse>(
     {
       id: IS_TEST_CONSTANTS.CONNECTION_ID,
       name: IS_TEST_CONSTANTS.CONNECTION_NAME,

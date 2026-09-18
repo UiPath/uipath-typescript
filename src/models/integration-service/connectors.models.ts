@@ -11,7 +11,7 @@ import {
   ConnectorGetDefaultConnectionOptions,
   ConnectorGetConnectionsOptions,
 } from './connectors.types';
-import { ConnectionGetResponse } from './connections.models';
+import { ConnectionGetResponse } from './connections.types';
 
 /**
  * A connector catalog entry from the Integration Service.
@@ -127,9 +127,7 @@ export interface ConnectorsServiceModel {
    *   folderPath: 'Shared/Finance',
    * });
    *
-   * // Use bound methods directly on the entity
-   * const status = await defaultSlack.ping();
-   * console.log(status.status);
+   * console.log(defaultSlack.name, defaultSlack.state);
    * ```
    */
   getDefaultConnection(
@@ -165,8 +163,7 @@ export interface ConnectorsServiceModel {
    * });
    *
    * for (const conn of slackConnections) {
-   *   const status = await conn.ping();
-   *   console.log(`${conn.name}: ${status.status}`);
+   *   console.log(`${conn.name}: ${conn.state}`);
    * }
    * ```
    *

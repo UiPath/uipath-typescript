@@ -108,7 +108,8 @@ class Execution extends BaseService {
     if (text) {
       try {
         parsed = JSON.parse(text);
-      } catch {
+      } catch (error) {
+        console.warn('execute: response body is not valid JSON, returning raw text', error);
         parsed = text;
       }
     }

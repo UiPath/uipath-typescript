@@ -363,7 +363,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `IS.Connections.Read` |
 | `getById()` | `IS.Connections.Read` |
-| `ping()` | `IS.Connections.Read` |
 
 ### Elements
 

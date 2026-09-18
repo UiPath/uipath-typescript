@@ -59,9 +59,9 @@ export interface ConnectionConnectorRef {
 }
 
 /**
- * Raw connection response from the Integration Service API.
+ * A connection returned by the Integration Service API.
  */
-export interface RawConnectionGetResponse {
+export interface ConnectionGetResponse {
   /** Connection ID (GUID). */
   id: string;
   /** User-supplied connection name. */
@@ -125,24 +125,4 @@ export interface ConnectionGetAllOptions extends IntegrationServiceFolderContext
 export interface ConnectionGetByIdOptions extends IntegrationServiceFolderContextOptions {
   /** Include the connector's full configuration blob in the response. */
   includeConfigs?: boolean;
-}
-
-/**
- * Options for {@link ConnectionsServiceModel.ping}.
- */
-export interface ConnectionPingOptions extends IntegrationServiceFolderContextOptions {
-  /** Force a live re-validation instead of cached status. */
-  forceRefresh?: boolean;
-}
-
-/**
- * Response from {@link ConnectionsServiceModel.ping}.
- */
-export interface ConnectionPingResponse {
-  /** Connector key for the pinged connection. */
-  connector: string;
-  /** Current connection state. */
-  status: ConnectionState;
-  /** Error message if the ping failed. */
-  error?: string;
 }

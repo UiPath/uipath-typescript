@@ -27,5 +27,4 @@ export const IS_TEST_CONSTANTS = {
   FOLDER_DISPLAY_NAME: 'Test Folder',
   ERROR_CONNECTOR_NOT_FOUND: 'Connector not found',
   ERROR_CONNECTION_NOT_FOUND: 'Connection not found',
-  ERROR_PING_FAILED: 'Ping failed',
 } as const;

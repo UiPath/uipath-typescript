@@ -18,7 +18,6 @@ export const CONNECTOR_ENDPOINTS = {
 export const CONNECTION_ENDPOINTS = {
   GET_ALL: `${CONNECTIONS_BASE}/api/v1/Connections`,
   GET_BY_ID: (connectionId: string) => `${CONNECTIONS_BASE}/api/v1/Connections/${encodeURIComponent(connectionId)}`,
-  PING: (connectionId: string) => `${CONNECTIONS_BASE}/api/v1/Connections/${encodeURIComponent(connectionId)}/ping`,
 } as const;
 
 export const ELEMENT_ENDPOINTS = {

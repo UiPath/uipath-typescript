@@ -4,7 +4,6 @@ import { CONNECTION_ENDPOINTS } from '../../../../src/utils/constants/endpoints'
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
-import { ConnectionState } from '../../../../src/models/integration-service/connections.types';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import {
   IS_TEST_CONSTANTS,
@@ -30,7 +29,7 @@ describe('ConnectionsService', () => {
   });
 
   describe('getAll', () => {
-    it('should return connections with bound methods on each entity', async () => {
+    it('should return connections', async () => {
       mockApiClient.get.mockResolvedValue([
         createMockConnection(),
         createMockConnection({ id: IS_TEST_CONSTANTS.CONNECTION_ID_2 }),
@@ -46,9 +45,6 @@ describe('ConnectionsService', () => {
         params: { pageSize: 50 },
       });
       expect(result).toHaveLength(2);
-      for (const conn of result) {
-        expect(typeof conn.ping).toBe('function');
-      }
     });
 
     it('should default to empty array when API returns null', async () => {
@@ -178,7 +174,7 @@ describe('ConnectionsService', () => {
   });
 
   describe('getById', () => {
-    it('should return a single connection with bound methods', async () => {
+    it('should return a single connection', async () => {
       mockApiClient.get.mockResolvedValue(createMockConnection());
 
       const result = await service.getById(IS_TEST_CONSTANTS.CONNECTION_ID);
@@ -188,7 +184,6 @@ describe('ConnectionsService', () => {
         { headers: {}, params: {} },
       );
       expect(result.id).toBe(IS_TEST_CONSTANTS.CONNECTION_ID);
-      expect(typeof result.ping).toBe('function');
     });
 
     it('should forward includeConfigs as a query param', async () => {
@@ -237,77 +232,6 @@ describe('ConnectionsService', () => {
 
     it('should throw ValidationError when connectionId is empty', async () => {
       await expect(service.getById('')).rejects.toThrow(ValidationError);
-    });
-  });
-
-  describe('ping', () => {
-    it('should return ping status', async () => {
-      mockApiClient.get.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        status: ConnectionState.Enabled,
-      });
-
-      const result = await service.ping(IS_TEST_CONSTANTS.CONNECTION_ID);
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
-        { headers: {}, params: {} },
-      );
-      expect(result.status).toBe(ConnectionState.Enabled);
-      expect(result.connector).toBe(IS_TEST_CONSTANTS.CONNECTOR_KEY);
-    });
-
-    it('should forward forceRefresh as a query param', async () => {
-      mockApiClient.get.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        status: ConnectionState.Enabled,
-      });
-      await service.ping(IS_TEST_CONSTANTS.CONNECTION_ID, { forceRefresh: true });
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
-        { headers: {}, params: { forceRefresh: true } },
-      );
-    });
-
-    it('should route folderPath to the encoded folder path header', async () => {
-      mockApiClient.get.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        status: ConnectionState.Enabled,
-      });
-      await service.ping(IS_TEST_CONSTANTS.CONNECTION_ID, {
-        folderPath: IS_TEST_CONSTANTS.FOLDER_PATH,
-      });
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
-        { headers: { [FOLDER_PATH_ENCODED]: IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE }, params: {} },
-      );
-    });
-
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
-      const scopedService = new ConnectionsService(instance);
-      mockApiClient.get.mockResolvedValue({
-        connector: IS_TEST_CONSTANTS.CONNECTOR_KEY,
-        status: ConnectionState.Enabled,
-      });
-
-      await scopedService.ping(IS_TEST_CONSTANTS.CONNECTION_ID);
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        CONNECTION_ENDPOINTS.PING(IS_TEST_CONSTANTS.CONNECTION_ID),
-        { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
-      );
-    });
-
-    it('should throw ValidationError when connectionId is empty', async () => {
-      await expect(service.ping('')).rejects.toThrow(ValidationError);
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.get.mockRejectedValue(createMockError(IS_TEST_CONSTANTS.ERROR_PING_FAILED));
-      await expect(service.ping(IS_TEST_CONSTANTS.CONNECTION_ID)).rejects.toThrow(
-        IS_TEST_CONSTANTS.ERROR_PING_FAILED,
-      );
     });
   });
 

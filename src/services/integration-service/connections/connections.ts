@@ -7,22 +7,16 @@ import { QueryParams } from '../../../models/common/request-spec';
 import {
   ConnectionGetAllOptions,
   ConnectionGetByIdOptions,
-  ConnectionPingOptions,
-  ConnectionPingResponse,
-  RawConnectionGetResponse,
-} from '../../../models/integration-service/connections.types';
-import {
   ConnectionGetResponse,
-  ConnectionsServiceModel,
-  createConnectionWithMethods,
-} from '../../../models/integration-service/connections.models';
+} from '../../../models/integration-service/connections.types';
+import { ConnectionsServiceModel } from '../../../models/integration-service/connections.models';
 
 /**
  * Service for managing UiPath Integration Service connections.
  *
  * A connection represents an authenticated link to a third-party system (Salesforce,
  * Slack, OneDrive, ...) inside a UiPath folder. Use this service to list connections,
- * inspect a single connection, check connectivity, or trigger re-authentication.
+ * or inspect a single connection.
  *
  * ### Usage
  *
@@ -43,11 +37,11 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
       'Connections.getAll',
       this.config.folderKey,
     );
-    const response = await this.get<RawConnectionGetResponse[]>(CONNECTION_ENDPOINTS.GET_ALL, {
+    const response = await this.get<ConnectionGetResponse[]>(CONNECTION_ENDPOINTS.GET_ALL, {
       headers,
       params: queryOptions as QueryParams,
     });
-    return (response.data ?? []).map((conn) => createConnectionWithMethods(conn, this));
+    return response.data ?? [];
   }
 
   @track('Connections.GetById')
@@ -60,24 +54,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
       'Connections.getById',
       this.config.folderKey,
     );
-    const response = await this.get<RawConnectionGetResponse>(CONNECTION_ENDPOINTS.GET_BY_ID(connectionId), {
-      headers,
-      params: queryOptions as QueryParams,
-    });
-    return createConnectionWithMethods(response.data, this);
-  }
-
-  @track('Connections.Ping')
-  async ping(connectionId: string, options?: ConnectionPingOptions): Promise<ConnectionPingResponse> {
-    if (!connectionId) {
-      throw new ValidationError({ message: 'connectionId is required for ping' });
-    }
-    const { headers, queryOptions } = resolveFolderScope(
-      options ?? {},
-      'Connections.ping',
-      this.config.folderKey,
-    );
-    const response = await this.get<ConnectionPingResponse>(CONNECTION_ENDPOINTS.PING(connectionId), {
+    const response = await this.get<ConnectionGetResponse>(CONNECTION_ENDPOINTS.GET_BY_ID(connectionId), {
       headers,
       params: queryOptions as QueryParams,
     });

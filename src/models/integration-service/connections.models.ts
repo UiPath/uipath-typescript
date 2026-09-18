@@ -1,25 +1,12 @@
 /**
  * Integration Service — Connection models
- *
- * Combines raw connection data with bound entity methods (`ping`).
  */
 
 import {
-  RawConnectionGetResponse,
+  ConnectionGetResponse,
   ConnectionGetAllOptions,
   ConnectionGetByIdOptions,
-  ConnectionPingOptions,
-  ConnectionPingResponse,
 } from './connections.types';
-
-/**
- * A Connection entity enriched with bound methods.
- *
- * Returned by every Connection-yielding method on the {@link ConnectionsServiceModel}
- * and {@link ConnectorsServiceModel}. The bound `ping` method closes over this
- * connection's ID so callers can act on the entity directly.
- */
-export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods;
 
 /**
  *
@@ -33,7 +20,7 @@ export type ConnectionGetResponse = RawConnectionGetResponse & ConnectionMethods
  *
  * A connection represents an authenticated link to a third-party system (Salesforce,
  * Slack, OneDrive, ...) inside a UiPath folder. Use this service to list connections,
- * inspect a single connection, check connectivity, or trigger re-authentication.
+ * or inspect a single connection.
  *
  * ### Usage
  *
@@ -142,95 +129,4 @@ export interface ConnectionsServiceModel {
    */
   getById(connectionId: string, options?: ConnectionGetByIdOptions): Promise<ConnectionGetResponse>;
 
-  /**
-   * Check whether a connection is currently active.
-   *
-   * @experimental
-   *
-   * /// warning
-   * Preview: This method is experimental and may change or be removed in future releases.
-   * ///
-   *
-   * Returns the resolved state plus an optional error message. Use this before
-   * invoking activities to surface a friendly error when the connection has
-   * expired or been disabled.
-   *
-   * @param connectionId - Connection GUID
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and `forceRefresh` flag
-   * @returns Promise resolving to a {@link ConnectionPingResponse}
-   * @example
-   * ```typescript
-   * import { Connections, ConnectionState } from '@uipath/uipath-typescript/connections';
-   *
-   * const connections = new Connections(sdk);
-   *
-   * const status = await connections.ping('<connectionId>');
-   * if (status.status !== ConnectionState.Enabled) {
-   *   console.warn(`Connection unhealthy: ${status.status} — ${status.error ?? 'no detail'}`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Skip cache and force a live re-validation
-   * const status = await connections.ping('<connectionId>', { forceRefresh: true });
-   * ```
-   */
-  ping(connectionId: string, options?: ConnectionPingOptions): Promise<ConnectionPingResponse>;
-}
-
-/**
- *
- * @experimental
- *
- * /// warning
- * Preview: This service is experimental and may change or be removed in future releases.
- * ///
- *
- * Methods bound onto every {@link ConnectionGetResponse} entity.
- *
- * Each method closes over the connection's ID and delegates to the
- * underlying service.
- */
-export interface ConnectionMethods {
-  /**
-   * Check whether this connection is currently active.
-   *
-   * @experimental
-   *
-   * /// warning
-   * Preview: This method is experimental and may change or be removed in future releases.
-   * ///
-   *
-   * @param options - Optional `forceRefresh` flag and folder scoping (`folderId` / `folderKey` / `folderPath`)
-   * @returns Promise resolving to a {@link ConnectionPingResponse}
-   */
-  ping(options?: ConnectionPingOptions): Promise<ConnectionPingResponse>;
-}
-
-function createConnectionMethods(
-  data: RawConnectionGetResponse,
-  service: ConnectionsServiceModel,
-): ConnectionMethods {
-  return {
-    async ping(options?: ConnectionPingOptions): Promise<ConnectionPingResponse> {
-      if (!data.id) throw new Error('Connection id is undefined');
-      return service.ping(data.id, options);
-    },
-  };
-}
-
-/**
- * Attaches bound methods to a raw connection response.
- *
- * @param data - Raw connection data from the API
- * @param service - The Connections service used to delegate bound-method calls
- * @returns A {@link ConnectionGetResponse} (raw data + methods)
- */
-export function createConnectionWithMethods(
-  data: RawConnectionGetResponse,
-  service: ConnectionsServiceModel,
-): ConnectionGetResponse {
-  const methods = createConnectionMethods(data, service);
-  return Object.assign({}, data, methods) as ConnectionGetResponse;
 }
