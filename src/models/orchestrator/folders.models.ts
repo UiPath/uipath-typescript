@@ -27,9 +27,14 @@ export interface FolderServiceModel {
    * @returns Promise resolving to the matching {@link FolderGetResponse}. Rejects with `ValidationError` when `key` is missing or not a GUID, and with `NotFoundError` when no folder matches the key.
    * @example
    * ```typescript
-   * // Resolve the fully qualified path for a known folder key
-   * const folder = await folders.getByKey('<folderKey>', { select: 'fullyQualifiedName' });
+   * // Get a folder by key
+   * const folder = await folders.getByKey('<folderKey>');
+   * ```
    *
+   * @example
+   * ```typescript
+   * // With select
+   * const folder = await folders.getByKey('<folderKey>', { select: 'fullyQualifiedName' });
    * console.log(folder.fullyQualifiedName);
    * ```
    */
