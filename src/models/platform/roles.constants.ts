@@ -1,0 +1,65 @@
+/**
+ * Platform role field mappings.
+ */
+
+import { PlatformRoleType } from './roles.types';
+
+/**
+ * Semantic renames applied to roles and role assignments — standard `*Time`
+ * timestamp naming.
+ */
+export const PlatformRoleMap = {
+  createdOn: 'createdTime',
+} as const;
+
+/**
+ * Normalizes the role-type strings to {@link PlatformRoleType}. The API is
+ * inconsistent across endpoints — lists return `BUILTIN`/`PLATFORM`/`CUSTOM`
+ * while single-role reads and assignments return `BuiltIn`/`Custom` (live-verified).
+ */
+export const PlatformRoleTypeMap: { [key: string]: PlatformRoleType } = {
+  BUILTIN: PlatformRoleType.BuiltIn,
+  PLATFORM: PlatformRoleType.Platform,
+  CUSTOM: PlatformRoleType.Custom,
+  BuiltIn: PlatformRoleType.BuiltIn,
+  Platform: PlatformRoleType.Platform,
+  Custom: PlatformRoleType.Custom,
+};
+
+/**
+ * Outbound renames for `roles.create()` and `roles.updateById()` — the SDK's
+ * `name`/`description`/`scopeType`/`ownerServiceName` become the API's `role*`
+ * names. Used with `transformRequest()`, which reverses the map (SDK name → wire name).
+ */
+export const PlatformRoleWriteMap = {
+  roleName: 'name',
+  roleDescription: 'description',
+  roleScopeType: 'scopeType',
+  roleService: 'ownerServiceName',
+} as const;
+
+/**
+ * Semantic renames applied to effective-access role groups — the nested
+ * assignment list becomes `assignments`.
+ */
+export const PlatformEffectiveRoleMap = {
+  roleAssignments: 'assignments',
+} as const;
+
+/**
+ * Semantic renames applied to per-principal assignment groups — drops the
+ * `Dto` wire jargon.
+ */
+export const PlatformPrincipalRoleAssignmentsMap = {
+  roleAssignmentDtos: 'roleAssignments',
+} as const;
+
+/**
+ * Outbound renames for `roles.updateAssignments()` — SDK `toAdd`/`toDelete`
+ * become the API's `roleAssignmentsTo*` names. Used with `transformRequest()`,
+ * which reverses the map (SDK name → wire name).
+ */
+export const PlatformRoleAssignmentChangesMap = {
+  roleAssignmentsToAdd: 'toAdd',
+  roleAssignmentsToDelete: 'toDelete',
+} as const;
