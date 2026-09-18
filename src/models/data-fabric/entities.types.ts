@@ -581,19 +581,19 @@ export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
   updateSourceJoin?: EntityUpdateSourceJoin[];
 }
 
-/** Fields to add to a Federated source, identified by the source object name. */
+/** Fields to add to a Federated source, identified by the source object name. @experimental */
 export interface EntityAddFieldsToSource {
   sourceObjectName: string;
   fields: EntityCreateExternalField[];
 }
 
-/** Fields to remove from a Federated source, identified by the source object name. */
+/** Fields to remove from a Federated source, identified by the source object name. @experimental */
 export interface EntityRemoveFieldsFromSource {
   sourceObjectName: string;
   fieldNames: string[];
 }
 
-/** A mapping update for one external field on a Federated source. */
+/** A mapping update for one external field on a Federated source. @experimental */
 export interface EntityUpdateExternalFieldMapping {
   sourceObjectName: string;
   fieldName: string;
@@ -601,7 +601,7 @@ export interface EntityUpdateExternalFieldMapping {
 }
 
 /** Updates an existing Federated cross-source join in place, identified by the two object
- * names. Only the supplied fields change; the others are kept. */
+ * names. Only the supplied fields change; the others are kept. @experimental */
 export interface EntityUpdateSourceJoin {
   sourceObjectName: string;
   relatedSourceObjectName: string;
@@ -916,6 +916,7 @@ export interface ExternalField {
 /**
  * Native connection detail — set for a Native source referencing another UiPath entity
  * (Federated entities with Native sources). When present, `externalConnectionDetail` may be empty.
+ * @experimental
  */
 export interface NativeConnectionDetail {
   /** Id of the referenced native UiPath entity (the source to read from) */
@@ -951,6 +952,7 @@ export interface SourceJoinCriteria {
 
 /**
  * A join between two sources of a Federated entity, expressed by source object and field names.
+ * @experimental
  */
 export interface SourceJoinConditionDetail {
   /** Name of the object on the owning side of the join. */
@@ -971,6 +973,7 @@ export interface SourceJoinConditionDetail {
 
 /**
  * Connection an external source reads from.
+ * @experimental
  */
 export interface EntityCreateExternalConnection {
   /** Integration Service connection id. */
@@ -989,6 +992,7 @@ export interface EntityCreateExternalConnection {
 
 /**
  * External object (table) a source reads from.
+ * @experimental
  */
 export interface EntityCreateExternalObject {
   /** Name of the object on the external system (e.g. `Account`). */
@@ -1005,6 +1009,7 @@ export interface EntityCreateExternalObject {
 
 /**
  * Maps an external source field to its internal column.
+ * @experimental
  */
 export interface EntityCreateExternalFieldMapping {
   /** Name of the field on the external source. */
@@ -1027,6 +1032,7 @@ export interface EntityCreateExternalFieldMapping {
  * A single field contributed by an external source on create: an internal column
  * (defined exactly like a native field via {@link EntityCreateFieldOptions}) plus the
  * mapping back to the external source field.
+ * @experimental
  */
 export interface EntityCreateExternalField {
   /** Internal column definition — same shape as a native create field. */
@@ -1040,6 +1046,7 @@ export interface EntityCreateExternalField {
  * from, and the fields it contributes. Supply `externalConnectionDetail` for a truly
  * external source, or `nativeConnectionDetail` for a source backed by another UiPath
  * entity.
+ * @experimental
  */
 export interface EntityCreateExternalSource {
   /** Fields this source contributes to the federated entity. */

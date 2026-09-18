@@ -983,7 +983,7 @@ export interface EntityServiceModel {
    * @returns Promise resolving to the ID of the created entity
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
+   * import { Entities, EntityClass, DataDirectionType, EntityFieldDataType, JoinType } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -1072,11 +1072,13 @@ export interface EntityServiceModel {
    * (a native entity's column or a connector field); it does not create the underlying field.
    *
    * @param id - UUID of the entity to update
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, `isAnalyticsEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    *
    * @example
    * ```typescript
+   * import { Entities, EntityFieldDataType, DataDirectionType, JoinType } from '@uipath/uipath-typescript/entities';
+   *
    * // Schema-only: add a field and remove another
    * await entities.updateById(<id>, {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],

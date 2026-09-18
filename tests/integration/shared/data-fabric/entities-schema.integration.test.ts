@@ -22,6 +22,10 @@ import {
 // wiring stays covered by the records/query suites, which run dual-mode.
 const modes: InitMode[] = ['v1'];
 
+// v3 reads upper-case record GUIDs; compare Ids case-insensitively.
+const idsEqual = (a?: string | null, b?: string | null): boolean =>
+  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
 describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', modes, () => {
 
   const createdEntityIds: string[] = [];
@@ -212,7 +216,9 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
     it('should enable analytics via isAnalyticsEnabled', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, []);
+      const entityId = await createEntityAwaitingReady(entities, name, [], {
+        displayName: `SDK Analytics ${name}`,
+      });
       createdEntityIds.push(entityId);
 
       // Exercises the isAnalyticsEnabled option end to end — the SDK sends it as the
@@ -599,7 +605,7 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       );
 
       const sourceRecords = responses.map(r =>
-        (r.items as Record<string, any>[]).find(item => item.Id === sourceInsert.Id),
+        (r.items as Record<string, any>[]).find(item => idsEqual(item.Id, sourceInsert.Id)),
       );
       sourceRecords.forEach((rec, i) => {
         expect(rec, `expansionLevel=${levels[i]} did not return the inserted source record`).toBeDefined();
@@ -608,13 +614,13 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
 
       // L0: FK is the raw target record Id string.
       expect(typeof l0.parent).toBe('string');
-      expect(l0.parent).toBe(targetRecordId);
+      expect(idsEqual(l0.parent, targetRecordId)).toBe(true);
 
       // L1+: FK inflates into an object envelope carrying the target Id.
       for (const [level, rec] of [[1, l1], [2, l2], [3, l3]] as const) {
         expect(typeof rec.parent, `L${level} parent should be object`).toBe('object');
         expect(rec.parent, `L${level} parent should not be null`).not.toBeNull();
-        expect(rec.parent, `L${level} parent should carry target Id`).toHaveProperty('Id', targetRecordId);
+        expect(idsEqual(rec.parent.Id, targetRecordId), `L${level} parent should carry target Id`).toBe(true);
       }
 
       // L2 surfaces the user-defined `label` field from the target record.

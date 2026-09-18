@@ -472,7 +472,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     if (!hasSchemaChanges && !hasMetadataChanges) {
       throw new ValidationError({
-        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, or isRbacEnabled.',
+        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, isRbacEnabled, isAnalyticsEnabled, or a federated source/join delta (addExternalSources, removeExternalSources, addFieldsToSource, removeFieldsFromSource, updateExternalFieldMapping, addSourceJoins, updateSourceJoin).',
       });
     }
 
