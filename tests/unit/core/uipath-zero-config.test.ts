@@ -173,8 +173,21 @@ describe('UiPath auth-method precedence across sources', () => {
     expect(sdk.isInitialized()).toBe(true); // secret wins, OAuth fields dropped
   });
 
-  it('leaves a single layer carrying both auth methods for validation to reject', async () => {
-    const sdk = new UiPath({
+  it('rejects a single layer carrying both auth methods at construction', () => {
+    // Contradictory input is not a precedence question — it must not be
+    // silently resolved by dropping one of the two, and deferring it would
+    // first surface at an unrelated service constructor.
+    expect(() => new UiPath({
+      baseUrl: BASE_URL,
+      orgName: 'my-org',
+      tenantName: 'my-tenant',
+      secret: 'ctor-secret',
+      ...OAUTH,
+    })).toThrow(/carries both authentication methods/);
+  });
+
+  it('names the constructor argument as the source of every field it supplied', () => {
+    const construct = () => new UiPath({
       baseUrl: BASE_URL,
       orgName: 'my-org',
       tenantName: 'my-tenant',
@@ -182,9 +195,93 @@ describe('UiPath auth-method precedence across sources', () => {
       ...OAUTH,
     });
 
-    // Contradictory input is not a precedence question — it must not be
-    // silently resolved by dropping one of the two.
-    await expect(sdk.initialize()).rejects.toThrow();
+    expect(construct).toThrow('secret: the constructor argument');
+    expect(construct).toThrow('clientId: the constructor argument');
+    expect(construct).toThrow('redirectUri: the constructor argument');
+    expect(construct).toThrow('scope: the constructor argument');
+    expect(construct).toThrow('Remove clientId, redirectUri, scope from the constructor argument');
+  });
+
+  it('rejects a conflict assembled across the constructor and meta tags, naming each side', () => {
+    // The reported scenario: a coded app passes a secret while the plugin has
+    // already injected the OAuth meta tags, and also names one OAuth field.
+    vi.mocked(loadFromMetaTags).mockReturnValue({
+      baseUrl: BASE_URL,
+      orgName: 'meta-org',
+      tenantName: 'meta-tenant',
+      ...OAUTH,
+    });
+
+    const construct = () => new UiPath({ secret: 'ctor-secret', scope: OAUTH.scope });
+
+    expect(construct).toThrow(/carries both authentication methods/);
+    expect(construct).toThrow('secret: the constructor argument');
+    expect(construct).toThrow('scope: the constructor argument');
+    expect(construct).toThrow('clientId: <meta name="uipath:client-id">');
+    expect(construct).toThrow('redirectUri: <meta name="uipath:redirect-uri">');
+    expect(construct).toThrow('Remove scope from the constructor argument');
+  });
+
+  it('keeps a secret config with one OAuth field usable when no OAuth is injected', () => {
+    // The contradiction is a secret plus a COMPLETE OAuth config. Widening it
+    // to any single OAuth field would reject the SDK's own documented shapes,
+    // where the stray field is simply dropped.
+    const sdk = new UiPath({
+      baseUrl: BASE_URL,
+      orgName: 'my-org',
+      tenantName: 'my-tenant',
+      secret: TOKEN,
+      scope: OAUTH.scope,
+    });
+
+    expect(sdk.isInitialized()).toBe(true);
+  });
+
+  it('accepts a secret with explicitly-undefined OAuth fields', () => {
+    // Object spread keeps a key whose value is `undefined`, so the conflict
+    // must be read by truthiness — never by key presence.
+    vi.mocked(loadFromMetaTags).mockReturnValue({
+      baseUrl: BASE_URL,
+      orgName: 'meta-org',
+      tenantName: 'meta-tenant',
+      ...OAUTH,
+    });
+
+    const sdk = new UiPath({ secret: TOKEN, clientId: undefined, redirectUri: undefined, scope: undefined });
+
+    expect(sdk.isInitialized()).toBe(true);
+  });
+
+  it('treats an empty-string auth value as absent', () => {
+    // A host-auth deployment injects empty `uipath:client-id`/`uipath:scope`
+    // tags and compactConfig keeps empty strings, so an empty value must not
+    // count as naming a method.
+    vi.mocked(loadFromMetaTags).mockReturnValue({
+      baseUrl: BASE_URL,
+      orgName: 'meta-org',
+      tenantName: 'meta-tenant',
+      ...OAUTH,
+    });
+
+    const sdk = new UiPath({ secret: '' });
+
+    // `config` is populated only when a complete config was resolved, so it is
+    // what distinguishes "resolved to OAuth" from "deferred with nothing".
+    expect(sdk.config.orgName).toBe('meta-org');
+    expect(sdk.isInitialized()).toBe(false); // resolves to the injected OAuth
+  });
+
+  it('reports the conflict from initialize() when meta tags arrive after construction', async () => {
+    const sdk = new UiPath({ secret: TOKEN, scope: OAUTH.scope });
+
+    vi.mocked(loadFromMetaTags).mockReturnValue({
+      baseUrl: BASE_URL,
+      orgName: 'meta-org',
+      tenantName: 'meta-tenant',
+      ...OAUTH,
+    });
+
+    await expect(sdk.initialize()).rejects.toThrow(/carries both authentication methods/);
   });
 });
 
@@ -205,6 +302,17 @@ describe('UiPath missing configuration', () => {
   it('does not mention the browser bundler plugin outside the browser', async () => {
     const sdk = new UiPath();
     await expect(sdk.initialize()).rejects.not.toThrow(/coded-apps plugin/);
+  });
+
+  it('reports which fields are missing when a partial config was found', async () => {
+    // The only assertion that a config WAS found is reported as such rather
+    // than as "not found" — without it the gap diagnostic is unreachable in
+    // production and drifts into dead code at the next refactor.
+    const sdk = new UiPath({ baseUrl: BASE_URL, clientId: TEST_CONSTANTS.CLIENT_ID });
+
+    await expect(sdk.initialize()).rejects.toThrow(/configuration is incomplete/);
+    await expect(sdk.initialize()).rejects.toThrow(/missing orgName, tenantName/);
+    await expect(sdk.initialize()).rejects.toThrow(/redirectUri, scope missing/);
   });
 });
 
