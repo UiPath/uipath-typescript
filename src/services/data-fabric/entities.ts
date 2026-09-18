@@ -468,11 +468,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
       opts.updateSourceJoin?.length
     );
     const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length) || hasFederatedChanges;
-    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined || opts.isAnalyticsEnabled !== undefined;
+    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
 
     if (!hasSchemaChanges && !hasMetadataChanges) {
       throw new ValidationError({
-        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, isRbacEnabled, isAnalyticsEnabled, or a federated source/join delta (addExternalSources, removeExternalSources, addFieldsToSource, removeFieldsFromSource, updateExternalFieldMapping, addSourceJoins, updateSourceJoin).',
+        message: 'updateById requires at least one change — pass addFields, removeFields, updateFields, displayName, description, isRbacEnabled, or a federated source/join delta (addExternalSources, removeExternalSources, addFieldsToSource, removeFieldsFromSource, updateExternalFieldMapping, addSourceJoins, updateSourceJoin).',
       });
     }
 
@@ -486,7 +486,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(opts.displayName !== undefined && { displayName: opts.displayName }),
           ...(opts.description !== undefined && { description: opts.description }),
           ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
-          ...(opts.isAnalyticsEnabled !== undefined && { isInsightsEnabled: opts.isAnalyticsEnabled }),
         },
         { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
       );

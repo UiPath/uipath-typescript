@@ -553,12 +553,6 @@ export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
   description?: string;
   /** Whether role-based access control is enabled for this entity */
   isRbacEnabled?: boolean;
-  /**
-   * Whether Analytics integration is enabled for this entity.
-   *
-   * @experimental Analytics integration is in preview — the contract may change.
-   */
-  isAnalyticsEnabled?: boolean;
 
   // ── Federated source/join deltas ──
 

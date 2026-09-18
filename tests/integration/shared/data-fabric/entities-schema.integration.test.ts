@@ -209,17 +209,16 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       expect(updated?.displayName).toBe('After Update');
     }, 90_000);
 
-    it('should enable analytics via isAnalyticsEnabled', async () => {
+    it('should enable analytics via isAnalyticsEnabled at create time', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const displayName = `SDK Analytics ${name}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [], { displayName });
+      // isInsightsEnabled is immutable after creation, so analytics must be set on create.
+      const entityId = await createEntityAwaitingReady(entities, name, [], { displayName, isAnalyticsEnabled: true });
       createdEntityIds.push(entityId);
 
-      await entities.updateById(entityId, { displayName, isAnalyticsEnabled: true });
-
-      const updated = await entities.getById(entityId);
-      expect(updated.isAnalyticsEnabled).toBe(true);
+      const created = await entities.getById(entityId);
+      expect(created.isAnalyticsEnabled).toBe(true);
     }, 90_000);
   });
 

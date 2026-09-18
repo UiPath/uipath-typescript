@@ -4983,40 +4983,6 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should emit isInsightsEnabled in the metadata PATCH when isAnalyticsEnabled is provided", async () => {
-      mockApiClient.patch.mockResolvedValue(undefined);
-
-      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        isAnalyticsEnabled: true,
-      });
-
-      expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        expect.objectContaining({ isInsightsEnabled: true }),
-        { headers: {} },
-      );
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
-    it("should emit isInsightsEnabled: false in the metadata PATCH when isAnalyticsEnabled is false", async () => {
-      mockApiClient.patch.mockResolvedValue(undefined);
-
-      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        isAnalyticsEnabled: false,
-      });
-
-      expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        expect.objectContaining({ isInsightsEnabled: false }),
-        { headers: {} },
-      );
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
     it("should pass folderKey via X-UIPATH-FolderKey header on both schema GET/POST and metadata PATCH", async () => {
       const mockRawEntity: RawEntityGetResponse = {
         name: "my_entity",
