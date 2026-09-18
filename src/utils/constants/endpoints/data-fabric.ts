@@ -37,11 +37,9 @@ export const DATA_FABRIC_ENDPOINTS = {
     // Same URL as GET_BY_ID; the HTTP method (DELETE vs GET) is resolved at the call site.
     DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,
     UPDATE_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}/metadata`,
-    // v3 non-join query (by id / by name) — Federated-capable.
+    // v3 query — Federated-capable; by-name handles joins, by-id rejects them.
     QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/query`,
-    QUERY_BY_NAME_V3: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/query`,
-    // v1 name-based query — the only route implementing multi-entity joins.
-    QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/query`,
+    QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,

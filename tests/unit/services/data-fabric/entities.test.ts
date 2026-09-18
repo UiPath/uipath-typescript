@@ -1760,8 +1760,7 @@ describe("EntityService Unit Tests", () => {
         { headers: {} },
       );
       const [config, downstream] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
-      // Multi-entity joins only exist on the name-based route — the ID-based
-      // route silently drops the `joins` body key.
+      // The v3 by-id route rejects joins, so join queries resolve the name and address by name.
       expect(config.getEndpoint()).toBe(DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME("Order"));
       expect(downstream).toMatchObject({
         selectedFields: ["Order.amount", "Customer.name", "Region.name"],
@@ -2847,7 +2846,7 @@ describe("EntityService Unit Tests", () => {
       // Non-join by-name queries use the v3 route so Federated entities are queryable.
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
       expect((config as any).getEndpoint()).toBe(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME_V3(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(
           ENTITY_TEST_CONSTANTS.ENTITY_NAME,
         ),
       );
