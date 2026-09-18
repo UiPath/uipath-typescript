@@ -59,6 +59,14 @@ export function generateRandomString(length: number = 8): string {
 }
 
 /**
+ * Compares two GUID strings case-insensitively. v3 endpoints return uppercase
+ * GUIDs while v1 and write operations return lowercase, so use this instead of
+ * strict equality when comparing record IDs across API versions.
+ */
+export const idsEqual = (a?: string | null, b?: string | null): boolean =>
+  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
+/**
  * Waits for a specified amount of time.
  *
  * @param ms - Milliseconds to wait

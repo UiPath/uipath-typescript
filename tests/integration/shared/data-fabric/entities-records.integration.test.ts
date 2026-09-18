@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
+import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, idsEqual, wait } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -18,12 +18,6 @@ import {
 } from '../../../../src/models/data-fabric/entities.types';
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
-
-// Record Ids are GUIDs (case-insensitive). Data Fabric endpoints return them in
-// different casing (v3 single-record read upper-cases; list/write and v1 lower-case),
-// so compare Ids case-insensitively rather than with exact string equality.
-const idsEqual = (a?: string | null, b?: string | null): boolean =>
-  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();

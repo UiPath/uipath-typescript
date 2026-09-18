@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
+import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString, idsEqual } from '../../utils/helpers';
 import {
   DataDirectionType,
   EntityClass,
@@ -21,10 +21,6 @@ import {
 // this suite's wall-clock critical path, the schema suite runs v1-only; v0 init
 // wiring stays covered by the records/query suites, which run dual-mode.
 const modes: InitMode[] = ['v1'];
-
-// v3 reads upper-case record GUIDs; compare Ids case-insensitively.
-const idsEqual = (a?: string | null, b?: string | null): boolean =>
-  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
 
 describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', modes, () => {
 

@@ -718,11 +718,7 @@ export enum EntityType {
 export enum EntityClass {
   /** Native entity — data fully stored and managed within UiPath */
   Native = "Native",
-  /**
-   * Federated entity — unified read-only view across UiPath and external sources.
-   *
-   * @experimental
-   */
+  /** Federated entity — unified read-only view across UiPath and external sources. */
   Federated = "Federated",
   /** Case-family entity — read-only: returned by `getById`, not a valid value for `create`. */
   Case = "Case",
