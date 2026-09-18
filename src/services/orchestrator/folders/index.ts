@@ -19,7 +19,7 @@
  * @module
  */
 
-export { FolderService as Folders, FolderService } from './folders';
+export { FolderService as Folders } from './folders';
 
 export * from '../../../models/orchestrator/folders.types';
 export * from '../../../models/orchestrator/folders.models';
