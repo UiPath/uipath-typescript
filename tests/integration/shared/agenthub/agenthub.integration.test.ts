@@ -49,6 +49,10 @@ describeIntegration('AgentHub - Integration Tests', 'user', modes, () => {
       expect(typeof choice.index).toBe('number');
       expect(typeof choice.message.role).toBe('string');
       expect(typeof choice.message.content).toBe('string');
+      expect((choice as Record<string, unknown>).finish_reason).toBeUndefined();
+      if (choice.finishReason != null) {
+        expect(typeof choice.finishReason).toBe('string');
+      }
     });
   });
 });

@@ -25,6 +25,24 @@ const REQUEST: AgentHubChatCompletionRequest = {
   temperature: 0.7,
 };
 
+const WIRE_REQUEST = {
+  model: MODEL,
+  messages: [{ role: 'user', content: 'Summarize this invoice.' }],
+  max_tokens: 2048,
+  temperature: 0.7,
+};
+
+const WIRE_RESPONSE = {
+  id: 'chatcmpl-123',
+  choices: [
+    {
+      index: 0,
+      message: { role: 'assistant', content: 'Invoice total: $100.' },
+      finish_reason: 'stop',
+    },
+  ],
+};
+
 const RESPONSE: AgentHubChatCompletionResponse = {
   id: 'chatcmpl-123',
   choices: [
@@ -56,7 +74,7 @@ describe('AgentHubService Unit Tests', () => {
 
   describe('createChatCompletion', () => {
     it('should return the chat completion', async () => {
-      mockApiClient.post.mockResolvedValue(RESPONSE);
+      mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
 
       const result = await service.createChatCompletion(REQUEST);
 
@@ -64,29 +82,51 @@ describe('AgentHubService Unit Tests', () => {
       expect(result.choices[0]?.message.content).toBe('Invoice total: $100.');
     });
 
-    it('should POST to the chat completions endpoint with the gateway model header', async () => {
-      mockApiClient.post.mockResolvedValue(RESPONSE);
+    it('should POST snake_case fields and map snake_case response fields', async () => {
+      mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
 
-      await service.createChatCompletion(REQUEST);
+      const result = await service.createChatCompletion(REQUEST);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         AGENTHUB_ENDPOINTS.CREATE_CHAT_COMPLETION,
-        REQUEST,
+        WIRE_REQUEST,
         expect.objectContaining({
           headers: { [LLM_GATEWAY_MODEL_NAME]: MODEL },
         }),
       );
+      const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(body.maxTokens).toBeUndefined();
+      expect(result.choices[0]?.finishReason).toBe('stop');
+      expect((result.choices[0] as Record<string, unknown>).finish_reason).toBeUndefined();
+    });
+
+    it('should leave tool parameter schema keys unchanged', async () => {
+      mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
+      const tools = [
+        {
+          type: 'function' as const,
+          function: {
+            name: 'lookupInvoice',
+            parameters: { invoiceId: { type: 'string' } },
+          },
+        },
+      ];
+
+      await service.createChatCompletion({ ...REQUEST, tools });
+
+      const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(body.tools).toEqual(tools);
     });
 
     it('should forward an abort signal', async () => {
-      mockApiClient.post.mockResolvedValue(RESPONSE);
+      mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
       const controller = new AbortController();
 
       await service.createChatCompletion(REQUEST, { signal: controller.signal });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
-        REQUEST,
+        WIRE_REQUEST,
         expect.objectContaining({ signal: controller.signal }),
       );
     });
@@ -103,6 +143,20 @@ describe('AgentHubService Unit Tests', () => {
         service.createChatCompletion({ ...REQUEST, messages: [] }),
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should omit max_tokens when maxTokens is not set', async () => {
+      mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
+
+      await service.createChatCompletion({
+        model: REQUEST.model,
+        messages: REQUEST.messages,
+        temperature: REQUEST.temperature,
+      });
+
+      const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(body.max_tokens).toBeUndefined();
+      expect(body.maxTokens).toBeUndefined();
     });
 
     it('should propagate API errors', async () => {

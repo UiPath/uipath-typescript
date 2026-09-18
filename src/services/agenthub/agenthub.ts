@@ -8,6 +8,7 @@ import type {
 import type { AgentHubServiceModel } from '../../models/agenthub/agenthub.models';
 import { AGENTHUB_ENDPOINTS } from '../../utils/constants/endpoints';
 import { LLM_GATEWAY_MODEL_NAME } from '../../utils/constants/headers';
+import { camelToSnakeCaseKeys, snakeToCamelCaseKeys } from '../../utils/transform';
 import { BaseService } from '../base';
 
 /**
@@ -32,14 +33,22 @@ export class AgentHubService extends BaseService implements AgentHubServiceModel
       throw new ValidationError({ message: 'messages must not be empty for createChatCompletion' });
     }
 
+    // Tool `parameters` is caller-defined JSON Schema — leave it verbatim so
+    // recursive snake_case conversion cannot rewrite schema property names.
+    const { tools, ...envelope } = request;
+    const body = camelToSnakeCaseKeys(envelope);
+    if (tools !== undefined) {
+      body.tools = tools;
+    }
+
     const response = await this.post<AgentHubChatCompletionResponse>(
       AGENTHUB_ENDPOINTS.CREATE_CHAT_COMPLETION,
-      request,
+      body,
       {
         headers: { [LLM_GATEWAY_MODEL_NAME]: request.model },
         signal: options.signal,
       },
     );
-    return response.data;
+    return snakeToCamelCaseKeys(response.data) as AgentHubChatCompletionResponse;
   }
 }
