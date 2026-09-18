@@ -2836,7 +2836,7 @@ describe("EntityService Unit Tests", () => {
       vi.mocked(PaginationHelpers.getAll).mockReset();
     });
 
-    it("should delegate to PaginationHelpers.getAll with POST and the by-name query endpoint", async () => {
+    it("should delegate to PaginationHelpers.getAll with POST and the v3 by-name query endpoint for non-join queries", async () => {
       const mockResponse = { items: createMockEntityRecords(2), totalCount: 2 };
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
@@ -2844,9 +2844,10 @@ describe("EntityService Unit Tests", () => {
         { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
       );
 
+      // Non-join by-name queries use the v3 route so Federated entities are queryable.
       const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
       expect((config as any).getEndpoint()).toBe(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME_V3(
           ENTITY_TEST_CONSTANTS.ENTITY_NAME,
         ),
       );
@@ -4954,7 +4955,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         {
@@ -4975,7 +4976,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
@@ -5051,7 +5052,7 @@ describe("EntityService Unit Tests", () => {
         folderHeaders,
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         { displayName: "renamed" },
         folderHeaders,
       );
@@ -5065,7 +5066,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { isRbacEnabled: false },
@@ -5095,7 +5096,7 @@ describe("EntityService Unit Tests", () => {
         { headers: {} },
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: "New Display Name" },

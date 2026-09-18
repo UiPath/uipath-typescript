@@ -481,7 +481,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
     if (hasMetadataChanges) {
       await this.patch(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE(id),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(id),
         {
           ...(opts.displayName !== undefined && { displayName: opts.displayName }),
           ...(opts.description !== undefined && { description: opts.description }),
@@ -1195,12 +1195,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
     // folderKey is header-only; expansionLevel must be sent as a query param by PaginationHelpers.
     const { folderKey, expansionLevel, ...rest } = options ?? {};
-    // The multi-entity (joins) contract only exists on the name-based query route —
-    // the ID-based route silently drops the `joins` body key. When addressing by id, resolve
-    // the name (by name, it is already known); then translate each join to the wire shape.
+    // Joins only exist on the v1 name route; resolve the name when addressing by id.
     let getEndpoint = () => byId
       ? DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(identifier)
-      : DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME(identifier);
+      : DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_NAME_V3(identifier);
     if (options?.joins && options.joins.length > 0) {
       const baseEntityName = byId ? await this.resolveEntityName(identifier, folderKey) : identifier;
       (rest as Record<string, unknown>).joins = options.joins.map(join => toWireJoin(join, baseEntityName));

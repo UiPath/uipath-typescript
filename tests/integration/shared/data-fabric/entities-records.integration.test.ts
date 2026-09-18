@@ -19,6 +19,12 @@ import {
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 
+// Record Ids are GUIDs (case-insensitive). Data Fabric endpoints return them in
+// different casing (v3 single-record read upper-cases; list/write and v1 lower-case),
+// so compare Ids case-insensitively rather than with exact string equality.
+const idsEqual = (a?: string | null, b?: string | null): boolean =>
+  (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
 
@@ -468,7 +474,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
   });
 
@@ -522,7 +528,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should batch insert multiple records using insertRecordsById', async () => {
@@ -697,7 +703,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entity.getRecord(recordId);
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(recordId);
+      expect(idsEqual(record.Id, recordId)).toBe(true);
     });
 
     it('should update records via entity.updateRecords', async () => {
@@ -782,7 +788,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(updateTestRecordId);
+      expect(idsEqual(result.Id, updateTestRecordId)).toBe(true);
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -986,7 +992,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
 
       expect(record).toBeDefined();
-      expect(record.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(record.Id, folderRecordIds[0])).toBe(true);
     });
 
     it('should list paginated records with folderKey via getAllRecords', async () => {
@@ -1012,7 +1018,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(Array.isArray(result.items)).toBe(true);
       // The folder header must reach the server for the row to be retrievable; the
       // filter narrows to the record we just inserted in this run.
-      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
+      expect(result.items.some((r) => idsEqual(r.Id, folderRecordIds[0]))).toBe(true);
     });
 
     it('should update a record with folderKey via updateRecordById', async () => {
@@ -1021,7 +1027,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
 
       expect(result).toBeDefined();
-      expect(result.Id).toBe(folderRecordIds[0]);
+      expect(idsEqual(result.Id, folderRecordIds[0])).toBe(true);
     }, 90_000);
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
@@ -1057,7 +1063,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           ],
         },
       });
-      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
+      expect(result.items.some((r) => idsEqual(r.Id, idToDelete))).toBe(false);
     }, 90_000);
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {
@@ -1181,7 +1187,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         const record = await entities.getRecordByName(byNameEntityName, recordId);
 
         expect(record).toBeDefined();
-        expect(record.Id).toBe(recordId);
+        expect(idsEqual(record.Id, recordId)).toBe(true);
       });
 
       it('should batch insert records using insertRecords with a name ref', async () => {
@@ -1219,7 +1225,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         const result = await entities.updateRecord({ name: byNameEntityName }, byNameRecordIds[0], updates);
 
         expect(result).toBeDefined();
-        expect(result.Id).toBe(byNameRecordIds[0]);
+        expect(idsEqual(result.Id, byNameRecordIds[0])).toBe(true);
       });
 
       it('should update records using updateRecords with a name ref', async () => {
