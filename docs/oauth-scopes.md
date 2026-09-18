@@ -267,10 +267,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 ## Roles
 
-The Authorization service does not publish dedicated OAuth scopes. Access is governed by
-the caller's own platform roles: reads need role read permission and writes need
-organization-level role management permission.
-
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | None — caller's platform roles govern access |
