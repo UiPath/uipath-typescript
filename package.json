@@ -116,6 +116,16 @@
                 "default": "./dist/processes/index.cjs"
             }
         },
+        "./folders": {
+            "import": {
+                "types": "./dist/folders/index.d.ts",
+                "default": "./dist/folders/index.mjs"
+            },
+            "require": {
+                "types": "./dist/folders/index.d.ts",
+                "default": "./dist/folders/index.cjs"
+            }
+        },
         "./cases": {
             "import": {
                 "types": "./dist/cases/index.d.ts",
