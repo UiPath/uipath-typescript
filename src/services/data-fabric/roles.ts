@@ -6,9 +6,8 @@ import {
   DataFabricRoleGetAllOptions,
   DataFabricRoleType,
 } from '../../models/data-fabric/roles.types';
-import { FOLDER_KEY } from '../../utils/constants/headers';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
-import { createHeaders } from '../../utils/http/headers';
+import { buildDataFabricFolderHeaders } from '../../utils/folder/folder-headers';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
 
@@ -50,7 +49,7 @@ export class DataFabricRoleService extends BaseService implements DataFabricRole
     const params = createParams({
       stats: options.stats ?? true,
     });
-    const headers = createHeaders({ [FOLDER_KEY]: options.folderKey });
+    const headers = buildDataFabricFolderHeaders(options);
     const response = await this.get<DataFabricRole[]>(
       DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
       { params, headers }

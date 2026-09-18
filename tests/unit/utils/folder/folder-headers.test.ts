@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFolderHeaders } from '../../../../src/utils/folder/folder-headers';
+import { resolveFolderHeaders, buildDataFabricFolderHeaders } from '../../../../src/utils/folder/folder-headers';
 import { encodeFolderPathHeader } from '../../../../src/utils/encoding/folder-path';
-import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ValidationError } from '../../../../src/core/errors';
 
 const GUID = '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba';
@@ -129,6 +129,36 @@ describe('resolveFolderHeaders', () => {
     it('includes the resourceType in the error message', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Asset.getByName' }))
         .toThrow(/Asset\.getByName/);
+    });
+  });
+});
+
+describe('buildDataFabricFolderHeaders', () => {
+  it('returns an empty header set when no options are provided (tenant scope)', () => {
+    expect(buildDataFabricFolderHeaders()).toEqual({});
+    expect(buildDataFabricFolderHeaders({})).toEqual({});
+  });
+
+  it('routes folderKey to X-UIPATH-FolderKey', () => {
+    expect(buildDataFabricFolderHeaders({ folderKey: GUID })).toEqual({ [FOLDER_KEY]: GUID });
+  });
+
+  it('routes folderPath to X-UiPath-FolderPath (plain string; DF-specific, not the Orchestrator encoded variant)', () => {
+    expect(buildDataFabricFolderHeaders({ folderPath: 'Shared/Finance' })).toEqual({
+      [FOLDER_PATH]: 'Shared/Finance',
+    });
+  });
+
+  it('forwards both headers when folderKey and folderPath are set', () => {
+    expect(buildDataFabricFolderHeaders({ folderKey: GUID, folderPath: 'Shared/Finance' })).toEqual({
+      [FOLDER_KEY]: GUID,
+      [FOLDER_PATH]: 'Shared/Finance',
+    });
+  });
+
+  it('trims whitespace and drops empty strings', () => {
+    expect(buildDataFabricFolderHeaders({ folderKey: `  ${GUID}  `, folderPath: '   ' })).toEqual({
+      [FOLDER_KEY]: GUID,
     });
   });
 });

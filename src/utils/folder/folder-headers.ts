@@ -1,6 +1,6 @@
 import { ValidationError } from '../../core/errors';
 import { createHeaders } from '../http/headers';
-import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH, FOLDER_PATH_ENCODED } from '../constants/headers';
 import { encodeFolderPathHeader } from '../encoding/folder-path';
 
 export interface ResolveFolderHeadersInput {
@@ -79,4 +79,24 @@ export function resolveFolderHeaders(input: ResolveFolderHeadersInput): Record<s
   }
 
   return createHeaders(headers);
+}
+
+/**
+ * Builds Data Fabric folder-scope headers. Returns empty headers when neither
+ * field is supplied (tenant scope).
+ *
+ * - `folderKey` → `X-UIPATH-FolderKey`
+ * - `folderPath` → `X-UiPath-FolderPath` (plain string; DataFabric-specific —
+ *   Orchestrator uses `X-UIPATH-FolderPath-Encoded` via {@link resolveFolderHeaders}).
+ */
+export function buildDataFabricFolderHeaders(options?: {
+  folderKey?: string;
+  folderPath?: string;
+}): Record<string, string> {
+  const trimmedKey = options?.folderKey?.trim();
+  const trimmedPath = options?.folderPath?.trim();
+  return createHeaders({
+    [FOLDER_KEY]: trimmedKey || undefined,
+    [FOLDER_PATH]: trimmedPath || undefined,
+  });
 }

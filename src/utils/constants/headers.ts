@@ -1,5 +1,8 @@
 export const  FOLDER_KEY = 'X-UIPATH-FolderKey';
 export const  FOLDER_PATH_ENCODED = 'X-UIPATH-FolderPath-Encoded';
+// Plain folder path header used by Data Fabric (CommonEntityPlatform);
+// distinct from FOLDER_PATH_ENCODED, which Orchestrator requires.
+export const  FOLDER_PATH = 'X-UiPath-FolderPath';
 export const  USER_AGENT = 'X-UIPATH-UserAgent';
 export const  TENANT_ID = 'X-UIPATH-Internal-TenantId';
 export const  ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
