@@ -471,7 +471,10 @@ export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}
 /**
  * Options for getting entity metadata by entity name
  */
-export interface EntityGetByNameOptions extends EntityGetByIdOptions {}
+export interface EntityGetByNameOptions extends EntityGetByIdOptions {
+  /** Demo-only additive field: optional, so existing callers are unaffected. */
+  includeArchived?: boolean;
+}
 
 export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
 
