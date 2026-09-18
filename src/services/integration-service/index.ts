@@ -39,11 +39,4 @@ export { ElementsService as Elements, ElementsService } from './elements/element
 export { execute } from './execution/execution';
 
 // Re-export service-specific types
-export * from '../../models/integration-service/integration-service.types';
-export * from '../../models/integration-service/connectors.types';
-export * from '../../models/integration-service/connectors.models';
-export * from '../../models/integration-service/connections.types';
-export * from '../../models/integration-service/connections.models';
-export * from '../../models/integration-service/elements.types';
-export * from '../../models/integration-service/elements.models';
-export * from '../../models/integration-service/execution.types';
+export * from '../../models/integration-service';

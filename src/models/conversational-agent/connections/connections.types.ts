@@ -5,15 +5,9 @@
  * connections in conversational agent settings.
  */
 
-/**
- * State of a connection
- */
-export enum ConnectionState {
-  Enabled = 'Enabled',
-  Disabled = 'Disabled',
-  Expired = 'Expired',
-  Failed = 'Failed',
-}
+import { ConnectionState } from '../../common/types';
+
+export { ConnectionState };
 
 /**
  * A single connection available for selection

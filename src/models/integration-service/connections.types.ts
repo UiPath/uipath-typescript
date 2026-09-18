@@ -4,21 +4,10 @@
  * Types for the Connections API (`connections_/api/v1/Connections`).
  */
 
+import { ConnectionState } from '../common/types';
 import { IntegrationServiceFolderContextOptions } from './integration-service.types';
 
-/**
- * Lifecycle state of an Integration Service connection.
- */
-export enum ConnectionState {
-  /** Connection is healthy and authorized. */
-  Enabled = 'Enabled',
-  /** Connection has been administratively disabled. */
-  Disabled = 'Disabled',
-  /** Token expired and needs re-authentication. */
-  Expired = 'Expired',
-  /** Connection failed validation or upstream error. */
-  Failed = 'Failed',
-}
+export { ConnectionState };
 
 /**
  * Folder context associated with a connection.

@@ -36,6 +36,20 @@ export enum JobState {
   Unknown = 'Unknown'
 }
 
+/**
+ * Lifecycle state of a connection.
+ */
+export enum ConnectionState {
+  /** Connection is healthy and authorized. */
+  Enabled = 'Enabled',
+  /** Connection has been administratively disabled. */
+  Disabled = 'Disabled',
+  /** Token expired and needs re-authentication. */
+  Expired = 'Expired',
+  /** Connection failed validation or upstream error. */
+  Failed = 'Failed',
+}
+
 export interface BaseOptions {
   expand?: string;
   select?: string;
