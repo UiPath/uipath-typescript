@@ -66,8 +66,21 @@ export function normalizeBaseUrl(url: string): string {
  * Shared so the registry can reuse it when a service is constructed from a
  * UiPath instance that never resolved a configuration — otherwise the caller
  * only learns their instance is "invalid", not why.
+ *
+ * When a config was found but only its clientId is empty (the common case is a
+ * coded app whose injected config carries every field except the client), name
+ * that instead of claiming nothing was found.
  */
-export function missingConfigMessage(): string {
+export function missingConfigMessage(config?: PartialUiPathConfig): string {
+  if (
+    config &&
+    hasRequiredBaseFields(config) &&
+    !hasSecretConfig(config) &&
+    !config.clientId
+  ) {
+    return 'UiPath SDK configuration is incomplete: clientId is empty. Set clientId in uipath.json and redeploy, or pass a client ID at deploy time.';
+  }
+
   if (isBrowser) {
     return 'UiPath SDK configuration not found. ' +
       'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.';
