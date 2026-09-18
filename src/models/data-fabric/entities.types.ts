@@ -854,21 +854,27 @@ export interface ExternalConnection {
 }
 
 /**
- * Operator-level searchability metadata
+ * Operator-level searchability metadata.
+ *
+ * @experimental
  */
 export interface SearchabilityOperator {
   searchableOperators?: string[];
 }
 
 /**
- * Named-search searchability metadata
+ * Named-search searchability metadata.
+ *
+ * @experimental
  */
 export interface SearchabilityNamedSearch {
   searchableNames?: string[];
 }
 
 /**
- * Field searchability metadata
+ * Field searchability metadata.
+ *
+ * @experimental
  */
 export interface Searchability {
   searchable: boolean;
