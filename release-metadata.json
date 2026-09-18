@@ -3,6 +3,17 @@
   "sdkVersion": "1.7.1",
   "services": [
     {
+      "name": "AgentHub",
+      "subpath": "@uipath/uipath-typescript/agenthub",
+      "since": "1.7.1",
+      "methods": [
+        {
+          "name": "createChatCompletion",
+          "since": "1.7.1"
+        }
+      ]
+    },
+    {
       "name": "AgentMemory",
       "subpath": "@uipath/uipath-typescript/agent-memory",
       "since": "1.4.1",
@@ -931,6 +942,25 @@
         {
           "name": "getSpansByIds",
           "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "subpath": "@uipath/uipath-typescript/users",
+      "since": "1.7.1",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.1"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.1"
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.1"
         }
       ]
     },
