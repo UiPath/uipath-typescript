@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.7.1",
+  "sdkVersion": "1.7.2",
   "services": [
     {
       "name": "AgentMemory",
@@ -318,6 +318,44 @@
       ]
     },
     {
+      "name": "Connections",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
+      "name": "Connectors",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getConnections",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getDefaultConnection",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
       "name": "ConversationalAgent",
       "subpath": "@uipath/uipath-typescript/conversational-agent",
       "since": null,
@@ -349,6 +387,49 @@
         {
           "name": "updateConnectionSelections",
           "since": "1.6.2"
+        }
+      ]
+    },
+    {
+      "name": "Elements",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getActivities",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjects",
+          "since": "1.7.2"
         }
       ]
     },
@@ -931,6 +1012,25 @@
         {
           "name": "getSpansByIds",
           "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "subpath": "@uipath/uipath-typescript/users",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.2"
         }
       ]
     },
