@@ -1526,6 +1526,17 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
       expect(result.data).toBeNull();
     });
 
+    it('should surface taskSchemaKey when present (QuickForm task) and omit it otherwise', async () => {
+      const schemaKey = '8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91';
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData({ taskSchemaKey: schemaKey }));
+      const qf = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+      expect(qf.taskSchemaKey).toBe(schemaKey);
+
+      mockApiClient.get.mockResolvedValueOnce(createMockRawTaskData());
+      const ext = await service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER });
+      expect(ext.taskSchemaKey).toBeUndefined();
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
       await expect(service.getDataById(EXT_TASK.ID, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
@@ -1565,6 +1576,53 @@ describe('TaskService (extended: getDataById/getDataByKey/saveData/saveTags/edit
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
       await expect(service.getDataByKey(TASK_KEY, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getSchema', () => {
+    const SCHEMA_KEY = '8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91';
+    const SCHEMA_BODY = { inputs: [{ id: 'invoice' }], outcomes: [{ name: 'Approve' }] };
+    const createMockRawSchema = (overrides: Partial<any> = {}): any =>
+      createMockBaseResponse({
+        key: SCHEMA_KEY,
+        name: 'Invoice Approval',
+        schema: SCHEMA_BODY,
+        organizationUnitId: EXT_TASK.FOLDER,
+        creationTime: EXT_TASK.CREATED,
+        ...overrides,
+      });
+
+    it('should throw ValidationError when the schema key or folder is missing', async () => {
+      await expect(service.getSchema('', { folderId: EXT_TASK.FOLDER })).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.getSchema(SCHEMA_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should GET the schema by key with the folder header and transform system fields', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawSchema());
+
+      const result = await service.getSchema(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_SCHEMA_BY_KEY,
+        expect.objectContaining({
+          params: expect.objectContaining({ key: SCHEMA_KEY }),
+          headers: expect.objectContaining({ [FOLDER_ID]: EXT_TASK.FOLDER.toString() }),
+        }),
+      );
+
+      expect(result.key).toBe(SCHEMA_KEY);
+      expect(result.name).toBe('Invoice Approval');
+      expect(result.schema).toEqual(SCHEMA_BODY);
+      expect(result.folderId).toBe(EXT_TASK.FOLDER);
+      expect((result as any).organizationUnitId).toBeUndefined(); // renamed to folderId
+      expect(result.createdTime).toBe(EXT_TASK.CREATED);
+      expect((result as any).creationTime).toBeUndefined(); // renamed to createdTime
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+      await expect(service.getSchema(SCHEMA_KEY, { folderId: EXT_TASK.FOLDER })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

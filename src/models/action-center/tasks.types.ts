@@ -390,7 +390,35 @@ export interface RawTaskDataGetResponse {
   action: string | null;
   createdTime: string;
   lastModifiedTime: string | null;
+  /**
+   * Present for QuickForm tasks — the key of the registered TaskSchema this
+   * task uses. Pass it to `getSchema` to fetch the schema. Omitted for task
+   * types that are not schema-backed.
+   */
+  taskSchemaKey?: string;
   tags?: Tag[];
+}
+
+/**
+ * A task schema (the QuickForm/HITL form definition), as returned by `getSchema`.
+ */
+export interface RawTaskSchemaGetResponse {
+  /** Unique key the schema is registered under (a task's `taskSchemaKey`). */
+  key: string;
+  /** Human-readable schema name. */
+  name: string;
+  /** The schema body (fields, outcomes, etc.). */
+  schema: Record<string, unknown>;
+  /** Job key that created the schema, when created by a job. */
+  creatorJobKey?: string;
+  /** Process key associated with the schema, when applicable. */
+  processKey?: string;
+  /** Name of the process/job that created the schema, when applicable. */
+  jobProcessName?: string;
+  /** Folder id the schema belongs to. */
+  folderId: number;
+  /** Creation timestamp. */
+  createdTime: string;
 }
 
 /**
