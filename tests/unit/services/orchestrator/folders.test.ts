@@ -5,29 +5,11 @@ import { ApiClient } from '@/core/http/api-client';
 import { FOLDER_ENDPOINTS } from '@/utils/constants/endpoints';
 import { NotFoundError, ValidationError } from '@/core/errors';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
+import { FOLDER_TEST_CONSTANTS } from '@tests/utils/constants/folders';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
-
-// ===== TEST CONSTANTS =====
-const FOLDER_KEY = '3cb92d99-9d2f-4c8c-9b8a-9b8a9b8a9b8a';
-const PARENT_KEY = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
-
-const RAW_FOLDER = {
-  Id: 123,
-  Key: FOLDER_KEY,
-  DisplayName: 'Finance',
-  FullyQualifiedName: 'Shared/Finance',
-  Description: 'AP invoices',
-  FolderType: 'Standard',
-  IsPersonal: false,
-  ProvisionType: 'Automatic',
-  PermissionModel: 'FineGrained',
-  ParentId: 10,
-  ParentKey: PARENT_KEY,
-  FeedType: 'Processes',
-};
 
 // ===== TEST SUITE =====
 describe('FolderService Unit Tests', () => {
@@ -49,12 +31,12 @@ describe('FolderService Unit Tests', () => {
 
   describe('getByKey', () => {
     it('should get a folder by key with fields mapped to camelCase', async () => {
-      mockApiClient.get.mockResolvedValue(RAW_FOLDER);
+      mockApiClient.get.mockResolvedValue(FOLDER_TEST_CONSTANTS.RAW_FOLDER);
 
-      const result = await folderService.getByKey(FOLDER_KEY);
+      const result = await folderService.getByKey(FOLDER_TEST_CONSTANTS.FOLDER_KEY);
 
       expect(result.id).toBe(123);
-      expect(result.key).toBe(FOLDER_KEY);
+      expect(result.key).toBe(FOLDER_TEST_CONSTANTS.FOLDER_KEY);
       expect(result.displayName).toBe('Finance');
       expect(result.fullyQualifiedName).toBe('Shared/Finance');
       expect(result.description).toBe('AP invoices');
@@ -63,7 +45,7 @@ describe('FolderService Unit Tests', () => {
       expect(result.provisionType).toBe('Automatic');
       expect(result.permissionModel).toBe('FineGrained');
       expect(result.parentId).toBe(10);
-      expect(result.parentKey).toBe(PARENT_KEY);
+      expect(result.parentKey).toBe(FOLDER_TEST_CONSTANTS.PARENT_KEY);
       expect(result.feedType).toBe('Processes');
       expect((result as any).DisplayName).toBeUndefined();
       expect((result as any).FullyQualifiedName).toBeUndefined();
@@ -72,12 +54,12 @@ describe('FolderService Unit Tests', () => {
     });
 
     it('should call GetByKey with select options and no folder headers', async () => {
-      mockApiClient.get.mockResolvedValue(RAW_FOLDER);
+      mockApiClient.get.mockResolvedValue(FOLDER_TEST_CONSTANTS.RAW_FOLDER);
 
-      await folderService.getByKey(FOLDER_KEY, { select: 'fullyQualifiedName' });
+      await folderService.getByKey(FOLDER_TEST_CONSTANTS.FOLDER_KEY, { select: 'fullyQualifiedName' });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        FOLDER_ENDPOINTS.GET_BY_KEY(FOLDER_KEY),
+        FOLDER_ENDPOINTS.GET_BY_KEY(FOLDER_TEST_CONSTANTS.FOLDER_KEY),
         expect.objectContaining({
           params: expect.objectContaining({
             '$select': 'fullyQualifiedName',
@@ -98,14 +80,14 @@ describe('FolderService Unit Tests', () => {
     it('should throw NotFoundError when the folder is missing', async () => {
       mockApiClient.get.mockRejectedValue(new NotFoundError({ message: 'not found' }));
 
-      await expect(folderService.getByKey(FOLDER_KEY)).rejects.toThrow(NotFoundError);
+      await expect(folderService.getByKey(FOLDER_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(NotFoundError);
     });
 
     it('should propagate API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(folderService.getByKey(FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(folderService.getByKey(FOLDER_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
