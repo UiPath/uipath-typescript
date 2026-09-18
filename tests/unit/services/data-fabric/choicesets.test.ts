@@ -548,21 +548,20 @@ describe('ChoiceSetService Unit Tests', () => {
   });
 
   describe('deleteById', () => {
-    it('should POST to the delete endpoint with empty body', async () => {
-      mockApiClient.post.mockResolvedValue(true);
+    it('should DELETE the choice-set via the v3 entity endpoint', async () => {
+      mockApiClient.delete.mockResolvedValue(true);
 
       await choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
-        {},
         { headers: {} },
       );
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
+      mockApiClient.delete.mockRejectedValue(error);
 
       await expect(
         choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
@@ -570,15 +569,14 @@ describe('ChoiceSetService Unit Tests', () => {
     });
 
     it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
-      mockApiClient.post.mockResolvedValue(true);
+      mockApiClient.delete.mockResolvedValue(true);
 
       await choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
         folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
-        {},
         { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } },
       );
     });
