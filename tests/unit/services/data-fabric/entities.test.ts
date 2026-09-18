@@ -2274,8 +2274,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRecord);
 
       const result = await entityService.getRecordByName(
-        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        { entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME, recordId: ENTITY_TEST_CONSTANTS.RECORD_ID },
       );
 
       expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
@@ -2297,8 +2296,7 @@ describe("EntityService Unit Tests", () => {
       };
 
       await entityService.getRecordByName(
-        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        { entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME, recordId: ENTITY_TEST_CONSTANTS.RECORD_ID },
         options,
       );
 
@@ -2322,8 +2320,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.getRecordByName(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          { entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME, recordId: ENTITY_TEST_CONSTANTS.RECORD_ID },
         ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });

@@ -6,6 +6,7 @@ import {
   EntityGetAllRecordsOptions,
   EntityGetRecordByIdOptions,
   EntityGetRecordByNameOptions,
+  EntityGetRecordByNameRequest,
   EntityInsertOptions,
   EntityInsertRecordOptions,
   EntityBatchInsertOptions,
@@ -166,11 +167,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetRecordByName')
   async getRecordByName(
-    entityName: string,
-    recordId: string,
+    request: EntityGetRecordByNameRequest,
     options: EntityGetRecordByNameOptions = {}
   ): Promise<EntityRecord> {
-    return this.getRecordImpl(false, entityName, recordId, options);
+    return this.getRecordImpl(false, request.entityName, request.recordId, options);
   }
 
   @track('Entities.InsertRecord')
