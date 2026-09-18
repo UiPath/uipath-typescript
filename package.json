@@ -265,6 +265,16 @@
                 "types": "./dist/users/index.d.ts",
                 "default": "./dist/users/index.cjs"
             }
+        },
+        "./connections": {
+            "import": {
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.mjs"
+            },
+            "require": {
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.cjs"
+            }
         }
     },
     "files": [
