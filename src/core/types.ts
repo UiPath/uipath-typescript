@@ -10,6 +10,7 @@
 
 import type { BaseConfig } from './config/sdk-config';
 import type { TokenInfo, LogoutOptions } from './auth/types';
+import type { DebugContext } from '../models/common/types';
 
 export interface IUiPath {
   /** Read-only configuration for the SDK instance */
@@ -67,4 +68,22 @@ export interface IUiPath {
    * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh/ID tokens
    */
   updateToken(tokenInfo: TokenInfo): void;
+
+  /**
+   * Sets the debug context applied to all subsequent API requests made through this instance,
+   * or clears it with `null`. While set, requests carry the parent job key so the platform routes
+   * runs they trigger as debug sub-jobs of that session — use it when the app is hosted inside a
+   * platform debug run (for example, a coded action app opened from a debug task in Action Center).
+   *
+   * @param context - The debug context ({@link DebugContext}) with the parent job key, or `null` to clear it
+   *
+   * @example
+   * ```typescript
+   * const task = await codedActionApp.getTask();
+   * if (task.isDebug && task.jobKey) {
+   *   sdk.setDebugContext({ jobKey: task.jobKey });
+   * }
+   * ```
+   */
+  setDebugContext(context: DebugContext | null): void;
 }

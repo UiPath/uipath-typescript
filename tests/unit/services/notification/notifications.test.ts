@@ -306,7 +306,7 @@ describe('Notification org-level URL routing', () => {
     tenantName: TEST_CONSTANTS.TENANT_ID,
   };
 
-  const mockExecutionContext = {};
+  const mockExecutionContext = { get: () => undefined };
 
   let capturedUrl = '';
   let capturedHeaders: Record<string, string> = {};

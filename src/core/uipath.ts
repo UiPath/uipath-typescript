@@ -1,7 +1,8 @@
 import { UiPathConfig } from './config/config';
-import { ExecutionContext } from './context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
+import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -397,6 +398,10 @@ export class UiPath implements IUiPath {
    */
   public updateToken(tokenInfo: TokenInfo): void {
     this.#authService?.updateToken(tokenInfo);
+  }
+
+  public setDebugContext(context: DebugContext | null): void {
+    SDKInternalsRegistry.get(this).context.set(DEBUG_CONTEXT_KEY, context ?? undefined);
   }
 
 }
