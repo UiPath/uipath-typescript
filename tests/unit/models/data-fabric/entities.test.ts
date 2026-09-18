@@ -12,6 +12,7 @@ import {
   createMockUpdateResponse,
   createMockDeleteResponse,
   createMockBlob,
+  createMockUpsertTreeResponse,
 } from "../../../utils/mocks/entities";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { EntityAggregateFunction } from "../../../../src/models/data-fabric/entities.types";
@@ -42,6 +43,7 @@ describe("Entity Models", () => {
       updateRecordById: vi.fn(),
       updateRecords: vi.fn(),
       updateRecordsById: vi.fn(),
+      upsert: vi.fn(),
       deleteRecords: vi.fn(),
       deleteRecordsById: vi.fn(),
       queryRecords: vi.fn(),
@@ -406,6 +408,65 @@ describe("Entity Models", () => {
         expect(result.failureRecords[0]).toHaveProperty("record");
         expect(result.failureRecords[0].record).toEqual(testData[1]);
         expect(typeof result.failureRecords[0].error).toBe("string");
+      });
+    });
+
+    describe("entity.upsert()", () => {
+      it("should throw error if entity name is undefined", async () => {
+        const entityData = createBasicEntity({ name: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.upsert(
+            ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+          ),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_NAME_UNDEFINED,
+        );
+      });
+
+      it("should call entity.upsert with a name ref and data", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const mockResponse = createMockUpsertTreeResponse();
+        mockService.upsert = vi
+          .fn()
+          .mockResolvedValue(mockResponse);
+
+        const result = await entity.upsert(
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+        );
+
+        // A name ref, not an id ref — the upsert route is name-only, so passing the id
+        // would make the service re-resolve a name the entity already carries.
+        expect(mockService.upsert).toHaveBeenCalledWith(
+          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+          undefined,
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it("should call entity.upsert with options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const options = { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID };
+        mockService.upsert = vi
+          .fn()
+          .mockResolvedValue(createMockUpsertTreeResponse());
+
+        await entity.upsert(
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+          options,
+        );
+
+        expect(mockService.upsert).toHaveBeenCalledWith(
+          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
+          ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
+          options,
+        );
       });
     });
 
@@ -863,6 +924,7 @@ describe("Entity Models", () => {
       expect(typeof entity.insertRecords).toBe("function");
       expect(typeof entity.updateRecord).toBe("function");
       expect(typeof entity.updateRecords).toBe("function");
+      expect(typeof entity.upsert).toBe("function");
       expect(typeof entity.deleteRecords).toBe("function");
       expect(typeof entity.deleteRecord).toBe("function");
       expect(typeof entity.getAllRecords).toBe("function");

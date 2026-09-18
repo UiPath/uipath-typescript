@@ -34,6 +34,8 @@ import {
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
   EntityGetByNameOptions,
+  EntityUpsertOptions,
+  EntityUpsertResponse,
   EntityRef,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -546,6 +548,66 @@ export interface EntityServiceModel {
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
+
+  /**
+   * Upserts a record, optionally together with its related child records
+   *
+   * A flat payload writes one record, matched on the entity's configured business key.
+   * Nesting child records under a key named for their entity instead applies the whole tree as
+   * a single transaction: every record is written or none is. In a tree, a record carrying an
+   * `Id` updates that row and one without it creates a new row, with the service filling in the
+   * foreign keys that link a child to its parent — do not set those yourself.
+   *
+   * Which form an entity accepts is decided by the server. A business key only exists on case
+   * and templated entities, so native entities are written with the nested form; sending a flat
+   * payload for one is rejected.
+   *
+   * A single-record write returns the record's fields. A tree write reports its outcome in
+   * `transaction` — one node per record, mirroring the request — and returns no field values.
+   *
+   * For a tree: at most 500 records, 3 levels of nesting, and 6 distinct entities per request.
+   * Passing `__Version__` in a record opts that row into a version check, which fails the whole
+   * transaction if the row changed in the meantime.
+   *
+   * Prefer `{ name }` over `{ id }` — the underlying route addresses entities by name, so an
+   * `{ id }` ref costs an extra lookup to resolve the name first.
+   *
+   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
+   * @param data - Record fields, optionally with child records nested under their entity name
+   * @param options - Upsert options. The `folderKey` property is **experimental**.
+   * @returns Promise resolving to the written record, or the per-record results of a tree write ({@link EntityUpsertResponse})
+   * @example
+   * ```typescript
+   * // Single record, matched on the entity's business key
+   * const result = await entities.upsert({ name: "Case" }, {
+   *   caseId: "CASE-001",
+   *   caseStatus: "Open"
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // A report with two expenses, one of which has a line item — applied as one transaction
+   * const result = await entities.upsert({ name: "Report" }, {
+   *   assignee: "assignee1",
+   *   totalReportAmount: 25,
+   *   Expense: [
+   *     { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+   *     { vendor: "Vendor 2", totalExpense: 5 }
+   *   ]
+   * }, { folderKey: "<folderKey>" });
+   *
+   * console.log(result.transaction!.totalRecordsAffected); // 4
+   * console.log(result.transaction!.members[0].id);        // generated expense record ID
+   * ```
+   *
+   * @experimental Writing across related entities requires the multi-entity write feature to be
+   * enabled for your tenant.
+   */
+  upsert(
+    entityRef: EntityRef,
+    data: Record<string, any>,
+    options?: EntityUpsertOptions
+  ): Promise<EntityUpsertResponse>;
 
   /**
    * Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
@@ -1157,6 +1219,18 @@ export interface EntityMethods {
   updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
   /**
+   * Upsert a record into this entity, optionally with its related child records
+   *
+   * @param data - Record fields, optionally with child records nested under their entity name
+   * @param options - Upsert options
+   * @returns Promise resolving to the written record, or the per-record results of a tree write
+   *
+   * @experimental Writing across related entities requires the multi-entity write feature to be
+   * enabled for your tenant.
+   */
+  upsert(data: Record<string, any>, options?: EntityUpsertOptions): Promise<EntityUpsertResponse>;
+
+  /**
    * Delete data from this entity
    *
    * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
@@ -1442,6 +1516,13 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.updateRecords({ id: entityData.id }, data, options);
+    },
+
+    // Passes `{ name }` where the other delegates pass `{ id }`: the upsert route addresses
+    // entities by name, so an id ref would make the service resolve the name we already hold.
+    async upsert(data: Record<string, any>, options?: EntityUpsertOptions): Promise<EntityUpsertResponse> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+      return service.upsert({ name: entityData.name }, data, options);
     },
 
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {

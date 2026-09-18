@@ -15,7 +15,9 @@ import {
   EntityBatchInsertResponse,
   EntityUpdateRecordResponse,
   EntityUpdateResponse,
-  EntityDeleteResponse
+  EntityDeleteResponse,
+  EntityMultiEntityWriteOperation,
+  EntityUpsertResponse
 } from '../../../src/models/data-fabric/entities.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { ENTITY_TEST_CONSTANTS } from '../constants/entities';
@@ -327,6 +329,69 @@ export const createMockSingleInsertResponse = (
 
   return result;
 };
+
+/**
+ * Creates a raw multi-entity transactional upsert response, in the wire shape the API returns.
+ *
+ * Shape verified against a live alpha response: the transaction tree is camelCase throughout,
+ * the root `Id` is the one PascalCase key, every node carries `noOp` and `version`, and a leaf
+ * sends `members: []` rather than omitting the key. `children`, `cascadeDeletedChildren` and
+ * `deletedCount` are always sent empty on this route and are included to match the real wire
+ * shape.
+ */
+export const createMockUpsertTreeResponse =
+  (): EntityUpsertResponse => ({
+    Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+    children: {},
+    cascadeDeletedChildren: {},
+    deletedCount: 0,
+    transaction: {
+      totalRecordsAffected: 3,
+      entityName: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+      op: EntityMultiEntityWriteOperation.Insert,
+      id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+      affectedRows: 1,
+      noOp: false,
+      version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+      members: [
+        {
+          entityName: ENTITY_TEST_CONSTANTS.TREE_CHILD_ENTITY_NAME,
+          op: EntityMultiEntityWriteOperation.Insert,
+          id: ENTITY_TEST_CONSTANTS.TREE_CHILD_RECORD_ID,
+          affectedRows: 1,
+          noOp: false,
+          version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+          members: [
+            {
+              entityName: ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_ENTITY_NAME,
+              op: EntityMultiEntityWriteOperation.Insert,
+              id: ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_RECORD_ID,
+              affectedRows: 1,
+              noOp: false,
+              version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+              members: [],
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+/**
+ * Creates a single-record upsert response, in the wire shape the API returns for a flat payload.
+ *
+ * The server echoes the written record's fields alongside `Id` and sends no `transaction` —
+ * the opposite of the tree form, which reports per-record outcomes and no field values.
+ */
+export const createMockUpsertRecordResponse = (
+  requestData: Record<string, any>
+): EntityUpsertResponse => ({
+  ...requestData,
+  Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+  children: {},
+  cascadeDeletedChildren: {},
+  deletedCount: 0
+});
 
 /**
  * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated record IDs

@@ -7,9 +7,12 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
+import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
 import {
+  EntityCreateFieldOptions,
   EntityFieldDataType,
+  EntityMultiEntityWriteOperation,
+  EntityMultiEntityWriteResponseNode,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -18,6 +21,7 @@ import {
 } from '../../../../src/models/data-fabric/entities.types';
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { isNotFoundError } from '../../../../src/core/errors/guards';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -149,6 +153,54 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
   }
 
   return record;
+}
+
+/**
+ * Collects every non-root record id in an upsert transaction, deepest first.
+ * Cleanup deletes in this order: a parent still referenced by a child is refused.
+ */
+function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[] {
+  return node.members.flatMap((m) => [...collectDescendantIds(m), m.id]);
+}
+
+/**
+ * Returns the named entity, creating it first when the tenant does not have it yet.
+ *
+ * The upsert suite needs a parent/child pair with a foreign key between them, which not
+ * every tenant has seeded. Provisioning it here keeps the suite runnable on a fresh tenant
+ * without a manual setup step. Existing entities are used as-is — `fields` only describes
+ * what to create, never what to enforce.
+ */
+async function ensureEntity(
+  name: string,
+  fields: EntityCreateFieldOptions[],
+): Promise<EntityGetResponse> {
+  const { entities } = getServices();
+  try {
+    return await entities.getByName(name);
+  } catch (error) {
+    // A name that does not exist comes back as a 400 naming it, not a 404, so the
+    // status alone cannot distinguish "absent" from "malformed request".
+    const absent = isNotFoundError(error)
+      || (error instanceof Error && /not found/i.test(error.message));
+    if (!absent) throw error;
+  }
+
+  try {
+    const entityId = await createEntityAwaitingReady(entities, name, fields);
+    return await entities.getById(entityId);
+  } catch (createError) {
+    // A parallel suite cell may have created it between the read and the write. If it did
+    // not, the creation failure is the useful error — re-reading would only report the
+    // entity as absent again and bury the reason.
+    console.warn(createError);
+    try {
+      return await entities.getByName(name);
+    } catch (retryError) {
+      console.warn(retryError);
+      throw createError;
+    }
+  }
 }
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -1312,6 +1364,224 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         createdRecordIds.push(...importedIds);
         registerResource('entityRecords', { entityId: byNameEntityId, recordIds: importedIds });
       }, 90_000);
+    });
+  });
+
+  // ─── Multi-entity transactional upsert ────────────────────────────────────
+
+  describe('upsert', () => {
+    let treeEntityName!: string;
+    let treeChildEntityName!: string;
+    let treeMetadata!: EntityGetResponse;
+    let treeChildMetadata!: EntityGetResponse;
+    const treeRootRecordIds: string[] = [];
+    const treeChildRecordIds: string[] = [];
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+
+      if (!config.dataFabricTestTreeEntityName || !config.dataFabricTestTreeChildEntityName) {
+        throw new Error(
+          'DATA_FABRIC_TEST_TREE_ENTITY_NAME and DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME '
+          + 'must be set to run the upsert integration tests',
+        );
+      }
+
+      treeEntityName = config.dataFabricTestTreeEntityName;
+      treeChildEntityName = config.dataFabricTestTreeChildEntityName;
+
+      treeMetadata = await ensureEntity(treeEntityName, [
+        { name: 'subject', type: EntityFieldDataType.STRING },
+        { name: 'totalAmount', type: EntityFieldDataType.DECIMAL },
+      ]);
+
+      // The child's foreign key to the parent is what makes this a tree the server will
+      // accept — the write path resolves the ancestor edge from it and fills it in itself.
+      const parentPk = treeMetadata.fields.find((f) => f.isPrimaryKey);
+      if (!parentPk?.id) {
+        throw new Error(`Entity ${treeEntityName} has no primary-key field to bind a foreign key to`);
+      }
+
+      treeChildMetadata = await ensureEntity(treeChildEntityName, [
+        { name: 'vendor', type: EntityFieldDataType.STRING },
+        { name: 'totalAmount', type: EntityFieldDataType.DECIMAL },
+        {
+          name: 'parent',
+          type: EntityFieldDataType.RELATIONSHIP,
+          referenceEntityId: treeMetadata.id,
+          referenceFieldId: parentPk.id,
+        },
+      ]);
+    });
+
+    it('should write a parent and its children in one transaction', async () => {
+      const { entities } = getServices();
+
+      const rootData = await buildDummyRecord(treeMetadata);
+      const childData = await buildDummyRecord(treeChildMetadata);
+
+      const result = await entities.upsert(
+        { name: treeEntityName },
+        { ...rootData, [treeChildEntityName]: [childData] },
+      );
+      expect(result.transaction).toBeDefined();
+      const tx = result.transaction!;
+
+      expect(result.Id).toBeDefined();
+      expect(tx.entityName).toBe(treeEntityName);
+      expect(tx.op).toBe(EntityMultiEntityWriteOperation.Insert);
+      expect(tx.id).toBe(result.Id);
+      // Root plus one child
+      expect(tx.totalRecordsAffected).toBe(2);
+
+      expect(tx.members).toHaveLength(1);
+      const child = tx.members[0];
+      expect(child.entityName).toBe(treeChildEntityName);
+      expect(child.op).toBe(EntityMultiEntityWriteOperation.Insert);
+      expect(child.id).toBeDefined();
+      // A leaf sends an empty array rather than omitting the key, so `members` is
+      // safe to type as required — assert that against the live response.
+      expect(Array.isArray(child.members)).toBe(true);
+      expect(child.members).toHaveLength(0);
+
+      // Tracked locally, not on createdRecordIds — that list is drained against
+      // testEntityId, and these records live in the tree entity.
+      treeRootRecordIds.push(result.Id);
+      registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
+      registerResource('entityRecords', { entityId: treeChildMetadata.id, recordIds: [child.id] });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
+    }, 90_000);
+
+    it('should update the root and insert another child in the same transaction', async () => {
+      const { entities } = getServices();
+
+      // Writes its own root rather than reusing the previous test's, so this case
+      // stands alone when run with -t.
+      const seed = await entities.upsert(
+        { name: treeEntityName },
+        {
+          ...(await buildDummyRecord(treeMetadata)),
+          [treeChildEntityName]: [await buildDummyRecord(treeChildMetadata)],
+        },
+      );
+      treeRootRecordIds.push(seed.Id);
+      registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [seed.Id] });
+      registerResource('entityRecords', {
+        entityId: treeChildMetadata.id,
+        recordIds: [seed.transaction!.members[0].id],
+      });
+      treeChildRecordIds.push(...collectDescendantIds(seed.transaction!));
+
+      // No readiness poll: the transaction has committed, so the row is addressable by Id
+      // on the write path. `awaitRecordVisible` polls the read path, whose index lags a
+      // transactional write and can burn most of this test's budget for no benefit.
+      const rootRecordId = seed.Id;
+
+      const rootData = await buildDummyRecord(treeMetadata);
+      const childData = await buildDummyRecord(treeChildMetadata);
+
+      // An Id on the root makes it an update; the child carries none, so it is created.
+      const result = await entities.upsert(
+        { name: treeEntityName },
+        { Id: rootRecordId, ...rootData, [treeChildEntityName]: [childData] },
+      );
+      expect(result.transaction).toBeDefined();
+      const tx = result.transaction!;
+
+      expect(result.Id).toBe(rootRecordId);
+      expect(tx.op).toBe(EntityMultiEntityWriteOperation.Update);
+      expect(tx.members[0].op).toBe(EntityMultiEntityWriteOperation.Insert);
+      expect(tx.totalRecordsAffected).toBe(2);
+
+      registerResource('entityRecords', {
+        entityId: treeChildMetadata.id,
+        recordIds: [tx.members[0].id],
+      });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
+      // Two tree writes in one test, and the first suite cell runs with cold caches.
+    }, 120_000);
+
+    it('should return typed transaction fields for every node', async () => {
+      const { entities } = getServices();
+
+      const rootData = await buildDummyRecord(treeMetadata);
+      const childData = await buildDummyRecord(treeChildMetadata);
+
+      const result = await entities.upsert(
+        { name: treeEntityName },
+        { ...rootData, [treeChildEntityName]: [childData] },
+      );
+      expect(result.transaction).toBeDefined();
+      const tx = result.transaction!;
+
+      // Transformed fields are present
+      expect(typeof tx.entityName).toBe('string');
+      expect(typeof tx.affectedRows).toBe('number');
+      expect(typeof tx.totalRecordsAffected).toBe('number');
+      expect(Array.isArray(tx.members)).toBe(true);
+
+      // Every node reports its own outcome
+      expect(typeof tx.members[0].entityName).toBe('string');
+      expect(typeof tx.members[0].affectedRows).toBe('number');
+
+      // `noOp` is typed as required — the service always sets it, never omits it
+      expect(typeof tx.noOp).toBe('boolean');
+      expect(typeof tx.members[0].noOp).toBe('boolean');
+
+      // A tree write reports outcomes, not field values
+      expect(tx.members[0].id).toBeDefined();
+
+      treeRootRecordIds.push(result.Id);
+      registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
+      registerResource('entityRecords', {
+        entityId: treeChildMetadata.id,
+        recordIds: [tx.members[0].id],
+      });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
+    }, 90_000);
+
+    it('should write a tree through the bound method on the entity', async () => {
+      const rootData = await buildDummyRecord(treeMetadata);
+      const childData = await buildDummyRecord(treeChildMetadata);
+
+      // treeMetadata already carries the bound methods — no need to re-fetch
+      const result = await treeMetadata.upsert({
+        ...rootData,
+        [treeChildEntityName]: [childData],
+      });
+      expect(result.transaction).toBeDefined();
+      const tx = result.transaction!;
+
+      expect(result.Id).toBeDefined();
+      expect(tx.entityName).toBe(treeEntityName);
+
+      treeRootRecordIds.push(result.Id);
+      registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
+      registerResource('entityRecords', {
+        entityId: treeChildMetadata.id,
+        recordIds: [tx.members[0].id],
+      });
+      treeChildRecordIds.push(...collectDescendantIds(tx));
+    }, 90_000);
+
+    afterAll(async () => {
+      const config = getTestConfig();
+      if (config.skipCleanup) return;
+      const { entities } = getServices();
+
+      // These live in the tree entity, not testEntityId, so the shared afterAll
+      // cannot delete them. Children first: a root still referenced by a child is
+      // refused ("a record is still referenced by another record"), not cascaded.
+      if (treeChildRecordIds.length > 0) {
+        await entities
+          .deleteRecords({ name: treeChildEntityName }, treeChildRecordIds)
+          .catch((error) => console.warn(error));
+      }
+      if (treeRootRecordIds.length > 0) {
+        await entities
+          .deleteRecords({ name: treeEntityName }, treeRootRecordIds)
+          .catch((error) => console.warn(error));
+      }
     });
   });
 
