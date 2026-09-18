@@ -75,6 +75,17 @@ export interface IntegrationConfig {
   casTestAgentId?: string;
   casTestFolderId?: string;
   /**
+   * Integration Service fixtures, all pointing at resources in the test tenant.
+   * The connector key is required by Connectors, Elements and Execute; the
+   * connection id by Connections, Elements and Execute; the event operation by
+   * Elements. The object name is optional — Elements resolves it from the
+   * connector and Execute from the connection when it is unset.
+   */
+  integrationServiceTestConnectorKey?: string;
+  integrationServiceTestConnectionId?: string;
+  integrationServiceTestObjectName?: string;
+  integrationServiceTestEventOperation?: string;
+  /**
    * Trace GUID used by the Agent Traces span tests. The trace must exist in the
    * test tenant and have at least one span; suites guard on it and throw when unset.
    */
@@ -176,6 +187,10 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     tasksTestUserId: typeof rawConfig.tasksTestUserId === 'string' ? rawConfig.tasksTestUserId : undefined,
     casTestAgentId: typeof rawConfig.casTestAgentId === 'string' ? rawConfig.casTestAgentId : undefined,
     casTestFolderId: typeof rawConfig.casTestFolderId === 'string' ? rawConfig.casTestFolderId : undefined,
+    integrationServiceTestConnectorKey: typeof rawConfig.integrationServiceTestConnectorKey === 'string' ? rawConfig.integrationServiceTestConnectorKey : undefined,
+    integrationServiceTestConnectionId: typeof rawConfig.integrationServiceTestConnectionId === 'string' ? rawConfig.integrationServiceTestConnectionId : undefined,
+    integrationServiceTestObjectName: typeof rawConfig.integrationServiceTestObjectName === 'string' ? rawConfig.integrationServiceTestObjectName : undefined,
+    integrationServiceTestEventOperation: typeof rawConfig.integrationServiceTestEventOperation === 'string' ? rawConfig.integrationServiceTestEventOperation : undefined,
     tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
     functionsTestFolderId: typeof rawConfig.functionsTestFolderId === 'string' ? rawConfig.functionsTestFolderId : undefined,
     functionsTestFunctionName: typeof rawConfig.functionsTestFunctionName === 'string' ? rawConfig.functionsTestFunctionName : undefined,
@@ -233,6 +248,10 @@ export function loadIntegrationConfig(): IntegrationConfig {
     tasksTestUserId: process.env.TASKS_TEST_USER_ID || undefined,
     casTestAgentId: process.env.CAS_TEST_AGENT_ID || undefined,
     casTestFolderId: process.env.CAS_TEST_FOLDER_ID || undefined,
+    integrationServiceTestConnectorKey: process.env.INTEGRATION_SERVICE_TEST_CONNECTOR_KEY || undefined,
+    integrationServiceTestConnectionId: process.env.INTEGRATION_SERVICE_TEST_CONNECTION_ID || undefined,
+    integrationServiceTestObjectName: process.env.INTEGRATION_SERVICE_TEST_OBJECT_NAME || undefined,
+    integrationServiceTestEventOperation: process.env.INTEGRATION_SERVICE_TEST_EVENT_OPERATION || undefined,
     tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
     functionsTestFolderId: process.env.FUNCTIONS_TEST_FOLDER_ID || undefined,
     functionsTestFunctionName: process.env.FUNCTIONS_TEST_FUNCTION_NAME || undefined,
