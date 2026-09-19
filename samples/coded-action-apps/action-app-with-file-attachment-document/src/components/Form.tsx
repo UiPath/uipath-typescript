@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, ChangeEvent, KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, ChangeEvent, KeyboardEvent } from 'react';
 import './Form.css';
 import { Theme, MessageSeverity } from '@uipath/coded-action-app';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { Document, Page, pdfjs } from 'react-pdf';
 import uipath from '../uipath';
+import Uploader, { SupportingDocument } from './Uploader';
 import documentIcon from '../assets/documentIcon.png';
 import themeToggler from '../assets/themeToggler.png';
 
@@ -22,6 +23,12 @@ interface FormData {
   riskFactor: string;
   reviewerComments: string;
   loanDocument: LoanDocument | null;
+  supportingDocument: SupportingDocument | null;
+}
+
+interface TaskContext {
+  folderId: number;
+  jobKey: string | null;
 }
 
 interface FormProps {
@@ -59,15 +66,25 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
     riskFactor: '',
     reviewerComments: '',
     loanDocument: null,
+    supportingDocument: null,
   });
+  const [taskContext, setTaskContext] = useState<TaskContext | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  /** The reviewer's upload, shown in the viewer in place of the task file once View is clicked. */
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
   const [hasLoadedDocument, setHasLoadedDocument] = useState(false);
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [scale, setScale] = useState(1.0);
   const blobUrlRef = useRef<string | null>(null);
+
+  const formDataRef = useRef(formData);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   useEffect(() => {
     const init = async () => {
@@ -85,8 +102,10 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
             loanDocument: data.loanDocument
               ? { ID: data.loanDocument.ID, FullName: data.loanDocument.FullName }
               : null,
+            supportingDocument: data.supportingDocument ?? null,
           });
         }
+        setTaskContext({ folderId: task.folderId, jobKey: task.jobKey });
         setIsReadOnly(task.isReadOnly);
         onInitTheme(isDarkTheme(task.theme));
       } catch (err: unknown) {
@@ -164,24 +183,34 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
   const zoomOut = () => setScale((s) => Math.max(0.4, parseFloat((s - 0.2).toFixed(1))));
   const resetZoom = () => setScale(1.0);
 
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    setPageNumber(1);
+  };
+
+  const goToPrevPage = () => setPageNumber((p) => Math.max(1, p - 1));
+  const goToNextPage = () => setPageNumber((p) => Math.min(numPages, p + 1));
+
+  // The viewer shows the reviewer's upload when they have opened it, otherwise the task's file.
+  const viewerUrl = preview?.url ?? documentUrl;
+  const viewerName = preview?.name ?? formData.loanDocument?.FullName ?? 'document.pdf';
+
   const handleDownload = async () => {
-    if (!documentUrl) return;
-    const fileName = formData.loanDocument?.FullName || 'document.pdf';
+    if (!viewerUrl) return;
     try {
       let blobUrl: string;
       let tempBlob = false;
-      if (documentUrl.startsWith('blob:')) {
-        blobUrl = documentUrl;
+      if (viewerUrl.startsWith('blob:')) {
+        blobUrl = viewerUrl;
       } else {
-        const response = await fetch(documentUrl);
+        const response = await fetch(viewerUrl);
         if (!response.ok) throw new Error(`Download failed (HTTP ${response.status}).`);
-        const blob = await response.blob();
-        blobUrl = URL.createObjectURL(blob);
+        blobUrl = URL.createObjectURL(await response.blob());
         tempBlob = true;
       }
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = fileName;
+      a.download = viewerName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -209,6 +238,13 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
     }
   };
 
+  const handleDocumentChange = useCallback((supportingDocument: SupportingDocument | null) => {
+    const updatedData = { ...formDataRef.current, supportingDocument };
+    formDataRef.current = updatedData;
+    setFormData(updatedData);
+    uipath.codedActionAppsService.setTaskData(updatedData);
+  }, []);
+
   // Complete the task with only the fields this form owns, so any extra
   // properties present in the incoming task data are not echoed back.
   const completeWith = (outcome: 'Approve' | 'Reject') => {
@@ -219,6 +255,7 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
       riskFactor,
       reviewerComments,
       loanDocument,
+      supportingDocument,
     } = formData;
     return uipath.codedActionAppsService.completeTask(outcome, {
       applicantName,
@@ -227,6 +264,7 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
       riskFactor,
       reviewerComments,
       loanDocument,
+      supportingDocument,
     });
   };
 
@@ -246,14 +284,6 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
 
   const handleApprove = () => submitDecision('Approve');
   const handleReject = () => submitDecision('Reject');
-
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-    setPageNumber(1);
-  };
-
-  const goToPrevPage = () => setPageNumber((p) => Math.max(1, p - 1));
-  const goToNextPage = () => setPageNumber((p) => Math.min(numPages, p + 1));
 
   const riskFactorNum = Number(formData.riskFactor);
   const isRiskFactorValid = !!formData.riskFactor && riskFactorNum >= 0 && riskFactorNum <= 10;
@@ -360,18 +390,31 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
           </>
         )}
 
-        {activeTab === 'document' && (
+        {/* Kept mounted rather than unmounted with the tab, so an upload in flight survives the
+            reviewer stepping back to the review form. */}
+        <div className="doc-panel" hidden={activeTab !== 'document'}>
+          {taskContext && (
+            <Uploader
+              folderId={taskContext.folderId}
+              jobKey={taskContext.jobKey}
+              isReadOnly={isReadOnly}
+              initialDocument={formData.supportingDocument}
+              onChange={handleDocumentChange}
+              onView={setPreview}
+            />
+          )}
+
           <div className="pdf-shell">
-            {isLoadingDocument ? (
+            {!preview && isLoadingDocument ? (
               <div className="pdf-loading"><div className="pdf-spinner" />Loading PDF…</div>
-            ) : documentError ? (
+            ) : !preview && documentError ? (
               <div className="pdf-shell--center">
                 <div className="pdf-error">
                   <span className="pdf-error__icon">⚠</span>
                   <p>{documentError}</p>
                 </div>
               </div>
-            ) : documentUrl ? (
+            ) : viewerUrl ? (
               <>
                 <div className="pdf-toolbar">
                   <div className="pdf-toolbar__group">
@@ -391,6 +434,11 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
                     <button type="button" className="pdf-btn" onClick={zoomIn} disabled={scale >= 2.5} title="Zoom in">+</button>
                   </div>
                   <div className="pdf-toolbar__group">
+                    {preview && (
+                      <button type="button" className="pdf-btn" onClick={() => setPreview(null)} title="Back to the task document">
+                        ← {formData.loanDocument?.FullName || 'Task document'}
+                      </button>
+                    )}
                     <button type="button" className="pdf-btn pdf-btn--download" onClick={handleDownload} title="Download PDF">
                       ⬇ Download
                     </button>
@@ -398,7 +446,9 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
                 </div>
                 <div className="pdf-viewport">
                   <Document
-                    file={documentUrl}
+                    // Remounted per file so page and zoom start fresh when the source swaps.
+                    key={viewerUrl}
+                    file={viewerUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
                     loading={<div className="pdf-loading"><div className="pdf-spinner" />Loading PDF…</div>}
                     error={<div className="pdf-page-error">Failed to load PDF.</div>}
@@ -424,7 +474,7 @@ const Form = ({ onInitTheme, darkTheme, onToggleTheme }: FormProps) => {
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       <div className="form-buttons">
