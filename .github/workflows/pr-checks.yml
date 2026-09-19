@@ -70,6 +70,83 @@ jobs:
       - name: Run tests
         run: npm test
 
+  api-surface:
+    # Reports changes to the public API. Never fails: a breaking change gets the
+    # `breaking-change` label plus a comment, anything else gets a short comment,
+    # and a PR that touches nothing public gets neither.
+    #
+    # The label is the part that matters downstream -- it makes "does this release
+    # contain a breaking change?" answerable at release time, which is what went
+    # wrong in #682 (shipped in a patch, no release note).
+    #
+    # Fork PRs get a read-only token, so the label and comment are skipped there,
+    # same as the other PR bots in this repo.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # to commit the regenerated snapshot back to the PR
+      pull-requests: write   # to label and comment
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          # Check out the PR branch itself, not the merge commit, so the
+          # regenerated snapshot can be committed back onto it.
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Classify public API changes
+        id: check
+        run: |
+          # Classify against the base branch, not the committed snapshot. If we
+          # compared against the snapshot, a PR that already includes the
+          # regenerated file would report no change at all -- and the label would
+          # be dropped on the next push.
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          # `|| code=$?` is required: the default shell is `bash -e`, which would
+          # abort on a non-zero exit before the code could be read.
+          # 0 = no public API change, 1 = breaking, 2 = additions only
+          code=0
+          node scripts/check-api-surface.mjs --base "origin/${{ github.base_ref }}" \
+            > api-surface-report.txt 2>&1 || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat api-surface-report.txt
+
+      # Nobody should have to run a command to satisfy a check. CI regenerates
+      # the snapshot and commits it back, so the PR diff carries the change and
+      # the baseline stays current on its own. Pushes made with GITHUB_TOKEN do
+      # not start another workflow run, so this cannot loop.
+      - name: Commit the regenerated snapshot
+        if: steps.check.outputs.code != '0' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          npm run api-surface:gen
+          if git diff --quiet -- scripts/api-surface.txt; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/api-surface.txt
+          git commit -m 'chore: update public API surface snapshot [skip ci]'
+          # A concurrent push from the author just means we retry next run.
+          git push origin HEAD:"${{ github.event.pull_request.head.ref }}" \
+            || echo '::warning::Could not push the regenerated snapshot (branch moved). It will be retried on the next push.'
+
+      - name: Label and comment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: bash scripts/api-surface-pr-feedback.sh
+
   check-samples:
     # Sample-app convention gate. Runs the check-samples.mjs rules against the
     # sample apps changed in this PR (existing apps are a backlog; each becomes
