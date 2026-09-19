@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/coded-action-app": "1.0.0-beta.2",
-    "@uipath/uipath-typescript": "1.4.0",
+    "@uipath/coded-action-app": "1.0.0",
+    "@uipath/uipath-typescript": "1.7.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-pdf": "^10.2.0",

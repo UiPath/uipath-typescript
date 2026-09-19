@@ -1,4 +1,4 @@
 {
-  "scope": "OR.Folders.Read",
+  "scope": "OR.Folders.Read OR.Folders.Write",
   "clientId": "<external-application-clientId>"
 }
