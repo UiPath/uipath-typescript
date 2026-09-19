@@ -296,8 +296,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.DownloadAttachment')
-  async downloadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.downloadAttachment');
+  async downloadAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
+    const { byId, identifier } = unwrapEntityRef({ id: entityId }, 'Entities.downloadAttachment');
     const response = await this.get<Blob>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(identifier, recordId, fieldName)
@@ -312,8 +312,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.UploadAttachment')
-  async uploadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.uploadAttachment');
+  async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+    const { byId, identifier } = unwrapEntityRef({ id: entityId }, 'Entities.uploadAttachment');
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -338,8 +338,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.DeleteAttachment')
-  async deleteAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.deleteAttachment');
+  async deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
+    const { byId, identifier } = unwrapEntityRef({ id: entityId }, 'Entities.deleteAttachment');
     const response = await this.delete<EntityDeleteAttachmentResponse>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(identifier, recordId, fieldName)

@@ -1285,7 +1285,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockBlob);
 
       const result = await entityService.downloadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
       );
@@ -1311,7 +1311,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockBlob);
 
       await entityService.downloadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
@@ -1333,7 +1333,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.downloadAttachment(
-          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
@@ -1359,7 +1359,7 @@ describe("EntityService Unit Tests", () => {
         mockApiClient.post.mockResolvedValue(response);
 
         const result = await entityService.uploadAttachment(
-          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
           file,
@@ -1385,7 +1385,7 @@ describe("EntityService Unit Tests", () => {
       const file = new Blob(["test"]);
 
       await entityService.uploadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file,
@@ -1409,7 +1409,7 @@ describe("EntityService Unit Tests", () => {
       const file = new Blob(["test"]);
 
       await entityService.uploadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file,
@@ -1435,7 +1435,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.uploadAttachment(
-          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
           file,
@@ -1449,7 +1449,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.delete.mockResolvedValue(undefined);
 
       await entityService.deleteAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
       );
@@ -1468,7 +1468,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.delete.mockResolvedValue(undefined);
 
       await entityService.deleteAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
@@ -1490,7 +1490,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.deleteAttachment(
-          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
@@ -3040,278 +3040,7 @@ describe("EntityService Unit Tests", () => {
     });
   });
 
-  describe("downloadAttachment (by name ref)", () => {
-    it("should download attachment successfully", async () => {
-      const mockBlob = new Blob(["test content"], { type: "application/pdf" });
-      mockApiClient.get.mockResolvedValue(mockBlob);
-
-      const result = await entityService.downloadAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-      );
-
-      expect(result).toBeInstanceOf(Blob);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { responseType: "blob", headers: {} },
-      );
-    });
-
-    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
-      mockApiClient.get.mockResolvedValue(new Blob(["x"]));
-
-      await entityService.downloadAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
-      );
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { responseType: "blob", headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
-      );
-    });
-
-    it("should handle API errors", async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.get.mockRejectedValue(error);
-
-      await expect(
-        entityService.downloadAttachment(
-          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it("should route to the by-id endpoint when given an id ref", async () => {
-      mockApiClient.get.mockResolvedValue(new Blob(["x"]));
-
-      await entityService.downloadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-      );
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { responseType: "blob", headers: {} },
-      );
-    });
-
-    it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
-      await expect(
-        entityService.downloadAttachment(
-          {} as EntityRef,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-      ).rejects.toBeInstanceOf(ValidationError);
-    });
-  });
-
-  describe("uploadAttachment (by name ref)", () => {
-    it.each([
-      { type: "Blob", file: new Blob(["test file content"], { type: "application/pdf" }) },
-      { type: "Uint8Array", file: new Uint8Array([72, 101, 108, 108, 111]) },
-    ])("should upload attachment successfully with $type", async ({ file }) => {
-      const response = { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: "uploaded" };
-      mockApiClient.post.mockResolvedValue(response);
-
-      const result = await entityService.uploadAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        file,
-      );
-
-      expect(result).toEqual(response);
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        expect.any(FormData),
-        { params: {}, headers: {} },
-      );
-    });
-
-    it("should include expansionLevel query parameter when provided", async () => {
-      mockApiClient.post.mockResolvedValue({ id: ENTITY_TEST_CONSTANTS.RECORD_ID });
-
-      await entityService.uploadAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        new Blob(["test"]),
-        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL },
-      );
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        expect.any(FormData),
-        {
-          params: expect.objectContaining({
-            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-          }),
-          headers: {},
-        },
-      );
-    });
-
-    it("should handle API errors", async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
-
-      await expect(
-        entityService.uploadAttachment(
-          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-          new Blob(["test"]),
-        ),
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it("should route to the by-id endpoint when given an id ref", async () => {
-      mockApiClient.post.mockResolvedValue({ id: ENTITY_TEST_CONSTANTS.RECORD_ID });
-
-      await entityService.uploadAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        new Blob(["test"]),
-      );
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        expect.any(FormData),
-        expect.any(Object),
-      );
-    });
-
-    it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
-      await expect(
-        entityService.uploadAttachment(
-          {} as EntityRef,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-          new Blob(["test"]),
-        ),
-      ).rejects.toBeInstanceOf(ValidationError);
-    });
-  });
-
-  describe("deleteAttachment (by name ref)", () => {
-    it("should delete attachment successfully", async () => {
-      const response = { status: "deleted" };
-      mockApiClient.delete.mockResolvedValue(response);
-
-      const result = await entityService.deleteAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-      );
-
-      expect(result).toEqual(response);
-      expect(mockApiClient.delete).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { headers: {} },
-      );
-    });
-
-    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
-      mockApiClient.delete.mockResolvedValue({ status: "deleted" });
-
-      await entityService.deleteAttachment(
-        { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
-      );
-
-      expect(mockApiClient.delete).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.ATTACHMENT_BY_NAME(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
-      );
-    });
-
-    it("should handle API errors", async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.delete.mockRejectedValue(error);
-
-      await expect(
-        entityService.deleteAttachment(
-          { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it("should route to the by-id endpoint when given an id ref", async () => {
-      mockApiClient.delete.mockResolvedValue({ status: "deleted" });
-
-      await entityService.deleteAttachment(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-      );
-
-      expect(mockApiClient.delete).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-        { headers: {} },
-      );
-    });
-
-    it("should reject with a ValidationError when the ref supplies neither id nor name", async () => {
-      await expect(
-        entityService.deleteAttachment(
-          {} as EntityRef,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        ),
-      ).rejects.toBeInstanceOf(ValidationError);
-    });
-  });
-
-  describe("create", () => {
+        describe("create", () => {
     it("should post entity schema and return created entity ID", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
