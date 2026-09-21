@@ -38,7 +38,7 @@ import {
   EntityType,
   EntityGetAllOptions,
   EntityGetByIdOptions,
-  EntityGetByNameOptions,
+  EntityLookupByNameOptions,
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
@@ -127,7 +127,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   @track('Entities.GetByName')
-  async getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
+  async getByName(entityName: string, options?: EntityLookupByNameOptions): Promise<EntityGetResponse> {
     return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(entityName), options?.folderKey);
   }
 
