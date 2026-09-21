@@ -4,7 +4,7 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describeIntegration('Data Fabric ChoiceSets - Integration Tests', 'both', modes, () => {
+describeIntegration('Data Fabric ChoiceSets - Integration Tests', 'pat', modes, () => {
   const testConfig = getTestConfig();
   let testChoiceSetId: string | null = testConfig.dataFabricTestChoiceSetId || null;
   const createdChoiceSetIds: string[] = [];

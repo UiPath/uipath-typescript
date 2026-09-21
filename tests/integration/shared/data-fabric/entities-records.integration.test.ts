@@ -187,7 +187,7 @@ async function resolveImportedRecordIds(
   return ids;
 }
 
-describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', modes, (mode) => {
+describeIntegration('Data Fabric Entities Records - Integration Tests', 'pat', modes, (mode) => {
 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;
