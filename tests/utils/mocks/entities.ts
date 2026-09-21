@@ -331,13 +331,7 @@ export const createMockSingleInsertResponse = (
 };
 
 /**
- * Creates a raw multi-entity transactional upsert response, in the wire shape the API returns.
- *
- * Shape verified against a live alpha response: the transaction tree is camelCase throughout,
- * the root `Id` is the one PascalCase key, every node carries `noOp` and `version`, and a leaf
- * sends `members: []` rather than omitting the key. `children`, `cascadeDeletedChildren` and
- * `deletedCount` are always sent empty on this route and are included to match the real wire
- * shape.
+ * Creates a mock upsert response.
  */
 export const createMockUpsertTreeResponse =
   (): EntityUpsertResponse => ({
@@ -378,15 +372,9 @@ export const createMockUpsertTreeResponse =
   });
 
 /**
- * Creates a single-record upsert response, in the wire shape the API returns for a flat payload.
- *
- * The server echoes the written record's fields alongside `Id` and sends no `transaction` —
- * the opposite of the tree form, which reports per-record outcomes and no field values.
+ * Creates a single-record upsert response.
  */
-export const createMockUpsertRecordResponse = (
-  requestData: Record<string, any>
-): EntityUpsertResponse => ({
-  ...requestData,
+export const createMockUpsertRecordResponse = (): EntityUpsertResponse => ({
   Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
   children: {},
   cascadeDeletedChildren: {},

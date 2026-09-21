@@ -62,9 +62,8 @@ export interface IntegrationConfig {
   dataFabricTestJoinFieldName?: string;
   dataFabricTestJoinRelatedEntityName?: string;
   dataFabricTestJoinRelatedFieldName?: string;
-  // Parent/child fixture for the multi-entity transactional upsert test. Both are
-  // required (the test throws when either is missing): the child entity must hold an
-  // active foreign key to the parent, and both must be native entities.
+  // Parent/child fixture for the upsert tests. Both are required, and the child must have
+  // a foreign key to the parent.
   dataFabricTestTreeEntityName?: string;
   dataFabricTestTreeChildEntityName?: string;
   orchestratorAttachmentId?: string;

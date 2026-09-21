@@ -156,20 +156,16 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
 }
 
 /**
- * Collects every non-root record id in an upsert transaction, deepest first.
- * Cleanup deletes in this order: a parent still referenced by a child is refused.
+ * Collects all non-root record IDs, starting with the deepest children.
+ * Cleanup deletes children before parents, since referenced parents can’t be deleted.
  */
 function collectDescendantIds(node: EntityMultiEntityWriteResponseNode): string[] {
   return node.members.flatMap((m) => [...collectDescendantIds(m), m.id]);
 }
 
 /**
- * Returns the named entity, creating it first when the tenant does not have it yet.
- *
- * The upsert suite needs a parent/child pair with a foreign key between them, which not
- * every tenant has seeded. Provisioning it here keeps the suite runnable on a fresh tenant
- * without a manual setup step. Existing entities are used as-is — `fields` only describes
- * what to create, never what to enforce.
+ * Returns the named entity, creating it if the tenant does not already have it, so the upsert suite can run on a fresh tenant. 
+ * If it already exists, it is used as-is; fields only define what to create.
  */
 async function ensureEntity(
   name: string,
@@ -179,8 +175,7 @@ async function ensureEntity(
   try {
     return await entities.getByName(name);
   } catch (error) {
-    // A name that does not exist comes back as a 400 naming it, not a 404, so the
-    // status alone cannot distinguish "absent" from "malformed request".
+    // An unknown entity comes back as a 400, not a 404, so the status alone cannot tell "absent" from "malformed request".
     const absent = isNotFoundError(error)
       || (error instanceof Error && /not found/i.test(error.message));
     if (!absent) throw error;
@@ -190,9 +185,6 @@ async function ensureEntity(
     const entityId = await createEntityAwaitingReady(entities, name, fields);
     return await entities.getById(entityId);
   } catch (createError) {
-    // A parallel suite cell may have created it between the read and the write. If it did
-    // not, the creation failure is the useful error — re-reading would only report the
-    // entity as absent again and bury the reason.
     console.warn(createError);
     try {
       return await entities.getByName(name);
@@ -1395,8 +1387,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         { name: 'totalAmount', type: EntityFieldDataType.DECIMAL },
       ]);
 
-      // The child's foreign key to the parent is what makes this a tree the server will
-      // accept — the write path resolves the ancestor edge from it and fills it in itself.
+      // There should be a valid parent-child relation to make it work
       const parentPk = treeMetadata.fields.find((f) => f.isPrimaryKey);
       if (!parentPk?.id) {
         throw new Error(`Entity ${treeEntityName} has no primary-key field to bind a foreign key to`);
@@ -1439,13 +1430,10 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(child.entityName).toBe(treeChildEntityName);
       expect(child.op).toBe(EntityMultiEntityWriteOperation.Insert);
       expect(child.id).toBeDefined();
-      // A leaf sends an empty array rather than omitting the key, so `members` is
-      // safe to type as required — assert that against the live response.
       expect(Array.isArray(child.members)).toBe(true);
       expect(child.members).toHaveLength(0);
 
-      // Tracked locally, not on createdRecordIds — that list is drained against
-      // testEntityId, and these records live in the tree entity.
+      // Tracked here, later used to clean up test output.ß
       treeRootRecordIds.push(result.Id);
       registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
       registerResource('entityRecords', { entityId: treeChildMetadata.id, recordIds: [child.id] });
@@ -1455,8 +1443,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
     it('should update the root and insert another child in the same transaction', async () => {
       const { entities } = getServices();
 
-      // Writes its own root rather than reusing the previous test's, so this case
-      // stands alone when run with -t.
+      // Seeding to make test independent of previous tests.
       const seed = await entities.upsert(
         { name: treeEntityName },
         {
@@ -1472,9 +1459,6 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       });
       treeChildRecordIds.push(...collectDescendantIds(seed.transaction!));
 
-      // No readiness poll: the transaction has committed, so the row is addressable by Id
-      // on the write path. `awaitRecordVisible` polls the read path, whose index lags a
-      // transactional write and can burn most of this test's budget for no benefit.
       const rootRecordId = seed.Id;
 
       const rootData = await buildDummyRecord(treeMetadata);
@@ -1524,7 +1508,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(typeof tx.members[0].entityName).toBe('string');
       expect(typeof tx.members[0].affectedRows).toBe('number');
 
-      // `noOp` is typed as required — the service always sets it, never omits it
+      // `noOp` is typed as required - the service always sets it, never omits it
       expect(typeof tx.noOp).toBe('boolean');
       expect(typeof tx.members[0].noOp).toBe('boolean');
 
@@ -1569,9 +1553,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       if (config.skipCleanup) return;
       const { entities } = getServices();
 
-      // These live in the tree entity, not testEntityId, so the shared afterAll
-      // cannot delete them. Children first: a root still referenced by a child is
-      // refused ("a record is still referenced by another record"), not cascaded.
+      // Deleting child records first before parent ones.
       if (treeChildRecordIds.length > 0) {
         await entities
           .deleteRecords({ name: treeChildEntityName }, treeChildRecordIds)

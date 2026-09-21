@@ -87,7 +87,7 @@ export const ENTITY_TEST_CONSTANTS = {
   TREE_CHILD_RECORD_ID: 'a2f10000-2222-4c3b-8a11-000000000002',
   TREE_GRANDCHILD_RECORD_ID: 'c4d30000-4444-4c3b-8a11-000000000004',
   TREE_ROOT_VERSION: 4,
-  // Root record with one child, which itself has one child — exercises two nesting levels.
+  // Root record with one child, which itself has one child: two levels of nesting.
   // Field names are camelCase; the nested keys are entity names.
   TEST_TREE_RECORD_DATA: {
     assignee: 'assignee1',

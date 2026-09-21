@@ -957,8 +957,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     options: EntityUpsertOptions
   ): Promise<EntityUpsertResponse> {
     const params = createParams({ expansionLevel: options.expansionLevel });
-    // Returned as sent: the envelope is already camelCase, and which fields come back depends
-    // on the form the server applied, so reshaping here would drop one form's payload.
+    // Returned as sent — the response is already camelCase.
     const response = await this.post<EntityUpsertResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_RECORD_BY_NAME(entityName),
       data,

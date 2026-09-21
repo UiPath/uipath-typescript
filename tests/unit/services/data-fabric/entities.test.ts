@@ -2439,7 +2439,7 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("upsert", () => {
-    // An id ref has to be resolved to a name first — the upsert route is name-only.
+
     const mockEntityNameLookup = (name: string) =>
       mockApiClient.get.mockResolvedValue({ name });
 
@@ -2505,8 +2505,7 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("should return the API response without reshaping it", async () => {
-      // A straight passthrough: which fields come back depends on the form the server
-      // applied, so the service must not pick or drop any of them.
+      // A straight passthrough: the service must not pick or drop anything the server sent.
       const raw = createMockUpsertTreeResponse();
       mockApiClient.post.mockResolvedValue(raw);
 
@@ -2519,12 +2518,8 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("should upsert a single record from a flat payload", async () => {
-      // No client-side gate: a flat payload reaches the API, which matches it on the
-      // entity's business key and echoes the written record back.
-      const response = createMockUpsertRecordResponse(
-        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-      );
-      mockApiClient.post.mockResolvedValue(response);
+      // No client-side validation.
+      mockApiClient.post.mockResolvedValue(createMockUpsertRecordResponse());
 
       const result = await entityService.upsert(
         { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
@@ -2538,16 +2533,14 @@ describe("EntityService Unit Tests", () => {
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
         { params: {}, headers: {} },
       );
-      // The record's own fields survive — they are the payload for this form
-      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
-      expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age);
+      // The written Id is the payload for this form; no field values come back
       expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID);
       expect(result.transaction).toBeUndefined();
     });
 
     it("should send expansionLevel as a query param", async () => {
       mockApiClient.post.mockResolvedValue(
-        createMockUpsertRecordResponse(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+        createMockUpsertRecordResponse(),
       );
 
       await entityService.upsert(

@@ -438,8 +438,6 @@ describe("Entity Models", () => {
           ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
         );
 
-        // A name ref, not an id ref — the upsert route is name-only, so passing the id
-        // would make the service re-resolve a name the entity already carries.
         expect(mockService.upsert).toHaveBeenCalledWith(
           { name: ENTITY_TEST_CONSTANTS.ENTITY_NAME },
           ENTITY_TEST_CONSTANTS.TEST_TREE_RECORD_DATA,
