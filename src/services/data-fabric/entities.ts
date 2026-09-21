@@ -99,7 +99,7 @@ function toWireJoin(join: EntityJoin, baseEntityName: string): EntityJoinPayload
  * Data Fabric exposes parallel by-id and by-name record/attachment routes, so a ref maps
  * to a direct endpoint switch — this is a synchronous check, not a lookup call.
  */
-function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boolean; identifier: string } {
+function resolveEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boolean; identifier: string } {
   const { id, name } = (entityRef ?? {}) as { id?: string; name?: string };
   if (id && name) {
     throw new ValidationError({
@@ -175,7 +175,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.InsertRecord')
   async insertRecord(entityRef: EntityRef, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecord');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.insertRecord');
     return this.insertRecordImpl(byId, identifier, data, options);
   }
 
@@ -186,7 +186,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.InsertRecords')
   async insertRecords(entityRef: EntityRef, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecords');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.insertRecords');
     return this.insertRecordsImpl(byId, identifier, data, options);
   }
 
@@ -197,7 +197,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.UpdateRecord')
   async updateRecord(entityRef: EntityRef, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.updateRecord');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.updateRecord');
     return this.updateRecordImpl(byId, identifier, recordId, data, options);
   }
 
@@ -208,7 +208,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.UpdateRecords')
   async updateRecords(entityRef: EntityRef, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.updateRecords');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.updateRecords');
     return this.updateRecordsImpl(byId, identifier, data, options);
   }
 
@@ -219,7 +219,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.DeleteRecords')
   async deleteRecords(entityRef: EntityRef, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.deleteRecords');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.deleteRecords');
     return this.deleteRecordsImpl(byId, identifier, recordIds, options);
   }
 
@@ -230,7 +230,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.DeleteRecord')
   async deleteRecord(entityRef: EntityRef, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.deleteRecord');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.deleteRecord');
     return this.deleteRecordImpl(byId, identifier, recordId, options);
   }
 
@@ -272,7 +272,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     entityRef: EntityRef,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.queryRecords');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.queryRecords');
     return this.queryRecordsImpl<T>(byId, identifier, options);
   }
 
@@ -286,7 +286,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.ImportRecords')
   async importRecords(entityRef: EntityRef, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.importRecords');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.importRecords');
     return this.importRecordsImpl(byId, identifier, file, options);
   }
 
@@ -297,7 +297,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.DownloadAttachment')
   async downloadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.downloadAttachment');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.downloadAttachment');
     const response = await this.get<Blob>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(identifier, recordId, fieldName)
@@ -313,7 +313,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.UploadAttachment')
   async uploadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.uploadAttachment');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.uploadAttachment');
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -339,7 +339,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.DeleteAttachment')
   async deleteAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
-    const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.deleteAttachment');
+    const { byId, identifier } = resolveEntityRef(entityRef, 'Entities.deleteAttachment');
     const response = await this.delete<EntityDeleteAttachmentResponse>(
       byId
         ? DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(identifier, recordId, fieldName)
