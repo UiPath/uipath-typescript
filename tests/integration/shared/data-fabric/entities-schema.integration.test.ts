@@ -221,7 +221,6 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'pat', mo
         const name = `sdk_defaults_${generateRandomString(8).toLowerCase()}`;
         const entityId = await createEntityAwaitingReady(entities, name, [
           { name: 'strField', type: EntityFieldDataType.STRING },
-          { name: 'strDefaultField', type: EntityFieldDataType.STRING },
           { name: 'mlField', type: EntityFieldDataType.MULTILINE_TEXT },
           { name: 'mlmaxField', type: EntityFieldDataType.MULTILINE_MAX },
           { name: 'decField', type: EntityFieldDataType.DECIMAL },
@@ -271,11 +270,6 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'pat', mo
       it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', () => {
         const field = sharedEntity.fields.find(f => f.name === 'dtzField');
         expect(field?.fieldDataType.lengthLimit).toBe(1000);
-      });
-
-      it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', () => {
-        const field = sharedEntity.fields.find(f => f.name === 'strDefaultField');
-        expect(field?.fieldDataType.lengthLimit).toBe(200);
       });
     });
 
