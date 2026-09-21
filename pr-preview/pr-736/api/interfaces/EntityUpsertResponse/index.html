@@ -3680,12 +3680,10 @@
   <h1>EntityUpsertResponse</h1>
 
 <p>Response from upserting a record.</p>
-<p>No field values come back, whichever form you used — only the <code>Id</code> of the record you wrote.
-A write that spans related entities also reports what it did in <a href="#transaction">transaction</a>, where
-the per-record IDs are the useful part.</p>
-<p>The raw response carries three more keys — <code>children</code>, <code>cascadeDeletedChildren</code> and
-<code>deletedCount</code> — that only apply to composite entities. This route never writes those, so
-the keys are always empty and are left off this type rather than published as dead fields.</p>
+<p>Contains the <code>Id</code> of the record that was written, not its field values.</p>
+<p>The raw response also carries <code>children</code>, <code>cascadeDeletedChildren</code> and <code>deletedCount</code>.
+They only apply to composite entities, so this route always sends them empty and they are
+left off this type.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../EntityRecord/"><code>EntityRecord</code></a></li>
