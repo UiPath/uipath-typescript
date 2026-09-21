@@ -1296,18 +1296,16 @@ const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Do
 
 **`Experimental`**
 
-Upserts a record into an entity, optionally with its related child records.
+Upserts a record into an entity, optionally with its related child records. The entity decides which of the two payload forms it accepts:
 
-There are two ways to call it, and the entity decides which one it accepts:
+- **One record** — a flat payload, matched on the entity's business key. Only case and templated entities have one, so a native entity rejects this form.
+- **A tree of records** — child records nested under a key named after their entity, written as one transaction. A nested record with an `Id` updates that row, one without it creates a row. The service fills in the foreign keys linking a child to its parent.
 
-- **One record** — send a flat payload. The server looks the record up by the entity's business key, updating it when it finds a match and creating it when it does not. Only case and templated entities have a business key, so a native entity rejects this form.
-- **A tree of records** — nest child records under a key named after their entity. The whole tree is written as one transaction: either all of it lands or none of it does. A nested record with an `Id` updates that row, one without it creates a new row. Leave out the foreign keys that link a child to its parent — the service fills those in.
+A tree holds at most 500 records, 3 levels deep, across 6 entities. Add `__Version__` to a record to fail the transaction if that row has changed since you read it.
 
-A tree holds at most 500 records, nested up to 3 levels deep, across at most 6 entities. Include `__Version__` in a record to make the transaction fail if that row has changed since you read it.
+Returns the written record's `Id`, never its field values.
 
-Neither form returns the record's field values. You get back the `Id` of the record you wrote, and for a tree a `transaction` summary with one entry per record. Read the record back if you need its stored values.
-
-Prefer `{ name }` to `{ id }`. The route addresses entities by name, so an `{ id }` costs an extra metadata lookup and needs the `DataFabric.Schema.Read` scope alongside `DataFabric.Data.Write`.
+Prefer `{ name }` to `{ id }`: the route is name-based, so an `{ id }` costs a metadata lookup and the `DataFabric.Schema.Read` scope.
 
 #### Parameters
 
