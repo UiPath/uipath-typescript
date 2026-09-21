@@ -818,7 +818,7 @@ export interface EntityServiceModel {
   /**
    * Downloads an attachment stored in a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
    *
-   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
+   * @param entityId - Entity ref (`{ id }` (GUID) or `{ name }`)
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
    * @param options - Optional download options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -838,10 +838,10 @@ export interface EntityServiceModel {
    * const recordId = records[0].Id;
    *
    * // Download attachment by id
-   * const response = await entities.downloadAttachment({ id: entityId }, recordId, 'Documents');
+   * const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
    *
    * // Or by name
-   * const byName = await entities.downloadAttachment({ name: 'Customer' }, recordId, 'Documents');
+   * const byName = await entities.downloadAttachment(entityId, recordId, 'Documents');
    *
    * // Or download using entity method (entityId is already known)
    * const entity = await entities.getById(entityId);
@@ -866,7 +866,7 @@ export interface EntityServiceModel {
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
-  downloadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob>;
+  downloadAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob>;
 
   /**
    * Uploads an attachment to a File-type field of an entity record.
@@ -874,7 +874,7 @@ export interface EntityServiceModel {
    * Uses multipart/form-data to upload the file content to the specified field.
    * Identified by ref (`{ id }` or `{ name }`).
    *
-   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
+   * @param entityId - Entity ref (`{ id }` (GUID) or `{ name }`)
    * @param recordId - UUID of the record to upload the attachment to
    * @param fieldName - Name of the File-type field
    * @param file - File to upload (Blob, File, or Uint8Array)
@@ -899,23 +899,23 @@ export interface EntityServiceModel {
    * const file = fileInput.files[0];
    *
    * // By id
-   * const response = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', file);
+   * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
    *
    * // By name, folder-scoped
-   * await entities.uploadAttachment({ name: 'Customer' }, recordId, 'Documents', file, { folderKey: "<folderKey>" });
+   * await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
    *
    * // Node.js: Upload a file from disk
    * const fileBuffer = fs.readFileSync('document.pdf');
    * const blob = new Blob([fileBuffer], { type: 'application/pdf' });
-   * const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
+   * const uploaded = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
    * ```
    */
-  uploadAttachment(entityRef: EntityRef, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+  uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
 
   /**
    * Removes an attachment from a File-type field of an entity record, identified by ref (`{ id }` or `{ name }`).
    *
-   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
+   * @param entityId - Entity ref (`{ id }` (GUID) or `{ name }`)
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
    * @param options - Optional delete options (e.g. `folderKey` for folder-scoped entities). The `folderKey` property is **experimental**.
@@ -935,17 +935,17 @@ export interface EntityServiceModel {
    * const recordId = records[0].Id;
    *
    * // Delete attachment by id
-   * await entities.deleteAttachment({ id: entityId }, recordId, 'Documents');
+   * await entities.deleteAttachment(entityId, recordId, 'Documents');
    *
    * // Or by name
-   * await entities.deleteAttachment({ name: 'Customer' }, recordId, 'Documents');
+   * await entities.deleteAttachment(entityId, recordId, 'Documents');
    *
    * // Or delete using entity method (entityId is already known)
    * const entity = await entities.getById(entityId);
    * await entity.deleteAttachment(recordId, 'Documents');
    * ```
    */
-  deleteAttachment(entityRef: EntityRef, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse>;
+  deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse>;
 
   /**
    * Gets entity metadata by entity name with attached operation methods.
@@ -1472,17 +1472,17 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
 
     async downloadAttachment(recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.downloadAttachment({ id: entityData.id }, recordId, fieldName, options);
+      return service.downloadAttachment(entityData.id, recordId, fieldName, options);
     },
 
     async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.uploadAttachment({ id: entityData.id }, recordId, fieldName, file, options);
+      return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
     },
 
     async deleteAttachment(recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteAttachment({ id: entityData.id }, recordId, fieldName, options);
+      return service.deleteAttachment(entityData.id, recordId, fieldName, options);
     },
 
     async queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<

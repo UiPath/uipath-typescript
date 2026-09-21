@@ -721,7 +721,7 @@ describe("Entity Models", () => {
         );
 
         expect(mockService.downloadAttachment).toHaveBeenCalledWith(
-          { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
           undefined,
@@ -777,7 +777,7 @@ describe("Entity Models", () => {
       );
 
       expect(mockService.uploadAttachment).toHaveBeenCalledWith(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file,
@@ -816,7 +816,7 @@ describe("Entity Models", () => {
       );
 
       expect(mockService.deleteAttachment).toHaveBeenCalledWith(
-        { id: ENTITY_TEST_CONSTANTS.ENTITY_ID },
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         undefined,
