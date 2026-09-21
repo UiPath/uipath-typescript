@@ -3668,8 +3668,7 @@
 
   <h1>EntityMultiEntityWriteResponse</h1>
 
-<p>Results for a whole upsert transaction: the record you sent at the top, with the results
-for its children nested underneath.</p>
+<p>For an upsert transaction, results include the top-level record and its nested child results.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../EntityMultiEntityWriteResponseNode/"><code>EntityMultiEntityWriteResponseNode</code></a></li>
@@ -3692,12 +3691,12 @@ for its children nested underneath.</p>
 <tr>
 <td><a id="entityname"></a> <code>entityName</code></td>
 <td><code>string</code></td>
-<td>Name of the entity this record belongs to</td>
+<td>Name of the entity</td>
 </tr>
 <tr>
 <td><a id="id"></a> <code>id</code></td>
 <td><code>string</code></td>
-<td>ID of the record. The service generates it when the record is created.</td>
+<td>ID of the record.</td>
 </tr>
 <tr>
 <td><a id="members"></a> <code>members</code></td>
@@ -3707,12 +3706,12 @@ for its children nested underneath.</p>
 <tr>
 <td><a id="noop"></a> <code>noOp</code></td>
 <td><code>boolean</code></td>
-<td><code>true</code> when an update changed nothing and only confirmed the row is there. Always <code>false</code> for a create or a real update.</td>
+<td><code>true</code> when an update changed nothing and only confirmed the row is there.</td>
 </tr>
 <tr>
 <td><a id="op"></a> <code>op</code></td>
 <td><a href="../../enumerations/EntityMultiEntityWriteOperation/"><code>EntityMultiEntityWriteOperation</code></a></td>
-<td>Whether the record was created or updated</td>
+<td>Record was created or updated</td>
 </tr>
 <tr>
 <td><a id="totalrecordsaffected"></a> <code>totalRecordsAffected</code></td>
@@ -3722,7 +3721,7 @@ for its children nested underneath.</p>
 <tr>
 <td><a id="version"></a> <code>version?</code></td>
 <td><code>number</code></td>
-<td>The row's version after the write. Missing when the entity has no version field.</td>
+<td>The row's version after the write.</td>
 </tr>
 </tbody>
 </table>

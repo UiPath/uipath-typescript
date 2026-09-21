@@ -3680,10 +3680,7 @@
   <h1>EntityUpsertResponse</h1>
 
 <p>Response from upserting a record.</p>
-<p>Contains the <code>Id</code> of the record that was written, not its field values.</p>
-<p>The raw response also carries <code>children</code>, <code>cascadeDeletedChildren</code> and <code>deletedCount</code>.
-They only apply to composite entities, so this route always sends them empty and they are
-left off this type.</p>
+<p>The raw response also carries <code>children</code>, <code>cascadeDeletedChildren</code> and <code>deletedCount</code> for composite entities.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../EntityRecord/"><code>EntityRecord</code></a></li>
@@ -3709,7 +3706,7 @@ left off this type.</p>
 <tr>
 <td><a id="transaction"></a> <code>transaction?</code></td>
 <td><a href="../EntityMultiEntityWriteResponse/"><code>EntityMultiEntityWriteResponse</code></a></td>
-<td>What the write did to each record, nested the same way the request was. Only present when the payload nested child records.</td>
+<td>-</td>
 </tr>
 </tbody>
 </table>

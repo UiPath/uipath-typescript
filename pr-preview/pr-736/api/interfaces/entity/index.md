@@ -1296,21 +1296,15 @@ const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Do
 
 **`Experimental`**
 
-Upserts a record into an entity, optionally with its related child records. The entity decides which of the two payload forms it accepts:
+Upserts a record into an entity, and to its related child records. Two payload type:
 
-- **One record** — a flat payload, matched on the entity's business key. Only case and templated entities have one, so a native entity rejects this form.
-- **A tree of records** — child records nested under a key named after their entity, written as one transaction. A nested record with an `Id` updates that row, one without it creates a row. The service fills in the foreign keys linking a child to its parent.
-
-A tree holds at most 500 records, 3 levels deep, across 6 entities. Add `__Version__` to a record to fail the transaction if that row has changed since you read it.
-
-Returns the written record's `Id`, never its field values.
-
-Prefer `{ name }` to `{ id }`: the route is name-based, so an `{ id }` costs a metadata lookup and the `DataFabric.Schema.Read` scope.
+- **One record** - Only case an templated entities have one, for a native entity rejects this type.
+- **A tree of records** - child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
 
 #### Parameters
 
 - `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
-- `data`: `Record`\<`string`, `any`> — Record fields, optionally with child records nested under their entity name
+- `data`: `Record`\<`string`, `any`> — Record fields, with child records nested under their entity name
 - `options?`: `EntityUpsertOptions` — Upsert options. The `folderKey` property is **experimental**.
 
 #### Returns
