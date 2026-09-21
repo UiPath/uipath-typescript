@@ -2,6 +2,7 @@ import { ExecutionContext } from '../context/execution';
 import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
+import { getExpiryMs } from './token-expiry';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
@@ -56,9 +57,7 @@ export class TokenManager {
       return false;
     }
 
-    // Re-parse defensively: expiresAt can originate from a host postMessage
-    // payload, where a Date may arrive serialized as an ISO string.
-    return Date.now() >= new Date(tokenInfo.expiresAt).getTime() - bufferMs;
+    return Date.now() >= getExpiryMs(tokenInfo.expiresAt) - bufferMs;
   }
 
   /**

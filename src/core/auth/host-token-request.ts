@@ -1,4 +1,5 @@
 import { TokenInfo } from './types';
+import { getExpiryMs } from './token-expiry';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 
@@ -37,9 +38,7 @@ export function isValidHostOrigin(origin: string | null): boolean {
  */
 export function isTokenExpired(tokenInfo: TokenInfo, bufferMs: number = 0): boolean {
   if (!tokenInfo?.expiresAt) return true;
-  // Re-parse defensively: host postMessage payloads may deliver expiresAt
-  // serialized as an ISO string rather than a Date.
-  return Date.now() >= new Date(tokenInfo.expiresAt).getTime() - bufferMs;
+  return Date.now() >= getExpiryMs(tokenInfo.expiresAt) - bufferMs;
 }
 
 /**
