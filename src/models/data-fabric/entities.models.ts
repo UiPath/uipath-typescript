@@ -2,6 +2,7 @@ import {
   EntityGetRecordsByIdOptions,
   EntityGetRecordByIdOptions,
   EntityGetRecordByNameOptions,
+  EntityGetRecordByNameRequest,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityInsertResponse,
@@ -264,8 +265,7 @@ export interface EntityServiceModel {
    * Sibling of {@link getRecordById} that addresses the entity by name. Returns the full record,
    * including the complete content of `MULTILINE_MAX` fields.
    *
-   * @param entityName - Name of the entity
-   * @param recordId - UUID of the record
+   * @param request - Entity name and record id
    * @param options - Query options. The `folderKey` property is **experimental**.
    * @returns Promise resolving to a single entity record ({@link EntityRecord})
    * @example
@@ -275,13 +275,13 @@ export interface EntityServiceModel {
    * const recordId = records.items[0].Id;
    *
    * // Get the record
-   * const record = await entities.getRecordByName("Customer", recordId);
+   * const record = await entities.getRecordByName({ entityName: \"Customer\", recordId }, recordId);
    *
    * // Folder-scoped entity: pass the entity's folder key
-   * const record = await entities.getRecordByName("Customer", recordId, { folderKey: "<folderKey>" });
+   * const record = await entities.getRecordByName({ entityName: \"Customer\", recordId }, recordId, { folderKey: "<folderKey>" });
    * ```
    */
-  getRecordByName(entityName: string, recordId: string, options?: EntityGetRecordByNameOptions): Promise<EntityRecord>;
+  getRecordByName(request: EntityGetRecordByNameRequest, options?: EntityGetRecordByNameOptions): Promise<EntityRecord>;
 
   /**
    * Inserts a single record into an entity, identified by ref (`{ id }` or `{ name }`)
