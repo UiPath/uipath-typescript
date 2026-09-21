@@ -70,6 +70,46 @@ jobs:
       - name: Run tests
         run: npm test
 
+  api-surface:
+    runs-on: uipath-ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Classify public API changes
+        id: check
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+          # `|| code=$?` keeps `bash -e` from aborting before the exit code is read
+          code=0
+          node scripts/check-api-surface.mjs --base "origin/${{ github.base_ref }}" \
+            > api-surface-report.txt 2>&1 || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          cat api-surface-report.txt
+
+      - name: Label and comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: bash scripts/api-surface-pr-feedback.sh
+
   check-samples:
     # Sample-app convention gate. Runs the check-samples.mjs rules against the
     # sample apps changed in this PR (existing apps are a backlog; each becomes
