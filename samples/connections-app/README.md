@@ -168,6 +168,6 @@ src/
 
 ## Notes
 
-- This app targets `@uipath/uipath-typescript@1.7.0-beta.2`. The Connections module (`/connections`) is experimental and its export path may change before the stable release.
+- This app targets `@uipath/uipath-typescript@1.7.2`. The Connections module (`/connections`) is experimental and its export path may change in a future release.
 - Triggers are filtered out of the activity list — the app only runs request/response operations.
 - Activities with no bound `objectName` are shown but disabled, since there is no schema to build a form from.

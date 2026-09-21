@@ -14,7 +14,7 @@
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.9",
     "@mui/material": "^7.3.5",
-    "@uipath/uipath-typescript": "1.7.0-beta.2",
+    "@uipath/uipath-typescript": "^1.7.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
