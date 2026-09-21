@@ -586,7 +586,7 @@ export interface FailureRecord {
   /** Error message */
   error?: string;
   /** Original record that failed */
-  record?: Record<string, any>;
+  record?: Record<string, unknown>;
 }
 
 /**
