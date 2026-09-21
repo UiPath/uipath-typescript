@@ -1298,8 +1298,8 @@ const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Do
 
 Upserts a record into an entity, and to its related child records. Two payload type:
 
-- **One record** - Only case an templated entities have one, for a native entity rejects this type.
-- **A tree of records** - child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
+- One record: Only case an templated entities have one, for a native entity rejects this type.
+- A tree of records: child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
 
 #### Parameters
 

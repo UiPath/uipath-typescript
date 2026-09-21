@@ -5763,8 +5763,8 @@ Identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <p><strong><code>Experimental</code></strong></p>
 <p>Upserts a record into an entity, and to its related child records. Two payload type:</p>
 <ul>
-<li><strong>One record</strong> - Only case an templated entities have one, for a native entity rejects this type.</li>
-<li><strong>A tree of records</strong> - child records nested under a root entity, written as one transaction. 
+<li>One record: Only case an templated entities have one, for a native entity rejects this type.</li>
+<li>A tree of records: child records nested under a root entity, written as one transaction. 
   A nested record with an <code>Id</code> field updates that row, one without it creates a row.</li>
 </ul>
 <h4 id="parameters_29">Parameters<a class="headerlink" href="#parameters_29" title="Permanent link">&para;</a></h4>
