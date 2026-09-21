@@ -72,16 +72,18 @@ export function normalizeBaseUrl(url: string): string {
  * that instead of claiming nothing was found.
  */
 export function missingConfigMessage(config?: PartialUiPathConfig): string {
-  if (
-    config &&
-    hasRequiredBaseFields(config) &&
-    !hasSecretConfig(config) &&
-    !config.clientId
-  ) {
-    return 'UiPath SDK configuration is incomplete: clientId is empty. Set clientId in uipath.json and redeploy, or pass a client ID at deploy time.';
-  }
-
   if (isBrowser) {
+    // Coded-app runtime: an empty clientId next to an injected redirectUri/scope is a
+    // partial OAuth config, not a page with no auth intent — name the missing client.
+    if (
+      config &&
+      hasRequiredBaseFields(config) &&
+      !hasSecretConfig(config) &&
+      !config.clientId &&
+      (config.redirectUri || config.scope)
+    ) {
+      return 'UiPath SDK configuration is incomplete: clientId is empty. Set a non-confidential clientId in uipath.json and redeploy, or pass a client ID at deploy time.';
+    }
     return 'UiPath SDK configuration not found. ' +
       'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.';
   }
