@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/entity/">
       
       
-        <link rel="prev" href="../BucketServiceModel/">
+        <link rel="prev" href="../ElementsServiceModel/">
       
       
         <link rel="next" href="../ChoiceSetServiceModel/">
@@ -1228,7 +1228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectorsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectorsServiceModel/" class="md-nav__link">
         
   
   
@@ -1256,7 +1256,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectionsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectionsServiceModel/" class="md-nav__link">
         
   
   
@@ -1284,7 +1284,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ElementsServiceModel.md" class="md-nav__link">
+      <a href="../ElementsServiceModel/" class="md-nav__link">
         
   
   
@@ -5761,22 +5761,26 @@ Identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <p><strong>upsert</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
-<p>Upserts a record, optionally together with its related child records</p>
-<p>A flat payload writes one record, matched on the entity's configured business key.
-Nesting child records under a key named for their entity instead applies the whole tree as
-a single transaction: every record is written or none is. In a tree, a record carrying an
-<code>Id</code> updates that row and one without it creates a new row, with the service filling in the
-foreign keys that link a child to its parent — do not set those yourself.</p>
-<p>Which form an entity accepts is decided by the server. A business key only exists on case
-and templated entities, so native entities are written with the nested form; sending a flat
-payload for one is rejected.</p>
-<p>A single-record write returns the record's fields. A tree write reports its outcome in
-<code>transaction</code> — one node per record, mirroring the request — and returns no field values.</p>
-<p>For a tree: at most 500 records, 3 levels of nesting, and 6 distinct entities per request.
-Passing <code>__Version__</code> in a record opts that row into a version check, which fails the whole
-transaction if the row changed in the meantime.</p>
-<p>Prefer <code>{ name }</code> over <code>{ id }</code> — the underlying route addresses entities by name, so an
-<code>{ id }</code> ref costs an extra lookup to resolve the name first.</p>
+<p>Upserts a record into an entity, optionally with its related child records.</p>
+<p>There are two ways to call it, and the entity decides which one it accepts:</p>
+<ul>
+<li><strong>One record</strong> — send a flat payload. The server looks the record up by the entity's
+  business key, updating it when it finds a match and creating it when it does not. Only
+  case and templated entities have a business key, so a native entity rejects this form.</li>
+<li><strong>A tree of records</strong> — nest child records under a key named after their entity. The
+  whole tree is written as one transaction: either all of it lands or none of it does. A
+  nested record with an <code>Id</code> updates that row, one without it creates a new row. Leave out
+  the foreign keys that link a child to its parent — the service fills those in.</li>
+</ul>
+<p>A tree holds at most 500 records, nested up to 3 levels deep, across at most 6 entities.
+Include <code>__Version__</code> in a record to make the transaction fail if that row has changed
+since you read it.</p>
+<p>Neither form returns the record's field values. You get back the <code>Id</code> of the record you
+wrote, and for a tree a <code>transaction</code> summary with one entry per record. Read the record
+back if you need its stored values.</p>
+<p>Prefer <code>{ name }</code> to <code>{ id }</code>. The route addresses entities by name, so an <code>{ id }</code> costs
+an extra metadata lookup and needs the <code>DataFabric.Schema.Read</code> scope alongside
+<code>DataFabric.Data.Write</code>.</p>
 <h4 id="parameters_29">Parameters<a class="headerlink" href="#parameters_29" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -5806,7 +5810,7 @@ transaction if the row changed in the meantime.</p>
 </table>
 <h4 id="returns_29">Returns<a class="headerlink" href="#returns_29" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
-<p>Promise resolving to the written record, or the per-record results of a tree write (<a href="../EntityUpsertResponse/">EntityUpsertResponse</a>)</p>
+<p>Promise resolving to the written root record's <code>Id</code>, plus the per-record results of a tree write (<a href="../EntityUpsertResponse/">EntityUpsertResponse</a>)</p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1">// Single record, matched on the entity&#39;s business key</span>
 <a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">upsert</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Case&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span>
@@ -5869,7 +5873,7 @@ enabled for your tenant.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../BucketServiceModel/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Buckets">
+          <a href="../ElementsServiceModel/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Elements">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -5879,7 +5883,7 @@ enabled for your tenant.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Buckets
+                Elements
               </div>
             </div>
           </a>

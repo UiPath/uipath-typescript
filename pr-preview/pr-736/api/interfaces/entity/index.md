@@ -1296,17 +1296,18 @@ const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Do
 
 **`Experimental`**
 
-Upserts a record, optionally together with its related child records
+Upserts a record into an entity, optionally with its related child records.
 
-A flat payload writes one record, matched on the entity's configured business key. Nesting child records under a key named for their entity instead applies the whole tree as a single transaction: every record is written or none is. In a tree, a record carrying an `Id` updates that row and one without it creates a new row, with the service filling in the foreign keys that link a child to its parent — do not set those yourself.
+There are two ways to call it, and the entity decides which one it accepts:
 
-Which form an entity accepts is decided by the server. A business key only exists on case and templated entities, so native entities are written with the nested form; sending a flat payload for one is rejected.
+- **One record** — send a flat payload. The server looks the record up by the entity's business key, updating it when it finds a match and creating it when it does not. Only case and templated entities have a business key, so a native entity rejects this form.
+- **A tree of records** — nest child records under a key named after their entity. The whole tree is written as one transaction: either all of it lands or none of it does. A nested record with an `Id` updates that row, one without it creates a new row. Leave out the foreign keys that link a child to its parent — the service fills those in.
 
-A single-record write returns the record's fields. A tree write reports its outcome in `transaction` — one node per record, mirroring the request — and returns no field values.
+A tree holds at most 500 records, nested up to 3 levels deep, across at most 6 entities. Include `__Version__` in a record to make the transaction fail if that row has changed since you read it.
 
-For a tree: at most 500 records, 3 levels of nesting, and 6 distinct entities per request. Passing `__Version__` in a record opts that row into a version check, which fails the whole transaction if the row changed in the meantime.
+Neither form returns the record's field values. You get back the `Id` of the record you wrote, and for a tree a `transaction` summary with one entry per record. Read the record back if you need its stored values.
 
-Prefer `{ name }` over `{ id }` — the underlying route addresses entities by name, so an `{ id }` ref costs an extra lookup to resolve the name first.
+Prefer `{ name }` to `{ id }`. The route addresses entities by name, so an `{ id }` costs an extra metadata lookup and needs the `DataFabric.Schema.Read` scope alongside `DataFabric.Data.Write`.
 
 #### Parameters
 
@@ -1318,7 +1319,7 @@ Prefer `{ name }` over `{ id }` — the underlying route addresses entities by n
 
 `Promise`\<`EntityUpsertResponse`>
 
-Promise resolving to the written record, or the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
+Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
 
 #### Examples
 

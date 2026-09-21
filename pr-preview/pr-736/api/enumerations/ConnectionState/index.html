@@ -1220,7 +1220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/ConnectorsServiceModel.md" class="md-nav__link">
+      <a href="../../interfaces/ConnectorsServiceModel/" class="md-nav__link">
         
   
   
@@ -1248,7 +1248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/ConnectionsServiceModel.md" class="md-nav__link">
+      <a href="../../interfaces/ConnectionsServiceModel/" class="md-nav__link">
         
   
   
@@ -1276,7 +1276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../interfaces/ElementsServiceModel.md" class="md-nav__link">
+      <a href="../../interfaces/ElementsServiceModel/" class="md-nav__link">
         
   
   
@@ -3707,27 +3707,31 @@
 
   <h1>ConnectionState</h1>
 
-<p>State of a connection</p>
+<p>Lifecycle state of a connection.</p>
 <h2 id="enumeration-members">Enumeration Members<a class="headerlink" href="#enumeration-members" title="Permanent link">&para;</a></h2>
 <h3 id="disabled">Disabled<a class="headerlink" href="#disabled" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Disabled</strong>: <code>"Disabled"</code></p>
 </blockquote>
+<p>Connection has been administratively disabled.</p>
 <hr />
 <h3 id="enabled">Enabled<a class="headerlink" href="#enabled" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Enabled</strong>: <code>"Enabled"</code></p>
 </blockquote>
+<p>Connection is healthy and authorized.</p>
 <hr />
 <h3 id="expired">Expired<a class="headerlink" href="#expired" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Expired</strong>: <code>"Expired"</code></p>
 </blockquote>
+<p>Token expired and needs re-authentication.</p>
 <hr />
 <h3 id="failed">Failed<a class="headerlink" href="#failed" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>Failed</strong>: <code>"Failed"</code></p>
 </blockquote>
+<p>Connection failed validation or upstream error.</p>
 
 
 

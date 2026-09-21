@@ -1220,7 +1220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectorsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectorsServiceModel/" class="md-nav__link">
         
   
   
@@ -1248,7 +1248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectionsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectionsServiceModel/" class="md-nav__link">
         
   
   
@@ -1276,7 +1276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ElementsServiceModel.md" class="md-nav__link">
+      <a href="../ElementsServiceModel/" class="md-nav__link">
         
   
   
@@ -4474,7 +4474,10 @@ trigger events to fire for each updated record.</p>
 <p><strong>upsert</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
-<p>Upsert a record into this entity, optionally with its related child records</p>
+<p>Upserts a record into this entity, optionally with its related child records.</p>
+<p>Send a flat payload to write one record, or nest child records under a key named after
+their entity to write the whole tree as a single transaction. See <a href="EntityServiceModel.md#upsert">EntityServiceModel.upsert</a>
+for which entities accept which form.</p>
 <h4 id="parameters_15">Parameters<a class="headerlink" href="#parameters_15" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4499,7 +4502,7 @@ trigger events to fire for each updated record.</p>
 </table>
 <h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
-<p>Promise resolving to the written record, or the per-record results of a tree write</p>
+<p>Promise resolving to the written root record's <code>Id</code>, plus the per-record results of a tree write</p>
 <p>Writing across related entities requires the multi-entity write feature to be
 enabled for your tenant.</p>
 

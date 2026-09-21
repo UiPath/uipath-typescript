@@ -1220,7 +1220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectorsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectorsServiceModel/" class="md-nav__link">
         
   
   
@@ -1248,7 +1248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ConnectionsServiceModel.md" class="md-nav__link">
+      <a href="../ConnectionsServiceModel/" class="md-nav__link">
         
   
   
@@ -1276,7 +1276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ElementsServiceModel.md" class="md-nav__link">
+      <a href="../ElementsServiceModel/" class="md-nav__link">
         
   
   
@@ -3680,12 +3680,12 @@
   <h1>EntityUpsertResponse</h1>
 
 <p>Response from upserting a record.</p>
-<p>A single-record upsert returns the written record's fields. A transactional write across
-related entities reports its outcome in <a href="#transaction">transaction</a> instead, and carries no field
-values — the per-record IDs there are the result.</p>
-<p>The response envelope also carries <code>children</code>, <code>cascadeDeletedChildren</code> and <code>deletedCount</code>.
-Those describe composite entities, which this route never writes, so they arrive empty on
-every call and are left undeclared rather than published as three inert fields.</p>
+<p>No field values come back, whichever form you used — only the <code>Id</code> of the record you wrote.
+A write that spans related entities also reports what it did in <a href="#transaction">transaction</a>, where
+the per-record IDs are the useful part.</p>
+<p>The raw response carries three more keys — <code>children</code>, <code>cascadeDeletedChildren</code> and
+<code>deletedCount</code> — that only apply to composite entities. This route never writes those, so
+the keys are always empty and are left off this type rather than published as dead fields.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../EntityRecord/"><code>EntityRecord</code></a></li>
@@ -3711,7 +3711,7 @@ every call and are left undeclared rather than published as three inert fields.<
 <tr>
 <td><a id="transaction"></a> <code>transaction?</code></td>
 <td><a href="../EntityMultiEntityWriteResponse/"><code>EntityMultiEntityWriteResponse</code></a></td>
-<td>What was written at each record, mirroring the nesting of the request. Present only when the payload nested child records.</td>
+<td>What the write did to each record, nested the same way the request was. Only present when the payload nested child records.</td>
 </tr>
 </tbody>
 </table>
