@@ -40,6 +40,13 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Token lifetime and automatic refresh
+
+The SDK reads the access token's lifetime from the sign-in response and silently
+refreshes the token shortly before it expires — no application code is needed.
+This also covers External Applications configured with a shortened access token
+lifetime (300–3600 seconds): tokens simply refresh more often, transparently.
+
 ### Enforcing sign-in through the organization's identity provider
 
 By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them

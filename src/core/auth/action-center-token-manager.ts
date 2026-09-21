@@ -2,6 +2,7 @@ import { ActionCenterEventNames, ActionCenterEventResponsePayload } from '../../
 import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { Config } from '../config/config';
+import { TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { HostTokenResponse, isTokenExpired, isValidHostOrigin, requestHostToken } from './host-token-request';
 
 export class ActionCenterTokenManager {
@@ -14,7 +15,9 @@ export class ActionCenterTokenManager {
   ) {}
 
   async refreshAccessToken(tokenInfo: TokenInfo): Promise<string> {
-    if (!isTokenExpired(tokenInfo)) {
+    // Buffered check: the host can always mint a fresh token, so renew ahead
+    // of expiry rather than risk a request expiring in flight.
+    if (!isTokenExpired(tokenInfo, TOKEN_EXPIRY_BUFFER_MS)) {
       return tokenInfo.token;
     }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AUTHENTICATION_TIMEOUT } from '@/core/auth/host-token-request';
+import { TOKEN_EXPIRY_BUFFER_MS } from '@/core/auth/constants';
 import { ActionCenterTokenManager } from '@/core/auth/action-center-token-manager';
 import { ActionCenterEventNames } from '@/models/action-center/tasks.internal-types';
 import { AuthenticationError } from '@/core/errors';
@@ -85,6 +86,18 @@ describe('ActionCenterTokenManager', () => {
     const result = await manager.refreshAccessToken(tokenInfo);
     expect(result).toBe('tok-valid');
     expect(mock.parentPostMessage).not.toHaveBeenCalled();
+  });
+
+  it('refreshes ahead of expiry when the token enters the buffer window', async () => {
+    const nearExpiry: TokenInfo = {
+      token: 'tok-near-expiry', type: 'secret', expiresAt: new Date(Date.now() + TOKEN_EXPIRY_BUFFER_MS / 2)
+    };
+
+    const refreshPromise = manager.refreshAccessToken(nearExpiry);
+    mock.dispatch(makeRefreshedEvent(VALID_ORIGIN, 'tok-new'));
+
+    expect(await refreshPromise).toBe('tok-new');
+    expect(mock.parentPostMessage).toHaveBeenCalledOnce();
   });
 
   // ---- missing basedomain ----

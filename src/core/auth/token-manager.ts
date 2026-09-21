@@ -1,7 +1,7 @@
 import { ExecutionContext } from '../context/execution';
 import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
-import { AUTH_STORAGE_KEYS } from './constants';
+import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
@@ -46,15 +46,19 @@ export class TokenManager {
   /**
    * Checks if a token is expired
    * @param tokenInfo The token info to check
+   * @param bufferMs Safety margin: the token is reported expired this many
+   *   milliseconds before its actual expiry. Defaults to 0 (exact expiry).
    * @returns true if the token is expired, false otherwise
    */
-  public isTokenExpired(tokenInfo?: TokenInfo): boolean {
+  public isTokenExpired(tokenInfo?: TokenInfo, bufferMs: number = 0): boolean {
     // If no token info or no expiration date, token is not expired
     if (!tokenInfo?.expiresAt) {
       return false;
     }
 
-    return new Date() >= tokenInfo.expiresAt;
+    // Re-parse defensively: expiresAt can originate from a host postMessage
+    // payload, where a Date may arrive serialized as an ISO string.
+    return Date.now() >= new Date(tokenInfo.expiresAt).getTime() - bufferMs;
   }
 
   /**
@@ -87,8 +91,15 @@ export class TokenManager {
       return tokenInfo.token;
     }
 
+    // When the SDK can refresh (OAuth config + refresh token), expiry is
+    // checked with a safety buffer so the token is renewed before a request
+    // signed near the deadline can expire in flight. Without a refresh path
+    // the full remaining lifetime is used — expiring early would only fail
+    // sooner than the token actually does.
+    const expiryBuffer = hasOAuthConfig(this.config) && tokenInfo.refreshToken ? TOKEN_EXPIRY_BUFFER_MS : 0;
+
     // If token is not expired, return it
-    if (!this.isTokenExpired(tokenInfo)) {
+    if (!this.isTokenExpired(tokenInfo, expiryBuffer)) {
       return tokenInfo.token;
     }
 
