@@ -337,12 +337,7 @@ export interface EntityServiceModel {
    */
   insertRecordById(id: string, data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
 
-  /**
-   * @deprecated Use {@link insertRecord} with `{ id }` or `{ name }` instead.
-   * @hidden
-   */
-  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
-
+  
   /**
    * Inserts one or more records into an entity, identified by ref (`{ id }` or `{ name }`)
    *
@@ -405,12 +400,7 @@ export interface EntityServiceModel {
    */
   insertRecordsById(id: string, data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
-  /**
-   * @deprecated Use {@link insertRecords} with `{ id }` or `{ name }` instead.
-   * @hidden
-   */
-  batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
-
+  
   /**
    * Updates a single record in an entity, identified by ref (`{ id }` or `{ name }`)
    *
