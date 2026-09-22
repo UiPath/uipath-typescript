@@ -253,7 +253,17 @@ const serviceEntries = [
     name: 'users',
     input: 'src/services/platform/users/index.ts',
     output: 'users/index'
-  }
+  },
+  {
+    name: 'connections',
+    input: 'src/services/integration-service/index.ts',
+    output: 'connections/index'
+  },
+  {
+    name: 'roles',
+    input: 'src/services/platform/roles/index.ts',
+    output: 'roles/index'
+  },
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry

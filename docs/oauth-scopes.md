@@ -274,6 +274,21 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `PM.User` or `PM.User.Read` |
 | `updateById()` | `PM.User` or `PM.User.Write` |
 
+## Roles
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | None — caller's platform roles govern access |
+| `getById()` | None — caller's platform roles govern access |
+| `create()` | None — caller's platform roles govern access |
+| `updateById()` | None — caller's platform roles govern access |
+| `deleteById()` | None — caller's platform roles govern access |
+| `getAssignments()` | None — caller's platform roles govern access |
+| `updateAssignments()` | None — caller's platform roles govern access |
+| `exportAssignments()` | None — caller's platform roles govern access |
+| `getEffectiveAccess()` | None — caller's platform roles govern access |
+| `getActions()` | None — caller's platform roles govern access |
+
 ## Processes
 
 | Method | OAuth Scope |
@@ -354,3 +369,41 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
 | `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+
+## Connections
+
+### Connectors
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connectors.Read` |
+| `getById()` | `IS.Connectors.Read` |
+| `getDefaultConnection()` | `IS.Connections.Read` |
+| `getConnections()` | `IS.Connections.Read` |
+
+### Connections
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connections.Read` |
+| `getById()` | `IS.Connections.Read` |
+
+### Elements
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getObjects()` | `IS.Connectors.Read` |
+| `getActivities()` | `IS.Connectors.Read` |
+| `getObjectMetadata()` | `IS.Connectors.Read` |
+| `getEventObjects()` | `IS.Connectors.Read` |
+| `getEventObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceObjects()` | `IS.Connectors.Read` |
+| `getInstanceObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceEventObjects()` | `IS.Connectors.Read` |
+| `getInstanceEventObjectMetadata()` | `IS.Connectors.Read` |
+
+### Execution
+
+| Function | OAuth Scope |
+|----------|-------------|
+| `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
