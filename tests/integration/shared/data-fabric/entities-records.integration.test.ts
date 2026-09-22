@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, idsEqual, wait } from '../../utils/helpers';
+import { awaitRecordVisible, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -468,7 +468,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(idsEqual(record.Id, recordId)).toBe(true);
+      expect(record.Id).toBe(recordId);
     });
   });
 
@@ -522,7 +522,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(idsEqual(record.Id, recordId)).toBe(true);
+      expect(record.Id).toBe(recordId);
     });
 
     it('should batch insert multiple records using insertRecordsById', async () => {
@@ -697,7 +697,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entity.getRecord(recordId);
 
       expect(record).toBeDefined();
-      expect(idsEqual(record.Id, recordId)).toBe(true);
+      expect(record.Id).toBe(recordId);
     });
 
     it('should update records via entity.updateRecords', async () => {
@@ -782,7 +782,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       });
 
       expect(result).toBeDefined();
-      expect(idsEqual(result.Id, updateTestRecordId)).toBe(true);
+      expect(result.Id).toBe(updateTestRecordId);
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -986,7 +986,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
 
       expect(record).toBeDefined();
-      expect(idsEqual(record.Id, folderRecordIds[0])).toBe(true);
+      expect(record.Id).toBe(folderRecordIds[0]);
     });
 
     it('should list paginated records with folderKey via getAllRecords', async () => {
@@ -1012,7 +1012,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(Array.isArray(result.items)).toBe(true);
       // The folder header must reach the server for the row to be retrievable; the
       // filter narrows to the record we just inserted in this run.
-      expect(result.items.some((r) => idsEqual(r.Id, folderRecordIds[0]))).toBe(true);
+      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
     });
 
     it('should update a record with folderKey via updateRecordById', async () => {
@@ -1021,7 +1021,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
 
       expect(result).toBeDefined();
-      expect(idsEqual(result.Id, folderRecordIds[0])).toBe(true);
+      expect(result.Id).toBe(folderRecordIds[0]);
     }, 90_000);
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
@@ -1057,7 +1057,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           ],
         },
       });
-      expect(result.items.some((r) => idsEqual(r.Id, idToDelete))).toBe(false);
+      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
     }, 90_000);
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {
@@ -1181,7 +1181,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         const record = await entities.getRecordByName(byNameEntityName, recordId);
 
         expect(record).toBeDefined();
-        expect(idsEqual(record.Id, recordId)).toBe(true);
+        expect(record.Id).toBe(recordId);
       });
 
       it('should batch insert records using insertRecords with a name ref', async () => {
@@ -1219,7 +1219,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         const result = await entities.updateRecord({ name: byNameEntityName }, byNameRecordIds[0], updates);
 
         expect(result).toBeDefined();
-        expect(idsEqual(result.Id, byNameRecordIds[0])).toBe(true);
+        expect(result.Id).toBe(byNameRecordIds[0]);
       });
 
       it('should update records using updateRecords with a name ref', async () => {

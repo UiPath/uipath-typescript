@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString, idsEqual } from '../../utils/helpers';
+import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
   DataDirectionType,
   EntityClass,
@@ -597,7 +597,7 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       );
 
       const sourceRecords = responses.map(r =>
-        (r.items as Record<string, any>[]).find(item => idsEqual(item.Id, sourceInsert.Id)),
+        (r.items as Record<string, any>[]).find(item => item.Id === sourceInsert.Id),
       );
       sourceRecords.forEach((rec, i) => {
         expect(rec, `expansionLevel=${levels[i]} did not return the inserted source record`).toBeDefined();
@@ -606,13 +606,13 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
 
       // L0: FK is the raw target record Id string.
       expect(typeof l0.parent).toBe('string');
-      expect(idsEqual(l0.parent, targetRecordId)).toBe(true);
+      expect(l0.parent).toBe(targetRecordId);
 
       // L1+: FK inflates into an object envelope carrying the target Id.
       for (const [level, rec] of [[1, l1], [2, l2], [3, l3]] as const) {
         expect(typeof rec.parent, `L${level} parent should be object`).toBe('object');
         expect(rec.parent, `L${level} parent should not be null`).not.toBeNull();
-        expect(idsEqual(rec.parent.Id, targetRecordId), `L${level} parent should carry target Id`).toBe(true);
+        expect(rec.parent.Id, `L${level} parent should carry target Id`).toBe(targetRecordId);
       }
 
       // L2 surfaces the user-defined `label` field from the target record.
