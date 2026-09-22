@@ -644,7 +644,7 @@ export interface EntityMultiEntityWriteResponseNode {
   op: EntityMultiEntityWriteOperation;
   /** ID of the record. */
   id: string;
-  /** How many rows this record's write touched */
+  /** Number of rows the write affected */
   affectedRows: number;
   /**
    * `true` when an update changed nothing and only confirmed the row is there.
