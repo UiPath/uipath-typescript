@@ -752,8 +752,8 @@ export enum FieldDisplayType {
  * Read/write direction for an external field.
  */
 export enum DataDirectionType {
-  ReadOnly = 0,
-  ReadAndWrite = 1,
+  ReadOnly = "ReadOnly",
+  ReadAndWrite = "ReadAndWrite",
 }
 
 /**
