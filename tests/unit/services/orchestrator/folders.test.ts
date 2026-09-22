@@ -41,7 +41,6 @@ describe('FolderService Unit Tests', () => {
       expect(result.fullyQualifiedName).toBe('Shared/Finance');
       expect(result.description).toBe('AP invoices');
       expect(result.folderType).toBe('Standard');
-      expect(result.isPersonal).toBe(false);
       expect(result.provisionType).toBe('Automatic');
       expect(result.permissionModel).toBe('FineGrained');
       expect(result.parentId).toBe(10);
@@ -74,6 +73,16 @@ describe('FolderService Unit Tests', () => {
 
     it('should reject a non-GUID key', async () => {
       await expect(folderService.getByKey('not-a-guid')).rejects.toThrow(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should reject an empty key', async () => {
+      await expect(folderService.getByKey('')).rejects.toThrow(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should reject a whitespace-only key', async () => {
+      await expect(folderService.getByKey('   ')).rejects.toThrow(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 

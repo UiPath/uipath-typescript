@@ -11,8 +11,7 @@ import { BaseService } from '../../base';
 /**
  * Service for looking up UiPath Orchestrator folders.
  *
- * The Folders GetByKey action is not folder-scoped, so this service extends
- * {@link BaseService} directly and sends no folder headers.
+ * This service is not folder-scoped — no folder headers are sent on requests.
  */
 export class FolderService extends BaseService implements FolderServiceModel {
   @track('Folders.GetByKey')

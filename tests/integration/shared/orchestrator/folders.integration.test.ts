@@ -25,7 +25,6 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       expect(typeof folder.displayName).toBe('string');
       expect(typeof folder.fullyQualifiedName).toBe('string');
       expect(typeof folder.folderType).toBe('string');
-      expect(typeof folder.isPersonal).toBe('boolean');
       expect(typeof folder.feedType).toBe('string');
       expect(folder.parentId === null || typeof folder.parentId === 'number').toBe(true);
       expect(folder.parentKey === null || typeof folder.parentKey === 'string').toBe(true);

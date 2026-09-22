@@ -16,7 +16,6 @@ export const FOLDER_TEST_CONSTANTS = {
     FullyQualifiedName: 'Shared/Finance',
     Description: 'AP invoices',
     FolderType: 'Standard',
-    IsPersonal: false,
     ProvisionType: 'Automatic',
     PermissionModel: 'FineGrained',
     ParentId: 10,

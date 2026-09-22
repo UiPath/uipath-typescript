@@ -54,8 +54,6 @@ export interface FolderGetResponse {
   description: string | null;
   /** Folder type (standard, personal workspace, solution, …). */
   folderType: FolderType;
-  /** True when {@link FolderGetResponse.folderType} is `Personal`. */
-  isPersonal: boolean;
   /** Robot provisioning type. */
   provisionType: FolderProvisionType | null;
   /** Folder permission model. */
