@@ -308,6 +308,7 @@
         "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
         "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
+        "api-surface": "node scripts/check-api-surface.mjs --base origin/main",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",
