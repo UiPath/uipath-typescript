@@ -1693,6 +1693,8 @@
       
         
       
+        
+      
     
     
     
@@ -1778,6 +1780,34 @@
     
   
     Users
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformRoleServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles
   
 
     
@@ -5761,9 +5791,9 @@ Identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <p><strong>upsert</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
-<p>Upserts a record into an entity, and to its related child records. Two payload type:</p>
+<p>Upserts a record into an entity, and to its related child records. Two payload types:</p>
 <ul>
-<li>One record: Only case an templated entities have one, for a native entity rejects this type.</li>
+<li>One record: Only case and templated entities have one; a native entity rejects this type.</li>
 <li>A tree of records: child records nested under a root entity, written as one transaction. 
   A nested record with an <code>Id</code> field updates that row, one without it creates a row.</li>
 </ul>
