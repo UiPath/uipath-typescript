@@ -63,6 +63,8 @@ export const DATA_FABRIC_ENDPOINTS = {
     DELETE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete/${recordId}`,
     DELETE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete-batch`,
     BULK_UPLOAD_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/bulk-upload`,
+    // v3 record upsert. There is no by-id route; nested child records are written as one transaction.
+    UPSERT_RECORD_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/upsert`,
     // Download (GET), upload (POST), and delete (DELETE) all share this URL; the HTTP method is chosen at the call site.
     ATTACHMENT_BY_NAME: (entityName: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
