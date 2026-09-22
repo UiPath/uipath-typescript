@@ -25,35 +25,44 @@ npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.2
 import {
   configureValidationStationWc,
   ValidationStation,
-  ValidationStationLanguage,
 } from "@uipath/ui-widgets-validation-station";
 import { UiPath } from "@uipath/uipath-typescript/core";
 import type { DuFramework } from "@uipath/uipath-typescript/document-understanding";
+import { useEffect, useState } from "react";
 
 // Once, at app startup — loads the web component from `du-vs-wc`, next to
 // your app's own root by default. See "Hosting the web component" below.
 configureValidationStationWc();
 
-const sdk = new UiPath({
-  baseUrl: "https://cloud.uipath.com",
-  orgName: "your-org",
-  tenantName: "your-tenant",
-  clientId: "your-client-id",
-  redirectUri: "http://localhost:3000/callback",
-  scope: "OR.Buckets OR.Tasks",
-});
+function App({ task }: { task: { data: DuFramework.ContentValidationData } }) {
+  const [sdk, setSdk] = useState<UiPath | null>(null);
 
-await sdk.initialize();
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath({
+        baseUrl: "https://cloud.uipath.com",
+        orgName: "your-org",
+        tenantName: "your-tenant",
+        clientId: "your-client-id",
+        // `OR.Buckets` is the widget's own need; `OR.Tasks` is for the host
+        // code that fetches the task and completes it after submit.
+        scope: "OR.Buckets OR.Tasks",
+        redirectUri: "http://localhost:3000/callback",
+      });
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
 
-function App() {
-  return (
-    <ValidationStation
-      sdk={sdk}
-      data={selectedTask.data as DuFramework.ContentValidationData}
-    />
-  );
+  if (!sdk) return <div>Loading...</div>;
+
+  return <ValidationStation sdk={sdk} data={task.data} />;
 }
 ```
+
+!!! note "`initialize()` drives the OAuth redirect"
+    Under OAuth, `initialize()` navigates the browser to the identity provider and completes the flow when it returns, so keep it inside an effect rather than at module scope, and serve `redirectUri` as a route of this same app — it must match a URI registered on the external application exactly, scheme and path included.
 
 `theme` defaults to `"light"` and `language` defaults to `ValidationStationLanguage.English`, so the minimal mount just needs `sdk` and `data`.
 
