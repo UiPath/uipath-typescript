@@ -66,7 +66,9 @@ export interface DuValidationResult {
 export interface DuValidationGetResponse {
   status?: JobStatus;
   error?: DuValidationErrorResponse;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  /** When the operation was created. */
+  createdTime?: string;
+  /** When the operation was last modified. */
+  lastModifiedTime?: string;
   result?: DuValidationResult;
 }

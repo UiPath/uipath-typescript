@@ -5,6 +5,7 @@ import type {
   StartValidationTaskResponse,
 } from '../../models/document-understanding/framework/validation.types';
 import type { DuValidationServiceModel } from '../../models/document-understanding/validation.models';
+import { DuValidationMap } from '../../models/document-understanding/validation.constants';
 import type {
   DuValidationGetResponse,
   DuValidationRequestOptions,
@@ -12,7 +13,7 @@ import type {
   DuValidationStartResponse,
 } from '../../models/document-understanding/validation.types';
 import { DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
-import { camelToPascalCaseKeys, pascalToCamelCaseKeys } from '../../utils/transform';
+import { camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { BaseService } from '../base';
 
 const DEFAULT_API_VERSION = '1.1';
@@ -78,6 +79,9 @@ export class DuValidationService
       DU_VALIDATION_ENDPOINTS.GET_RESULT(projectId, tag, documentTypeId, operationId),
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
-    return pascalToCamelCaseKeys(response.data) as DuValidationGetResponse;
+    return transformData(
+      pascalToCamelCaseKeys(response.data),
+      DuValidationMap,
+    ) as DuValidationGetResponse;
   }
 }

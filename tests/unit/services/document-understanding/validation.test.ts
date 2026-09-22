@@ -43,13 +43,20 @@ const START_SDK_RESPONSE = {
   resultUrl: RESULT_URL,
 };
 
+const CREATED_TIME = '2026-01-01T00:00:00Z';
+const LAST_MODIFIED_TIME = '2026-01-02T00:00:00Z';
+
 const RESULT_API_RESPONSE = {
   Status: JobStatus.Succeeded,
+  CreatedAt: CREATED_TIME,
+  LastUpdatedAt: LAST_MODIFIED_TIME,
   Result: { ActionStatus: ActionStatus.Pending },
 };
 
 const RESULT_SDK_RESPONSE = {
   status: JobStatus.Succeeded,
+  createdTime: CREATED_TIME,
+  lastModifiedTime: LAST_MODIFIED_TIME,
   result: { actionStatus: ActionStatus.Pending },
 };
 
@@ -62,7 +69,7 @@ describe('DuValidationService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
 
     service = new DuValidationService(instance);
   });
@@ -134,8 +141,12 @@ describe('DuValidationService Unit Tests', () => {
 
       expect(result).toEqual(RESULT_SDK_RESPONSE);
       expect(result.status).toBe(JobStatus.Succeeded);
+      expect(result.createdTime).toBe(CREATED_TIME);
+      expect(result.lastModifiedTime).toBe(LAST_MODIFIED_TIME);
       expect(result.result?.actionStatus).toBe(ActionStatus.Pending);
       expect((result as Record<string, unknown>).Status).toBeUndefined();
+      expect((result as Record<string, unknown>).createdAt).toBeUndefined();
+      expect((result as Record<string, unknown>).lastUpdatedAt).toBeUndefined();
       expect((result as Record<string, unknown>).Result).toBeUndefined();
     });
 
