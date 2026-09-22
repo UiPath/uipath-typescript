@@ -1433,7 +1433,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(Array.isArray(child.members)).toBe(true);
       expect(child.members).toHaveLength(0);
 
-      // Tracked here, later used to clean up test output.ß
+      // Tracked here, later used to clean up test output.
       treeRootRecordIds.push(result.Id);
       registerResource('entityRecords', { entityId: treeMetadata.id, recordIds: [result.Id] });
       registerResource('entityRecords', { entityId: treeChildMetadata.id, recordIds: [child.id] });

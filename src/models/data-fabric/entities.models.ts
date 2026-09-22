@@ -550,9 +550,9 @@ export interface EntityServiceModel {
 
 
   /**
-   * Upserts a record into an entity, and to its related child records. Two payload type:
+   * Upserts a record into an entity, and to its related child records. Two payload types:
    *
-   * - One record: Only case an templated entities have one, for a native entity rejects this type.
+   * - One record: Only case and templated entities have one; a native entity rejects this type.
    * - A tree of records: child records nested under a root entity, written as one transaction. 
    *   A nested record with an `Id` field updates that row, one without it creates a row. 
    *
