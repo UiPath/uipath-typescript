@@ -25,7 +25,7 @@ npm install @uipath/ui-widgets-datatable
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.3.10
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 ```
 
 ## Usage
@@ -49,7 +49,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -72,7 +74,13 @@ function App() {
 
 Finding the entity ID
 
-`entityId` is the UUID of a Data Fabric entity. List the entities available to you with `sdk.entities.getAll()` — see the [Entity service reference](../../api/interfaces/entity/).
+`entityId` is the UUID of a Data Fabric entity. List the ones available to you with the Entities service — see the [Entity service reference](../../api/interfaces/entity/):
+
+```
+import { Entities } from "@uipath/uipath-typescript/entities";
+
+const entities = await new Entities(sdk).getAll();
+```
 
 ## Props
 

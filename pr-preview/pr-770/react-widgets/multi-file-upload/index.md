@@ -19,11 +19,11 @@ Package: `@uipath/ui-widgets-multi-file-upload`
 npm install @uipath/ui-widgets-multi-file-upload
 ```
 
-### Requirements
+### Peer dependencies
 
-- React 19.2.0+ and React DOM 19.2.0+
-- `@uipath/uipath-typescript` ^1.3.10
-- `@uipath/apollo-wind`
+```
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+```
 
 ## Usage
 
@@ -69,7 +69,13 @@ function App() {
 
 Finding the bucket and folder IDs
 
-List the buckets you can reach with `sdk.buckets.getAll()` — the response carries both the bucket `id` and its `folderId`. See the [Bucket service reference](../../api/interfaces/BucketServiceModel/).
+List the buckets you can reach with the Buckets service — the cross-folder `getAll()` response carries the bucket `id` alongside its `folderId`. See the [Bucket service reference](../../api/interfaces/BucketServiceModel/):
+
+```
+import { Buckets } from "@uipath/uipath-typescript/buckets";
+
+const buckets = await new Buckets(sdk).getAll();
+```
 
 ## Props
 

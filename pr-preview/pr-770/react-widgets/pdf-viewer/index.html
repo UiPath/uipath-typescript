@@ -2822,6 +2822,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#peer-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peer dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4051,6 +4068,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#peer-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peer dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4144,29 +4178,36 @@
 <p>Package: <code>@uipath/ui-widgets-pdf-viewer</code></p>
 <p>Built on <a href="https://www.npmjs.com/package/react-pdf">react-pdf</a> (Mozilla pdf.js). The pdf.js worker <strong>ships inside the package</strong> — no CDN, no bundler configuration — so the widget works behind enterprise CSP and firewalls, including coded apps deployed on <code>*.uipath.host</code>. The packaged worker is byte-exact to the <code>pdfjs-dist</code> version the widget pins, so the pdf.js API and the worker can never mismatch regardless of what your dependency tree hoists.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Beta — not yet published to npm</p>
+<p><code>@uipath/ui-widgets-pdf-viewer</code> is at <code>1.0.0-beta.1</code> and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.</p>
+</div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>npm<span class="w"> </span>install<span class="w"> </span>@uipath/ui-widgets-pdf-viewer
 </code></pre></div>
+<h3 id="peer-dependencies">Peer dependencies<a class="headerlink" href="#peer-dependencies" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>npm<span class="w"> </span>install<span class="w"> </span>react@^19.2.0<span class="w"> </span>react-dom@^19.2.0<span class="w"> </span>@uipath/uipath-typescript@^1.4.1
+</code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PdfViewer</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/ui-widgets-pdf-viewer&quot;</span><span class="p">;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">import</span><span class="w"> </span><span class="s2">&quot;@uipath/ui-widgets-pdf-viewer/PdfViewer.css&quot;</span><span class="p">;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">function</span><span class="w"> </span><span class="nx">App</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="c1">// SDK configuration (or `new UiPath()` inside a coded app)</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="p">});</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p">&lt;</span><span class="nt">PdfViewer</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="nx">bucketId</span><span class="o">:</span><span class="w"> </span><span class="kt">123</span><span class="p">,</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folder-guid&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// or folderId / folderPath</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;invoices/inv-0714.pdf&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">      </span><span class="p">}}</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="p">/&gt;</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="p">);</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PdfViewer</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/ui-widgets-pdf-viewer&quot;</span><span class="p">;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">import</span><span class="w"> </span><span class="s2">&quot;@uipath/ui-widgets-pdf-viewer/PdfViewer.css&quot;</span><span class="p">;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@uipath/uipath-typescript/core&quot;</span><span class="p">;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">function</span><span class="w"> </span><span class="nx">App</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="c1">// SDK configuration (or `new UiPath()` inside a coded app)</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="p">});</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="p">&lt;</span><span class="nt">PdfViewer</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">      </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">      </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">        </span><span class="nx">bucketId</span><span class="o">:</span><span class="w"> </span><span class="kt">123</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">        </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folder-guid&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// or folderId / folderPath</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;invoices/inv-0714.pdf&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">      </span><span class="p">}}</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="p">/&gt;</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="p">);</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">}</span>
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Theming</p>
@@ -4174,23 +4215,23 @@
 </div>
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">&para;</a></h2>
 <p>One <code>source</code> prop, four shapes. <strong>The widget selects the adapter from the fields you pass</strong> — <code>bucketId</code> → storage bucket, <code>entityId</code> → Data Fabric entity, <code>url</code> → direct URL, <code>data</code> → pre-fetched bytes.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Orchestrator storage bucket (requires `sdk`).</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// Scope the folder with EXACTLY ONE of:</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">//   folderId   — numeric folder ID</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">//   folderKey  — folder GUID (what coded apps usually have)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">//   folderPath — slash-delimited path, e.g. &quot;Shared/Finance&quot;</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderKey</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Shared/Finance&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1">// Data Fabric entity file field (requires `sdk`)</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">entityId</span><span class="p">,</span><span class="w"> </span><span class="nx">recordId</span><span class="p">,</span><span class="w"> </span><span class="nx">fieldName</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="c1">// Plain URL — same-origin or CORS-accessible (no sdk needed)</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">signedUrl</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="c1">// Pre-fetched bytes from your own data store (no sdk needed)</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="kt">blobOrArrayBuffer</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Orchestrator storage bucket (requires `sdk`).</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1">// Scope the folder with EXACTLY ONE of:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1">//   folderId   — numeric folder ID</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">//   folderKey  — folder GUID (what coded apps usually have)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1">//   folderPath — slash-delimited path, e.g. &quot;Shared/Finance&quot;</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderKey</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">bucketId</span><span class="p">,</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Shared/Finance&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1">// Data Fabric entity file field (requires `sdk`)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">entityId</span><span class="p">,</span><span class="w"> </span><span class="nx">recordId</span><span class="p">,</span><span class="w"> </span><span class="nx">fieldName</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1">// Plain URL — same-origin or CORS-accessible (no sdk needed)</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">url</span><span class="o">:</span><span class="w"> </span><span class="kt">signedUrl</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1">// Pre-fetched bytes from your own data store (no sdk needed)</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="p">&lt;</span><span class="nt">PdfViewer</span><span class="w"> </span><span class="na">source</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="kt">blobOrArrayBuffer</span><span class="w"> </span><span class="p">}}</span><span class="w"> </span><span class="p">/&gt;</span>
 </code></pre></div>
 <h2 id="props">Props<a class="headerlink" href="#props" title="Permanent link">&para;</a></h2>
 <table>
@@ -4261,12 +4302,12 @@
 <h2 id="worker-configuration-advanced">Worker configuration (advanced)<a class="headerlink" href="#worker-configuration-advanced" title="Permanent link">&para;</a></h2>
 <p>No configuration is needed: the widget points pdf.js at the worker file shipped in the package (<code>new URL("./pdf.worker.min.mjs", import.meta.url)</code>), which production bundlers emit into the app build and dev servers serve straight from <code>node_modules</code>.</p>
 <p>If your toolchain resolves neither — for example a dev server that pre-bundles dependencies and rewrites <code>import.meta.url</code> — override it once in your app after importing the widget:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pdfjs</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;react-pdf&quot;</span><span class="p">;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nx">pdfjs</span><span class="p">.</span><span class="nx">GlobalWorkerOptions</span><span class="p">.</span><span class="nx">workerSrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">URL</span><span class="p">(</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="s2">&quot;pdfjs-dist/build/pdf.worker.min.mjs&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">pdfjs</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;react-pdf&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nx">pdfjs</span><span class="p">.</span><span class="nx">GlobalWorkerOptions</span><span class="p">.</span><span class="nx">workerSrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">URL</span><span class="p">(</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="s2">&quot;pdfjs-dist/build/pdf.worker.min.mjs&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
 </code></pre></div>
 <h2 id="limitations-v1">Limitations (v1)<a class="headerlink" href="#limitations-v1" title="Permanent link">&para;</a></h2>
 <div class="admonition warning">

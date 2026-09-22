@@ -737,22 +737,23 @@ Source: [github.com/UiPath/uipath-ui-widgets](https://github.com/UiPath/uipath-u
 
 ## Available widgets
 
-| Widget                                                  | Package                                        | What it does                                                                                     |
-| ------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [Validation Station](validation-station/)               | `@uipath/ui-widgets-validation-station`        | React wrapper for the Document Understanding Validation Station                                  |
-| [Conversational Agent Chat](conversational-agent-chat/) | `@uipath/ui-widgets-conversational-agent-chat` | Streaming chat UI for UiPath Conversational Agents, with tool-call visualization                 |
-| [DataTable](datatable/)                                 | `@uipath/ui-widgets-datatable`                 | Full CRUD grid over a Data Fabric entity — inline editing, master-detail, filtering, diff review |
-| [Multi File Upload](multi-file-upload/)                 | `@uipath/ui-widgets-multi-file-upload`         | Drag-and-drop upload of multiple files to an Orchestrator Storage Bucket                         |
-| [PDF Viewer](pdf-viewer/)                               | `@uipath/ui-widgets-pdf-viewer`                | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes                       |
-| [External Auth](external-auth/)                         | `@uipath/ui-widgets-external-auth`             | Provider-agnostic sign-in buttons that start login at an external IdP                            |
+| Widget                                                  | Package                                                    | What it does                                                                                     |
+| ------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [Validation Station](validation-station/)               | `@uipath/ui-widgets-validation-station`                    | React wrapper for the Document Understanding Validation Station                                  |
+| [Conversational Agent Chat](conversational-agent-chat/) | `@uipath/ui-widgets-conversational-agent-chat`             | Streaming chat UI for UiPath Conversational Agents, with tool-call visualization                 |
+| [DataTable](datatable/)                                 | `@uipath/ui-widgets-datatable`                             | Full CRUD grid over a Data Fabric entity — inline editing, master-detail, filtering, diff review |
+| [Multi File Upload](multi-file-upload/)                 | `@uipath/ui-widgets-multi-file-upload`                     | Drag-and-drop upload of multiple files to an Orchestrator Storage Bucket                         |
+| [PDF Viewer](pdf-viewer/)                               | `@uipath/ui-widgets-pdf-viewer` *beta — not yet on npm*    | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes                       |
+| [External Auth](external-auth/)                         | `@uipath/ui-widgets-external-auth` *beta — not yet on npm* | Provider-agnostic sign-in buttons that start login at an external IdP                            |
 
 ## Common setup
 
 ### Requirements
 
-- **React** 19.2.0 or higher (and `react-dom`)
-- **@uipath/uipath-typescript** — the version each widget pins as a peer dependency
-- **@uipath/apollo-wind** — the design system the widgets render with
+- **React** `^19.2.0` — 19.2.0 or later in the 19.x line (and a matching `react-dom`)
+- **@uipath/uipath-typescript** — a peer dependency, so you install it yourself. Each widget pins its own minimum; the per-widget pages give the exact range
+
+The widgets render with the UiPath Apollo design system, but they depend on it directly — `@uipath/apollo-wind` installs with the widget and is nothing you add yourself.
 
 ### Install
 
@@ -762,9 +763,15 @@ Each widget is installed independently:
 npm install @uipath/ui-widgets-datatable
 ```
 
+PDF Viewer and External Auth are not on npm yet
+
+Both are at `1.0.0-beta.1` and are not yet published to the public registry, so `npm install` for them fails today. Their pages document the current API so you can evaluate and plan against it.
+
 ### Pass an initialized SDK instance
 
-Most widgets take a `sdk` prop — an initialized `UiPath` instance. Create it once and share it across widgets:
+Most widgets take an `sdk` prop — an initialized `UiPath` instance. Create it once and share it across widgets.
+
+A browser app is a public client, so authenticate it with OAuth:
 
 ```
 import { UiPath } from "@uipath/uipath-typescript/core";
@@ -779,7 +786,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "<scopes the widgets you use need>",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -793,7 +802,11 @@ function App() {
 }
 ```
 
-See [Authentication](../authentication/) for the available credential types, and [Coded Apps](../coded-apps/getting-started/) if the app is deployed to UiPath — there, `new UiPath()` picks up configuration automatically.
+Never ship a tenant secret to the browser
+
+The SDK's secret-based mode is for backend services, where the credential stays on the server. Anything handed to a browser bundle is readable by every user of the page, so a frontend app uses OAuth — the flow above — and never `secret`.
+
+The scopes you need depend on which SDK services the widgets call — [OAuth Scopes](../oauth-scopes/) lists them per method. In a [Coded App](../coded-apps/getting-started/) deployed to UiPath, `new UiPath()` picks the configuration up on its own and there is nothing to pass at all. See [Authentication](../authentication/) for the full set of credential types and when each applies.
 
 External Auth needs no SDK
 
@@ -809,12 +822,18 @@ Add either a `light` or a `dark` class to your `<body>` element. Without it, Apo
 
 ### Import the stylesheet
 
-Every widget ships a stylesheet that you import once, alongside the component:
+Most widgets ship a stylesheet that you import once, alongside the component:
 
 ```
 import { DataTable } from "@uipath/ui-widgets-datatable";
 import "@uipath/ui-widgets-datatable/DataTable.css";
 ```
+
+[Validation Station](validation-station/) is the exception — it exports no stylesheet. Its styles arrive with the web component bundle and are adopted into the shadow root.
+
+### One widget needs an extra step
+
+[Validation Station](validation-station/) additionally requires a `configureValidationStationWc()` call before render, plus the Document Understanding web component hosted as static files. Miss either and nothing renders — see [Hosting the web component](validation-station/#hosting-the-web-component).
 
 ### TypeScript
 
@@ -839,9 +858,7 @@ npm install @uipath/ui-widgets-validation-station
 ### Peer dependencies
 
 ```
-react >= 19.2.0
-react-dom >= 19.2.0
-@uipath/uipath-typescript >= 1.4.2
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.2
 ```
 
 ## Quick start
@@ -867,7 +884,9 @@ const sdk = new UiPath({
   baseUrl: "https://cloud.uipath.com",
   orgName: "your-org",
   tenantName: "your-tenant",
-  secret: "your-secret",
+  clientId: "your-client-id",
+  redirectUri: "http://localhost:3000/callback",
+  scope: "OR.Buckets OR.Tasks",
 });
 
 await sdk.initialize();
@@ -1399,7 +1418,7 @@ Same shapes, new names — a find-and-replace:
 
 Nothing to do
 
-`sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` and the fourteen state, command-result and panel callbacks the compact subcomponents already had; all are additive.
+`sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` plus fourteen state, command-result and panel callbacks; all are additive.
 
 # Conversational Agent Chat
 
@@ -1426,7 +1445,7 @@ npm install @uipath/ui-widgets-conversational-agent-chat
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.3.10
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.5.5
 ```
 
 ## Usage
@@ -1450,7 +1469,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -1463,6 +1484,10 @@ function App() {
   return <ConversationalAgentChat sdk={sdk} agentId={123} folderId={456} />;
 }
 ```
+
+Scopes for streaming
+
+The `ConversationalAgents` scope is what makes the real-time WebSocket session work; without it the REST calls succeed but the socket connection fails. See [OAuth Scopes](../../oauth-scopes/#conversational-agent) for the authoritative list.
 
 ## Props
 
@@ -1495,7 +1520,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -1591,7 +1618,7 @@ npm install @uipath/ui-widgets-datatable
 ### Peer dependencies
 
 ```
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.3.10
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 ```
 
 ## Usage
@@ -1615,7 +1642,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -1638,7 +1667,13 @@ function App() {
 
 Finding the entity ID
 
-`entityId` is the UUID of a Data Fabric entity. List the entities available to you with `sdk.entities.getAll()` — see the [Entity service reference](../../api/interfaces/entity/).
+`entityId` is the UUID of a Data Fabric entity. List the ones available to you with the Entities service — see the [Entity service reference](../../api/interfaces/entity/):
+
+```
+import { Entities } from "@uipath/uipath-typescript/entities";
+
+const entities = await new Entities(sdk).getAll();
+```
 
 ## Props
 
@@ -1767,11 +1802,11 @@ Package: `@uipath/ui-widgets-multi-file-upload`
 npm install @uipath/ui-widgets-multi-file-upload
 ```
 
-### Requirements
+### Peer dependencies
 
-- React 19.2.0+ and React DOM 19.2.0+
-- `@uipath/uipath-typescript` ^1.3.10
-- `@uipath/apollo-wind`
+```
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+```
 
 ## Usage
 
@@ -1817,7 +1852,13 @@ function App() {
 
 Finding the bucket and folder IDs
 
-List the buckets you can reach with `sdk.buckets.getAll()` — the response carries both the bucket `id` and its `folderId`. See the [Bucket service reference](../../api/interfaces/BucketServiceModel/).
+List the buckets you can reach with the Buckets service — the cross-folder `getAll()` response carries the bucket `id` alongside its `folderId`. See the [Bucket service reference](../../api/interfaces/BucketServiceModel/):
+
+```
+import { Buckets } from "@uipath/uipath-typescript/buckets";
+
+const buckets = await new Buckets(sdk).getAll();
+```
 
 ## Props
 
@@ -1857,8 +1898,18 @@ Built on [react-pdf](https://www.npmjs.com/package/react-pdf) (Mozilla pdf.js). 
 
 ## Installation
 
+Beta — not yet published to npm
+
+`@uipath/ui-widgets-pdf-viewer` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
+
 ```
 npm install @uipath/ui-widgets-pdf-viewer
+```
+
+### Peer dependencies
+
+```
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 ```
 
 ## Usage
@@ -1981,9 +2032,21 @@ External Auth never calls UiPath. It is for signing users into your own app thro
 
 ## Installation
 
+Beta — not yet published to npm
+
+`@uipath/ui-widgets-external-auth` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
+
 ```
 npm install @uipath/ui-widgets-external-auth
 ```
+
+### Peer dependencies
+
+```
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+```
+
+The package declares the SDK as a peer dependency for consistency with the other widgets, even though this one makes no UiPath calls of its own.
 
 ## Usage
 

@@ -8,8 +8,18 @@ Built on [react-pdf](https://www.npmjs.com/package/react-pdf) (Mozilla pdf.js). 
 
 ## Installation
 
+Beta — not yet published to npm
+
+`@uipath/ui-widgets-pdf-viewer` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
+
 ```
 npm install @uipath/ui-widgets-pdf-viewer
+```
+
+### Peer dependencies
+
+```
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 ```
 
 ## Usage

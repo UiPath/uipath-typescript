@@ -4414,9 +4414,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>npm<span class="w"> </span>install<span class="w"> </span>@uipath/ui-widgets-validation-station
 </code></pre></div>
 <h3 id="peer-dependencies">Peer dependencies<a class="headerlink" href="#peer-dependencies" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>react &gt;= 19.2.0
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>react-dom &gt;= 19.2.0
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>@uipath/uipath-typescript &gt;= 1.4.2
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>npm<span class="w"> </span>install<span class="w"> </span>react@^19.2.0<span class="w"> </span>react-dom@^19.2.0<span class="w"> </span>@uipath/uipath-typescript@^1.4.2
 </code></pre></div>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="admonition note">
@@ -4439,19 +4437,21 @@
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://cloud.uipath.com&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-org&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-tenant&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">  </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-secret&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="p">});</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">  </span><span class="nx">clientId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">  </span><span class="nx">redirectUri</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;http://localhost:3000/callback&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="nx">scope</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;OR.Buckets OR.Tasks&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="p">});</span>
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="kd">function</span><span class="w"> </span><span class="nx">App</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="p">&lt;</span><span class="nt">ValidationStation</span>
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">      </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">      </span><span class="na">data</span><span class="o">=</span><span class="p">{</span><span class="nx">selectedTask</span><span class="p">.</span><span class="nx">data</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">DuFramework</span><span class="p">.</span><span class="nx">ContentValidationData</span><span class="p">}</span>
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">    </span><span class="p">/&gt;</span>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">  </span><span class="p">);</span>
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="p">}</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="kd">function</span><span class="w"> </span><span class="nx">App</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="p">&lt;</span><span class="nt">ValidationStation</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">      </span><span class="na">sdk</span><span class="o">=</span><span class="p">{</span><span class="nx">sdk</span><span class="p">}</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">      </span><span class="na">data</span><span class="o">=</span><span class="p">{</span><span class="nx">selectedTask</span><span class="p">.</span><span class="nx">data</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">DuFramework</span><span class="p">.</span><span class="nx">ContentValidationData</span><span class="p">}</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">    </span><span class="p">/&gt;</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">  </span><span class="p">);</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="p">}</span>
 </code></pre></div>
 <p><code>theme</code> defaults to <code>"light"</code> and <code>language</code> defaults to <code>ValidationStationLanguage.English</code>, so the minimal mount just needs <code>sdk</code> and <code>data</code>.</p>
 <div class="admonition warning">
@@ -5129,7 +5129,7 @@
 </details>
 <details class="note">
 <summary>Nothing to do</summary>
-<p><code>sdk</code> and <code>data</code> became optional, alongside the new <code>artifacts</code> / <code>documentId</code> props — existing calls that pass both keep working. See <a href="#data-sources">Data sources</a>. <code>ValidationStation</code> also gained <code>persistent</code> and the fourteen state, command-result and panel callbacks the compact subcomponents already had; all are additive.</p>
+<p><code>sdk</code> and <code>data</code> became optional, alongside the new <code>artifacts</code> / <code>documentId</code> props — existing calls that pass both keep working. See <a href="#data-sources">Data sources</a>. <code>ValidationStation</code> also gained <code>persistent</code> plus fourteen state, command-result and panel callbacks; all are additive.</p>
 </details>
 
 
