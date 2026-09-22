@@ -387,6 +387,18 @@
   cursor: not-allowed;
 }
 
+/* ===== Document tab ===== */
+.doc-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.doc-panel[hidden] {
+  display: none;
+}
+
 /* ===== PDF viewer ===== */
 .pdf-shell {
   display: flex;

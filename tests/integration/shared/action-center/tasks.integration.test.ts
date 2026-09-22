@@ -406,16 +406,14 @@ describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (m
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const users = await tasks.getUsers(folderId!);
-        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
-        if (user) {
-          await tasks.assign({
-            taskId: createdTaskId,
-            userId: user.id,
-          });
-        } else {
-          throw new Error('No DirectoryUser available to assign task');
+        if (!config.tasksTestUserId) {
+          throw new Error('TASKS_TEST_USER_ID is required in the test config for single-user assignment');
         }
+
+        await tasks.assign({
+          taskId: createdTaskId,
+          userId: Number(config.tasksTestUserId),
+        });
 
         const result = await tasks.complete({
           taskId: createdTaskId,

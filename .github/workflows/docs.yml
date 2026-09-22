@@ -1,7 +1,19 @@
 name: Deploy Documentation
 on:
   workflow_call:
+    # Declared rather than inherited, so a caller hands over these two secrets
+    # and nothing else. Not required: without them the JS Functions fetch falls
+    # back to placeholder pages instead of failing the build.
+    secrets:
+      CODED_FUNCTIONS_DOCS_APP_ID:
+        required: false
+      CODED_FUNCTIONS_DOCS_PRIVATE_KEY:
+        required: false
   workflow_dispatch:
+  # Sent by UiPath/coded-functions-js when its docs/ changes on main, so the
+  # JS Functions section refreshes without waiting for the next SDK release.
+  repository_dispatch:
+    types: [js-functions-docs-updated]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -41,7 +53,25 @@ jobs:
           source docs-env/bin/activate
           pip install -r docs/requirements.txt
 
+      - name: Mint JS Functions Docs Token
+        # UiPath/coded-functions-js is an INTERNAL repo, so the default
+        # GITHUB_TOKEN cannot read it. Mint a short-lived installation token
+        # scoped to that one repo (Contents: read). The action revokes it when
+        # the job ends, so nothing long-lived is stored -- only the App id and
+        # private key live in secrets.
+        id: js_functions_docs_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+        with:
+          app-id: ${{ secrets.CODED_FUNCTIONS_DOCS_APP_ID }}
+          private-key: ${{ secrets.CODED_FUNCTIONS_DOCS_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: coded-functions-js
+
       - name: Generate API Documentation
+        # docs:api also fetches the JS Functions pages from
+        # UiPath/coded-functions-js using the token minted above.
+        env:
+          CODED_FUNCTIONS_DOCS_TOKEN: ${{ steps.js_functions_docs_token.outputs.token }}
         run: npm run docs:api
 
       - name: Build MkDocs Documentation

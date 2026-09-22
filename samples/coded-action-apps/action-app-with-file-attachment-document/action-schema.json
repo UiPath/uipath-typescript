@@ -29,6 +29,10 @@
             },
             "reviewerComments": {
                 "type": "string"
+            },
+            "supportingDocument": {
+                "type": "file",
+                "required": false
             }
         }
     },

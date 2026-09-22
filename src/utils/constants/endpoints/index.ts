@@ -17,6 +17,7 @@ export * from './data-fabric';
 
 // Identity endpoints
 export * from './identity';
+export * from './authorization';
 
 // Platform endpoints
 export * from './platform';
@@ -47,3 +48,6 @@ export * from './governance';
 
 // Notification endpoints
 export * from './notification';
+
+// Integration Service endpoints
+export * from './integration-service';
