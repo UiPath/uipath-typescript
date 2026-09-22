@@ -1024,7 +1024,7 @@ export interface EntityServiceModel {
    *   externalFields: [{
    *     externalConnectionDetail: {
    *       connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
-   *       elementInstanceId: <elementInstanceId>, folderKey: "<folderKey>",
+   *       elementInstanceId: 0, folderKey: "<folderKey>",
    *     },
    *     externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
    *     fields: [{
@@ -1117,7 +1117,7 @@ export interface EntityServiceModel {
    * // Federated: add a source joined to the existing graph
    * await entities.updateById(<id>, {
    *   addExternalSources: [{
-   *     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: <elementInstanceId>, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+   *     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
    *     externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
    *     fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
    *   }],
@@ -1436,7 +1436,7 @@ export interface EntityMethods {
   /**
    * Updates this entity — schema and/or metadata.
    *
-   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions}). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
