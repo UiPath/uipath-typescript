@@ -23,7 +23,7 @@ npm install @uipath/ui-widgets-conversational-agent-chat
 ### Peer dependencies
 
 ```bash
-npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.3.10
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.5.5
 ```
 
 ## Usage
@@ -46,7 +46,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -59,6 +61,9 @@ function App() {
   return <ConversationalAgentChat sdk={sdk} agentId={123} folderId={456} />;
 }
 ```
+
+!!! info "Scopes for streaming"
+    The `ConversationalAgents` scope is what makes the real-time WebSocket session work; without it the REST calls succeed but the socket connection fails. See [OAuth Scopes](../oauth-scopes.md#conversational-agent) for the authoritative list.
 
 ## Props
 
@@ -91,7 +96,9 @@ function App() {
         baseUrl: "https://cloud.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
-        secret: "your-secret",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);

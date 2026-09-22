@@ -12,10 +12,8 @@ npm install @uipath/ui-widgets-validation-station
 
 ### Peer dependencies
 
-```
-react >= 19.2.0
-react-dom >= 19.2.0
-@uipath/uipath-typescript >= 1.4.2
+```bash
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.2
 ```
 
 ## Quick start
@@ -40,7 +38,9 @@ const sdk = new UiPath({
   baseUrl: "https://cloud.uipath.com",
   orgName: "your-org",
   tenantName: "your-tenant",
-  secret: "your-secret",
+  clientId: "your-client-id",
+  redirectUri: "http://localhost:3000/callback",
+  scope: "OR.Buckets OR.Tasks",
 });
 
 await sdk.initialize();
@@ -566,4 +566,4 @@ Four things changed since `1.0.1`, ordered by how loudly they fail.
 
 ??? note "Nothing to do"
 
-    `sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` and the fourteen state, command-result and panel callbacks the compact subcomponents already had; all are additive.
+    `sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` plus fourteen state, command-result and panel callbacks; all are additive.

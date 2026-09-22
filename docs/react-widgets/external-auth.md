@@ -20,9 +20,20 @@ For OIDC providers (Google, UAE PASS, or any other) it ships a built-in default 
 
 ## Installation
 
+!!! warning "Beta — not yet published to npm"
+    `@uipath/ui-widgets-external-auth` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
+
 ```bash
 npm install @uipath/ui-widgets-external-auth
 ```
+
+### Peer dependencies
+
+```bash
+npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
+```
+
+The package declares the SDK as a peer dependency for consistency with the other widgets, even though this one makes no UiPath calls of its own.
 
 ## Usage
 
