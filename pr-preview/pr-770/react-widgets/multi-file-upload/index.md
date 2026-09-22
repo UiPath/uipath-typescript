@@ -25,6 +25,10 @@ npm install @uipath/ui-widgets-multi-file-upload
 npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 ```
 
+The published 1.0.0 pins an older SDK
+
+`@uipath/ui-widgets-multi-file-upload@1.0.0` — currently the only published version — declares an exact peer of `@uipath/uipath-typescript@1.1.1`, which the range above does not satisfy, so npm reports an unmet peer dependency. The `^1.4.1` above is what the widget is built against today and what the next release will carry.
+
 ## Usage
 
 Theming
@@ -38,7 +42,7 @@ import { UiPath } from "@uipath/uipath-typescript/core";
 
 function App() {
   const sdk = new UiPath({
-    // SDK configuration
+    // SDK configuration — uploading needs the full `OR.Buckets` scope
   });
 
   const handleUploadError = (error: Error) => {

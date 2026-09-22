@@ -31,7 +31,9 @@ import { UiPath } from "@uipath/uipath-typescript/core";
 
 function App() {
   const sdk = new UiPath({
-    // SDK configuration (or `new UiPath()` inside a coded app)
+    // SDK configuration (or `new UiPath()` inside a coded app).
+    // Bucket sources need `OR.Buckets`; entity sources need
+    // `DataFabric.Data.Read`. URL and byte sources need no scope.
   });
 
   return (
