@@ -1,9 +1,26 @@
 /**
+ * Role of a chat message.
+ */
+export enum AgentHubMessageRole {
+  System = 'system',
+  User = 'user',
+  Assistant = 'assistant',
+  Tool = 'tool',
+}
+
+/**
+ * Tool definition type forwarded to the model.
+ */
+export enum AgentHubToolType {
+  Function = 'function',
+}
+
+/**
  * A single chat message in an AgentHub chat completion request.
  */
 export interface AgentHubChatMessage {
   /** Message role. */
-  role: 'system' | 'user' | 'assistant' | 'tool';
+  role: AgentHubMessageRole;
   /** Message content. */
   content: string;
 }
@@ -13,7 +30,7 @@ export interface AgentHubChatMessage {
  */
 export interface AgentHubChatTool {
   /** Tool type. */
-  type: 'function';
+  type: AgentHubToolType;
   /** Function definition. */
   function: {
     /** Function name. */
@@ -48,7 +65,7 @@ export interface AgentHubChatCompletionChoice {
   /** Completed assistant message. */
   message: {
     /** Message role. */
-    role: string;
+    role: AgentHubMessageRole;
     /** Completed content. */
     content: string;
   };

@@ -26,12 +26,12 @@ import type {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { AgentHub } from '@uipath/uipath-typescript/agenthub';
+ * import { AgentHub, AgentHubMessageRole } from '@uipath/uipath-typescript/agenthub';
  *
  * const agentHub = new AgentHub(sdk);
  * const completion = await agentHub.createChatCompletion({
  *   model: '<modelName>',
- *   messages: [{ role: 'user', content: 'Summarize this invoice.' }],
+ *   messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
  * });
  * ```
  */
@@ -48,16 +48,29 @@ export interface AgentHubServiceModel {
    * @param request - Model, messages, and generation parameters.
    * @param options - Optional abort signal.
    * @returns Promise resolving to the {@link AgentHubChatCompletionResponse} completion.
-   * @example
+   *
+   * @example Minimal request
    * ```typescript
+   * import { AgentHubMessageRole } from '@uipath/uipath-typescript/agenthub';
+   *
    * const completion = await agentHub.createChatCompletion({
    *   model: '<modelName>',
-   *   messages: [{ role: 'user', content: 'Summarize this invoice.' }],
-   *   maxTokens: 2048,
-   *   temperature: 0.7,
+   *   messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
    * });
    *
    * console.log(completion.choices[0]?.message.content);
+   * ```
+   *
+   * @example With generation parameters
+   * ```typescript
+   * import { AgentHubMessageRole } from '@uipath/uipath-typescript/agenthub';
+   *
+   * const completion = await agentHub.createChatCompletion({
+   *   model: '<modelName>',
+   *   messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
+   *   maxTokens: 2048,
+   *   temperature: 0.7,
+   * });
    * ```
    */
   createChatCompletion(

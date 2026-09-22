@@ -13,7 +13,7 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { AgentHub } from '@uipath/uipath-typescript/agenthub';
+ * import { AgentHub, AgentHubMessageRole } from '@uipath/uipath-typescript/agenthub';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -21,7 +21,7 @@
  * const agentHub = new AgentHub(sdk);
  * const completion = await agentHub.createChatCompletion({
  *   model: '<modelName>',
- *   messages: [{ role: 'user', content: 'Summarize this invoice.' }],
+ *   messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
  * });
  * ```
  *

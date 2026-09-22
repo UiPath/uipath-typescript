@@ -5,6 +5,7 @@ import type {
   AgentHubChatCompletionRequest,
   AgentHubChatCompletionResponse,
 } from '../../models/agenthub/agenthub.types';
+import type { RawAgentHubChatCompletionResponse } from '../../models/agenthub/agenthub.internal-types';
 import type { AgentHubServiceModel } from '../../models/agenthub/agenthub.models';
 import { AGENTHUB_ENDPOINTS } from '../../utils/constants/endpoints';
 import { LLM_GATEWAY_MODEL_NAME } from '../../utils/constants/headers';
@@ -41,7 +42,7 @@ export class AgentHubService extends BaseService implements AgentHubServiceModel
       body.tools = tools;
     }
 
-    const response = await this.post<AgentHubChatCompletionResponse>(
+    const response = await this.post<RawAgentHubChatCompletionResponse>(
       AGENTHUB_ENDPOINTS.CREATE_CHAT_COMPLETION,
       body,
       {

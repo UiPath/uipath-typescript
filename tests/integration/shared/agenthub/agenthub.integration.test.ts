@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { AgentHub } from '../../../../src/services/agenthub';
-import type { AgentHubChatCompletionRequest } from '../../../../src/models/agenthub/agenthub.types';
+import {
+  AgentHubMessageRole,
+  type AgentHubChatCompletionRequest,
+} from '../../../../src/models/agenthub/agenthub.types';
 
 /**
  * Integration tests for AgentHub chat completions (`/agenthub_/llm/api/*`).
@@ -14,7 +17,7 @@ const modes: InitMode[] = ['v1'];
 
 const REQUEST: AgentHubChatCompletionRequest = {
   model: 'gpt-4.1-2025-04-14',
-  messages: [{ role: 'user', content: 'Reply with the word ok.' }],
+  messages: [{ role: AgentHubMessageRole.User, content: 'Reply with the word ok.' }],
   maxTokens: 16,
   temperature: 0,
 };

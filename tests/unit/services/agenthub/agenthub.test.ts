@@ -5,9 +5,11 @@ import { ValidationError } from '@/core/errors';
 import { ApiClient } from '@/core/http/api-client';
 import { AGENTHUB_ENDPOINTS } from '@/utils/constants/endpoints';
 import { LLM_GATEWAY_MODEL_NAME } from '@/utils/constants/headers';
-import type {
-  AgentHubChatCompletionRequest,
-  AgentHubChatCompletionResponse,
+import {
+  AgentHubMessageRole,
+  AgentHubToolType,
+  type AgentHubChatCompletionRequest,
+  type AgentHubChatCompletionResponse,
 } from '@/models/agenthub/agenthub.types';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
@@ -20,7 +22,7 @@ const MODEL = 'gpt-4.1-2025-04-14';
 
 const REQUEST: AgentHubChatCompletionRequest = {
   model: MODEL,
-  messages: [{ role: 'user', content: 'Summarize this invoice.' }],
+  messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
   maxTokens: 2048,
   temperature: 0.7,
 };
@@ -48,7 +50,7 @@ const RESPONSE: AgentHubChatCompletionResponse = {
   choices: [
     {
       index: 0,
-      message: { role: 'assistant', content: 'Invoice total: $100.' },
+      message: { role: AgentHubMessageRole.Assistant, content: 'Invoice total: $100.' },
       finishReason: 'stop',
     },
   ],
@@ -104,7 +106,7 @@ describe('AgentHubService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
       const tools = [
         {
-          type: 'function' as const,
+          type: AgentHubToolType.Function,
           function: {
             name: 'lookupInvoice',
             parameters: { invoiceId: { type: 'string' } },
