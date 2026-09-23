@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
 import { Groups } from '../../../../src/services/platform';
 import { Users } from '../../../../src/services/platform/users';
 import { PlatformGroupType, PlatformUserType } from '../../../../src/models/platform';
@@ -7,9 +7,7 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Platform Groups - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => {
   let groups!: Groups;
   let users!: Users;
   /** Account the suite may add to / remove from throwaway groups. */
