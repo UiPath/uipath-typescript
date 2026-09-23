@@ -285,6 +285,16 @@
                 "types": "./dist/roles/index.d.ts",
                 "default": "./dist/roles/index.cjs"
             }
+        },
+        "./groups": {
+            "import": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.mjs"
+            },
+            "require": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.cjs"
+            }
         }
     },
     "files": [

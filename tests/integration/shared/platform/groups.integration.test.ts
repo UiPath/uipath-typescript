@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
-import { Groups } from '../../../../src/services/platform';
+import { Groups } from '../../../../src/services/platform/groups';
 import { Users } from '../../../../src/services/platform/users';
 import { PlatformGroupType, PlatformUserType } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';
@@ -90,7 +90,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
       expect(fetched.name).toBe(name);
 
       // Rename
-      const renamed = await groups.updateById(created.id, `${name}-renamed`);
+      const renamed = await groups.updateById(created.id, { name: `${name}-renamed` });
       expect(renamed.name).toBe(`${name}-renamed`);
 
       // Delete
@@ -119,8 +119,8 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
       const created = await groups.create(`sdk-it-${generateRandomString(8)}`);
       createdGroupIds.push(created.id);
 
-      // Add from the group side — the current name must travel with membership edits
-      await groups.updateById(created.id, created.name, {
+      // Add from the group side — the SDK carries the current name the API requires
+      await groups.updateById(created.id, {
         memberUserIdsToAdd: [mutableUserId],
       });
       let members = await created.getMembers();

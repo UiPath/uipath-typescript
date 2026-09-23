@@ -47,29 +47,13 @@ describe('Platform Group Model Tests', () => {
   });
 
   describe('update', () => {
-    it('should delegate to service.updateById with the captured group ID and new name', async () => {
+    it('should delegate to service.updateById with the captured group ID', async () => {
       const group = createPlatformGroupWithMethods(createTransformedGroup(), mockService);
+      const update = { name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT, memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID] };
 
-      await group.update({ name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT });
+      await group.update(update);
 
-      expect(mockService.updateById).toHaveBeenCalledWith(
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT,
-        {}
-      );
-    });
-
-    it('should fill in the current name when only membership changes are given', async () => {
-      const group = createPlatformGroupWithMethods(createTransformedGroup(), mockService);
-      const membership = { memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID] };
-
-      await group.update(membership);
-
-      expect(mockService.updateById).toHaveBeenCalledWith(
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
-        membership
-      );
+      expect(mockService.updateById).toHaveBeenCalledWith(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID, update);
     });
 
     it('should throw when the group ID is missing', async () => {
@@ -78,7 +62,6 @@ describe('Platform Group Model Tests', () => {
       await expect(group.update({ name: 'x' })).rejects.toThrow('Group ID is undefined');
       expect(mockService.updateById).not.toHaveBeenCalled();
     });
-
   });
 
   describe('delete', () => {

@@ -2,45 +2,45 @@
  * PlatformGroupService — manages an organization's local and built-in groups.
  */
 
-import { track } from '../../core/telemetry';
-import { ValidationError } from '../../core/errors';
-import type { IUiPath } from '../../core/types';
-import { SDKInternalsRegistry } from '../../core/internals';
-import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
-import { BaseService } from '../base';
+import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { OrganizationIdResolver } from '../../../core/organization/organization-id-resolver';
+import { BaseService } from '../../base';
 
 import type {
   RawPlatformGroupGetResponse,
   PlatformGroupCreateOptions,
-  PlatformGroupMembershipOptions,
+  PlatformGroupUpdateOptions,
   PlatformGroupMember,
-} from '../../models/platform/groups.types';
+} from '../../../models/platform/groups.types';
 import type {
   RawPlatformGroup,
   RawPlatformGroupMember,
   RawPlatformGroupMembersResponse,
-} from '../../models/platform/groups.internal-types';
-import type { PlatformGroupServiceModel } from '../../models/platform/groups.models';
-import { PlatformGroupGetResponse, createPlatformGroupWithMethods } from '../../models/platform/groups.models';
+} from '../../../models/platform/groups.internal-types';
+import type { PlatformGroupServiceModel } from '../../../models/platform/groups.models';
+import { PlatformGroupGetResponse, createPlatformGroupWithMethods } from '../../../models/platform/groups.models';
 import {
   PlatformGroupMap,
   PlatformGroupCreateMap,
   PlatformGroupUpdateMap,
   PlatformGroupTypeMap,
-} from '../../models/platform/groups.constants';
-import { PlatformUserTypeMap } from '../../models/platform/users.constants';
+} from '../../../models/platform/groups.constants';
+import { PlatformUserTypeMap } from '../../../models/platform/users.constants';
 
-import { IDENTITY_GROUP_ENDPOINTS } from '../../utils/constants/endpoints';
-import { IDENTITY_PAGINATION, IDENTITY_OFFSET_PARAMS, IDENTITY_MAX_PAGE_SIZE } from '../../utils/constants/common';
-import { transformData, transformRequest, applyDataTransforms } from '../../utils/transform';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
+import { IDENTITY_GROUP_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { IDENTITY_PAGINATION, IDENTITY_OFFSET_PARAMS, IDENTITY_MAX_PAGE_SIZE } from '../../../utils/constants/common';
+import { transformData, transformRequest, applyDataTransforms } from '../../../utils/transform';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
 import {
   PaginatedResponse,
   NonPaginatedResponse,
   HasPaginationOptions,
   PaginationOptions,
-} from '../../utils/pagination';
+} from '../../../utils/pagination';
 
 /**
  * Service for managing an organization's groups.
@@ -77,10 +77,7 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
     }
     const organizationId = await this.#organizationIdResolver.resolve();
 
-    const response = await this.get<RawPlatformGroup>(
-      IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId)
-    );
-    return this.toGroup(response.data);
+    return this.fetchGroup(organizationId, groupId);
   }
 
   @track('PlatformGroups.Create')
@@ -102,24 +99,23 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
   }
 
   @track('PlatformGroups.UpdateById')
-  async updateById(
-    groupId: string,
-    name: string,
-    options?: PlatformGroupMembershipOptions
-  ): Promise<PlatformGroupGetResponse> {
+  async updateById(groupId: string, update: PlatformGroupUpdateOptions): Promise<PlatformGroupGetResponse> {
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for updateById' });
     }
-    // The API rejects updates without a name — it is required even for pure membership edits
-    if (!name) {
-      throw new ValidationError({ message: 'name is required for updateById' });
+    if (!update || Object.keys(update).length === 0) {
+      throw new ValidationError({ message: 'update must contain at least one field to change' });
     }
     const organizationId = await this.#organizationIdResolver.resolve();
 
+    // The API requires the name on every update, even for pure membership edits —
+    // read the current group so callers can omit it
+    const { name, ...membership } = update;
+    const current = name === undefined ? await this.fetchGroup(organizationId, groupId) : undefined;
     const body = {
       partitionGlobalId: organizationId,
-      name,
-      ...transformRequest(options ?? {}, PlatformGroupUpdateMap),
+      name: name ?? current?.name,
+      ...transformRequest(membership, PlatformGroupUpdateMap),
     };
     const response = await this.put<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.UPDATE(groupId), body);
     return this.toGroup(response.data);
@@ -185,13 +181,21 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
   }
 
   /**
+   * Fetches one group and transforms it — shared by `getById` and `updateById`.
+   */
+  private async fetchGroup(organizationId: string, groupId: string): Promise<PlatformGroupGetResponse> {
+    const response = await this.get<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId));
+    return this.toGroup(response.data);
+  }
+
+  /**
    * Fetches every page of the group members listing and returns the combined result.
    */
   private async getAllMemberPages(
     groupId: string,
     organizationId: string
   ): Promise<NonPaginatedResponse<PlatformGroupMember>> {
-    const items: PlatformGroupMember[] = [];
+    const membersById = new Map<string, PlatformGroupMember>();
     let totalCount = 0;
     let skip = 0;
 
@@ -202,16 +206,20 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
       );
       const { results, totalCount: reportedTotal } = response.data;
       totalCount = reportedTotal;
-      items.push(...results.map(member => this.toMember(member)));
+      for (const raw of results) {
+        const member = this.toMember(raw);
+        // Dedupe by id — a record straddling a page boundary must not count twice or hide a real member.
+        membersById.set(member.id, member);
+      }
 
-      if (results.length === 0 || items.length >= totalCount) {
+      // A short page is terminal for a record offset; the count check stops a full final page early.
+      if (results.length < IDENTITY_MAX_PAGE_SIZE || membersById.size >= totalCount) {
         break;
       }
-      // Advance by what was actually returned — a short non-final page must not skip records
-      skip += results.length;
+      skip += IDENTITY_MAX_PAGE_SIZE;
     }
 
-    return { items, totalCount };
+    return { items: [...membersById.values()], totalCount };
   }
 
   /**

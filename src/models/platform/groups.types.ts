@@ -41,23 +41,16 @@ export interface PlatformGroupCreateOptions {
 }
 
 /**
- * Membership changes for a group update.
+ * Fields to change on a group via `groups.updateById()`. Only the fields present
+ * are sent — omitted fields are left untouched.
  */
-export interface PlatformGroupMembershipOptions {
+export interface PlatformGroupUpdateOptions {
+  /** New group name. */
+  name?: string;
   /** GUIDs of users to add as members. */
   memberUserIdsToAdd?: string[];
   /** GUIDs of users to remove from the group. */
   memberUserIdsToRemove?: string[];
-}
-
-/**
- * Fields to change on a bound `group.update()` call. The group's current name
- * is filled in automatically when `name` is omitted — the API requires a name
- * on every update.
- */
-export interface PlatformGroupUpdateOptions extends PlatformGroupMembershipOptions {
-  /** New group name. Defaults to the group's current name. */
-  name?: string;
 }
 
 /**

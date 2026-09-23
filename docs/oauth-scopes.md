@@ -281,7 +281,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getEffectiveAccess()` | None — caller's platform roles govern access |
 | `getActions()` | None — caller's platform roles govern access |
 
-## Platform Groups
+## Groups
 
 | Method | OAuth Scope |
 |--------|-------------|
