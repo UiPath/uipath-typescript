@@ -13,10 +13,37 @@ import type {
   DuValidationStartResponse,
 } from '../../models/document-understanding/validation.types';
 import { DU_VALIDATION_ENDPOINTS } from '../../utils/constants/endpoints';
-import { camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { camelToPascalCase, pascalToCamelCase, transformData } from '../../utils/transform';
 import { BaseService } from '../base';
 
 const DEFAULT_API_VERSION = '1.1';
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Converts one object's own keys. Nested values, including framework payloads, are copied as-is. */
+function shallowConvertKeys(
+  data: object,
+  convertKey: (key: string) => string,
+): Record<string, unknown> {
+  const converted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    converted[convertKey(key)] = value;
+  }
+  return converted;
+}
+
+function shallowCamelCaseEnvelope(data: object): Record<string, unknown> {
+  const envelope = shallowConvertKeys(data, pascalToCamelCase);
+  if (isPlainObject(envelope.error)) {
+    envelope.error = shallowConvertKeys(envelope.error, pascalToCamelCase);
+  }
+  if (isPlainObject(envelope.result)) {
+    envelope.result = shallowConvertKeys(envelope.result, pascalToCamelCase);
+  }
+  return envelope;
+}
 
 /**
  * Service for the Document Understanding validation-station flow.
@@ -48,10 +75,10 @@ export class DuValidationService
 
     const response = await this.post<StartValidationTaskResponse>(
       DU_VALIDATION_ENDPOINTS.START(projectId, tag, documentTypeId),
-      camelToPascalCaseKeys(request),
+      shallowConvertKeys(request, camelToPascalCase),
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
-    return pascalToCamelCaseKeys(response.data) as DuValidationStartResponse;
+    return shallowConvertKeys(response.data, pascalToCamelCase) as DuValidationStartResponse;
   }
 
   @track('DuValidation.GetExtractionValidationResult')
@@ -79,9 +106,6 @@ export class DuValidationService
       DU_VALIDATION_ENDPOINTS.GET_RESULT(projectId, tag, documentTypeId, operationId),
       { params: { 'api-version': options.apiVersion ?? DEFAULT_API_VERSION } },
     );
-    return transformData(
-      pascalToCamelCaseKeys(response.data),
-      DuValidationMap,
-    ) as DuValidationGetResponse;
+    return transformData(shallowCamelCaseEnvelope(response.data), DuValidationMap) as DuValidationGetResponse;
   }
 }

@@ -5,6 +5,7 @@ import { ApiClient } from '@/core/http/api-client';
 import { DU_VALIDATION_ENDPOINTS } from '@/utils/constants/endpoints';
 import type { DuValidationStartRequest } from '@/models/document-understanding/validation.types';
 import { ActionStatus } from '@/models/document-understanding/framework/validation.types';
+import { ErrorSeverity } from '@/models/document-understanding/framework/helpers.types';
 import { JobStatus } from '@/models/document-understanding/framework/model.types';
 import { ValidationError } from '@/core/errors';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
@@ -24,13 +25,19 @@ const RESULT_URL = `result/${OPERATION_ID}`;
 const START_REQUEST: DuValidationStartRequest = {
   documentId: DOCUMENT_ID,
   actionTitle: 'Review invoice',
-  extractionResult: { DocumentId: DOCUMENT_ID },
+  extractionResult: {
+    DocumentId: DOCUMENT_ID,
+    ResultsDocument: { DocumentTypeId: 'invoice' },
+  },
 };
 
 const START_WIRE_BODY = {
   DocumentId: DOCUMENT_ID,
   ActionTitle: 'Review invoice',
-  ExtractionResult: { DocumentId: DOCUMENT_ID },
+  ExtractionResult: {
+    DocumentId: DOCUMENT_ID,
+    ResultsDocument: { DocumentTypeId: 'invoice' },
+  },
 };
 
 const START_API_RESPONSE = {
@@ -50,14 +57,42 @@ const RESULT_API_RESPONSE = {
   Status: JobStatus.Succeeded,
   CreatedAt: CREATED_TIME,
   LastUpdatedAt: LAST_MODIFIED_TIME,
-  Result: { ActionStatus: ActionStatus.Pending },
+  Error: {
+    Message: 'validation failed',
+    Severity: ErrorSeverity.Error,
+    Code: 'E1',
+    Parameters: ['total'],
+  },
+  Result: {
+    ActionStatus: ActionStatus.Pending,
+    ActionData: { Title: 'Review invoice', TaskUrl: 'https://example.test/task' },
+    ValidatedExtractionResults: {
+      DocumentId: DOCUMENT_ID,
+      ResultsDocument: { DocumentTypeId: 'invoice' },
+    },
+    DataProjection: [{ FieldGroupName: 'header', FieldValues: [{ Name: 'Total' }] }],
+  },
 };
 
 const RESULT_SDK_RESPONSE = {
   status: JobStatus.Succeeded,
   createdTime: CREATED_TIME,
   lastModifiedTime: LAST_MODIFIED_TIME,
-  result: { actionStatus: ActionStatus.Pending },
+  error: {
+    message: 'validation failed',
+    severity: ErrorSeverity.Error,
+    code: 'E1',
+    parameters: ['total'],
+  },
+  result: {
+    actionStatus: ActionStatus.Pending,
+    actionData: { Title: 'Review invoice', TaskUrl: 'https://example.test/task' },
+    validatedExtractionResults: {
+      DocumentId: DOCUMENT_ID,
+      ResultsDocument: { DocumentTypeId: 'invoice' },
+    },
+    dataProjection: [{ FieldGroupName: 'header', FieldValues: [{ Name: 'Total' }] }],
+  },
 };
 
 // ===== TEST SUITE =====
@@ -144,6 +179,17 @@ describe('DuValidationService Unit Tests', () => {
       expect(result.createdTime).toBe(CREATED_TIME);
       expect(result.lastModifiedTime).toBe(LAST_MODIFIED_TIME);
       expect(result.result?.actionStatus).toBe(ActionStatus.Pending);
+      expect(result.result?.validatedExtractionResults?.DocumentId).toBe(DOCUMENT_ID);
+      expect(result.result?.validatedExtractionResults?.ResultsDocument?.DocumentTypeId).toBe('invoice');
+      expect(result.result?.actionData?.Title).toBe('Review invoice');
+      expect(result.result?.dataProjection?.[0]?.FieldGroupName).toBe('header');
+      expect(result.result?.dataProjection?.[0]?.FieldValues?.[0]?.Name).toBe('Total');
+      expect(result.error?.message).toBe('validation failed');
+      expect(result.result?.validatedExtractionResults).not.toHaveProperty('documentId');
+      expect(result.result?.actionData).not.toHaveProperty('title');
+      expect(result.result?.dataProjection?.[0]).not.toHaveProperty('fieldGroupName');
+      expect(result.result).not.toHaveProperty('ActionStatus');
+      expect(result.error).not.toHaveProperty('Message');
       expect((result as Record<string, unknown>).Status).toBeUndefined();
       expect((result as Record<string, unknown>).createdAt).toBeUndefined();
       expect((result as Record<string, unknown>).lastUpdatedAt).toBeUndefined();

@@ -56,6 +56,12 @@ export interface DuValidationErrorResponse {
   parameters?: string[] | null;
 }
 
+/**
+ * Validated extraction on a succeeded operation.
+ *
+ * Envelope fields are SDK camelCase. `actionData`, `validatedExtractionResults`,
+ * and `dataProjection` keep the generated framework shapes.
+ */
 export interface DuValidationResult {
   actionStatus?: ActionStatus;
   actionData?: DocumentExtractionActionDataModel;
