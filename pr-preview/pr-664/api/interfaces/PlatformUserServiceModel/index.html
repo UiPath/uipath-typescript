@@ -4003,7 +4003,7 @@ membership check against a known group needs no extra call.</p>
 current values. Group membership is edited incrementally through
 <code>groupIdsToAdd</code> / <code>groupIdsToRemove</code>, which makes this the call for granting or
 revoking a user's access ("add user to the Administrators group").</p>
-<p>First, get group IDs with <code>groups.getAll()</code> (from <code>@uipath/uipath-typescript/platform</code>).</p>
+<p>First, get group IDs with <code>groups.getAll()</code> (from <code>@uipath/uipath-typescript/groups</code>).</p>
 <p>Resolves once the change is applied. Input Identity rejects (for example an email
 that is already taken) surfaces as a <code>ValidationError</code> carrying the reason.</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
