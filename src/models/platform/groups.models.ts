@@ -6,7 +6,6 @@
 import type {
   RawPlatformGroupGetResponse,
   PlatformGroupCreateOptions,
-  PlatformGroupMembershipOptions,
   PlatformGroupUpdateOptions,
   PlatformGroupMember,
 } from './groups.types';
@@ -30,7 +29,7 @@ export type PlatformGroupGetResponse = RawPlatformGroupGetResponse & PlatformGro
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Groups } from '@uipath/uipath-typescript/platform';
+ * import { Groups } from '@uipath/uipath-typescript/groups';
  *
  * const groups = new Groups(sdk);
  * const allGroups = await groups.getAll();
@@ -48,7 +47,7 @@ export interface PlatformGroupServiceModel {
    * @example
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Groups } from '@uipath/uipath-typescript/platform';
+   * import { Groups } from '@uipath/uipath-typescript/groups';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
@@ -103,35 +102,28 @@ export interface PlatformGroupServiceModel {
   /**
    * Updates a local group.
    *
-   * The group's name must be sent on every update — pass the current name when
-   * only editing membership (the bound `group.update()` fills it in automatically).
-   * Membership is edited incrementally through `memberUserIdsToAdd` /
+   * Only the fields present in `update` are changed — omitted fields keep their
+   * current values. Membership is edited incrementally through `memberUserIdsToAdd` /
    * `memberUserIdsToRemove`. Built-in groups cannot be updated.
    *
    * @param groupId - GUID of the group to update
-   * @param name - The group's name (new name to rename, or current name to keep it)
-   * @param options - Membership changes
+   * @param update - The fields to change
    * @returns The group as stored after the update, as a {@link PlatformGroupGetResponse}
    *
    * @example Rename a group
    * ```typescript
-   * const updated = await groups.updateById('<groupId>', 'Ticket Managers');
+   * const updated = await groups.updateById('<groupId>', { name: 'Ticket Managers' });
    * ```
    *
-   * @example Edit membership (keeping the current name)
+   * @example Edit membership
    * ```typescript
-   * const group = await groups.getById('<groupId>');
-   * await groups.updateById(group.id, group.name, {
+   * await groups.updateById('<groupId>', {
    *   memberUserIdsToAdd: ['<userId>'],
    *   memberUserIdsToRemove: ['<otherUserId>'],
    * });
    * ```
    */
-  updateById(
-    groupId: string,
-    name: string,
-    options?: PlatformGroupMembershipOptions
-  ): Promise<PlatformGroupGetResponse>;
+  updateById(groupId: string, update: PlatformGroupUpdateOptions): Promise<PlatformGroupGetResponse>;
 
   /**
    * Deletes a local group. Built-in groups cannot be deleted.
@@ -185,8 +177,7 @@ export interface PlatformGroupServiceModel {
  */
 export interface PlatformGroupMethods {
   /**
-   * Updates this group. The current name is filled in automatically when
-   * `update.name` is omitted (the API requires a name on every update).
+   * Updates this group. Only the fields present in `update` are changed.
    *
    * @param update - The fields to change
    * @returns Promise resolving to the group as stored after the update
@@ -230,8 +221,7 @@ function createPlatformGroupMethods(
     async update(update: PlatformGroupUpdateOptions): Promise<PlatformGroupGetResponse> {
       if (!groupData.id) throw new Error('Group ID is undefined');
 
-      const { name, ...membership } = update;
-      return service.updateById(groupData.id, name ?? groupData.name, membership);
+      return service.updateById(groupData.id, update);
     },
 
     async delete(): Promise<void> {

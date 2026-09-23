@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // Imported through the subpath barrel, the way consumers reach it — this also catches a
 // barrel that stops re-exporting the class or the enums as runtime values.
-import { Groups, PlatformGroupType } from '../../../../src/services/platform';
+import { Groups, PlatformGroupType } from '../../../../src/services/platform/groups';
 import { PlatformUserType } from '../../../../src/services/platform/users';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
@@ -17,6 +17,7 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { IDENTITY_GROUP_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { IDENTITY_MAX_PAGE_SIZE } from '../../../../src/utils/constants/common';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -198,18 +199,17 @@ describe('Platform Groups Service Unit Tests', () => {
   });
 
   describe('updateById', () => {
-    it('should PUT the name and member changes under wire names with the resolved organization in the body', async () => {
+    it('should PUT the new name and member changes under wire names with the resolved organization in the body', async () => {
       mockApiClient.put.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
 
-      const group = await groupsService.updateById(
-        groupId,
-        PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT,
-        {
-          memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID],
-          memberUserIdsToRemove: [PLATFORM_USER_TEST_CONSTANTS.USER_ID_ALT],
-        }
-      );
+      const group = await groupsService.updateById(groupId, {
+        name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME_ALT,
+        memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID],
+        memberUserIdsToRemove: [PLATFORM_USER_TEST_CONSTANTS.USER_ID_ALT],
+      });
 
+      // The name was supplied, so no read is needed before the write
+      expect(mockApiClient.get).not.toHaveBeenCalled();
       const [endpoint, body] = mockApiClient.put.mock.calls[0];
       expect(endpoint).toBe(IDENTITY_GROUP_ENDPOINTS.UPDATE(groupId));
       expect(body.partitionGlobalId).toBe(organizationId);
@@ -221,21 +221,34 @@ describe('Platform Groups Service Unit Tests', () => {
       expect(typeof group.update).toBe('function');
     });
 
-    it('should throw ValidationError when name is empty — the API requires it on every update', async () => {
-      await expect(groupsService.updateById(groupId, '')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.put).not.toHaveBeenCalled();
+    it('should read the current name when only membership changes are given — the API requires it on every update', async () => {
+      mockApiClient.get.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
+      mockApiClient.put.mockResolvedValue(createBasicRawPlatformGroup({ type: 1 }));
+
+      await groupsService.updateById(groupId, { memberUserIdsToAdd: [PLATFORM_USER_TEST_CONSTANTS.USER_ID] });
+
+      expect(mockApiClient.get.mock.calls[0][0]).toBe(IDENTITY_GROUP_ENDPOINTS.GET_BY_ID(organizationId, groupId));
+      const [, body] = mockApiClient.put.mock.calls[0];
+      // Merge preservation: the stored name travels with the membership edit
+      expect(body.name).toBe(PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME);
+      expect(body.directoryUserIDsToAdd).toEqual([PLATFORM_USER_TEST_CONSTANTS.USER_ID]);
     });
 
     it('should throw ValidationError when groupId is empty', async () => {
-      await expect(groupsService.updateById('', 'x')).rejects.toBeInstanceOf(ValidationError);
+      await expect(groupsService.updateById('', { name: 'x' })).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
+    it('should throw ValidationError when the update has no fields', async () => {
+      await expect(groupsService.updateById(groupId, {})).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
 
     it('should propagate API errors', async () => {
       mockApiClient.put.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 
-      await expect(groupsService.updateById(groupId, 'x')).rejects.toThrow(
+      await expect(groupsService.updateById(groupId, { name: 'x' })).rejects.toThrow(
         PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND
       );
     });
@@ -270,21 +283,50 @@ describe('Platform Groups Service Unit Tests', () => {
 
   describe('getMembers', () => {
     it('should fetch every page when no pagination options are given', async () => {
-      const firstPage = Array.from({ length: 2 }, (_, i) =>
+      const fullPage = Array.from({ length: IDENTITY_MAX_PAGE_SIZE }, (_, i) =>
         createBasicRawPlatformGroupMember({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
       );
       mockApiClient.get
-        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse(firstPage, 3))
-        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse([createBasicRawPlatformGroupMember()], 3));
+        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse(fullPage, IDENTITY_MAX_PAGE_SIZE + 1))
+        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse([createBasicRawPlatformGroupMember()], IDENTITY_MAX_PAGE_SIZE + 1));
+
+      const result = await groupsService.getMembers(groupId);
+
+      expect(result.items).toHaveLength(IDENTITY_MAX_PAGE_SIZE + 1);
+      expect(result.totalCount).toBe(IDENTITY_MAX_PAGE_SIZE + 1);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
+      expect(secondCall.params.skip).toBe(IDENTITY_MAX_PAGE_SIZE);
+    });
+
+    it('should stop after a short page and not refetch', async () => {
+      const shortPage = Array.from({ length: 3 }, (_, i) => createBasicRawPlatformGroupMember({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` }));
+      // totalCount overcounts (e.g. stale index) — a short page must still be terminal
+      mockApiClient.get.mockResolvedValueOnce(createRawPlatformGroupMembersResponse(shortPage, 5));
 
       const result = await groupsService.getMembers(groupId);
 
       expect(result.items).toHaveLength(3);
-      expect(result.totalCount).toBe(3);
-      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      const secondCall = mockApiClient.get.mock.calls[1][1] as { params: Record<string, unknown> };
-      // Advances by returned count, not requested page size — short pages must not skip records
-      expect(secondCall.params.skip).toBe(2);
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+    });
+
+    it('should dedupe members that appear on two pages', async () => {
+      const straddler = `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${IDENTITY_MAX_PAGE_SIZE - 1}`;
+      const fullPage = Array.from({ length: IDENTITY_MAX_PAGE_SIZE }, (_, i) =>
+        createBasicRawPlatformGroupMember({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-${i}` })
+      );
+      // The last record of page one is served again at the top of page two
+      mockApiClient.get
+        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse(fullPage, IDENTITY_MAX_PAGE_SIZE + 1))
+        .mockResolvedValueOnce(createRawPlatformGroupMembersResponse(
+          [createBasicRawPlatformGroupMember({ id: straddler }), createBasicRawPlatformGroupMember({ id: `${PLATFORM_USER_TEST_CONSTANTS.USER_ID}-new` })],
+          IDENTITY_MAX_PAGE_SIZE + 1
+        ));
+
+      const result = await groupsService.getMembers(groupId);
+
+      expect(result.items).toHaveLength(IDENTITY_MAX_PAGE_SIZE + 1);
+      expect(result.items.filter((m) => m.id === straddler)).toHaveLength(1);
     });
 
     it('should map the numeric member account type to the PlatformUserType enum', async () => {
