@@ -4036,6 +4036,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#upsert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        upsert()
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5804,6 +5815,70 @@ Identified by ref (<code>{ id }</code> or <code>{ name }</code>).</p>
 <a id="__codelineno-29-25" name="__codelineno-29-25" href="#__codelineno-29-25"></a><span class="kd">const</span><span class="w"> </span><span class="nx">blob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Blob</span><span class="p">([</span><span class="nx">fileBuffer</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;application/pdf&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-29-26" name="__codelineno-29-26" href="#__codelineno-29-26"></a><span class="kd">const</span><span class="w"> </span><span class="nx">uploaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">uploadAttachment</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">entityId</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nx">recordId</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Documents&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">blob</span><span class="p">);</span>
 </code></pre></div>
+<hr />
+<h3 id="upsert">upsert()<a class="headerlink" href="#upsert" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>upsert</strong>(<code>entityRef</code>: <a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a>, <code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Upserts a record into an entity, and to its related child records. Two payload types:</p>
+<ul>
+<li>One record: Only case and templated entities have one; a native entity rejects this type.</li>
+<li>A tree of records: child records nested under a root entity, written as one transaction. 
+  A nested record with an <code>Id</code> field updates that row, one without it creates a row.</li>
+</ul>
+<h4 id="parameters_29">Parameters<a class="headerlink" href="#parameters_29" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entityRef</code></td>
+<td><a href="../../type-aliases/EntityRef/"><code>EntityRef</code></a></td>
+<td>Entity ref (<code>{ id }</code> (GUID) or <code>{ name }</code>)</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</td>
+<td>Record fields, with child records nested under their entity name</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a></td>
+<td>Upsert options. The <code>folderKey</code> property is <strong>experimental</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_29">Returns<a class="headerlink" href="#returns_29" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
+<p>Promise resolving to the written root record's <code>Id</code>, plus the per-record results of a tree write (<a href="../EntityUpsertResponse/">EntityUpsertResponse</a>)</p>
+<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1">// Single record, matched on the entity&#39;s business key</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">upsert</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Case&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="nx">caseId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;CASE-001&quot;</span><span class="p">,</span>
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="nx">caseStatus</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Open&quot;</span>
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="p">});</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1">// A report with two expenses, one of which has a line item — applied as one transaction</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">upsert</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Report&quot;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="nx">assignee</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;assignee1&quot;</span><span class="p">,</span>
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="nx">totalReportAmount</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span><span class="p">,</span>
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">  </span><span class="nx">Expense</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">vendor</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Vendor 1&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">totalExpense</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span><span class="w"> </span><span class="nx">ExpenseLineItem</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">expenseAmount</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">vendor</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Vendor 2&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">totalExpense</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;folderKey&gt;&quot;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a>
+<a id="__codelineno-31-11" name="__codelineno-31-11" href="#__codelineno-31-11"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">transaction</span><span class="o">!</span><span class="p">.</span><span class="nx">totalRecordsAffected</span><span class="p">);</span><span class="w"> </span><span class="c1">// 4</span>
+<a id="__codelineno-31-12" name="__codelineno-31-12" href="#__codelineno-31-12"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">transaction</span><span class="o">!</span><span class="p">.</span><span class="nx">members</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">id</span><span class="p">);</span><span class="w">        </span><span class="c1">// generated expense record ID</span>
+</code></pre></div>
+<p>Writing across related entities requires the multi-entity write feature to be
+enabled for your tenant.</p>
 
 
 

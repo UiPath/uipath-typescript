@@ -4333,6 +4333,56 @@ const blob = new Blob([fileBuffer], { type: 'application/pdf' });
 const uploaded = await entities.uploadAttachment({ id: entityId }, recordId, 'Documents', blob);
 ```
 
+### upsert()
+
+> **upsert**(`entityRef`: `EntityRef`, `data`: `Record`\<`string`, `any`>, `options?`: `EntityUpsertOptions`): `Promise`\<`EntityUpsertResponse`>
+
+**`Experimental`**
+
+Upserts a record into an entity, and to its related child records. Two payload types:
+
+- One record: Only case and templated entities have one; a native entity rejects this type.
+- A tree of records: child records nested under a root entity, written as one transaction. A nested record with an `Id` field updates that row, one without it creates a row.
+
+#### Parameters
+
+- `entityRef`: `EntityRef` — Entity ref (`{ id }` (GUID) or `{ name }`)
+- `data`: `Record`\<`string`, `any`> — Record fields, with child records nested under their entity name
+- `options?`: `EntityUpsertOptions` — Upsert options. The `folderKey` property is **experimental**.
+
+#### Returns
+
+`Promise`\<`EntityUpsertResponse`>
+
+Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ([EntityUpsertResponse](../EntityUpsertResponse/))
+
+#### Examples
+
+```
+// Single record, matched on the entity's business key
+const result = await entities.upsert({ name: "Case" }, {
+  caseId: "CASE-001",
+  caseStatus: "Open"
+});
+```
+
+```
+// A report with two expenses, one of which has a line item — applied as one transaction
+const result = await entities.upsert({ name: "Report" }, {
+  assignee: "assignee1",
+  totalReportAmount: 25,
+  Expense: [
+    { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+    { vendor: "Vendor 2", totalExpense: 5 }
+  ]
+}, { folderKey: "<folderKey>" });
+
+console.log(result.transaction!.totalRecordsAffected); // 4
+console.log(result.transaction!.members[0].id);        // generated expense record ID
+```
+
+Writing across related entities requires the multi-entity write feature to be enabled for your tenant.
+
 Service for managing UiPath Data Fabric Choice Sets
 
 Choice Sets are enumerated lists of values that can be used as field types in entities. They enable single-select or multi-select fields, such as expense types, categories, or status values. [UiPath Choice Sets Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/choice-sets)

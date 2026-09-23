@@ -3861,6 +3861,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#upsert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        upsert()
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4517,6 +4528,41 @@ trigger events to fire for each updated record.</p>
 <h4 id="returns_14">Returns<a class="headerlink" href="#returns_14" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../../type-aliases/EntityUploadAttachmentResponse/"><code>EntityUploadAttachmentResponse</code></a>&gt;</p>
 <p>Promise resolving to <a href="../../type-aliases/EntityUploadAttachmentResponse/">EntityUploadAttachmentResponse</a></p>
+<hr />
+<h3 id="upsert">upsert()<a class="headerlink" href="#upsert" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>upsert</strong>(<code>data</code>: <code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;, <code>options?</code>: <a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a>): <code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
+</blockquote>
+<p><strong><code>Experimental</code></strong></p>
+<p>Upserts a record into this entity, optionally with its related child records.</p>
+<p>See <a href="EntityServiceModel.md#upsert">EntityServiceModel.upsert</a> for the two payload forms and which entities take them.</p>
+<h4 id="parameters_15">Parameters<a class="headerlink" href="#parameters_15" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data</code></td>
+<td><code>Record</code>&lt;<code>string</code>, <code>any</code>&gt;</td>
+<td>Record fields, optionally with child records nested under their entity name</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../EntityUpsertOptions/"><code>EntityUpsertOptions</code></a></td>
+<td>Upsert options</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../EntityUpsertResponse/"><code>EntityUpsertResponse</code></a>&gt;</p>
+<p>Promise resolving to the written root record's <code>Id</code>, plus the per-record results of a tree write</p>
+<p>Writing across related entities requires the multi-entity write feature to be
+enabled for your tenant.</p>
 
 
 
