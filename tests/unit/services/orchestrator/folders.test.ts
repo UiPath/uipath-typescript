@@ -14,13 +14,13 @@ vi.mock('@/core/http/api-client');
 // ===== TEST SUITE =====
 describe('FolderService Unit Tests', () => {
   let folderService: FolderService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
 
     folderService = new FolderService(instance);
   });
