@@ -5,6 +5,9 @@
 
 import { track } from '../../core/telemetry';
 import { ValidationError } from '../../core/errors';
+import type { IUiPath } from '../../core/types';
+import { SDKInternalsRegistry } from '../../core/internals';
+import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
 import { BaseService } from '../base';
 
 import type {
@@ -32,14 +35,22 @@ import { createParams } from '../../utils/http/params';
  * applications — and answering membership questions.
  */
 export class PlatformDirectoryService extends BaseService implements PlatformDirectoryServiceModel {
+  readonly #organizationIdResolver: OrganizationIdResolver;
+
+  /**
+   * Creates an instance of the Directory service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
+  constructor(instance: IUiPath) {
+    super(instance);
+    // Identity keys on the organization GUID; resolved once per SDK instance and shared
+    this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
+  }
+
   @track('PlatformDirectory.Search')
-  async search(
-    organizationId: string,
-    options?: PlatformDirectorySearchOptions
-  ): Promise<PlatformDirectoryEntry[]> {
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for search' });
-    }
+  async search(options?: PlatformDirectorySearchOptions): Promise<PlatformDirectoryEntry[]> {
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const params = {
       ...createParams({ startsWith: options?.startsWith, entityType: options?.entityType }),
@@ -54,20 +65,14 @@ export class PlatformDirectoryService extends BaseService implements PlatformDir
   }
 
   @track('PlatformDirectory.GetGroupMembership')
-  async getGroupMembership(
-    userId: string,
-    groupIds: string[],
-    organizationId: string
-  ): Promise<PlatformDirectoryGroup[]> {
+  async getGroupMembership(userId: string, groupIds: string[]): Promise<PlatformDirectoryGroup[]> {
     if (!userId) {
       throw new ValidationError({ message: 'userId is required for getGroupMembership' });
     }
     if (!groupIds?.length) {
       throw new ValidationError({ message: 'groupIds must contain at least one group ID' });
     }
-    if (!organizationId) {
-      throw new ValidationError({ message: 'organizationId is required for getGroupMembership' });
-    }
+    const organizationId = await this.#organizationIdResolver.resolve();
 
     const response = await this.post<RawPlatformDirectoryGroup[]>(
       IDENTITY_DIRECTORY_ENDPOINTS.GROUP_MEMBERSHIP(organizationId),

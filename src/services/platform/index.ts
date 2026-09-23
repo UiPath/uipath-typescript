@@ -5,7 +5,8 @@
  * - `Platform` — bulk read and bulk create/update of a user's setting key/value pairs
  * - `Directory` — search principals and check group membership
  *
- * Every operation is user-scoped — see {@link PlatformSettingKey}.
+ * Every `Platform` settings operation is user-scoped — see {@link PlatformSettingKey}.
+ * `Directory` operations are organization-scoped; the organization is resolved from the SDK configuration.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *
