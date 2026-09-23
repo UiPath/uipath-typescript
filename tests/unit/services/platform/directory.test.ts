@@ -18,7 +18,7 @@ import {
   PLATFORM_GROUP_TEST_CONSTANTS,
   PLATFORM_DIRECTORY_TEST_CONSTANTS,
 } from '../../../utils/mocks';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
 import { IDENTITY_DIRECTORY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 
 // ===== MOCKING =====
@@ -34,7 +34,7 @@ describe('Platform Directory Service Unit Tests', () => {
   const groupId = PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID;
 
   beforeEach(() => {
-    const { instance } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies({ organizationId });
     mockApiClient = createMockApiClient();
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
 
@@ -55,10 +55,23 @@ describe('Platform Directory Service Unit Tests', () => {
   });
 
   describe('search', () => {
+    it('should share one organization id resolver between services built on the same instance', async () => {
+      const { instance } = createServiceTestDependencies({ organizationId });
+      mockApiClient.get.mockResolvedValue([]);
+
+      await new Directory(instance).search();
+      const resolver = getPrivateSDK(instance).organizationIdResolver;
+      await new Directory(instance).search();
+
+      expect(resolver).toBeDefined();
+      expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
+      expect(mockApiClient.get.mock.calls[1][0]).toBe(IDENTITY_DIRECTORY_ENDPOINTS.SEARCH(organizationId));
+    });
+
     it('should GET the search endpoint and apply the transform pipeline', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformDirectoryEntry()]);
 
-      const results = await directoryService.search(organizationId);
+      const results = await directoryService.search();
 
       expect(mockApiClient.get.mock.calls[0][0]).toBe(IDENTITY_DIRECTORY_ENDPOINTS.SEARCH(organizationId));
       expect(results).toHaveLength(1);
@@ -80,7 +93,7 @@ describe('Platform Directory Service Unit Tests', () => {
         createBasicRawPlatformDirectoryEntry({ type: 2, objectType: 'Application' }),
       ]);
 
-      const results = await directoryService.search(organizationId);
+      const results = await directoryService.search();
 
       expect(results[0].type).toBe(PlatformDirectoryEntityType.Group);
       expect(results[1].type).toBe(PlatformDirectoryEntityType.Application);
@@ -89,7 +102,7 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should send filters under the wire param names', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      await directoryService.search(organizationId, {
+      await directoryService.search({
         startsWith: PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX,
         entityType: PlatformDirectoryEntityType.Group,
         sources: [PlatformDirectorySource.LocalGroups, PlatformDirectorySource.DirectoryGroups],
@@ -105,7 +118,7 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should omit filter params that are not provided', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      await directoryService.search(organizationId);
+      await directoryService.search();
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
       expect(spec.params).not.toHaveProperty('startsWith');
@@ -116,20 +129,16 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should return an empty array when nothing matches', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      const results = await directoryService.search(organizationId, { startsWith: 'zzz' });
+      const results = await directoryService.search({ startsWith: 'zzz' });
 
       expect(results).toEqual([]);
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(directoryService.search('')).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN));
 
-      await expect(directoryService.search(organizationId)).rejects.toThrow(
+      await expect(directoryService.search()).rejects.toThrow(
         PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN
       );
     });
@@ -139,7 +148,7 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should POST the user and group IDs and apply the transform pipeline', async () => {
       mockApiClient.post.mockResolvedValue([createBasicRawPlatformDirectoryGroup()]);
 
-      const memberships = await directoryService.getGroupMembership(userId, [groupId], organizationId);
+      const memberships = await directoryService.getGroupMembership(userId, [groupId]);
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(IDENTITY_DIRECTORY_ENDPOINTS.GROUP_MEMBERSHIP(organizationId));
@@ -156,37 +165,31 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should return an empty array when the user is in none of the groups', async () => {
       mockApiClient.post.mockResolvedValue([]);
 
-      const memberships = await directoryService.getGroupMembership(userId, [groupId], organizationId);
+      const memberships = await directoryService.getGroupMembership(userId, [groupId]);
 
       expect(memberships).toEqual([]);
     });
 
     it('should throw ValidationError when userId is empty', async () => {
       await expect(
-        directoryService.getGroupMembership('', [groupId], organizationId)
+        directoryService.getGroupMembership('', [groupId])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when groupIds is empty', async () => {
       await expect(
-        directoryService.getGroupMembership(userId, [], organizationId)
+        directoryService.getGroupMembership(userId, [])
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when organizationId is empty', async () => {
-      await expect(
-        directoryService.getGroupMembership(userId, [groupId], '')
-      ).rejects.toBeInstanceOf(ValidationError);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
 
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN));
 
       await expect(
-        directoryService.getGroupMembership(userId, [groupId], organizationId)
+        directoryService.getGroupMembership(userId, [groupId])
       ).rejects.toThrow(PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN);
     });
   });

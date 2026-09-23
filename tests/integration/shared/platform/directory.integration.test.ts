@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
 import { Directory } from '../../../../src/services/platform';
 import { Groups } from '../../../../src/services/platform/groups';
 import { PlatformDirectoryEntityType, PlatformDirectorySource } from '../../../../src/models/platform';
@@ -8,12 +8,9 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Platform Directory - Integration Tests', 'both', modes, () => {
   let directory!: Directory;
   let groups!: Groups;
-  let organizationId!: string;
   let readOnlyUserId!: string;
   let mutableUserId!: string;
   /** Throwaway group holding the mutable user; deleted in afterAll. */
@@ -28,31 +25,29 @@ describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
     directory = directoryService;
     groups = groupsService;
 
-    const { organizationId: configuredOrganizationId, identityTestUserId, identityMutableTestUserId } = getTestConfig();
-    if (!configuredOrganizationId || !identityTestUserId || !identityMutableTestUserId) {
+    const { identityTestUserId, identityMutableTestUserId } = getTestConfig();
+    if (!identityTestUserId || !identityMutableTestUserId) {
       throw new Error(
-        'UIPATH_ORGANIZATION_ID, IDENTITY_TEST_USER_ID, and IDENTITY_MUTABLE_TEST_USER_ID must be ' +
-          'configured for the Directory suite.'
+        'IDENTITY_TEST_USER_ID and IDENTITY_MUTABLE_TEST_USER_ID must be configured for the Directory suite.'
       );
     }
-    organizationId = configuredOrganizationId;
     readOnlyUserId = identityTestUserId;
     mutableUserId = identityMutableTestUserId;
 
     // A group whose membership is known exactly: contains only the mutable user
-    probeGroup = await groups.create(`sdk-it-${generateRandomString(8)}`, organizationId, {
+    probeGroup = await groups.create(`sdk-it-${generateRandomString(8)}`, {
       memberUserIds: [mutableUserId],
     });
   });
 
   afterAll(async () => {
     if (!groups || !probeGroup) return;
-    await groups.deleteById(probeGroup.id, organizationId);
+    await groups.deleteById(probeGroup.id);
   });
 
   describe('search', () => {
     it('should find a known group by name prefix', async () => {
-      const results = await directory.search(organizationId, {
+      const results = await directory.search({
         startsWith: 'Administrator',
         entityType: PlatformDirectoryEntityType.Group,
       });
@@ -65,7 +60,7 @@ describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
     });
 
     it('should apply the SDK transforms against the live response', async () => {
-      const results = await directory.search(organizationId, { startsWith: 'Administrator' });
+      const results = await directory.search({ startsWith: 'Administrator' });
       const entry = results[0];
 
       // Renamed fields carry values
@@ -80,7 +75,7 @@ describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
     });
 
     it('should narrow results with sourceFilter', async () => {
-      const results = await directory.search(organizationId, {
+      const results = await directory.search({
         startsWith: 'sdk-it-',
         sources: [PlatformDirectorySource.LocalGroups],
       });
@@ -94,7 +89,7 @@ describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
 
   describe('getGroupMembership', () => {
     it('should return the probe group for its member', async () => {
-      const memberships = await directory.getGroupMembership(mutableUserId, [probeGroup.id], organizationId);
+      const memberships = await directory.getGroupMembership(mutableUserId, [probeGroup.id]);
 
       expect(memberships).toHaveLength(1);
       expect(memberships[0].id).toBe(probeGroup.id);
@@ -105,20 +100,17 @@ describe.each(modes)('Platform Directory - Integration Tests [%s]', (mode) => {
 
     it('should return an empty array for a non-member', async () => {
       // The read-only user was never added to the probe group
-      const memberships = await directory.getGroupMembership(readOnlyUserId, [probeGroup.id], organizationId);
+      const memberships = await directory.getGroupMembership(readOnlyUserId, [probeGroup.id]);
 
       expect(memberships).toEqual([]);
     });
 
     it('should return only the subset of groups the user belongs to', async () => {
-      const allGroups = await groups.getAll(organizationId);
-      const everyone = allGroups.find((g) => g.name === 'Everyone')!;
+      const allGroups = await groups.getAll();
+      const everyone = allGroups.find((g) => g.name === 'Everyone');
+      if (!everyone) throw new Error('Expected an "Everyone" group in the organization — check the test environment');
 
-      const memberships = await directory.getGroupMembership(
-        mutableUserId,
-        [probeGroup.id, everyone.id],
-        organizationId
-      );
+      const memberships = await directory.getGroupMembership(mutableUserId, [probeGroup.id, everyone.id]);
 
       const ids = memberships.map((m) => m.id);
       expect(ids).toContain(probeGroup.id);

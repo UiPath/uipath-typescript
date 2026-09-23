@@ -10,13 +10,23 @@ import type {
 } from './directory.types';
 
 /**
- * Public surface of the platform Directory service. JSDoc on this interface drives
- * the generated API reference documentation.
+ * Public surface of the Directory service.
  *
  * The directory is the lookup layer over an organization's principals — users,
  * groups, and applications, whether local or provisioned from an external
  * directory. Use it to find principals by name and to answer membership questions
  * ("is this user in the Administrators group?") without listing whole groups.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Directory } from '@uipath/uipath-typescript/platform';
+ *
+ * const directory = new Directory(sdk);
+ * const results = await directory.search({ startsWith: 'sar' });
+ * ```
  */
 export interface PlatformDirectoryServiceModel {
   /**
@@ -25,7 +35,6 @@ export interface PlatformDirectoryServiceModel {
    * Returns users, groups, and applications matching the options, from both
    * local and external-directory sources.
    *
-   * @param organizationId - Organization (account) GUID to search in
    * @param options - Search filters
    * @returns The matching principals, as {@link PlatformDirectoryEntry} items
    *
@@ -38,26 +47,20 @@ export interface PlatformDirectoryServiceModel {
    * await sdk.initialize();
    *
    * const directory = new Directory(sdk);
-   * const results = await directory.search('<organizationId>', { startsWith: 'sar' });
-   * for (const entry of results) {
-   *   console.log(`${entry.displayName} (${entry.type})`);
-   * }
+   * const results = await directory.search({ startsWith: 'sar' });
    * ```
    *
    * @example Find groups only
    * ```typescript
    * import { PlatformDirectoryEntityType } from '@uipath/uipath-typescript/platform';
    *
-   * const groups = await directory.search('<organizationId>', {
+   * const groups = await directory.search({
    *   startsWith: 'Admin',
    *   entityType: PlatformDirectoryEntityType.Group,
    * });
    * ```
    */
-  search(
-    organizationId: string,
-    options?: PlatformDirectorySearchOptions
-  ): Promise<PlatformDirectoryEntry[]>;
+  search(options?: PlatformDirectorySearchOptions): Promise<PlatformDirectoryEntry[]>;
 
   /**
    * Checks which of the given groups a user belongs to.
@@ -70,22 +73,20 @@ export interface PlatformDirectoryServiceModel {
    *
    * @param userId - GUID of the user to check
    * @param groupIds - GUIDs of the groups to check against
-   * @param organizationId - Organization (account) GUID the user and groups belong to
    * @returns The groups the user belongs to, as {@link PlatformDirectoryGroup} items
    *
    * @example
    * ```typescript
-   * const memberships = await directory.getGroupMembership(
-   *   '<userId>',
-   *   ['<adminGroupId>'],
-   *   '<organizationId>'
-   * );
+   * import { UiPath } from '@uipath/uipath-typescript/core';
+   * import { Directory } from '@uipath/uipath-typescript/platform';
+   *
+   * const sdk = new UiPath(config);
+   * await sdk.initialize();
+   *
+   * const directory = new Directory(sdk);
+   * const memberships = await directory.getGroupMembership('<userId>', ['<adminGroupId>']);
    * const isAdmin = memberships.length > 0;
    * ```
    */
-  getGroupMembership(
-    userId: string,
-    groupIds: string[],
-    organizationId: string
-  ): Promise<PlatformDirectoryGroup[]>;
+  getGroupMembership(userId: string, groupIds: string[]): Promise<PlatformDirectoryGroup[]>;
 }
