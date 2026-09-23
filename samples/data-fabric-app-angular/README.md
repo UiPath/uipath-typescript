@@ -206,7 +206,7 @@ Built bundle lives in `dist/`. From there:
 uip tools install codedapp
 
 # Sign in with the uip CLI (interactive — pick the org + tenant to deploy to).
-uip login --it
+uip login --interactive
 
 uip codedapp pack ./dist --name data-fabric-app-angular --version 1.0.0
 uip codedapp publish
