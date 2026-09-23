@@ -3986,7 +3986,7 @@ Membership can be edited from the group side (this service) or from the user sid
 (<code>users.updateById()</code> with <code>groupIdsToAdd</code> / <code>groupIdsToRemove</code>).</p>
 <h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
 <p>Prerequisites: Initialize the SDK first - see <a href="/uipath-typescript/getting-started/#import-initialize">Getting Started</a></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/platform&#39;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/groups&#39;</span><span class="p">;</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Groups</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allGroups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
@@ -4073,7 +4073,7 @@ groups (Everyone, Administrators, …) cannot be modified or deleted.</p>
 <p>All groups, as <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a> items</p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">UiPath</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/core&#39;</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/platform&#39;</span><span class="p">;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Groups</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/groups&#39;</span><span class="p">;</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
@@ -4174,12 +4174,11 @@ Everyone) is not materialized — they report no local members.</p>
 <hr />
 <h3 id="updatebyid">updateById()<a class="headerlink" href="#updatebyid" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>updateById</strong>(<code>groupId</code>: <code>string</code>, <code>name</code>: <code>string</code>, <code>options?</code>: <a href="../PlatformGroupMembershipOptions/"><code>PlatformGroupMembershipOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+<p><strong>updateById</strong>(<code>groupId</code>: <code>string</code>, <code>update</code>: <a href="../PlatformGroupUpdateOptions/"><code>PlatformGroupUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Updates a local group.</p>
-<p>The group's name must be sent on every update — pass the current name when
-only editing membership (the bound <code>group.update()</code> fills it in automatically).
-Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
+<p>Only the fields present in <code>update</code> are changed — omitted fields keep their
+current values. Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <code>memberUserIdsToRemove</code>. Built-in groups cannot be updated.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
@@ -4197,14 +4196,9 @@ Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <td>GUID of the group to update</td>
 </tr>
 <tr>
-<td><code>name</code></td>
-<td><code>string</code></td>
-<td>The group's name (new name to rename, or current name to keep it)</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../PlatformGroupMembershipOptions/"><code>PlatformGroupMembershipOptions</code></a></td>
-<td>Membership changes</td>
+<td><code>update</code></td>
+<td><a href="../PlatformGroupUpdateOptions/"><code>PlatformGroupUpdateOptions</code></a></td>
+<td>The fields to change</td>
 </tr>
 </tbody>
 </table>
@@ -4212,13 +4206,12 @@ Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
 <p>The group as stored after the update, as a <a href="../../type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a></p>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Ticket Managers&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ticket Managers&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="nx">group</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">group</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">memberUserIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nx">memberUserIdsToRemove</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;otherUserId&gt;&#39;</span><span class="p">],</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">await</span><span class="w"> </span><span class="nx">groups</span><span class="p">.</span><span class="nx">updateById</span><span class="p">(</span><span class="s1">&#39;&lt;groupId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nx">memberUserIdsToAdd</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;userId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">memberUserIdsToRemove</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;&lt;otherUserId&gt;&#39;</span><span class="p">],</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">});</span>
 </code></pre></div>
 
 

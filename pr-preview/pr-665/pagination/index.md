@@ -126,7 +126,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Users                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAssignments()`         | ✅ Yes                 |
-| Platform Groups                   | `getMembers()`             | ✅ Yes                 |
+| Groups                            | `getMembers()`             | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `getRecordsByName()`       | ✅ Yes                 |
 | Entities                          | `queryRecords()`           | ✅ Yes                 |
