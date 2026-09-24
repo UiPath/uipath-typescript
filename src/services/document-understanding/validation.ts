@@ -81,7 +81,7 @@ export class DocumentUnderstanding
     return shallowConvertKeys(response.data, pascalToCamelCase) as DuValidationStartResponse;
   }
 
-  @track('DuValidation.GetExtractionValidationResult')
+  @track('DocumentUnderstanding.GetExtractionValidationResult')
   async getExtractionValidationResult(
     projectId: string,
     tag: string,
