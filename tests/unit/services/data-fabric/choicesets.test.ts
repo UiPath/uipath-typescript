@@ -17,6 +17,7 @@ import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../../..
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import type { ChoiceSetGetResponse } from '../../../../src/models/data-fabric/choicesets.types';
 import { ValidationError, NotFoundError } from '../../../../src/core/errors';
+import { UIPATH_SOURCE, UIPATH_TYPESCRIPT_SDK } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -53,6 +54,13 @@ describe('ChoiceSetService Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('constructor', () => {
+    it('should send x-uipath-source: uipath-typescript-sdk on every ApiClient request', () => {
+      const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
+      expect(clientConfig).toEqual({ headers: { [UIPATH_SOURCE]: UIPATH_TYPESCRIPT_SDK } });
+    });
   });
 
   describe('getAll', () => {
