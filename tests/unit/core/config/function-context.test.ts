@@ -3,6 +3,7 @@ import {
   configFromFunctionContext,
   folderKeyFromFunctionContext,
   isFunctionContext,
+  robotKeyFromFunctionContext,
 } from '@/core/config/function-context';
 import type { PartialUiPathConfig } from '@/core/config/sdk-config';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -137,5 +138,30 @@ describe('folderKeyFromFunctionContext', () => {
 
   it('returns undefined when the platform is null, as on a local run', () => {
     expect(folderKeyFromFunctionContext(functionContext({ platform: null }))).toBeUndefined();
+  });
+});
+
+describe('robotKeyFromFunctionContext', () => {
+  it('returns the serverless robot key, trimmed', () => {
+    const context = functionContext({
+      robot: { accessToken: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, key: ` ${TEST_CONSTANTS.ROBOT_KEY} ` },
+    });
+
+    expect(robotKeyFromFunctionContext(context)).toBe(TEST_CONSTANTS.ROBOT_KEY);
+  });
+
+  it.each([
+    ['null', null],
+    ['undefined', undefined],
+    ['empty', ''],
+    ['whitespace-only', '   '],
+  ])('treats a %s robot key as absent', (_label, key) => {
+    const context = functionContext({ robot: { accessToken: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, key } });
+
+    expect(robotKeyFromFunctionContext(context)).toBeUndefined();
+  });
+
+  it('returns undefined when the robot is null', () => {
+    expect(robotKeyFromFunctionContext(functionContext({ robot: null }))).toBeUndefined();
   });
 });

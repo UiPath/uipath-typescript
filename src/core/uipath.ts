@@ -12,6 +12,7 @@ import {
   configFromFunctionContext,
   folderKeyFromFunctionContext,
   isFunctionContext,
+  robotKeyFromFunctionContext,
   type CodedFunctionContext,
 } from './config/function-context';
 import type { IUiPath } from './types';
@@ -184,6 +185,7 @@ export class UiPath implements IUiPath {
       tokenManager: this.#authService.getTokenManager(),
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
+      robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
     });
 
     // Expose read-only config for user convenience
