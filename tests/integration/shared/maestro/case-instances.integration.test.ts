@@ -555,7 +555,9 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
     });
   });
 
-  // insightsrtm_ rejects PAT — user-token cell only.
+  // insightsrtm_ rejects PAT — user-token cell only. Its SLA aggregations routinely take
+  // 15–30s+ server-side (measured 16s, 23s, >30s across CI runs), so the tests carry a
+  // 90s budget like the schema DDL tests.
   describe.skipIf(authMode !== 'user')('getSlaSummary', () => {
     // skip: slaDueTime comes back empty on this tenant's SLA rows, so the ISO
     // timestamp assertion cannot pass.
@@ -581,7 +583,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       // Validate transform pipeline: timestamps must be ISO 8601, not the raw "M/D/YYYY h:mm:ss AM" format
       expect(item.slaDueTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
       expect(item.lastModifiedTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    });
+    }, 90_000);
 
     it('should support pagination with pageSize', async () => {
       const { caseInstances } = getServices();
@@ -590,7 +592,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
 
       expect(result).toBeDefined();
       expect(result.items.length).toBeLessThanOrEqual(5);
-    });
+    }, 90_000);
   });
 
   // insightsrtm_ rejects PAT — user-token cell only.
@@ -624,7 +626,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       expect(typeof stage.slaStatus).toBe('string');
       expect(typeof stage.escalationRuleIndex).toBe('string');
       expect(typeof stage.escalationRuleType).toBe('string');
-    });
+    }, 90_000);
 
     it('should support filtering by caseInstanceId', async () => {
       const { caseInstances } = getServices();
@@ -645,7 +647,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         throw new Error('Filter by caseInstanceId returned no results — expected at least one matching item');
       }
       expect(filtered[0].caseInstanceId).toBe(targetId);
-    });
+    }, 90_000);
   });
 
   describe('Service verification', () => {
