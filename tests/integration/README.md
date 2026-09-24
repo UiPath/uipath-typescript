@@ -252,7 +252,7 @@ A suite declares what it *needs* from a credential:
 | Requirement | Runs under | Declared by |
 |-------------|-----------|-------------|
 | `both` | **Every configured credential** — both, when both are set | Every suite unless noted below |
-| `user` | The user token only | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions, CAS Connections |
+| `user` | The user token only | Agents, Agent Memory, Agent Traces, Governance, Notifications, Subscriptions, CAS Connections, Integration Service (Connections, Connectors, Elements, Execute) |
 | `pat` | The PAT only | None currently — `auth-errors` builds its own SDK instances directly |
 
 `resolveAuthModes(requirement)` returns the list, and `describeIntegration` expands the
@@ -408,6 +408,10 @@ passes `'both'` and runs under both.
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
 | `IDENTITY_TEST_USER_ID` | GUID of the user whose platform settings are read and round-tripped; must be in the test PAT's organization | (required for the Platform tests) |
 | `UIPATH_ORGANIZATION_ID` | Organization (account) GUID; platform settings reads fall back to the host partition without it | (required for the Platform tests) |
+| `INTEGRATION_SERVICE_TEST_CONNECTOR_KEY` | Connector key (e.g. `uipath-slack`) used by the Connectors, Elements and Execute tests | (required for those suites) |
+| `INTEGRATION_SERVICE_TEST_CONNECTION_ID` | Pre-existing connection id used by the Connections, Elements and Execute tests | (required for those suites) |
+| `INTEGRATION_SERVICE_TEST_OBJECT_NAME` | Object name used by the Elements and Execute tests | (optional — resolved from the connector for Elements, or the connection for Execute, when unset) |
+| `INTEGRATION_SERVICE_TEST_EVENT_OPERATION` | Event operation name for the Elements event tests | (required for the Elements suite) |
 
 ## Test Data Management
 
