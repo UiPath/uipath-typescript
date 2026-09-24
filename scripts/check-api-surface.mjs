@@ -1,0 +1,217 @@
+#!/usr/bin/env node
+// Compares public API surfaces and reports the difference grouped by symbol.
+// Usage: --base <ref> | <dirA> <dirB>
+// Exit: 0 unchanged, 1 breaking, 2 additions only, 3 comparison unusable.
+import { readFileSync, writeFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, appendFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { resolve, join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const fail = (m) => { throw new Error(`api-surface: ${m}`); };
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+const argv = process.argv.slice(2);
+const baseIdx = argv.indexOf('--base');
+const baseRef = baseIdx === -1 ? null : argv[baseIdx + 1];
+const [argBefore, argAfter] = baseRef ? [] : argv;
+
+function readSnapshot(file) {
+  const entries = new Map();
+  if (!existsSync(file)) return entries;
+  let container = null;
+  for (const raw of readFileSync(file, 'utf8').split('\n')) {
+    if (!raw.trim() || raw.startsWith('##')) continue;
+    const indented = raw.startsWith('  ');
+    const tagAt = raw.lastIndexOf('   [');
+    const body = (tagAt === -1 ? raw : raw.slice(0, tagAt)).trim();
+    const subs = tagAt === -1 ? [] : raw.slice(tagAt + 4).replace(/]\s*$/, '').split(', ');
+    if (!indented) {
+      entries.set(`decl:${body}`, { line: body, kind: 'decl', subs });
+      container = body;
+      continue;
+    }
+    const m = body.match(/^([A-Za-z_$][\w$.]*?)\.((?:(?:readonly|static|abstract|override|get|set)\s+)*)([A-Za-z_$][\w$]*|\[[^\]]*\])(.*)$/);
+    entries.set(`mem:${body}`, { line: body, kind: 'mem', container, symbol: m ? m[3] : body, sig: m ? `${m[2] ?? ''}${m[4]}` : '', subs });
+  }
+  return entries;
+}
+
+const shortName = (l) =>
+  l.match(/^(?:interface|class|type|enum|function|const)\s+([\w$.]+)/)?.[1] ?? l.split(/[\s<(]/)[0];
+const declName = (l) => {
+  const m = l.match(/^(interface|class|type|enum|function|const)\s+([\w$.]+)/);
+  return m ? `${m[1]} ${m[2]}` : l;
+};
+
+const bump = (map, key, sub) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(sub); };
+
+const bumpMem = (map, id, sig, sub, container) => {
+  if (!map.has(id)) map.set(id, { sigs: new Set(), where: new Set(), containers: new Set() });
+  const e = map.get(id);
+  e.sigs.add(sig); e.where.add(sub); e.containers.add(container);
+};
+
+const bare = (set) => Array.from(set, (x) => x.replace(/\s\s@[\w @]+$/, '')).sort().join('|');
+const where = (s) => `[${Array.from(s).sort().join(', ')}]`;
+const cnames = (e) => Array.from(e.containers, shortName).sort().join(', ');
+const member = (id) => id.slice(id.lastIndexOf('.') + 1);
+
+function main() {
+  const compareOnly = Boolean(argBefore && argAfter);
+  const tmpDir = compareOnly ? null : mkdtempSync(join(tmpdir(), 'api-surface-'));
+  const tmp = tmpDir ? join(tmpDir, 'api-surface.txt') : null;
+  try {
+    let beforeFile = null;
+    if (!compareOnly) {
+      execFileSync(process.execPath, [join(ROOT, 'scripts/gen-api-surface.mjs'), ROOT, tmp], { stdio: ['ignore', 'ignore', 'inherit'] });
+      if (!baseRef) fail('--base <ref> or two snapshot directories are required');
+      {
+        const src = join(tmpDir, 'base');
+        mkdirSync(src, { recursive: true });
+        // Compare against the merge base, not the tip: symbols added to the
+        // base branch after this one forked are not removals by this branch.
+        const mergeBase = execFileSync('git', ['-C', ROOT, 'merge-base', baseRef, 'HEAD'], { encoding: 'utf8' }).trim();
+        const tarPath = join(tmpDir, 'base.tar');
+        writeFileSync(tarPath, execFileSync('git',
+          ['-C', ROOT, 'archive', mergeBase, 'src', 'rollup.config.js', 'package.json', 'tsconfig.json'],
+          { maxBuffer: 1 << 28 }));
+        execFileSync('tar', ['-x', '-f', tarPath, '-C', src], { stdio: ['ignore', 'ignore', 'inherit'] });
+        beforeFile = join(tmpDir, 'base-api-surface.txt');
+        execFileSync(process.execPath, [join(ROOT, 'scripts/gen-api-surface.mjs'), src, beforeFile], { stdio: ['ignore', 'ignore', 'inherit'] });
+      }
+    }
+    const before = readSnapshot(compareOnly ? resolve(argBefore) : beforeFile);
+    const after = readSnapshot(compareOnly ? resolve(argAfter) : tmp);
+
+    // Reporting "no changes" from an empty comparison would be a silent pass.
+    if (before.size === 0 || after.size === 0) {
+      console.log(`::error::api-surface: one side of the comparison is empty (before=${before.size}, after=${after.size}). Refusing to report "no changes".`);
+      process.exitCode = 3;
+      return;
+    }
+
+    const changed = new Map(), tagged = new Map(), removedDecls = new Map(), addedDecls = new Map();
+    const declLines = { removed: new Map(), added: new Map() };
+    const removedMem = new Map(), addedMem = new Map();
+
+    for (const [k, v] of before) {
+      if (after.has(k)) continue;
+      for (const sub of v.subs.length ? v.subs : ['?']) {
+        if (v.kind === 'decl') { bump(removedDecls, declName(v.line), sub); declLines.removed.set(declName(v.line), v.line); }
+        else bumpMem(removedMem, `${shortName(v.container)}.${v.symbol}`, v.sig, sub, v.container);
+      }
+    }
+    for (const [k, v] of after) {
+      if (before.has(k)) continue;
+      for (const sub of v.subs.length ? v.subs : ['?']) {
+        if (v.kind === 'decl') { bump(addedDecls, declName(v.line), sub); declLines.added.set(declName(v.line), v.line); }
+        else bumpMem(addedMem, `${shortName(v.container)}.${v.symbol}`, v.sig, sub, v.container);
+      }
+    }
+
+    for (const [id, r] of Array.from(removedMem)) {
+      const a = addedMem.get(id);
+      if (!a) continue;
+      const entry = { was: r.sigs, now: a.sigs, where: new Set([...r.where, ...a.where]), containers: r.containers };
+      (bare(r.sigs) === bare(a.sigs) ? tagged : changed).set(id, entry);
+      removedMem.delete(id); addedMem.delete(id);
+    }
+
+    for (const [name, subs] of Array.from(removedDecls)) {
+      const added = addedDecls.get(name);
+      if (!added) continue;
+      removedDecls.delete(name); addedDecls.delete(name);
+      tagged.set(name, {
+        was: new Set([declLines.removed.get(name)].filter(Boolean)),
+        now: new Set([declLines.added.get(name)].filter(Boolean)),
+        where: new Set([...subs, ...added]),
+        containers: new Set([name]),
+        isDecl: true,
+      });
+    }
+
+    if (!changed.size && !tagged.size && !removedDecls.size && !addedDecls.size && !removedMem.size && !addedMem.size) {
+      console.log(
+        compareOnly ? 'No public API surface difference.'
+          : `No public API changes versus ${baseRef}.`
+      );
+      return;
+    }
+
+    let riskyCount = 0;
+    const L = [];
+    const REQUIRED = /^(?:(?:readonly|static|abstract|override|get|set)\s+)*:/;
+
+    L.push(
+      compareOnly ? 'Public API surface difference:' : `Public API changes versus ${baseRef}:`,
+      ''
+    );
+    L.push(`  changed: ${changed.size}   removed: ${removedDecls.size + removedMem.size}   added: ${addedDecls.size + addedMem.size}   stability-tag only: ${tagged.size}`);
+
+    if (changed.size) {
+      L.push('', 'CHANGED — existing call sites may no longer compile');
+      for (const [id, e] of Array.from(changed).sort()) {
+        L.push(`  ${cnames(e)} :: ${member(id)}   ${where(e.where)}`);
+        for (const w of Array.from(e.was).sort()) L.push(`      was  ${w}`);
+        for (const n of Array.from(e.now).sort()) L.push(`      now  ${n}`);
+      }
+    }
+    if (removedDecls.size || removedMem.size) {
+      L.push('', 'REMOVED — consumers can no longer reference these');
+      for (const [n, subs] of Array.from(removedDecls).sort()) L.push(`  ${n}   ${where(subs)}`);
+      for (const [id, e] of Array.from(removedMem).sort()) {
+        L.push(`  ${cnames(e)} :: ${member(id)}   ${where(e.where)}`);
+        for (const w of Array.from(e.sigs).sort()) L.push(`      was  ${w}`);
+      }
+    }
+    if (tagged.size) {
+      L.push('', 'STABILITY TAG ONLY — still compiles, no migration needed');
+      for (const [id, e] of Array.from(tagged).sort()) {
+        const tag = Array.from(e.now, (x) => x.match(/@[\w @]+$/)?.[0] ?? '(tag removed)').sort().join(', ');
+        const label = e.isDecl ? id : `${cnames(e)} :: ${member(id)}`;
+        L.push(`  ${label}   ${tag}   ${where(e.where)}`);
+      }
+    }
+    if (addedDecls.size || addedMem.size) {
+      const newDecls = new Set(Array.from(addedDecls.keys(), (d) => d.split(' ')[1]));
+      const risky = Array.from(addedMem).filter(
+        ([, e]) => Array.from(e.sigs).some((s) => REQUIRED.test(s)) && Array.from(e.containers).every((c) => !newDecls.has(shortName(c)))
+      );
+      const riskySet = new Set(risky.map(([id]) => id));
+      riskyCount = risky.length;
+      if (risky.length) {
+        L.push('', 'ADDED BUT REQUIRED — breaks callers that omit them');
+        for (const [id, e] of risky.sort()) L.push(`  ${cnames(e)} :: ${member(id)}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
+      }
+      L.push('', 'ADDED — backward compatible');
+      for (const [n, subs] of Array.from(addedDecls).sort()) L.push(`  ${n}   ${where(subs)}`);
+      for (const [id, e] of Array.from(addedMem).sort()) {
+        if (riskySet.has(id)) continue;
+        L.push(`  ${cnames(e)} :: ${member(id)}${Array.from(e.sigs)[0]}   ${where(e.where)}`);
+      }
+    }
+    L.push('', 'A removal or a signature change needs a release note and the matching version',
+      'bump. Parameter renames and members moved onto a base type are not breaking.');
+
+    const report = L.join('\n');
+    console.log(report);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## API surface changed\n\n\`\`\`\n${report}\n\`\`\`\n`);
+    }
+    if (!compareOnly) {
+      const breaking = changed.size + removedDecls.size + removedMem.size + riskyCount;
+      if (breaking) {
+        console.log(`\n::error::${breaking} breaking change(s) to the public API. See the report above.`);
+        process.exitCode = 1;
+      } else {
+        console.log('\n::notice::Public API changed, nothing breaking. Nothing to do.');
+        process.exitCode = 2;
+      }
+    }
+  } finally {
+    if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
+  }
+}
+
+main();

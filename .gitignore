@@ -61,9 +61,24 @@ logs/
 npm-debug.log* 
 
 dist/
-docs/api/
 site/
 .uipath/
 
+# Generated API docs (npm run docs:api). Regenerate; never commit.
+#   typedoc          -> docs/api/
+#   docs-post-process -> docs/agents/, docs/conversational-agent/, docs/conversations/
+#   packages/coded-action-app typedoc -> docs/coded-action-app-sdk/
+docs/api/
+docs/agents/
+docs/conversational-agent/
+docs/conversations/
+# getting-started.md here is hand-written and tracked; the rest is typedoc output
+docs/coded-action-app-sdk/*
+!docs/coded-action-app-sdk/getting-started.md
+
+# Fetched from UiPath/coded-functions-js by the docs workflows. Regenerate; never commit.
+docs/js-functions/
+
 # Python bytecode cache (created by the mkdocs-llmstxt preprocess hook)
 __pycache__/
+.apihist/

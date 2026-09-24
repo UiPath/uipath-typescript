@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
+import { describeIntegration, getServices, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
+import { awaitRecordVisible } from '../../utils/helpers';
 
 /**
  * Integration tests for entity attachment operations (upload, remove, download)
@@ -28,13 +29,38 @@ const hasAttachmentConfig = !!(
 
 const modes: InitMode[] = ['v1'];
 
-describe.skipIf(!hasAttachmentConfig).each(modes)(
-  'Entity Attachment - Integration Tests [%s]',
-  (mode) => {
-    setupUnifiedTests(mode);
+describeIntegration(
+  'Entity Attachment - Integration Tests',
+  'both',
+  modes,
+  () => {
 
-    let recordId!: string;
     let entityName!: string;
+    const recordIds: string[] = [];
+
+    /**
+     * Each test uploads against its own fresh record. Sharing one record across
+     * tests made every upload an overwrite of the previous attachment, and the
+     * overwrite tail (unlink + blob cleanup) deadlocked the next upload's
+     * transaction and raced downloads against blob deletion — the server-side
+     * signatures behind this suite's intermittent 500s.
+     */
+    async function createFreshRecord(): Promise<string> {
+      const { entities } = getServices();
+      const inserted = await entities.insertRecordById(ATTACHMENT_CONFIG.entityId, {});
+      if (!inserted.Id) {
+        throw new Error('Failed to insert test record for attachment tests');
+      }
+      recordIds.push(inserted.Id);
+      registerResource('entityRecords', {
+        entityId: ATTACHMENT_CONFIG.entityId,
+        recordIds: [inserted.Id],
+      });
+      // Uploads against a record the attachment path cannot see yet return an
+      // empty-body 404 — wait until the fresh record is addressable.
+      await awaitRecordVisible(entities, ATTACHMENT_CONFIG.entityId, inserted.Id);
+      return inserted.Id;
+    }
 
     beforeAll(async () => {
       const { entities } = getServices();
@@ -42,29 +68,17 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       // Resolve the entity name once so by-name attachment tests can address it.
       const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
       entityName = entity.name;
-
-      const inserted = await entities.insertRecordById(ATTACHMENT_CONFIG.entityId, {});
-
-      if (!inserted.Id) {
-        throw new Error('Failed to insert test record for attachment tests');
-      }
-
-      recordId = inserted.Id;
-
-      registerResource('entityRecords', {
-        entityId: ATTACHMENT_CONFIG.entityId,
-        recordIds: [recordId],
-      });
-    });
+    }, 90_000);
 
     afterAll(async () => {
-      if (!recordId) return;
+      if (recordIds.length === 0) return;
       const { entities } = getServices();
-      await entities.deleteRecordsById(ATTACHMENT_CONFIG.entityId, [recordId]);
-    });
+      await entities.deleteRecordsById(ATTACHMENT_CONFIG.entityId, recordIds);
+    }, 90_000);
 
     describe('uploadAttachment', () => {
       it('should upload an attachment via service method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const file = new Blob(['Hello from UiPath TypeScript SDK integration test!'], { type: 'text/plain' });
@@ -77,9 +91,10 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload an attachment via entity method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
@@ -92,11 +107,12 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('deleteAttachment', () => {
       it('should upload and then delete an attachment via service method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const file = new Blob(['Temporary file for delete attachment test'], { type: 'text/plain' });
@@ -115,9 +131,10 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload and then delete an attachment via entity method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
@@ -135,11 +152,12 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('downloadAttachment', () => {
       it('should upload and then download an attachment via service method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const file = new Blob(['Temporary file for download attachment test'], { type: 'text/plain' });
@@ -158,9 +176,10 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(downloadedFile).toBeDefined();
-      });
+      }, 90_000);
 
       it('should upload and then download an attachment via entity method', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
@@ -178,11 +197,12 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(downloadedFile).toBeDefined();
-      });
+      }, 90_000);
     });
 
     describe('attachment by name', () => {
       it('should upload, download, and delete an attachment addressing the entity by name', async () => {
+        const recordId = await createFreshRecord();
         const { entities } = getServices();
 
         const file = new Blob(['Attachment by-name round-trip test'], { type: 'text/plain' });
@@ -208,7 +228,8 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
           ATTACHMENT_CONFIG.fieldName,
         );
         expect(deleteResult).toBeDefined();
-      });
+      }, 90_000);
     });
-  }
+  },
+  { skip: !hasAttachmentConfig },
 );

@@ -11,7 +11,7 @@ import { loadFromEnvironment } from './config/environment';
 import { configFromFunctionContext, isFunctionContext, type CodedFunctionContext } from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
-import { trustedEmbeddingOrigin } from './auth/host-token-request';
+import { hostEmbeddingOrigin } from './auth/host-token-request';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -87,10 +87,11 @@ export class UiPath implements IUiPath {
   // SDK can flow it through to BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
   // Org/tenant ids captured from the meta tags before the constructor config
-  // is merged in. The `uipath:org-name`/`uipath:tenant-name` meta tags always
-  // carry org/tenant *ids* in coded-app deployments, whereas a
-  // constructor-supplied `orgName`/`tenantName` may be actual names — so the
-  // telemetry ids must be read from the meta tags.
+  // is merged in. Deployments inject the organization GUID as `uipath:org-id`
+  // (`uipath:org-name` is the logical name) and the tenant GUID as
+  // `uipath:tenant-name`; a constructor-supplied `orgName`/`tenantName` may be
+  // actual names — so the telemetry ids must be read from the meta tags. The
+  // `org-name` fallback covers deployments that predate the dedicated id tag.
   #metaOrgId?: string;
   #metaTenantId?: string;
 
@@ -112,7 +113,7 @@ export class UiPath implements IUiPath {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
     this.#metaFolderKey = configFromMetaTags?.folderKey;
-    this.#metaOrgId = configFromMetaTags?.orgName;
+    this.#metaOrgId = configFromMetaTags?.organizationId ?? configFromMetaTags?.orgName;
     this.#metaTenantId = configFromMetaTags?.tenantName;
 
     // Merge configuration: constructor config overrides meta tags, which
@@ -138,6 +139,7 @@ export class UiPath implements IUiPath {
       baseUrl: normalizeBaseUrl(config.baseUrl),
       orgName: config.orgName,
       tenantName: config.tenantName,
+      organizationId: config.organizationId,
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
@@ -185,7 +187,7 @@ export class UiPath implements IUiPath {
      * initialize tokenInfo with an empty token so getValidToken() can bootstrap via postMessage.
      * When an sdk call is made, the host passes the token to the sdk.
      */
-    if (hasSecretAuth || isInActionCenter || trustedEmbeddingOrigin) {
+    if (hasSecretAuth || isInActionCenter || hostEmbeddingOrigin) {
       this.#authService.authenticateWithSecret(config.secret ?? '');
       this.#initialized = true;
     }
@@ -237,14 +239,14 @@ export class UiPath implements IUiPath {
     // runs at all.
     const metaConfig = loadFromMetaTags();
     this.#metaFolderKey = metaConfig?.folderKey;
-    this.#metaOrgId = metaConfig?.orgName;
+    this.#metaOrgId = metaConfig?.organizationId ?? metaConfig?.orgName;
     this.#metaTenantId = metaConfig?.tenantName;
 
     // Constructor config overrides meta tags, which override the environment.
     const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
     if (!merged || !isCompleteConfig(merged)) {
-      throw new Error(missingConfigMessage());
+      throw new Error(missingConfigMessage(merged));
     }
 
     return merged;

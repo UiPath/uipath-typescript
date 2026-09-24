@@ -45,6 +45,16 @@ describe('loadFromMetaTags', () => {
     expect(loadFromMetaTags()?.orgName).toBe('myorg');
   });
 
+  it('reads organizationId from the org-id meta tag, separately from orgName', () => {
+    setMetaTags({
+      [UiPathMetaTags.ORG_NAME]: 'myorg',
+      [UiPathMetaTags.ORG_ID]: '11111111-2222-3333-4444-555555555555',
+    });
+    const config = loadFromMetaTags();
+    expect(config?.orgName).toBe('myorg');
+    expect(config?.organizationId).toBe('11111111-2222-3333-4444-555555555555');
+  });
+
   it('reads clientId from meta tag', () => {
     setMetaTags({ [UiPathMetaTags.ORG_NAME]: 'myorg', [UiPathMetaTags.CLIENT_ID]: 'client-123' });
     expect(loadFromMetaTags()?.clientId).toBe('client-123');

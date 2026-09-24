@@ -1,13 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
 import type { AssetGetResponse } from '../../../../src/models/orchestrator/assets.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, () => {
   describe('getAll', () => {
     it('should retrieve all assets', async () => {
       const { assets } = getServices();

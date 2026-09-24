@@ -1,0 +1,46 @@
+.uploader {
+  width: 100%;
+  padding: 1.35rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.uploader__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.uploader__subtitle {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  max-width: 62ch;
+}
+
+.uploader__file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.uploader__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploader__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

@@ -232,7 +232,11 @@ export class BaseService {
         limitedPageSize = getLimitedPageSize(params.pageSize);
         const pageSizeParam = paginationParams?.pageSizeParam || ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM;
         const offsetParam = paginationParams?.offsetParam || ODATA_OFFSET_PARAMS.OFFSET_PARAM;
-        const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
+        // Honor an explicit `countParam: undefined` (non-OData API, no count param);
+        // fall back to the OData default only when the key is absent entirely.
+        const countParam = paginationParams && 'countParam' in paginationParams
+          ? paginationParams.countParam
+          : ODATA_OFFSET_PARAMS.COUNT_PARAM;
         // When true (default), converts pageNumber to a skip/offset value (e.g., page 3 with pageSize 10 → skip 20).
         // When false, passes pageNumber directly as the offset param — used by APIs that accept a page number instead of a record offset.
         const convertToSkip = paginationParams?.convertToSkip ?? true;

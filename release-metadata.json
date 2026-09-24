@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.7.0",
+  "sdkVersion": "1.7.2",
   "services": [
     {
       "name": "AgentMemory",
@@ -117,8 +117,16 @@
           "since": null
         },
         {
+          "name": "getByKey",
+          "since": "1.7.1"
+        },
+        {
           "name": "getByName",
           "since": null
+        },
+        {
+          "name": "updateValue",
+          "since": "1.7.1"
         },
         {
           "name": "updateValueById",
@@ -310,6 +318,44 @@
       ]
     },
     {
+      "name": "Connections",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
+      "name": "Connectors",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getConnections",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getDefaultConnection",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
       "name": "ConversationalAgent",
       "subpath": "@uipath/uipath-typescript/conversational-agent",
       "since": null,
@@ -345,6 +391,49 @@
       ]
     },
     {
+      "name": "Elements",
+      "subpath": "@uipath/uipath-typescript/connections",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getActivities",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceEventObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getInstanceObjects",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjectMetadata",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getObjects",
+          "since": "1.7.2"
+        }
+      ]
+    },
+    {
       "name": "Entities",
       "subpath": "@uipath/uipath-typescript/entities",
       "since": null,
@@ -366,8 +455,16 @@
           "since": "1.7.0"
         },
         {
+          "name": "deleteRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "deleteRecordById",
           "since": null
+        },
+        {
+          "name": "deleteRecords",
+          "since": "1.7.1"
         },
         {
           "name": "deleteRecordsById",
@@ -390,12 +487,28 @@
           "since": null
         },
         {
+          "name": "getByName",
+          "since": "1.7.1"
+        },
+        {
           "name": "getRecordById",
           "since": null
         },
         {
+          "name": "getRecordByName",
+          "since": "1.7.1"
+        },
+        {
           "name": "getRecordsById",
           "since": null
+        },
+        {
+          "name": "getRecordsByName",
+          "since": "1.7.1"
+        },
+        {
+          "name": "importRecords",
+          "since": "1.7.1"
         },
         {
           "name": "importRecordsById",
@@ -406,12 +519,24 @@
           "since": null
         },
         {
+          "name": "insertRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "insertRecordById",
           "since": null
         },
         {
+          "name": "insertRecords",
+          "since": "1.7.1"
+        },
+        {
           "name": "insertRecordsById",
           "since": null
+        },
+        {
+          "name": "queryRecords",
+          "since": "1.7.1"
         },
         {
           "name": "queryRecordsById",
@@ -422,8 +547,16 @@
           "since": "1.7.0"
         },
         {
+          "name": "updateRecord",
+          "since": "1.7.1"
+        },
+        {
           "name": "updateRecordById",
           "since": null
+        },
+        {
+          "name": "updateRecords",
+          "since": "1.7.1"
         },
         {
           "name": "updateRecordsById",
@@ -879,6 +1012,25 @@
         {
           "name": "getSpansByIds",
           "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "subpath": "@uipath/uipath-typescript/users",
+      "since": "1.7.2",
+      "methods": [
+        {
+          "name": "getAll",
+          "since": "1.7.2"
+        },
+        {
+          "name": "getById",
+          "since": "1.7.2"
+        },
+        {
+          "name": "updateById",
+          "since": "1.7.2"
         }
       ]
     },

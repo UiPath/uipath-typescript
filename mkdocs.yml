@@ -46,7 +46,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.indexes
     - navigation.sections
@@ -59,7 +58,6 @@ theme:
     - content.footnote.tooltips
     - content.tabs.link
     - content.tooltips
-    - navigation.expand
     - navigation.footer
     - navigation.sections
     - search.highlight
@@ -77,6 +75,22 @@ plugins:
         Coded Action App SDK:
           - coded-action-app-sdk/getting-started.md: Getting started with Coded Action App SDK
           - coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md: Coded Action App service methods
+  - llmstxt:
+      full_output: "js-functions/llms.txt"
+      sections:
+        JS Functions:
+          - js-functions/index.md: JS Functions overview
+          - js-functions/getting-started.md: Getting started with JS Functions
+          - js-functions/platform-context.md: Platform context available to a function
+          - js-functions/calling-orchestrator.md: Calling Orchestrator from a function
+          - js-functions/production-rules.md: Production rules for functions
+          - js-functions/deployment.md: Deploying functions to Orchestrator
+          - js-functions/cli-reference.md: JS Functions CLI reference
+          - js-functions/api/index.md: JS Functions API overview
+          - js-functions/api/define-function.md: defineFunction reference
+          - js-functions/api/function-error.md: FunctionError reference
+          - js-functions/api/function-context.md: FunctionContext reference
+          - js-functions/api/response-helpers.md: Response helpers reference
   - llmstxt:
       full_output: "llms-full-content.txt"
       preprocess: "scripts/llms-preprocess.py"
@@ -198,6 +212,10 @@ nav:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
+          - Connections:
+            - Connectors: api/interfaces/ConnectorsServiceModel.md
+            - Connections: api/interfaces/ConnectionsServiceModel.md
+            - Elements: api/interfaces/ElementsServiceModel.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
@@ -209,7 +227,10 @@ nav:
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
-          - Platform: api/interfaces/PlatformServiceModel.md
+          - Platform:
+            - Settings: api/interfaces/PlatformServiceModel.md
+            - Users: api/interfaces/PlatformUserServiceModel.md
+            - Roles: api/interfaces/PlatformRoleServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks:
@@ -229,15 +250,30 @@ nav:
       - Coded Action App SDK:
         - Getting Started: coded-action-app-sdk/getting-started.md
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
+  - JS Functions:
+      - Overview: js-functions/index.md
+      - Getting Started: js-functions/getting-started.md
+      - Platform Context: js-functions/platform-context.md
+      - Calling Orchestrator: js-functions/calling-orchestrator.md
+      - Production Rules: js-functions/production-rules.md
+      - Deployment: js-functions/deployment.md
+      - CLI Reference: js-functions/cli-reference.md
+      - API Reference:
+          - Overview: js-functions/api/index.md
+          - defineFunction: js-functions/api/define-function.md
+          - FunctionError: js-functions/api/function-error.md
+          - FunctionContext: js-functions/api/function-context.md
+          - Response Helpers: js-functions/api/response-helpers.md
   - Plugins:
       - Codex: plugins/codex.md
-  - AI App Builders:
+  - App Builder Integrations:
       - Getting Started: ai-app-builders/getting-started.md
-      - Video Gallery: ai-app-builders/videos.md
-      - Vercel (v0): ai-app-builders/vercel.md
-      - Replit: ai-app-builders/replit.md
-      - Bolt: ai-app-builders/bolt.md
-      - Lovable: ai-app-builders/lovable.md
+      - Guides:
+          - ai-app-builders/guides/index.md
+          - Vercel (v0): ai-app-builders/vercel.md
+          - Replit: ai-app-builders/replit.md
+          - Bolt: ai-app-builders/bolt.md
+          - Lovable: ai-app-builders/lovable.md
   - Sample Apps Gallery: samples/index.md
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md

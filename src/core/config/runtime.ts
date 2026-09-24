@@ -32,6 +32,7 @@ export function loadFromMetaTags(): MetaTagConfig | null {
     clientId: getMetaTagContent(UiPathMetaTags.CLIENT_ID),
     scope: getMetaTagContent(UiPathMetaTags.SCOPE),
     orgName: getMetaTagContent(UiPathMetaTags.ORG_NAME),
+    organizationId: getMetaTagContent(UiPathMetaTags.ORG_ID),
     tenantName: getMetaTagContent(UiPathMetaTags.TENANT_NAME),
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),

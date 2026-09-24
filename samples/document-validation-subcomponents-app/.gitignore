@@ -25,3 +25,6 @@ dist-ssr
 *.sw?
 .env
 uipath.json
+
+# Validation Station web component, staged from node_modules by scripts/stage-du-wc.mjs
+public/du-vs-wc

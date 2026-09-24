@@ -407,6 +407,32 @@ describe('BaseService Unit Tests', () => {
       expect(params).not.toHaveProperty(ODATA_OFFSET_PARAMS.COUNT_PARAM);
     });
 
+    it('should omit the count param entirely when countParam is explicitly undefined', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [], totalRecordCount: 0 });
+
+      await service.exposedRequestWithPagination(
+        'GET',
+        TEST_PATH,
+        { pageSize: 5 },
+        {
+          pagination: {
+            paginationType: PaginationType.OFFSET,
+            paginationParams: {
+              pageSizeParam: 'limit',
+              offsetParam: 'start',
+              // Non-OData API with no count param — the OData '$count' default must not be injected
+              countParam: undefined,
+            },
+          },
+        }
+      );
+
+      const params = mockApiClient.get.mock.calls[0][1].params as Record<string, unknown>;
+      expect(params.limit).toBe(5);
+      expect(params).not.toHaveProperty(ODATA_OFFSET_PARAMS.COUNT_PARAM);
+      expect(Object.keys(params).some(key => key.toLowerCase().includes('count'))).toBe(false);
+    });
+
     it('should merge pagination params into body for POST while leaving caller params in the URL', async () => {
       mockApiClient.post.mockResolvedValue({ value: [TEST_RESPONSE], totalRecordCount: 1 });
 

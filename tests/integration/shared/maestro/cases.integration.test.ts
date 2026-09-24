@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetIncidentsTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Cases - Integration Tests', 'both', modes, (_mode, authMode) => {
   describe('Case access and structure', () => {
     it('should instantiate cases service', async () => {
       const { cases } = getServices();
@@ -72,16 +70,16 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getInstanceStatusTimeline', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getInstanceStatusTimeline', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
       await testGetInstanceStatusTimeline(cases);
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getIncidentsTimeline', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getIncidentsTimeline', () => {
     it('should retrieve incident counts bucketed by time for case management', async () => {
       const { cases } = getServices();
       await testGetIncidentsTimeline(cases);
@@ -130,16 +128,16 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopRunCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopRunCount', () => {
     it('should retrieve top case processes by run count', async () => {
       const { cases } = getServices();
       await testGetTopRunCount(cases);
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopFaultedCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopFaultedCount', () => {
     it('should retrieve top case processes by failure count', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -162,8 +160,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopElementFailedCount', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count for cases', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -186,8 +184,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getTopExecutionDuration', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getTopExecutionDuration', () => {
     it('should retrieve top case processes by duration', async () => {
       const { cases } = getServices();
       const now = new Date();
@@ -226,15 +224,16 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getElementStats', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getElementStats', () => {
     it('should retrieve element stats for a case', async () => {
       const { cases } = getServices();
       await testGetElementStats(cases, 'cases');
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  // skip: the duration fields (minDurationMs onward) come back undefined — the
+  // tenant has no completed instances in the window to compute them from.
   describe.skip('getInstanceStats', () => {
     it('should retrieve instance stats for a case', async () => {
       const { cases } = getServices();

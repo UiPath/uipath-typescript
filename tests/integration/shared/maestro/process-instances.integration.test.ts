@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { InstanceStatus } from '../../../../src/models/maestro';
@@ -10,9 +10,7 @@ import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/mo
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
 
@@ -264,7 +262,10 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
       const instance = await processInstances.getById(job.key, config.folderKey);
       expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
-    }, 60_000);
+      // 120s: the wait-for-Running poll alone spans ~40-60s (20 polls at 2s intervals
+      // plus per-request latency) before the cancel
+      // call and verification, and CI runs have timed this test out at 60s under load
+    }, 120_000);
   });
 
   // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in

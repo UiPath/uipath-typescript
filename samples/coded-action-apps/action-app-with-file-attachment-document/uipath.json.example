@@ -1,6 +1,6 @@
 {
   "clientId": "<your-oauth-external-app-client-id>",
-  "scope": "OR.Folders.Read",
+  "scope": "OR.Folders.Read OR.Folders.Write",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
   "baseUrl": "https://api.uipath.com",

@@ -34,6 +34,8 @@ import {
   EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
   EntityGetByNameOptions,
+  EntityUpsertOptions,
+  EntityUpsertResponse,
   EntityRef,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -546,6 +548,50 @@ export interface EntityServiceModel {
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
+
+  /**
+   * Upserts a record into an entity, and to its related child records. Two payload types:
+   *
+   * - One record: Only case and templated entities have one; a native entity rejects this type.
+   * - A tree of records: child records nested under a root entity, written as one transaction. 
+   *   A nested record with an `Id` field updates that row, one without it creates a row. 
+   *
+   * @param entityRef - Entity ref (`{ id }` (GUID) or `{ name }`)
+   * @param data - Record fields, with child records nested under their entity name
+   * @param options - Upsert options. The `folderKey` property is **experimental**.
+   * @returns Promise resolving to the written root record's `Id`, plus the per-record results of a tree write ({@link EntityUpsertResponse})
+   * @example
+   * ```typescript
+   * // Single record, matched on the entity's business key
+   * const result = await entities.upsert({ name: "Case" }, {
+   *   caseId: "CASE-001",
+   *   caseStatus: "Open"
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // A report with two expenses, one of which has a line item — applied as one transaction
+   * const result = await entities.upsert({ name: "Report" }, {
+   *   assignee: "assignee1",
+   *   totalReportAmount: 25,
+   *   Expense: [
+   *     { vendor: "Vendor 1", totalExpense: 20, ExpenseLineItem: [{ expenseAmount: 5 }] },
+   *     { vendor: "Vendor 2", totalExpense: 5 }
+   *   ]
+   * }, { folderKey: "<folderKey>" });
+   *
+   * console.log(result.transaction!.totalRecordsAffected); // 4
+   * console.log(result.transaction!.members[0].id);        // generated expense record ID
+   * ```
+   *
+   * @experimental Writing across related entities requires the multi-entity write feature to be
+   * enabled for your tenant.
+   */
+  upsert(
+    entityRef: EntityRef,
+    data: Record<string, any>,
+    options?: EntityUpsertOptions
+  ): Promise<EntityUpsertResponse>;
 
   /**
    * Deletes data from an entity, identified by ref (`{ id }` or `{ name }`)
@@ -1157,6 +1203,20 @@ export interface EntityMethods {
   updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
   /**
+   * Upserts a record into this entity, optionally with its related child records.
+   *
+   * See {@link EntityServiceModel.upsert} for the two payload forms and which entities take them.
+   *
+   * @param data - Record fields, optionally with child records nested under their entity name
+   * @param options - Upsert options
+   * @returns Promise resolving to the written root record's `Id`, plus the per-record results of a tree write
+   *
+   * @experimental Writing across related entities requires the multi-entity write feature to be
+   * enabled for your tenant.
+   */
+  upsert(data: Record<string, any>, options?: EntityUpsertOptions): Promise<EntityUpsertResponse>;
+
+  /**
    * Delete data from this entity
    *
    * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
@@ -1442,6 +1502,11 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.updateRecords({ id: entityData.id }, data, options);
+    },
+
+    async upsert(data: Record<string, any>, options?: EntityUpsertOptions): Promise<EntityUpsertResponse> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+      return service.upsert({ name: entityData.name }, data, options);
     },
 
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {

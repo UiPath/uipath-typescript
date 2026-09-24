@@ -298,3 +298,71 @@ export const CONVERSATIONAL_TOKEN_PARAMS = {
   /** Conversational agent cursor parameter name */
   TOKEN_PARAM: 'cursor'
 };
+
+/**
+ * Identity pagination response shape constants (users, groups)
+ */
+export const IDENTITY_PAGINATION = {
+  /** Field name for items in identity list responses */
+  ITEMS_FIELD: 'results',
+
+  /** Field name for total count in identity list responses */
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/**
+ * Identity OFFSET pagination parameter names (skip-based, non-OData)
+ */
+export const IDENTITY_OFFSET_PARAMS = {
+  /** Identity page size parameter name */
+  PAGE_SIZE_PARAM: 'top',
+
+  /** Identity offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** No count param — the response always carries totalCount */
+  COUNT_PARAM: undefined
+};
+
+/**
+ * Identity maximum page size — the API rejects `top` above 1000. The fetch-all
+ * (non-paginated) path pages in chunks of this size.
+ */
+export const IDENTITY_MAX_PAGE_SIZE = 1000;
+
+/**
+ * Authorization service pagination response shape constants (roles, role assignments)
+ */
+export const AUTHORIZATION_PAGINATION = {
+  /** Field name for items in authorization list responses */
+  ITEMS_FIELD: 'results',
+
+  /** Field name for total count in authorization list responses */
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/**
+ * Authorization OFFSET pagination parameter names (skip-based, non-OData)
+ */
+export const AUTHORIZATION_OFFSET_PARAMS = {
+  /** Authorization page size parameter name */
+  PAGE_SIZE_PARAM: 'top',
+
+  /** Authorization offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** No count param — the response always carries totalCount */
+  COUNT_PARAM: undefined
+};
+
+/**
+ * Authorization roles maximum page size — the `roles` endpoint accepts `top`
+ * up to 1000. The fetch-all (non-paginated) path pages in chunks of this size.
+ */
+export const AUTHORIZATION_ROLES_MAX_PAGE_SIZE = 1000;
+
+/**
+ * Authorization role-assignments maximum page size — the API rejects `top`
+ * above 100 (live-verified: "Page size cannot be greater than 100!").
+ */
+export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 100;

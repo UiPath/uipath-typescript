@@ -2,7 +2,7 @@ import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
 import { hasValidPagination, generateRandomString } from '../../utils/helpers';
@@ -10,9 +10,7 @@ import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes, (_mode, authMode) => {
   let testCaseInstanceId: string | null = null;
   let testCaseFolderKey: string | null = null;
 
@@ -33,6 +31,22 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
     if (!config.maestroCaseProcessKey || !config.folderId || !config.folderKey) {
       return null;
+    }
+
+    // Reuse an existing Running instance of the fixture process before starting a new
+    // one — interrupted runs leave them Running indefinitely (the human task never
+    // completes), so scavenging them curbs instance growth in the tenant, where
+    // terminal instances cannot be deleted via API.
+    const existing = await caseInstances.getAll({
+      processKey: config.maestroCaseProcessKey,
+      pageSize: 20,
+    });
+    const runningOrphan = existing.items.find(
+      (inst) =>
+        inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey === config.folderKey
+    );
+    if (runningOrphan) {
+      return { instanceId: runningOrphan.instanceId, folderKey: runningOrphan.folderKey };
     }
 
     const [job] = await processes.start(
@@ -61,16 +75,32 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   let seededCompletedJobKey: string | null = null;
 
   beforeAll(async () => {
-    const { processes } = getServices();
+    const { processes, caseInstances } = getServices();
     const config = getTestConfig();
 
-    // Fire-and-forget the reopen fixture first so its completion overlaps the suite
-    if (config.maestroCompletedCaseProcessKey && config.folderId) {
-      const [job] = await processes.start(
-        { processKey: config.maestroCompletedCaseProcessKey },
-        { folderId: Number(config.folderId) }
+    // Provide the reopen fixture first so any completion wait overlaps the suite.
+    // Reuse a Completed timer instance from an interrupted run before starting a new
+    // one — reuse keeps instance growth down, and an existing Completed instance means
+    // the reopen test has zero wait.
+    if (config.maestroCompletedCaseProcessKey && config.folderId && config.folderKey) {
+      const existing = await caseInstances.getAll({
+        processKey: config.maestroCompletedCaseProcessKey,
+        pageSize: 20,
+      });
+      const completedOrphan = existing.items.find(
+        (inst) =>
+          inst.latestRunStatus === InstanceStatus.COMPLETED &&
+          inst.folderKey === config.folderKey
       );
-      seededCompletedJobKey = job.key;
+      if (completedOrphan) {
+        seededCompletedJobKey = completedOrphan.instanceId;
+      } else {
+        const [job] = await processes.start(
+          { processKey: config.maestroCompletedCaseProcessKey },
+          { folderId: Number(config.folderId) }
+        );
+        seededCompletedJobKey = job.key;
+      }
     }
 
     seededInstance = await seedRunningInstance();
@@ -82,15 +112,33 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     }
   }, 120_000);
 
-  /** Prefers the instance seeded for this run; falls back to any running instance. */
+  /**
+   * Prefers the instance seeded for this run; falls back to any running instance.
+   * The seeded instance can die on its own between tests (observed live: a transient
+   * platform fault moved it Running→Faulted, making the next pause fail with an invalid
+   * state transition), so its status is re-verified on every resolve and a replacement
+   * is seeded when it is no longer Running.
+   */
   const resolveRunningInstance = async (): Promise<{
     instanceId: string;
     folderKey: string;
   } | null> => {
-    if (seededInstance) {
-      return seededInstance;
-    }
     const { caseInstances } = getServices();
+
+    if (seededInstance) {
+      const current = await caseInstances.getById(
+        seededInstance.instanceId,
+        seededInstance.folderKey
+      );
+      if (current.latestRunStatus === InstanceStatus.RUNNING) {
+        return seededInstance;
+      }
+      seededInstance = await seedRunningInstance();
+      if (seededInstance) {
+        return seededInstance;
+      }
+    }
+
     const instances = await caseInstances.getAll({ pageSize: 20 });
     const found = instances.items.find(
       (inst) => inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey
@@ -333,18 +381,29 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       const resumeResult = await caseInstances.resume(target.instanceId, target.folderKey);
       expect(resumeResult.success).toBe(true);
 
-      // The instance must return to Running so later tests can keep using it
+      // The instance must return to Running so later tests can keep using it. A resume
+      // issued while the pause is still settling (status Pausing) is accepted but can be
+      // lost — the pause completes afterwards and wins, leaving the instance Paused
+      // (observed live: success=true resume, then Paused for 60s+). When the status
+      // settles on Paused without running again, re-issue the resume: it is idempotent
+      // from Paused and no longer races the pause transition.
       let resumedStatus = '';
-      for (let attempt = 0; attempt < 10; attempt++) {
+      for (let attempt = 0; attempt < 30; attempt++) {
         const current = await caseInstances.getById(target.instanceId, target.folderKey);
         resumedStatus = current.latestRunStatus;
         if (resumedStatus === InstanceStatus.RUNNING) {
           break;
         }
+        // On every 5th poll that reads Paused, assume the earlier resume was lost and
+        // re-issue it (a trailing re-issue also restores the shared instance for later
+        // tests even when this assertion is about to fail)
+        if (resumedStatus === InstanceStatus.PAUSED && attempt % 5 === 4) {
+          await caseInstances.resume(target.instanceId, target.folderKey);
+        }
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       expect(resumedStatus).toBe(InstanceStatus.RUNNING);
-    }, 60_000);
+    }, 120_000);
   });
 
   // Runs after pause/resume (see note there): the ad-hoc trigger spawns an in-flight task
@@ -369,7 +428,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           { itemData: { taskNames: [`sdk-integration-${generateRandomString(8)}`] } }
         )
       ).resolves.toBeUndefined();
-    });
+      // 120s: resolveRunningInstance may re-seed a dead fixture (up to ~90s)
+    }, 120_000);
   });
 
   describe('close', () => {
@@ -391,7 +451,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         // Consumed the seeded instance; afterAll must not close it again
         seededInstance = null;
       }
-    });
+      // 120s: resolveRunningInstance may re-seed a dead fixture (up to ~90s)
+    }, 120_000);
   });
 
   // Reopen requires a Completed instance (close produces Cancelled, which PIMS rejects),
@@ -419,9 +480,11 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         instanceId = job.key;
       }
 
-      // Check immediately, then poll only if it has not completed yet
+      // Check immediately, then poll only if it has not completed yet. Completion takes
+      // ~45s idle but the execution engine stalls for minutes under load — sized to the
+      // same 180s ceiling the retry test uses for the equivalent fault wait.
       let completed = false;
-      for (let attempt = 0; attempt < 24; attempt++) {
+      for (let attempt = 0; attempt < 36; attempt++) {
         try {
           const instance = await caseInstances.getById(instanceId, config.folderKey);
           if (instance.latestRunStatus === InstanceStatus.COMPLETED) {
@@ -434,7 +497,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
       if (!completed) {
-        throw new Error('Seeded auto-completing case instance did not complete within 120s');
+        throw new Error('Seeded auto-completing case instance did not complete within 180s');
       }
 
       const stages = await caseInstances.getStages(instanceId, config.folderKey);
@@ -451,7 +514,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       // Cleanup: close the reopened instance — reopened instances do NOT re-complete on
       // their own, and letting them accumulate saturates the tenant's execution queue.
       await caseInstances.close(instanceId, config.folderKey);
-    }, 180_000);
+    }, 240_000);
   });
 
   describe('Case instance structure validation', () => {
@@ -492,9 +555,11 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getSlaSummary', () => {
-    it('should retrieve SLA summary for case instances', async () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getSlaSummary', () => {
+    // skip: slaDueTime comes back empty on this tenant's SLA rows, so the ISO
+    // timestamp assertion cannot pass.
+    it.skip('should retrieve SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
       const result = await caseInstances.getSlaSummary();
@@ -528,8 +593,8 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getStagesSlaSummary', () => {
+  // insightsrtm_ rejects PAT — user-token cell only.
+  describe.skipIf(authMode !== 'user')('getStagesSlaSummary', () => {
     it('should retrieve stages SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 

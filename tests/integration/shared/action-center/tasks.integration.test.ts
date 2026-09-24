@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
-  setupUnifiedTests,
+  describeIntegration,
   cleanupTestTask,
   InitMode,
 } from '../../config/unified-setup';
@@ -12,9 +12,7 @@ import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '..
 
 const modes: InitMode[] = ['v0', 'v1'];
 
-describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Tasks - Integration Tests', 'both', modes, (mode) => {
   let createdTaskId: number | null = null;
   const testTaskTitle = generateTestResourceName(`Task_${mode}`);
 
@@ -96,6 +94,49 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
           `Task creation failed. This may require specific Action Center configuration: ${error.message}`
         );
       }
+    });
+  });
+
+  describe('create (QuickForm)', () => {
+    it('should create a QuickForm task with inline schema', async () => {
+      const { tasks } = getServices();
+      const config = getTestConfig();
+
+      // Use a fresh schema key per run so we don't collide with prior tests.
+      const taskSchemaKey = crypto.randomUUID();
+      const quickFormTitle = generateTestResourceName(`QuickForm_${mode}`);
+
+      const schema = {
+        id: taskSchemaKey,
+        fields: [
+          { id: 'note', label: 'Reviewer Note', type: 'text', direction: 'input' },
+        ],
+        outcomes: [
+          { id: 'approve', name: 'Approve', type: 'string', isPrimary: true },
+          { id: 'reject', name: 'Reject', type: 'string', isPrimary: false },
+        ],
+      };
+
+      if (!config.folderId) {
+        throw new Error('QuickForm integration test requires folderId — set FOLDER_ID in the test environment');
+      }
+      const folderId = Number(config.folderId);
+
+      const result = await tasks.create({
+        type: TaskType.QuickForm,
+        title: quickFormTitle,
+        taskSchemaKey,
+        schema,
+        data: { note: 'Sample input for QuickForm integration test' },
+        priority: TaskPriority.Medium,
+      }, folderId);
+
+      expect(result).toBeDefined();
+      expect(result.title).toBe(quickFormTitle);
+      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe('number');
+
+      registerResource('tasks', { id: result.id, folderId });
     });
   });
 
@@ -365,16 +406,14 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const users = await tasks.getUsers(folderId!);
-        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
-        if (user) {
-          await tasks.assign({
-            taskId: createdTaskId,
-            userId: user.id,
-          });
-        } else {
-          throw new Error('No DirectoryUser available to assign task');
+        if (!config.tasksTestUserId) {
+          throw new Error('TASKS_TEST_USER_ID is required in the test config for single-user assignment');
         }
+
+        await tasks.assign({
+          taskId: createdTaskId,
+          userId: Number(config.tasksTestUserId),
+        });
 
         const result = await tasks.complete({
           taskId: createdTaskId,
@@ -437,11 +476,9 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       await cleanupTestTask(createdTaskId);
     }
   });
-}, 120000);
+}, { timeout: 120000 });
 
-describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Tasks (extended) - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;
@@ -569,9 +606,7 @@ describe.each(['v1'] as InitMode[])('Action Center Tasks (extended) - Integratio
   });
 });
 
-describe.each(['v1'] as InitMode[])('Action Center Task Comments - Integration Tests [%s]', (mode) => {
-  setupUnifiedTests(mode);
-
+describeIntegration('Action Center Task Comments - Integration Tests', 'both', ['v1'] as InitMode[], () => {
   let folderId: number;
   let folderKey: string;
   let folderPath: string;

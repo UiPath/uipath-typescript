@@ -627,6 +627,60 @@ export interface EntityUpdateResponse extends EntityOperationResponse {}
 export interface EntityDeleteResponse extends EntityOperationResponse {}
 
 /**
+ * Whether an upsert created a record or updated one that already existed.
+ */
+export enum EntityMultiEntityWriteOperation {
+  Insert = "Insert",
+  Update = "Update",
+}
+
+/**
+ * Write response of a node in request tree. Results follow the same structure as the request.
+ */
+export interface EntityMultiEntityWriteResponseNode {
+  /** Name of the entity */
+  entityName: string;
+  /** Record was created or updated */
+  op: EntityMultiEntityWriteOperation;
+  /** ID of the record. */
+  id: string;
+  /** Number of rows the write affected */
+  affectedRows: number;
+  /**
+   * `true` when an update changed nothing and only confirmed the row is there.
+   */
+  noOp: boolean;
+  /** The row's version after the write. */
+  version?: number;
+  /** Results for the child records nested under this one */
+  members: EntityMultiEntityWriteResponseNode[];
+}
+
+/**
+ * For an upsert transaction, results include the top-level record and its nested child results.
+ */
+export interface EntityMultiEntityWriteResponse extends EntityMultiEntityWriteResponseNode {
+  /** Total records written across every entity in the transaction */
+  totalRecordsAffected: number;
+}
+
+/**
+ * Response from upserting a record.
+ *
+ * The raw response also carries `children`, `cascadeDeletedChildren` and `deletedCount` for composite entities.
+ */
+export interface EntityUpsertResponse extends EntityRecord {
+  transaction?: EntityMultiEntityWriteResponse;
+}
+
+/**
+ * Options for upserting a record
+ */
+export interface EntityUpsertOptions extends EntityFolderScopedOptions {
+  expansionLevel?: number;
+}
+
+/**
  * Entity type enum
  */
 export enum EntityType {

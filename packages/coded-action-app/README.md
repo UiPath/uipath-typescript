@@ -51,6 +51,7 @@ console.log(taskData.isReadOnly); // boolean
 console.log(taskData.data);       // the task's form data
 console.log(taskData.folderId);   // number
 console.log(taskData.folderName); // string
+console.log(taskData.jobKey);     // string | null — GUID key of the job that created the task
 console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
 ```
 
@@ -124,6 +125,7 @@ type Task = {
   data: unknown;
   folderId: number;
   folderName: string;
+  jobKey: string | null;
   theme: Theme;
 };
 ```

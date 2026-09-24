@@ -15,7 +15,9 @@ import {
   EntityBatchInsertResponse,
   EntityUpdateRecordResponse,
   EntityUpdateResponse,
-  EntityDeleteResponse
+  EntityDeleteResponse,
+  EntityMultiEntityWriteOperation,
+  EntityUpsertResponse
 } from '../../../src/models/data-fabric/entities.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { ENTITY_TEST_CONSTANTS } from '../constants/entities';
@@ -327,6 +329,57 @@ export const createMockSingleInsertResponse = (
 
   return result;
 };
+
+/**
+ * Creates a mock upsert response.
+ */
+export const createMockUpsertTreeResponse =
+  (): EntityUpsertResponse => ({
+    Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+    children: {},
+    cascadeDeletedChildren: {},
+    deletedCount: 0,
+    transaction: {
+      totalRecordsAffected: 3,
+      entityName: ENTITY_TEST_CONSTANTS.TREE_ROOT_ENTITY_NAME,
+      op: EntityMultiEntityWriteOperation.Insert,
+      id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+      affectedRows: 1,
+      noOp: false,
+      version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+      members: [
+        {
+          entityName: ENTITY_TEST_CONSTANTS.TREE_CHILD_ENTITY_NAME,
+          op: EntityMultiEntityWriteOperation.Insert,
+          id: ENTITY_TEST_CONSTANTS.TREE_CHILD_RECORD_ID,
+          affectedRows: 1,
+          noOp: false,
+          version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+          members: [
+            {
+              entityName: ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_ENTITY_NAME,
+              op: EntityMultiEntityWriteOperation.Insert,
+              id: ENTITY_TEST_CONSTANTS.TREE_GRANDCHILD_RECORD_ID,
+              affectedRows: 1,
+              noOp: false,
+              version: ENTITY_TEST_CONSTANTS.TREE_ROOT_VERSION,
+              members: [],
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+/**
+ * Creates a single-record upsert response.
+ */
+export const createMockUpsertRecordResponse = (): EntityUpsertResponse => ({
+  Id: ENTITY_TEST_CONSTANTS.TREE_ROOT_RECORD_ID,
+  children: {},
+  cascadeDeletedChildren: {},
+  deletedCount: 0
+});
 
 /**
  * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated record IDs

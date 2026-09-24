@@ -7,23 +7,23 @@ interface PlatformMock {
   embeddingOrigin: string | null;
 }
 
-// trustedEmbeddingOrigin is a module-level const evaluated at import time from the
+// hostEmbeddingOrigin is a module-level const evaluated at import time from the
 // platform flags, so each scenario re-mocks platform and re-imports the module.
-async function loadTrustedEmbeddingOrigin(platform: PlatformMock): Promise<string | null> {
+async function loadHostEmbeddingOrigin(platform: PlatformMock): Promise<string | null> {
   vi.resetModules();
   vi.doMock('@/utils/platform', () => platform);
   const mod = await import('@/core/auth/host-token-request');
-  return mod.trustedEmbeddingOrigin;
+  return mod.hostEmbeddingOrigin;
 }
 
-describe('trustedEmbeddingOrigin', () => {
+describe('hostEmbeddingOrigin', () => {
   afterEach(() => {
     vi.resetModules();
     vi.doUnmock('@/utils/platform');
   });
 
-  it('resolves to the origin when host-embedded with a trusted UiPath origin', async () => {
-    const origin = await loadTrustedEmbeddingOrigin({
+  it('resolves to the origin when host-embedded', async () => {
+    const origin = await loadHostEmbeddingOrigin({
       isBrowser: true,
       isInActionCenter: false,
       isHostEmbedded: true,
@@ -32,8 +32,8 @@ describe('trustedEmbeddingOrigin', () => {
     expect(origin).toBe('https://cloud.uipath.com');
   });
 
-  it('is null when not host-embedded even with a valid origin', async () => {
-    const origin = await loadTrustedEmbeddingOrigin({
+  it('is null when not host-embedded even with an origin present', async () => {
+    const origin = await loadHostEmbeddingOrigin({
       isBrowser: true,
       isInActionCenter: false,
       isHostEmbedded: false,
@@ -42,18 +42,20 @@ describe('trustedEmbeddingOrigin', () => {
     expect(origin).toBeNull();
   });
 
-  it('is null when the embedding origin is not a trusted UiPath host', async () => {
-    const origin = await loadTrustedEmbeddingOrigin({
+  // Host origins are customer-configurable and follow no fixed pattern, so any
+  // origin the host supplies is taken as given and simply pinned.
+  it('resolves to the origin for a non-uipath.com host domain', async () => {
+    const origin = await loadHostEmbeddingOrigin({
       isBrowser: true,
       isInActionCenter: false,
       isHostEmbedded: true,
-      embeddingOrigin: 'https://evil.example.com',
+      embeddingOrigin: 'https://automation.customer-sf.internal',
     });
-    expect(origin).toBeNull();
+    expect(origin).toBe('https://automation.customer-sf.internal');
   });
 
   it('is null when embeddingOrigin is null', async () => {
-    const origin = await loadTrustedEmbeddingOrigin({
+    const origin = await loadHostEmbeddingOrigin({
       isBrowser: true,
       isInActionCenter: false,
       isHostEmbedded: true,

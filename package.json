@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.7.0",
+    "version": "1.7.2",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -255,6 +255,36 @@
                 "types": "./dist/business-apps/index.d.ts",
                 "default": "./dist/business-apps/index.cjs"
             }
+        },
+        "./users": {
+            "import": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.cjs"
+            }
+        },
+        "./connections": {
+            "import": {
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.mjs"
+            },
+            "require": {
+                "types": "./dist/connections/index.d.ts",
+                "default": "./dist/connections/index.cjs"
+            }
+        },
+        "./roles": {
+            "import": {
+                "types": "./dist/roles/index.d.ts",
+                "default": "./dist/roles/index.mjs"
+            },
+            "require": {
+                "types": "./dist/roles/index.d.ts",
+                "default": "./dist/roles/index.cjs"
+            }
         }
     },
     "files": [
@@ -269,14 +299,16 @@
         "build": "rollup -c",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
-        "docs:api": "typedoc && npm run docs:post-process && npm run docs:coded-action-app",
+        "docs:api": "typedoc && npm run docs:post-process && npm run docs:coded-action-app && npm run docs:js-functions",
         "docs:coded-action-app": "npm run docs --prefix packages/coded-action-app",
+        "docs:js-functions": "bash scripts/fetch-js-functions-docs.sh",
         "docs:post-process": "node scripts/docs-post-process.mjs",
         "docs:validate": "typedoc --options typedoc.validation.json",
         "lint": "oxlint",
         "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
         "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
+        "api-surface": "node scripts/check-api-surface.mjs --base origin/main",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",
