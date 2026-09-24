@@ -20,18 +20,19 @@ describe('query (entity operations)', () => {
     vi.restoreAllMocks();
   });
 
-  it('reads the entity by name in the invocation folder and returns the rows', async () => {
+  it('reads the entity by name in the invocation folder and returns the full response', async () => {
     const queryRecords = vi
       .spyOn(EntityService.prototype, 'queryRecords')
       .mockResolvedValue({ items: rows, totalCount: rows.length } as never);
 
-    const result = await query(ctx, 'Ticket', { filterGroup: { queryFilters: [] } } as never);
+    const result = await query(ctx, 'Ticket', { filterGroup: { queryFilters: [] } });
 
     expect(queryRecords).toHaveBeenCalledWith(
       { name: 'Ticket' },
       expect.objectContaining({ folderKey: 'invocation-folder' }),
     );
-    expect(result).toEqual(rows);
+    expect(result.items).toEqual(rows);
+    expect(result.totalCount).toBe(rows.length);
   });
 
   it('lets an explicit folderKey override the invocation folder', async () => {
@@ -39,7 +40,7 @@ describe('query (entity operations)', () => {
       .spyOn(EntityService.prototype, 'queryRecords')
       .mockResolvedValue({ items: [], totalCount: 0 } as never);
 
-    await query(ctx, 'Ticket', { folderKey: 'other-folder' } as never);
+    await query(ctx, 'Ticket', { folderKey: 'other-folder' });
 
     expect(queryRecords).toHaveBeenCalledWith({ name: 'Ticket' }, expect.objectContaining({ folderKey: 'other-folder' }));
   });
@@ -56,5 +57,11 @@ describe('query (entity operations)', () => {
     await query(tenantCtx, 'Ticket');
 
     expect(queryRecords).toHaveBeenCalledWith({ name: 'Ticket' }, expect.objectContaining({ folderKey: undefined }));
+  });
+
+  it('propagates a rejected queryRecords', async () => {
+    vi.spyOn(EntityService.prototype, 'queryRecords').mockRejectedValue(new Error('API failure'));
+
+    await expect(query(ctx, 'Ticket')).rejects.toBeInstanceOf(Error);
   });
 });
