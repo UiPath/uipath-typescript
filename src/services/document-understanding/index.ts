@@ -8,12 +8,12 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { DuValidation } from '@uipath/uipath-typescript/document-understanding';
+ * import { DocumentUnderstanding } from '@uipath/uipath-typescript/document-understanding';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const validation = new DuValidation(sdk);
+ * const validation = new DocumentUnderstanding(sdk);
  * const { operationId } = await validation.startExtractionValidation(
  *   '<projectId>',
  *   '<tag>',
@@ -25,9 +25,6 @@
  * @module
  */
 
-export {
-  DuValidationService as DuValidation,
-  DuValidationService,
-} from './validation';
+export { DocumentUnderstanding } from './validation';
 
 export * from '../../models/document-understanding';
