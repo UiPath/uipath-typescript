@@ -52,7 +52,7 @@ export class DocumentUnderstanding
   extends BaseService
   implements DuValidationServiceModel
 {
-  @track('DuValidation.StartExtractionValidation')
+  @track('DocumentUnderstanding.StartExtractionValidation')
   async startExtractionValidation(
     projectId: string,
     tag: string,
