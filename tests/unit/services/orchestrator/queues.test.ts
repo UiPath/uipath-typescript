@@ -922,7 +922,7 @@ describe('QueueService Unit Tests', () => {
       );
     });
 
-    it('should not send a robot identifier', async () => {
+    it('should not send a robot identifier when the SDK has no robot key', async () => {
       mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
 
       await queueService.startTransaction(
@@ -930,12 +930,33 @@ describe('QueueService Unit Tests', () => {
         { folderId: TEST_CONSTANTS.FOLDER_ID }
       );
 
-      // The API defines RobotIdentifier as the key of the robot that sent the
-      // request, so the SDK never supplies one on the caller's behalf.
       const body = mockApiClient.post.mock.calls[0][1] as {
         transactionData: Record<string, unknown>;
       };
       expect(body.transactionData.RobotIdentifier).toBeUndefined();
+    });
+
+    it('should send the robot key as the robot identifier when the SDK has one', async () => {
+      // Built from a coded function's ctx, which carries the robot key
+      const { instance } = createServiceTestDependencies({ robotKey: TEST_CONSTANTS.ROBOT_KEY });
+      const robotQueueService = new QueueService(instance);
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
+
+      await robotQueueService.startTransaction(
+        { name: QUEUE_TEST_CONSTANTS.QUEUE_NAME },
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.START_TRANSACTION,
+        {
+          transactionData: {
+            Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+            RobotIdentifier: TEST_CONSTANTS.ROBOT_KEY
+          }
+        },
+        expect.anything()
+      );
     });
 
     it('should return null when no item is available (204 empty body)', async () => {

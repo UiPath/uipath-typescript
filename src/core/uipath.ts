@@ -86,6 +86,8 @@ export class UiPath implements IUiPath {
   // deployments). Not accepted via the public constructor; lives here so the
   // SDK can flow it through to BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
+  // Robot key from a coded function's ctx; only ctx carries it.
+  #robotKey?: string;
   // Org/tenant ids captured from the meta tags before the constructor config
   // is merged in. Deployments inject the organization GUID as `uipath:org-id`
   // (`uipath:org-name` is the logical name) and the tenant GUID as
@@ -109,6 +111,7 @@ export class UiPath implements IUiPath {
     const resolved = config && isFunctionContext(config)
       ? configFromFunctionContext(config) ?? undefined
       : config;
+    this.#robotKey = config && isFunctionContext(config) ? config.robot?.key ?? undefined : undefined;
 
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
@@ -159,6 +162,7 @@ export class UiPath implements IUiPath {
       context: executionContext,
       tokenManager: this.#authService.getTokenManager(),
       folderKey: this.#metaFolderKey,
+      robotKey: this.#robotKey,
     });
 
     // Expose read-only config for user convenience

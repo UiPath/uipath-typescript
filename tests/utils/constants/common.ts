@@ -46,4 +46,5 @@ export const TEST_CONSTANTS = {
   CODE_CHALLENGE: 'test-code-challenge',
   OAUTH_SCOPE: 'OR.Processes',
   TENANT_ID: 'test-tenant-id',
+  ROBOT_KEY: 'test-robot-key',
 } as const;

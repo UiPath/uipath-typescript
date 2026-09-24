@@ -31,6 +31,7 @@ vi.mock('@/core/config/runtime', () => ({ loadFromMetaTags: vi.fn(() => null) })
 
 import { UiPath } from '@/core/uipath';
 import { loadFromMetaTags } from '@/core/config/runtime';
+import { SDKInternalsRegistry } from '@/core/internals';
 import type { CodedFunctionContext } from '@/core/config/function-context';
 import { clearContractEnv } from '../../utils/env-contract';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
@@ -223,6 +224,29 @@ describe('UiPath constructed from a coded-function context', () => {
     expect(sdk.isInitialized()).toBe(true);
   });
 
+  it('keeps the robot key for services, off the public config', () => {
+    const ctx: CodedFunctionContext = {
+      platform: { baseUrl: BASE_URL, orgId: ORG_ID, tenantId: TENANT_ID },
+      robot: { accessToken: TOKEN, key: TEST_CONSTANTS.ROBOT_KEY },
+    };
+
+    const sdk = new UiPath(ctx);
+
+    expect(SDKInternalsRegistry.get(sdk).robotKey).toBe(TEST_CONSTANTS.ROBOT_KEY);
+    expect(JSON.stringify(sdk.config)).not.toContain(TEST_CONSTANTS.ROBOT_KEY);
+  });
+
+  it('has no robot key when ctx carries none', () => {
+    const ctx: CodedFunctionContext = {
+      platform: { baseUrl: BASE_URL, orgId: ORG_ID, tenantId: TENANT_ID },
+      robot: { accessToken: TOKEN, key: null },
+    };
+
+    const sdk = new UiPath(ctx);
+
+    expect(SDKInternalsRegistry.get(sdk).robotKey).toBeUndefined();
+  });
+
   it('never exposes the workload token on the public config', () => {
     const ctx: CodedFunctionContext = {
       platform: { baseUrl: BASE_URL, orgId: ORG_ID, tenantId: TENANT_ID },
@@ -266,5 +290,6 @@ describe('UiPath constructed from a coded-function context', () => {
 
     expect(sdk.config.orgName).toBe('my-org');
     expect(sdk.isInitialized()).toBe(true);
+    expect(SDKInternalsRegistry.get(sdk).robotKey).toBeUndefined();
   });
 });
