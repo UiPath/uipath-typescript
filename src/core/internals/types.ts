@@ -28,7 +28,7 @@ export interface PrivateSDK {
   folderKey?: string;
   /**
    * Present only in public (anonymous) coded-app mode. Routes supported calls
-   * through the Apps gateway with a session cookie instead of a user token.
+   * through the Apps service with a session cookie instead of a user token.
    * @internal
    */
   publicAppClient?: PublicAppClient;

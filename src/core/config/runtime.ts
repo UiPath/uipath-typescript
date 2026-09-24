@@ -9,9 +9,6 @@ import { isBrowser } from '../../utils/platform';
  */
 export type MetaTagConfig = PartialUiPathConfig & { folderKey?: string };
 
-/** Value of `uipath:runtime-auth-mode` that switches the SDK into public (application-identity) mode. */
-export const RUNTIME_AUTH_MODE_APPLICATION = 'application';
-
 /**
  * Get the content of a meta tag by name.
  * Returns undefined if not in browser environment or meta tag is not found.
@@ -39,8 +36,7 @@ export function loadFromMetaTags(): MetaTagConfig | null {
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),
     folderKey: getMetaTagContent(UiPathMetaTags.FOLDER_KEY),
-    runtimeAuthMode: getMetaTagContent(UiPathMetaTags.RUNTIME_AUTH_MODE),
-    appId: getMetaTagContent(UiPathMetaTags.APP_ID),
+    appKey: getMetaTagContent(UiPathMetaTags.APP_KEY),
   };
 
   const hasAnyValue = Object.values(config).some(Boolean);

@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { TelemetryContext } from '@uipath/core-telemetry';
 import { UiPath } from '../../../src/core/uipath';
+import { AuthService } from '../../../src/core/auth/service';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
@@ -148,6 +149,48 @@ describe('UiPath Core', () => {
 
       const config = getConfig(sdk);
       expect(config.baseUrl).toBe('https://cloud.uipath.com');
+    });
+  });
+
+  describe('Public mode', () => {
+    // A deployed public app's page carries both its app key and its OAuth meta tags.
+    const publicPage = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'OR.Jobs',
+      appKey: 'uapp_key',
+    };
+
+    it('drops the OAuth credentials when an app key is present', () => {
+      const config = getConfig(new UiPath(publicPage));
+
+      expect(config.appKey).toBe('uapp_key');
+      expect(config.clientId).toBeUndefined();
+      expect(config.scope).toBeUndefined();
+    });
+
+    it('initializes without starting a sign-in', async () => {
+      const authenticate = vi.fn();
+      vi.mocked(AuthService).mockImplementationOnce(function () {
+        return {
+          getTokenManager: () => mockTokenManager,
+          hasValidToken: () => false,
+          getToken: () => undefined,
+          authenticateWithSecret: vi.fn(),
+          authenticate,
+          setMultiLogin: vi.fn(),
+          logout: vi.fn(),
+        };
+      } as any);
+
+      const sdk = new UiPath(publicPage);
+      await sdk.initialize();
+
+      expect(authenticate).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
     });
   });
 

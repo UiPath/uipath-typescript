@@ -75,9 +75,7 @@ export class UiPath implements IUiPath {
     // Merge configuration: constructor config overrides meta tags
     const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
 
-    // Public (anonymous) mode is complete without OAuth/secret: the app carries no
-    // creds — the Apps gateway holds its identity. Base fields (baseUrl/org/tenant)
-    // still come from meta tags/config.
+    // Public (anonymous) mode is complete without OAuth/secret: the Apps service holds the app's identity.
     if (mergedConfig && (isCompleteConfig(mergedConfig) || (isPublicMode(mergedConfig) && hasRequiredBaseFields(mergedConfig)))) {
       this.#initializeWithConfig(mergedConfig);
     } else if (config) {
@@ -95,7 +93,8 @@ export class UiPath implements IUiPath {
     }
 
     const hasSecretAuth = hasSecretConfig(config);
-    const hasOAuthAuth = hasOAuthConfig(config);
+    // A public app's page still carries its OAuth meta tags; they must not start a sign-in.
+    const hasOAuthAuth = !publicMode && hasOAuthConfig(config);
 
     // Initialize core components
     const internalConfig = new UiPathConfig({
@@ -106,22 +105,21 @@ export class UiPath implements IUiPath {
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
-      runtimeAuthMode: config.runtimeAuthMode,
-      appId: config.appId,
+      appKey: config.appKey,
     });
 
     const executionContext = new ExecutionContext();
     // AuthService is safe without creds (no token manager work happens until a call
-    // needs one, which public-mode services never do — they route through the gateway).
+    // needs one, which public-mode services never do — they call the Apps service).
     this.#authService = new AuthService(internalConfig, executionContext);
     if (this.#multiLogin) {
       this.#authService.setMultiLogin();
     }
     this.#config = internalConfig;
 
-    // In public mode, build the gateway client the supported services route through.
+    // In public mode, build the client the supported services call the Apps service through.
     const publicAppClient = publicMode
-      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appId!)
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!)
       : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
@@ -202,6 +200,12 @@ export class UiPath implements IUiPath {
 
     // For secret-based auth, it's already initialized in constructor
     if (hasSecretConfig(this.#config!)) {
+      return;
+    }
+
+    // Public mode has no user to sign in: the Apps service holds the app's identity.
+    if (isPublicMode(this.#config!)) {
+      this.#initialized = true;
       return;
     }
 
