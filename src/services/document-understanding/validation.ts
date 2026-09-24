@@ -48,7 +48,7 @@ function shallowCamelCaseEnvelope(data: object): Record<string, unknown> {
 /**
  * Service for the Document Understanding validation-station flow.
  */
-export class DuValidationService
+export class DocumentUnderstanding
   extends BaseService
   implements DuValidationServiceModel
 {

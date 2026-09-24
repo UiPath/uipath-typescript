@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DuValidationService } from '@/services/document-understanding/validation';
+import { DocumentUnderstanding } from '@/services/document-understanding/validation';
 import { ApiClient } from '@/core/http/api-client';
 import { DU_VALIDATION_ENDPOINTS } from '@/utils/constants/endpoints';
 import type { DuValidationStartRequest } from '@/models/document-understanding/validation.types';
@@ -96,8 +96,8 @@ const RESULT_SDK_RESPONSE = {
 };
 
 // ===== TEST SUITE =====
-describe('DuValidationService Unit Tests', () => {
-  let service: DuValidationService;
+describe('DocumentUnderstanding Unit Tests', () => {
+  let service: DocumentUnderstanding;
   let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
@@ -106,7 +106,7 @@ describe('DuValidationService Unit Tests', () => {
 
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
 
-    service = new DuValidationService(instance);
+    service = new DocumentUnderstanding(instance);
   });
 
   afterEach(() => {

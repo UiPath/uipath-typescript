@@ -16,9 +16,9 @@ import type {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { DuValidation } from '@uipath/uipath-typescript/document-understanding';
+ * import { DocumentUnderstanding } from '@uipath/uipath-typescript/document-understanding';
  *
- * const validation = new DuValidation(sdk);
+ * const validation = new DocumentUnderstanding(sdk);
  * ```
  */
 export interface DuValidationServiceModel {

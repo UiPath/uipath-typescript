@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
-import { DuValidation } from '../../../../src/services/document-understanding';
+import { DocumentUnderstanding } from '../../../../src/services/document-understanding';
 import { UiPathError } from '../../../../src/core/errors';
 import type { DuValidationStartRequest } from '../../../../src/models/document-understanding/validation.types';
 
@@ -28,11 +28,11 @@ const START_REQUEST: DuValidationStartRequest = {
 };
 
 describeIntegration('Document Understanding Validation - Integration Tests', 'both', modes, () => {
-  let validation!: DuValidation;
+  let validation!: DocumentUnderstanding;
 
   beforeAll(() => {
     const { sdk } = getServices();
-    validation = new DuValidation(sdk);
+    validation = new DocumentUnderstanding(sdk);
   });
 
   describe('startExtractionValidation', () => {
