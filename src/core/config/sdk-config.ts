@@ -12,14 +12,12 @@ export interface OAuthFields {
   scope: string;
 }
 
-// Public (anonymous) coded-app fields. Injected via meta tags at deploy — the app
-// runs as its own identity through the Apps gateway, so it carries no OAuth creds.
+// Public (anonymous) coded-app fields. Injected via meta tags at deploy; the app carries no OAuth creds.
 export interface PublicModeFields {
-  /** 'application' switches the SDK into public mode; absent/'user' keeps PKCE. */
-  runtimeAuthMode?: string;
-  /** Deployment id used to build the Apps-gateway routes in public mode. */
-  appId?: string;
+  /** Names the app to the Apps service. Minted only for public apps, so its presence means public mode. */
+  appKey?: string;
 }
+
 
 // Configuration type that enforces either secret or complete OAuth fields
 export type UiPathSDKConfig = BaseConfig & (
@@ -31,10 +29,9 @@ export type UiPathSDKConfig = BaseConfig & (
 // The isCompleteConfig function validates the final merged config
 export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields & { secret: string } & PublicModeFields>;
 
-// Type guard: is the app running in public (anonymous) mode? Requires the appId
-// the gateway routes are keyed on, so a bare mode flag can't half-enable it.
-export function isPublicMode(config: { runtimeAuthMode?: string; appId?: string }): config is { runtimeAuthMode: string; appId: string } {
-  return config.runtimeAuthMode === 'application' && Boolean(config.appId);
+// Public (anonymous) mode: the Apps service mints an app key only for public apps, so the key alone decides it.
+export function isPublicMode(config: { appKey?: string }): config is { appKey: string } {
+  return Boolean(config.appKey);
 }
 
 // Type guard to check if config has OAuth credentials

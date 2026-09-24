@@ -50,6 +50,11 @@ describe('loadFromMetaTags', () => {
     expect(loadFromMetaTags()?.clientId).toBe('client-123');
   });
 
+  it('reads appKey from meta tag', () => {
+    setMetaTags({ [UiPathMetaTags.ORG_NAME]: 'myorg', [UiPathMetaTags.APP_KEY]: 'uapp_key' });
+    expect(loadFromMetaTags()?.appKey).toBe('uapp_key');
+  });
+
   it('reads folderKey from meta tag', () => {
     setMetaTags({ [UiPathMetaTags.ORG_NAME]: 'myorg', [UiPathMetaTags.FOLDER_KEY]: 'folder-abc' });
     expect(loadFromMetaTags()?.folderKey).toBe('folder-abc');

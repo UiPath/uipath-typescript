@@ -101,11 +101,20 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    // Public (anonymous) mode: the gateway checks this session owns the job (404 if
+    // Public (anonymous) mode: the Apps service checks this session owns the job (404 if
     // not), mints the app token, and returns the output — no folderId, no user token.
     if (this.publicApp) {
-      const result = await this.publicApp.getJobOutput(jobKey) as { output?: Record<string, unknown> | null } | null;
-      return result?.output ?? null;
+      // The Apps service returns Orchestrator's job as sent, so the output is parsed here exactly as it is on the
+      // signed-in path below.
+      const job = (await this.publicApp.getJob(jobKey)) as { OutputArguments?: string | null } | null;
+      if (!job?.OutputArguments) {
+        return null;
+      }
+      try {
+        return JSON.parse(job.OutputArguments) as Record<string, unknown>;
+      } catch {
+        throw new ServerError({ message: 'Failed to parse job output arguments as JSON' });
+      }
     }
 
     if (folderId === undefined) {
