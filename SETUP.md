@@ -15,22 +15,11 @@ Machine-executable setup, build, and test instructions for the UiPath TypeScript
 
 ## Environment Variables
 
-### Standard (injected by pipeline)
-
-| Variable | Description |
-|----------|-------------|
-| `GITHUB_TOKEN` | Referenced by this repo's `.npmrc` (`//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}`). All dependencies resolve from the public npm registry via `package-lock.json`, so the token value is never validated during install — it only needs to be set so npm can interpolate the `.npmrc`. Any non-empty value works for local dev. |
-
-### Project-specific
-
-None. Unit tests are fully mocked and need no credentials or external infrastructure. (Integration tests against a live UiPath tenant exist under `tests/integration/` but are not part of this loop.)
+None. All dependencies, including `@uipath/*`, resolve from the public npm registry, and unit tests are fully mocked and need no credentials or external infrastructure. (Integration tests against a live UiPath tenant exist under `tests/integration/` but are not part of this loop.)
 
 ## Setup
 
 ```bash
-# .npmrc interpolates ${GITHUB_TOKEN}; default it for local dev (pipeline injects the real one).
-export GITHUB_TOKEN="${GITHUB_TOKEN:-local-dev-placeholder}"
-
 # Install exact locked dependencies.
 npm ci --no-audit --no-fund
 ```
@@ -114,10 +103,6 @@ npm run typecheck
 ```
 
 ## Troubleshooting
-
-### `npm error Failed to replace env in config: ${GITHUB_TOKEN}`
-
-Older npm versions fail hard when `.npmrc` references an unset variable. Set it to any non-empty value: `export GITHUB_TOKEN=local-dev-placeholder`.
 
 ### Build aborts with `FatalProcessOutOfMemory` / `JavaScript heap out of memory`
 
