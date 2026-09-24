@@ -27,6 +27,11 @@ export interface PrivateSDK {
    */
   folderKey?: string;
   /**
+   * Serverless robot key, taken from a coded function's `ctx.robot.key`.
+   * Orchestrator needs it to hand a queue item to the function's robot.
+   */
+  robotKey?: string;
+  /**
    * Organization GUID resolver, created lazily by
    * `SDKInternalsRegistry.getOrganizationIdResolver()` and cached here so every
    * service built on the instance shares one resolution.
