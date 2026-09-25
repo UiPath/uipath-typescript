@@ -4,6 +4,10 @@
 
 import { OperationResponse } from "../models/common";
 
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 /**
  * Resolves a field value from an object, supporting both direct keys (e.g., '@odata.count')
  * and dot-separated nested paths (e.g., 'pagination.totalCount').
