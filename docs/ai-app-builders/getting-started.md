@@ -83,7 +83,7 @@ Sign-in problems land on a UiPath error page (`cloud.uipath.com/identity_/web/?e
 
 ## Deploy pitfalls (all builders)
 
-- **App names are org-wide.** If an app with the same name was deployed from a different project, `uip codedapp deploy` reports it as already deployed and cannot upgrade it — deploy under a new name, or delete the existing deployed app first.
+- **App names are org-wide.** If an app with the same name was deployed from a different project, `uip codedapp deploy` reports it as already deployed and cannot upgrade it — deploy under a new name, or delete the existing deployed app first, either [in Orchestrator](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/managing-apps#deleting-a-deployed-app) or with [`uip codedapp delete`](../coded-apps/cli-reference.md#delete).
 - **Omit `--version` on deploy.** It defaults to Latest; passing a version the catalog hasn't indexed yet yields a misleading *"has not been published yet"*.
 - **Keep publish and deploy in one `uip login` session** with no base-URL overrides — split contexts make deploy unable to see what publish just wrote.
 
