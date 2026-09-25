@@ -40,6 +40,10 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Token renewal
+
+With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
+
 ### Enforcing sign-in through the organization's identity provider
 
 By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them
