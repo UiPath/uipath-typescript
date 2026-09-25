@@ -12,6 +12,11 @@ on:
         type: string
         required: false
         default: main
+      scope_to_changes:
+        description: Run only the integration suites affected by the PR's changed files
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -54,7 +59,45 @@ jobs:
       - name: Build Project
         run: npm run build
 
+  scope:
+    # Which integration suites to run (scripts/integration-scope.mjs); anything
+    # unrecognised, or the `ci:full-integration` label, means the full run.
+    runs-on: uipath-ubuntu-latest
+    outputs:
+      run_integration: ${{ steps.resolve.outputs.run_integration }}
+      test_paths: ${{ steps.resolve.outputs.test_paths }}
+      scope: ${{ steps.resolve.outputs.scope }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Resolve integration test scope
+        id: resolve
+        env:
+          SCOPE_TO_CHANGES: ${{ inputs.scope_to_changes }}
+          BASE_REF: ${{ github.base_ref }}
+          FULL_RUN_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'ci:full-integration') }}
+        run: |
+          if [ "$SCOPE_TO_CHANGES" = "true" ] && [ -n "$BASE_REF" ] && [ "$FULL_RUN_LABEL" != "true" ]; then
+            # No base ref → the resolver falls back to the full run.
+            git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" \
+              || echo "::warning::could not fetch $BASE_REF; running the full integration suite"
+            node scripts/integration-scope.mjs --base "origin/$BASE_REF"
+          else
+            node scripts/integration-scope.mjs --all
+          fi
+
   integration:
+    needs: scope
+    # A missing output runs everything rather than skipping.
+    if: needs.scope.outputs.run_integration != 'false'
     runs-on: uipath-ubuntu-latest
     strategy:
       fail-fast: false
@@ -248,7 +291,9 @@ jobs:
       - name: Run Integration Tests
         env:
           INTEGRATION_AUTH_MODE: ${{ matrix.auth }}
-        run: npm run test:integration:coverage -- --run --maxWorkers=2
+          # vitest path filters (empty = whole suite); built from suite folder names only.
+          TEST_PATHS: ${{ needs.scope.outputs.test_paths }}
+        run: npm run test:integration:coverage -- --run --maxWorkers=2 $TEST_PATHS
 
       # Runners are reused, so the config file — which holds the minted token —
       # must not outlive the job.
@@ -263,8 +308,14 @@ jobs:
           path: coverage-integration/lcov.info
 
   sonar:
-    needs: [unit, integration]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [scope, unit, integration]
+    # Runs on skipped integration too (unit coverage only); any failure still blocks it.
+    if: >-
+      always()
+      && needs.scope.result == 'success'
+      && needs.unit.result == 'success'
+      && (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
     runs-on: uipath-ubuntu-latest
     steps:
       - name: Checkout
@@ -281,8 +332,12 @@ jobs:
         run: |
           mkdir -p coverage coverage-integration
           cp lcov/unit-coverage/lcov.info coverage/lcov.info
-          # lcov reports concatenate; Sonar merges the records per file.
-          cat lcov/integration-coverage-*/lcov.info > coverage-integration/lcov.info
+          # lcov reports concatenate; none exist when integration was skipped.
+          shopt -s nullglob
+          reports=(lcov/integration-coverage-*/lcov.info)
+          if [ ${#reports[@]} -gt 0 ]; then
+            cat "${reports[@]}" > coverage-integration/lcov.info
+          fi
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d  # v5.0.0
@@ -290,12 +345,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   summary:
-    needs: [unit, integration]
+    needs: [scope, unit, integration]
     if: always()
     runs-on: uipath-ubuntu-latest
     steps:
       - name: Generate Summary
-        if: needs.unit.result == 'success' && needs.integration.result == 'success'
+        if: needs.scope.result == 'success' && needs.unit.result == 'success' && (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+        env:
+          SCOPE: ${{ needs.scope.outputs.scope }}
+          INTEGRATION_RESULT: ${{ needs.integration.result }}
         run: |
           echo "## ✅ Coverage Checks Passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -307,10 +365,14 @@ jobs:
           echo "- ✅ Typecheck passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ SDK tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
+          if [ "$INTEGRATION_RESULT" = "skipped" ]; then
+            echo "- ⏭️ Integration tests skipped: no changed file affects them (scope: \`$SCOPE\`)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ✅ Integration tests passed (scope: \`$SCOPE\`)" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Generate Failure Summary
-        if: needs.unit.result != 'success' || needs.integration.result != 'success'
+        if: needs.scope.result != 'success' || needs.unit.result != 'success' || (needs.integration.result != 'success' && needs.integration.result != 'skipped')
         run: |
           echo "## ❌ Coverage Checks Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
