@@ -24,8 +24,6 @@ import type { PlatformGroupServiceModel } from '../../../models/platform/groups.
 import { PlatformGroupGetResponse, createPlatformGroupWithMethods } from '../../../models/platform/groups.models';
 import {
   PlatformGroupMap,
-  PlatformGroupCreateMap,
-  PlatformGroupUpdateMap,
   PlatformGroupTypeMap,
 } from '../../../models/platform/groups.constants';
 import { PlatformUserTypeMap } from '../../../models/platform/users.constants';
@@ -92,7 +90,7 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
       // The API rejects requests without a client-generated group ID
       id: crypto.randomUUID(),
       name,
-      ...transformRequest(options ?? {}, PlatformGroupCreateMap),
+      ...transformRequest(options ?? {}, PlatformGroupMap),
     };
     const response = await this.post<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.CREATE, body);
     return this.toGroup(response.data);
@@ -115,7 +113,7 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
     const body = {
       partitionGlobalId: organizationId,
       name: name ?? current?.name,
-      ...transformRequest(membership, PlatformGroupUpdateMap),
+      ...transformRequest(membership, PlatformGroupMap),
     };
     const response = await this.put<RawPlatformGroup>(IDENTITY_GROUP_ENDPOINTS.UPDATE(groupId), body);
     return this.toGroup(response.data);
