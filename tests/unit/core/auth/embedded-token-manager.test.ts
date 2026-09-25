@@ -3,7 +3,6 @@ import { EmbeddedTokenManager } from '@/core/auth/embedded-token-manager';
 import { UipEmbeddedEventNames } from '@/core/auth/uip-embedded-protocol';
 import { AuthenticationError, ValidationError } from '@/core/errors';
 import { AUTHENTICATION_TIMEOUT } from '@/core/auth/host-token-request';
-import { TOKEN_EXPIRY_BUFFER_MS } from '@/core/auth/constants';
 import type { TokenInfo } from '@/core/auth/types';
 import type { Config } from '@/core/config/config';
 
@@ -85,18 +84,6 @@ describe('EmbeddedTokenManager', () => {
     const tokenInfo: TokenInfo = { token: 'tok-fresh', type: 'secret', expiresAt: new Date(Date.now() + 3600_000) };
     expect(await manager.refreshAccessToken(tokenInfo)).toBe('tok-fresh');
     expect(mock.parentPostMessage).not.toHaveBeenCalled();
-  });
-
-  it('refreshes ahead of expiry when the token enters the buffer window', async () => {
-    const nearExpiry: TokenInfo = {
-      token: 'tok-near-expiry', type: 'secret', expiresAt: new Date(Date.now() + TOKEN_EXPIRY_BUFFER_MS / 2)
-    };
-
-    const refreshPromise = manager.refreshAccessToken(nearExpiry);
-    mock.dispatch(makeRefreshedEvent(PARENT_ORIGIN, 'tok-new'));
-
-    expect(await refreshPromise).toBe('tok-new');
-    expect(mock.parentPostMessage).toHaveBeenCalledOnce();
   });
 
   // ---- refresh flow ----

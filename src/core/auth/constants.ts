@@ -7,9 +7,5 @@ export const AUTH_STORAGE_KEYS = {
   CODE_VERIFIER: 'uipath_sdk_code_verifier',
 } as const;
 
-/**
- * A token is treated as expired this long before its actual expiry, so a
- * request signed just before the deadline cannot be rejected server-side after
- * network latency and client/server clock skew are added.
- */
+/** How long before expiry an OAuth access token is renewed, so a request cannot expire in flight. */
 export const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;

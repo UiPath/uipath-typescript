@@ -1,23 +1,12 @@
 import { TokenInfo } from './types';
-import { getExpiryMs } from './token-expiry';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 
 export const AUTHENTICATION_TIMEOUT = 8000;
 
-/**
- * Checks whether a host-issued token is expired.
- *
- * Unlike TokenManager.isTokenExpired, a missing expiresAt means expired —
- * host-embedded flows seed an empty token so the first call bootstraps the
- * postMessage token request.
- *
- * @param bufferMs Safety margin: the token is reported expired this many
- *   milliseconds before its actual expiry. Defaults to 0 (exact expiry).
- */
-export function isTokenExpired(tokenInfo: TokenInfo, bufferMs: number = 0): boolean {
+export function isTokenExpired(tokenInfo: TokenInfo): boolean {
   if (!tokenInfo?.expiresAt) return true;
-  return Date.now() >= getExpiryMs(tokenInfo.expiresAt) - bufferMs;
+  return new Date() >= tokenInfo.expiresAt;
 }
 
 /**

@@ -14,16 +14,16 @@ describe('getExpiryMs', () => {
     expect(getExpiryMs(FIXED_ISO)).toBe(getExpiryMs(new Date(FIXED_ISO)));
   });
 
-  it('returns NaN for an unparseable string, so comparisons treat the token as not expired', () => {
+  it('returns the epoch for an unparseable string, so the token reads as expired', () => {
     const result = getExpiryMs('not-a-date');
 
-    expect(Number.isNaN(result)).toBe(true);
-    // Every relational comparison against NaN is false — the pre-existing behaviour
-    // for malformed values, preserved deliberately.
-    expect(Date.now() >= result).toBe(false);
+    expect(result).toBe(0);
+    // The point of the epoch over NaN: NaN makes every comparison false, which
+    // would leave the token looking like it never expires.
+    expect(Date.now() >= result).toBe(true);
   });
 
-  it('returns NaN for an invalid Date instance', () => {
-    expect(Number.isNaN(getExpiryMs(new Date('not-a-date')))).toBe(true);
+  it('returns the epoch for an invalid Date instance', () => {
+    expect(getExpiryMs(new Date('not-a-date'))).toBe(0);
   });
 });

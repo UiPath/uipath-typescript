@@ -90,11 +90,7 @@ export class TokenManager {
       return tokenInfo.token;
     }
 
-    // When the SDK can refresh (OAuth config + refresh token), expiry is
-    // checked with a safety buffer so the token is renewed before a request
-    // signed near the deadline can expire in flight. Without a refresh path
-    // the full remaining lifetime is used — expiring early would only fail
-    // sooner than the token actually does.
+    // Renew a minute early only when the SDK can refresh; otherwise use the token until it actually expires.
     const expiryBuffer = hasOAuthConfig(this.config) && tokenInfo.refreshToken ? TOKEN_EXPIRY_BUFFER_MS : 0;
 
     // If token is not expired, return it

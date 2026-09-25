@@ -1,7 +1,6 @@
 import { UipEmbeddedEventNames, UipEmbeddedRefreshTokenPayload, UipEmbeddedTokenRefreshedPayload } from './uip-embedded-protocol';
 import { TokenInfo } from './types';
 import { Config } from '../config/config';
-import { TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { ValidationError } from '../errors';
 import { HostTokenResponse, isTokenExpired, requestHostToken } from './host-token-request';
 
@@ -61,9 +60,7 @@ export class EmbeddedTokenManager {
   }
 
   async refreshAccessToken(tokenInfo: TokenInfo): Promise<string> {
-    // Buffered check: the host can always mint a fresh token, so renew ahead
-    // of expiry rather than risk a request expiring in flight.
-    if (!isTokenExpired(tokenInfo, TOKEN_EXPIRY_BUFFER_MS)) {
+    if (!isTokenExpired(tokenInfo)) {
       return tokenInfo.token;
     }
 
