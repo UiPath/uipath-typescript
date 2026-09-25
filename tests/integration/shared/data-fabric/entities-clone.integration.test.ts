@@ -100,6 +100,9 @@ describeIntegration('Data Fabric Entities Clone - Integration Tests', 'both', mo
     }
 
     expect(status.state).toBe(EntityCloneJobState.Done);
+    // Transform validation: getCloneStatus() must also expose createdTime, never the API's createdAt.
+    expect(typeof status.createdTime).toBe('string');
+    expect((status as any).createdAt).toBeUndefined();
   }, 18 * 60 * 1000);
 
   it('throws when polling a non-existent clone job', async () => {
