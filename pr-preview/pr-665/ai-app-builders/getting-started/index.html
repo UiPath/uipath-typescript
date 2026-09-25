@@ -4038,7 +4038,7 @@
 </ul>
 <h2 id="deploy-pitfalls-all-builders">Deploy pitfalls (all builders)<a class="headerlink" href="#deploy-pitfalls-all-builders" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>App names are org-wide.</strong> If an app with the same name was deployed from a different project, <code>uip codedapp deploy</code> reports it as already deployed and cannot upgrade it — deploy under a new name, or delete the existing deployed app first.</li>
+<li><strong>App names are org-wide.</strong> If an app with the same name was deployed from a different project, <code>uip codedapp deploy</code> reports it as already deployed and cannot upgrade it — deploy under a new name, or delete the existing deployed app first, either <a href="https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/managing-apps#deleting-a-deployed-app">in Orchestrator</a> or with <a href="../../coded-apps/cli-reference/#delete"><code>uip codedapp delete</code></a>.</li>
 <li><strong>Omit <code>--version</code> on deploy.</strong> It defaults to Latest; passing a version the catalog hasn't indexed yet yields a misleading <em>"has not been published yet"</em>.</li>
 <li><strong>Keep publish and deploy in one <code>uip login</code> session</strong> with no base-URL overrides — split contexts make deploy unable to see what publish just wrote.</li>
 </ul>

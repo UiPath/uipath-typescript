@@ -3784,14 +3784,24 @@
 <td>-</td>
 </tr>
 <tr>
+<td><a id="entityclass"></a> <code>entityClass?</code></td>
+<td><a href="../../enumerations/EntityClass/"><code>EntityClass</code></a></td>
+<td><strong><code>Experimental</code></strong> Product classification: Native, Federated, or Case.</td>
+</tr>
+<tr>
 <td><a id="entitytype"></a> <code>entityType</code></td>
 <td><a href="../../enumerations/EntityType/"><code>EntityType</code></a></td>
 <td>-</td>
 </tr>
 <tr>
+<td><a id="entitytypeid"></a> <code>entityTypeId?</code></td>
+<td><code>number</code></td>
+<td>Numeric entity type identifier</td>
+</tr>
+<tr>
 <td><a id="externalfields"></a> <code>externalFields?</code></td>
 <td><a href="../ExternalSourceFields/"><code>ExternalSourceFields</code></a>[]</td>
-<td>-</td>
+<td><strong><code>Experimental</code></strong> External source definitions — present only on Federated entities.</td>
 </tr>
 <tr>
 <td><a id="fields"></a> <code>fields</code></td>
@@ -3831,12 +3841,17 @@
 <tr>
 <td><a id="sourcejoincriterias"></a> <code>sourceJoinCriterias?</code></td>
 <td><a href="../SourceJoinCriteria/"><code>SourceJoinCriteria</code></a>[]</td>
-<td>-</td>
+<td><strong><code>Experimental</code></strong> Cross-source join criteria — present only on Federated entities.</td>
 </tr>
 <tr>
 <td><a id="storagesizeinmb"></a> <code>storageSizeInMB?</code></td>
 <td><code>number</code></td>
 <td>-</td>
+</tr>
+<tr>
+<td><a id="templatename"></a> <code>templateName?</code></td>
+<td><code>string</code></td>
+<td>Template discriminator — null for non-templated entities, set for templated ones</td>
 </tr>
 <tr>
 <td><a id="updatedby"></a> <code>updatedBy?</code></td>

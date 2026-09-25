@@ -4102,14 +4102,16 @@ or a PaginatedResponse when any pagination parameter is provided</p>
 </code></pre></div>
 <hr />
 <h3 id="start">start()<a class="headerlink" href="#start" title="Permanent link">&para;</a></h3>
-<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
 <blockquote>
-<p><strong>start</strong>(<code>request</code>: <a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a>, <code>options?</code>: <a href="../ProcessStartOptions/"><code>ProcessStartOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
+<p><strong>start</strong>(<code>processRef</code>: <a href="../../type-aliases/ProcessRef/"><code>ProcessRef</code></a>, <code>options?</code>: <a href="../ProcessStartRefOptions/"><code>ProcessStartRefOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
 </blockquote>
-<p>Starts a process with the specified configuration.</p>
-<p>Folder context can be supplied as <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>
-inside the options.</p>
-<h5 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h5>
+<p>Starts a process. First fetch the process via <code>processes.getAll()</code> or
+<code>processes.getByName()</code> to obtain a name or key to pass in <code>processRef</code>.</p>
+<p>Folder context and every startInfo field (<code>jobPriority</code>, <code>jobsCount</code>, <code>robotIds</code>,
+<code>inputArguments</code>, etc.) live in <code>options</code>. Runtime resource overrides apply on both
+<code>{ name }</code> and <code>{ key }</code> — a cross-folder redirect steers both the identity and the
+folder scoping to the override target.</p>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4120,75 +4122,41 @@ inside the options.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>request</code></td>
-<td><a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a></td>
-<td>Process start configuration</td>
+<td><code>processRef</code></td>
+<td><a href="../../type-aliases/ProcessRef/"><code>ProcessRef</code></a></td>
+<td>Process identifier — see the variants for their folder-scope requirements</td>
 </tr>
 <tr>
 <td><code>options?</code></td>
-<td><a href="../ProcessStartOptions/"><code>ProcessStartOptions</code></a></td>
-<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional query parameters (<code>expand</code>, <code>select</code>, <code>filter</code>, <code>orderby</code>)</td>
+<td><a href="../ProcessStartRefOptions/"><code>ProcessStartRefOptions</code></a></td>
+<td>Folder scoping + startInfo fields + optional <code>expand</code> / <code>select</code> / <code>filter</code> / <code>orderby</code></td>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h5>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-<p>Promise resolving to array of started process instances
-<a href="../ProcessStartResponse/">ProcessStartResponse</a></p>
-<h5 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// By folder ID</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1">// By folder key (GUID)</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1">// By folder path</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1">// Start by process name (instead of processKey)</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">processName</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;MyProcess&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1">// With additional options</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">expand</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Robot&#39;</span><span class="w"> </span><span class="p">});</span>
+<p>Promise resolving to an array of started process instances of <a href="../ProcessStartResponse/">ProcessStartResponse</a></p>
+<h4 id="example_3">Example<a class="headerlink" href="#example_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">JobPriority</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/processes&#39;</span><span class="p">;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">// By process name + folder path</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;InvoiceReview&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Live&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// By process key (GUID)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">({</span><span class="w"> </span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// With startInfo options</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;InvoiceReview&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Live&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">jobPriority</span><span class="o">:</span><span class="w"> </span><span class="kt">JobPriority.High</span><span class="p">,</span><span class="w"> </span><span class="nx">jobsCount</span><span class="o">:</span><span class="w"> </span><span class="kt">3</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="p">);</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="c1">// With expand to include related entities</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="k">await</span><span class="w"> </span><span class="nx">processes</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;InvoiceReview&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Live&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">expand</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Robot,Machine&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="p">);</span>
 </code></pre></div>
-<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
-<blockquote>
-<p><strong>start</strong>(<code>request</code>: <a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../RequestOptions/"><code>RequestOptions</code></a>): <code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-</blockquote>
-<p>Starts a process — positional <code>folderId</code> form.</p>
-<h5 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h5>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>request</code></td>
-<td><a href="../../type-aliases/ProcessStartRequest/"><code>ProcessStartRequest</code></a></td>
-<td>Process start configuration</td>
-</tr>
-<tr>
-<td><code>folderId</code></td>
-<td><code>number</code></td>
-<td>Required folder ID (numeric)</td>
-</tr>
-<tr>
-<td><code>options?</code></td>
-<td><a href="../RequestOptions/"><code>RequestOptions</code></a></td>
-<td>Optional request options</td>
-</tr>
-</tbody>
-</table>
-<h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
-<p><code>Promise</code>&lt;<a href="../ProcessStartResponse/"><code>ProcessStartResponse</code></a>[]&gt;</p>
-<p>Promise resolving to array of started process instances
-<a href="../ProcessStartResponse/">ProcessStartResponse</a></p>
-<h5 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h5>
-<p>Use the options-object form: <code>start(request, { folderId })</code>. See <a href="../ProcessStartOptions/">ProcessStartOptions</a> for the supported options.</p>
 
 
 
