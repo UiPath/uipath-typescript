@@ -1,0 +1,94 @@
+name: Samples Build
+
+# Runs npm ci + build for each sample project a PR touches, from a clean
+# checkout. Catches broken lockfiles and samples that no longer compile.
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:     # Builds every sample
+
+permissions:
+  contents: read
+
+jobs:
+  targets:
+    runs-on: uipath-ubuntu-latest
+    outputs:
+      projects: ${{ steps.list.outputs.projects }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          fetch-depth: 0
+
+      - name: List sample projects to build
+        id: list
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            projects=$(node scripts/sample-build-targets.mjs --changed "origin/$BASE_REF")
+          else
+            projects=$(node scripts/sample-build-targets.mjs --all)
+          fi
+          echo "projects=$projects" >> "$GITHUB_OUTPUT"
+          echo "Sample projects to build: $projects"
+
+  build:
+    needs: targets
+    if: needs.targets.outputs.projects != '[]'
+    runs-on: uipath-ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.targets.outputs.projects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          # Angular 22 needs Node >=24.15.
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Projects without a build script are type-checked instead.
+      - name: Build
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.build ? 0 : 1)"; then
+            npm run build
+          elif [ -f tsconfig.json ]; then
+            npx tsc --noEmit -p .
+          else
+            echo "No build script or tsconfig.json; install only."
+          fi
+
+  samples-build:
+    # The required check: passes if all selected samples built, or none were selected.
+    needs: [targets, build]
+    if: always()
+    runs-on: uipath-ubuntu-latest
+    steps:
+      - name: Check sample builds
+        env:
+          TARGETS: ${{ needs.targets.result }}
+          BUILD: ${{ needs.build.result }}
+        run: |
+          echo "targets: $TARGETS, build: $BUILD"
+          [ "$TARGETS" = "success" ] && { [ "$BUILD" = "success" ] || [ "$BUILD" = "skipped" ]; }
