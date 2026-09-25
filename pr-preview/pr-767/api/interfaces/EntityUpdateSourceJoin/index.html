@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ExternalFieldMapping/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateSourceJoin/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>ExternalFieldMapping - UiPath TypeScript SDK</title>
+        <title>EntityUpdateSourceJoin - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ExternalFieldMapping
+              EntityUpdateSourceJoin
             
           </span>
         </div>
@@ -3685,9 +3685,11 @@
   
 
 
-  <h1>ExternalFieldMapping</h1>
+  <h1>EntityUpdateSourceJoin</h1>
 
-<p>External field mapping</p>
+<p><strong><code>Experimental</code></strong></p>
+<p>Updates an existing Federated cross-source join in place, identified by the two object
+names. Only the supplied fields change; the others are kept.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3699,54 +3701,29 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="directiontype"></a> <code>directionType</code></td>
-<td><a href="../../enumerations/DataDirectionType/"><code>DataDirectionType</code></a></td>
-<td>-</td>
+<td><a id="jointype"></a> <code>joinType?</code></td>
+<td><a href="../../enumerations/JoinType/"><code>JoinType</code></a></td>
+<td><strong><code>Experimental</code></strong></td>
 </tr>
 <tr>
-<td><a id="externalfielddisplayname"></a> <code>externalFieldDisplayName?</code></td>
+<td><a id="relatedsourcejoinfield"></a> <code>relatedSourceJoinField?</code></td>
 <td><code>string</code></td>
-<td>-</td>
+<td><strong><code>Experimental</code></strong></td>
 </tr>
 <tr>
-<td><a id="externalfieldname"></a> <code>externalFieldName?</code></td>
+<td><a id="relatedsourceobjectname"></a> <code>relatedSourceObjectName</code></td>
 <td><code>string</code></td>
-<td>-</td>
+<td><strong><code>Experimental</code></strong></td>
 </tr>
 <tr>
-<td><a id="externalfieldtype"></a> <code>externalFieldType?</code></td>
+<td><a id="sourcejoinfield"></a> <code>sourceJoinField?</code></td>
 <td><code>string</code></td>
-<td>-</td>
+<td><strong><code>Experimental</code></strong></td>
 </tr>
 <tr>
-<td><a id="externalobjectid"></a> <code>externalObjectId</code></td>
+<td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
 <td><code>string</code></td>
-<td>-</td>
-</tr>
-<tr>
-<td><a id="id"></a> <code>id</code></td>
-<td><code>string</code></td>
-<td>-</td>
-</tr>
-<tr>
-<td><a id="internalfieldid"></a> <code>internalFieldId</code></td>
-<td><code>string</code></td>
-<td>-</td>
-</tr>
-<tr>
-<td><a id="isrequiredforread"></a> <code>isRequiredForRead?</code></td>
-<td><code>boolean</code></td>
-<td>Whether this external field is required for read operations</td>
-</tr>
-<tr>
-<td><a id="searchability"></a> <code>searchability?</code></td>
-<td><a href="../Searchability/"><code>Searchability</code></a></td>
-<td>Field searchability metadata</td>
-</tr>
-<tr>
-<td><a id="sortable"></a> <code>sortable?</code></td>
-<td><code>boolean</code></td>
-<td>Whether this external field can be used for sorting</td>
+<td><strong><code>Experimental</code></strong></td>
 </tr>
 </tbody>
 </table>

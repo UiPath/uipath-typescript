@@ -40,9 +40,9 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
-### Token lifetime and automatic refresh
+### Token renewal
 
-The SDK reads the access token's lifetime from the sign-in response and silently refreshes the token shortly before it expires — no application code is needed. This also covers External Applications configured with a shortened access token lifetime (300–3600 seconds): tokens simply refresh more often, transparently.
+With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
 
 ### Enforcing sign-in through the organization's identity provider
 

@@ -452,10 +452,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#token-lifetime-and-automatic-refresh" class="md-nav__link">
+  <a href="#token-renewal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Token lifetime and automatic refresh
+        Token renewal
       
     </span>
   </a>
@@ -3946,10 +3946,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#token-lifetime-and-automatic-refresh" class="md-nav__link">
+  <a href="#token-renewal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Token lifetime and automatic refresh
+        Token renewal
       
     </span>
   </a>
@@ -4186,11 +4186,8 @@
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">();</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
 </code></pre></div>
-<h3 id="token-lifetime-and-automatic-refresh">Token lifetime and automatic refresh<a class="headerlink" href="#token-lifetime-and-automatic-refresh" title="Permanent link">&para;</a></h3>
-<p>The SDK reads the access token's lifetime from the sign-in response and silently
-refreshes the token shortly before it expires — no application code is needed.
-This also covers External Applications configured with a shortened access token
-lifetime (300–3600 seconds): tokens simply refresh more often, transparently.</p>
+<h3 id="token-renewal">Token renewal<a class="headerlink" href="#token-renewal" title="Permanent link">&para;</a></h3>
+<p>With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.</p>
 <h3 id="enforcing-sign-in-through-the-organizations-identity-provider">Enforcing sign-in through the organization's identity provider<a class="headerlink" href="#enforcing-sign-in-through-the-organizations-identity-provider" title="Permanent link">&para;</a></h3>
 <p>By default users see the UiPath account sign-in screen. Set <code>enforceSso: true</code> to send them
 straight to the organization's configured identity provider instead.</p>

@@ -753,6 +753,10 @@
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityClass/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/EntityFieldDataType/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
@@ -1993,6 +1997,10 @@
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddFieldsToSource/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAggregate/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
@@ -2002,6 +2010,26 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityBatchInsertResponse/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityCreateExternalConnection/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityCreateExternalField/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityCreateExternalFieldMapping/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityCreateExternalObject/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityCreateExternalSource/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
@@ -2153,7 +2181,15 @@
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldsFromSource/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateByIdOptions/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalFieldMapping/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
@@ -2174,6 +2210,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateResponse/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateSourceJoin/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
@@ -2561,6 +2601,10 @@
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/NativeConnectionDetail/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/NonPaginatedResponse/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
@@ -2925,6 +2969,18 @@
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/Searchability/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/SearchabilityNamedSearch/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/SearchabilityOperator/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/SessionCapabilities/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
@@ -2950,6 +3006,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/SlaSummaryResponse/</loc>
+         <lastmod>2026-09-25</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/SourceJoinConditionDetail/</loc>
          <lastmod>2026-09-25</lastmod>
     </url>
     <url>
