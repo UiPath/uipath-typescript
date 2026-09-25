@@ -79,11 +79,18 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `uploadAttachment()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |
 | `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
-| `query()` (`entity-operations` subpath) | `DataFabric.Data.Read` |
 | `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
 | `create()` | `DataFabric.Schema.Write` |
 | `updateById()` / `update()` | `DataFabric.Schema.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
+
+## Entity Operations
+
+`query()` reads records through `Entities.queryRecords()` and needs the same scope.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `query()` | `DataFabric.Data.Read` |
 
 ## ChoiceSets
 
