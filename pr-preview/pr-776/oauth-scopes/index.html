@@ -523,6 +523,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#entity-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity Operations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#choicesets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4186,6 +4197,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#entity-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entity Operations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#choicesets" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4698,7 +4720,7 @@
 </tr>
 <tr>
 <td><code>uploadFile()</code></td>
-<td><code>OR.Buckets</code></td>
+<td><code>OR.Buckets</code> or <code>OR.Buckets.Write</code></td>
 </tr>
 <tr>
 <td><code>deleteFile()</code></td>
@@ -4792,10 +4814,6 @@
 <td><code>DataFabric.Data.Read</code></td>
 </tr>
 <tr>
-<td><code>query()</code> (<code>entity-operations</code> subpath)</td>
-<td><code>DataFabric.Data.Read</code></td>
-</tr>
-<tr>
 <td><code>importRecordsById()</code> / <code>importRecords()</code></td>
 <td><code>DataFabric.Data.Write</code></td>
 </tr>
@@ -4810,6 +4828,22 @@
 <tr>
 <td><code>deleteById()</code> / <code>delete()</code></td>
 <td><code>DataFabric.Schema.Write</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="entity-operations">Entity Operations<a class="headerlink" href="#entity-operations" title="Permanent link">&para;</a></h2>
+<p><code>query()</code> reads records through <code>Entities.queryRecords()</code> and needs the same scope.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>OAuth Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>query()</code></td>
+<td><code>DataFabric.Data.Read</code></td>
 </tr>
 </tbody>
 </table>
@@ -5429,7 +5463,7 @@
 </tr>
 <tr>
 <td><code>start()</code></td>
-<td><code>OR.Jobs</code> or <code>OR.Jobs.Write</code></td>
+<td>(<code>OR.Jobs</code> or <code>OR.Jobs.Write</code>) <strong>and</strong> (<code>OR.Execution</code> or <code>OR.Execution.Read</code>)</td>
 </tr>
 </tbody>
 </table>
