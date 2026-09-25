@@ -1,0 +1,42 @@
+import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
+
+/**
+ * Service for looking up UiPath Orchestrator folders.
+ *
+ * Folders organize automations, queues, assets, and other resources, and scope
+ * most Orchestrator API calls. [UiPath Folders Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-folders)
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { Folders } from '@uipath/uipath-typescript/folders';
+ *
+ * const folders = new Folders(sdk);
+ * const folder = await folders.getByKey('<folderKey>');
+ * ```
+ */
+export interface FolderServiceModel {
+  /**
+   * Gets a single folder by its key (GUID). Unlike most Orchestrator reads,
+   * this lookup is not folder-scoped: no folder headers are sent.
+   *
+   * @param key - Folder key (GUID).
+   * @param options - Optional query options (`select` / `expand`).
+   * @returns Promise resolving to the matching {@link FolderGetResponse}. Rejects with `ValidationError` when `key` is missing or not a GUID, and with `NotFoundError` when no folder matches the key.
+   * @example
+   * ```typescript
+   * // Get a folder by key
+   * const folder = await folders.getByKey('<folderKey>');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With select
+   * const folder = await folders.getByKey('<folderKey>', { select: 'fullyQualifiedName' });
+   * console.log(folder.fullyQualifiedName);
+   * ```
+   */
+  getByKey(key: string, options?: FolderGetByKeyOptions): Promise<FolderGetResponse>;
+}
