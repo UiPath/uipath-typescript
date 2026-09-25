@@ -18,6 +18,7 @@ import {
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Agents } from '../../../src/services/agents';
 import { AgentMemory } from '../../../src/services/agents/memory';
+import { AgentHub } from '../../../src/services/agenthub';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
@@ -74,6 +75,7 @@ export interface TestServices {
   agentTraces?: AgentTraces;
   traces?: Traces;
   agents?: Agents;
+  agentHub?: AgentHub;
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
@@ -195,6 +197,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     agentTraces: new AgentTraces(sdk),
     traces: new Traces(sdk),
     agents: new Agents(sdk),
+    agentHub: new AgentHub(sdk),
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),

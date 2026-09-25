@@ -3,6 +3,17 @@
   "sdkVersion": "1.7.2",
   "services": [
     {
+      "name": "AgentHub",
+      "subpath": "@uipath/uipath-typescript/agenthub",
+      "since": "1.7.1",
+      "methods": [
+        {
+          "name": "createChatCompletion",
+          "since": "1.7.1"
+        }
+      ]
+    },
+    {
       "name": "AgentMemory",
       "subpath": "@uipath/uipath-typescript/agent-memory",
       "since": "1.4.1",

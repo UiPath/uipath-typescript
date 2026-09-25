@@ -35,6 +35,11 @@ export const AUTOPILOT_BASE = 'autopilotforeveryone_';
 export const LLMOPS_BASE = 'llmopstenant_';
 export const INSIGHTS_RTM_BASE = 'insightsrtm_';
 /**
+ * AgentHub LLM gateway base. Chat completions are addressed relative to the
+ * caller's Automation Cloud host (`agenthub_/llm/api/...`).
+ */
+export const AGENTHUB_LLM_BASE = 'agenthub_/llm/api';
+/**
  * Notification service base. The notification service is routed at the **organization**
  * level — its URLs do not include a tenant segment (unlike most UiPath services).
  *

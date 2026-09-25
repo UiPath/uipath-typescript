@@ -21,7 +21,8 @@ export interface IntegrationConfig {
    * User access token, minted by a browser login (Minter) rather than issued to
    * an external application. Required by services that reject PAT and
    * client-credentials tokens outright: everything under `insightsrtm_` (Agents,
-   * Agent Memory, Agent Traces, Governance) and the notification service.
+   * Agent Memory, Agent Traces, Governance), `agenthub_` (LLM gateway), and the
+   * notification service.
    * Unset by default — suites that need it skip rather than fail.
    */
   userToken?: string;
@@ -256,7 +257,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
 /**
  * What a suite needs from its credential:
  * - 'pat'  — the external-application identity
- * - 'user' — a user access token (insightsrtm_, notification service)
+ * - 'user' — a user access token (insightsrtm_, agenthub_, notification service)
  * - 'both' — either works; runs once under each configured credential
  */
 export type AuthRequirement = 'pat' | 'user' | 'both';
