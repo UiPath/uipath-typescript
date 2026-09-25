@@ -264,6 +264,11 @@ const serviceEntries = [
     input: 'src/services/platform/roles/index.ts',
     output: 'roles/index'
   },
+  {
+    name: 'groups',
+    input: 'src/services/platform/groups/index.ts',
+    output: 'groups/index'
+  },
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry

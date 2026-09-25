@@ -25,6 +25,7 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Platform } from '../../../src/services/platform';
+import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
 import { BusinessApps } from '../../../src/services/maestro/business-apps';
@@ -83,6 +84,7 @@ export interface TestServices {
   businessApps?: BusinessApps;
   platformUsers?: Users;
   platformRoles?: Roles;
+  platformGroups?: Groups;
 }
 
 /**
@@ -204,6 +206,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),
+    platformGroups: new Groups(sdk),
   };
 }
 
