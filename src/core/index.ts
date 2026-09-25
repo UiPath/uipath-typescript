@@ -66,5 +66,7 @@ export type {
   BackoffStrategy,
 } from '../models/common/http.types';
 
+export { trace } from '../utils/tracing/trace';
+
 // Export telemetry
 export * from './telemetry';

@@ -22,5 +22,6 @@ export * from './governance';
 export * from './notification';
 export * from './platform';
 export * from './http';
+export * from './tracing';
 export * from './business-apps';
 export * from './integration-service';
