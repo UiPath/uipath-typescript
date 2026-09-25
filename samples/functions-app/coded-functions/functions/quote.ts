@@ -78,3 +78,6 @@ export default defineFunction({
     return { lines, subtotal, discount, total: money(subtotal - discount), currency, promo };
   },
 });
+
+// Deliberate type error to verify the samples-build check fails. Do not merge.
+export const brokenOnPurpose: number = 'not a number';
