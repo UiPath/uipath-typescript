@@ -37,6 +37,15 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getAll()` | `OR.Default` |
 | `invoke()` | `OR.Default`, `OR.Folders` or `OR.Folders.Read` |
 
+## Document Understanding
+
+Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `startExtractionValidation()` | `Du.Validation.Api` |
+| `getExtractionValidationResult()` | `Du.Validation.Api` |
+
 ## Attachments
 
 | Method | OAuth Scope |
