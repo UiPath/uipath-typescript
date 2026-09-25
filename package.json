@@ -46,6 +46,16 @@
                 "default": "./dist/entities/index.cjs"
             }
         },
+        "./entity-operations": {
+            "import": {
+                "types": "./dist/entity-operations/index.d.ts",
+                "default": "./dist/entity-operations/index.mjs"
+            },
+            "require": {
+                "types": "./dist/entity-operations/index.d.ts",
+                "default": "./dist/entity-operations/index.cjs"
+            }
+        },
         "./tasks": {
             "import": {
                 "types": "./dist/tasks/index.d.ts",
