@@ -70,6 +70,11 @@ export const DATA_FABRIC_ENDPOINTS = {
     ATTACHMENT_BY_NAME: (entityName: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
   },
+  CLONE: {
+    // v3 entity clone: POST starts an async job, GET polls it by jobId.
+    START: `${DATAFABRIC_BASE}/api/v3/clone/entities`,
+    STATUS: (jobId: string) => `${DATAFABRIC_BASE}/api/v3/clone/entities/${jobId}`,
+  },
   CHOICESETS: {
     // A choice set is an entity: UPDATE/DELETE reuse the v3 entity routes (same URLs as
     // ENTITY.UPDATE_METADATA / ENTITY.DELETE). The /choiceset create/list + value writes have

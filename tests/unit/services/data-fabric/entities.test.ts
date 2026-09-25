@@ -36,8 +36,12 @@ import type {
   EntityUpdateByIdOptions,
   EntityGetRecordByNameOptions,
   EntityRef,
+  EntityCloneRequest,
 } from "../../../../src/models/data-fabric/entities.types";
 import {
+  EntityCloneScopeType,
+  EntityCloneMode,
+  EntityCloneJobState,
   EntityFieldDataType,
   EntityAggregateFunction,
   EntityHavingOperator,
@@ -5332,6 +5336,169 @@ describe("EntityService Unit Tests", () => {
         }),
       ).rejects.toThrow(/Cannot update field\(s\).*non-existent-id/);
       expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("clone", () => {
+    const TARGET_FOLDER = "b1b1b1b1-0000-0000-0000-000000000001";
+    const ENTITY_A = "e1e1e1e1-0000-0000-0000-000000000001";
+    const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
+
+    const cloneRequest: EntityCloneRequest = {
+      source: { scopeType: EntityCloneScopeType.Tenant },
+      target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+      entityIds: [ENTITY_A],
+      options: { mode: EntityCloneMode.SchemaAndData },
+    };
+
+    // Wire shape as returned by the API (createdAt); the SDK renames it to createdTime.
+    const queuedJob = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Queued,
+      createdAt: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    const queuedJobResult = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Queued,
+      createdTime: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    it("starts a clone job and returns the job descriptor with createdTime", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      const result = await entityService.clone(cloneRequest);
+
+      expect(result).toEqual(queuedJobResult);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.stringContaining("/api/v3/clone/entities"),
+        expect.objectContaining({
+          entityIds: [ENTITY_A],
+          target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+          options: { mode: EntityCloneMode.SchemaAndData },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it("defaults mode to SchemaAndData when options are omitted", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+      const { options: _options, ...withoutOptions } = cloneRequest;
+
+      await entityService.clone(withoutOptions);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ options: { mode: EntityCloneMode.SchemaAndData } }),
+        expect.any(Object),
+      );
+    });
+
+    it("forwards a caller-supplied DataOnly mode", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({ ...cloneRequest, options: { mode: EntityCloneMode.DataOnly } });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ options: { mode: EntityCloneMode.DataOnly } }),
+        expect.any(Object),
+      );
+    });
+
+    it("rejects when the target is not folder-scoped", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Tenant, folderId: TARGET_FOLDER } as any,
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("rejects when the target folderId is missing", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Folder } as any,
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("rejects when no entity ids are supplied", async () => {
+      await expect(
+        entityService.clone({ ...cloneRequest, entityIds: [] }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("propagates API errors", async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE),
+      );
+
+      await expect(
+        entityService.clone(cloneRequest),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe("getCloneStatus", () => {
+    const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
+
+    // Wire shape as returned by the API (createdAt); the SDK renames it to createdTime.
+    const doneJob = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Done,
+      createdAt: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    const doneJobResult = {
+      jobId: JOB_ID,
+      state: EntityCloneJobState.Done,
+      createdTime: "2026-09-25T14:30:00Z",
+      failureReasonCode: null,
+      failurePhase: null,
+      failureMessage: null,
+    };
+
+    it("fetches a clone job status by id and returns createdTime", async () => {
+      mockApiClient.get.mockResolvedValue(doneJob);
+
+      const result = await entityService.getCloneStatus(JOB_ID);
+
+      expect(result).toEqual(doneJobResult);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        expect.stringContaining(`/api/v3/clone/entities/${JOB_ID}`),
+        expect.any(Object),
+      );
+    });
+
+    it("rejects when the job id is empty", async () => {
+      await expect(
+        entityService.getCloneStatus("  "),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("propagates API errors", async () => {
+      mockApiClient.get.mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE),
+      );
+
+      await expect(
+        entityService.getCloneStatus(JOB_ID),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

@@ -37,6 +37,8 @@ import {
   EntityUpsertOptions,
   EntityUpsertResponse,
   EntityRef,
+  EntityCloneRequest,
+  EntityCloneJob,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -1086,6 +1088,90 @@ export interface EntityServiceModel {
    * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+
+  /**
+   * Starts an asynchronous job that clones a selected set of entities and/or choicesets into a
+   * target folder.
+   *
+   * You choose exactly which entities/choicesets to clone by listing their ids as **roots** in
+   * `entityIds` — clone a single one, a hand-picked subset, or many at once (bulk); a root may be
+   * an entity or a choiceset. The server resolves the full **dependency closure** of the selected roots
+   * (every entity, choiceset, and relationship / foreign-key target they reference, transitively)
+   * and clones the whole set together in dependency order, retargeting references into the
+   * destination folder so they stay intact. The resolved closure (roots + dependencies) may not
+   * exceed 1000 items. Tenant-level system entities (e.g. SystemUser) are never copied; references
+   * to them keep pointing at the tenant instance. File attachments are copied too.
+   *
+   * The job runs in the background: this resolves as soon as the job is accepted and returns the
+   * descriptor whose `jobId` you poll with {@link EntityServiceModel.getCloneStatus}.
+   *
+   * **Scope** — the target must be folder-scoped (`scopeType: "Folder"` with a `folderId`);
+   * cloning to tenant scope is rejected. The source may be `"Tenant"` or `"Folder"`.
+   *
+   * **Modes** ({@link EntityCloneMode}) — `"SchemaAndData"` (default) creates the schema, copies
+   * rows, and copies attachments; the target folder must be clean (no entity of the same name;
+   * same-name choicesets are merged). `"DataOnly"` copies rows into a **pre-existing**,
+   * schema-compatible, **empty** target — every entity in the closure must already exist there
+   * with a matching schema.
+   *
+   * **Not cloneable** (the job fails validation): federated/external entities, composite/Case
+   * entities, entities with record- or field-level RBAC, Insights-enabled entities, templated
+   * (v3) entities, and entity classes other than Legacy/Native.
+   *
+   * Requires folder-admin on the target folder, plus tenant-admin (Tenant source) or source
+   * folder-admin (Folder source).
+   *
+   * @param request - Source scope, folder-scoped target, root `entityIds` (entities and/or
+   * choicesets), and clone `options` (defaults to `SchemaAndData`).
+   * @returns Promise resolving to the {@link EntityCloneJob} descriptor (initial state `Queued`).
+   * @example
+   * ```typescript
+   * // Bulk clone: two roots from the tenant into a folder. Their whole dependency tree
+   * // (referenced entities + choicesets) is resolved and cloned automatically.
+   * const job = await entities.clone({
+   *   source: { scopeType: EntityCloneScopeType.Tenant },
+   *   target: { scopeType: EntityCloneScopeType.Folder, folderId: "<targetFolderId>" },
+   *   entityIds: ["<rootEntityId>", "<choiceSetId>"],
+   *   options: { mode: EntityCloneMode.SchemaAndData },
+   * });
+   *
+   * // Poll to completion.
+   * const terminal = [
+   *   EntityCloneJobState.Done,
+   *   EntityCloneJobState.Failed,
+   *   EntityCloneJobState.RolledBack,
+   *   EntityCloneJobState.RollbackFailed,
+   * ];
+   * let status = await entities.getCloneStatus(job.jobId);
+   * while (!terminal.includes(status.state)) {
+   *   await new Promise((r) => setTimeout(r, 3000));
+   *   status = await entities.getCloneStatus(job.jobId);
+   * }
+   * ```
+   * @experimental
+   */
+  clone(request: EntityCloneRequest): Promise<EntityCloneJob>;
+
+  /**
+   * Gets the current status of a clone job started by {@link EntityServiceModel.clone}.
+   *
+   * Poll this until `state` reaches a terminal value. The lifecycle is
+   * `Queued → Validating → SchemaCopying → DataCopying → FilesCopying → Verifying → Done`; a
+   * failure moves to `Failed` (before any write) or unwinds via `RollingBack → RolledBack`
+   * (or `RollbackFailed` when cleanup could not complete). Terminal states are `Done`, `Failed`,
+   * `RolledBack`, and `RollbackFailed`; on any non-`Done` terminal state `failureReasonCode`,
+   * `failurePhase`, and `failureMessage` are populated.
+   *
+   * @param jobId - The `jobId` returned when the clone job was started.
+   * @returns Promise resolving to the latest {@link EntityCloneJob}.
+   * @example
+   * ```typescript
+   * const status = await entities.getCloneStatus("<jobId>");
+   * if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
+   * ```
+   * @experimental
+   */
+  getCloneStatus(jobId: string): Promise<EntityCloneJob>;
 
   /**
    * Deletes a Data Fabric entity and all its records
