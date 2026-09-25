@@ -134,3 +134,6 @@ export class AppComponent implements OnInit {
     this.selectedEntityId.set(null)
   }
 }
+
+// Deliberate type error to verify the samples-build check fails. Do not merge.
+export const brokenOnPurpose: number = 'not a number';
