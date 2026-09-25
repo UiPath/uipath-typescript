@@ -3817,6 +3817,7 @@
 <li><a href="enumerations/DataDirectionType/">DataDirectionType</a></li>
 <li><a href="enumerations/DebugMode/">DebugMode</a></li>
 <li><a href="enumerations/EntityAggregateFunction/">EntityAggregateFunction</a></li>
+<li><a href="enumerations/EntityClass/">EntityClass</a></li>
 <li><a href="enumerations/EntityFieldDataType/">EntityFieldDataType</a></li>
 <li><a href="enumerations/EntityHavingOperator/">EntityHavingOperator</a></li>
 <li><a href="enumerations/EntityMultiEntityWriteOperation/">EntityMultiEntityWriteOperation</a></li>
@@ -4116,9 +4117,15 @@
 <li><a href="interfaces/ElementRunMetadata/">ElementRunMetadata</a></li>
 <li><a href="interfaces/ElementsServiceModel/">ElementsServiceModel</a></li>
 <li><a href="interfaces/ElementStats/">ElementStats</a></li>
+<li><a href="interfaces/EntityAddFieldsToSource/">EntityAddFieldsToSource</a></li>
 <li><a href="interfaces/EntityAggregate/">EntityAggregate</a></li>
 <li><a href="interfaces/EntityBatchInsertOptions/"><del>EntityBatchInsertOptions</del></a></li>
 <li><a href="interfaces/EntityBatchInsertResponse/">EntityBatchInsertResponse</a></li>
+<li><a href="interfaces/EntityCreateExternalConnection/">EntityCreateExternalConnection</a></li>
+<li><a href="interfaces/EntityCreateExternalField/">EntityCreateExternalField</a></li>
+<li><a href="interfaces/EntityCreateExternalFieldMapping/">EntityCreateExternalFieldMapping</a></li>
+<li><a href="interfaces/EntityCreateExternalObject/">EntityCreateExternalObject</a></li>
+<li><a href="interfaces/EntityCreateExternalSource/">EntityCreateExternalSource</a></li>
 <li><a href="interfaces/EntityCreateFieldOptions/">EntityCreateFieldOptions</a></li>
 <li><a href="interfaces/EntityCreateOptions/">EntityCreateOptions</a></li>
 <li><a href="interfaces/EntityDeleteAttachmentOptions/">EntityDeleteAttachmentOptions</a></li>
@@ -4156,13 +4163,16 @@
 <li><a href="interfaces/EntityQuerySortOption/">EntityQuerySortOption</a></li>
 <li><a href="interfaces/EntityRecord/">EntityRecord</a></li>
 <li><a href="interfaces/EntityRemoveFieldOptions/">EntityRemoveFieldOptions</a></li>
+<li><a href="interfaces/EntityRemoveFieldsFromSource/">EntityRemoveFieldsFromSource</a></li>
 <li><a href="interfaces/EntityServiceModel.md">EntityServiceModel</a></li>
 <li><a href="interfaces/EntityUpdateByIdOptions/">EntityUpdateByIdOptions</a></li>
+<li><a href="interfaces/EntityUpdateExternalFieldMapping/">EntityUpdateExternalFieldMapping</a></li>
 <li><a href="interfaces/EntityUpdateOptions/"><del>EntityUpdateOptions</del></a></li>
 <li><a href="interfaces/EntityUpdateRecordOptions/">EntityUpdateRecordOptions</a></li>
 <li><a href="interfaces/EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a></li>
 <li><a href="interfaces/EntityUpdateRecordsOptions/">EntityUpdateRecordsOptions</a></li>
 <li><a href="interfaces/EntityUpdateResponse/">EntityUpdateResponse</a></li>
+<li><a href="interfaces/EntityUpdateSourceJoin/">EntityUpdateSourceJoin</a></li>
 <li><a href="interfaces/EntityUploadAttachmentOptions/">EntityUploadAttachmentOptions</a></li>
 <li><a href="interfaces/EntityUpsertOptions/">EntityUpsertOptions</a></li>
 <li><a href="interfaces/EntityUpsertResponse/">EntityUpsertResponse</a></li>
@@ -4259,6 +4269,7 @@
 <li><a href="interfaces/MessageStartEvent/">MessageStartEvent</a></li>
 <li><a href="interfaces/MessageStream/">MessageStream</a></li>
 <li><a href="interfaces/MetaEvent/">MetaEvent</a></li>
+<li><a href="interfaces/NativeConnectionDetail/">NativeConnectionDetail</a></li>
 <li><a href="interfaces/NonPaginatedResponse/">NonPaginatedResponse</a></li>
 <li><a href="interfaces/OAuthFields/">OAuthFields</a></li>
 <li><a href="interfaces/OperationResponse/">OperationResponse</a></li>
@@ -4318,6 +4329,7 @@
 <li><a href="interfaces/ProcessProperties/">ProcessProperties</a></li>
 <li><a href="interfaces/ProcessServiceModel/">ProcessServiceModel</a></li>
 <li><a href="interfaces/ProcessStartOptions/">ProcessStartOptions</a></li>
+<li><a href="interfaces/ProcessStartRefOptions/">ProcessStartRefOptions</a></li>
 <li><a href="interfaces/ProcessStartRequestWithKey/">ProcessStartRequestWithKey</a></li>
 <li><a href="interfaces/ProcessStartRequestWithName/">ProcessStartRequestWithName</a></li>
 <li><a href="interfaces/ProcessStartResponse/">ProcessStartResponse</a></li>
@@ -4355,6 +4367,9 @@
 <li><a href="interfaces/RequestSpec/">RequestSpec</a></li>
 <li><a href="interfaces/RetryOptions/">RetryOptions</a></li>
 <li><a href="interfaces/RobotMetadata/">RobotMetadata</a></li>
+<li><a href="interfaces/Searchability/">Searchability</a></li>
+<li><a href="interfaces/SearchabilityNamedSearch/">SearchabilityNamedSearch</a></li>
+<li><a href="interfaces/SearchabilityOperator/">SearchabilityOperator</a></li>
 <li><a href="interfaces/SessionCapabilities/">SessionCapabilities</a></li>
 <li><a href="interfaces/SessionEndEvent/">SessionEndEvent</a></li>
 <li><a href="interfaces/SessionEndingEvent/">SessionEndingEvent</a></li>
@@ -4362,6 +4377,7 @@
 <li><a href="interfaces/SessionStartEvent/">SessionStartEvent</a></li>
 <li><a href="interfaces/SessionStream/">SessionStream</a></li>
 <li><a href="interfaces/SlaSummaryResponse/">SlaSummaryResponse</a></li>
+<li><a href="interfaces/SourceJoinConditionDetail/">SourceJoinConditionDetail</a></li>
 <li><a href="interfaces/SourceJoinCriteria/">SourceJoinCriteria</a></li>
 <li><a href="interfaces/SpanAttachment/">SpanAttachment</a></li>
 <li><a href="interfaces/SpanContext/">SpanContext</a></li>
@@ -4434,6 +4450,7 @@
 <li><a href="type-aliases/BucketGetAllOptions/">BucketGetAllOptions</a></li>
 <li><a href="type-aliases/BucketGetFileMetaDataWithPaginationOptions/">BucketGetFileMetaDataWithPaginationOptions</a></li>
 <li><a href="type-aliases/BucketGetFilesOptions/">BucketGetFilesOptions</a></li>
+<li><a href="type-aliases/BucketRef/">BucketRef</a></li>
 <li><a href="type-aliases/CaseGetAllWithMethodsResponse/">CaseGetAllWithMethodsResponse</a></li>
 <li><a href="type-aliases/CaseInstanceGetAllWithPaginationOptions/">CaseInstanceGetAllWithPaginationOptions</a></li>
 <li><a href="type-aliases/CaseInstanceGetResponse/">CaseInstanceGetResponse</a></li>
@@ -4493,6 +4510,7 @@
 <li><a href="type-aliases/ProcessGetAllOptions/">ProcessGetAllOptions</a></li>
 <li><a href="type-aliases/ProcessInstanceGetAllWithPaginationOptions/">ProcessInstanceGetAllWithPaginationOptions</a></li>
 <li><a href="type-aliases/ProcessInstanceGetResponse/">ProcessInstanceGetResponse</a></li>
+<li><a href="type-aliases/ProcessRef/">ProcessRef</a></li>
 <li><a href="type-aliases/ProcessStartRequest/">ProcessStartRequest</a></li>
 <li><a href="type-aliases/QueryParams/">QueryParams</a></li>
 <li><a href="type-aliases/QueueGetAllItemsOptions/">QueueGetAllItemsOptions</a></li>

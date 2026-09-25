@@ -4044,7 +4044,7 @@
 
 <div class="admonition info">
 <p class="admonition-title">Minimum versions</p>
-<p>Coded Apps requires <strong>CLI version &gt;= 0.1.21</strong> and <strong>codedapp tool version &gt;= 0.1.14</strong>.</p>
+<p>Coded Apps requires <strong>CLI version &gt;= 0.9.0</strong> and <strong>codedapp tool version &gt;= 0.9.0</strong>. The <code>validate</code> and <code>delete</code> commands require <strong>codedapp tool version &gt;= 1.202.2</strong>.</p>
 <p>Check your installed CLI version:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uip<span class="w"> </span>--version
 </code></pre></div>
@@ -4279,9 +4279,10 @@
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip login</span><span data-ty="input" data-ty-prompt="$">npm run build</span><span data-ty="input" data-ty-prompt="$">uip codedapp pack dist -n &lt;appName&gt; --version 1.0.0</span><span data-ty="input" data-ty-prompt="$">uip codedapp publish</span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy</span><span data-ty></span></div>
 
 <p>Once deployed, your app is accessible at:</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>https://&lt;orgName&gt;.uipath.host/&lt;appName&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>https://&lt;orgName&gt;.uipath.host/&lt;appName&gt;
 </code></pre></div>
-Refer to <a href="../cli-reference/">CLI Reference</a> for details.</p>
+<p>To serve the app at a different path, pass <code>--path-name</code> to <code>uip codedapp deploy</code>.</p>
+<p>Refer to <a href="../cli-reference/">CLI Reference</a> for details.</p>
 <div class="admonition info">
 <p class="admonition-title">Coded apps deployment domain</p>
 <p>Coded Apps uses <code>uipath.host</code> domain (for example, <code>&lt;orgname&gt;.uipath.host</code>) because Coded Apps is a static-site hosting service separate from the main UiPath application site. Key reasons are:</p>

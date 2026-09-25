@@ -3747,9 +3747,24 @@ only when the corresponding fields are provided.</p>
 </thead>
 <tbody>
 <tr>
+<td><a id="addexternalsources"></a> <code>addExternalSources?</code></td>
+<td><a href="../EntityCreateExternalSource/"><code>EntityCreateExternalSource</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> External sources to add to a Federated entity (same shape as create's <code>externalFields</code>).</td>
+</tr>
+<tr>
 <td><a id="addfields"></a> <code>addFields?</code></td>
 <td><a href="../EntityCreateFieldOptions/"><code>EntityCreateFieldOptions</code></a>[]</td>
 <td>New fields to add</td>
+</tr>
+<tr>
+<td><a id="addfieldstosource"></a> <code>addFieldsToSource?</code></td>
+<td><a href="../EntityAddFieldsToSource/"><code>EntityAddFieldsToSource</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Fields to add to an existing source, keyed by the source's <code>externalObjectName</code>.</td>
+</tr>
+<tr>
+<td><a id="addsourcejoins"></a> <code>addSourceJoins?</code></td>
+<td><a href="../SourceJoinConditionDetail/"><code>SourceJoinConditionDetail</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Cross-source joins to add (typically paired with <code>addExternalSources</code> — a new non-primary source must be connected to the graph by a join).</td>
 </tr>
 <tr>
 <td><a id="description"></a> <code>description?</code></td>
@@ -3772,14 +3787,34 @@ only when the corresponding fields are provided.</p>
 <td>Whether role-based access control is enabled for this entity</td>
 </tr>
 <tr>
+<td><a id="removeexternalsources"></a> <code>removeExternalSources?</code></td>
+<td><code>string</code>[]</td>
+<td><strong><code>Experimental</code></strong> External sources to remove, by <code>externalObjectName</code>.</td>
+</tr>
+<tr>
 <td><a id="removefields"></a> <code>removeFields?</code></td>
 <td><a href="../EntityRemoveFieldOptions/"><code>EntityRemoveFieldOptions</code></a>[]</td>
 <td>Fields to remove, each identified by field name</td>
 </tr>
 <tr>
+<td><a id="removefieldsfromsource"></a> <code>removeFieldsFromSource?</code></td>
+<td><a href="../EntityRemoveFieldsFromSource/"><code>EntityRemoveFieldsFromSource</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Fields to remove from an existing source, keyed by the source's <code>externalObjectName</code>.</td>
+</tr>
+<tr>
+<td><a id="updateexternalfieldmapping"></a> <code>updateExternalFieldMapping?</code></td>
+<td><a href="../EntityUpdateExternalFieldMapping/"><code>EntityUpdateExternalFieldMapping</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Field-mapping updates (searchability/direction/sortable) on an existing external field.</td>
+</tr>
+<tr>
 <td><a id="updatefields"></a> <code>updateFields?</code></td>
 <td><a href="../EntityFieldUpdateOptions/"><code>EntityFieldUpdateOptions</code></a>[]</td>
 <td>Fields to update, each identified by its field ID</td>
+</tr>
+<tr>
+<td><a id="updatesourcejoin"></a> <code>updateSourceJoin?</code></td>
+<td><a href="../EntityUpdateSourceJoin/"><code>EntityUpdateSourceJoin</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Update an existing join in place — change its join fields and/or type. Identified by source + related object names. (There is no standalone remove-join: a join can't outlive its source, so <code>removeExternalSources</code> cascades its joins automatically.)</td>
 </tr>
 </tbody>
 </table>

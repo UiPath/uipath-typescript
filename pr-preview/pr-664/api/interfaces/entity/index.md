@@ -36,7 +36,7 @@ Promise resolving to the ID of the created entity
 #### Example
 
 ```
-import { Entities } from '@uipath/uipath-typescript/entities';
+import { Entities, EntityClass, DataDirectionType, EntityFieldDataType, JoinType } from '@uipath/uipath-typescript/entities';
 
 const entities = new Entities(sdk);
 
@@ -69,6 +69,26 @@ await entities.create("orderLine", [
     // referenceFolderKey omitted → SDK looks up the target at tenant scope
   },
 ], { folderKey: "<sourceFolderKey>" });
+
+// Federated entity — a read-only view over external and/or native sources.
+// Native columns stay empty ([]); the schema comes from `externalFields`.
+await entities.create("<entityName>", [], {
+  entityClass: EntityClass.Federated,
+  externalFields: [{
+    externalConnectionDetail: {
+      connectionId: "<connectionId>", connectorKey: "<connectorKey>", connectorName: "<connectorName>",
+      elementInstanceId: 0, folderKey: "<folderKey>",
+    },
+    externalObjectDetail: { externalObjectName: "<objectName>", primaryKey: "<primaryKeyField>", isPrimarySource: true, method: "<operationsCatalogJson>" },
+    fields: [{
+      field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING },
+      externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly },
+    }],
+  }],
+  // Multi-source: add more entries to `externalFields` and join them:
+  // sourceJoinConditionDetails: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin, relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>" }],
+});
 ```
 
 ### deleteAttachment()
@@ -1022,10 +1042,12 @@ Updates an existing Data Fabric entity — schema and/or metadata.
 
 Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
 
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources` (also removes that source's joins), `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, and `updateSourceJoin`. `addFieldsToSource` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field.
+
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, or `isRbacEnabled` must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -1036,6 +1058,8 @@ Promise resolving when the update is complete
 #### Example
 
 ```
+import { Entities, EntityFieldDataType, DataDirectionType, JoinType } from '@uipath/uipath-typescript/entities';
+
 // Schema-only: add a field and remove another
 await entities.updateById(<id>, {
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
@@ -1070,6 +1094,29 @@ await entities.updateById(<id>, {
   folderKey: "<folderKey>",
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
 });
+
+// Federated: add a source joined to the existing graph
+await entities.updateById(<id>, {
+  addExternalSources: [{
+    externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
+    externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
+    fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
+  }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+});
+
+// Federated: add a field to an existing source (maps a field that already exists on it)
+await entities.updateById(<id>, {
+  addFieldsToSource: [{ sourceObjectName: "<objectName>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+});
+
+// Federated: change an existing join in place
+await entities.updateById(<id>, {
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", relatedSourceObjectName: "<relatedObjectName>", sourceJoinField: "<externalFieldName>" }],
+});
+
+// Federated: remove a source (its joins are removed automatically)
+await entities.updateById(<id>, { removeExternalSources: ["<relatedObjectName>"] });
 ```
 
 ### updateRecord()
