@@ -83,6 +83,8 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `create()` | `DataFabric.Schema.Write` |
 | `updateById()` / `update()` | `DataFabric.Schema.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
+| `clone()` | `DataFabric.Schema.Write`, `DataFabric.Data.Write` |
+| `getCloneStatus()` | `DataFabric.Schema.Read` |
 
 ## ChoiceSets
 

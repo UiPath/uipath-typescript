@@ -1146,3 +1146,79 @@ export interface RawEntityGetResponse {
   updatedTime?: string;
   updatedBy?: string;
 }
+
+// ===== ENTITY CLONE =====
+
+/** Scope an entity clone reads from or writes to. Clone targets must be folder-scoped. */
+export enum EntityCloneScopeType {
+  Tenant = "Tenant",
+  Folder = "Folder",
+}
+
+/**
+ * What a clone copies:
+ * - `SchemaAndData` — create the schema, copy rows, and copy file attachments (target folder must be clean).
+ * - `DataOnly` — copy rows into a pre-existing, schema-compatible, empty target.
+ */
+export enum EntityCloneMode {
+  SchemaAndData = "SchemaAndData",
+  DataOnly = "DataOnly",
+}
+
+/** Lifecycle of a clone job. `Done`, `Failed`, `RolledBack`, and `RollbackFailed` are terminal. */
+export enum EntityCloneJobState {
+  Queued = "Queued",
+  Validating = "Validating",
+  SchemaCopying = "SchemaCopying",
+  DataCopying = "DataCopying",
+  FilesCopying = "FilesCopying",
+  Verifying = "Verifying",
+  Done = "Done",
+  Failed = "Failed",
+  RollingBack = "RollingBack",
+  RolledBack = "RolledBack",
+  RollbackFailed = "RollbackFailed",
+}
+
+/** Where a clone reads from. `folderId` is required only when `scopeType` is `Folder`. */
+export interface EntityCloneSource {
+  scopeType: EntityCloneScopeType;
+  folderId?: string | null;
+}
+
+/** Where a clone writes to. Always folder-scoped with a concrete `folderId`. */
+export interface EntityCloneTarget {
+  scopeType: EntityCloneScopeType.Folder;
+  folderId: string;
+}
+
+/** Clone tuning. `mode` defaults to `SchemaAndData` when omitted. */
+export interface EntityCloneOptions {
+  mode?: EntityCloneMode;
+}
+
+/** Request body for {@link EntityServiceModel.clone}. */
+export interface EntityCloneRequest {
+  /** Where to clone from. Tenant- or folder-scoped. */
+  source: EntityCloneSource;
+  /** Where to clone into. Always a folder. */
+  target: EntityCloneTarget;
+  /**
+   * Ids of the selected root entities and/or choicesets to clone (one, a subset, or many —
+   * bulk is supported). Their full dependency closure — referenced entities, choicesets, and
+   * relationship targets — is resolved and cloned alongside them, up to 1000 items total.
+   */
+  entityIds: string[];
+  /** Clone options; defaults to `{ mode: 'SchemaAndData' }`. */
+  options?: EntityCloneOptions;
+}
+
+/** Clone job descriptor returned when a job is started and on each status poll. Failure fields are set only on failure. */
+export interface EntityCloneJob {
+  jobId: string;
+  state: EntityCloneJobState;
+  createdTime: string;
+  failureReasonCode?: string | null;
+  failurePhase?: string | null;
+  failureMessage?: string | null;
+}
