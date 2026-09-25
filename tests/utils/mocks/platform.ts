@@ -24,11 +24,16 @@ import type {
   RawPlatformRoleAssignmentListResponse,
   RawPlatformEffectiveAccessResponse,
 } from '../../../src/models/platform/roles.internal-types';
+import type {
+  RawPlatformDirectoryEntry,
+  RawPlatformDirectoryGroup,
+} from '../../../src/models/platform/directory.internal-types';
 import {
   PLATFORM_TEST_CONSTANTS,
   PLATFORM_USER_TEST_CONSTANTS,
   PLATFORM_GROUP_TEST_CONSTANTS,
   PLATFORM_ROLE_TEST_CONSTANTS,
+  PLATFORM_DIRECTORY_TEST_CONSTANTS,
 } from '../constants/platform';
 
 /**
@@ -288,4 +293,38 @@ export const createRawPlatformGroupMembersResponse = (
 ): RawPlatformGroupMembersResponse => ({
   totalCount,
   results: members,
+});
+
+/**
+ * Builds a directory search result in the raw wire shape: `identifier`/`identityName`
+ * naming, numeric `type` code, and the redundant `objectType` the service drops.
+ */
+export const createBasicRawPlatformDirectoryEntry = (
+  overrides?: Partial<RawPlatformDirectoryEntry>
+): RawPlatformDirectoryEntry => ({
+  source: PLATFORM_DIRECTORY_TEST_CONSTANTS.SOURCE_LOCAL,
+  identifier: PLATFORM_USER_TEST_CONSTANTS.USER_ID,
+  identityName: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_NAME,
+  displayName: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_DISPLAY_NAME,
+  email: PLATFORM_DIRECTORY_TEST_CONSTANTS.ENTRY_NAME,
+  domain: null,
+  type: 0,
+  objectType: 'DirectoryUser',
+  ...overrides,
+});
+
+/**
+ * Builds a membership-check result in the raw wire shape.
+ */
+export const createBasicRawPlatformDirectoryGroup = (
+  overrides?: Partial<RawPlatformDirectoryGroup>
+): RawPlatformDirectoryGroup => ({
+  objectType: 'DirectoryGroup',
+  externalId: null,
+  source: PLATFORM_DIRECTORY_TEST_CONSTANTS.SOURCE_LOCAL,
+  identifier: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_ID,
+  name: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  email: null,
+  displayName: PLATFORM_GROUP_TEST_CONSTANTS.GROUP_NAME,
+  ...overrides,
 });

@@ -3,8 +3,10 @@
  *
  * Provides access to UiPath platform settings:
  * - `Platform` — bulk read and bulk create/update of a user's setting key/value pairs
+ * - `Directory` — search principals and check group membership
  *
- * Every operation is user-scoped — see {@link PlatformSettingKey}.
+ * Every `Platform` settings operation is user-scoped — see {@link PlatformSettingKey}.
+ * `Directory` operations are organization-scoped; the organization is resolved from the SDK configuration.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write`).
  *
@@ -32,7 +34,10 @@
  */
 
 export { PlatformService as Platform } from './platform';
+export { PlatformDirectoryService as Directory } from './directory';
 
 // Models (types, response shapes)
 export * from '../../models/platform/platform.types';
 export * from '../../models/platform/platform.models';
+export * from '../../models/platform/directory.types';
+export * from '../../models/platform/directory.models';
