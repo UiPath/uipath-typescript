@@ -5,26 +5,15 @@
 import { PlatformGroupType } from './groups.types';
 
 /**
- * Semantic renames applied to group rows: standard `*Time` names.
+ * Semantic renames for groups: standard `*Time` names on responses, and the
+ * `directoryUser*` membership fields the API expects on writes. Used for responses
+ * with `transformData()` and for request bodies with `transformRequest()`, which
+ * reverses the map (SDK name → wire name).
  */
 export const PlatformGroupMap = {
   creationTime: 'createdTime',
   lastModificationTime: 'lastModifiedTime',
-} as const;
-
-/**
- * Outbound renames for `groups.create()` — the API expects `directoryUserMemberIDs`.
- * Used with `transformRequest()`, which reverses the map (SDK name → wire name).
- */
-export const PlatformGroupCreateMap = {
   directoryUserMemberIDs: 'memberUserIds',
-} as const;
-
-/**
- * Outbound renames for `groups.updateById()`.
- * Used with `transformRequest()`, which reverses the map (SDK name → wire name).
- */
-export const PlatformGroupUpdateMap = {
   directoryUserIDsToAdd: 'memberUserIdsToAdd',
   directoryUserIDsToRemove: 'memberUserIdsToRemove',
 } as const;
