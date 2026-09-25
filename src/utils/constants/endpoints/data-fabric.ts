@@ -17,28 +17,29 @@ export const DATA_FABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-00000000000
 export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity`,
-    // Lists tenant-level and folder-level entities together.
-    // Used by getAll when includeFolderEntities is true.
-    GET_ALL_V2: `${DATAFABRIC_BASE}/api/v2/Entity`,
-    GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
-    GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
-    // v2 single-record read. Returns the full record including complete MULTILINE_MAX
-    // content, unlike list/query endpoints which project only a preview for those fields.
+    // v3 listing of tenant-level and folder-level entities together.
+    // Used by getAll when folderKey is set or includeFolderEntities is true.
+    GET_ALL_V3: `${DATAFABRIC_BASE}/api/v3/entities`,
+    GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/read`,
+    GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,
+    // v3 single-record read. Returns the full record including complete MULTILINE_MAX
+    // content, unlike list/query endpoints which project a size marker for those fields.
     GET_RECORD_BY_ID: (entityId: string, recordId: string) =>
-      `${DATAFABRIC_BASE}/api/v2/EntityService/entity/${entityId}/read/${recordId}`,
-    INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert`,
-    BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert-batch`,
-    UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update/${recordId}`,
-    UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
-    DELETE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete/${recordId}`,
-    DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
-    UPSERT: `${DATAFABRIC_BASE}/api/Entity`,
-    DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
-    UPDATE: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/metadata`,
-    QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
-    // Name-based structured query. The multi-entity (joins) contract is only
-    // implemented on this route — QUERY_BY_ID silently drops the `joins` body key.
-    QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/query`,
+      `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/read/${recordId}`,
+    INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/insert`,
+    BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/insert-batch`,
+    UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/update/${recordId}`,
+    UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/update-batch`,
+    DELETE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/delete/${recordId}`,
+    DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/delete-batch`,
+    // Same URL as GET_ALL_V3; the HTTP method (POST for create/upsert vs GET for list) is resolved at the call site.
+    UPSERT: `${DATAFABRIC_BASE}/api/v3/entities`,
+    // Same URL as GET_BY_ID; the HTTP method (DELETE vs GET) is resolved at the call site.
+    DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,
+    UPDATE_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}/metadata`,
+    // v3 query — Federated-capable; by-name handles joins, by-id rejects them.
+    QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/query`,
+    QUERY_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
@@ -51,17 +52,17 @@ export const DATA_FABRIC_ENDPOINTS = {
     // The Data Fabric API exposes a parallel `{entityName}/...` route for every
     // record operation, letting callers address an entity by name instead of id
     // (used by solution binding overrides, which resolve resources by name + folderKey).
-    GET_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/Entity/${entityName}/metadata`,
-    GET_ENTITY_RECORDS_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/read`,
-    // v2 single-record read by name — mirrors GET_RECORD_BY_ID (full MULTILINE_MAX content).
+    GET_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/metadata`,
+    GET_ENTITY_RECORDS_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/read`,
+    // v3 single-record read by name — mirrors GET_RECORD_BY_ID (full MULTILINE_MAX content).
     GET_RECORD_BY_NAME: (entityName: string, recordId: string) =>
-      `${DATAFABRIC_BASE}/api/v2/EntityService/${entityName}/read/${recordId}`,
-    INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/insert`,
-    BATCH_INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/insert-batch`,
-    UPDATE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/update/${recordId}`,
-    UPDATE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/update-batch`,
-    DELETE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete/${recordId}`,
-    DELETE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/delete-batch`,
+      `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/read/${recordId}`,
+    INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/insert`,
+    BATCH_INSERT_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/insert-batch`,
+    UPDATE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/update/${recordId}`,
+    UPDATE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/update-batch`,
+    DELETE_RECORD_BY_NAME: (entityName: string, recordId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/delete/${recordId}`,
+    DELETE_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/delete-batch`,
     BULK_UPLOAD_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/bulk-upload`,
     // v3 record upsert. There is no by-id route; nested child records are written as one transaction.
     UPSERT_RECORD_BY_NAME: (entityName: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityName}/upsert`,
@@ -70,11 +71,14 @@ export const DATA_FABRIC_ENDPOINTS = {
       `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
   },
   CHOICESETS: {
+    // A choice set is an entity: UPDATE/DELETE reuse the v3 entity routes (same URLs as
+    // ENTITY.UPDATE_METADATA / ENTITY.DELETE). The /choiceset create/list + value writes have
+    // no v3 equivalent and stay on v1.
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
-    GET_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/query_expansion`,
+    GET_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${choiceSetId}/query_expansion`,
     CREATE: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
-    UPDATE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/Entity/${choiceSetId}/metadata`,
-    DELETE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/Entity/${choiceSetId}/delete`,
+    UPDATE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${choiceSetId}/metadata`,
+    DELETE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${choiceSetId}`,
     INSERT_BY_NAME: (choiceSetName: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/insert`,
     UPDATE_BY_NAME: (choiceSetName: string, valueId: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/${valueId}/update`,
     DELETE_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/choiceset/delete`,
