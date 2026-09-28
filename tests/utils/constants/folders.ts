@@ -22,4 +22,24 @@ export const FOLDER_TEST_CONSTANTS = {
     ParentKey: PARENT_KEY,
     FeedType: 'Processes',
   },
+  /**
+   * One folder as the folder-list endpoint returns it: everything the
+   * single-folder lookup sends, plus FolderPath, RootType and IsPersonal.
+   */
+  RAW_LIST_FOLDER: {
+    Id: 123,
+    Key: FOLDER_KEY,
+    DisplayName: 'Finance',
+    FullyQualifiedName: 'Shared/Finance',
+    Description: 'AP invoices',
+    FolderType: 'Standard',
+    ProvisionType: 'Automatic',
+    PermissionModel: 'FineGrained',
+    ParentId: 10,
+    ParentKey: PARENT_KEY,
+    FeedType: 'Processes',
+    FolderPath: `${PARENT_KEY}.${FOLDER_KEY}`,
+    RootType: 2,
+    IsPersonal: false,
+  },
 } as const;

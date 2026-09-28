@@ -228,6 +228,20 @@ export const FEEDBACK_OFFSET_PARAMS = {
 };
 
 /**
+ * Folder pagination response shape constants.
+ *
+ * Request params reuse {@link FEEDBACK_OFFSET_PARAMS} — the folder list takes the
+ * same `take` + `skip` pair and likewise has no count parameter.
+ */
+export const FOLDER_PAGINATION = {
+  /** Field name for items in the folder list response */
+  ITEMS_FIELD: 'PageItems',
+
+  /** Field name for total count in the folder list response */
+  TOTAL_COUNT_FIELD: 'Count'
+};
+
+/**
  * Entity OFFSET pagination parameter names (limit/start style)
  */
 export const ENTITY_OFFSET_PARAMS = {
