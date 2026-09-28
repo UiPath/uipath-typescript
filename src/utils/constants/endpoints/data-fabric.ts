@@ -69,11 +69,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     // Download (GET), upload (POST), and delete (DELETE) all share this URL; the HTTP method is chosen at the call site.
     ATTACHMENT_BY_NAME: (entityName: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
-  },
-  CLONE: {
-    // v3 entity clone: POST starts an async job, GET polls it by jobId.
-    START: `${DATAFABRIC_BASE}/api/v3/clone/entities`,
-    STATUS: (jobId: string) => `${DATAFABRIC_BASE}/api/v3/clone/entities/${jobId}`,
+
+    // v3 entity clone: POST starts an async job, CLONE_STATUS GET polls it by jobId. Clone is an entity operation, not a separate resource.
+    CLONE: `${DATAFABRIC_BASE}/api/v3/clone/entities`,
+    CLONE_STATUS: (jobId: string) => `${DATAFABRIC_BASE}/api/v3/clone/entities/${jobId}`,
   },
   CHOICESETS: {
     // A choice set is an entity: UPDATE/DELETE reuse the v3 entity routes (same URLs as

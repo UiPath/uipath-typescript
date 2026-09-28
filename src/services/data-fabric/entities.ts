@@ -496,7 +496,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       entityIds: request.entityIds,
       options: { mode: request.options?.mode ?? EntityCloneMode.SchemaAndData },
     };
-    const response = await this.post<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.CLONE.START, payload);
+    const response = await this.post<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE, payload);
     return toEntityCloneJob(response.data);
   }
 
@@ -505,7 +505,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     if (!jobId?.trim()) {
       throw new ValidationError({ message: 'getCloneStatus requires a non-empty job id.' });
     }
-    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.CLONE.STATUS(jobId));
+    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_STATUS(jobId));
     return toEntityCloneJob(response.data);
   }
 
