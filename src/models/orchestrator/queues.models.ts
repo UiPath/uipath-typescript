@@ -201,6 +201,12 @@ export interface QueueServiceModel {
    * The payload must be flat — values are simple scalars (see
    * {@link QueueItemValue}); nested objects and arrays are rejected.
    *
+   * The returned item's `folderId` reflects the folder the SDK actually
+   * targeted — after any runtime resource-override redirect on `folderPath`.
+   * Pass `{ folderId: item.folderId }` to follow-up operations (e.g.
+   * `completeTransaction`) so they scope to the same folder without the
+   * caller having to re-derive it.
+   *
    * @param queueName - Name of the queue to insert into
    * @param specificData - The item's business payload (stored as the queue item's specific content)
    * @param options Item metadata (priority, reference, defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
@@ -249,11 +255,19 @@ export interface QueueServiceModel {
    * API identifies queues by name, so an `id` selector is first resolved to
    * the queue's name (one extra lookup).
    *
+   * The returned item's `folderId` reflects the folder the SDK actually
+   * targeted — after any runtime resource-override redirect on the
+   * `{ name }` selector's `folderPath`. Pass `{ folderId: item.folderId }`
+   * to `completeTransaction` so the follow-up scopes to the same folder
+   * without the caller having to re-derive it.
+   *
    * @param queue - Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to the acquired {@link QueueItem} (in `InProgress` status with `processingStartTime` set), or `null` when no item is available
    * @example
    * ```typescript
+   * import { QueueTransactionOutcome } from '@uipath/uipath-typescript/queues';
+   *
    * const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
    *
    * // or select by ID — the SDK first resolves the queue's name (one extra lookup)
@@ -266,6 +280,14 @@ export interface QueueServiceModel {
    *   // Running under a robot session: the item is now locked to this caller
    *   console.log(transaction.status);        // 'InProgress'
    *   console.log(transaction.specificData);  // the item's business payload
+   *
+   *   // Complete via the SAME folder the item lives in — `folderId` on the
+   *   // returned item is the resolved folder after any override redirect.
+   *   await queues.completeTransaction(
+   *     transaction.id,
+   *     QueueTransactionOutcome.Successful,
+   *     { folderId: transaction.folderId },
+   *   );
    * } else {
    *   // No item was acquired. This happens when the queue has no eligible
    *   // items — and always for user/application identities (e.g. a coded app
@@ -288,6 +310,11 @@ export interface QueueServiceModel {
    *
    * Applies to items with an active transaction. Changing the outcome of an
    * item that already reached a terminal status is rejected.
+   *
+   * Folder scoping is required. When the item came from `startTransaction`
+   * or `insertItemByName`, pass `{ folderId: item.folderId }` — that's the
+   * resolved folder the item lives in after any override redirect, so no
+   * re-derivation is needed at the call site.
    *
    * @param itemId - Queue item ID of the transaction to complete
    * @param outcome - The caller's verdict on its own processing of the item; Orchestrator records it as-is
