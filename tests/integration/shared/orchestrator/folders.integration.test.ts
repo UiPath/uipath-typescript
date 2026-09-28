@@ -5,6 +5,48 @@ import { isNotFoundError } from '../../../../src/core/errors';
 const modes: InitMode[] = ['v1'];
 
 describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, () => {
+  describe('getAll', () => {
+    it('should list the folders the caller has access to', async () => {
+      const { folders } = getServices();
+
+      if (!folders) {
+        throw new Error('Folders service is not registered for this init mode');
+      }
+
+      const result = await folders.getAll();
+
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeGreaterThan(0);
+
+      const folder = result.items[0];
+      expect(typeof folder.id).toBe('number');
+      expect(typeof folder.key).toBe('string');
+      expect(typeof folder.fullyQualifiedName).toBe('string');
+      expect(typeof folder.folderPath).toBe('string');
+      expect(typeof folder.rootType).toBe('number');
+      expect(typeof folder.isPersonal).toBe('boolean');
+
+      expect((folder as any).FullyQualifiedName).toBeUndefined();
+      expect((folder as any).FolderPath).toBeUndefined();
+      expect((folder as any).RootType).toBeUndefined();
+      expect((folder as any).IsPersonal).toBeUndefined();
+    });
+
+    it('should page with pageSize and report a total count', async () => {
+      const { folders } = getServices();
+
+      if (!folders) {
+        throw new Error('Folders service is not registered for this init mode');
+      }
+
+      const page = await folders.getAll({ pageSize: 1 });
+
+      expect(page.items.length).toBe(1);
+      expect(typeof page.totalCount).toBe('number');
+      expect(page.totalCount).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   describe('getByKey', () => {
     it('should retrieve a folder by its GUID key', async () => {
       const { folders } = getServices();

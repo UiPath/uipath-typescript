@@ -1,4 +1,10 @@
-import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
+import type {
+  FolderGetAllOptions,
+  FolderGetAllResponse,
+  FolderGetByKeyOptions,
+  FolderGetResponse,
+} from './folders.types';
+import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Service for looking up UiPath Orchestrator folders.
@@ -18,6 +24,37 @@ import type { FolderGetByKeyOptions, FolderGetResponse } from './folders.types';
  * ```
  */
 export interface FolderServiceModel {
+  /**
+   * Gets the folders the calling user has access to, across the tenant.
+   *
+   * Returns only folders the user can actually operate in, so the result is
+   * safe to offer as a picker. Each folder carries its id, key, fully
+   * qualified path and parent reference.
+   *
+   * @param options - Optional pagination options.
+   * @returns Promise resolving to a {@link NonPaginatedResponse} of {@link FolderGetAllResponse} without pagination options, or a {@link PaginatedResponse} of {@link FolderGetAllResponse} when pagination options are used.
+   * @example
+   * ```typescript
+   * // Get all folders
+   * const folders_ = await folders.getAll();
+   * folders_.items.forEach(folder => console.log(folder.fullyQualifiedName));
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With pagination
+   * const page = await folders.getAll({ pageSize: 10 });
+   * console.log(page.totalCount, page.hasNextPage);
+   * ```
+   */
+  getAll<T extends FolderGetAllOptions = FolderGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<FolderGetAllResponse>
+      : NonPaginatedResponse<FolderGetAllResponse>
+  >;
+
   /**
    * Gets a single folder by its key (GUID). Unlike most Orchestrator reads,
    * this lookup is not folder-scoped: no folder headers are sent.
