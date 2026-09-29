@@ -14,6 +14,8 @@ import { TEST_CONSTANTS } from '../constants/common';
 export const mockTransformUtils = {
   pascalToCamelCaseKeys: vi.fn((obj) => obj),
   camelToPascalCaseKeys: vi.fn((obj) => obj),
+  snakeToCamelCaseKeys: vi.fn((obj) => obj),
+  camelToSnakeCaseKeys: vi.fn((obj) => obj),
   transformData: vi.fn((data) => data),
   applyDataTransforms: vi.fn((data) => data),
   addPrefixToKeys: vi.fn((obj) => obj),

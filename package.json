@@ -206,6 +206,16 @@
                 "default": "./dist/agents/index.cjs"
             }
         },
+        "./agenthub": {
+            "import": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.cjs"
+            }
+        },
         "./governance": {
             "import": {
                 "types": "./dist/governance/index.d.ts",
