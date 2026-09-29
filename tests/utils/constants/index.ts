@@ -24,4 +24,3 @@ export * from './platform';
 export * from './http';
 export * from './business-apps';
 export * from './integration-service';
-export * from './agenthub';
