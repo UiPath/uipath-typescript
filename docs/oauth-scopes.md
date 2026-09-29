@@ -83,14 +83,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `create()` | `DataFabric.Schema.Write` |
 | `updateById()` / `update()` | `DataFabric.Schema.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
-
-## Entity Operations
-
-`query()` reads records through `Entities.queryRecords()` and needs the same scope.
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `query()` | `DataFabric.Data.Read` |
+| `entityOperationHost()` | `DataFabric.Data.Read` |
 
 ## ChoiceSets
 
