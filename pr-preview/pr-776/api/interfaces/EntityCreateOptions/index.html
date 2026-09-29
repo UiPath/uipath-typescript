@@ -3724,9 +3724,14 @@
 <td>Human-readable display name shown in the UI (defaults to <code>name</code> if omitted)</td>
 </tr>
 <tr>
+<td><a id="entityclass"></a> <code>entityClass?</code></td>
+<td><a href="../../enumerations/EntityClass/"><code>EntityClass</code></a></td>
+<td><strong><code>Experimental</code></strong> Product class of the entity (default: <code>Native</code>). Set to <code>Federated</code> to create a federated entity — a read-only view over one or more external/native sources. A Federated entity requires at least one source in <code>externalFields</code>.</td>
+</tr>
+<tr>
 <td><a id="externalfields"></a> <code>externalFields?</code></td>
-<td><a href="../ExternalField/"><code>ExternalField</code></a>[]</td>
-<td>External field source definitions (default: empty)</td>
+<td><a href="../EntityCreateExternalSource/"><code>EntityCreateExternalSource</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> External source definitions — the connections, objects, and field mappings a Federated entity reads from. Required when <code>entityClass</code> is <code>Federated</code>; ignored for Native entities.</td>
 </tr>
 <tr>
 <td><a id="folderkey"></a> <code>folderKey?</code></td>
@@ -3742,6 +3747,11 @@
 <td><a id="isrbacenabled"></a> <code>isRbacEnabled?</code></td>
 <td><code>boolean</code></td>
 <td>Whether role-based access control is enabled for this entity (default: false)</td>
+</tr>
+<tr>
+<td><a id="sourcejoinconditiondetails"></a> <code>sourceJoinConditionDetails?</code></td>
+<td><a href="../SourceJoinConditionDetail/"><code>SourceJoinConditionDetail</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Cross-source joins for a multi-source Federated entity. Each entry joins two sources by object + field name; omit for a single-source Federated entity.</td>
 </tr>
 </tbody>
 </table>
