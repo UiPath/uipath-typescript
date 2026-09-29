@@ -50,6 +50,8 @@ export interface FolderGetResponse {
   displayName: string;
   /** Fully qualified folder path (e.g. `Shared/Finance`). */
   fullyQualifiedName: string;
+  /** Sortable form of the fully qualified folder path. */
+  fullyQualifiedNameOrderable: string;
   /** Description of the folder. */
   description: string | null;
   /** Folder type (standard, personal workspace, solution, …). */
@@ -64,10 +66,12 @@ export interface FolderGetResponse {
   parentKey: string | null;
   /** Package feed type for the folder. */
   feedType: FolderFeedType;
+  /** Whether the folder is active. */
+  isActive: boolean;
 }
 
 /**
- * Query options for {@link FolderServiceModel.getByKey} (`expand` / `select` only).
+ * Query options for {@link FolderServiceModel.getByKey} (`select` only — folders have no expandable relations).
  * This lookup is not folder-scoped — no folder headers are sent.
  */
-export interface FolderGetByKeyOptions extends BaseOptions {}
+export interface FolderGetByKeyOptions extends Omit<BaseOptions, 'expand'> {}

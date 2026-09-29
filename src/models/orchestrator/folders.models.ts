@@ -23,7 +23,7 @@ export interface FolderServiceModel {
    * this lookup is not folder-scoped: no folder headers are sent.
    *
    * @param key - Folder key (GUID).
-   * @param options - Optional query options (`select` / `expand`).
+   * @param options - Optional query options (`select`).
    * @returns Promise resolving to the matching {@link FolderGetResponse}. Rejects with `ValidationError` when `key` is missing or not a GUID, and with `NotFoundError` when no folder matches the key.
    * @example
    * ```typescript

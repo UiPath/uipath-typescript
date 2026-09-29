@@ -24,6 +24,8 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       expect(typeof folder.id).toBe('number');
       expect(typeof folder.displayName).toBe('string');
       expect(typeof folder.fullyQualifiedName).toBe('string');
+      expect(typeof folder.fullyQualifiedNameOrderable).toBe('string');
+      expect(typeof folder.isActive).toBe('boolean');
       expect(typeof folder.folderType).toBe('string');
       expect(typeof folder.feedType).toBe('string');
       expect(folder.parentId === null || typeof folder.parentId === 'number').toBe(true);
@@ -34,6 +36,7 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       expect((folder as any).FolderType).toBeUndefined();
       expect((folder as any).ParentId).toBeUndefined();
       expect((folder as any).ParentKey).toBeUndefined();
+      expect((folder as any).IsActive).toBeUndefined();
     });
 
     it('should honor $select', async () => {
