@@ -387,7 +387,9 @@ Path parameters work identically in local `serve` and when deployed. `path` beco
     "details": { "formErrors": ["must NOT have additional properties"], "fieldErrors": {} } }
   ```
 
-Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all. Values coerce to the declared type (`id: number` on `/users/:id{[0-9]+}` arrives as a number), whereas `ctx.params` is always strings.
+Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all.
+
+- **Declare a path param as a `string`,** and convert it in the handler. A URL carries text, and the contract states what arrives, so `input.id` is the segment as sent. The same holds for a `GET` query string. See [text-sourced input](../production-rules/#text-sourced-input-a-query-string-and-a-path-segment-are-strings).
 
 A function with **no** `input` schema receives the path params alone as its input.
 
@@ -798,29 +800,27 @@ handler: async (input, ctx) => Promise.race([
 
 ______________________________________________________________________
 
-## GET functions: query-string coercion is automatic for schema-first contracts
+## Text-sourced input: a query string and a path segment are strings
 
-Query string values always arrive as strings. With a schema-first contract — `defineSchema<T>()` or a JSON Schema literal — the runtime coerces them to the declared type before validation, so this just works:
+A URL carries text and nothing else, and the runtime does not convert it. A contract declaring `folderId: number` for a query parameter describes something the request cannot deliver, so validation rejects it. Declare what arrives and convert in the handler, where you also decide what an unconvertible value means:
 
 ```
 interface ListInput {
-  folderId: number;   // "123" arrives as a string; the runtime coerces it to 123
+  folderId: string;   // "123" arrives as text, because that is what a query string carries
 }
 
-input: defineSchema<ListInput>()
+handler: (input) => {
+  const folderId = Number(input.folderId);
+  if (!Number.isInteger(folderId)) {
+    return { status: 400, body: { error: "folderId must be an integer" } };
+  }
+  ...
+}
 ```
 
-Only functions still using a **zod** schema must opt into coercion themselves — a plain `z.number()` fails validation on any GET input:
+The same holds for a path segment on any verb. A **JSON body** is unaffected: it carries its own types, so `{"folderId": 123}` is a number and `{"folderId": "123"}` is rejected.
 
-```
-// ❌ validation error with zod — "123" is a string, not a number
-input: z.object({ folderId: z.number() })
-
-// ✅ zod-authored functions need z.coerce
-input: z.object({ folderId: z.coerce.number() })
-```
-
-This does not apply to POST functions — JSON body values preserve their types.
+A zod contract follows the same rule, and can state the conversion itself: `z.number()` rejects a query value, `z.coerce.number()` accepts and converts it.
 
 ______________________________________________________________________
 
@@ -1546,7 +1546,7 @@ No `$ref`/`$defs`, no custom keywords, no custom format functions — a contract
 The runtime compiles the contract with ajv (ajv never appears in your project):
 
 - **Input** is validated before the handler runs; failures return `400` with per-field errors.
-- **GET query strings** are coerced to their schema types (`"42"` → `42`, `"true"` → `true`).
+- **Values are validated as they arrive.** Query and path values are strings; declare them as `string` and convert in the handler (see [path parameters](../../platform-context/#path-parameters)).
 - **`default`** values are filled into missing input fields.
 - **Output** (when declared) is validated after the handler; failures return `500`.
 
