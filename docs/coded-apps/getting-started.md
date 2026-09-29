@@ -23,7 +23,7 @@ $ uip tools install codedapp
 ```
 
 !!! info "Minimum versions"
-    Coded Apps requires **CLI version >= 0.1.21** and **codedapp tool version >= 0.1.14**.
+    Coded Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**. The `validate` and `delete` commands require **codedapp tool version >= 1.202.2**.
 
     Check your installed CLI version:
 
@@ -294,6 +294,9 @@ Once deployed, your app is accessible at:
 ```
 https://<orgName>.uipath.host/<appName>
 ```
+
+To serve the app at a different path, pass `--path-name` to `uip codedapp deploy`.
+
 Refer to [CLI Reference](cli-reference.md) for details.
 
 !!! info "Coded apps deployment domain"

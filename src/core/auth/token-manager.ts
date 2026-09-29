@@ -1,7 +1,8 @@
 import { ExecutionContext } from '../context/execution';
 import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
-import { AUTH_STORAGE_KEYS } from './constants';
+import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
+import { getExpiryMs } from './token-expiry';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
@@ -46,15 +47,17 @@ export class TokenManager {
   /**
    * Checks if a token is expired
    * @param tokenInfo The token info to check
+   * @param bufferMs Safety margin: the token is reported expired this many
+   *   milliseconds before its actual expiry. Defaults to 0 (exact expiry).
    * @returns true if the token is expired, false otherwise
    */
-  public isTokenExpired(tokenInfo?: TokenInfo): boolean {
+  public isTokenExpired(tokenInfo?: TokenInfo, bufferMs: number = 0): boolean {
     // If no token info or no expiration date, token is not expired
     if (!tokenInfo?.expiresAt) {
       return false;
     }
 
-    return new Date() >= tokenInfo.expiresAt;
+    return Date.now() >= getExpiryMs(tokenInfo.expiresAt) - bufferMs;
   }
 
   /**
@@ -87,8 +90,11 @@ export class TokenManager {
       return tokenInfo.token;
     }
 
+    // Renew a minute early only when the SDK can refresh; otherwise use the token until it actually expires.
+    const expiryBuffer = hasOAuthConfig(this.config) && tokenInfo.refreshToken ? TOKEN_EXPIRY_BUFFER_MS : 0;
+
     // If token is not expired, return it
-    if (!this.isTokenExpired(tokenInfo)) {
+    if (!this.isTokenExpired(tokenInfo, expiryBuffer)) {
       return tokenInfo.token;
     }
 
