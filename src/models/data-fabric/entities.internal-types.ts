@@ -89,11 +89,12 @@ export type FederatedUpdateDeltas = Pick<
   EntityUpdateByIdOptions,
   | 'addExternalSources'
   | 'removeExternalSources'
-  | 'addFieldsToSource'
-  | 'removeFieldsFromSource'
-  | 'updateExternalFieldMapping'
+  | 'addExternalFields'
+  | 'removeExternalFields'
   | 'addSourceJoins'
   | 'updateSourceJoin'
+  | 'replaceSourceJoins'
+  | 'updateExternalConnection'
 >;
 
 /**
