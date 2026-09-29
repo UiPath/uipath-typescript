@@ -26,7 +26,7 @@ $ uip tools install codedapp
 ```
 
 !!! info "Minimum versions"
-    Coded Action Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**.
+    Coded Action Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**. The `validate` and `delete` commands require **codedapp tool version >= 1.202.2**.
 
     Check your installed CLI version:
 
@@ -356,4 +356,4 @@ Refer to [CLI Reference](cli-reference.md) for details.
 
 ## Network requirements
 
-Coded action apps have the same network requirements as coded apps. [Coded Apps Network Requirements](../../coded-apps/getting-started/#network-requirements)
+Coded action apps have the same network requirements as coded apps. [Coded Apps Network Requirements](../coded-apps/getting-started.md#network-requirements)

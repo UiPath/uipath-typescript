@@ -66,9 +66,29 @@ export function normalizeBaseUrl(url: string): string {
  * Shared so the registry can reuse it when a service is constructed from a
  * UiPath instance that never resolved a configuration — otherwise the caller
  * only learns their instance is "invalid", not why.
+ *
+ * When a coded app's injected config carries base fields but a required OAuth
+ * field is empty (clientId or redirectUri), name the missing field(s) instead
+ * of claiming nothing was found. scope is not required here: Identity falls
+ * back to the client's registered scopes when it is omitted.
  */
-export function missingConfigMessage(): string {
+export function missingConfigMessage(config?: PartialUiPathConfig): string {
   if (isBrowser) {
+    if (config && hasRequiredBaseFields(config) && !hasSecretConfig(config)) {
+      const missing: string[] = [];
+      if (!config.clientId) missing.push('clientId');
+      if (!config.redirectUri) missing.push('redirectUri');
+      // Only when the plugin injected some OAuth field — a page with none is
+      // "not configured", handled by the generic message below.
+      if (missing.length > 0 && (config.clientId || config.redirectUri || config.scope)) {
+        const fields = missing.join(' and ');
+        const verb = missing.length > 1 ? 'are' : 'is';
+        const clientHint = missing.includes('clientId')
+          ? ' clientId must be a non-confidential OAuth client, or pass one with --client-id at deploy.'
+          : '';
+        return `UiPath SDK configuration is incomplete: ${fields} ${verb} empty. Set ${missing.length > 1 ? 'them' : 'it'} in uipath.json and redeploy.${clientHint}`;
+      }
+    }
     return 'UiPath SDK configuration not found. ' +
       'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.';
   }
