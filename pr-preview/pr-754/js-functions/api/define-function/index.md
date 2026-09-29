@@ -71,7 +71,7 @@ export default defineFunction({
 });
 ```
 
-`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest.
+`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest. Write it in place in the `defineFunction(...)` call that the file default-exports, as above; that call may also sit in a `const` the file exports as default and uses nowhere else. Anywhere else, declare `input`/`output` as a JSON Schema literal or a validator.
 
 **JavaScript — write the JSON Schema literal directly:**
 
