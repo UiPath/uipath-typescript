@@ -1155,11 +1155,7 @@ export enum EntityCloneScopeType {
   Folder = "Folder",
 }
 
-/**
- * What a clone copies:
- * - `SchemaAndData` — create the schema, copy rows, and copy file attachments (target folder must be clean).
- * - `DataOnly` — copy rows into a pre-existing, schema-compatible, empty target.
- */
+/** What a clone copies: `SchemaAndData` (schema + rows + attachments, clean target) or `DataOnly` (rows into a pre-existing, schema-compatible, empty target). */
 export enum EntityCloneMode {
   SchemaAndData = "SchemaAndData",
   DataOnly = "DataOnly",
@@ -1203,11 +1199,7 @@ export interface EntityCloneRequest {
   source: EntityCloneSource;
   /** Where to clone into. Always a folder. */
   target: EntityCloneTarget;
-  /**
-   * Ids of the selected root entities and/or choicesets to clone (one, a subset, or many —
-   * bulk is supported). Their full dependency closure — referenced entities, choicesets, and
-   * relationship targets — is resolved and cloned alongside them, up to 1000 items total.
-   */
+  /** Ids of the root entities/choicesets to clone; their full dependency closure is cloned alongside them, up to 1000 items total. */
   entityIds: string[];
   /** Clone options; defaults to `{ mode: 'SchemaAndData' }`. */
   options?: EntityCloneOptions;
