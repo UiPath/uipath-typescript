@@ -16,8 +16,8 @@ Source: [github.com/UiPath/uipath-ui-widgets](https://github.com/UiPath/uipath-u
 | [Conversational Agent Chat](conversational-agent-chat.md) | `@uipath/ui-widgets-conversational-agent-chat` | Streaming chat UI for UiPath Conversational Agents, with tool-call visualization |
 | [DataTable](datatable.md) | `@uipath/ui-widgets-datatable` | Full CRUD grid over a Data Fabric entity — inline editing, master-detail, filtering, diff review |
 | [Multi File Upload](multi-file-upload.md) | `@uipath/ui-widgets-multi-file-upload` | Drag-and-drop upload of multiple files to an Orchestrator Storage Bucket |
-| [PDF Viewer](pdf-viewer.md) | `@uipath/ui-widgets-pdf-viewer` <br>*beta — not yet on npm* | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes |
-| [External Auth](external-auth.md) | `@uipath/ui-widgets-external-auth` <br>*beta — not yet on npm* | Provider-agnostic sign-in buttons that start login at an external IdP |
+| [PDF Viewer](pdf-viewer.md) | `@uipath/ui-widgets-pdf-viewer` | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes |
+| [External Auth](external-auth.md) | `@uipath/ui-widgets-external-auth` | Provider-agnostic sign-in buttons that start login at an external IdP |
 
 ---
 
@@ -28,8 +28,6 @@ Source: [github.com/UiPath/uipath-ui-widgets](https://github.com/UiPath/uipath-u
 - **React** `^19.2.0` — 19.2.0 or later in the 19.x line (and a matching `react-dom`)
 - **@uipath/uipath-typescript** — a peer dependency, so you install it yourself. Each widget pins its own minimum; the per-widget pages give the exact range
 
-The widgets render with the UiPath Apollo design system, but they depend on it directly — `@uipath/apollo-wind` installs with the widget and is nothing you add yourself.
-
 ### Install
 
 Each widget is installed independently:
@@ -37,9 +35,6 @@ Each widget is installed independently:
 ```bash
 npm install @uipath/ui-widgets-datatable
 ```
-
-!!! warning "PDF Viewer and External Auth are not on npm yet"
-    Both are at `1.0.0-beta.1` and are not yet published to the public registry, so `npm install` for them fails today. Their pages document the current API so you can evaluate and plan against it.
 
 ### Pass an initialized SDK instance
 
@@ -57,7 +52,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
