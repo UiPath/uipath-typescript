@@ -158,6 +158,18 @@ describe('DocumentUnderstanding Unit Tests', () => {
       );
     });
 
+    it('should reject a missing tag', async () => {
+      await expect(service.startExtractionValidation(PROJECT_ID, '', DOCUMENT_TYPE_ID, START_REQUEST)).rejects.toBeInstanceOf(
+        ValidationError,
+      );
+    });
+
+    it('should reject a missing documentTypeId', async () => {
+      await expect(service.startExtractionValidation(PROJECT_ID, TAG, '', START_REQUEST)).rejects.toBeInstanceOf(
+        ValidationError,
+      );
+    });
+
     it('should propagate API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
@@ -204,6 +216,24 @@ describe('DocumentUnderstanding Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DU_VALIDATION_ENDPOINTS.GET_RESULT(PROJECT_ID, TAG, DOCUMENT_TYPE_ID, OPERATION_ID),
         expect.objectContaining({ params: { 'api-version': '1.1' } }),
+      );
+    });
+
+    it('should reject a missing projectId', async () => {
+      await expect(service.getExtractionValidationResult('', TAG, DOCUMENT_TYPE_ID, OPERATION_ID)).rejects.toBeInstanceOf(
+        ValidationError,
+      );
+    });
+
+    it('should reject a missing tag', async () => {
+      await expect(service.getExtractionValidationResult(PROJECT_ID, '', DOCUMENT_TYPE_ID, OPERATION_ID)).rejects.toBeInstanceOf(
+        ValidationError,
+      );
+    });
+
+    it('should reject a missing documentTypeId', async () => {
+      await expect(service.getExtractionValidationResult(PROJECT_ID, TAG, '', OPERATION_ID)).rejects.toBeInstanceOf(
+        ValidationError,
       );
     });
 
