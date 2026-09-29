@@ -1917,6 +1917,34 @@
          <lastmod>2026-09-29</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationErrorResponse/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationGetResponse/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationRequestOptions/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationResult/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationServiceModel/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationStartRequest/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DuValidationStartResponse/</loc>
+         <lastmod>2026-09-29</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/DurationStats/</loc>
          <lastmod>2026-09-29</lastmod>
     </url>
