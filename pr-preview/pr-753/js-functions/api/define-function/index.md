@@ -161,7 +161,7 @@ No `$ref`/`$defs`, no custom keywords, no custom format functions — a contract
 The runtime compiles the contract with ajv (ajv never appears in your project):
 
 - **Input** is validated before the handler runs; failures return `400` with per-field errors.
-- **GET query strings** are coerced to their schema types (`"42"` → `42`, `"true"` → `true`).
+- **Values are validated as they arrive.** Query and path values are strings; declare them as `string` and convert in the handler (see [path parameters](../../platform-context/#path-parameters)).
 - **`default`** values are filled into missing input fields.
 - **Output** (when declared) is validated after the handler; failures return `500`.
 

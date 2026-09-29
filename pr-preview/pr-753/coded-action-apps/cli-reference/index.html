@@ -2521,6 +2521,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#build-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2554,6 +2565,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2565,10 +2587,54 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        push
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pull
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#upgrading-deploying-new-version-of-a-coded-action-app" class="md-nav__link">
     <span class="md-ellipsis">
       
         Upgrading / Deploying new version of a coded action app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Options
       
     </span>
   </a>
@@ -3863,6 +3929,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        init
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#build-app" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3896,6 +3973,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deploy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3907,10 +3995,54 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        push
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pull
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#upgrading-deploying-new-version-of-a-coded-action-app" class="md-nav__link">
     <span class="md-ellipsis">
       
         Upgrading / Deploying new version of a coded action app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global Options
       
     </span>
   </a>
@@ -3966,7 +4098,7 @@
 
 <div class="admonition info">
 <p class="admonition-title">Minimum versions</p>
-<p>Coded Action Apps requires <strong>CLI version &gt;= 0.9.0</strong> and <strong>codedapp tool version &gt;= 0.9.0</strong>.</p>
+<p>Coded Action Apps requires <strong>CLI version &gt;= 0.9.0</strong> and <strong>codedapp tool version &gt;= 0.9.0</strong>. This reference reflects <strong>CLI 1.202.1</strong> and <strong>codedapp tool 1.202.2</strong>; some options are not available in older versions. The <code>validate</code> and <code>delete</code> commands require <strong>codedapp tool version &gt;= 1.202.2</strong>.</p>
 <p>Check your installed CLI version:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uip<span class="w"> </span>--version
 </code></pre></div>
@@ -3996,7 +4128,7 @@
 <td><code>--authority</code></td>
 <td>string</td>
 <td>Custom authority URL</td>
-<td>—</td>
+<td><code>https://cloud.uipath.com</code></td>
 </tr>
 <tr>
 <td><code>-t, --tenant</code></td>
@@ -4005,29 +4137,99 @@
 <td>—</td>
 </tr>
 <tr>
-<td><code>--it, --interactive</code></td>
+<td><code>--organization</code></td>
+<td>string</td>
+<td>Organization logical name to pre-select during browser login</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--interactive</code></td>
 <td>boolean</td>
-<td>Interactively select tenant from list</td>
+<td>Prompt to select a tenant from a list</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--client-id</code></td>
+<td>string</td>
+<td>Client ID of an <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications">External App</a>. Use <code>env.&lt;NAME&gt;</code> to read it from an environment variable</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--client-secret</code></td>
+<td>string</td>
+<td>Client secret of the External App. Use <code>env.&lt;NAME&gt;</code> to read it from an environment variable</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>-s, --scope</code></td>
+<td>string</td>
+<td>Scopes to request for an External App, comma- or space-separated</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--no-browser</code></td>
+<td>boolean</td>
+<td>Print the sign-in URL instead of opening a browser</td>
 <td>—</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Publishing and deploying coded action apps with <code>client-id</code> and <code>client-secret</code> based login is not currently supported. Use interactive browser-based user OAuth login only.</p>
-</div>
 <p><strong>Examples</strong></p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span class="termynal-comment" data-ty># Interactive login</span><span data-ty="input" data-ty-prompt="$">uip login -it</span><span data-ty></span><span class="termynal-comment" data-ty># Specific tenant</span><span data-ty="input" data-ty-prompt="$">uip login --tenant MyTenant</span><span data-ty></span><span class="termynal-comment" data-ty># Check login status</span><span data-ty="input" data-ty-prompt="$">uip login status</span><span data-ty></span></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span class="termynal-comment" data-ty># Interactive login</span><span data-ty="input" data-ty-prompt="$">uip login --interactive</span><span data-ty></span><span class="termynal-comment" data-ty># Specific tenant</span><span data-ty="input" data-ty-prompt="$">uip login --tenant MyTenant</span><span data-ty></span><span class="termynal-comment" data-ty># Check login status</span><span data-ty="input" data-ty-prompt="$">uip login status</span><span data-ty></span><span class="termynal-comment" data-ty># Log out and remove stored credentials</span><span data-ty="input" data-ty-prompt="$">uip logout</span><span data-ty></span></div>
+
+<hr />
+<h2 id="init">init<a class="headerlink" href="#init" title="Permanent link">&para;</a></h2>
+<p>Create a starter app in a new or empty directory. Pass <code>--type Action</code> to create a coded action app.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ uip codedapp init &lt;path&gt; [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--template</code></td>
+<td>string</td>
+<td>Starter template: <code>form</code>, <code>dashboard</code>, or <code>inline-automation</code></td>
+<td><code>form</code></td>
+</tr>
+<tr>
+<td><code>--type</code></td>
+<td>string</td>
+<td>App subtype. Omit for a coded app, or pass <code>Action</code> to create a coded action app</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--force</code></td>
+<td>boolean</td>
+<td>Overwrite starter files in a non-empty directory</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--skip-solution-registration</code></td>
+<td>boolean</td>
+<td>Do not register the project in the surrounding solution</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp init ./approve-invoice --type Action</span><span data-ty></span></div>
 
 <hr />
 <h2 id="build-app">Build app<a class="headerlink" href="#build-app" title="Permanent link">&para;</a></h2>
 <p>Before proceeding, make sure you build your coded action app using your framework's build command from the root of the project:</p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ npm run build
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ npm run build
 </code></pre></div>
 This will create the <code>dist</code> (or build) folder.</p>
 <h2 id="pack">pack<a class="headerlink" href="#pack" title="Permanent link">&para;</a></h2>
 <p>Package a built app into a <code>.nupkg</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$ uip codedapp pack &lt;dist&gt; [options]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$ uip codedapp pack &lt;dist&gt; [options]
 </code></pre></div>
 <table>
 <thead>
@@ -4046,13 +4248,19 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td>—</td>
 </tr>
 <tr>
+<td><code>--display-name</code></td>
+<td>string</td>
+<td>Display name of the app</td>
+<td>Value of <code>--name</code></td>
+</tr>
+<tr>
 <td><code>-v, --version</code></td>
 <td>string</td>
 <td>Package version</td>
 <td><code>1.0.0</code></td>
 </tr>
 <tr>
-<td><code>-o, --output</code></td>
+<td><code>--output-dir</code></td>
 <td>string</td>
 <td>Output directory</td>
 <td><code>./.uipath</code></td>
@@ -4067,7 +4275,7 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td><code>--description</code></td>
 <td>string</td>
 <td>Package description</td>
-<td>—</td>
+<td>Package name</td>
 </tr>
 <tr>
 <td><code>--main-file</code></td>
@@ -4082,39 +4290,45 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td><code>webapp</code></td>
 </tr>
 <tr>
+<td><code>--release-notes</code></td>
+<td>string</td>
+<td>Release notes for the package</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--repository-url</code></td>
+<td>string</td>
+<td>Source repository URL (recorded in the package for traceability)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--repository-commit</code></td>
+<td>string</td>
+<td>Source repository commit hash (recorded in the package for traceability)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--repository-branch</code></td>
+<td>string</td>
+<td>Source repository branch</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--repository-type</code></td>
+<td>string</td>
+<td>Source repository type</td>
+<td><code>git</code> when <code>--repository-url</code> is set</td>
+</tr>
+<tr>
+<td><code>--project-url</code></td>
+<td>string</td>
+<td>Automation Hub idea URL</td>
+<td>—</td>
+</tr>
+<tr>
 <td><code>--dry-run</code></td>
 <td>boolean</td>
 <td>Show what would be packaged without creating it</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>--reuse-client</code></td>
-<td>boolean</td>
-<td>Reuse existing clientId from uipath.json</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>--base-url</code></td>
-<td>string</td>
-<td>UiPath base URL</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>--org-id</code></td>
-<td>string</td>
-<td>Organization ID</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>--tenant-id</code></td>
-<td>string</td>
-<td>Tenant ID</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>--access-token</code></td>
-<td>string</td>
-<td>Access token</td>
 <td>—</td>
 </tr>
 </tbody>
@@ -4125,12 +4339,12 @@ This will create the <code>dist</code> (or build) folder.</p>
 </div>
 <p><strong>Output</strong>: <code>.uipath/&lt;name&gt;.&lt;version&gt;.nupkg</code></p>
 <p><strong>Examples</strong></p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist --name MyApp --version 1.0.0</span><span data-ty><br></span></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist --name MyApp --version 1.0.0</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pack ./dist --name my-app --display-name &quot;My App&quot; --version 1.0.0</span><span data-ty></span></div>
 
 <hr />
 <h2 id="publish">publish<a class="headerlink" href="#publish" title="Permanent link">&para;</a></h2>
 <p>Upload the <code>.nupkg</code> to Orchestrator and register it as a coded action app version. Pass <code>--type Action</code> so the app is registered as an Action Center task interface rather than a standalone web app.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$ uip codedapp publish --type Action [options]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$ uip codedapp publish --type Action [options]
 </code></pre></div>
 <table>
 <thead>
@@ -4158,7 +4372,13 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td><code>-t, --type</code></td>
 <td>string</td>
 <td>App type: <code>Web</code> or <code>Action</code>. Use <code>Action</code> for coded action apps</td>
-<td><code>Web</code></td>
+<td><code>Action</code> if <code>action-schema.json</code> exists in the current directory, otherwise <code>Web</code></td>
+</tr>
+<tr>
+<td><code>--personal-workspace</code></td>
+<td>boolean</td>
+<td>Publish to your Personal Workspace instead of the tenant</td>
+<td>—</td>
 </tr>
 <tr>
 <td><code>--uipath-dir</code></td>
@@ -4176,6 +4396,12 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td><code>--org-id</code></td>
 <td>string</td>
 <td>Organization ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-name</code></td>
+<td>string</td>
+<td>Organization name, used when <code>--org-id</code> is not provided</td>
 <td>—</td>
 </tr>
 <tr>
@@ -4199,12 +4425,66 @@ This will create the <code>dist</code> (or build) folder.</p>
 </tbody>
 </table>
 <p><strong>Examples</strong></p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action --name MyApp --version 2.0.0</span><span data-ty></span></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action --name MyApp --version 2.0.0</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp publish --type Action --personal-workspace</span><span data-ty></span></div>
+
+<hr />
+<h2 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">&para;</a></h2>
+<p>Check whether a path name is free before deploying. A coded app is served at <code>https://&lt;org&gt;.uipath.host/&lt;path-name&gt;</code>, and path names are unique across the organization. When the name is taken, the command returns the app that holds it.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>$ uip codedapp validate --path-name &lt;name&gt; [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--path-name</code></td>
+<td>string</td>
+<td>Path name to check (<strong>required</strong>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--base-url</code></td>
+<td>string</td>
+<td>UiPath base URL</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-id</code></td>
+<td>string</td>
+<td>Organization ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-name</code></td>
+<td>string</td>
+<td>Organization name</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--access-token</code></td>
+<td>string</td>
+<td>Access token</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A taken name is a result, not an error, so both outcomes exit with code <code>0</code>. Read <code>Available</code> in the output; a non-zero exit means the lookup itself failed (for example, invalid credentials or missing permissions). The path name is sanitized to lowercase letters, digits, and hyphens before the check, the same way <code>deploy</code> sanitizes it.</p>
+</div>
+<p><strong>Examples</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp validate --path-name my-app</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp validate --path-name my-app --output table</span><span data-ty></span></div>
 
 <hr />
 <h2 id="deploy">deploy<a class="headerlink" href="#deploy" title="Permanent link">&para;</a></h2>
 <p>Deploy a published app version to a folder.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$ uip codedapp deploy [options]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$ uip codedapp deploy [options]
 </code></pre></div>
 <table>
 <thead>
@@ -4223,9 +4503,33 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td>—</td>
 </tr>
 <tr>
-<td><code>--version</code></td>
+<td><code>--display-name</code></td>
+<td>string</td>
+<td>Display name of the deployed app</td>
+<td>Value of <code>--name</code></td>
+</tr>
+<tr>
+<td><code>--path-name</code></td>
+<td>string</td>
+<td>App path name in the URL (<code>https://&lt;org&gt;.uipath.host/&lt;path-name&gt;</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--client-id</code></td>
+<td>string</td>
+<td>Client ID of a non-confidential <a href="https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications">External App</a></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>-v, --version</code></td>
 <td>string</td>
 <td>Target a specific published version</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--tags</code></td>
+<td>string</td>
+<td>Comma-separated labels for the deployed app (e.g. <code>governance,insights</code>)</td>
 <td>—</td>
 </tr>
 <tr>
@@ -4267,15 +4571,273 @@ This will create the <code>dist</code> (or build) folder.</p>
 </tbody>
 </table>
 <p><strong>Examples</strong></p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp deploy</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy --name MyApp</span><span data-ty></span></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp deploy</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy --name MyApp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp deploy --name my-app --display-name &quot;My App&quot; --path-name my-app</span><span data-ty></span></div>
+
+<hr />
+<h2 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">&para;</a></h2>
+<p>Delete a deployed app from a folder. The published package and deployments in other folders are not affected.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$ uip codedapp delete --display-name &lt;name&gt; --yes [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--display-name</code></td>
+<td>string</td>
+<td>Display name of the deployed app. Case-sensitive (<strong>required</strong>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--folder-key</code></td>
+<td>string</td>
+<td>Key of the folder that contains the deployed app. Required unless <code>UIPATH_FOLDER_KEY</code> is set</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>-y, --yes</code></td>
+<td>boolean</td>
+<td>Confirm the deletion (<strong>required</strong>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--base-url</code></td>
+<td>string</td>
+<td>UiPath base URL</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-id</code></td>
+<td>string</td>
+<td>Organization ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-name</code></td>
+<td>string</td>
+<td>Organization name</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--tenant-id</code></td>
+<td>string</td>
+<td>Tenant ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--access-token</code></td>
+<td>string</td>
+<td>Access token</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Deletion cannot be undone.</p>
+</div>
+<p><strong>Examples</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp delete --display-name &quot;My App&quot; --folder-key &lt;folderKey&gt; --yes</span><span data-ty></span></div>
+
+<hr />
+<h2 id="push">push<a class="headerlink" href="#push" title="Permanent link">&para;</a></h2>
+<p>Push local source code to a Studio Web project.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>$ uip codedapp push [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--project-id</code></td>
+<td>string</td>
+<td>Studio Web project ID. If omitted and <code>UIPATH_PROJECT_ID</code> is not set, you are prompted to create or select a solution</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--build-dir</code></td>
+<td>string</td>
+<td>Build output directory</td>
+<td><code>dist</code></td>
+</tr>
+<tr>
+<td><code>-v, --version</code></td>
+<td>string</td>
+<td>Code version to set (e.g. <code>2.0.0</code>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--ignore-resources</code></td>
+<td>boolean</td>
+<td>Skip importing referenced resources</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>boolean</td>
+<td>Show detailed progress logs</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--base-url</code></td>
+<td>string</td>
+<td>UiPath base URL</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-id</code></td>
+<td>string</td>
+<td>Organization ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--tenant-id</code></td>
+<td>string</td>
+<td>Tenant ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--access-token</code></td>
+<td>string</td>
+<td>Access token</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt; --build-dir build</span><span data-ty></span></div>
+
+<hr />
+<h2 id="pull">pull<a class="headerlink" href="#pull" title="Permanent link">&para;</a></h2>
+<p>Pull project files from a Studio Web project.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>$ uip codedapp pull [options]
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--project-id</code></td>
+<td>string</td>
+<td>Studio Web project ID. Required unless <code>UIPATH_PROJECT_ID</code> is set</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--target-dir</code></td>
+<td>string</td>
+<td>Local directory to write the files to</td>
+<td>Current directory</td>
+</tr>
+<tr>
+<td><code>--overwrite</code></td>
+<td>boolean</td>
+<td>Allow overwriting existing local files</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>boolean</td>
+<td>Show detailed progress logs</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--base-url</code></td>
+<td>string</td>
+<td>UiPath base URL</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--org-id</code></td>
+<td>string</td>
+<td>Organization ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--tenant-id</code></td>
+<td>string</td>
+<td>Tenant ID</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--access-token</code></td>
+<td>string</td>
+<td>Access token</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Examples</strong></p>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp pull --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp pull --project-id &lt;projectId&gt; --target-dir ./my-app --overwrite</span><span data-ty></span></div>
 
 <hr />
 <h2 id="upgrading-deploying-new-version-of-a-coded-action-app">Upgrading / Deploying new version of a coded action app<a class="headerlink" href="#upgrading-deploying-new-version-of-a-coded-action-app" title="Permanent link">&para;</a></h2>
 <p>When updating a deployed app, just repeat the build-pack-publish-deploy cycle with a bumped version:</p>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span class="termynal-comment" data-ty># 1. Rebuild</span><span data-ty>npm run build</span><span class="termynal-comment" data-ty># 2. Pack with new version</span><span data-ty>uip codedapp pack dist -n &lt;appName&gt; --version 2.0.0</span><span class="termynal-comment" data-ty># 3. Publish</span><span data-ty>uip codedapp publish --type Action</span><span class="termynal-comment" data-ty># 4. Deploy (auto-detects upgrade)</span><span data-ty>uip codedapp deploy<br></span></div>
 
+<h2 id="global-options">Global Options<a class="headerlink" href="#global-options" title="Permanent link">&para;</a></h2>
+<p>These options work with every command.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--output</code></td>
+<td>string</td>
+<td>Output format: <code>table</code>, <code>json</code>, <code>yaml</code>, or <code>plain</code></td>
+<td><code>json</code></td>
+</tr>
+<tr>
+<td><code>--output-filter</code></td>
+<td>string</td>
+<td>JMESPath expression applied to the <code>Data</code> field of the output</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--log-level</code></td>
+<td>string</td>
+<td>Log level: <code>debug</code>, <code>info</code>, <code>warn</code>, or <code>error</code></td>
+<td><code>info</code></td>
+</tr>
+<tr>
+<td><code>--log-file</code></td>
+<td>string</td>
+<td>Write logs to a file instead of stderr</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--profile</code></td>
+<td>string</td>
+<td>Use a named login profile</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
 <h2 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
-<p>All flags can be supplied as environment variables (set by <code>uip login</code> or manually for CI/CD):</p>
+<p>Connection settings can also be set as environment variables (e.g. in CI/CD). Flags override them, and an active <code>uip login</code> session overrides the token, URL, organization, and tenant variables.</p>
 <table>
 <thead>
 <tr>
@@ -4285,16 +4847,16 @@ This will create the <code>dist</code> (or build) folder.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>UIPATH_URL</code></td>
-<td>Platform base URL</td>
+<td><code>UIPATH_BASE_URL</code></td>
+<td>Platform base URL (<code>UIPATH_URL</code> is also accepted)</td>
 </tr>
 <tr>
-<td><code>UIPATH_ORGANIZATION_NAME</code></td>
+<td><code>UIPATH_ORG_ID</code></td>
+<td>Organization ID (<code>UIPATH_ORGANIZATION_ID</code> is also accepted)</td>
+</tr>
+<tr>
+<td><code>UIPATH_ORG_NAME</code></td>
 <td>Organization name</td>
-</tr>
-<tr>
-<td><code>UIPATH_ORGANIZATION_ID</code></td>
-<td>Organization ID</td>
 </tr>
 <tr>
 <td><code>UIPATH_TENANT_NAME</code></td>
@@ -4305,16 +4867,16 @@ This will create the <code>dist</code> (or build) folder.</p>
 <td>Tenant ID</td>
 </tr>
 <tr>
+<td><code>UIPATH_FOLDER_KEY</code></td>
+<td>Folder key</td>
+</tr>
+<tr>
 <td><code>UIPATH_ACCESS_TOKEN</code></td>
 <td>Bearer token (skips interactive login)</td>
 </tr>
 <tr>
-<td><code>UIPATH_REFRESH_TOKEN</code></td>
-<td>Refresh token</td>
-</tr>
-<tr>
 <td><code>UIPATH_PROJECT_ID</code></td>
-<td>Studio Web project ID (for push/pull)</td>
+<td>Studio Web project ID for push/pull. Also read from a <code>.env</code> file in the current directory</td>
 </tr>
 </tbody>
 </table>
@@ -4332,7 +4894,7 @@ This will create the <code>dist</code> (or build) folder.</p>
 <tr>
 <td><code>.uipath/.auth</code></td>
 <td><code>uip login</code></td>
-<td>Access tokens and org/tenant selection.</td>
+<td>Access tokens and org/tenant selection. Uses the nearest <code>.uipath/.auth</code> in the current or a parent directory, otherwise <code>~/.uipath/.auth</code></td>
 </tr>
 <tr>
 <td><code>.uipath/app.config.json</code></td>

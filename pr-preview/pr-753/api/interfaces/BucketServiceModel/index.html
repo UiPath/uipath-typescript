@@ -4003,11 +4003,54 @@
 </code></pre></div>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="deletefile">deleteFile()<a class="headerlink" href="#deletefile" title="Permanent link">&para;</a></h3>
+<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>deleteFile</strong>(<code>bucketRef</code>: <a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a>, <code>path</code>: <code>string</code>, <code>options?</code>: <a href="../BucketDeleteFileOptions/"><code>BucketDeleteFileOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Deletes a file from a bucket</p>
+<h5 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bucketRef</code></td>
+<td><a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a></td>
+<td>Bucket ref (<code>{ id }</code> or <code>{ name }</code>). <code>{ name }</code> triggers an internal name lookup where runtime resource overrides may redirect the target across folders.</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>The full path to the file to delete</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../BucketDeleteFileOptions/"><code>BucketDeleteFileOptions</code></a></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>)</td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving when the file is deleted</p>
+<h5 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// By bucket id</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">deleteFile</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1">// By bucket name</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">deleteFile</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;MyBucket&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>deleteFile</strong>(<code>bucketId</code>: <code>number</code>, <code>path</code>: <code>string</code>, <code>options?</code>: <a href="../BucketDeleteFileOptions/"><code>BucketDeleteFileOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Deletes a file from a bucket</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<p>Deletes a file from a bucket — numeric bucket id form.</p>
+<h5 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4034,13 +4077,11 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h5 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<code>void</code>&gt;</p>
 <p>Promise resolving when the file is deleted</p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Delete a file from a bucket</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">deleteFile</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-</code></pre></div>
+<h5 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>deleteFile({ id: bucketId }, path, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
 <hr />
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
@@ -4065,7 +4106,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4082,7 +4123,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to either an array of buckets NonPaginatedResponse<BucketGetResponse> or a PaginatedResponse<BucketGetResponse> when pagination options are used.
 <a href="../BucketGetResponse/">BucketGetResponse</a></p>
@@ -4120,7 +4161,7 @@
 <p><strong>getById</strong>(<code>bucketId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <a href="../BucketGetByIdOptions/"><code>BucketGetByIdOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single bucket by ID</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4147,7 +4188,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt;</p>
 <p>Promise resolving to a bucket definition
 <a href="../BucketGetResponse/">BucketGetResponse</a></p>
@@ -4161,7 +4202,7 @@
 <p><strong>getByName</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../BucketGetByNameOptions/"><code>BucketGetByNameOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Retrieves a single orchestrator storage bucket by name.</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4183,7 +4224,7 @@
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../BucketGetResponse/"><code>BucketGetResponse</code></a>&gt;</p>
 <p>Promise resolving to a single bucket
 <a href="../BucketGetResponse/">BucketGetResponse</a></p>
@@ -4199,9 +4240,9 @@
 </code></pre></div>
 <hr />
 <h3 id="getfilemetadata">getFileMetaData()<a class="headerlink" href="#getfilemetadata" title="Permanent link">&para;</a></h3>
-<h4 id="call-signature">Call Signature<a class="headerlink" href="#call-signature" title="Permanent link">&para;</a></h4>
+<h4 id="call-signature_2">Call Signature<a class="headerlink" href="#call-signature_2" title="Permanent link">&para;</a></h4>
 <blockquote>
-<p><strong>getFileMetaData</strong>&lt;<code>T</code>&gt;(<code>bucketId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
+<p><strong>getFileMetaData</strong>&lt;<code>T</code>&gt;(<code>bucketRef</code>: <a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets metadata for files in a bucket with optional filtering and pagination.</p>
 <p>Folder context can be supplied as <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>
@@ -4224,7 +4265,71 @@ inside the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bucketRef</code></td>
+<td><a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a></td>
+<td>Bucket ref (<code>{ id }</code> or <code>{ name }</code>). <code>{ name }</code> triggers an internal name lookup where runtime resource overrides may redirect the target across folders.</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><code>T</code></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional parameters for filtering and pagination</td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
+<p>Promise resolving to either an array of files metadata NonPaginatedResponse<BlobItem> or a PaginatedResponse<BlobItem> when pagination options are used.
+<a href="../BlobItem/">BlobItem</a></p>
+<h5 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// By bucket id</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">fileMetadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1">// By bucket name (folder scoping applies to both the name lookup and the meta-data read)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;InvoicesBucket&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">// Filter by prefix</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/folder1&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1">// First page with pagination</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1">// Navigate using cursor</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="call-signature_3">Call Signature<a class="headerlink" href="#call-signature_3" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>getFileMetaData</strong>&lt;<code>T</code>&gt;(<code>bucketId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
+</blockquote>
+<p>Gets metadata for files in a bucket — numeric bucket id form.</p>
+<h5 id="type-parameters_2">Type Parameters<a class="headerlink" href="#type-parameters_2" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code> <em>extends</em> <a href="../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/"><code>BucketGetFileMetaDataWithPaginationOptions</code></a></td>
+<td><a href="../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/"><code>BucketGetFileMetaDataWithPaginationOptions</code></a></td>
+</tr>
+</tbody>
+</table>
+<h5 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4246,37 +4351,18 @@ inside the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h5>
+<h5 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
 <p>Promise resolving to either an array of files metadata NonPaginatedResponse<BlobItem> or a PaginatedResponse<BlobItem> when pagination options are used.
 <a href="../BlobItem/">BlobItem</a></p>
-<h5 id="example_4">Example<a class="headerlink" href="#example_4" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// By folder ID</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">fileMetadata</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1">// By folder key (GUID)</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">// By folder path</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1">// Filter by prefix</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/folder1&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1">// First page with pagination</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1">// Navigate using cursor</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFileMetaData</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="p">}</span>
-</code></pre></div>
-<h4 id="call-signature_1">Call Signature<a class="headerlink" href="#call-signature_1" title="Permanent link">&para;</a></h4>
+<h5 id="deprecated_1">Deprecated<a class="headerlink" href="#deprecated_1" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>getFileMetaData({ id: bucketId }, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
+<h4 id="call-signature_4">Call Signature<a class="headerlink" href="#call-signature_4" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>getFileMetaData</strong>&lt;<code>T</code>&gt;(<code>bucketId</code>: <code>number</code>, <code>folderId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets metadata for files in a bucket — positional <code>folderId</code> form.</p>
-<h5 id="type-parameters_2">Type Parameters<a class="headerlink" href="#type-parameters_2" title="Permanent link">&para;</a></h5>
+<h5 id="type-parameters_3">Type Parameters<a class="headerlink" href="#type-parameters_3" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4291,7 +4377,7 @@ inside the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4318,16 +4404,17 @@ inside the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h5>
+<h5 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BlobItem/"><code>BlobItem</code></a>&gt;&gt;</p>
 <p>Promise resolving to either an array of files metadata NonPaginatedResponse<BlobItem> or a PaginatedResponse<BlobItem> when pagination options are used.
 <a href="../BlobItem/">BlobItem</a></p>
-<h5 id="deprecated">Deprecated<a class="headerlink" href="#deprecated" title="Permanent link">&para;</a></h5>
-<p>Use the options-object form: <code>getFileMetaData(bucketId, { folderId })</code>. See <a href="../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/">BucketGetFileMetaDataWithPaginationOptions</a> for the supported options.</p>
+<h5 id="deprecated_2">Deprecated<a class="headerlink" href="#deprecated_2" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>getFileMetaData({ id: bucketId }, { folderId })</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
 <hr />
 <h3 id="getfiles">getFiles()<a class="headerlink" href="#getfiles" title="Permanent link">&para;</a></h3>
+<h4 id="call-signature_5">Call Signature<a class="headerlink" href="#call-signature_5" title="Permanent link">&para;</a></h4>
 <blockquote>
-<p><strong>getFiles</strong>&lt;<code>T</code>&gt;(<code>bucketId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt;&gt;</p>
+<p><strong>getFiles</strong>&lt;<code>T</code>&gt;(<code>bucketRef</code>: <a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Lists all files in a bucket.</p>
 <p>Returns a flat, recursive listing of all files in the bucket. Supports regex filtering
@@ -4336,7 +4423,7 @@ and filter / orderby / select / expand. <a href="../BucketFile/">BucketFile</a> 
 <p>The method returns either:
 - A NonPaginatedResponse with items array (when no pagination parameters are provided)
 - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)</p>
-<h4 id="type-parameters_3">Type Parameters<a class="headerlink" href="#type-parameters_3" title="Permanent link">&para;</a></h4>
+<h5 id="type-parameters_4">Type Parameters<a class="headerlink" href="#type-parameters_4" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4351,7 +4438,81 @@ and filter / orderby / select / expand. <a href="../BucketFile/">BucketFile</a> 
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<h5 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bucketRef</code></td>
+<td><a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a></td>
+<td>Bucket ref (<code>{ id }</code> or <code>{ name }</code>). <code>{ name }</code> triggers an internal name lookup where runtime resource overrides may redirect the target across folders.</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><code>T</code></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional parameters for regex filtering, query options, and pagination <a href="../../type-aliases/BucketGetFilesOptions/">BucketGetFilesOptions</a></td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt;&gt;</p>
+<p>Promise resolving to either an array of files NonPaginatedResponse<BucketFile> or a PaginatedResponse<BucketFile> when pagination options are used.
+<a href="../BucketFile/">BucketFile</a></p>
+<h5 id="example_5">Example<a class="headerlink" href="#example_5" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// By bucket id</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// By bucket name (folder scoping applies to both the name lookup and the listing)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">filesByName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;MyBucket&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1">// Filter by regex pattern</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">pdfs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nx">fileNameRegex</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;.*\\.pdf$&#39;</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="p">});</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="c1">// First page with pagination</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="c1">// Navigate using cursor</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="p">}</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="c1">// Jump to specific page</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">  </span><span class="nx">jumpToPage</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="p">,</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="p">});</span>
+</code></pre></div>
+<h4 id="call-signature_6">Call Signature<a class="headerlink" href="#call-signature_6" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>getFiles</strong>&lt;<code>T</code>&gt;(<code>bucketId</code>: <code>number</code>, <code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt;&gt;</p>
+</blockquote>
+<p>Lists all files in a bucket — numeric bucket id form.</p>
+<h5 id="type-parameters_5">Type Parameters<a class="headerlink" href="#type-parameters_5" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code> <em>extends</em> <a href="../../type-aliases/BucketGetFilesOptions/"><code>BucketGetFilesOptions</code></a></td>
+<td><a href="../../type-aliases/BucketGetFilesOptions/"><code>BucketGetFilesOptions</code></a></td>
+</tr>
+</tbody>
+</table>
+<h5 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4373,45 +4534,65 @@ and filter / orderby / select / expand. <a href="../BucketFile/">BucketFile</a> 
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
+<h5 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../BucketFile/"><code>BucketFile</code></a>&gt;&gt;</p>
 <p>Promise resolving to either an array of files NonPaginatedResponse<BucketFile> or a PaginatedResponse<BucketFile> when pagination options are used.
 <a href="../BucketFile/">BucketFile</a></p>
-<h4 id="example_5">Example<a class="headerlink" href="#example_5" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// List all files in the bucket</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1">// Filter by regex pattern</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">pdfs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nx">fileNameRegex</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;.*\\.pdf$&#39;</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">});</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1">// First page with pagination</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="c1">// Navigate using cursor</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page1</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">page2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page1.nextCursor</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="p">}</span>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="c1">// Jump to specific page</span>
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getFiles</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">  </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="p">,</span>
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">  </span><span class="nx">jumpToPage</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="p">,</span>
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">10</span>
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="p">});</span>
-</code></pre></div>
+<h5 id="deprecated_3">Deprecated<a class="headerlink" href="#deprecated_3" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>getFiles({ id: bucketId }, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
 <hr />
 <h3 id="getreaduri">getReadUri()<a class="headerlink" href="#getreaduri" title="Permanent link">&para;</a></h3>
-<h4 id="call-signature_2">Call Signature<a class="headerlink" href="#call-signature_2" title="Permanent link">&para;</a></h4>
+<h4 id="call-signature_7">Call Signature<a class="headerlink" href="#call-signature_7" title="Permanent link">&para;</a></h4>
 <blockquote>
-<p><strong>getReadUri</strong>(<code>bucketId</code>: <code>number</code>, <code>path</code>: <code>string</code>, <code>options?</code>: <a href="../BucketGetReadUriRequestOptions/"><code>BucketGetReadUriRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
+<p><strong>getReadUri</strong>(<code>bucketRef</code>: <a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a>, <code>path</code>: <code>string</code>, <code>options?</code>: <a href="../BucketGetReadUriRequestOptions/"><code>BucketGetReadUriRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a direct download URL for a file in the bucket.</p>
 <p>Folder context can be supplied as <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>
 in the options.</p>
-<h5 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bucketRef</code></td>
+<td><a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a></td>
+<td>Bucket ref (<code>{ id }</code> or <code>{ name }</code>). <code>{ name }</code> triggers an internal name lookup where runtime resource overrides may redirect the target across folders.</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>The full path to the file</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../BucketGetReadUriRequestOptions/"><code>BucketGetReadUriRequestOptions</code></a></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) and optional <code>expiryInMinutes</code></td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
+<p>Promise resolving to blob file access information
+<a href="../BucketGetUriResponse/">BucketGetUriResponse</a></p>
+<h5 id="example_6">Example<a class="headerlink" href="#example_6" title="Permanent link">&para;</a></h5>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// By bucket id</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getReadUri</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// By bucket name (folder scoping applies to both the name lookup and the read)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getReadUri</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;MyBucket&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
+</code></pre></div>
+<h4 id="call-signature_8">Call Signature<a class="headerlink" href="#call-signature_8" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>getReadUri</strong>(<code>bucketId</code>: <code>number</code>, <code>path</code>: <code>string</code>, <code>options?</code>: <a href="../BucketGetReadUriRequestOptions/"><code>BucketGetReadUriRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
+</blockquote>
+<p>Gets a direct download URL for a file in the bucket — numeric bucket id form.</p>
+<h5 id="parameters_11">Parameters<a class="headerlink" href="#parameters_11" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4438,26 +4619,18 @@ in the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h5>
+<h5 id="returns_11">Returns<a class="headerlink" href="#returns_11" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
 <p>Promise resolving to blob file access information
 <a href="../BucketGetUriResponse/">BucketGetUriResponse</a></p>
-<h5 id="example_6">Example<a class="headerlink" href="#example_6" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// By folder ID</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getReadUri</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// By folder key (GUID)</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getReadUri</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1">// By folder path</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">getReadUri</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/file.pdf&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
-</code></pre></div>
-<h4 id="call-signature_3">Call Signature<a class="headerlink" href="#call-signature_3" title="Permanent link">&para;</a></h4>
+<h5 id="deprecated_4">Deprecated<a class="headerlink" href="#deprecated_4" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>getReadUri({ id: bucketId }, path, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
+<h4 id="call-signature_9">Call Signature<a class="headerlink" href="#call-signature_9" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>getReadUri</strong>(<code>options</code>: <a href="../BucketGetReadUriOptions/"><code>BucketGetReadUriOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a direct download URL for a file in the bucket — options-only form.</p>
-<h5 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_12">Parameters<a class="headerlink" href="#parameters_12" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4474,22 +4647,22 @@ in the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_8">Returns<a class="headerlink" href="#returns_8" title="Permanent link">&para;</a></h5>
+<h5 id="returns_12">Returns<a class="headerlink" href="#returns_12" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<a href="../BucketGetUriResponse/"><code>BucketGetUriResponse</code></a>&gt;</p>
 <p>Promise resolving to blob file access information
 <a href="../BucketGetUriResponse/">BucketGetUriResponse</a></p>
-<h5 id="deprecated_1">Deprecated<a class="headerlink" href="#deprecated_1" title="Permanent link">&para;</a></h5>
-<p>Use the positional form: <code>getReadUri(bucketId, path, options?)</code>. See <a href="../BucketGetReadUriRequestOptions/">BucketGetReadUriRequestOptions</a> for the supported options.</p>
+<h5 id="deprecated_5">Deprecated<a class="headerlink" href="#deprecated_5" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>getReadUri({ id: bucketId }, path, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
 <hr />
 <h3 id="uploadfile">uploadFile()<a class="headerlink" href="#uploadfile" title="Permanent link">&para;</a></h3>
-<h4 id="call-signature_4">Call Signature<a class="headerlink" href="#call-signature_4" title="Permanent link">&para;</a></h4>
+<h4 id="call-signature_10">Call Signature<a class="headerlink" href="#call-signature_10" title="Permanent link">&para;</a></h4>
 <blockquote>
-<p><strong>uploadFile</strong>(<code>bucketId</code>: <code>number</code>, <code>path</code>: <code>string</code>, <code>content</code>: <code>Uint8Array</code>&lt;<code>ArrayBuffer</code>&gt; | <code>Blob</code> | <code>File</code>, <code>options?</code>: <a href="../BucketUploadFileRequestOptions/"><code>BucketUploadFileRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
+<p><strong>uploadFile</strong>(<code>bucketRef</code>: <a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a>, <code>path</code>: <code>string</code>, <code>content</code>: <code>Uint8Array</code>&lt;<code>ArrayBuffer</code>&gt; | <code>Blob</code> | <code>File</code>, <code>options?</code>: <a href="../BucketUploadFileRequestOptions/"><code>BucketUploadFileRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
 </blockquote>
 <p>Uploads a file to a bucket.</p>
 <p>Folder context can be supplied as <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>
 in the options.</p>
-<h5 id="parameters_9">Parameters<a class="headerlink" href="#parameters_9" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4500,9 +4673,9 @@ in the options.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>bucketId</code></td>
-<td><code>number</code></td>
-<td>The ID of the bucket to upload to</td>
+<td><code>bucketRef</code></td>
+<td><a href="../../type-aliases/BucketRef/"><code>BucketRef</code></a></td>
+<td>Bucket ref (<code>{ id }</code> or <code>{ name }</code>). <code>{ name }</code> triggers an internal name lookup where runtime resource overrides may redirect the target across folders.</td>
 </tr>
 <tr>
 <td><code>path</code></td>
@@ -4521,31 +4694,71 @@ in the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_9">Returns<a class="headerlink" href="#returns_9" title="Permanent link">&para;</a></h5>
+<h5 id="returns_13">Returns<a class="headerlink" href="#returns_13" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
 <p>Promise resolving bucket upload response
 <a href="../BucketUploadResponse/">BucketUploadResponse</a></p>
 <h5 id="example_7">Example<a class="headerlink" href="#example_7" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// By folder ID</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// By bucket id</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">File</span><span class="p">([</span><span class="s1">&#39;file content&#39;</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;example.txt&#39;</span><span class="p">);</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1">// By folder key (GUID)</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;5f6dadf1-3677-49dc-8aca-c2999dd4b3ba&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1">// By bucket name (folder scoping applies to both the name lookup and the upload)</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;MyBucket&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1">// By folder path</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Shared/Finance&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1">// In Node env with Uint8Array or Buffer</span>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">TextEncoder</span><span class="p">().</span><span class="nx">encode</span><span class="p">(</span><span class="s1">&#39;file content&#39;</span><span class="p">);</span>
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1">// In Node env with Uint8Array or Buffer</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">TextEncoder</span><span class="p">().</span><span class="nx">encode</span><span class="p">(</span><span class="s1">&#39;file content&#39;</span><span class="p">);</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="k">await</span><span class="w"> </span><span class="nx">buckets</span><span class="p">.</span><span class="nx">uploadFile</span><span class="p">({</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">bucketId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;/folder/example.txt&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="nx">folderId</span><span class="o">&gt;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
-<h4 id="call-signature_5">Call Signature<a class="headerlink" href="#call-signature_5" title="Permanent link">&para;</a></h4>
+<h4 id="call-signature_11">Call Signature<a class="headerlink" href="#call-signature_11" title="Permanent link">&para;</a></h4>
+<blockquote>
+<p><strong>uploadFile</strong>(<code>bucketId</code>: <code>number</code>, <code>path</code>: <code>string</code>, <code>content</code>: <code>Uint8Array</code>&lt;<code>ArrayBuffer</code>&gt; | <code>Blob</code> | <code>File</code>, <code>options?</code>: <a href="../BucketUploadFileRequestOptions/"><code>BucketUploadFileRequestOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
+</blockquote>
+<p>Uploads a file to a bucket — numeric bucket id form.</p>
+<h5 id="parameters_14">Parameters<a class="headerlink" href="#parameters_14" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bucketId</code></td>
+<td><code>number</code></td>
+<td>The ID of the bucket</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td><code>string</code></td>
+<td>Path where the file should be stored in the bucket</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td><code>Uint8Array</code>&lt;<code>ArrayBuffer</code>&gt; | <code>Blob</code> | <code>File</code></td>
+<td>File content to upload</td>
+</tr>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../BucketUploadFileRequestOptions/"><code>BucketUploadFileRequestOptions</code></a></td>
+<td>Folder scoping (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>)</td>
+</tr>
+</tbody>
+</table>
+<h5 id="returns_14">Returns<a class="headerlink" href="#returns_14" title="Permanent link">&para;</a></h5>
+<p><code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
+<p>Promise resolving bucket upload response
+<a href="../BucketUploadResponse/">BucketUploadResponse</a></p>
+<h5 id="deprecated_6">Deprecated<a class="headerlink" href="#deprecated_6" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>uploadFile({ id: bucketId }, path, content, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
+<h4 id="call-signature_12">Call Signature<a class="headerlink" href="#call-signature_12" title="Permanent link">&para;</a></h4>
 <blockquote>
 <p><strong>uploadFile</strong>(<code>options</code>: <a href="../BucketUploadFileOptions/"><code>BucketUploadFileOptions</code></a>): <code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
 </blockquote>
 <p>Uploads a file to a bucket — options-only form.</p>
-<h5 id="parameters_10">Parameters<a class="headerlink" href="#parameters_10" title="Permanent link">&para;</a></h5>
+<h5 id="parameters_15">Parameters<a class="headerlink" href="#parameters_15" title="Permanent link">&para;</a></h5>
 <table>
 <thead>
 <tr>
@@ -4562,12 +4775,12 @@ in the options.</p>
 </tr>
 </tbody>
 </table>
-<h5 id="returns_10">Returns<a class="headerlink" href="#returns_10" title="Permanent link">&para;</a></h5>
+<h5 id="returns_15">Returns<a class="headerlink" href="#returns_15" title="Permanent link">&para;</a></h5>
 <p><code>Promise</code>&lt;<a href="../BucketUploadResponse/"><code>BucketUploadResponse</code></a>&gt;</p>
 <p>Promise resolving bucket upload response
 <a href="../BucketUploadResponse/">BucketUploadResponse</a></p>
-<h5 id="deprecated_2">Deprecated<a class="headerlink" href="#deprecated_2" title="Permanent link">&para;</a></h5>
-<p>Use the positional form: <code>uploadFile(bucketId, path, content, options?)</code>. See <a href="../BucketUploadFileRequestOptions/">BucketUploadFileRequestOptions</a> for the supported options.</p>
+<h5 id="deprecated_7">Deprecated<a class="headerlink" href="#deprecated_7" title="Permanent link">&para;</a></h5>
+<p>Use the ref-based form: <code>uploadFile({ id: bucketId }, path, content, options?)</code>. See <a href="../../type-aliases/BucketRef/">BucketRef</a>.</p>
 
 
 

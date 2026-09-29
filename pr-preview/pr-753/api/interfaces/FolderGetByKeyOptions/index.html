@@ -3728,11 +3728,11 @@
 
   <h1>FolderGetByKeyOptions</h1>
 
-<p>Query options for <a href="../FolderServiceModel/#getbykey">FolderServiceModel.getByKey</a> (<code>expand</code> / <code>select</code> only).
+<p>Query options for <a href="../FolderServiceModel/#getbykey">FolderServiceModel.getByKey</a> (<code>select</code> only — folders have no expandable relations).
 This lookup is not folder-scoped — no folder headers are sent.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../BaseOptions/"><code>BaseOptions</code></a></li>
+<li><code>Omit</code>&lt;<a href="../BaseOptions/"><code>BaseOptions</code></a>, <code>"expand"</code>&gt;</li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -3743,10 +3743,6 @@ This lookup is not folder-scoped — no folder headers are sent.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><a id="expand"></a> <code>expand?</code></td>
-<td><code>string</code></td>
-</tr>
 <tr>
 <td><a id="select"></a> <code>select?</code></td>
 <td><code>string</code></td>

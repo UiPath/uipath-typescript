@@ -4410,7 +4410,9 @@
 <p>The runtime compiles the contract with ajv (ajv never appears in your project):</p>
 <ul>
 <li><strong>Input</strong> is validated before the handler runs; failures return <code>400</code> with per-field errors.</li>
-<li><strong>GET query strings</strong> are coerced to their schema types (<code>"42"</code> → <code>42</code>, <code>"true"</code> → <code>true</code>).</li>
+<li><strong>Values are validated as they arrive.</strong> Query and path values are strings; declare them as
+  <code>string</code> and convert in the handler (see
+  <a href="../../platform-context/#path-parameters">path parameters</a>).</li>
 <li><strong><code>default</code></strong> values are filled into missing input fields.</li>
 <li><strong>Output</strong> (when declared) is validated after the handler; failures return <code>500</code>.</li>
 </ul>
