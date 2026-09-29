@@ -39,12 +39,6 @@ export interface AgentHubServiceModel {
   /**
    * Creates a non-streaming chat completion via the AgentHub LLM gateway.
    *
-   * @experimental
-   *
-   * /// warning
-   * Preview: This method is experimental and may change or be removed in future releases.
-   * ///
-   *
    * @param request - Model, messages, and generation parameters.
    * @param options - Optional abort signal.
    * @returns Promise resolving to the {@link AgentHubChatCompletionResponse} completion.
@@ -72,6 +66,7 @@ export interface AgentHubServiceModel {
    *   temperature: 0.7,
    * });
    * ```
+   * @internal
    */
   createChatCompletion(
     request: AgentHubChatCompletionRequest,
