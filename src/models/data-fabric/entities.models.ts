@@ -1103,6 +1103,10 @@ export interface EntityServiceModel {
    * @returns Promise resolving to the {@link EntityCloneJob} descriptor (initial state `Queued`).
    * @example
    * ```typescript
+   * import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * const job = await entities.clone({
    *   source: { scopeType: EntityCloneScopeType.Tenant },
    *   target: { scopeType: EntityCloneScopeType.Folder, folderId: "<targetFolderId>" },
@@ -1134,6 +1138,10 @@ export interface EntityServiceModel {
    * @returns Promise resolving to the latest {@link EntityCloneJob}.
    * @example
    * ```typescript
+   * import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * const status = await entities.getCloneJob("<jobId>");
    * if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
    * ```
