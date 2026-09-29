@@ -4078,12 +4078,12 @@
 </tr>
 <tr>
 <td><a href="pdf-viewer/">PDF Viewer</a></td>
-<td><code>@uipath/ui-widgets-pdf-viewer</code> <br><em>beta — not yet on npm</em></td>
+<td><code>@uipath/ui-widgets-pdf-viewer</code></td>
 <td>Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes</td>
 </tr>
 <tr>
 <td><a href="external-auth/">External Auth</a></td>
-<td><code>@uipath/ui-widgets-external-auth</code> <br><em>beta — not yet on npm</em></td>
+<td><code>@uipath/ui-widgets-external-auth</code></td>
 <td>Provider-agnostic sign-in buttons that start login at an external IdP</td>
 </tr>
 </tbody>
@@ -4095,15 +4095,10 @@
 <li><strong>React</strong> <code>^19.2.0</code> — 19.2.0 or later in the 19.x line (and a matching <code>react-dom</code>)</li>
 <li><strong>@uipath/uipath-typescript</strong> — a peer dependency, so you install it yourself. Each widget pins its own minimum; the per-widget pages give the exact range</li>
 </ul>
-<p>The widgets render with the UiPath Apollo design system, but they depend on it directly — <code>@uipath/apollo-wind</code> installs with the widget and is nothing you add yourself.</p>
 <h3 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h3>
 <p>Each widget is installed independently:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>npm<span class="w"> </span>install<span class="w"> </span>@uipath/ui-widgets-datatable
 </code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">PDF Viewer and External Auth are not on npm yet</p>
-<p>Both are at <code>1.0.0-beta.1</code> and are not yet published to the public registry, so <code>npm install</code> for them fails today. Their pages document the current API so you can evaluate and plan against it.</p>
-</div>
 <h3 id="pass-an-initialized-sdk-instance">Pass an initialized SDK instance<a class="headerlink" href="#pass-an-initialized-sdk-instance" title="Permanent link">&para;</a></h3>
 <p>Most widgets take an <code>sdk</code> prop — an initialized <code>UiPath</code> instance. Create it once and share it across widgets.</p>
 <p>A browser app is a public client, so authenticate it with OAuth:</p>
@@ -4116,7 +4111,7 @@
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">useEffect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">uipath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://cloud.uipath.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://api.uipath.com&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-org&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-tenant&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="nx">clientId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>

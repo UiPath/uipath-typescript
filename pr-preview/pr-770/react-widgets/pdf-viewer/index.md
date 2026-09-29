@@ -8,10 +8,6 @@ Built on [react-pdf](https://www.npmjs.com/package/react-pdf) (Mozilla pdf.js). 
 
 ## Installation
 
-Beta — not yet published to npm
-
-`@uipath/ui-widgets-pdf-viewer` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
-
 ```
 npm install @uipath/ui-widgets-pdf-viewer
 ```
@@ -24,17 +20,71 @@ npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 
 ## Usage
 
+OAuth is the flow for a browser app, so the instance is built once in an effect and `initialize()` is awaited before anything renders — see [Pass an initialized SDK instance](../#pass-an-initialized-sdk-instance).
+
 ```
 import { PdfViewer } from "@uipath/ui-widgets-pdf-viewer";
 import "@uipath/ui-widgets-pdf-viewer/PdfViewer.css";
 import { UiPath } from "@uipath/uipath-typescript/core";
+import { useEffect, useState } from "react";
 
 function App() {
-  const sdk = new UiPath({
-    // SDK configuration (or `new UiPath()` inside a coded app).
-    // Bucket sources need `OR.Buckets`; entity sources need
-    // `DataFabric.Data.Read`. URL and byte sources need no scope.
-  });
+  const [sdk, setSdk] = useState<UiPath | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath({
+        baseUrl: "https://api.uipath.com",
+        orgName: "your-org",
+        tenantName: "your-tenant",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        // Bucket sources need `OR.Buckets`; entity sources need
+        // `DataFabric.Data.Read`. URL and byte sources need no scope.
+        scope: "OR.Buckets",
+      });
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
+
+  if (!sdk) return <div>Loading...</div>;
+
+  return (
+    <PdfViewer
+      sdk={sdk}
+      source={{
+        bucketId: 123,
+        folderKey: "<folder-guid>", // or folderId / folderPath
+        path: "invoices/inv-0714.pdf",
+      }}
+    />
+  );
+}
+```
+
+Inside a [Coded App](../../coded-apps/getting-started/), `new UiPath()` reads `clientId`, `orgName`, `tenantName`, `baseUrl`, `scope` and `redirectUri` from the platform's `uipath:*` meta tags, so there is nothing to pass — but `initialize()` still drives the OAuth flow and must be awaited.
+
+```
+import { PdfViewer } from "@uipath/ui-widgets-pdf-viewer";
+import "@uipath/ui-widgets-pdf-viewer/PdfViewer.css";
+import { UiPath } from "@uipath/uipath-typescript/core";
+import { useEffect, useState } from "react";
+
+function App() {
+  const [sdk, setSdk] = useState<UiPath | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath();
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
+
+  if (!sdk) return <div>Loading...</div>;
 
   return (
     <PdfViewer

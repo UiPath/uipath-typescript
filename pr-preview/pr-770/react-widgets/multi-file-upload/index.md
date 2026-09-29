@@ -47,7 +47,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",

@@ -2886,6 +2886,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#serving-it-with-vite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving it with Vite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2906,6 +2917,17 @@
     <span class="md-ellipsis">
       
         Migrating from 1.0.x
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-apps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample apps
       
     </span>
   </a>
@@ -4361,6 +4383,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#serving-it-with-vite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving it with Vite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4381,6 +4414,17 @@
     <span class="md-ellipsis">
       
         Migrating from 1.0.x
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-apps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample apps
       
     </span>
   </a>
@@ -4439,7 +4483,7 @@
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nx">useEffect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">uipath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://cloud.uipath.com&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="nx">baseUrl</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;https://api.uipath.com&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">        </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-org&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">        </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-tenant&quot;</span><span class="p">,</span>
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">        </span><span class="nx">clientId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;your-client-id&quot;</span><span class="p">,</span>
@@ -5047,6 +5091,28 @@
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>                       the business-rules executor
 </code></pre></div>
 <p>Copying the package directory verbatim satisfies this.</p>
+<h3 id="serving-it-with-vite">Serving it with Vite<a class="headerlink" href="#serving-it-with-vite" title="Permanent link">&para;</a></h3>
+<div class="admonition success">
+<p class="admonition-title">No <code>vite.config.ts</code> changes are needed</p>
+<p>Since <code>1.1.0</code> the web component is fetched at runtime instead of imported, so it never enters the module graph. The <code>optimizeDeps.exclude</code>, asset-copy plugin and dev-server middleware that <code>1.0.x</code> required are all obsolete — delete them (see <a href="#migrating-from-10x">Migrating from 1.0.x</a>). A Vite app needs nothing in its config beyond whatever it already has.</p>
+</div>
+<p>What it does need is the package copied into <code>public/</code>, which Vite serves verbatim in dev and copies to <code>dist/</code> on build. The four samples below all do it with one script wired to the <code>predev</code> and <code>prebuild</code> hooks, so a plain <code>npm run dev</code> or <code>npm run build</code> stages it:</p>
+<div class="highlight"><span class="filename">package.json</span><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nt">&quot;stage-du-wc&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node scripts/stage-du-wc.mjs&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="nt">&quot;predev&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;npm run stage-du-wc&quot;</span><span class="p">,</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="nt">&quot;prebuild&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;npm run stage-du-wc&quot;</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">  </span><span class="nt">&quot;devDependencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">    </span><span class="nt">&quot;@uipath/du-validation-station-wc&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0-rc.1&quot;</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="p">}</span>
+</code></pre></div>
+<p>The script copies <code>node_modules/@uipath/du-validation-station-wc</code> to <code>public/du-vs-wc</code> — which is exactly where the <code>deploymentUrl</code> default looks — skipping the npm metadata, verifying that <code>main.js</code>, <code>polyfills.js</code>, <code>styles.css</code>, <code>fonts.css</code> and <code>du-assets/</code> all landed, and stamping the staged version so a repeat run is a no-op. Take it as-is: <a href="https://github.com/UiPath/uipath-typescript/blob/main/samples/document-validation-app/scripts/stage-du-wc.mjs"><code>scripts/stage-du-wc.mjs</code></a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Keep <code>public/du-vs-wc</code> out of git</p>
+<p>It is generated, and it is tens of megabytes — the fonts alone are most of it. Add it to <code>.gitignore</code> and let the <code>predev</code> / <code>prebuild</code> hooks produce it.</p>
+</div>
 <h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Call it once.</strong> Loading is cached per page, so a second call with a different <code>deploymentUrl</code> is ignored. A <em>failed</em> load is not cached — call again to retry.</li>
@@ -5062,9 +5128,9 @@
 <details class="warning">
 <summary>The web component now loads from a URL</summary>
 <p><code>1.0.x</code> imported the web component as a bare module specifier, which put a prebuilt Angular bundle into your module graph and made its assets your bundler's problem. It now loads at runtime from a hosted URL, so you must call <code>configureValidationStationWc</code> once before rendering any widget from this package:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="gi">+ import { configureValidationStationWc } from &quot;@uipath/ui-widgets-validation-station&quot;;</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="gi">+</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="gi">+ configureValidationStationWc();</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="gi">+ import { configureValidationStationWc } from &quot;@uipath/ui-widgets-validation-station&quot;;</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="gi">+</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="gi">+ configureValidationStationWc();</span>
 </code></pre></div>
 <p>Miss it and nothing renders. See <a href="#hosting-the-web-component">Hosting the web component</a> for the <code>deploymentUrl</code> default and when to override it.</p>
 <p><strong>Delete your 1.0.x bundler setup.</strong> None of it applies any more, and what it produces is no longer read:</p>
@@ -5077,14 +5143,14 @@
 <details class="warning">
 <summary>Save callbacks are unified</summary>
 <p><code>1.0.x</code> had one pair of callbacks meaning "the widget persisted it" and another meaning "over to you", chosen by an unrelated input. There is now one callback per user action. It always carries the request, and takes the outcome as an optional second argument, present exactly when the widget did the write-back itself:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="gd">- onSubmitComplete={(result) =&gt; …}</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="gd">- onSaveAsDraftComplete={(result) =&gt; …}</span>
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="gd">- onReportExceptionComplete={(documentId, reason) =&gt; …}</span>
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="gd">- onSaveValidatedDataRequest={(request) =&gt; …}</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="gd">- onSaveValidatedDataAsDraftRequest={(request) =&gt; …}</span>
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="gi">+ onSubmit={(request, result) =&gt; …}</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="gi">+ onSaveAsDraft={(request, result) =&gt; …}</span>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="gi">+ onReportException={(request) =&gt; …}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="gd">- onSubmitComplete={(result) =&gt; …}</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="gd">- onSaveAsDraftComplete={(result) =&gt; …}</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="gd">- onReportExceptionComplete={(documentId, reason) =&gt; …}</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="gd">- onSaveValidatedDataRequest={(request) =&gt; …}</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="gd">- onSaveValidatedDataAsDraftRequest={(request) =&gt; …}</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="gi">+ onSubmit={(request, result) =&gt; …}</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="gi">+ onSaveAsDraft={(request, result) =&gt; …}</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="gi">+ onReportException={(request) =&gt; …}</span>
 </code></pre></div>
 <p><strong>Check the first parameter, not just the name.</strong> The old callbacks took the result first, the new ones take the request. A rename that leaves the body alone reads <code>success</code> off the wrong object — and does it silently wherever the handler isn't type-checked.</p>
 <p><code>onReportException</code> no longer receives <code>(documentId, reason)</code>; the reason is at <code>request.exceptionReport.Reason</code>. The widget still never persists that flow, so it has no <code>result</code> argument at all.</p>
@@ -5092,18 +5158,18 @@
 <details class="warning">
 <summary>The folder comes from <code>ContentValidationData</code></summary>
 <p>The <code>folderId</code> prop is gone. The folder now travels on <code>ContentValidationData</code> itself, as <code>FolderId</code> or <code>FolderKey</code> — the activity that produces the payload sets one of them, so in the common case there is nothing to pass and nothing to wire up.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="gd">- &lt;ValidationStation sdk={sdk} data={data} folderId={folderId} /&gt;</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="gi">+ &lt;ValidationStation sdk={sdk} data={data} /&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="gd">- &lt;ValidationStation sdk={sdk} data={data} folderId={folderId} /&gt;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="gi">+ &lt;ValidationStation sdk={sdk} data={data} /&gt;</span>
 </code></pre></div>
 <p>The four exported helpers lost the same parameter:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="gd">- fetchDuDocumentArtifacts(sdk, data, folderId)</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="gd">- useDuDocumentArtifacts(sdk, data, folderId)</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="gd">- submitValidatedData(sdk, data, folderId, request)</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="gd">- saveValidatedDataAsDraft(sdk, data, folderId, request)</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="gi">+ fetchDuDocumentArtifacts(sdk, data)</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="gi">+ useDuDocumentArtifacts(sdk, data)</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="gi">+ submitValidatedData(sdk, data, request)</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="gi">+ saveValidatedDataAsDraft(sdk, data, request)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="gd">- fetchDuDocumentArtifacts(sdk, data, folderId)</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="gd">- useDuDocumentArtifacts(sdk, data, folderId)</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="gd">- submitValidatedData(sdk, data, folderId, request)</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="gd">- saveValidatedDataAsDraft(sdk, data, folderId, request)</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="gi">+ fetchDuDocumentArtifacts(sdk, data)</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="gi">+ useDuDocumentArtifacts(sdk, data)</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="gi">+ submitValidatedData(sdk, data, request)</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="gi">+ saveValidatedDataAsDraft(sdk, data, request)</span>
 </code></pre></div>
 <p>If you construct the object yourself, set <code>FolderId</code> or <code>FolderKey</code> — for example from the Action Center task's folder, which the SDK surfaces as <code>task.folderId</code>. Memoise the object you pass in, or the widget takes a new reference on every render and refetches the document each time.</p>
 </details>
@@ -5141,6 +5207,35 @@
 <summary>Nothing to do</summary>
 <p><code>sdk</code> and <code>data</code> became optional, alongside the new <code>artifacts</code> / <code>documentId</code> props — existing calls that pass both keep working. See <a href="#data-sources">Data sources</a>. <code>ValidationStation</code> also gained <code>persistent</code> plus fourteen state, command-result and panel callbacks; all are additive.</p>
 </details>
+<h2 id="sample-apps">Sample apps<a class="headerlink" href="#sample-apps" title="Permanent link">&para;</a></h2>
+<p>Four runnable apps in this repository use the widget end to end — task fetch, render, submit and completion. Each has a <code>README.md</code> with setup steps and a preview GIF; all four are also in the <a href="../../samples/">Sample Apps Gallery</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/UiPath/uipath-typescript/tree/main/samples/document-validation-app"><code>document-validation-app</code></a></td>
+<td>A standalone validation inbox: lists Action Center Document Validation tasks as Pending / Unassigned / Completed tabs and reviews the selected one with the all-in-one <code>ValidationStation</code> component</td>
+</tr>
+<tr>
+<td><a href="https://github.com/UiPath/uipath-typescript/tree/main/samples/document-validation-subcomponents-app"><code>document-validation-subcomponents-app</code></a></td>
+<td>The same review screen built from the package's five subcomponents in a custom grid, linked by one shared <code>instanceId</code> — the path to take when the standard layout does not fit</td>
+</tr>
+<tr>
+<td><a href="https://github.com/UiPath/uipath-typescript/tree/main/samples/coded-action-apps/action-app-with-document-validation"><code>coded-action-apps/action-app-with-document-validation</code></a></td>
+<td>The same widget as a <a href="../../coded-action-apps/getting-started/">Coded Action App</a>: no task list, Action Center routes the reviewer straight to one action</td>
+</tr>
+<tr>
+<td><a href="https://github.com/UiPath/uipath-typescript/tree/main/samples/coded-action-apps/action-app-with-document-validation-subcomponents"><code>coded-action-apps/action-app-with-document-validation-subcomponents</code></a></td>
+<td>The subcomponent layout as a Coded Action App</td>
+</tr>
+</tbody>
+</table>
+<p>All four stage the web component with the script described in <a href="#serving-it-with-vite">Serving it with Vite</a>.</p>
 
 
 

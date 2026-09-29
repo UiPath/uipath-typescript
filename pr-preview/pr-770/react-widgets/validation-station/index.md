@@ -41,7 +41,7 @@ function App({ task }: { task: { data: DuFramework.ContentValidationData } }) {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -495,6 +495,35 @@ The served directory must keep the package's own layout, because the bundle reso
 
 Copying the package directory verbatim satisfies this.
 
+### Serving it with Vite
+
+No `vite.config.ts` changes are needed
+
+Since `1.1.0` the web component is fetched at runtime instead of imported, so it never enters the module graph. The `optimizeDeps.exclude`, asset-copy plugin and dev-server middleware that `1.0.x` required are all obsolete — delete them (see [Migrating from 1.0.x](#migrating-from-10x)). A Vite app needs nothing in its config beyond whatever it already has.
+
+What it does need is the package copied into `public/`, which Vite serves verbatim in dev and copies to `dist/` on build. The four samples below all do it with one script wired to the `predev` and `prebuild` hooks, so a plain `npm run dev` or `npm run build` stages it:
+
+package.json
+
+```
+{
+  "scripts": {
+    "stage-du-wc": "node scripts/stage-du-wc.mjs",
+    "predev": "npm run stage-du-wc",
+    "prebuild": "npm run stage-du-wc"
+  },
+  "devDependencies": {
+    "@uipath/du-validation-station-wc": "1.0.0-rc.1"
+  }
+}
+```
+
+The script copies `node_modules/@uipath/du-validation-station-wc` to `public/du-vs-wc` — which is exactly where the `deploymentUrl` default looks — skipping the npm metadata, verifying that `main.js`, `polyfills.js`, `styles.css`, `fonts.css` and `du-assets/` all landed, and stamping the staged version so a repeat run is a no-op. Take it as-is: `scripts/stage-du-wc.mjs`.
+
+Keep `public/du-vs-wc` out of git
+
+It is generated, and it is tens of megabytes — the fonts alone are most of it. Add it to `.gitignore` and let the `predev` / `prebuild` hooks produce it.
+
 ### Notes
 
 - **Call it once.** Loading is cached per page, so a second call with a different `deploymentUrl` is ignored. A *failed* load is not cached — call again to retry.
@@ -584,3 +613,16 @@ Same shapes, new names — a find-and-replace:
 Nothing to do
 
 `sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` plus fourteen state, command-result and panel callbacks; all are additive.
+
+## Sample apps
+
+Four runnable apps in this repository use the widget end to end — task fetch, render, submit and completion. Each has a `README.md` with setup steps and a preview GIF; all four are also in the [Sample Apps Gallery](../../samples/).
+
+| Sample                                                                | What it shows                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `document-validation-app`                                             | A standalone validation inbox: lists Action Center Document Validation tasks as Pending / Unassigned / Completed tabs and reviews the selected one with the all-in-one `ValidationStation` component |
+| `document-validation-subcomponents-app`                               | The same review screen built from the package's five subcomponents in a custom grid, linked by one shared `instanceId` — the path to take when the standard layout does not fit                      |
+| `coded-action-apps/action-app-with-document-validation`               | The same widget as a [Coded Action App](../../coded-action-apps/getting-started/): no task list, Action Center routes the reviewer straight to one action                                            |
+| `coded-action-apps/action-app-with-document-validation-subcomponents` | The subcomponent layout as a Coded Action App                                                                                                                                                        |
+
+All four stage the web component with the script described in [Serving it with Vite](#serving-it-with-vite).

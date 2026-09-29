@@ -21,10 +21,6 @@ External Auth never calls UiPath. It is for signing users into your own app thro
 
 ## Installation
 
-Beta — not yet published to npm
-
-`@uipath/ui-widgets-external-auth` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
-
 ```
 npm install @uipath/ui-widgets-external-auth
 ```

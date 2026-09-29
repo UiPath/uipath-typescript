@@ -741,14 +741,14 @@ Source: [github.com/UiPath/uipath-ui-widgets](https://github.com/UiPath/uipath-u
 
 ## Available widgets
 
-| Widget                                                  | Package                                                    | What it does                                                                                     |
-| ------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [Validation Station](validation-station/)               | `@uipath/ui-widgets-validation-station`                    | React wrapper for the Document Understanding Validation Station                                  |
-| [Conversational Agent Chat](conversational-agent-chat/) | `@uipath/ui-widgets-conversational-agent-chat`             | Streaming chat UI for UiPath Conversational Agents, with tool-call visualization                 |
-| [DataTable](datatable/)                                 | `@uipath/ui-widgets-datatable`                             | Full CRUD grid over a Data Fabric entity — inline editing, master-detail, filtering, diff review |
-| [Multi File Upload](multi-file-upload/)                 | `@uipath/ui-widgets-multi-file-upload`                     | Drag-and-drop upload of multiple files to an Orchestrator Storage Bucket                         |
-| [PDF Viewer](pdf-viewer/)                               | `@uipath/ui-widgets-pdf-viewer` *beta — not yet on npm*    | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes                       |
-| [External Auth](external-auth/)                         | `@uipath/ui-widgets-external-auth` *beta — not yet on npm* | Provider-agnostic sign-in buttons that start login at an external IdP                            |
+| Widget                                                  | Package                                        | What it does                                                                                     |
+| ------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [Validation Station](validation-station/)               | `@uipath/ui-widgets-validation-station`        | React wrapper for the Document Understanding Validation Station                                  |
+| [Conversational Agent Chat](conversational-agent-chat/) | `@uipath/ui-widgets-conversational-agent-chat` | Streaming chat UI for UiPath Conversational Agents, with tool-call visualization                 |
+| [DataTable](datatable/)                                 | `@uipath/ui-widgets-datatable`                 | Full CRUD grid over a Data Fabric entity — inline editing, master-detail, filtering, diff review |
+| [Multi File Upload](multi-file-upload/)                 | `@uipath/ui-widgets-multi-file-upload`         | Drag-and-drop upload of multiple files to an Orchestrator Storage Bucket                         |
+| [PDF Viewer](pdf-viewer/)                               | `@uipath/ui-widgets-pdf-viewer`                | Renders PDFs from Storage Buckets, Data Fabric attachments, URLs, or bytes                       |
+| [External Auth](external-auth/)                         | `@uipath/ui-widgets-external-auth`             | Provider-agnostic sign-in buttons that start login at an external IdP                            |
 
 ## Common setup
 
@@ -757,8 +757,6 @@ Source: [github.com/UiPath/uipath-ui-widgets](https://github.com/UiPath/uipath-u
 - **React** `^19.2.0` — 19.2.0 or later in the 19.x line (and a matching `react-dom`)
 - **@uipath/uipath-typescript** — a peer dependency, so you install it yourself. Each widget pins its own minimum; the per-widget pages give the exact range
 
-The widgets render with the UiPath Apollo design system, but they depend on it directly — `@uipath/apollo-wind` installs with the widget and is nothing you add yourself.
-
 ### Install
 
 Each widget is installed independently:
@@ -766,10 +764,6 @@ Each widget is installed independently:
 ```
 npm install @uipath/ui-widgets-datatable
 ```
-
-PDF Viewer and External Auth are not on npm yet
-
-Both are at `1.0.0-beta.1` and are not yet published to the public registry, so `npm install` for them fails today. Their pages document the current API so you can evaluate and plan against it.
 
 ### Pass an initialized SDK instance
 
@@ -787,7 +781,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -890,7 +884,7 @@ function App({ task }: { task: { data: DuFramework.ContentValidationData } }) {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -1344,6 +1338,35 @@ The served directory must keep the package's own layout, because the bundle reso
 
 Copying the package directory verbatim satisfies this.
 
+### Serving it with Vite
+
+No `vite.config.ts` changes are needed
+
+Since `1.1.0` the web component is fetched at runtime instead of imported, so it never enters the module graph. The `optimizeDeps.exclude`, asset-copy plugin and dev-server middleware that `1.0.x` required are all obsolete — delete them (see [Migrating from 1.0.x](#migrating-from-10x)). A Vite app needs nothing in its config beyond whatever it already has.
+
+What it does need is the package copied into `public/`, which Vite serves verbatim in dev and copies to `dist/` on build. The four samples below all do it with one script wired to the `predev` and `prebuild` hooks, so a plain `npm run dev` or `npm run build` stages it:
+
+package.json
+
+```
+{
+  "scripts": {
+    "stage-du-wc": "node scripts/stage-du-wc.mjs",
+    "predev": "npm run stage-du-wc",
+    "prebuild": "npm run stage-du-wc"
+  },
+  "devDependencies": {
+    "@uipath/du-validation-station-wc": "1.0.0-rc.1"
+  }
+}
+```
+
+The script copies `node_modules/@uipath/du-validation-station-wc` to `public/du-vs-wc` — which is exactly where the `deploymentUrl` default looks — skipping the npm metadata, verifying that `main.js`, `polyfills.js`, `styles.css`, `fonts.css` and `du-assets/` all landed, and stamping the staged version so a repeat run is a no-op. Take it as-is: `scripts/stage-du-wc.mjs`.
+
+Keep `public/du-vs-wc` out of git
+
+It is generated, and it is tens of megabytes — the fonts alone are most of it. Add it to `.gitignore` and let the `predev` / `prebuild` hooks produce it.
+
 ### Notes
 
 - **Call it once.** Loading is cached per page, so a second call with a different `deploymentUrl` is ignored. A *failed* load is not cached — call again to retry.
@@ -1434,6 +1457,19 @@ Nothing to do
 
 `sdk` and `data` became optional, alongside the new `artifacts` / `documentId` props — existing calls that pass both keep working. See [Data sources](#data-sources). `ValidationStation` also gained `persistent` plus fourteen state, command-result and panel callbacks; all are additive.
 
+## Sample apps
+
+Four runnable apps in this repository use the widget end to end — task fetch, render, submit and completion. Each has a `README.md` with setup steps and a preview GIF; all four are also in the [Sample Apps Gallery](../../samples/).
+
+| Sample                                                                | What it shows                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `document-validation-app`                                             | A standalone validation inbox: lists Action Center Document Validation tasks as Pending / Unassigned / Completed tabs and reviews the selected one with the all-in-one `ValidationStation` component |
+| `document-validation-subcomponents-app`                               | The same review screen built from the package's five subcomponents in a custom grid, linked by one shared `instanceId` — the path to take when the standard layout does not fit                      |
+| `coded-action-apps/action-app-with-document-validation`               | The same widget as a [Coded Action App](../../coded-action-apps/getting-started/): no task list, Action Center routes the reviewer straight to one action                                            |
+| `coded-action-apps/action-app-with-document-validation-subcomponents` | The subcomponent layout as a Coded Action App                                                                                                                                                        |
+
+All four stage the web component with the script described in [Serving it with Vite](#serving-it-with-vite).
+
 # Conversational Agent Chat
 
 A React chat interface powered by [UiPath Conversational Agents](../../api/interfaces/ConversationalAgentServiceModel/). Built on UiPath Apollo React chat components, it drops an AI chat experience into your application with streaming, attachments and tool-call visibility.
@@ -1480,7 +1516,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -1531,7 +1567,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -1653,7 +1689,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -1844,7 +1880,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       const uipath = new UiPath({
-        baseUrl: "https://cloud.uipath.com",
+        baseUrl: "https://api.uipath.com",
         orgName: "your-org",
         tenantName: "your-tenant",
         clientId: "your-client-id",
@@ -1934,10 +1970,6 @@ Built on [react-pdf](https://www.npmjs.com/package/react-pdf) (Mozilla pdf.js). 
 
 ## Installation
 
-Beta — not yet published to npm
-
-`@uipath/ui-widgets-pdf-viewer` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
-
 ```
 npm install @uipath/ui-widgets-pdf-viewer
 ```
@@ -1950,17 +1982,71 @@ npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 
 ## Usage
 
+OAuth is the flow for a browser app, so the instance is built once in an effect and `initialize()` is awaited before anything renders — see [Pass an initialized SDK instance](../#pass-an-initialized-sdk-instance).
+
 ```
 import { PdfViewer } from "@uipath/ui-widgets-pdf-viewer";
 import "@uipath/ui-widgets-pdf-viewer/PdfViewer.css";
 import { UiPath } from "@uipath/uipath-typescript/core";
+import { useEffect, useState } from "react";
 
 function App() {
-  const sdk = new UiPath({
-    // SDK configuration (or `new UiPath()` inside a coded app).
-    // Bucket sources need `OR.Buckets`; entity sources need
-    // `DataFabric.Data.Read`. URL and byte sources need no scope.
-  });
+  const [sdk, setSdk] = useState<UiPath | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath({
+        baseUrl: "https://api.uipath.com",
+        orgName: "your-org",
+        tenantName: "your-tenant",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        // Bucket sources need `OR.Buckets`; entity sources need
+        // `DataFabric.Data.Read`. URL and byte sources need no scope.
+        scope: "OR.Buckets",
+      });
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
+
+  if (!sdk) return <div>Loading...</div>;
+
+  return (
+    <PdfViewer
+      sdk={sdk}
+      source={{
+        bucketId: 123,
+        folderKey: "<folder-guid>", // or folderId / folderPath
+        path: "invoices/inv-0714.pdf",
+      }}
+    />
+  );
+}
+```
+
+Inside a [Coded App](../../coded-apps/getting-started/), `new UiPath()` reads `clientId`, `orgName`, `tenantName`, `baseUrl`, `scope` and `redirectUri` from the platform's `uipath:*` meta tags, so there is nothing to pass — but `initialize()` still drives the OAuth flow and must be awaited.
+
+```
+import { PdfViewer } from "@uipath/ui-widgets-pdf-viewer";
+import "@uipath/ui-widgets-pdf-viewer/PdfViewer.css";
+import { UiPath } from "@uipath/uipath-typescript/core";
+import { useEffect, useState } from "react";
+
+function App() {
+  const [sdk, setSdk] = useState<UiPath | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath();
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
+
+  if (!sdk) return <div>Loading...</div>;
 
   return (
     <PdfViewer
@@ -2069,10 +2155,6 @@ External Auth never calls UiPath. It is for signing users into your own app thro
 - Customizable heading
 
 ## Installation
-
-Beta — not yet published to npm
-
-`@uipath/ui-widgets-external-auth` is at `1.0.0-beta.1` and is not yet on the public registry, so the command below does not resolve today. This page documents the current API so you can evaluate and plan against it.
 
 ```
 npm install @uipath/ui-widgets-external-auth
