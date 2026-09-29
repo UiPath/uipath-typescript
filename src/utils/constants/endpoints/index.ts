@@ -43,6 +43,9 @@ export * from './agents';
 // Governance endpoints
 export * from './governance';
 
+// Document Understanding framework endpoints
+export * from './document-understanding';
+
 // Notification endpoints
 export * from './notification';
 
