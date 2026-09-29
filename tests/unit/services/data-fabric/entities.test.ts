@@ -5450,7 +5450,7 @@ describe("EntityService Unit Tests", () => {
     });
   });
 
-  describe("getCloneStatus", () => {
+  describe("getCloneJob", () => {
     const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
 
     // Wire shape as returned by the API (createdAt); the SDK renames it to createdTime.
@@ -5475,7 +5475,7 @@ describe("EntityService Unit Tests", () => {
     it("fetches a clone job status by id and returns createdTime", async () => {
       mockApiClient.get.mockResolvedValue(doneJob);
 
-      const result = await entityService.getCloneStatus(JOB_ID);
+      const result = await entityService.getCloneJob(JOB_ID);
 
       expect(result).toEqual(doneJobResult);
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -5486,7 +5486,7 @@ describe("EntityService Unit Tests", () => {
 
     it("rejects when the job id is empty", async () => {
       await expect(
-        entityService.getCloneStatus("  "),
+        entityService.getCloneJob("  "),
       ).rejects.toThrow(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
@@ -5497,7 +5497,7 @@ describe("EntityService Unit Tests", () => {
       );
 
       await expect(
-        entityService.getCloneStatus(JOB_ID),
+        entityService.getCloneJob(JOB_ID),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

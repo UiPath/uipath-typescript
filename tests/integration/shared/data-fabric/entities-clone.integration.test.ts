@@ -85,7 +85,7 @@ describeIntegration('Data Fabric Entities Clone - Integration Tests', 'both', mo
       }
       await wait(5000);
       try {
-        status = await entities.getCloneStatus(job.jobId);
+        status = await entities.getCloneJob(job.jobId);
       } catch (error) {
         console.warn(`[clone] transient status poll error for ${job.jobId}, retrying:`, error);
       }
@@ -100,7 +100,7 @@ describeIntegration('Data Fabric Entities Clone - Integration Tests', 'both', mo
     }
 
     expect(status.state).toBe(EntityCloneJobState.Done);
-    // Transform validation: getCloneStatus() must also expose createdTime, never the API's createdAt.
+    // Transform validation: getCloneJob() must also expose createdTime, never the API's createdAt.
     expect(typeof status.createdTime).toBe('string');
     expect((status as any).createdAt).toBeUndefined();
   }, 18 * 60 * 1000);
@@ -109,7 +109,7 @@ describeIntegration('Data Fabric Entities Clone - Integration Tests', 'both', mo
     const { entities } = getServices();
     const missingJobId = '00000000-0000-0000-0000-0000000000ff';
 
-    await expect(entities.getCloneStatus(missingJobId)).rejects.toThrow();
+    await expect(entities.getCloneJob(missingJobId)).rejects.toThrow();
   });
 
   afterAll(async () => {

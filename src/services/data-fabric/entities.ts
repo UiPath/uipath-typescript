@@ -500,10 +500,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return toEntityCloneJob(response.data);
   }
 
-  @track('Entities.GetCloneStatus')
-  async getCloneStatus(jobId: string): Promise<EntityCloneJob> {
+  @track('Entities.GetCloneJob')
+  async getCloneJob(jobId: string): Promise<EntityCloneJob> {
     if (!jobId?.trim()) {
-      throw new ValidationError({ message: 'getCloneStatus requires a non-empty job id.' });
+      throw new ValidationError({ message: 'getCloneJob requires a non-empty job id.' });
     }
     const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_STATUS(jobId));
     return toEntityCloneJob(response.data);

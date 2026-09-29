@@ -1092,7 +1092,7 @@ export interface EntityServiceModel {
   /**
    * Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full
    * dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the
-   * job descriptor to poll via {@link EntityServiceModel.getCloneStatus}.
+   * job descriptor to poll via {@link EntityServiceModel.getCloneJob}.
    *
    * Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData`
    * (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into
@@ -1115,10 +1115,10 @@ export interface EntityServiceModel {
    *   EntityCloneJobState.Done, EntityCloneJobState.Failed,
    *   EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
    * ];
-   * let status = await entities.getCloneStatus(job.jobId);
+   * let status = await entities.getCloneJob(job.jobId);
    * while (!terminal.includes(status.state)) {
    *   await new Promise((r) => setTimeout(r, 3000));
-   *   status = await entities.getCloneStatus(job.jobId);
+   *   status = await entities.getCloneJob(job.jobId);
    * }
    * ```
    * @experimental
@@ -1134,12 +1134,12 @@ export interface EntityServiceModel {
    * @returns Promise resolving to the latest {@link EntityCloneJob}.
    * @example
    * ```typescript
-   * const status = await entities.getCloneStatus("<jobId>");
+   * const status = await entities.getCloneJob("<jobId>");
    * if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
    * ```
    * @experimental
    */
-  getCloneStatus(jobId: string): Promise<EntityCloneJob>;
+  getCloneJob(jobId: string): Promise<EntityCloneJob>;
 
   /**
    * Deletes a Data Fabric entity and all its records
