@@ -1,12 +1,6 @@
 /**
  * AgentHub Module
  *
- * @experimental
- *
- * /// warning
- * Preview: This module is experimental and may change or be removed in future releases.
- * ///
- *
  * Provides access to the AgentHub LLM gateway chat completions — send
  * OpenAI-compatible requests routed by normalized model name.
  *
@@ -19,10 +13,9 @@
  * await sdk.initialize();
  *
  * const agentHub = new AgentHub(sdk);
- * const completion = await agentHub.createChatCompletion({
- *   model: '<modelName>',
- *   messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
- * });
+ * const completion = await agentHub.createChatCompletion('<modelName>', [
+ *   { role: AgentHubMessageRole.User, content: 'Summarize this invoice.' },
+ * ]);
  * ```
  *
  * @module

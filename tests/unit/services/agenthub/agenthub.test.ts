@@ -8,8 +8,9 @@ import { LLM_GATEWAY_MODEL_NAME } from '@/utils/constants/headers';
 import {
   AgentHubMessageRole,
   AgentHubToolType,
-  type AgentHubChatCompletionRequest,
+  type AgentHubChatCompletionOptions,
   type AgentHubChatCompletionResponse,
+  type AgentHubChatMessage,
 } from '@/models/agenthub/agenthub.types';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
@@ -20,9 +21,11 @@ vi.mock('@/core/http/api-client');
 // ===== TEST CONSTANTS =====
 const MODEL = 'gpt-4.1-2025-04-14';
 
-const REQUEST: AgentHubChatCompletionRequest = {
-  model: MODEL,
-  messages: [{ role: AgentHubMessageRole.User, content: 'Summarize this invoice.' }],
+const MESSAGES: AgentHubChatMessage[] = [
+  { role: AgentHubMessageRole.User, content: 'Summarize this invoice.' },
+];
+
+const OPTIONS: AgentHubChatCompletionOptions = {
   maxTokens: 2048,
   temperature: 0.7,
 };
@@ -78,7 +81,7 @@ describe('AgentHubService Unit Tests', () => {
     it('should return the chat completion', async () => {
       mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
 
-      const result = await service.createChatCompletion(REQUEST);
+      const result = await service.createChatCompletion(MODEL, MESSAGES, OPTIONS);
 
       expect(result).toEqual(RESPONSE);
       expect(result.choices[0]?.message.content).toBe('Invoice total: $100.');
@@ -87,7 +90,7 @@ describe('AgentHubService Unit Tests', () => {
     it('should POST snake_case fields and map snake_case response fields', async () => {
       mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
 
-      const result = await service.createChatCompletion(REQUEST);
+      const result = await service.createChatCompletion(MODEL, MESSAGES, OPTIONS);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         AGENTHUB_ENDPOINTS.CREATE_CHAT_COMPLETION,
@@ -99,7 +102,7 @@ describe('AgentHubService Unit Tests', () => {
       const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
       expect(body.maxTokens).toBeUndefined();
       expect(result.choices[0]?.finishReason).toBe('stop');
-      expect((result.choices[0] as Record<string, unknown>).finish_reason).toBeUndefined();
+      expect(result.choices[0]).not.toHaveProperty('finish_reason');
     });
 
     it('should leave tool parameter schema keys unchanged', async () => {
@@ -114,7 +117,7 @@ describe('AgentHubService Unit Tests', () => {
         },
       ];
 
-      await service.createChatCompletion({ ...REQUEST, tools });
+      await service.createChatCompletion(MODEL, MESSAGES, { ...OPTIONS, tools });
 
       const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
       expect(body.tools).toEqual(tools);
@@ -124,7 +127,7 @@ describe('AgentHubService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
       const controller = new AbortController();
 
-      await service.createChatCompletion(REQUEST, { signal: controller.signal });
+      await service.createChatCompletion(MODEL, MESSAGES, { ...OPTIONS, signal: controller.signal });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
@@ -135,14 +138,14 @@ describe('AgentHubService Unit Tests', () => {
 
     it('should reject an empty model', async () => {
       await expect(
-        service.createChatCompletion({ ...REQUEST, model: '' }),
+        service.createChatCompletion('', MESSAGES, OPTIONS),
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should reject empty messages', async () => {
       await expect(
-        service.createChatCompletion({ ...REQUEST, messages: [] }),
+        service.createChatCompletion(MODEL, [], OPTIONS),
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -150,11 +153,7 @@ describe('AgentHubService Unit Tests', () => {
     it('should omit max_tokens when maxTokens is not set', async () => {
       mockApiClient.post.mockResolvedValue(WIRE_RESPONSE);
 
-      await service.createChatCompletion({
-        model: REQUEST.model,
-        messages: REQUEST.messages,
-        temperature: REQUEST.temperature,
-      });
+      await service.createChatCompletion(MODEL, MESSAGES, { temperature: OPTIONS.temperature });
 
       const body = mockApiClient.post.mock.calls[0]?.[1] as Record<string, unknown>;
       expect(body.max_tokens).toBeUndefined();
@@ -165,7 +164,9 @@ describe('AgentHubService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(service.createChatCompletion(REQUEST)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        service.createChatCompletion(MODEL, MESSAGES, OPTIONS),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

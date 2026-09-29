@@ -3,7 +3,8 @@ import { getServices, describeIntegration, InitMode } from '../../config/unified
 import { AgentHub } from '../../../../src/services/agenthub';
 import {
   AgentHubMessageRole,
-  type AgentHubChatCompletionRequest,
+  type AgentHubChatCompletionOptions,
+  type AgentHubChatMessage,
 } from '../../../../src/models/agenthub/agenthub.types';
 
 /**
@@ -15,12 +16,11 @@ import {
 
 const modes: InitMode[] = ['v1'];
 
-const REQUEST: AgentHubChatCompletionRequest = {
-  model: 'gpt-4.1-2025-04-14',
-  messages: [{ role: AgentHubMessageRole.User, content: 'Reply with the word ok.' }],
-  maxTokens: 16,
-  temperature: 0,
-};
+const MODEL = 'gpt-4.1-2025-04-14';
+const MESSAGES: AgentHubChatMessage[] = [
+  { role: AgentHubMessageRole.User, content: 'Reply with the word ok.' },
+];
+const OPTIONS: AgentHubChatCompletionOptions = { maxTokens: 16, temperature: 0 };
 
 // agenthub_ rejects PAT tokens entirely (401 regardless of scopes), so this
 // suite authenticates with a user token and skips when one is not configured.
@@ -37,7 +37,7 @@ describeIntegration('AgentHub - Integration Tests', 'user', modes, () => {
 
   describe('createChatCompletion', () => {
     it('should return a completion with an assistant choice', async () => {
-      const result = await agentHub.createChatCompletion(REQUEST);
+      const result = await agentHub.createChatCompletion(MODEL, MESSAGES, OPTIONS);
 
       expect(result).toBeDefined();
       expect(typeof result.id).toBe('string');
@@ -52,7 +52,7 @@ describeIntegration('AgentHub - Integration Tests', 'user', modes, () => {
       expect(typeof choice.index).toBe('number');
       expect(typeof choice.message.role).toBe('string');
       expect(typeof choice.message.content).toBe('string');
-      expect((choice as Record<string, unknown>).finish_reason).toBeUndefined();
+      expect(choice).not.toHaveProperty('finish_reason');
       if (choice.finishReason != null) {
         expect(typeof choice.finishReason).toBe('string');
       }

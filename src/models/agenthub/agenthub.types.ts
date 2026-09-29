@@ -41,22 +41,6 @@ export interface AgentHubChatTool {
 }
 
 /**
- * Request body for an AgentHub chat completion (non-streaming).
- */
-export interface AgentHubChatCompletionRequest {
-  /** Normalized model name, e.g. `gpt-4.1-2025-04-14`. Also sent via the gateway model header. */
-  model: string;
-  /** Conversation messages. */
-  messages: AgentHubChatMessage[];
-  /** Maximum tokens in the completion. */
-  maxTokens?: number;
-  /** Sampling temperature. */
-  temperature?: number;
-  /** Tool definitions available to the model. */
-  tools?: AgentHubChatTool[];
-}
-
-/**
  * A single completion choice in an AgentHub chat completion response.
  */
 export interface AgentHubChatCompletionChoice {
@@ -87,6 +71,12 @@ export interface AgentHubChatCompletionResponse {
  * Options for `createChatCompletion`.
  */
 export interface AgentHubChatCompletionOptions {
+  /** Maximum tokens in the completion. */
+  maxTokens?: number;
+  /** Sampling temperature. */
+  temperature?: number;
+  /** Tool definitions available to the model. */
+  tools?: AgentHubChatTool[];
   /** Abort signal cancelling the request. */
   signal?: AbortSignal;
 }
