@@ -19,7 +19,7 @@ const allEntities = await entities.getAll();
 
 **`Experimental`**
 
-Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneStatus](#getclonestatus).
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
 
 Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
 
@@ -48,10 +48,10 @@ const terminal = [
   EntityCloneJobState.Done, EntityCloneJobState.Failed,
   EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
 ];
-let status = await entities.getCloneStatus(job.jobId);
+let status = await entities.getCloneJob(job.jobId);
 while (!terminal.includes(status.state)) {
   await new Promise((r) => setTimeout(r, 3000));
-  status = await entities.getCloneStatus(job.jobId);
+  status = await entities.getCloneJob(job.jobId);
 }
 ```
 
@@ -588,9 +588,9 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 const records = await entity.getAllRecords();
 ```
 
-### getCloneStatus()
+### getCloneJob()
 
-> **getCloneStatus**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
 
 **`Experimental`**
 
@@ -609,7 +609,7 @@ Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
 #### Example
 
 ```
-const status = await entities.getCloneStatus("<jobId>");
+const status = await entities.getCloneJob("<jobId>");
 if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
 

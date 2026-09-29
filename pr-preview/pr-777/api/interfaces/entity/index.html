@@ -3831,10 +3831,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#getclonestatus" class="md-nav__link">
+  <a href="#getclonejob" class="md-nav__link">
     <span class="md-ellipsis">
       
-        getCloneStatus()
+        getCloneJob()
       
     </span>
   </a>
@@ -4083,7 +4083,7 @@
 <p><strong><code>Experimental</code></strong></p>
 <p>Starts an async job that clones the entities/choicesets listed in <code>entityIds</code> (plus their full
 dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the
-job descriptor to poll via <a href="#getclonestatus">EntityServiceModel.getCloneStatus</a>.</p>
+job descriptor to poll via <a href="#getclonejob">EntityServiceModel.getCloneJob</a>.</p>
 <p>Target must be <code>Folder</code>-scoped; source may be <code>Tenant</code> or <code>Folder</code>. Mode <code>SchemaAndData</code>
 (default) clones schema, rows, and attachments into a clean target; <code>DataOnly</code> copies rows into
 a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-,
@@ -4121,10 +4121,10 @@ Insights-, or template-enabled entities and non-Legacy/Native classes are not cl
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nx">EntityCloneJobState</span><span class="p">.</span><span class="nx">Done</span><span class="p">,</span><span class="w"> </span><span class="nx">EntityCloneJobState</span><span class="p">.</span><span class="nx">Failed</span><span class="p">,</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nx">EntityCloneJobState</span><span class="p">.</span><span class="nx">RolledBack</span><span class="p">,</span><span class="w"> </span><span class="nx">EntityCloneJobState</span><span class="p">.</span><span class="nx">RollbackFailed</span><span class="p">,</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">];</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="kd">let</span><span class="w"> </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneStatus</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">jobId</span><span class="p">);</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="kd">let</span><span class="w"> </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneJob</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">jobId</span><span class="p">);</span>
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">terminal</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="nx">status</span><span class="p">.</span><span class="nx">state</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Promise</span><span class="p">((</span><span class="nx">r</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">setTimeout</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span><span class="w"> </span><span class="mf">3000</span><span class="p">));</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneStatus</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">jobId</span><span class="p">);</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneJob</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">jobId</span><span class="p">);</span>
 <a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
@@ -4829,9 +4829,9 @@ resources by name and <code>folderKey</code>), avoiding a lookup to resolve the 
 <a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">records</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entity</span><span class="p">.</span><span class="nx">getAllRecords</span><span class="p">();</span>
 </code></pre></div>
 <hr />
-<h3 id="getclonestatus">getCloneStatus()<a class="headerlink" href="#getclonestatus" title="Permanent link">&para;</a></h3>
+<h3 id="getclonejob">getCloneJob()<a class="headerlink" href="#getclonejob" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getCloneStatus</strong>(<code>jobId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../EntityCloneJob/"><code>EntityCloneJob</code></a>&gt;</p>
+<p><strong>getCloneJob</strong>(<code>jobId</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../EntityCloneJob/"><code>EntityCloneJob</code></a>&gt;</p>
 </blockquote>
 <p><strong><code>Experimental</code></strong></p>
 <p>Gets the current status of a clone job started by <a href="#clone">EntityServiceModel.clone</a>; poll until
@@ -4858,7 +4858,7 @@ terminal state, <code>failureReasonCode</code>, <code>failurePhase</code>, and <
 <p><code>Promise</code>&lt;<a href="../EntityCloneJob/"><code>EntityCloneJob</code></a>&gt;</p>
 <p>Promise resolving to the latest <a href="../EntityCloneJob/">EntityCloneJob</a>.</p>
 <h4 id="example_13">Example<a class="headerlink" href="#example_13" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneStatus</span><span class="p">(</span><span class="s2">&quot;&lt;jobId&gt;&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">getCloneJob</span><span class="p">(</span><span class="s2">&quot;&lt;jobId&gt;&quot;</span><span class="p">);</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">status</span><span class="p">.</span><span class="nx">state</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">EntityCloneJobState</span><span class="p">.</span><span class="nx">Failed</span><span class="p">)</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">status</span><span class="p">.</span><span class="nx">failureReasonCode</span><span class="p">,</span><span class="w"> </span><span class="nx">status</span><span class="p">.</span><span class="nx">failureMessage</span><span class="p">);</span>
 </code></pre></div>
 <hr />
