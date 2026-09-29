@@ -1,0 +1,9 @@
+{
+    "clientId": "8508dfa8-ca79-4a6a-9b70-4ce6a45bb36d",
+    "scope": "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
+    "orgName": "popoc",
+    "tenantName": "adetenant",
+    "baseUrl": "https://alpha.api.uipath.com",
+    "redirectUri": "http://localhost:5173"
+  }
+  
