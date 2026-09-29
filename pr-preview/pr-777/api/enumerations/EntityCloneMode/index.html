@@ -3715,9 +3715,7 @@
 
   <h1>EntityCloneMode</h1>
 
-<p>What a clone copies:
-- <code>SchemaAndData</code> — create the schema, copy rows, and copy file attachments (target folder must be clean).
-- <code>DataOnly</code> — copy rows into a pre-existing, schema-compatible, empty target.</p>
+<p>What a clone copies: <code>SchemaAndData</code> (schema + rows + attachments, clean target) or <code>DataOnly</code> (rows into a pre-existing, schema-compatible, empty target).</p>
 <h2 id="enumeration-members">Enumeration Members<a class="headerlink" href="#enumeration-members" title="Permanent link">&para;</a></h2>
 <h3 id="dataonly">DataOnly<a class="headerlink" href="#dataonly" title="Permanent link">&para;</a></h3>
 <blockquote>
