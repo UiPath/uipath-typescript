@@ -36,6 +36,10 @@ Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initia
 #### Example
 
 ```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
 const job = await entities.clone({
   source: { scopeType: EntityCloneScopeType.Tenant },
   target: { scopeType: EntityCloneScopeType.Folder, folderId: "<targetFolderId>" },
@@ -609,6 +613,10 @@ Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
 #### Example
 
 ```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
 const status = await entities.getCloneJob("<jobId>");
 if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
