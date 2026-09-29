@@ -39,11 +39,27 @@ Add either a `light` or `dark` class to your HTML `<body>` element to enable pro
 import { MultiFileUpload } from "@uipath/ui-widgets-multi-file-upload";
 import "@uipath/ui-widgets-multi-file-upload/MultiFileUpload.css";
 import { UiPath } from "@uipath/uipath-typescript/core";
+import { useEffect, useState } from "react";
 
 function App() {
-  const sdk = new UiPath({
-    // SDK configuration — uploading needs the full `OR.Buckets` scope
-  });
+  const [sdk, setSdk] = useState<UiPath | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      const uipath = new UiPath({
+        baseUrl: "https://cloud.uipath.com",
+        orgName: "your-org",
+        tenantName: "your-tenant",
+        clientId: "your-client-id",
+        redirectUri: "http://localhost:3000/callback",
+        // Uploading needs the full `OR.Buckets` scope
+        scope: "OR.Buckets",
+      });
+      await uipath.initialize();
+      setSdk(uipath);
+    };
+    init();
+  }, []);
 
   const handleUploadError = (error: Error) => {
     console.error("Upload failed:", error);
@@ -55,6 +71,8 @@ function App() {
       uploadedFiles.map((f) => f.name),
     );
   };
+
+  if (!sdk) return <div>Loading...</div>;
 
   return (
     <MultiFileUpload

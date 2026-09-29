@@ -4339,8 +4339,13 @@ validating it, as <code>{ ...params, ...body-or-query }</code>. Two consequences
 </li>
 </ul>
 <p>Declaring it is also the convenient path: <code>input.id</code> is typed, so the handler rarely needs
-  <code>ctx.params</code> at all. Values coerce to the declared type (<code>id: number</code> on <code>/users/:id{[0-9]+}</code>
-  arrives as a number), whereas <code>ctx.params</code> is always strings.</p>
+  <code>ctx.params</code> at all.</p>
+<ul>
+<li><strong>Declare a path param as a <code>string</code>,</strong> and convert it in the handler. A URL carries text, and
+  the contract states what arrives, so <code>input.id</code> is the segment as sent. The same holds for a
+  <code>GET</code> query string. See
+  <a href="../production-rules/#text-sourced-input-a-query-string-and-a-path-segment-are-strings">text-sourced input</a>.</li>
+</ul>
 <p>A function with <strong>no</strong> <code>input</code> schema receives the path params alone as its input.</p>
 <h3 id="slug-pattern-syntax">Slug pattern syntax<a class="headerlink" href="#slug-pattern-syntax" title="Permanent link">&para;</a></h3>
 <table>
