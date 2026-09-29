@@ -43,6 +43,10 @@
  *   body
  *   <!-- /details -->
  *
+ * A README also speaks to contributors, which this site does not. Anything
+ * between `<!-- docs:ignore -->` and `<!-- /docs:ignore -->` is dropped on the
+ * way in -- build and test commands, the license notice, release chores.
+ *
  * Blockquotes and HTML comments both degrade cleanly: npm and GitHub render the
  * first as a quote and drop the second entirely.
  *
@@ -52,11 +56,15 @@
  * upstream is a broken link here, so this script warns about them.
  */
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { realpathSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
 
 const REPO = 'UiPath/uipath-ui-widgets';
-const TARGET = join(process.cwd(), 'docs', 'react-widgets');
+const DOCS_DIR = join(process.cwd(), 'docs');
+const TARGET = join(DOCS_DIR, 'react-widgets');
+const RETRY_DELAY_MS = 2000;
 const CONFIG = join(process.cwd(), 'mkdocs.yml');
 const SITE_URL = 'https://uipath.github.io/uipath-typescript/';
 
@@ -93,32 +101,105 @@ const ADMONITION_TYPES = new Map(
  * source of truth. The slug doubles as the upstream package directory name.
  */
 function referencedPages(config) {
-  const pages = new Map();
+  const titles = new Map();
   for (const line of config.split('\n')) {
-    const match = line.match(/^\s*-\s*(.+?):\s*react-widgets\/([A-Za-z0-9._-]+)\.md\s*$/);
-    if (!match) continue;
-    const [, title, slug] = match;
+    const nav = line.match(/^\s*-\s*(.+?):\s*react-widgets\/([A-Za-z0-9._/-]+)\.md\s*$/);
+    if (nav) titles.set(nav[2], nav[1].trim());
+  }
+
+  // Every mention, not just the site nav: mkdocs-llmstxt lists the same pages
+  // the other way round (`path: description`) and raises a KeyError during
+  // post-build for one that does not exist, so a page named only there has to
+  // be fetched too.
+  const pages = new Map();
+  for (const [, slug] of config.matchAll(/react-widgets\/([A-Za-z0-9._/-]+)\.md/g)) {
     if (LOCAL_PAGES.has(`${slug}.md`)) continue;
-    // Only the site nav matches: the llmstxt block writes the same pages the
-    // other way round (`path: description`), so those lines fall through.
-    pages.set(slug, title.trim());
+    // The slug is both a path segment under docs/react-widgets/ and one in the
+    // upstream URL. Keeping it flat is what makes both safe.
+    if (slug.includes('/') || slug.startsWith('.')) {
+      throw new Error(
+        `mkdocs.yml references react-widgets/${slug}.md. Widget pages are flat -- each maps to ` +
+          `packages/<slug>/README.md in ${REPO} -- so a nested or dot-prefixed path cannot be fetched.`,
+      );
+    }
+    pages.set(slug, titles.get(slug) ?? slug);
+    if (!titles.has(slug)) {
+      console.warn(
+        `::warning::mkdocs.yml names react-widgets/${slug}.md outside the site nav, so it has no title ` +
+          `and no nav entry. Using "${slug}" -- add it to the React Widgets nav.`,
+      );
+    }
   }
   return pages;
 }
 
-async function gh(url, { token, accept = 'application/vnd.github+json' } = {}) {
-  const response = await fetch(url, {
-    headers: {
-      Accept: accept,
-      'X-GitHub-Api-Version': '2022-11-28',
-      'User-Agent': 'uipath-typescript-docs-build',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`GET ${url} -> ${response.status} ${response.statusText}`);
+/**
+ * One authenticated GET, retried on the failures that are worth retrying.
+ *
+ * The thrown error carries `.status`, so a caller can tell "this README is
+ * gone" (404, actionable) from "GitHub said no right now" (429/5xx/network,
+ * not actionable) instead of reporting every failure as a missing page. The
+ * token travels in a header, never in the URL or argv, so it stays out of
+ * logs and out of `ps`.
+ */
+async function gh(url, { token, accept = 'application/vnd.github+json', attempts = 3 } = {}) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          Accept: accept,
+          'X-GitHub-Api-Version': '2022-11-28',
+          'User-Agent': 'uipath-typescript-docs-build',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      await new Promise((resolve) => setTimeout(resolve, attempt * RETRY_DELAY_MS));
+      continue;
+    }
+
+    if (response.ok) return response;
+
+    lastError = Object.assign(
+      new Error(`GET ${url} -> ${response.status} ${response.statusText}`),
+      { status: response.status },
+    );
+    // 403 is how GitHub reports a rate limit as well as a real permission
+    // failure; both are worth one more try on a shared-IP runner.
+    const retriable = response.status === 429 || response.status === 403 || response.status >= 500;
+    if (!retriable || attempt === attempts) break;
+    await new Promise((resolve) => setTimeout(resolve, attempt * RETRY_DELAY_MS));
   }
-  return response;
+  throw lastError;
+}
+
+/**
+ * Marks the lines inside fenced code blocks, fences included.
+ *
+ * Every pass consults this before matching a marker: a README that documents
+ * this very syntax puts `> **Note:**` or `<!-- tabs -->` inside a fence as an
+ * example, and rewriting those would both mangle the example and leave the
+ * fence unbalanced. Recomputed per pass, because indenting a block moves the
+ * fences but keeps them recognizable.
+ */
+function fenceMask(lines) {
+  const mask = Array.from({ length: lines.length }, () => false);
+  let fence = null;
+  for (let i = 0; i < lines.length; i++) {
+    const marker = lines[i].trimStart().match(/^(`{3,}|~{3,})/);
+    if (fence === null && marker) {
+      fence = marker[1][0];
+      mask[i] = true;
+    } else if (fence !== null) {
+      mask[i] = true;
+      if (marker && marker[1][0] === fence) fence = null;
+    }
+  }
+  return mask;
 }
 
 /**
@@ -131,9 +212,11 @@ function indent(lines) {
 
 /** `> **Warning: Title**` / `> **Note:** body` -> an admonition block. */
 function convertAdmonitions(lines, warn) {
+  const OPENER = /^>\s*\*\*([A-Za-z]+)(?::\s*(.*?))?\*\*:?\s*(.*)$/;
+  const fenced = fenceMask(lines);
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    const opener = lines[i].match(/^>\s*\*\*([A-Za-z]+)(?::\s*(.*?))?\*\*:?\s*(.*)$/);
+    const opener = fenced[i] ? null : lines[i].match(OPENER);
     if (!opener) {
       out.push(lines[i]);
       continue;
@@ -149,7 +232,9 @@ function convertAdmonitions(lines, warn) {
 
     const body = [];
     if (rest.trim()) body.push(rest.trim());
-    while (i + 1 < lines.length && lines[i + 1].startsWith('>')) {
+    // Stop at the next opener: two admonitions written back to back are two
+    // blocks, not one with the second's label swallowed into its body.
+    while (i + 1 < lines.length && lines[i + 1].startsWith('>') && !OPENER.test(lines[i + 1])) {
       body.push(lines[++i].replace(/^>\s?/, ''));
     }
 
@@ -160,11 +245,35 @@ function convertAdmonitions(lines, warn) {
   return out;
 }
 
-/** `<!-- tabs -->` / `<!-- tab: Title -->` groups -> `=== "Title"` blocks. */
-function convertTabs(lines, warn) {
+/** Drops `<!-- docs:ignore -->` blocks: README content this site does not want. */
+function stripIgnored(lines, warn, fail) {
+  const fenced = fenceMask(lines);
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    if (!/^<!--\s*tabs\s*-->$/.test(lines[i].trim())) {
+    if (fenced[i] || !/^<!--\s*docs:ignore\s*-->$/.test(lines[i].trim())) {
+      out.push(lines[i]);
+      continue;
+    }
+    let closed = false;
+    while (++i < lines.length) {
+      if (/^<!--\s*\/docs:ignore\s*-->$/.test(lines[i].trim())) {
+        closed = true;
+        break;
+      }
+    }
+    if (!closed) fail('unclosed <!-- docs:ignore --> block -- everything after it was dropped');
+    // Collapse the blank line the removed block would otherwise leave behind.
+    if (lines[i + 1]?.trim() === '' && out[out.length - 1]?.trim() === '') i++;
+  }
+  return out;
+}
+
+/** `<!-- tabs -->` / `<!-- tab: Title -->` groups -> `=== "Title"` blocks. */
+function convertTabs(lines, warn, fail) {
+  const fenced = fenceMask(lines);
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (fenced[i] || !/^<!--\s*tabs\s*-->$/.test(lines[i].trim())) {
       out.push(lines[i]);
       continue;
     }
@@ -174,24 +283,24 @@ function convertTabs(lines, warn) {
     let closed = false;
     while (++i < lines.length) {
       const line = lines[i];
-      const tab = line.trim().match(/^<!--\s*tab:\s*(.+?)\s*-->$/);
+      const tab = fenced[i] ? null : line.trim().match(/^<!--\s*tab:\s*(.+?)\s*-->$/);
       if (tab) {
         if (current) group.push(current);
         current = { title: tab[1], body: [] };
         continue;
       }
-      if (/^<!--\s*\/tabs\s*-->$/.test(line.trim())) {
+      if (!fenced[i] && /^<!--\s*\/tabs\s*-->$/.test(line.trim())) {
         closed = true;
         break;
       }
       if (!current) {
-        if (line.trim() !== '') warn(`content between <!-- tabs --> and the first tab was dropped`);
+        if (line.trim() !== '') warn(`dropped content between <!-- tabs --> and the first tab: "${line.trim()}"`);
         continue;
       }
       current.body.push(line);
     }
     if (current) group.push(current);
-    if (!closed) warn('unclosed <!-- tabs --> block');
+    if (!closed) fail('unclosed <!-- tabs --> block -- everything after it was swallowed into the last tab');
 
     for (const { title, body } of group) {
       out.push(`=== "${title}"`, '', ...indent(trimBlankEdges(body)), '');
@@ -203,10 +312,13 @@ function convertTabs(lines, warn) {
 }
 
 /** `<!-- details warning: Title -->` -> `??? warning "Title"`. */
-function convertDetails(lines, warn) {
+function convertDetails(lines, warn, fail) {
+  const fenced = fenceMask(lines);
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    const opener = lines[i].trim().match(/^<!--\s*details(?:\s+([A-Za-z]+))?:\s*(.+?)\s*-->$/);
+    const opener = fenced[i]
+      ? null
+      : lines[i].trim().match(/^<!--\s*details(?:\s+([A-Za-z]+))?:\s*(.+?)\s*-->$/);
     if (!opener) {
       out.push(lines[i]);
       continue;
@@ -221,13 +333,13 @@ function convertDetails(lines, warn) {
     const body = [];
     let closed = false;
     while (++i < lines.length) {
-      if (/^<!--\s*\/details\s*-->$/.test(lines[i].trim())) {
+      if (!fenced[i] && /^<!--\s*\/details\s*-->$/.test(lines[i].trim())) {
         closed = true;
         break;
       }
       body.push(lines[i]);
     }
-    if (!closed) warn(`unclosed <!-- details: ${title} --> block`);
+    if (!closed) fail(`unclosed <!-- details: ${title} --> block -- everything after it was swallowed into it`);
 
     out.push(`??? ${type ?? 'note'} "${title}"`, '', ...indent(trimBlankEdges(body)), '');
     if (lines[i + 1]?.trim() === '') i++;
@@ -248,7 +360,8 @@ function trimBlankEdges(lines) {
  * to install.
  */
 function rewriteHeading(lines, { slug, title, warn }) {
-  const index = lines.findIndex((line) => line.startsWith('# '));
+  const fenced = fenceMask(lines);
+  const index = lines.findIndex((line, i) => !fenced[i] && line.startsWith('# '));
   if (index === -1) {
     warn('no H1 found -- page rendered without a title heading');
     return lines;
@@ -260,39 +373,91 @@ function rewriteHeading(lines, { slug, title, warn }) {
     warn(`H1 is "${heading}", expected the package name -- assuming ${pkg}`);
   }
 
-  return [
-    ...lines.slice(0, index),
-    `# ${title}`,
-    '',
-    `Package: \`${pkg}\``,
-    ...lines.slice(index + 1),
-  ];
+  const rest = lines.slice(index + 1);
+  // Without a blank line the package note and the intro run together into one
+  // paragraph.
+  if (rest[0]?.trim() !== '') rest.unshift('');
+
+  return [...lines.slice(0, index), `# ${title}`, '', `Package: \`${pkg}\``, ...rest];
 }
 
-/** Flags links that resolve upstream but not here. */
+/**
+ * Turns the absolute site URLs a README has to use into source-relative links.
+ *
+ * Upstream writes `https://uipath.github.io/uipath-typescript/api/…` so the
+ * link works from an npm page. Left as-is, every cross-page link in a PR
+ * preview would jump to the published site instead of the build under review.
+ * Pointing them back at the source file lets MkDocs resolve them per build.
+ *
+ * The docs/ tree decides which spelling is right -- `x.md` or `x/index.md` --
+ * so this runs after the rest of docs:api has generated the API pages. A
+ * target that does not exist keeps its absolute URL: still correct, just not
+ * preview-local.
+ */
+function localizeSiteLinks(lines, warn) {
+  const absolute = new RegExp(`\\]\\(${SITE_URL.replace(/[.*+?^$()|[\]\\]/g, '\\$&')}([^)\\s#]*)(#[^)]*)?\\)`, 'g');
+  return lines.map((line) =>
+    line.replace(absolute, (whole, path, anchor = '') => {
+      const clean = path.replace(/^\/+|\/+$/g, '');
+      // The bare site root is the docs home page; anything else has to match a
+      // real file, or the link keeps its absolute form.
+      const candidate =
+        clean === ''
+          ? 'index.md'
+          : [`${clean}.md`, `${clean}/index.md`].find((rel) => existsSync(join(DOCS_DIR, rel)));
+      if (!candidate) {
+        warn(`"${SITE_URL}${path}" matches no page under docs/ -- left as an absolute link`);
+        return whole;
+      }
+      return `](../${candidate}${anchor})`;
+    }),
+  );
+}
+
+/**
+ * Flags links that resolve from the README's own directory but not from
+ * docs/react-widgets/ -- a path into the package tree, or a screenshot that
+ * ships with the package and is never copied here.
+ */
 function checkLinks(lines, warn) {
-  const relative = /\]\((?!https?:|#|mailto:)([^)]+\.md(?:#[^)]*)?)\)/g;
-  for (const line of lines) {
-    for (const [, href] of line.matchAll(relative)) {
-      warn(`relative link "${href}" does not resolve on the docs site -- use an absolute ${SITE_URL} URL`);
+  const fenced = fenceMask(lines);
+  const local = /\]\((?!https?:|#|mailto:|data:)([^)\s]+)/g;
+  lines.forEach((line, i) => {
+    if (fenced[i]) return;
+    for (const [, href] of line.matchAll(local)) {
+      // A bare filename is a sibling page in this same directory and resolves.
+      if (!href.includes('/')) continue;
+      warn(`link "${href}" does not resolve on the docs site -- use an absolute ${SITE_URL} URL`);
     }
-  }
+  });
 }
 
-function transform(markdown, { slug, title, warn }) {
+/**
+ * Order matters. Admonitions are matched on a bare `>` at column 0, and tabs
+ * and collapsibles indent whatever they contain -- so admonitions convert
+ * first, and the block passes then indent the `!!!` they produced. Details
+ * before tabs for the same reason: a collapsible inside a tab has to become
+ * `???` before the tab indents it.
+ */
+function transform(markdown, { slug, title, warn, fail }) {
   let lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  if (lines.every((line) => line.trim() === '')) {
+    fail('README is empty');
+  }
+  lines = stripIgnored(lines, warn, fail);
   checkLinks(lines, warn);
+  lines = localizeSiteLinks(lines, warn);
   lines = rewriteHeading(lines, { slug, title, warn });
-  lines = convertTabs(lines, warn);
-  lines = convertDetails(lines, warn);
   lines = convertAdmonitions(lines, warn);
-  return `${lines.join('\n').replace(/\n{3,}$/, '\n')}`;
+  lines = convertDetails(lines, warn, fail);
+  lines = convertTabs(lines, warn, fail);
+  return lines.join('\n').replace(/\n{3,}$/, '\n');
 }
 
+// Slugs are flat (referencedPages rejects anything else), so the directory is
+// made once by the caller and every page is a plain file inside it.
 function writePage(slug, body) {
-  const dest = join(TARGET, `${slug}.md`);
-  mkdirSync(dirname(dest), { recursive: true });
-  writeFileSync(dest, body.endsWith('\n') ? body : `${body}\n`);
+  writeFileSync(join(TARGET, `${slug}.md`), body.endsWith('\n') ? body : `${body}\n`);
 }
 
 function placeholder(slug, title) {
@@ -306,10 +471,15 @@ The fetch was skipped because \`WIDGET_DOCS_OFFLINE\` was set.
 `;
 }
 
-/** Clears the generated pages without touching the ones authored here. */
-function clearGenerated(pages) {
-  for (const slug of pages.keys()) {
-    rmSync(join(TARGET, `${slug}.md`), { force: true });
+/**
+ * Clears every generated page without touching the ones authored here. Sweeps
+ * the directory rather than the current page list, so a page dropped from the
+ * nav does not linger locally and publish as an orphan.
+ */
+function clearGenerated() {
+  mkdirSync(TARGET, { recursive: true });
+  for (const entry of readdirSync(TARGET)) {
+    if (!LOCAL_PAGES.has(entry)) rmSync(join(TARGET, entry), { force: true, recursive: true });
   }
 }
 
@@ -336,12 +506,15 @@ async function main() {
     warnings.push(`${slug}: ${message}`);
     console.warn(`::warning::${REPO} packages/${slug}/README.md -- ${message}`);
   };
+  const fail = (slug, message) => {
+    throw new Error(`${REPO} packages/${slug}/README.md -- ${message}`);
+  };
 
   if (process.env.WIDGET_DOCS_OFFLINE === '1') {
     console.warn(
       '::warning::WIDGET_DOCS_OFFLINE=1 -- skipping the widget docs fetch. Writing placeholder pages; the React Widgets section will not show real content.',
     );
-    clearGenerated(pages);
+    clearGenerated();
     for (const [slug, title] of pages) writePage(slug, placeholder(slug, title));
     return;
   }
@@ -365,30 +538,47 @@ async function main() {
       try {
         markdown = await (await gh(url, { token, accept: 'application/vnd.github.raw' })).text();
       } catch (error) {
+        // Only a 404 means the page is really gone. A 403 rate limit or a 5xx
+        // says nothing about the README, and telling the maintainer to edit
+        // mkdocs.yml would send them after the wrong thing.
+        if (error.status !== 404) throw error;
         throw new Error(
           `${REPO}@${sha} has no packages/${slug}/README.md, which mkdocs.yml references as react-widgets/${slug}.md. ` +
-            `Update the React Widgets nav entries in mkdocs.yml, or restore the package. (${error.message})`,
+            `Update the React Widgets nav entries in mkdocs.yml, or restore the package.`,
         );
       }
-      return [slug, transform(markdown, { slug, title, warn: (m) => warn(slug, m) })];
+      return [
+        slug,
+        transform(markdown, {
+          slug,
+          title,
+          warn: (m) => warn(slug, m),
+          fail: (m) => fail(slug, m),
+        }),
+      ];
     }),
   );
 
-  clearGenerated(pages);
+  clearGenerated();
   for (const [slug, body] of fetched) writePage(slug, body);
 
   // Drift the other way: a package added upstream that nothing here references
-  // is invisible on the site.
-  const upstream = await (
-    await gh(`https://api.github.com/repos/${REPO}/contents/packages?ref=${sha}`, { token })
-  ).json();
-  for (const entry of upstream) {
-    if (entry.type === 'dir' && !pages.has(entry.name)) {
-      console.warn(
-        `::warning::${REPO}@${sha.slice(0, 7)} provides packages/${entry.name}, which mkdocs.yml does not reference. ` +
-          `It is absent from the site -- add a React Widgets nav entry for react-widgets/${entry.name}.md.`,
-      );
+  // is invisible on the site. Advisory only -- the pages are already written
+  // and correct, so a hiccup on this one call must not fail the build.
+  try {
+    const upstream = await (
+      await gh(`https://api.github.com/repos/${REPO}/contents/packages?ref=${sha}`, { token })
+    ).json();
+    for (const entry of Array.isArray(upstream) ? upstream : []) {
+      if (entry.type === 'dir' && !pages.has(entry.name)) {
+        console.warn(
+          `::warning::${REPO}@${sha.slice(0, 7)} provides packages/${entry.name}, which mkdocs.yml does not reference. ` +
+            `It is absent from the site -- add a React Widgets nav entry for react-widgets/${entry.name}.md.`,
+        );
+      }
     }
+  } catch (error) {
+    console.warn(`::warning::could not list ${REPO} packages to check for unreferenced widgets: ${error.message}`);
   }
 
   console.log(
@@ -397,7 +587,22 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(`::error::${error.message}`);
-  process.exit(1);
-});
+// Exported for tests; the CLI only runs when this file is executed directly,
+// so importing a transform helper never triggers a fetch.
+export {
+  convertAdmonitions,
+  convertDetails,
+  convertTabs,
+  fenceMask,
+  referencedPages,
+  rewriteHeading,
+  stripIgnored,
+  transform,
+};
+
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(`::error::${error.message}`);
+    process.exit(1);
+  });
+}

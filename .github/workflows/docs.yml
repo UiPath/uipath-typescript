@@ -70,10 +70,15 @@ jobs:
           repositories: coded-functions-js
 
       - name: Generate API Documentation
-        # docs:api also fetches the JS Functions pages from
-        # UiPath/coded-functions-js using the token minted above.
+        # docs:api also pulls in two sections authored elsewhere: the JS
+        # Functions pages from UiPath/coded-functions-js, using the token
+        # minted above, and the React Widgets pages from the package READMEs in
+        # UiPath/uipath-ui-widgets. That repo is public, so GITHUB_TOKEN is
+        # enough -- it is only there to lift the 60/hr unauthenticated limit,
+        # which a shared-IP runner burns through quickly.
         env:
           CODED_FUNCTIONS_DOCS_TOKEN: ${{ steps.js_functions_docs_token.outputs.token }}
+          WIDGET_DOCS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run docs:api
 
       - name: Build MkDocs Documentation
