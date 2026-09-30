@@ -260,6 +260,11 @@ const serviceEntries = [
     output: 'business-apps/index'
   },
   {
+    name: 'case-app',
+    input: 'src/services/maestro/case-app/index.ts',
+    output: 'case-app/index'
+  },
+  {
     name: 'users',
     input: 'src/services/platform/users/index.ts',
     output: 'users/index'

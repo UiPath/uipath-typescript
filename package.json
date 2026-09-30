@@ -276,6 +276,16 @@
                 "default": "./dist/business-apps/index.cjs"
             }
         },
+        "./case-app": {
+            "import": {
+                "types": "./dist/case-app/index.d.ts",
+                "default": "./dist/case-app/index.mjs"
+            },
+            "require": {
+                "types": "./dist/case-app/index.d.ts",
+                "default": "./dist/case-app/index.cjs"
+            }
+        },
         "./users": {
             "import": {
                 "types": "./dist/users/index.d.ts",

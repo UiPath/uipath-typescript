@@ -171,6 +171,23 @@ Creating a validation action and polling its result both go through the [Documen
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 | `getStagesSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 
+## Maestro Case App
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PIMS` |
+| `getStages()` | `PIMS` |
+| `getSlaSummary()` | `PIMS` |
+| `getCaseJson()` | `PIMS` |
+| `getElementExecutions()` | `PIMS` |
+| `getIncidents()` | `PIMS` |
+| `getAdhocTasks()` | `PIMS` |
+| `triggerAdhocTask()` | `PIMS` |
+| `selectStage()` | `PIMS` |
+| `sendMessage()` | `PIMS` |
+| `close()` | `PIMS` |
+| `reopen()` | `PIMS` |
+
 ## Conversational Agent
 
 To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:
