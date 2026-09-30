@@ -143,14 +143,15 @@ describe('CaseApp Service Unit Tests', () => {
   });
 
   describe('getSlaSummary', () => {
-    it('should return the SLA summary', async () => {
+    it('should return the SLA summary with externalId renamed to caseId', async () => {
       const summary = { caseInstanceId: C.INSTANCE_ID, slaDueTime: C.SLA_DUE_TIME, slaStatus: 'OnTrack' };
-      mockApiClient.get.mockResolvedValue(summary);
+      mockApiClient.get.mockResolvedValue({ ...summary, externalId: C.CASE_ID });
 
       const result = await caseApp.getSlaSummary(C.INSTANCE_ID, C.FOLDER_KEY);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_SLA_SUMMARY(C.INSTANCE_ID), FOLDER_HEADERS);
-      expect(result).toEqual(summary);
+      expect(result).toEqual({ ...summary, caseId: C.CASE_ID });
+      expect((result as unknown as Record<string, unknown>).externalId).toBeUndefined();
     });
 
     it('should propagate API errors', async () => {
@@ -187,6 +188,8 @@ describe('CaseApp Service Unit Tests', () => {
       const [run] = execution.elementRuns;
 
       expect(result.startedTime).toBe(C.STARTED_TIME);
+      expect(result.caseId).toBe(C.CASE_ID);
+      expect((result as unknown as Record<string, unknown>).externalId).toBeUndefined();
       expect(execution.completedTime).toBe(C.COMPLETED_TIME);
       expect(run.startedTime).toBe(C.STARTED_TIME);
       expect((result as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();

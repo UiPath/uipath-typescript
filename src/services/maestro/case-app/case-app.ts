@@ -19,6 +19,7 @@ import type {
 } from '../../../models/maestro/case-app.types';
 import type {
   RawCaseAppInstance,
+  RawCaseAppGetSlaSummaryResponse,
   RawCaseAppAdhocTasksResponse,
   RawCaseAppElementExecution,
   RawCaseAppGetElementExecutionsResponse,
@@ -106,11 +107,11 @@ export class CaseAppService extends BaseService implements CaseAppServiceModel {
 
   @track('CaseApp.GetSlaSummary')
   async getSlaSummary(instanceId: string, folderKey: string): Promise<CaseAppGetSlaSummaryResponse> {
-    const response = await this.get<CaseAppGetSlaSummaryResponse>(
+    const response = await this.get<RawCaseAppGetSlaSummaryResponse>(
       MAESTRO_ENDPOINTS.CASE_APP.GET_SLA_SUMMARY(instanceId),
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
-    return response.data;
+    return transformData(response.data, CaseAppInstanceMap) as unknown as CaseAppGetSlaSummaryResponse;
   }
 
   @track('CaseApp.GetCaseJson')
@@ -139,7 +140,7 @@ export class CaseAppService extends BaseService implements CaseAppServiceModel {
     // Sections carry author-defined details, so only the named time fields are renamed.
     const { elementExecutions, ...envelope } = response.data;
     return {
-      ...(transformData(envelope, TimeFieldTransformMap) as unknown as Omit<
+      ...(transformData(envelope, CaseAppInstanceMap) as unknown as Omit<
         CaseAppGetElementExecutionsResponse,
         'elementExecutions'
       >),
