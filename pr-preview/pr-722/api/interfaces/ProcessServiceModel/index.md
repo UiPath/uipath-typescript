@@ -124,66 +124,43 @@ await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: '
 
 ### start()
 
-#### Call Signature
+> **start**(`processRef`: `ProcessRef`, `options?`: `ProcessStartRefOptions`): `Promise`\<`ProcessStartResponse`[]>
 
-> **start**(`request`: `ProcessStartRequest`, `options?`: `ProcessStartOptions`): `Promise`\<`ProcessStartResponse`[]>
+Starts a process. First fetch the process via `processes.getAll()` or `processes.getByName()` to obtain a name or key to pass in `processRef`.
 
-Starts a process with the specified configuration.
+Folder context and every startInfo field (`jobPriority`, `jobsCount`, `robotIds`, `inputArguments`, etc.) live in `options`. Runtime resource overrides apply on both `{ name }` and `{ key }` — a cross-folder redirect steers both the identity and the folder scoping to the override target.
 
-Folder context can be supplied as `folderId`, `folderKey`, or `folderPath` inside the options.
+#### Parameters
 
-##### Parameters
+- `processRef`: `ProcessRef` — Process identifier — see the variants for their folder-scope requirements
+- `options?`: `ProcessStartRefOptions` — Folder scoping + startInfo fields + optional `expand` / `select` / `filter` / `orderby`
 
-| Parameter  | Type                  | Description                                                                                                                      |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration                                                                                                      |
-| `options?` | `ProcessStartOptions` | Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`) |
-
-##### Returns
+#### Returns
 
 `Promise`\<`ProcessStartResponse`[]>
 
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+Promise resolving to an array of started process instances of [ProcessStartResponse](../ProcessStartResponse/)
 
-##### Example
+#### Example
 
 ```
-// By folder ID
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
+import { JobPriority } from '@uipath/uipath-typescript/processes';
 
-// By folder key (GUID)
-await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+// By process name + folder path
+await processes.start({ name: 'InvoiceReview' }, { folderPath: 'Shared/Live' });
 
-// By folder path
-await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
+// By process key (GUID)
+await processes.start({ key: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' }, { folderKey: '<folderKey>' });
 
-// Start by process name (instead of processKey)
-await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
+// With startInfo options
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', jobPriority: JobPriority.High, jobsCount: 3 },
+);
 
-// With additional options
-await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
+// With expand to include related entities
+await processes.start(
+  { name: 'InvoiceReview' },
+  { folderPath: 'Shared/Live', expand: 'Robot,Machine' },
+);
 ```
-
-#### Call Signature
-
-> **start**(`request`: `ProcessStartRequest`, `folderId`: `number`, `options?`: `RequestOptions`): `Promise`\<`ProcessStartResponse`[]>
-
-Starts a process — positional `folderId` form.
-
-##### Parameters
-
-| Parameter  | Type                  | Description                  |
-| ---------- | --------------------- | ---------------------------- |
-| `request`  | `ProcessStartRequest` | Process start configuration  |
-| `folderId` | `number`              | Required folder ID (numeric) |
-| `options?` | `RequestOptions`      | Optional request options     |
-
-##### Returns
-
-`Promise`\<`ProcessStartResponse`[]>
-
-Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
-
-##### Deprecated
-
-Use the options-object form: `start(request, { folderId })`. See [ProcessStartOptions](../ProcessStartOptions/) for the supported options.
