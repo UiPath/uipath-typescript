@@ -245,6 +245,12 @@ describe('Platform Groups Service Unit Tests', () => {
       expect(mockApiClient.put).not.toHaveBeenCalled();
     });
 
+    it('should throw ValidationError when name is explicitly empty — the API rejects an empty name', async () => {
+      await expect(groupsService.updateById(groupId, { name: '' })).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.put.mockRejectedValue(createMockError(PLATFORM_GROUP_TEST_CONSTANTS.ERROR_GROUP_NOT_FOUND));
 

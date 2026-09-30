@@ -101,8 +101,12 @@ export class PlatformGroupService extends BaseService implements PlatformGroupSe
     if (!groupId) {
       throw new ValidationError({ message: 'groupId is required for updateById' });
     }
-    if (!update || Object.keys(update).length === 0) {
+    if (Object.keys(update).length === 0) {
       throw new ValidationError({ message: 'update must contain at least one field to change' });
+    }
+    // Distinguish "omitted" (keep the current name) from "explicitly empty" (the API rejects it)
+    if (update.name !== undefined && !update.name) {
+      throw new ValidationError({ message: 'name must not be empty when provided for updateById' });
     }
     const organizationId = await this.#organizationIdResolver.resolve();
 
