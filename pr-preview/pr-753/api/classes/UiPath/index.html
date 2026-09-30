@@ -4050,6 +4050,9 @@ Use the modular pattern with <code>@uipath/uipath-typescript/core</code> instead
 <p><strong>new UiPath</strong>(<code>config?</code>: <code>Partial</code>&lt;<a href="../../interfaces/BaseConfig/"><code>BaseConfig</code></a> &amp; <a href="../../interfaces/OAuthFields/"><code>OAuthFields</code></a> &amp; { <code>secret</code>: <code>string</code>; } &amp; <code>LoginFields</code>&gt; | <code>CodedFunctionContext</code>): <code>UiPath</code></p>
 </blockquote>
 <p>Creates a UiPath SDK instance.</p>
+<p>Precedence is per field: the constructor argument wins, then meta tags, then
+the environment. Naming one authentication method drops the other's inherited
+fields; <code>secret</code> beside a complete OAuth set is a fatal configuration error.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

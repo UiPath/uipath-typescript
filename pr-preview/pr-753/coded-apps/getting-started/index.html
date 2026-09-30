@@ -4303,6 +4303,7 @@
 <a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="k">await</span><span class="w"> </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">initialize</span><span class="p">()</span>
 </code></pre></div>
 <p><code>getAppBase()</code> returns the app root injected by the platform, so the URI stays stable regardless of which route the user is on.</p>
+<p>Overrides work per field — <code>clientId</code> and <code>scope</code> still come from the meta tags. Passing <code>secret</code> instead is not a field override: it selects secret authentication for the instance and the injected OAuth fields are dropped.</p>
 </div>
 <hr />
 <h2 id="deploy">Deploy<a class="headerlink" href="#deploy" title="Permanent link">&para;</a></h2>

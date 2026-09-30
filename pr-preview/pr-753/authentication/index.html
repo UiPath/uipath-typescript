@@ -4276,7 +4276,7 @@ organization id, otherwise <code>enforceSso</code> is ignored and a warning is l
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Using externally obtained tokens</p>
-<p>If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the <code>secret</code> parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via <code>sdk.updateToken()</code> to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.</p>
+<p>If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the <code>secret</code> parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via <code>sdk.updateToken()</code> to keep it authenticated. In this setup, token lifecycle management stays entirely on your side. In a deployed coded app the platform has already injected OAuth meta tags; passing <code>secret</code> still selects secret authentication and those injected fields are dropped.</p>
 </div>
 <p>To Generate a PAT Token:</p>
 <ol type="1">
@@ -4361,6 +4361,10 @@ takes precedence over both the environment and meta tags:</p>
 <p>Constructor arguments win over meta tags, which win over the environment.
 Meta tags apply in the browser only; the environment contract applies
 outside it.</p>
+<p>Precedence is per field, so a config passing only <code>secret</code> still inherits any
+injected <code>clientId</code>, <code>redirectUri</code> and <code>scope</code>. Naming one method drops the
+other's inherited fields. If the merge still carries <code>secret</code> beside a
+<strong>complete</strong> OAuth set, the constructor throws, naming each field and its source.</p>
 </div>
 <h2 id="sdk-initialization-the-initialize-method">SDK Initialization - The initialize() Method<a class="headerlink" href="#sdk-initialization-the-initialize-method" title="Permanent link">&para;</a></h2>
 <h3 id="when-to-use-initialize">When to Use initialize()<a class="headerlink" href="#when-to-use-initialize" title="Permanent link">&para;</a></h3>
