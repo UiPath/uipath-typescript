@@ -1,5 +1,5 @@
 /**
- * Platform service model — the ServiceModel interface that drives generated
+ * Platform settings service model — the ServiceModel interface that drives generated
  * API documentation.
  */
 
@@ -7,10 +7,10 @@ import type {
   PlatformSetting,
   PlatformSettingKey,
   PlatformSettingUpsert,
-} from './platform.types';
+} from './settings.types';
 
 /**
- * Public surface of the Platform service.
+ * Public surface of the Settings service.
  *
  * Every operation is user-scoped: `userId` identifies whose settings are read or written.
  *
@@ -19,17 +19,13 @@ import type {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Platform, PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+ * import { Settings, PlatformSettingKey } from '@uipath/uipath-typescript/settings';
  *
- * const platform = new Platform(sdk);
- * const settings = await platform.getUserSettings(
- *   [PlatformSettingKey.UserTheme],
- *   '<userId>',
- *   { organizationId: '<organizationId>' }
- * );
+ * const settings = new Settings(sdk);
+ * const stored = await settings.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
  * ```
  */
-export interface PlatformServiceModel {
+export interface PlatformSettingServiceModel {
   /**
    * Gets a user's platform settings by key.
    *
@@ -45,21 +41,21 @@ export interface PlatformServiceModel {
    * @example Basic usage
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Platform, PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { Settings, PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
    *
-   * const platform = new Platform(sdk);
-   * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
-   * const theme = settings.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
+   * const settings = new Settings(sdk);
+   * const stored = await settings.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
+   * const theme = stored.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
    * ```
    *
    * @example Fetch several keys at once
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * const settings = await platform.getUserSettings(
+   * const stored = await settings.getUserSettings(
    *   [
    *     PlatformSettingKey.UserTheme,
    *     PlatformSettingKey.UserAccessibility,
@@ -69,7 +65,7 @@ export interface PlatformServiceModel {
    * );
    *
    * // Structured settings arrive as a JSON string
-   * const pinned = settings.find(s => s.key === PlatformSettingKey.UserCasePinnedInstancesByTenant);
+   * const pinned = stored.find(s => s.key === PlatformSettingKey.UserCasePinnedInstancesByTenant);
    * const parsed = pinned ? JSON.parse(pinned.value) : {};
    * ```
    */
@@ -89,9 +85,9 @@ export interface PlatformServiceModel {
    *
    * @example Update a setting
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * const updated = await platform.updateUserSettings(
+   * const updated = await settings.updateUserSettings(
    *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
    *   '<userId>'
    * );
@@ -99,9 +95,9 @@ export interface PlatformServiceModel {
    *
    * @example Update several settings at once
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * await platform.updateUserSettings(
+   * await settings.updateUserSettings(
    *   [
    *     { key: PlatformSettingKey.UserTheme, value: 'dark' },
    *     { key: PlatformSettingKey.UserAccessibility, value: 'true' },

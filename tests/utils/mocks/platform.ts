@@ -4,7 +4,7 @@
  * Shapes mirror the real API response captured during onboarding.
  */
 
-import type { RawPlatformSetting } from '../../../src/models/platform/platform.internal-types';
+import type { RawPlatformSetting } from '../../../src/models/platform/settings.internal-types';
 import type {
   RawPlatformUser,
   RawPlatformUserListResponse,

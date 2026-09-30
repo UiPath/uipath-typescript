@@ -1,42 +1,42 @@
 /**
- * PlatformService — reads and writes a user's platform settings.
+ * PlatformSettingService — reads and writes a user's platform settings.
  */
 
-import { track } from '../../core/telemetry';
-import { ValidationError } from '../../core/errors';
-import type { IUiPath } from '../../core/types';
-import { SDKInternalsRegistry } from '../../core/internals';
-import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
-import { BaseService } from '../base';
+import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { OrganizationIdResolver } from '../../../core/organization/organization-id-resolver';
+import { BaseService } from '../../base';
 
 import type {
   PlatformSetting,
   PlatformSettingKey,
   PlatformSettingUpsert,
-} from '../../models/platform/platform.types';
-import type { RawPlatformSetting } from '../../models/platform/platform.internal-types';
-import type { PlatformServiceModel } from '../../models/platform/platform.models';
-import { PlatformSettingMap } from '../../models/platform/platform.constants';
+} from '../../../models/platform/settings.types';
+import type { RawPlatformSetting } from '../../../models/platform/settings.internal-types';
+import type { PlatformSettingServiceModel } from '../../../models/platform/settings.models';
+import { PlatformSettingMap } from '../../../models/platform/settings.constants';
 
-import { PLATFORM_SETTING_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData } from '../../utils/transform';
+import { PLATFORM_SETTING_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { transformData } from '../../../utils/transform';
 
 /**
  * Service for reading and writing UiPath platform settings.
  *
  * Every operation is user-scoped — `userId` is always sent, so reads and writes act on that
  * user's own value for a key. Both operations are bulk:
- * {@link PlatformService.getUserSettings} fetches many keys in one request, and
- * {@link PlatformService.updateUserSettings} upserts many keys in one request.
+ * {@link PlatformSettingService.getUserSettings} fetches many keys in one request, and
+ * {@link PlatformSettingService.updateUserSettings} upserts many keys in one request.
  *
  * Requires the `PM.Setting` scope (or `PM.Setting.Read` / `PM.Setting.Write` for
  * read-only / write-only access).
  */
-export class PlatformService extends BaseService implements PlatformServiceModel {
+export class PlatformSettingService extends BaseService implements PlatformSettingServiceModel {
   readonly #organizationIdResolver: OrganizationIdResolver;
 
   /**
-   * Creates an instance of the Platform service.
+   * Creates an instance of the Settings service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
@@ -47,7 +47,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
     this.#organizationIdResolver = SDKInternalsRegistry.getOrganizationIdResolver(instance);
   }
 
-  @track('Platform.GetUserSettings')
+  @track('PlatformSettings.GetUserSettings')
   async getUserSettings(
     keys: PlatformSettingKey[],
     userId: string
@@ -74,7 +74,7 @@ export class PlatformService extends BaseService implements PlatformServiceModel
     return transformData(response.data, PlatformSettingMap) as unknown as PlatformSetting[];
   }
 
-  @track('Platform.UpdateUserSettings')
+  @track('PlatformSettings.UpdateUserSettings')
   async updateUserSettings(
     settings: PlatformSettingUpsert[],
     userId: string

@@ -1,5 +1,5 @@
 /**
- * Platform service types — request/response shapes for platform settings.
+ * Platform settings types — request/response shapes for a user's platform settings.
  */
 
 /**
