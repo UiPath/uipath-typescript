@@ -53,6 +53,7 @@ describe('FolderService Unit Tests', () => {
       expect((result as any).FolderType).toBeUndefined();
       expect((result as any).ParentId).toBeUndefined();
       expect((result as any).IsActive).toBeUndefined();
+      expect(result).not.toHaveProperty('@odata.context');
     });
 
     it('should call GetByKey with select options and no folder headers', async () => {

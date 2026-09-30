@@ -23,5 +23,6 @@ export const FOLDER_TEST_CONSTANTS = {
     ParentKey: PARENT_KEY,
     FeedType: 'Processes',
     IsActive: true,
+    '@odata.context': 'https://uipath.com/odata/$metadata#Folders',
   },
 } as const;
