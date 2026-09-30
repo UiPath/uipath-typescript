@@ -183,6 +183,12 @@ export interface PlatformGroupMethods {
   /**
    * Updates this group. Only the fields present in `update` are changed.
    *
+   * Membership is edited incrementally through `memberUserIdsToAdd` /
+   * `memberUserIdsToRemove`. The name must be sent on every write, so a
+   * membership-only update (no `name`) first reads the group's current name; a
+   * rename that lands between that read and the write is overwritten with the
+   * earlier name. Pass `name` explicitly to skip the read.
+   *
    * @param update - The fields to change
    * @returns Promise resolving to the group as stored after the update
    */
