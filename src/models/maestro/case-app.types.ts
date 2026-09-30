@@ -60,8 +60,11 @@ export enum CaseAppInstanceSortBy {
 export enum CaseAppElementType {
   /** Human-in-the-loop (Action Center) tasks */
   Hitl = 'hitl',
+  /** AI agents */
   Agent = 'agent',
+  /** Robotic Process Automation (RPA) processes */
   Rpa = 'rpa',
+  /** API workflows */
   ApiWorkflow = 'apiworkflow',
 }
 
