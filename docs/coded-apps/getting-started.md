@@ -275,6 +275,8 @@ await sdk.initialize()
 
     `getAppBase()` returns the app root injected by the platform, so the URI stays stable regardless of which route the user is on.
 
+    Overrides work per field — `clientId` and `scope` still come from the meta tags. Passing `secret` instead is not a field override: it selects secret authentication for the instance and the injected OAuth fields are dropped.
+
 ---
 
 ## Deploy
