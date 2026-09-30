@@ -81,6 +81,19 @@ function activeSpanId(tracing: TracingCapability): string | undefined {
   return isRecord(span) && typeof span.spanId === 'string' ? span.spanId : undefined;
 }
 
+// A host may record asynchronously, so a rejection is caught like a throw.
+function record(tracing: TracingCapability, span: TraceSpan): void {
+  const warn = (error: unknown): void => {
+    console.warn(`[UiPath SDK] The host could not record the ${span.kind}:`, error);
+  };
+
+  try {
+    Promise.resolve(tracing.recordSpan(span)).catch(warn);
+  } catch (error) {
+    warn(error);
+  }
+}
+
 function startCallSpan(traced: TracedMethod): CallSpan | undefined {
   const tracing = hostTracing();
   if (!tracing) {
@@ -109,21 +122,17 @@ function reportCall(span: CallSpan | undefined, label: string, values: object, s
 
   const { tracing, id, parentId, stack, startTime } = span;
 
-  try {
-    tracing.recordSpan({
-      id,
-      parentId,
-      kind: 'call',
-      label,
-      values,
-      stack,
-      startTime,
-      endTime: new Date().toISOString(),
-      status,
-    });
-  } catch (error) {
-    console.warn('[UiPath SDK] The host could not record the call:', error);
-  }
+  record(tracing, {
+    id,
+    parentId,
+    kind: 'call',
+    label,
+    values,
+    stack,
+    startTime,
+    endTime: new Date().toISOString(),
+    status,
+  });
 }
 
 function traceCalls(method: TracedMethod, label: string): TracedMethod {
@@ -234,7 +243,7 @@ export function trace(...args: unknown[]): unknown {
     try {
       const locals = typeof tracing.callerLocals === 'function' ? tracing.callerLocals() : undefined;
       const time = new Date().toISOString();
-      tracing.recordSpan({
+      record(tracing, {
         id: crypto.randomUUID(),
         parentId: activeSpanId(tracing),
         kind: 'marker',

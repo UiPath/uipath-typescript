@@ -189,6 +189,17 @@ describe('trace', () => {
         expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('could not record the marker'), expect.any(Error));
       },
     );
+
+    it('warns, never throwing, when the host rejects while recording the marker', async () => {
+      const failure = hostError();
+      host.tracing.recordSpan.mockImplementation(() => Promise.reject(failure));
+      installHost();
+
+      expect(() => trace(TRACE_TEST_CONSTANTS.LABEL)).not.toThrow();
+      await vi.waitFor(() =>
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('could not record the marker'), failure),
+      );
+    });
   });
 
   describe('as a method decorator', () => {
@@ -357,6 +368,19 @@ describe('trace', () => {
 
       expect(traced()).toBe(true);
       expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('could not record the call'), expect.any(Error));
+    });
+
+    it('keeps the result, and warns, when the host rejects while recording the call', async () => {
+      const failure = hostError();
+      host.tracing.recordSpan.mockImplementation(() => Promise.reject(failure));
+      installHost();
+      const approve = vi.fn(() => true);
+      const traced = trace(approve, methodContext(TRACE_TEST_CONSTANTS.METHOD_NAME, approve));
+
+      expect(traced()).toBe(true);
+      await vi.waitFor(() =>
+        expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('could not record the call'), failure),
+      );
     });
 
     it('leaves a field or an accessor untraced, and warns', () => {
