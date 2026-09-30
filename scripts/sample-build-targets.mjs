@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Prints the sample projects (dirs under samples/ with a committed package.json)
-// to build, as a JSON array for the samples-build.yml matrix.
+// to build, one per line, for scripts/build-samples.sh.
 //
 //   node scripts/sample-build-targets.mjs --changed origin/main   # changed projects only
 //   node scripts/sample-build-targets.mjs --all                   # every project
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Changing the build setup rebuilds every sample.
-export const REBUILD_ALL_FILES = ['.github/workflows/samples-build.yml', 'scripts/sample-build-targets.mjs'];
+export const REBUILD_ALL_FILES = ['scripts/build-samples.sh', 'scripts/sample-build-targets.mjs'];
 
 // Selects every project containing a changed file, parents included: a parent
 // may compile a nested project's files (functions-app → coded-functions).
@@ -27,13 +27,15 @@ function git(args) {
 
 function run() {
   const projectDirs = git(['ls-files', 'samples']).filter(f => f.endsWith('/package.json')).map(dirname);
+  let targets;
   if (process.argv.includes('--all')) {
-    console.log(JSON.stringify([...projectDirs].sort()));
-    return;
+    targets = [...projectDirs].sort();
+  } else {
+    const changedIdx = process.argv.indexOf('--changed');
+    const baseRef = (changedIdx !== -1 && process.argv[changedIdx + 1]) || 'origin/main';
+    targets = buildTargets(projectDirs, git(['diff', '--name-only', `${baseRef}...HEAD`]));
   }
-  const changedIdx = process.argv.indexOf('--changed');
-  const baseRef = (changedIdx !== -1 && process.argv[changedIdx + 1]) || 'origin/main';
-  console.log(JSON.stringify(buildTargets(projectDirs, git(['diff', '--name-only', `${baseRef}...HEAD`]))));
+  if (targets.length) console.log(targets.join('\n'));
 }
 
 // Run only when executed directly, not when imported by tests.
