@@ -233,9 +233,11 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     }, 240_000);
   });
 
+  // Cleanup goes through the v1 close, which folder permissions authorize, so a run that fails
+  // for lack of Case grants still does not leave the seeded instance running.
   afterAll(async () => {
     if (!seededInstanceId) return;
-    await caseApp.close(seededInstanceId, folderKey);
+    await getServices().caseInstances.close(seededInstanceId, folderKey);
     seededInstanceId = null;
   });
 });
