@@ -106,6 +106,10 @@ export interface PlatformGroupServiceModel {
    * current values. Membership is edited incrementally through `memberUserIdsToAdd` /
    * `memberUserIdsToRemove`. Built-in groups cannot be updated.
    *
+   * The name must be sent on every write, so a membership-only update first reads the
+   * group's current name. A rename that lands between that read and the write is
+   * overwritten with the earlier name — pass `name` explicitly to avoid the read.
+   *
    * @param groupId - GUID of the group to update
    * @param update - The fields to change
    * @returns The group as stored after the update, as a {@link PlatformGroupGetResponse}
