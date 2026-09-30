@@ -10,6 +10,7 @@ export * from './choicesets';
 export * from './buckets';
 export * from './processes';
 export * from './assets';
+export * from './folders';
 export * from './queues';
 export * from './pagination';
 export * from './conversational-agent';
