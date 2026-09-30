@@ -22,7 +22,10 @@ export enum FunctionHttpMethod {
 export interface RawFunctionGetResponse {
   /** Unique identifier (GUID) of the function's HTTP endpoint. */
   id: string;
-  /** Function name — unique within a folder. */
+  /**
+   * Function name — unique within a folder. Functions deployed since July 2026
+   * carry their process name as a prefix, e.g. `my-functions_hello`.
+   */
   name: string;
   /** URL path segment of the function within its package. */
   slug: string;
@@ -40,8 +43,12 @@ export interface RawFunctionGetResponse {
   processKey: string;
   /** Display name of the process that packages this function. */
   processName: string;
-  /** URL slug of the process that packages this function. */
-  processSlug: string;
+  /**
+   * URL slug of the process that packages this function. `null` on tenants
+   * where processes have no URL segment of their own, in which case the
+   * function is reached by its `slug` alone.
+   */
+  processSlug: string | null;
   /** ID of the folder the function lives in. */
   folderId: number;
 }
@@ -79,10 +86,18 @@ export interface FunctionInvokeOptions extends FolderScopedOptions {
 }
 
 /**
- * Identifies the function to invoke. Currently only `name` is supported;
- * additional identifiers (for example, `id`) may be added in future releases.
+ * Identifies the function to invoke by name; additional identifiers (for
+ * example, `id`) may be added in future releases.
  */
 export interface FunctionRef {
-  /** Name of the function to invoke (unique within a folder). */
+  /**
+   * Name of the function to invoke: either the name it is declared with in its
+   * source (`hello`) or the full name shown by `getAll` (`my-functions_hello`).
+   */
   name: string;
+  /**
+   * Name of the process the function is deployed as. Only needed when several
+   * processes in the folder declare a function with the same name.
+   */
+  processName?: string;
 }

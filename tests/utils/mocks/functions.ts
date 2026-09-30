@@ -60,6 +60,7 @@ export const createMockRawFunctionTrigger = (
     Enabled: true,
     ReleaseKey: FUNCTION_TEST_CONSTANTS.PROCESS_KEY,
     Name: FUNCTION_TEST_CONSTANTS.NAME,
+    ExternalReference: FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE,
     Description: FUNCTION_TEST_CONSTANTS.DESCRIPTION,
     JobPriority: 45,
     RunAsMe: false,
