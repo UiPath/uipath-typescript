@@ -49,29 +49,27 @@ handler: async (input, ctx) => Promise.race([
 
 ______________________________________________________________________
 
-## GET functions: query-string coercion is automatic for schema-first contracts
+## Text-sourced input: a query string and a path segment are strings
 
-Query string values always arrive as strings. With a schema-first contract — `defineSchema<T>()` or a JSON Schema literal — the runtime coerces them to the declared type before validation, so this just works:
+A URL carries text and nothing else, and the runtime does not convert it. A contract declaring `folderId: number` for a query parameter describes something the request cannot deliver, so validation rejects it. Declare what arrives and convert in the handler, where you also decide what an unconvertible value means:
 
 ```
 interface ListInput {
-  folderId: number;   // "123" arrives as a string; the runtime coerces it to 123
+  folderId: string;   // "123" arrives as text, because that is what a query string carries
 }
 
-input: defineSchema<ListInput>()
+handler: (input) => {
+  const folderId = Number(input.folderId);
+  if (!Number.isInteger(folderId)) {
+    return { status: 400, body: { error: "folderId must be an integer" } };
+  }
+  ...
+}
 ```
 
-Only functions still using a **zod** schema must opt into coercion themselves — a plain `z.number()` fails validation on any GET input:
+The same holds for a path segment on any verb. A **JSON body** is unaffected: it carries its own types, so `{"folderId": 123}` is a number and `{"folderId": "123"}` is rejected.
 
-```
-// ❌ validation error with zod — "123" is a string, not a number
-input: z.object({ folderId: z.number() })
-
-// ✅ zod-authored functions need z.coerce
-input: z.object({ folderId: z.coerce.number() })
-```
-
-This does not apply to POST functions — JSON body values preserve their types.
+A zod contract follows the same rule, and can state the conversion itself: `z.number()` rejects a query value, `z.coerce.number()` accepts and converts it.
 
 ______________________________________________________________________
 

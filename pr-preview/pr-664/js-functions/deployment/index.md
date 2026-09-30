@@ -26,7 +26,7 @@ ______________________________________________________________________
 
 ## Pack
 
-`uip functions pack` reads your `defineFunction` calls and generates two manifest files before zipping everything into a `.nupkg`.
+`uip functions pack` reads each function file's default-exported `defineFunction` and generates two manifest files before zipping everything into a `.nupkg`.
 
 ### What pack generates
 
@@ -84,7 +84,7 @@ One `HttpTrigger` resource per function. Non-HttpTrigger resources (Storage, Que
 
 ### defineFunction → API Trigger field mapping
 
-Each `defineFunction` call maps directly to one API Trigger in Orchestrator:
+Each function file's default-exported `defineFunction` maps to one API Trigger in Orchestrator:
 
 | `defineFunction` field | Orchestrator API Trigger field                 |
 | ---------------------- | ---------------------------------------------- |
