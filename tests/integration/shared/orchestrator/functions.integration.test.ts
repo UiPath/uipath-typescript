@@ -126,6 +126,23 @@ describeIntegration('Functions - Integration Tests', 'both', modes, () => {
       expect(output).toBeDefined();
     });
 
+    it('should invoke by the name declared in source when the stored name is process-prefixed', async () => {
+      // Functions deployed since July 2026 are stored as `<process name>_<name>`;
+      // older ones keep the bare name, which this reduces to unchanged.
+      const prefix = `${seededFunction.processName}_`;
+      const declaredName = seededFunction.name.startsWith(prefix)
+        ? seededFunction.name.slice(prefix.length)
+        : seededFunction.name;
+
+      const output = await functions.invoke<Record<string, unknown>, unknown>(
+        { name: declaredName, processName: seededFunction.processName },
+        {},
+        { folderId },
+      );
+
+      expect(output).toBeDefined();
+    });
+
     it('should invoke via the bound method on a function response', async () => {
       const output = await seededFunction.invoke({});
 
