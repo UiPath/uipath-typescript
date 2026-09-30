@@ -604,6 +604,8 @@
       
         
       
+        
+      
     
     
     
@@ -1422,6 +1424,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../DuValidationServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Understanding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../FunctionServiceModel/" class="md-nav__link">
         
   
@@ -1498,10 +1528,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_10" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_9" id="__nav_2_1_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_10" id="__nav_2_1_10_label" tabindex="0">
             
   
   
@@ -1519,8 +1549,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_9">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1709,10 +1739,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_11" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_12" checked>
         
           
-          <label class="md-nav__link" for="__nav_2_1_11" id="__nav_2_1_11_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
             
   
   
@@ -1730,8 +1760,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_11_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_1_11">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2109,7 +2139,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_14" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_15" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2131,14 +2161,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_14" id="__nav_2_1_14_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_15" id="__nav_2_1_15_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_14">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_15">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2211,7 +2241,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_15" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_16" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2233,14 +2263,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_15" id="__nav_2_1_15_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_16" id="__nav_2_1_16_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_15">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_16">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4180,6 +4210,9 @@ Everyone) is not materialized — they report no local members.</p>
 <p>Only the fields present in <code>update</code> are changed — omitted fields keep their
 current values. Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
 <code>memberUserIdsToRemove</code>. Built-in groups cannot be updated.</p>
+<p>The name must be sent on every write, so a membership-only update first reads the
+group's current name. A rename that lands between that read and the write is
+overwritten with the earlier name — pass <code>name</code> explicitly to avoid the read.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

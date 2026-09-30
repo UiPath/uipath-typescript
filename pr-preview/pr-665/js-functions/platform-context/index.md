@@ -121,7 +121,9 @@ Path parameters work identically in local `serve` and when deployed. `path` beco
     "details": { "formErrors": ["must NOT have additional properties"], "fieldErrors": {} } }
   ```
 
-Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all. Values coerce to the declared type (`id: number` on `/users/:id{[0-9]+}` arrives as a number), whereas `ctx.params` is always strings.
+Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all.
+
+- **Declare a path param as a `string`,** and convert it in the handler. A URL carries text, and the contract states what arrives, so `input.id` is the segment as sent. The same holds for a `GET` query string. See [text-sourced input](../production-rules/#text-sourced-input-a-query-string-and-a-path-segment-are-strings).
 
 A function with **no** `input` schema receives the path params alone as its input.
 
