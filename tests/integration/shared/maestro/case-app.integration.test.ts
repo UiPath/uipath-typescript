@@ -5,7 +5,9 @@ import type { CaseAppInstanceGetResponse } from '../../../../src/models/maestro'
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Maestro Case App - Integration Tests', 'both', modes, () => {
+// 'user': the v3 routes authorize through the caller's Case persona grants, and the grant lookup
+// fails closed with 403 for a PAT, so this suite runs under the user token only.
+describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () => {
   let caseApp!: CaseApp;
   let folderKey!: string;
   let instance!: CaseAppInstanceGetResponse;
