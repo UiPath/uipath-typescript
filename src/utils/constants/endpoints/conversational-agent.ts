@@ -54,7 +54,8 @@ export const AGENT_ENDPOINTS = {
   LIST: `${AUTOPILOT_BASE}/api/${API_VERSION}/agent`,
   GET: (folderId: number, agentId: number) => `${AUTOPILOT_BASE}/api/${API_VERSION}/agent/${folderId}/${agentId}`,
   CONNECTIONS: (folderId: number, agentId: number) => `${AUTOPILOT_BASE}/api/${API_VERSION}/agent/${folderId}/${agentId}/connections`,
-  CONNECTION_AUTH: `${AUTOPILOT_BASE}/api/${API_VERSION}/agent/connections/auth`
+  CONNECTION_AUTH: `${AUTOPILOT_BASE}/api/${API_VERSION}/agent/connections/auth`,
+  CONNECTION_SESSION_STATUS: (sessionId: string) => `${AUTOPILOT_BASE}/api/${API_VERSION}/agent/connections/sessions/${sessionId}`
 } as const;
 
 /**
