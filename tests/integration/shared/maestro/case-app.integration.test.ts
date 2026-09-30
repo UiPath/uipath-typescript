@@ -19,6 +19,11 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 'user': the v3 routes authorize through the caller's Case persona grants, and the grant lookup
 // fails closed with 403 for a PAT, so this suite runs under the user token only.
+//
+// skip: the CI integration user holds no Case persona grants in the test tenant, so getAll returns
+// no instances and every write is rejected with 403. Re-enable once that user is assigned a Case
+// persona (Cases.View, ViewSummary, RunAdhocTasks, SelectStage, Close, Reopen) on the
+// MAESTRO_TEST_CASE_PROCESS_KEY and MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY processes.
 describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () => {
   let caseApp!: CaseApp;
   let folderKey!: string;
@@ -240,4 +245,4 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     await getServices().caseInstances.close(seededInstanceId, folderKey);
     seededInstanceId = null;
   });
-});
+}, { skip: true });
