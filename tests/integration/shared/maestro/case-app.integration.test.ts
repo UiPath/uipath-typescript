@@ -56,6 +56,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'both', modes, () =>
 
       expect(result.caseInstanceId).toBe(instance.instanceId);
       expect(result.instanceStatus).toBeDefined();
+      expect((result as unknown as Record<string, unknown>).externalId).toBeUndefined();
     });
   });
 

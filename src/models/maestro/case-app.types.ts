@@ -179,7 +179,7 @@ export interface CaseAppGetSlaSummaryResponse {
   folderKey: string | null;
   name: string | null;
   /** Human-readable case reference number */
-  externalId: string | null;
+  caseId: string | null;
   caseSummary: string | null;
   processKey: string | null;
   /** SLA deadline in UTC (ISO 8601) */
@@ -277,7 +277,7 @@ export interface CaseAppGetElementExecutionsResponse {
   instanceId: string;
   instanceDisplayName: string;
   /** Human-readable case reference number */
-  externalId: string | null;
+  caseId: string | null;
   organizationId: string;
   tenantId: string;
   folderKey: string;
