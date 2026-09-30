@@ -26,7 +26,8 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
-import { Platform, Directory } from '../../../src/services/platform';
+import { Platform } from '../../../src/services/platform';
+import { Directory } from '../../../src/services/platform/directory';
 import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';

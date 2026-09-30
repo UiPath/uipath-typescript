@@ -307,7 +307,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `deleteById()` | `PM.Group` or `PM.Group.Write` |
 | `getMembers()` | `PM.Group` or `PM.Group.Read` |
 
-## Platform Directory
+## Directory
 
 | Method | OAuth Scope |
 |--------|-------------|

@@ -56,8 +56,6 @@ export interface PlatformDirectoryEntry {
  * Options for `directory.search()`.
  */
 export interface PlatformDirectorySearchOptions {
-  /** Returns only principals whose name starts with the text. */
-  startsWith?: string;
   /** Returns only principals of this kind. */
   entityType?: PlatformDirectoryEntityType;
   /** Returns only principals from these sources. */

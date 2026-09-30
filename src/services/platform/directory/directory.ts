@@ -3,32 +3,32 @@
  * membership questions.
  */
 
-import { track } from '../../core/telemetry';
-import { ValidationError } from '../../core/errors';
-import type { IUiPath } from '../../core/types';
-import { SDKInternalsRegistry } from '../../core/internals';
-import type { OrganizationIdResolver } from '../../core/organization/organization-id-resolver';
-import { BaseService } from '../base';
+import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
+import type { OrganizationIdResolver } from '../../../core/organization/organization-id-resolver';
+import { BaseService } from '../../base';
 
 import type {
   PlatformDirectoryEntry,
   PlatformDirectorySearchOptions,
   PlatformDirectoryGroup,
-} from '../../models/platform/directory.types';
+} from '../../../models/platform/directory.types';
 import type {
   RawPlatformDirectoryEntry,
   RawPlatformDirectoryGroup,
-} from '../../models/platform/directory.internal-types';
-import type { PlatformDirectoryServiceModel } from '../../models/platform/directory.models';
+} from '../../../models/platform/directory.internal-types';
+import type { PlatformDirectoryServiceModel } from '../../../models/platform/directory.models';
 import {
   PlatformDirectoryEntryMap,
   PlatformDirectoryGroupMap,
   PlatformDirectoryEntityTypeMap,
-} from '../../models/platform/directory.constants';
+} from '../../../models/platform/directory.constants';
 
-import { IDENTITY_DIRECTORY_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData, applyDataTransforms } from '../../utils/transform';
-import { createParams } from '../../utils/http/params';
+import { IDENTITY_DIRECTORY_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { transformData, applyDataTransforms } from '../../../utils/transform';
+import { createParams } from '../../../utils/http/params';
 
 /**
  * Service for looking up an organization's principals — users, groups, and
@@ -49,11 +49,14 @@ export class PlatformDirectoryService extends BaseService implements PlatformDir
   }
 
   @track('PlatformDirectory.Search')
-  async search(options?: PlatformDirectorySearchOptions): Promise<PlatformDirectoryEntry[]> {
+  async search(startsWith: string, options?: PlatformDirectorySearchOptions): Promise<PlatformDirectoryEntry[]> {
+    if (!startsWith) {
+      throw new ValidationError({ message: 'startsWith is required for search' });
+    }
     const organizationId = await this.#organizationIdResolver.resolve();
 
     const params = {
-      ...createParams({ startsWith: options?.startsWith, entityType: options?.entityType }),
+      ...createParams({ startsWith, entityType: options?.entityType }),
       // The API calls the source narrowing "sourceFilter"
       ...(options?.sources !== undefined && { sourceFilter: options.sources }),
     };

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { describeIntegration, getServices, getTestConfig, InitMode } from '../../config/unified-setup';
-import { Directory } from '../../../../src/services/platform';
+import { Directory } from '../../../../src/services/platform/directory';
 import { Groups } from '../../../../src/services/platform/groups';
 import { PlatformDirectoryEntityType, PlatformDirectorySource } from '../../../../src/models/platform';
 import type { PlatformGroupGetResponse } from '../../../../src/models/platform';
@@ -8,7 +8,7 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
-describeIntegration('Platform Directory - Integration Tests', 'both', modes, () => {
+describeIntegration('Directory - Integration Tests', 'both', modes, () => {
   let directory!: Directory;
   let groups!: Groups;
   let readOnlyUserId!: string;
@@ -20,7 +20,7 @@ describeIntegration('Platform Directory - Integration Tests', 'both', modes, () 
     const directoryService = getServices().platformDirectory;
     const groupsService = getServices().platformGroups;
     if (!directoryService || !groupsService) {
-      throw new Error('Platform Directory/Groups services are not registered for this init mode');
+      throw new Error('Directory/Groups services are not registered for this init mode');
     }
     directory = directoryService;
     groups = groupsService;
@@ -47,8 +47,7 @@ describeIntegration('Platform Directory - Integration Tests', 'both', modes, () 
 
   describe('search', () => {
     it('should find a known group by name prefix', async () => {
-      const results = await directory.search({
-        startsWith: 'Administrator',
+      const results = await directory.search('Administrator', {
         entityType: PlatformDirectoryEntityType.Group,
       });
 
@@ -60,7 +59,8 @@ describeIntegration('Platform Directory - Integration Tests', 'both', modes, () 
     });
 
     it('should apply the SDK transforms against the live response', async () => {
-      const results = await directory.search({ startsWith: 'Administrator' });
+      const results = await directory.search('Administrator');
+      if (!results.length) throw new Error('Expected at least one principal matching "Administrator" — check the test environment');
       const entry = results[0];
 
       // Renamed fields carry values
@@ -75,8 +75,7 @@ describeIntegration('Platform Directory - Integration Tests', 'both', modes, () 
     });
 
     it('should narrow results with sourceFilter', async () => {
-      const results = await directory.search({
-        startsWith: 'sdk-it-',
+      const results = await directory.search('sdk-it-', {
         sources: [PlatformDirectorySource.LocalGroups],
       });
 
