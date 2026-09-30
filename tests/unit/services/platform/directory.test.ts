@@ -6,7 +6,7 @@ import {
   Directory,
   PlatformDirectoryEntityType,
   PlatformDirectorySource,
-} from '../../../../src/services/platform';
+} from '../../../../src/services/platform/directory';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ValidationError } from '../../../../src/core/errors';
 import {
@@ -25,7 +25,7 @@ import { IDENTITY_DIRECTORY_ENDPOINTS } from '../../../../src/utils/constants/en
 vi.mock('../../../../src/core/http/api-client');
 
 // ===== TEST SUITE =====
-describe('Platform Directory Service Unit Tests', () => {
+describe('Directory Service Unit Tests', () => {
   let directoryService: Directory;
   let mockApiClient: ReturnType<typeof createMockApiClient>;
 
@@ -59,9 +59,9 @@ describe('Platform Directory Service Unit Tests', () => {
       const { instance } = createServiceTestDependencies({ organizationId });
       mockApiClient.get.mockResolvedValue([]);
 
-      await new Directory(instance).search();
+      await new Directory(instance).search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
       const resolver = getPrivateSDK(instance).organizationIdResolver;
-      await new Directory(instance).search();
+      await new Directory(instance).search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
 
       expect(resolver).toBeDefined();
       expect(getPrivateSDK(instance).organizationIdResolver).toBe(resolver);
@@ -71,7 +71,7 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should GET the search endpoint and apply the transform pipeline', async () => {
       mockApiClient.get.mockResolvedValue([createBasicRawPlatformDirectoryEntry()]);
 
-      const results = await directoryService.search();
+      const results = await directoryService.search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
 
       expect(mockApiClient.get.mock.calls[0][0]).toBe(IDENTITY_DIRECTORY_ENDPOINTS.SEARCH(organizationId));
       expect(results).toHaveLength(1);
@@ -93,7 +93,7 @@ describe('Platform Directory Service Unit Tests', () => {
         createBasicRawPlatformDirectoryEntry({ type: 2, objectType: 'Application' }),
       ]);
 
-      const results = await directoryService.search();
+      const results = await directoryService.search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
 
       expect(results[0].type).toBe(PlatformDirectoryEntityType.Group);
       expect(results[1].type).toBe(PlatformDirectoryEntityType.Application);
@@ -102,8 +102,7 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should send filters under the wire param names', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      await directoryService.search({
-        startsWith: PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX,
+      await directoryService.search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX, {
         entityType: PlatformDirectoryEntityType.Group,
         sources: [PlatformDirectorySource.LocalGroups, PlatformDirectorySource.DirectoryGroups],
       });
@@ -115,13 +114,13 @@ describe('Platform Directory Service Unit Tests', () => {
       expect(spec.params).not.toHaveProperty('sources');
     });
 
-    it('should omit filter params that are not provided', async () => {
+    it('should send only the prefix when no options are given', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      await directoryService.search();
+      await directoryService.search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
-      expect(spec.params).not.toHaveProperty('startsWith');
+      expect(spec.params.startsWith).toBe(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX);
       expect(spec.params).not.toHaveProperty('entityType');
       expect(spec.params).not.toHaveProperty('sourceFilter');
     });
@@ -129,16 +128,20 @@ describe('Platform Directory Service Unit Tests', () => {
     it('should return an empty array when nothing matches', async () => {
       mockApiClient.get.mockResolvedValue([]);
 
-      const results = await directoryService.search({ startsWith: 'zzz' });
+      const results = await directoryService.search('zzz');
 
       expect(results).toEqual([]);
     });
 
+    it('should throw ValidationError when startsWith is empty — the API requires a search term', async () => {
+      await expect(directoryService.search('')).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN));
 
-      await expect(directoryService.search()).rejects.toThrow(
+      await expect(directoryService.search(PLATFORM_DIRECTORY_TEST_CONSTANTS.SEARCH_PREFIX)).rejects.toThrow(
         PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN
       );
     });
@@ -183,7 +186,6 @@ describe('Platform Directory Service Unit Tests', () => {
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
-
 
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(PLATFORM_DIRECTORY_TEST_CONSTANTS.ERROR_DIRECTORY_FORBIDDEN));
