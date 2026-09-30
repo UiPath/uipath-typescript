@@ -797,6 +797,22 @@
          <lastmod>2026-09-30</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderFeedType/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderPermissionModel/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderProvisionType/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderType/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FunctionHttpMethod/</loc>
          <lastmod>2026-09-30</lastmod>
     </url>
@@ -2441,6 +2457,14 @@
          <lastmod>2026-09-30</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderGetByKeyOptions/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderGetResponse/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderProperties/</loc>
          <lastmod>2026-09-30</lastmod>
     </url>
@@ -2450,6 +2474,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderScopingOnly/</loc>
+         <lastmod>2026-09-30</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderServiceModel/</loc>
          <lastmod>2026-09-30</lastmod>
     </url>
     <url>
