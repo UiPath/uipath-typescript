@@ -71,7 +71,7 @@ export default defineFunction({
 });
 ```
 
-`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest.
+`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest. Write it in place in the `defineFunction(...)` call that the file default-exports, as above; that call may also sit in a `const` the file exports as default and uses nowhere else. Anywhere else, declare `input`/`output` as a JSON Schema literal or a validator.
 
 **JavaScript — write the JSON Schema literal directly:**
 
@@ -161,7 +161,7 @@ No `$ref`/`$defs`, no custom keywords, no custom format functions — a contract
 The runtime compiles the contract with ajv (ajv never appears in your project):
 
 - **Input** is validated before the handler runs; failures return `400` with per-field errors.
-- **GET query strings** are coerced to their schema types (`"42"` → `42`, `"true"` → `true`).
+- **Values are validated as they arrive.** Query and path values are strings; declare them as `string` and convert in the handler (see [path parameters](../../platform-context/#path-parameters)).
 - **`default`** values are filled into missing input fields.
 - **Output** (when declared) is validated after the handler; failures return `500`.
 
