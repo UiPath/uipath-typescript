@@ -43,12 +43,8 @@ export interface RawFunctionGetResponse {
   processKey: string;
   /** Display name of the process that packages this function. */
   processName: string;
-  /**
-   * URL slug of the process that packages this function. `null` on tenants
-   * where processes have no URL segment of their own, in which case the
-   * function is reached by its `slug` alone.
-   */
-  processSlug: string | null;
+  /** URL slug of the process that packages this function. */
+  processSlug: string;
   /** ID of the folder the function lives in. */
   folderId: number;
 }
