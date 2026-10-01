@@ -469,8 +469,7 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
     // Note: We don't cleanup test instances as they may be pre-existing
   });
 }, {
-  // PIMS list and lookup calls stall past 30 s under load on the CI tenant (a
-  // pageSize: 1 getAll timed out with no other run on the tenant); same budget
-  // as the other Maestro suites. No retries, no assertion changes.
-  timeout: 120_000,
+  // PIMS answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });

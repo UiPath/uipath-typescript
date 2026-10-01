@@ -306,8 +306,7 @@ describeIntegration('Maestro Processes - Integration Tests', 'both', modes, (_mo
     });
   });
 }, {
-  // The Insights block (getTop*, *Timeline, getElementStats) calls insightsrtm_,
-  // whose aggregations regularly take 15-30 s server-side on the CI tenant, so
-  // vitest's 30 s default fails healthy responses. No retries, no assertion changes.
-  timeout: 120_000,
+  // insightsrtm_ (the Insights block) answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });

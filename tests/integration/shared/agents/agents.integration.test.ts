@@ -401,8 +401,7 @@ describeIntegration('Agents - Integration Tests', 'user', modes, () => {
     });
   });
 }, {
-  // insightsrtm_ aggregations regularly take 15-30 s server-side on the CI tenant,
-  // so vitest's 30 s default fails healthy responses. Same budget as the Action
-  // Center suite; no retries, no assertion changes.
-  timeout: 120_000,
+  // insightsrtm_ answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });
