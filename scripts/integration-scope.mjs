@@ -2,7 +2,8 @@
 // Picks the integration suites a PR needs from its changed files: a change under
 // src/services/<name>, src/models/<name> or tests/integration/shared/<name> runs
 // tests/integration/shared/<name>; docs/samples/packages/unit tests run nothing;
-// anything else runs everything. Usage: --base <ref> | --files <list> | --all.
+// anything else runs everything.
+// Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -11,14 +12,14 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHARED = 'tests/integration/shared';
 
-/** Run whenever any suite runs. */
+/** Run whenever any suite runs; a change to one of them runs just these. */
 export const ALWAYS_ON = Object.freeze([
   `${SHARED}/smoke.integration.test.ts`,
   `${SHARED}/http`,
   'tests/integration/auth-errors.integration.test.ts',
 ]);
 
-/** PR label that forces the full run. */
+/** PR label that forces the full run; the workflow hands the PR's labels over via --labels. */
 export const FULL_RUN_LABEL = 'ci:full-integration';
 
 const IGNORED_PATTERNS = [
@@ -27,6 +28,8 @@ const IGNORED_PATTERNS = [
   /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example)$/,
 ];
 const DOMAIN_PATH = /^(?:src\/services|src\/models|tests\/integration\/shared)\/([^/]+)\//;
+
+const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
 
 /** Suite folders, minus the always-on ones. */
 export function suites() {
@@ -39,9 +42,10 @@ export function suites() {
 /** One path → { kind: 'ignore' | 'always-on' | 'domain' | 'all' }. */
 export function classify(file, domains) {
   if (IGNORED_PATTERNS.some(pattern => pattern.test(file))) return { kind: 'ignore' };
+  if (isAlwaysOn(file)) return { kind: 'always-on' };
   const domain = file.match(DOMAIN_PATH)?.[1];
   if (domain && domains.includes(domain)) return { kind: 'domain', domain };
-  if (domain && ALWAYS_ON.includes(`${SHARED}/${domain}`)) return { kind: 'always-on' };
+  if (domain) return { kind: 'all', reason: `${file}: no suite folder ${SHARED}/${domain}` };
   return { kind: 'all', reason: `${file} is outside the per-domain folders` };
 }
 
@@ -74,14 +78,17 @@ export function toOutputs(scope) {
 
 // ---- CLI ----
 
-function changedFiles(argv) {
+/** argv → { scope } when the answer is fixed up front, else { files } to classify. */
+export function resolveArgs(argv) {
   const at = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
   if (argv.includes('--all')) return { scope: fullScope('full run requested') };
+  const labels = (at('--labels') ?? '').split(',').map(l => l.trim()).filter(Boolean);
+  if (labels.includes(FULL_RUN_LABEL)) return { scope: fullScope(`the PR carries the ${FULL_RUN_LABEL} label`) };
   const list = at('--files');
   if (list) return { files: readFileSync(list, 'utf8').split('\n').map(l => l.trim()).filter(Boolean) };
   const base = at('--base');
   if (!base) {
-    console.error('usage: integration-scope.mjs (--base <ref> | --files <list> | --all)');
+    console.error('usage: integration-scope.mjs (--base <ref> [--labels <a,b,...>] | --files <list> | --all)');
     process.exit(2);
   }
   try {
@@ -95,7 +102,7 @@ function changedFiles(argv) {
 }
 
 function run() {
-  const { files, scope: forced } = changedFiles(process.argv.slice(2));
+  const { files, scope: forced } = resolveArgs(process.argv.slice(2));
   const scope = forced ?? resolveScope(files);
   const outputs = toOutputs(scope);
 

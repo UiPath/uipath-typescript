@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 // The PR integration-test scoping rules. Imported directly (the script only runs
 // its CLI when executed as main), so the pure resolver is exercised here.
-import { ALWAYS_ON, classify, resolveScope, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
+import { ALWAYS_ON, FULL_RUN_LABEL, classify, resolveArgs, resolveScope, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
 
 const SHARED = 'tests/integration/shared';
 const DOMAINS = ['action-center', 'data-fabric', 'maestro', 'orchestrator'];
@@ -42,8 +42,12 @@ describe('integration-scope resolveScope', () => {
     ]);
   });
 
-  it('runs only the always-on suites when they are what changed', () => {
-    const scope = resolveScope([`${SHARED}/http/http-request.integration.test.ts`], DOMAINS);
+  it.each([
+    `${SHARED}/smoke.integration.test.ts`,
+    `${SHARED}/http/http-request.integration.test.ts`,
+    'tests/integration/auth-errors.integration.test.ts',
+  ])('runs only the always-on suites when one of them changes: %s', (file) => {
+    const scope = resolveScope([file], DOMAINS);
     expect(scope).toMatchObject({ run: true, all: false, domains: [], paths: [...ALWAYS_ON] });
     expect(toOutputs(scope)[2]).toBe('scope=always-on');
   });
@@ -59,7 +63,8 @@ describe('integration-scope resolveScope', () => {
     'tests/integration/config/unified-setup.ts',
     'tests/integration/utils/helpers.ts',
     'tests/utils/constants/agents.ts', // imported by the agents suites
-    `${SHARED}/smoke.integration.test.ts`,
+    `${SHARED}/loose.integration.test.ts`, // a loose file that is not always-on
+    `${SHARED}/http-extras/x.integration.test.ts`, // a prefix of an always-on folder is not it
     `${SHARED}/brand-new-domain/x.integration.test.ts`,
     'vitest.integration.config.ts',
     'package.json',
@@ -73,6 +78,11 @@ describe('integration-scope resolveScope', () => {
     expect(toOutputs(scope)).toEqual(['run_integration=true', 'test_paths=', 'scope=all']);
   });
 
+  it('runs everything for a version-bump PR', () => {
+    const scope = resolveScope(['package.json', 'package-lock.json', 'release-metadata.json'], DOMAINS);
+    expect(scope).toMatchObject({ run: true, all: true });
+  });
+
   it('lets a single shared file override any number of scoped ones', () => {
     const scope = resolveScope(['src/services/data-fabric/entities.ts', 'src/core/config.ts'], DOMAINS);
     expect(scope).toMatchObject({ all: true, domains: [] });
@@ -81,6 +91,29 @@ describe('integration-scope resolveScope', () => {
   it('classifies against the given domain list only', () => {
     expect(classify('src/services/maestro/cases.ts', DOMAINS)).toEqual({ kind: 'domain', domain: 'maestro' });
     expect(classify('src/services/maestro/cases.ts', ['data-fabric']).kind).toBe('all');
+  });
+
+  it('says which suite folder is missing when a domain has none, and otherwise that the path is shared', () => {
+    expect(classify('src/services/integration-service/connections/connections.ts', DOMAINS)).toEqual({
+      kind: 'all',
+      reason: `src/services/integration-service/connections/connections.ts: no suite folder ${SHARED}/integration-service`,
+    });
+    expect(classify('src/core/http/api-client.ts', DOMAINS)).toEqual({
+      kind: 'all',
+      reason: 'src/core/http/api-client.ts is outside the per-domain folders',
+    });
+  });
+});
+
+describe('integration-scope resolveArgs', () => {
+  it('forces the full run for --all', () => {
+    expect(resolveArgs(['--all'])).toMatchObject({ scope: { run: true, all: true, paths: [] } });
+  });
+
+  it(`forces the full run when the PR carries the ${FULL_RUN_LABEL} label, without diffing`, () => {
+    const { scope } = resolveArgs(['--base', 'origin/main', '--labels', `bug, ${FULL_RUN_LABEL}`]);
+    expect(scope).toMatchObject({ run: true, all: true, paths: [] });
+    expect(scope.reasons[0]).toContain(FULL_RUN_LABEL);
   });
 });
 
