@@ -468,4 +468,9 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
   afterAll(async () => {
     // Note: We don't cleanup test instances as they may be pre-existing
   });
+}, {
+  // PIMS list and lookup calls stall past 30 s under load on the CI tenant (a
+  // pageSize: 1 getAll timed out with no other run on the tenant); same budget
+  // as the other Maestro suites. No retries, no assertion changes.
+  timeout: 120_000,
 });
