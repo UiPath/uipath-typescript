@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 // The PR integration-test scoping rules. Imported directly (the script only runs
 // its CLI when executed as main), so the pure resolver is exercised here.
 import { ALWAYS_ON, FULL_RUN_LABEL, classify, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
@@ -132,6 +135,25 @@ describe('integration-scope resolveArgs', () => {
     const { scope } = resolveArgs(['--base', 'origin/main', '--labels', `bug, ${FULL_RUN_LABEL}`]);
     expect(scope).toMatchObject({ run: true, all: true, paths: [] });
     expect(scope.reasons[0]).toContain(FULL_RUN_LABEL);
+  });
+
+  it('reads the changed files from git for --base', () => {
+    // HEAD...HEAD is an empty diff, so this exercises the git call without depending on history.
+    expect(resolveArgs(['--base', 'HEAD'])).toEqual({ files: [] });
+  });
+
+  // "A diff problem must never skip the run": a ref git does not know makes it exit non-zero.
+  it('falls back to the full run when git cannot diff against the base', () => {
+    const { scope } = resolveArgs(['--base', 'no-such-ref']);
+    expect(scope).toMatchObject({ run: true, all: true, paths: [] });
+    expect(scope.reasons[0]).toContain('could not diff against no-such-ref');
+    expect(toOutputs(scope)).toEqual(['run_integration=true', 'test_paths=', 'scope=all']);
+  });
+
+  it('reads a file list for --files, dropping blanks and surrounding whitespace', () => {
+    const list = join(mkdtempSync(join(tmpdir(), 'integration-scope-')), 'files.txt');
+    writeFileSync(list, ' docs/a.md \n\nsrc/services/maestro/cases.ts\n');
+    expect(resolveArgs(['--files', list])).toEqual({ files: ['docs/a.md', 'src/services/maestro/cases.ts'] });
   });
 });
 
