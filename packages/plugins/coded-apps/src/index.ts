@@ -4,7 +4,8 @@ import type { UnpluginFactory, UnpluginInstance } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { Options } from './types'
 import { PLUGIN_NAME, DEV_MODE } from './constants'
-import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml } from './core/index'
+import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml, readEnvValues, generateEnvScriptForVite, injectEnvScriptHtml } from './core/index'
+import { DEV_ENV_FILES } from './constants'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
@@ -28,12 +29,18 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             cachedConfig = null
           }
         })
+        // Env files are re-read per request, so watching them only has to trigger a reload.
+        for (const envFile of DEV_ENV_FILES) {
+          server.watcher.add(path.resolve(process.cwd(), envFile))
+        }
       },
       transformIndexHtml() {
         if (!cachedConfig) {
           cachedConfig = readConfig({ ...options, isDev })
         }
-        return generateMetaTagsForVite(cachedConfig)
+        const tags = generateMetaTagsForVite(cachedConfig)
+        // Dev only: a production build gets env.js from the deployment, never from a local file.
+        return isDev ? [...generateEnvScriptForVite(readEnvValues()), ...tags] : tags
       },
     },
 
@@ -49,8 +56,9 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
+          const envValues = isDev ? readEnvValues() : undefined
 
-          if (!metaTagsHtml) {
+          if (!metaTagsHtml && !envValues) {
             callback()
             return
           }
@@ -60,7 +68,10 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             if (filename.endsWith('.html')) {
               const asset = compilation.assets[filename]
               const html = asset.source().toString()
-              const modifiedHtml = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              let modifiedHtml = envValues ? injectEnvScriptHtml(html, envValues) : html
+              if (metaTagsHtml) {
+                modifiedHtml = modifiedHtml.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              }
 
               compilation.assets[filename] = {
                 source: () => modifiedHtml,
@@ -86,7 +97,8 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
-          if (!metaTagsHtml) return
+          const envValues = isDev ? readEnvValues() : undefined
+          if (!metaTagsHtml && !envValues) return
 
           for (const fileName of Object.keys(bundle)) {
             const asset = bundle[fileName]
@@ -95,7 +107,11 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
               asset.type === 'asset' &&
               typeof asset.source === 'string'
             ) {
-              asset.source = asset.source.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              let html = envValues ? injectEnvScriptHtml(asset.source, envValues) : asset.source
+              if (metaTagsHtml) {
+                html = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+              }
+              asset.source = html
             }
           }
         } catch (error) {
@@ -114,7 +130,8 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
           try {
             const config = readConfig({ ...options, isDev })
             const metaTagsHtml = generateMetaTagsHtml(config)
-            if (!metaTagsHtml) return
+            const envValues = isDev ? readEnvValues() : undefined
+            if (!metaTagsHtml && !envValues) return
 
             const outdir = build.initialOptions.outdir
             if (!outdir) return
@@ -125,11 +142,10 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             for (const file of fs.readdirSync(outPath)) {
               if (file.endsWith('.html')) {
                 const filePath = path.join(outPath, file)
-                const html = fs.readFileSync(filePath, 'utf-8')
-                fs.writeFileSync(
-                  filePath,
-                  html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
-                )
+                let html = fs.readFileSync(filePath, 'utf-8')
+                if (envValues) html = injectEnvScriptHtml(html, envValues)
+                if (metaTagsHtml) html = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+                fs.writeFileSync(filePath, html)
               }
             }
           } catch (error) {
