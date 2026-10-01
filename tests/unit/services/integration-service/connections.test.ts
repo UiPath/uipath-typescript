@@ -115,8 +115,8 @@ describe('ConnectionsService', () => {
       expect(requestOptions.params).toEqual({ folderDefaults: true });
     });
 
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    it('should fall back to the meta-tag folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectionsService(instance);
       mockApiClient.get.mockResolvedValue([]);
 
@@ -128,8 +128,22 @@ describe('ConnectionsService', () => {
       });
     });
 
-    it('should prefer an explicit folder path over the init-time folder key', async () => {
+    it('should not fall back to the invocation folder of a coded function', async () => {
+      // A default folder key with no meta-tag one is what a coded-function context leaves.
       const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue([]);
+
+      await scopedService.getAll();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(CONNECTION_ENDPOINTS.GET_ALL, {
+        headers: {},
+        params: {},
+      });
+    });
+
+    it('should prefer an explicit folder path over the meta-tag folder key', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectionsService(instance);
       mockApiClient.get.mockResolvedValue([]);
 
@@ -159,8 +173,8 @@ describe('ConnectionsService', () => {
       });
     });
 
-    it('should fall back to the init-time folder key when folderKey is whitespace-only', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    it('should fall back to the meta-tag folder key when folderKey is whitespace-only', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectionsService(instance);
       mockApiClient.get.mockResolvedValue([]);
 
@@ -217,8 +231,8 @@ describe('ConnectionsService', () => {
       );
     });
 
-    it('should fall back to the init-time folder key when no folder context is supplied', async () => {
-      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+    it('should fall back to the meta-tag folder key when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
       const scopedService = new ConnectionsService(instance);
       mockApiClient.get.mockResolvedValue(createMockConnection());
 
@@ -227,6 +241,19 @@ describe('ConnectionsService', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONNECTION_ENDPOINTS.GET_BY_ID(IS_TEST_CONSTANTS.CONNECTION_ID),
         { headers: { [FOLDER_KEY]: IS_TEST_CONSTANTS.FOLDER_KEY }, params: {} },
+      );
+    });
+
+    it('should not fall back to the invocation folder of a coded function', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+      const scopedService = new ConnectionsService(instance);
+      mockApiClient.get.mockResolvedValue(createMockConnection());
+
+      await scopedService.getById(IS_TEST_CONSTANTS.CONNECTION_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        CONNECTION_ENDPOINTS.GET_BY_ID(IS_TEST_CONSTANTS.CONNECTION_ID),
+        { headers: {}, params: {} },
       );
     });
 

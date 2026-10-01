@@ -48,8 +48,10 @@ export interface ConnectionsServiceModel {
    * paginate by incrementing `pageIndex` until a short page is returned.
    *
    * Folder scoping is optional — pass `folderId`, `folderKey`, or `folderPath`
-   * to narrow the query. When none is supplied, the folder context the SDK was
-   * initialized with is used.
+   * to list a folder's connections. When none is supplied, a deployed coded
+   * app's folder is used; elsewhere, including in a coded function, the service
+   * lists the caller's personal workspace, so a robot account, which has none,
+   * gets an empty list.
    *
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`), paging, sorting, and filter options
    * @returns Promise resolving to an array of {@link ConnectionGetResponse}

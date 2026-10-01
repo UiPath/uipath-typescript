@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { execute } from '../../../../src/services/integration-service/execution/execution';
 import { ValidationError } from '../../../../src/core/errors';
+import { UiPath } from '../../../../src/core/uipath';
+import type { CodedFunctionContext } from '../../../../src/core/config/function-context';
 import { createServiceTestDependencies } from '../../../utils/setup';
 import { IS_TEST_CONSTANTS } from '../../../utils/mocks';
-import { HTTP_TEST_CONSTANTS } from '../../../utils/constants';
+import { HTTP_TEST_CONSTANTS, TEST_CONSTANTS } from '../../../utils/constants';
+import { clearContractEnv } from '../../../utils/env-contract';
+import { functionContext, TEST_PLATFORM } from '../../../utils/function-context';
 import {
   FOLDER_ID,
   FOLDER_KEY,
@@ -121,8 +125,8 @@ describe('execute', () => {
     expect(init.headers[FOLDER_PATH_ENCODED]).toBe(IS_TEST_CONSTANTS.FOLDER_PATH_ENCODED_VALUE);
   });
 
-  it('falls back to the init-time folder key when no folder context is provided', async () => {
-    const { instance } = createServiceTestDependencies({ folderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
+  it('falls back to the meta-tag folder key when no folder context is provided', async () => {
+    const { instance } = createServiceTestDependencies({ metaFolderKey: IS_TEST_CONSTANTS.FOLDER_KEY });
     fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
 
     await execute(instance, IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
@@ -373,6 +377,43 @@ describe('execute', () => {
 
       const [, init] = fetchSpy.mock.calls[0];
       expect(init.signal).toBeInstanceOf(AbortSignal);
+    });
+  });
+
+  describe('with a UiPath built from a coded-function context', () => {
+    let restoreEnv: () => void;
+
+    beforeEach(() => {
+      restoreEnv = clearContractEnv();
+    });
+
+    afterEach(() => {
+      restoreEnv();
+    });
+
+    const contextInFolder = (folderKey: string): CodedFunctionContext =>
+      functionContext({ platform: { ...TEST_PLATFORM, folderKey } });
+
+    it('does not scope the call to the invocation folder when no folder option is supplied', async () => {
+      // A folder header that is not the connection's makes Integration Service answer 404, and the
+      // connection a function uses can live outside the folder it runs in.
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(new UiPath(contextInFolder(TEST_CONSTANTS.FOLDER_KEY)), IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME);
+
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(init.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('sends an explicit folderKey option', async () => {
+      fetchSpy.mockResolvedValue(buildResponse({ body: '[]' }));
+
+      await execute(new UiPath(contextInFolder(TEST_CONSTANTS.FOLDER_KEY)), IS_TEST_CONSTANTS.CONNECTION_ID, OBJECT_NAME, 'GET', {
+        folderKey: IS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(init.headers[FOLDER_KEY]).toBe(IS_TEST_CONSTANTS.FOLDER_KEY);
     });
   });
 });

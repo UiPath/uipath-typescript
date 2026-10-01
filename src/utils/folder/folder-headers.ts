@@ -24,9 +24,9 @@ export interface ResolveFolderHeadersInput {
   resourceType: string;
 
   /**
-   * SDK init-time folder key (sourced from `<meta name="uipath:folder-key">`
-   * in coded-app deployments). Used as a fallback when none of `folderId`,
-   * `folderKey`, or `folderPath` is supplied.
+   * SDK init-time folder key (a coded function's `ctx.platform.folderKey`, or
+   * `<meta name="uipath:folder-key">` in coded-app deployments). Used as a
+   * fallback when none of `folderId`, `folderKey`, or `folderPath` is supplied.
    */
   fallbackFolderKey?: string;
 }

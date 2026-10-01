@@ -1,17 +1,24 @@
 import { PartialUiPathConfig } from './sdk-config';
+import { nonBlank, toHttpOrigin } from './config-utils';
 
 /**
  * Platform coordinates a coded function receives, mirroring `PlatformContext`
  * from `@uipath/coded-functions-js-sdk`.
  */
 export interface CodedFunctionPlatform {
-  /** Platform host, without a path — for example `https://cloud.uipath.com`. */
+  /**
+   * Platform host, such as `https://cloud.uipath.com`. A longer URL is reduced to its origin; one
+   * that is not http(s) counts as missing.
+   */
   baseUrl: string;
   /** Organization id (GUID, not slug). */
   orgId: string;
   /** Tenant id (GUID, not slug). */
   tenantId: string;
-  /** Folder key of the invocation, if any. The SDK ignores it. */
+  /**
+   * Folder key of the invocation, if any. It becomes the default folder for calls that need one
+   * and name none. Integration Service calls stay unscoped, so they reach a connection in any folder.
+   */
   folderKey?: string | null;
 }
 
@@ -56,25 +63,34 @@ export function isFunctionContext(
 /**
  * Maps a coded-function context onto SDK configuration.
  *
- * Null when the context has no coordinates — a local run, where `platform` is
- * null — so the caller falls through to its other sources.
+ * Null when the context carries nothing — a local run, where `platform` and
+ * `robot` are null — so the caller falls through to its other sources. A blank
+ * coordinate is left out rather than copied, so the environment can still fill
+ * it in the merge; a context that hands over a token but no platform
+ * contributes the token alone.
  */
 export function configFromFunctionContext(
   context: CodedFunctionContext,
 ): PartialUiPathConfig | null {
   const { platform, robot } = context;
-  if (!platform) return null;
 
-  // Org and tenant ids go where orgName/tenantName go — the platform accepts
-  // either in that URL position — and the token goes to `secret`, used verbatim
-  // as the bearer value. `baseUrl` must already be host-only: a host that holds
-  // a longer URL has to reduce it, or org and tenant appear in the path twice.
+  // Ids go where names go and the token is the bearer value; baseUrl is reduced to its origin (org
+  // and tenant are appended to it) and left out when it is not http(s), for the error to name.
+  const baseUrl = nonBlank(platform?.baseUrl);
   const config: PartialUiPathConfig = {
-    baseUrl: platform.baseUrl,
-    orgName: platform.orgId,
-    tenantName: platform.tenantId,
-    secret: robot?.accessToken ?? undefined,
+    baseUrl: baseUrl === undefined ? undefined : toHttpOrigin(baseUrl) ?? undefined,
+    orgName: nonBlank(platform?.orgId),
+    tenantName: nonBlank(platform?.tenantId),
+    secret: nonBlank(robot?.accessToken),
   };
 
   return Object.values(config).some(Boolean) ? config : null;
+}
+
+/**
+ * The invocation's folder key off a coded-function context, or undefined when it carries none
+ * (null, empty or whitespace — a folder header must never be sent blank).
+ */
+export function folderKeyFromFunctionContext(context: CodedFunctionContext): string | undefined {
+  return nonBlank(context.platform?.folderKey);
 }

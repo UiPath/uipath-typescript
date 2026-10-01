@@ -1,6 +1,9 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { conflictingAuthMessage, missingConfigMessage } from '@/core/config/config-utils';
+import { conflictingAuthMessage, missingConfigMessage, nonBlank, toHttpOrigin } from '@/core/config/config-utils';
+import { UiPathEnvVars } from '@/core/config/environment';
+import type { PartialUiPathConfig } from '@/core/config/sdk-config';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { functionContext, TEST_PLATFORM } from '../../../utils/function-context';
 
 const BASE_URL = TEST_CONSTANTS.BASE_URL;
 const TOKEN = TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN;
@@ -9,6 +12,50 @@ const OAUTH = {
   redirectUri: TEST_CONSTANTS.REDIRECT_URI,
   scope: TEST_CONSTANTS.OAUTH_SCOPE,
 };
+
+describe('nonBlank', () => {
+  it('returns the value trimmed', () => {
+    expect(nonBlank(` ${TEST_CONSTANTS.FOLDER_KEY} `)).toBe(TEST_CONSTANTS.FOLDER_KEY);
+  });
+
+  it.each([
+    ['null', null],
+    ['undefined', undefined],
+    ['empty', ''],
+    ['whitespace-only', TEST_CONSTANTS.FOLDER_KEY_WHITESPACE],
+  ])('treats a %s value as absent', (_label, value) => {
+    expect(nonBlank(value)).toBeUndefined();
+  });
+});
+
+describe('toHttpOrigin', () => {
+  it.each([
+    ['a bare origin', TEST_CONSTANTS.BASE_URL],
+    ['a trailing slash', TEST_CONSTANTS.BASE_URL_TRAILING_SLASH],
+    ['a path', TEST_CONSTANTS.BASE_URL_WITH_PATH],
+    ['a query string', TEST_CONSTANTS.BASE_URL_WITH_QUERY],
+    ['a fragment', TEST_CONSTANTS.BASE_URL_WITH_HASH],
+  ])('reduces a URL with %s to its origin', (_label, value) => {
+    expect(toHttpOrigin(value)).toBe(TEST_CONSTANTS.BASE_URL);
+  });
+
+  it('keeps an explicit port', () => {
+    expect(toHttpOrigin(TEST_CONSTANTS.BASE_URL_WITH_PORT)).toBe(TEST_CONSTANTS.BASE_URL_WITH_PORT);
+  });
+
+  it.each([
+    ['a non-http(s) scheme', TEST_CONSTANTS.BASE_URL_NON_HTTP],
+    ['a value that is not a URL', TEST_CONSTANTS.BASE_URL_NOT_A_URL],
+  ])('returns null for %s, and says so', (_label, value) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    expect(toHttpOrigin(value)).toBeNull();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0][0]).toContain(value);
+
+    warn.mockRestore();
+  });
+});
 
 describe('conflictingAuthMessage', () => {
   it('attributes each field to the layer that supplied it', () => {
@@ -141,5 +188,120 @@ describe('missingConfigMessage', () => {
 
     expect(message).toContain('missing baseUrl, orgName, tenantName');
     expect(message).toContain('no authentication method set');
+  });
+});
+
+describe('missingConfigMessage with a handler context', () => {
+  it('names a null platform and a null token when the context carried neither', () => {
+    const message = missingConfigMessage(undefined, functionContext({ platform: null, robot: null }));
+
+    // A context was passed, so the configuration is incomplete rather than not found.
+    expect(message).toMatch(/^UiPath SDK configuration is incomplete: /);
+    expect(message).not.toContain('not found');
+    expect(message).toContain(
+      `ctx.platform is null (or set ${UiPathEnvVars.BASE_URL}, ${UiPathEnvVars.ORG_NAME} and ${UiPathEnvVars.TENANT_NAME})`,
+    );
+    expect(message).toContain(`ctx.robot.accessToken is null (or set ${UiPathEnvVars.ACCESS_TOKEN})`);
+    expect(message).not.toContain('pass the handler context');
+  });
+
+  it('names only the variables the environment left unset when the platform is null', () => {
+    const merged: PartialUiPathConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+    };
+
+    const message = missingConfigMessage(merged, functionContext({ platform: null }));
+
+    expect(message).toContain(`ctx.platform is null (or set ${UiPathEnvVars.TENANT_NAME})`);
+    expect(message).not.toContain(UiPathEnvVars.BASE_URL);
+    expect(message).not.toContain(UiPathEnvVars.ORG_NAME);
+  });
+
+  it('names only the platform when the context handed over a token without coordinates', () => {
+    // The token reached the merged configuration; the platform did not.
+    const merged: PartialUiPathConfig = { secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN };
+
+    const message = missingConfigMessage(merged, functionContext({ platform: null }));
+
+    expect(message).toContain('ctx.platform is null');
+    expect(message).not.toContain('ctx.robot.accessToken');
+  });
+
+  it('names the platform coordinates the merged configuration still lacks', () => {
+    const context = functionContext({ platform: { ...TEST_PLATFORM, baseUrl: '', tenantId: '' } });
+    const merged: PartialUiPathConfig = {
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+    };
+
+    const message = missingConfigMessage(merged, context);
+
+    expect(message).toContain(`ctx.platform.baseUrl is empty (or set ${UiPathEnvVars.BASE_URL})`);
+    expect(message).toContain(`ctx.platform.tenantId is empty (or set ${UiPathEnvVars.TENANT_NAME})`);
+    expect(message).not.toContain('ctx.platform.orgId');
+    expect(message).not.toContain('ctx.robot.accessToken');
+  });
+
+  it('names a base URL that is not http(s), with its value', () => {
+    const context = functionContext({ platform: { ...TEST_PLATFORM, baseUrl: TEST_CONSTANTS.BASE_URL_NON_HTTP } });
+    const merged: PartialUiPathConfig = {
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+    };
+
+    const message = missingConfigMessage(merged, context);
+
+    expect(message).toContain(
+      `ctx.platform.baseUrl "${TEST_CONSTANTS.BASE_URL_NON_HTTP}" is not an http(s) URL (or set ${UiPathEnvVars.BASE_URL})`,
+    );
+  });
+
+  it('names a missing workload token as ctx.robot.accessToken', () => {
+    const merged: PartialUiPathConfig = {
+      baseUrl: TEST_PLATFORM.baseUrl,
+      orgName: TEST_PLATFORM.orgId,
+      tenantName: TEST_PLATFORM.tenantId,
+    };
+
+    const message = missingConfigMessage(merged, functionContext({ robot: null }));
+
+    expect(message).toContain(`ctx.robot.accessToken is null (or set ${UiPathEnvVars.ACCESS_TOKEN})`);
+    expect(message).not.toContain('ctx.platform');
+  });
+
+  it('does not name a coordinate the environment supplied', () => {
+    // The context lacks a token, but the merged configuration got one from UIPATH_ACCESS_TOKEN.
+    const context = functionContext({ platform: { ...TEST_PLATFORM, orgId: '' }, robot: null });
+    const merged: PartialUiPathConfig = {
+      baseUrl: TEST_PLATFORM.baseUrl,
+      tenantName: TEST_PLATFORM.tenantId,
+      secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+    };
+
+    const message = missingConfigMessage(merged, context);
+
+    expect(message).toContain('ctx.platform.orgId is empty');
+    expect(message).not.toContain('ctx.robot.accessToken');
+  });
+
+  it('does not claim variables were named when nothing is missing', () => {
+    // Complete coordinates carrying both authentication methods: incomplete, yet nothing is absent.
+    // The constructor rejects this merge before asking for a message; only a direct call lands here.
+    const merged: PartialUiPathConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+      ...OAUTH,
+    };
+
+    const message = missingConfigMessage(merged, functionContext());
+
+    expect(message).toMatch(/configuration is incomplete/);
+    expect(message).toContain('does not form a complete configuration');
+    expect(message).not.toContain('variables named');
   });
 });
