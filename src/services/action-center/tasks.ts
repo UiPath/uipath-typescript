@@ -1,3 +1,5 @@
+// Throwaway demo for #775: a change inside an existing service scopes the
+// pull-request integration run to that service's own suite.
 import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DEFAULT_TASK_EXPAND, TaskMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
