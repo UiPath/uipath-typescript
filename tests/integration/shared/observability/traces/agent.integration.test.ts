@@ -262,4 +262,9 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
       expect(Array.isArray(result.byMode)).toBe(true);
     });
   });
+}, {
+  // insightsrtm_ aggregations regularly take 15-30 s server-side on the CI tenant,
+  // so vitest's 30 s default fails healthy responses. Same budget as the Action
+  // Center suite; no retries, no assertion changes.
+  timeout: 120_000,
 });

@@ -240,4 +240,9 @@ describeIntegration('Maestro Cases - Integration Tests', 'both', modes, (_mode, 
       await testGetInstanceStats(cases, 'cases');
     });
   });
+}, {
+  // The Insights block (getTop*, *Timeline, getElementStats) calls insightsrtm_,
+  // whose aggregations regularly take 15-30 s server-side on the CI tenant, so
+  // vitest's 30 s default fails healthy responses. No retries, no assertion changes.
+  timeout: 120_000,
 });
