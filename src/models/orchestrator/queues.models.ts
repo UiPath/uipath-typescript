@@ -238,7 +238,9 @@ export interface QueueServiceModel {
    *
    * Requires a robot session. Orchestrator allocates the item to the robot
    * that sent the request, so user and application identities always receive
-   * `null`, however many items are waiting. Queue items are normally consumed
+   * `null`, however many items are waiting. Inside a coded function, build the
+   * SDK with `new UiPath(ctx)`: the SDK then sends the function's robot key,
+   * which Orchestrator needs to allocate the item. Queue items are normally consumed
    * by a robot running a process — apps produce with `insertItemByName` and
    * observe with `getAllItems`, leaving acquisition to the robot.
    *

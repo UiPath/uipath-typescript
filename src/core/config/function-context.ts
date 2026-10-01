@@ -22,7 +22,7 @@ export interface CodedFunctionPlatform {
 export interface CodedFunctionRobot {
   /** Platform-issued token the SDK uses to authenticate its calls. */
   accessToken: string | null;
-  /** Serverless robot key. The SDK ignores it. */
+  /** Serverless robot key, sent where Orchestrator asks which robot is calling. */
   key?: string | null;
 }
 
