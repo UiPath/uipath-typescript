@@ -1,0 +1,8 @@
+{
+  "clientId": "f4128d64-6296-4398-9fc6-d26c08e1c5b1",
+  "scope": "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api IS.Connections.Read IS.Connectors.Read",
+  "orgName": "conversationalagents",
+  "tenantName": "UnifiedRuntimeTesting",
+  "baseUrl": "https://alpha.uipath.com",
+  "redirectUri": "http://localhost:5173/"
+}

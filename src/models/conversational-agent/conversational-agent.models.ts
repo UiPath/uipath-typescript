@@ -291,6 +291,10 @@ export interface ConversationalAgentServiceModel {
    * Gets available connections for each configurable connector binding of an agent.
    * Only returns bindings that are "configurable by users" (not admin-fixed).
    *
+   * **Requires user-scoped authentication.** Personal connections are per-user;
+   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
+   * user identity and these calls will fail.
+   *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
    * @returns Promise resolving to an array of connector items with their available connections
@@ -309,6 +313,10 @@ export interface ConversationalAgentServiceModel {
   /**
    * Updates the current user's connection selections for an agent.
    * Only configurable bindings (not admin-fixed) can be updated.
+   *
+   * **Requires user-scoped authentication.** Personal connections are per-user;
+   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
+   * user identity and these calls will fail.
    *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
@@ -356,6 +364,9 @@ export interface ConversationalAgentServiceModel {
    * The response includes a `sessionId` that can be passed to
    * {@link getConnectionSessionStatus} to poll for OAuth completion.
    *
+   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
+   * `externalUserId`) do not carry a user identity and cannot initiate OAuth flows.
+   *
    * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
    * @returns Promise resolving to the auth URL, session ID, and expiration
    * {@link ConnectionAuthResponse}
@@ -370,6 +381,9 @@ export interface ConversationalAgentServiceModel {
    * until the returned `status` is `'success'` (the user completed OAuth and
    * a connection was created) or `'failed'`. When `status` is `'success'`,
    * `connectionId` contains the ID of the newly created connection.
+   *
+   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
+   * `externalUserId`) do not carry a user identity and cannot poll session status.
    *
    * @param sessionId - The session ID returned by {@link getConnectionAuthUrl}
    * @returns Promise resolving to the current session status
