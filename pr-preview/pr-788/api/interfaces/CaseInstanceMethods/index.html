@@ -3899,7 +3899,8 @@
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to operation result</p>
+<p>Promise resolving to operation result. With Case App routes, a case that has already
+         completed is rejected, and the result reports <code>isCompleted</code>.</p>
 <hr />
 <h3 id="getactiontasks">getActionTasks()<a class="headerlink" href="#getactiontasks" title="Permanent link">&para;</a></h3>
 <blockquote>
