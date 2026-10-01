@@ -10,6 +10,10 @@ import { CaseInstanceMessageName, InstanceStatus } from '../../../../src/models/
 
 const modes: InitMode[] = ['v0', 'v1'];
 
+// A full integration leg finishes well inside an hour, so a Running fixture instance
+// older than this cannot be held by a concurrent run.
+const ORPHAN_MIN_AGE_MS = 60 * 60 * 1000;
+
 describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes, (_mode, authMode) => {
   let testCaseInstanceId: string | null = null;
   let testCaseFolderKey: string | null = null;
@@ -36,14 +40,20 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
     // Reuse an existing Running instance of the fixture process before starting a new
     // one — interrupted runs leave them Running indefinitely (the human task never
     // completes), so scavenging them curbs instance growth in the tenant, where
-    // terminal instances cannot be deleted via API.
+    // terminal instances cannot be deleted via API. Only instances older than any
+    // run still in flight qualify: a younger Running instance belongs to a concurrent
+    // leg, which will pause and close it under us (observed live as
+    // "Canceling->Pausing is not a valid state transition").
+    const orphanMinAge = Date.now() - ORPHAN_MIN_AGE_MS;
     const existing = await caseInstances.getAll({
       processKey: config.maestroCaseProcessKey,
       pageSize: 20,
     });
     const runningOrphan = existing.items.find(
       (inst) =>
-        inst.latestRunStatus === InstanceStatus.RUNNING && inst.folderKey === config.folderKey
+        inst.latestRunStatus === InstanceStatus.RUNNING &&
+        inst.folderKey === config.folderKey &&
+        new Date(inst.startedTime).getTime() < orphanMinAge
     );
     if (runningOrphan) {
       return { instanceId: runningOrphan.instanceId, folderKey: runningOrphan.folderKey };
@@ -73,6 +83,9 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
   // Timer-case instance started at suite start for the reopen test. It completes in the
   // background (~45s) while the earlier tests run, so reopen rarely has to wait.
   let seededCompletedJobKey: string | null = null;
+  // True when the key above was found rather than started: every concurrent run sees
+  // the same Completed orphan, so another leg may reopen and close it before we do.
+  let seededCompletedIsShared = false;
 
   beforeAll(async () => {
     const { processes, caseInstances } = getServices();
@@ -94,6 +107,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       );
       if (completedOrphan) {
         seededCompletedJobKey = completedOrphan.instanceId;
+        seededCompletedIsShared = true;
       } else {
         const [job] = await processes.start(
           { processKey: config.maestroCompletedCaseProcessKey },
@@ -302,7 +316,9 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
 
       variablesInstanceId = instance.instanceId;
       variablesFolderKey = instance.folderKey;
-    });
+      // getAll enriches each instance with its case JSON (one call each); under load
+      // the ten lookups overrun the 30s hook default
+    }, 60_000);
 
     it('should retrieve variables for a case instance', async () => {
       const { caseInstances } = getServices();
@@ -469,51 +485,73 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         );
       }
 
-      // Use the instance started in beforeAll — it has been completing in the background
-      // while the earlier tests ran, so this usually needs no waiting at all.
-      let instanceId = seededCompletedJobKey;
-      if (!instanceId) {
-        const [job] = await processes.start(
-          { processKey: config.maestroCompletedCaseProcessKey },
-          { folderId: Number(config.folderId) }
-        );
-        instanceId = job.key;
-      }
+      const completedProcessKey = config.maestroCompletedCaseProcessKey;
+      const folderId = Number(config.folderId);
+      const folderKey = config.folderKey;
 
-      // Check immediately, then poll only if it has not completed yet. Completion takes
-      // ~45s idle but the execution engine stalls for minutes under load — sized to the
-      // same 180s ceiling the retry test uses for the equivalent fault wait.
-      let completed = false;
-      for (let attempt = 0; attempt < 36; attempt++) {
+      const startOwnInstance = async (): Promise<string> => {
+        const [job] = await processes.start({ processKey: completedProcessKey }, { folderId });
+        return job.key;
+      };
+
+      // Use the instance from beforeAll — it has been completing in the background
+      // while the earlier tests ran, so this usually needs no waiting at all. A found
+      // (shared) orphan can be taken by a concurrent leg between beforeAll and here:
+      // it then reads Running/Canceling/Cancelled instead of Completed, or the reopen
+      // itself is rejected. Either way we switch to an instance of our own and wait
+      // for that one; a reopen failure on our own instance is real and propagates.
+      let shared = seededCompletedIsShared && seededCompletedJobKey !== null;
+      let instanceId = seededCompletedJobKey ?? (await startOwnInstance());
+
+      // Completion takes ~45s idle but the execution engine stalls for minutes under
+      // load — sized to the same 180s ceiling the retry test uses for the fault wait.
+      const deadline = Date.now() + 180_000;
+      let result: Awaited<ReturnType<typeof caseInstances.reopen>> | null = null;
+      while (result === null) {
+        let status: string | null = null;
         try {
-          const instance = await caseInstances.getById(instanceId, config.folderKey);
-          if (instance.latestRunStatus === InstanceStatus.COMPLETED) {
-            completed = true;
-            break;
-          }
+          status = (await caseInstances.getById(instanceId, folderKey)).latestRunStatus;
         } catch {
           // not yet visible in PIMS
         }
+
+        if (status === InstanceStatus.COMPLETED) {
+          const stages = await caseInstances.getStages(instanceId, folderKey);
+          expect(stages.length).toBeGreaterThan(0);
+          try {
+            result = await caseInstances.reopen(instanceId, folderKey, {
+              stageId: stages[0].id,
+              comment: 'Reopened by the SDK integration suite',
+            });
+            break;
+          } catch (error) {
+            if (!shared) throw error;
+            console.warn(`Shared Completed instance ${instanceId} was claimed by another run; seeding our own:`, error);
+          }
+        } else if (shared && status !== null) {
+          console.warn(`Shared Completed instance ${instanceId} now reads ${status}; seeding our own`);
+        } else if (status === InstanceStatus.CANCELLED || status === InstanceStatus.FAULTED) {
+          throw new Error(`Seeded auto-completing case instance ended ${status} instead of Completed`);
+        }
+
+        if (shared && status !== null) {
+          shared = false;
+          instanceId = await startOwnInstance();
+          continue;
+        }
+
+        if (Date.now() > deadline) {
+          throw new Error('Seeded auto-completing case instance did not complete within 180s');
+        }
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
-      if (!completed) {
-        throw new Error('Seeded auto-completing case instance did not complete within 180s');
-      }
-
-      const stages = await caseInstances.getStages(instanceId, config.folderKey);
-      expect(stages.length).toBeGreaterThan(0);
-
-      const result = await caseInstances.reopen(instanceId, config.folderKey, {
-        stageId: stages[0].id,
-        comment: 'Reopened by the SDK integration suite',
-      });
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
 
       // Cleanup: close the reopened instance — reopened instances do NOT re-complete on
       // their own, and letting them accumulate saturates the tenant's execution queue.
-      await caseInstances.close(instanceId, config.folderKey);
+      await caseInstances.close(instanceId, folderKey);
     }, 240_000);
   });
 
