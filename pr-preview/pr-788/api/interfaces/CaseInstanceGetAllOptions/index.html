@@ -3754,24 +3754,69 @@
 <tr>
 <th>Property</th>
 <th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td><a id="caseid"></a> <code>caseId?</code></td>
+<td><code>string</code></td>
+<td>Human-readable case reference number</td>
+</tr>
+<tr>
+<td><a id="creatoruserkey"></a> <code>creatorUserKey?</code></td>
+<td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
 <td><a id="errorcode"></a> <code>errorCode?</code></td>
 <td><code>string</code></td>
+<td>Incident error code</td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey?</code></td>
+<td><code>string</code></td>
+<td>Limits results to one folder. Required when the service uses Case App routes.</td>
+</tr>
+<tr>
+<td><a id="order"></a> <code>order?</code></td>
+<td><a href="../../enumerations/CaseInstanceSortOrder/"><code>CaseInstanceSortOrder</code></a></td>
+<td>Defaults to descending</td>
 </tr>
 <tr>
 <td><a id="packageid"></a> <code>packageId?</code></td>
 <td><code>string</code></td>
+<td>-</td>
 </tr>
 <tr>
 <td><a id="packageversion"></a> <code>packageVersion?</code></td>
 <td><code>string</code></td>
+<td>Requires <code>packageId</code></td>
 </tr>
 <tr>
 <td><a id="processkey"></a> <code>processKey?</code></td>
 <td><code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="sortby"></a> <code>sortBy?</code></td>
+<td><a href="../../enumerations/CaseInstanceSortBy/"><code>CaseInstanceSortBy</code></a></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="startedtimeend"></a> <code>startedTimeEnd?</code></td>
+<td><code>Date</code></td>
+<td>Upper bound of the started-time range</td>
+</tr>
+<tr>
+<td><a id="startedtimestart"></a> <code>startedTimeStart?</code></td>
+<td><code>Date</code></td>
+<td>Lower bound of the started-time range</td>
+</tr>
+<tr>
+<td><a id="statuses"></a> <code>statuses?</code></td>
+<td><a href="../../enumerations/InstanceStatus/"><code>InstanceStatus</code></a>[]</td>
+<td>Instance statuses to include</td>
 </tr>
 </tbody>
 </table>

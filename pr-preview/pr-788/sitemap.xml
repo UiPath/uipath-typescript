@@ -729,23 +729,23 @@
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseAppElementType/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseAppInstanceSortBy/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseAppSlaStatus/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseAppSortOrder/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseInstanceElementType/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseInstanceMessageName/</loc>
+         <lastmod>2026-10-01</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseInstanceSortBy/</loc>
+         <lastmod>2026-10-01</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/CaseInstanceSortOrder/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
@@ -1609,31 +1609,7 @@
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppCloseOptions/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppCloseResponse/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppConfig/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppElementExecution/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppElementRun/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppGetElementExecutionsOptions/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppGetElementExecutionsResponse/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
@@ -1649,31 +1625,11 @@
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppInstanceGetAllOptions/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppInstanceGetResponse/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppInstanceRun/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppOverview/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppSection/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppSelectStageOptions/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppSendMessageResponse/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
@@ -1717,6 +1673,10 @@
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetExecutionHistoryOptions/</loc>
+         <lastmod>2026-10-01</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetVariablesOptions/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
@@ -1745,6 +1705,10 @@
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceSection/</loc>
+         <lastmod>2026-10-01</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceSendMessageOptions/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
@@ -1758,6 +1722,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceStageSLAStage/</loc>
+         <lastmod>2026-10-01</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstancesOptions/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>
@@ -3450,10 +3418,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/BucketRef/</loc>
-         <lastmod>2026-10-01</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/CaseAppInstanceGetAllWithPaginationOptions/</loc>
          <lastmod>2026-10-01</lastmod>
     </url>
     <url>

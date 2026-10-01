@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppElementRun/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceSection/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>CaseAppElementRun - UiPath TypeScript SDK</title>
+        <title>CaseInstanceSection - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CaseAppElementRun
+              CaseInstanceSection
             
           </span>
         </div>
@@ -3745,10 +3745,9 @@
   
 
 
-  <h1>CaseAppElementRun</h1>
+  <h1>CaseInstanceSection</h1>
 
-<p><strong><code>Experimental</code></strong></p>
-<p>One run of a case element.</p>
+<p>A details card configured on the case app.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3760,69 +3759,19 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="completedtime"></a> <code>completedTime</code></td>
+<td><a id="details"></a> <code>details</code></td>
+<td><code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>Fields configured by the case app author, returned as the API sends them</td>
+</tr>
+<tr>
+<td><a id="id"></a> <code>id</code></td>
 <td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td>-</td>
 </tr>
 <tr>
-<td><a id="elementrunid"></a> <code>elementRunId</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="externallink"></a> <code>externalLink</code></td>
+<td><a id="title"></a> <code>title</code></td>
 <td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong> External reference, e.g. the Action Center task</td>
-</tr>
-<tr>
-<td><a id="incomingflowid"></a> <code>incomingFlowId</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="incomingflowids"></a> <code>incomingFlowIds</code></td>
-<td><code>string</code>[]</td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="jobkey"></a> <code>jobKey</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="maestrolink"></a> <code>maestroLink</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="markeritemindex"></a> <code>markerItemIndex</code></td>
-<td><code>null</code> | <code>number</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="parentelementrunid"></a> <code>parentElementRunId</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="startedtime"></a> <code>startedTime</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="status"></a> <code>status</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="version"></a> <code>version</code></td>
-<td><code>null</code> | <code>number</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="workflowid"></a> <code>workflowId</code></td>
-<td><code>null</code> | <code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td>-</td>
 </tr>
 </tbody>
 </table>

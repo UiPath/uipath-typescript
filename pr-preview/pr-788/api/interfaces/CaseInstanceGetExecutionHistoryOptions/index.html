@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppInstanceGetAllOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceGetExecutionHistoryOptions/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>CaseAppInstanceGetAllOptions - UiPath TypeScript SDK</title>
+        <title>CaseInstanceGetExecutionHistoryOptions - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CaseAppInstanceGetAllOptions
+              CaseInstanceGetExecutionHistoryOptions
             
           </span>
         </div>
@@ -3745,10 +3745,9 @@
   
 
 
-  <h1>CaseAppInstanceGetAllOptions</h1>
+  <h1>CaseInstanceGetExecutionHistoryOptions</h1>
 
-<p><strong><code>Experimental</code></strong></p>
-<p>Options for listing case instances.</p>
+<p>Options for getting a case instance's execution history.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3760,59 +3759,9 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="caseid"></a> <code>caseId?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Human-readable case reference number</td>
-</tr>
-<tr>
-<td><a id="creatoruserkey"></a> <code>creatorUserKey?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="errorcode"></a> <code>errorCode?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Incident error code</td>
-</tr>
-<tr>
-<td><a id="order"></a> <code>order?</code></td>
-<td><a href="../../enumerations/CaseAppSortOrder/"><code>CaseAppSortOrder</code></a></td>
-<td><strong><code>Experimental</code></strong> Defaults to descending</td>
-</tr>
-<tr>
-<td><a id="packageid"></a> <code>packageId?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="packageversion"></a> <code>packageVersion?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Requires <code>packageId</code></td>
-</tr>
-<tr>
-<td><a id="processkey"></a> <code>processKey?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="sortby"></a> <code>sortBy?</code></td>
-<td><a href="../../enumerations/CaseAppInstanceSortBy/"><code>CaseAppInstanceSortBy</code></a></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="startedtimeend"></a> <code>startedTimeEnd?</code></td>
-<td><code>Date</code></td>
-<td><strong><code>Experimental</code></strong> Upper bound of the started-time range</td>
-</tr>
-<tr>
-<td><a id="startedtimestart"></a> <code>startedTimeStart?</code></td>
-<td><code>Date</code></td>
-<td><strong><code>Experimental</code></strong> Lower bound of the started-time range</td>
-</tr>
-<tr>
-<td><a id="statuses"></a> <code>statuses?</code></td>
-<td><a href="../../enumerations/InstanceStatus/"><code>InstanceStatus</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Instance statuses to include</td>
+<td><a id="elementtypes"></a> <code>elementTypes?</code></td>
+<td><a href="../../enumerations/CaseInstanceElementType/"><code>CaseInstanceElementType</code></a>[]</td>
+<td>Only return elements of these types</td>
 </tr>
 </tbody>
 </table>

@@ -3944,9 +3944,26 @@
 <hr />
 <h3 id="getexecutionhistory">getExecutionHistory()<a class="headerlink" href="#getexecutionhistory" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getExecutionHistory</strong>(): <code>Promise</code>&lt;<a href="../CaseInstanceExecutionHistoryResponse/"><code>CaseInstanceExecutionHistoryResponse</code></a>&gt;</p>
+<p><strong>getExecutionHistory</strong>(<code>options?</code>: <a href="../CaseInstanceGetExecutionHistoryOptions/"><code>CaseInstanceGetExecutionHistoryOptions</code></a>): <code>Promise</code>&lt;<a href="../CaseInstanceExecutionHistoryResponse/"><code>CaseInstanceExecutionHistoryResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets execution history for this case instance</p>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>options?</code></td>
+<td><a href="../CaseInstanceGetExecutionHistoryOptions/"><code>CaseInstanceGetExecutionHistoryOptions</code></a></td>
+<td>Optional element-type filter</td>
+</tr>
+</tbody>
+</table>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../CaseInstanceExecutionHistoryResponse/"><code>CaseInstanceExecutionHistoryResponse</code></a>&gt;</p>
 <p>Promise resolving to instance execution history</p>
@@ -3972,7 +3989,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4016,7 +4033,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>getVariables</strong>(<code>options?</code>: <a href="../CaseInstanceGetVariablesOptions/"><code>CaseInstanceGetVariablesOptions</code></a>): <code>Promise</code>&lt;<a href="../CaseInstanceGetVariablesResponse/"><code>CaseInstanceGetVariablesResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets global variables for this case instance</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4042,7 +4059,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>pause</strong>(<code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Pauses this case instance</p>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4068,7 +4085,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>reopen</strong>(<code>options</code>: <a href="../CaseInstanceReopenOptions/"><code>CaseInstanceReopenOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Reopens this case instance from a specified element</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4094,7 +4111,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>resume</strong>(<code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Resumes this case instance</p>
-<h4 id="parameters_6">Parameters<a class="headerlink" href="#parameters_6" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4120,7 +4137,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>sendMessage</strong>(<code>name</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceSendMessageOptions/"><code>CaseInstanceSendMessageOptions</code></a>): <code>Promise</code>&lt;<code>void</code>&gt;</p>
 </blockquote>
 <p>Sends a message to this case instance</p>
-<h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_8">Parameters<a class="headerlink" href="#parameters_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
