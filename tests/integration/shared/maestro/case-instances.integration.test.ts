@@ -317,8 +317,8 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       variablesInstanceId = instance.instanceId;
       variablesFolderKey = instance.folderKey;
       // getAll enriches each instance with its case JSON (one call each); under load
-      // the ten lookups overrun the 30s hook default
-    }, 60_000);
+      // the ten lookups overran 60s with no other run on the tenant
+    }, 120_000);
 
     it('should retrieve variables for a case instance', async () => {
       const { caseInstances } = getServices();
@@ -502,17 +502,20 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       // for that one; a reopen failure on our own instance is real and propagates.
       let shared = seededCompletedIsShared && seededCompletedJobKey !== null;
       let instanceId = seededCompletedJobKey ?? (await startOwnInstance());
+      console.log(`reopen fixture: ${shared ? 'shared Completed orphan' : 'own instance'} ${instanceId}`);
 
-      // Completion takes ~45s idle but the execution engine stalls for minutes under
-      // load — sized to the same 180s ceiling the retry test uses for the fault wait.
-      const deadline = Date.now() + 180_000;
+      // Completion takes ~45s idle, but the execution engine stalls for minutes under
+      // load (observed: an own instance still not Completed after 180s with no other
+      // run on the tenant), so the wait gets most of the test budget.
+      const deadline = Date.now() + 240_000;
       let result: Awaited<ReturnType<typeof caseInstances.reopen>> | null = null;
       while (result === null) {
         let status: string | null = null;
         try {
           status = (await caseInstances.getById(instanceId, folderKey)).latestRunStatus;
-        } catch {
-          // not yet visible in PIMS
+        } catch (error) {
+          // not yet visible in PIMS, or PIMS answering 5xx; either way keep polling
+          console.warn(`reopen fixture ${instanceId} not readable yet:`, error);
         }
 
         if (status === InstanceStatus.COMPLETED) {
@@ -541,7 +544,9 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         }
 
         if (Date.now() > deadline) {
-          throw new Error('Seeded auto-completing case instance did not complete within 180s');
+          throw new Error(
+            `Seeded auto-completing case instance ${instanceId} did not complete within 240s (last status: ${status ?? 'unreadable'})`
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
@@ -552,7 +557,7 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       // Cleanup: close the reopened instance — reopened instances do NOT re-complete on
       // their own, and letting them accumulate saturates the tenant's execution queue.
       await caseInstances.close(instanceId, folderKey);
-    }, 240_000);
+    }, 300_000);
   });
 
   describe('Case instance structure validation', () => {
