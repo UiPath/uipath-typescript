@@ -190,10 +190,11 @@ describe('ConversationalAgentService — Connections', () => {
   // ── getConnectionAuthUrl ──
 
   describe('getConnectionAuthUrl', () => {
-    it('should call the correct endpoint with the connector key', async () => {
+    it('should call the correct endpoint with the connector key and return sessionId', async () => {
       // Mock returns raw API wire format (expiresAt, not expiresTime)
       mockApiClient.post.mockResolvedValue({
         authUrl: 'https://auth.example.com/oauth?connector=jira',
+        sessionId: 'session-abc-123',
         expiresAt: 1700000000,
       });
 
@@ -205,6 +206,7 @@ describe('ConversationalAgentService — Connections', () => {
         expect.any(Object),
       );
       expect(result.authUrl).toBe('https://auth.example.com/oauth?connector=jira');
+      expect(result.sessionId).toBe('session-abc-123');
       expect(result.expiresTime).toBe(1700000000);
       expect((result as any).expiresAt).toBeUndefined();
     });
@@ -216,6 +218,64 @@ describe('ConversationalAgentService — Connections', () => {
       await expect(
         conversationalAgent.getConnectionAuthUrl('jira'),
       ).rejects.toThrow('Unauthorized');
+    });
+  });
+
+  // ── getConnectionSessionStatus ──
+
+  describe('getConnectionSessionStatus', () => {
+    it('should call the correct endpoint and return pending status', async () => {
+      mockApiClient.get.mockResolvedValue({
+        status: 'pending',
+        connectionId: null,
+        expiresAt: 1700000000,
+      });
+
+      const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        AGENT_ENDPOINTS.CONNECTION_SESSION_STATUS('session-abc-123'),
+        expect.any(Object),
+      );
+      expect(result.status).toBe('pending');
+      expect(result.connectionId).toBeNull();
+      expect(result.expiresTime).toBe(1700000000);
+      expect((result as any).expiresAt).toBeUndefined();
+    });
+
+    it('should return success status with connectionId', async () => {
+      mockApiClient.get.mockResolvedValue({
+        status: 'success',
+        connectionId: 'conn-new-456',
+        expiresAt: 1700000000,
+      });
+
+      const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
+
+      expect(result.status).toBe('success');
+      expect(result.connectionId).toBe('conn-new-456');
+    });
+
+    it('should return failed status', async () => {
+      mockApiClient.get.mockResolvedValue({
+        status: 'failed',
+        connectionId: null,
+        expiresAt: 1700000000,
+      });
+
+      const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
+
+      expect(result.status).toBe('failed');
+      expect(result.connectionId).toBeNull();
+    });
+
+    it('should propagate API errors', async () => {
+      const error = createMockError('Session not found');
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        conversationalAgent.getConnectionSessionStatus('session-abc-123'),
+      ).rejects.toThrow('Session not found');
     });
   });
 

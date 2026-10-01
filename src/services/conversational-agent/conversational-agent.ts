@@ -16,6 +16,7 @@ import type {
   AvailableConnectionsResponse,
   ConnectionAuthRequest,
   ConnectionAuthResponse,
+  ConnectionSessionStatusResponse,
   ConversationalAgentOptions,
   ConversationalAgentServiceModel,
   CitationSourceMedia,
@@ -192,6 +193,14 @@ export class ConversationalAgentService extends BaseService implements Conversat
       { connectorKey } as ConnectionAuthRequest
     );
     return transformData(response.data, ConnectionAuthMap) as ConnectionAuthResponse;
+  }
+
+  @track('ConversationalAgent.GetConnectionSessionStatus')
+  async getConnectionSessionStatus(sessionId: string): Promise<ConnectionSessionStatusResponse> {
+    const response = await this.get<ConnectionSessionStatusResponse>(
+      AGENT_ENDPOINTS.CONNECTION_SESSION_STATUS(sessionId)
+    );
+    return transformData(response.data, ConnectionAuthMap) as ConnectionSessionStatusResponse;
   }
 
   async getFeatureFlags(): Promise<FeatureFlags> {

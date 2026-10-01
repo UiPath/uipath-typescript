@@ -94,6 +94,21 @@ export interface ConnectionAuthRequest {
 export interface ConnectionAuthResponse {
   /** The connector-specific auth URL to open */
   authUrl: string;
-  /** Unix timestamp when the auth URL expires */
+  /** Unique session ID used to poll for OAuth completion via {@link getConnectionSessionStatus} */
+  sessionId: string;
+  /** Unix timestamp (ms) when the auth session expires */
+  expiresTime: number;
+}
+
+/**
+ * Status of a connection auth session returned by the polling endpoint.
+ * Poll until `status` is `'success'` (connection created) or `'failed'`.
+ */
+export interface ConnectionSessionStatusResponse {
+  /** Current status of the OAuth session */
+  status: 'pending' | 'success' | 'failed';
+  /** ID of the newly created connection (only present when status is 'success') */
+  connectionId: string | null;
+  /** Unix timestamp (ms) when the session expires */
   expiresTime: number;
 }
