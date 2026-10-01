@@ -312,8 +312,7 @@ describeIntegration('Agent Feedback - Integration Tests', 'both', modes, () => {
     });
   });
 }, {
-  // llmopstenant_ stalls for 30 s+ on the CI tenant (three calls that take under a
-  // second on the pat leg timed out on the user leg with no other run on the tenant).
-  // Same budget as the other slow-server suites; no retries, no assertion changes.
-  timeout: 120_000,
+  // llmopstenant_ answers take up to the 60 s gateway limit on the CI tenant, so the 30 s
+  // default fails healthy responses; 90 s covers one slow call plus a follow-up.
+  timeout: 90_000,
 });
