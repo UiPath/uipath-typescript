@@ -33,7 +33,7 @@
 
 ### Integration tests
 
-Every new method must also have an integration test in `tests/integration/shared/{domain}/`, where `{domain}` is the service's folder name under `src/services/` (pull-request CI picks the suites to run by that name — see "Which suites run on a pull request" in `tests/integration/README.md`). These run against a live API and catch issues unit tests miss — wrong endpoints, broken transforms, auth/header problems.
+Every new method must also have an integration test in `tests/integration/shared/{domain}/`. These run against a live API and catch issues unit tests miss — wrong endpoints, broken transforms, auth/header problems.
 
 - Use `getServices()` and `getTestConfig()` from `tests/integration/config/unified-setup.ts`
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
