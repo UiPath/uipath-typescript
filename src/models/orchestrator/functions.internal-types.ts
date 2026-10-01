@@ -40,8 +40,7 @@ export interface RawFunctionTrigger {
   /** Release (process) that packages the function. */
   release: {
     name: string;
-    /** Null on tenants where releases have no URL segment of their own. */
-    slug: string | null;
+    slug: string;
   };
 }
 

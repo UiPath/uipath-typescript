@@ -545,7 +545,12 @@ export function parseExternalReference(value: unknown): FunctionInvokeTarget | u
  *
  * @internal
  */
-export function buildInvokeRoute(fn: Pick<RawFunctionGetResponse, 'name' | 'slug' | 'processSlug'>): string {
+export function buildInvokeRoute(fn: {
+  name: string;
+  slug: string;
+  /** The API returns null here on tenants where releases have no slug. */
+  processSlug: string | null;
+}): string {
   const slug = fn.slug?.replace(EDGE_SLASHES_RE, '');
   if (!slug) {
     throw new ServerError({ message: `Function '${fn.name}' has no endpoint path, so it cannot be invoked.` });

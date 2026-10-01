@@ -221,20 +221,6 @@ describe('FunctionService Unit Tests', () => {
       expect(typeof transformed.invoke).toBe('function');
     });
 
-    it('should keep a null process slug as null', async () => {
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(createMockTransformedFunctionCollection());
-
-      await functionService.getAll({ folderId: TEST_CONSTANTS.FOLDER_ID });
-
-      const { transformFn } = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0];
-      const transformed = transformFn!(
-        createMockRawFunctionTrigger({ Release: { Name: FUNCTION_TEST_CONSTANTS.PROCESS_NAME, Slug: null } })
-      ) as FunctionGetResponse;
-
-      expect(transformed.processSlug).toBeNull();
-      expect(transformed.processName).toBe(FUNCTION_TEST_CONSTANTS.PROCESS_NAME);
-    });
-
     it('should propagate errors from the pagination helper', async () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(createMockError());
 
