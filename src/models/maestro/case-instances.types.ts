@@ -7,6 +7,22 @@ import { PaginationOptions } from "../../utils/pagination";
 import { InstanceGetVariablesOptions, InstanceGetVariablesResponse } from "./instance-variables.types";
 
 /**
+ * Options for the Case Instances service constructor.
+ *
+ * @experimental
+ */
+export interface CaseInstancesOptions {
+  /**
+   * Route requests through the Case App routes, which authorize with Case persona grants instead
+   * of folder permissions. Requires a user token for a user holding Case persona grants on the
+   * processes involved; PAT and client-credentials tokens are rejected. `getById`, `pause`,
+   * `resume` and `getVariables` have no Case App route and throw while this is on.
+   * Defaults to `false`.
+   */
+  useCaseAppRoutes?: boolean;
+}
+
+/**
  * Response for getting a single case instance
  */
 export interface RawCaseInstanceGetResponse {
@@ -26,6 +42,11 @@ export interface RawCaseInstanceGetResponse {
   startedTime: string;
   completedTime: string;
   instanceRuns: CaseInstanceRun[];
+  /** Human-readable case reference number */
+  caseId?: string | null;
+  organizationId?: string;
+  tenantId?: string;
+  createdTime?: string | null;
   // Properties from case JSON
   caseAppConfig?: CaseAppConfig;
   caseType?: string;
@@ -47,9 +68,43 @@ export interface CaseInstanceRun {
  */
 export interface CaseInstanceGetAllOptions {
   packageId?: string;
+  /** Requires `packageId` */
   packageVersion?: string;
   processKey?: string;
+  /** Incident error code */
   errorCode?: string;
+  /** Limits results to one folder. Required when the service uses Case App routes. */
+  folderKey?: string;
+  /** Instance statuses to include */
+  statuses?: InstanceStatus[];
+  /** Human-readable case reference number */
+  caseId?: string;
+  creatorUserKey?: string;
+  /** Lower bound of the started-time range */
+  startedTimeStart?: Date;
+  /** Upper bound of the started-time range */
+  startedTimeEnd?: Date;
+  sortBy?: CaseInstanceSortBy;
+  /** Defaults to descending */
+  order?: CaseInstanceSortOrder;
+}
+
+/**
+ * Field to sort case instances by.
+ */
+export enum CaseInstanceSortBy {
+  StartedTime = 'startedTimeUtc',
+  CompletedTime = 'completedTimeUtc',
+  CreatedTime = 'createdTimeUtc',
+  Status = 'status',
+}
+
+/**
+ * Sort direction for case instances.
+ */
+export enum CaseInstanceSortOrder {
+  Asc = 'Asc',
+  Desc = 'Desc',
 }
 
 /**
@@ -70,6 +125,8 @@ export interface CaseInstanceOperationOptions {
 export interface CaseInstanceOperationResponse {
   instanceId: string;
   status: string;
+  /** Whether the case reached a terminal state. Returned by `close` with Case App routes. */
+  isCompleted?: boolean;
 }
 
 /**
@@ -369,6 +426,18 @@ export interface ElementExecutionMetadata {
   externalLink: string;
   /** List of element runs for the element */
   elementRuns: ElementRunMetadata[];
+  /** BPMN element type */
+  elementType?: string;
+  /** What the element does — an action, an agent, an automation */
+  elementExtensionType?: string | null;
+  runId?: string;
+  parentRunId?: string | null;
+  parentElementRunId?: string | null;
+  caseInstanceId?: string | null;
+  /** The stage the element belongs to */
+  caseStageElementId?: string | null;
+  jobKey?: string | null;
+  maestroLink?: string | null;
 }
 
 /**
@@ -389,6 +458,48 @@ export interface CaseInstanceExecutionHistoryResponse {
   startedTime: string;
   completedTime: string | null;
   elementExecutions: ElementExecutionMetadata[];
+  /** Human-readable case reference number */
+  caseId?: string | null;
+  organizationId?: string;
+  tenantId?: string;
+  traceId?: string | null;
+  caseSummary?: string | null;
+  caseSummaryExpression?: string | null;
+  /** Details cards configured on the case app */
+  sections?: CaseInstanceSection[] | null;
+  sectionsExpressions?: CaseInstanceSection[] | null;
+}
+
+/**
+ * A details card configured on the case app.
+ */
+export interface CaseInstanceSection {
+  id: string | null;
+  title: string | null;
+  /** Fields configured by the case app author, returned as the API sends them */
+  details: Record<string, unknown> | null;
+}
+
+/**
+ * Element types the execution history can be filtered by.
+ */
+export enum CaseInstanceElementType {
+  /** Human-in-the-loop (Action Center) tasks */
+  Hitl = 'hitl',
+  /** AI agents */
+  Agent = 'agent',
+  /** Robotic Process Automation (RPA) processes */
+  Rpa = 'rpa',
+  /** API workflows */
+  ApiWorkflow = 'apiworkflow',
+}
+
+/**
+ * Options for getting a case instance's execution history.
+ */
+export interface CaseInstanceGetExecutionHistoryOptions {
+  /** Only return elements of these types */
+  elementTypes?: CaseInstanceElementType[];
 }
 
 /**
@@ -400,6 +511,15 @@ export interface ElementRunMetadata {
   completedTime: string | null;
   elementRunId: string;
   parentElementRunId: string | null;
+  incomingFlowId?: string | null;
+  incomingFlowIds?: string[];
+  markerItemIndex?: number | null;
+  workflowId?: string | null;
+  version?: number | null;
+  jobKey?: string | null;
+  /** External reference, e.g. the Action Center task */
+  externalLink?: string | null;
+  maestroLink?: string | null;
 }
 
 /**
