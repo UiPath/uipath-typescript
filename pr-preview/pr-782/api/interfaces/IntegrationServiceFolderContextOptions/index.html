@@ -3762,8 +3762,10 @@
 Provide one of <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>. When more than one
 is supplied, all are forwarded; the server applies precedence
 <code>folderPath</code> &gt; <code>folderKey</code> &gt; <code>folderId</code>.</p>
-<p>Folder context is optional — omit it to fall back to the folder context the
-SDK was initialized with.</p>
+<p>Folder context is optional — omit it to fall back to a deployed coded app's
+folder. A coded function's invocation folder is not applied. To address a
+connection under a folder, name the connection's own: Integration Service
+rejects a connection outside the folder named.</p>
 <h2 id="extended-by">Extended by<a class="headerlink" href="#extended-by" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../ConnectorGetDefaultConnectionOptions/"><code>ConnectorGetDefaultConnectionOptions</code></a></li>
