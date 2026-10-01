@@ -170,23 +170,18 @@ Creating a validation action and polling its result both go through the [Documen
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 | `getStagesSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
-
-## Maestro Case App
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `PIMS` |
-| `getStages()` | `PIMS` |
-| `getSlaSummary()` | `PIMS` |
-| `getCaseJson()` | `PIMS` |
-| `getElementExecutions()` | `PIMS` |
-| `getIncidents()` | `PIMS` |
-| `getAdhocTasks()` | `PIMS` |
-| `triggerAdhocTask()` | `PIMS` |
-| `selectStage()` | `PIMS` |
-| `sendMessage()` | `PIMS` |
-| `close()` | `PIMS` |
-| `reopen()` | `PIMS` |
+| `getAllForCaseApp()` | `PIMS` |
+| `getStagesForCaseApp()` | `PIMS` |
+| `getSlaSummaryForCaseApp()` | `PIMS` |
+| `getCaseJsonForCaseApp()` | `PIMS` |
+| `getElementExecutionsForCaseApp()` | `PIMS` |
+| `getIncidentsForCaseApp()` | `PIMS` |
+| `getAdhocTasksForCaseApp()` | `PIMS` |
+| `triggerAdhocTaskForCaseApp()` | `PIMS` |
+| `selectStageForCaseApp()` | `PIMS` |
+| `sendMessageForCaseApp()` | `PIMS` |
+| `closeForCaseApp()` | `PIMS` |
+| `reopenForCaseApp()` | `PIMS` |
 
 ## Conversational Agent
 

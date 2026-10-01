@@ -12,8 +12,24 @@ import {
   CaseInstanceStageSLAResponse,
   CaseInstanceStageSLAOptions,
   CaseInstanceGetVariablesOptions,
-  CaseInstanceGetVariablesResponse
+  CaseInstanceGetVariablesResponse,
+  CaseInstanceMessageName,
 } from './case-instances.types';
+import type {
+  CaseAppAdhocTaskStage,
+  CaseAppCloseOptions,
+  CaseAppCloseResponse,
+  CaseAppGetElementExecutionsOptions,
+  CaseAppGetElementExecutionsResponse,
+  CaseAppGetSlaSummaryResponse,
+  CaseAppGetStagesResponse,
+  CaseAppIncidentGetResponse,
+  CaseAppInstanceGetAllWithPaginationOptions,
+  CaseAppInstanceGetResponse,
+  CaseAppSelectStageOptions,
+  CaseAppSendMessageResponse,
+  CaseAppTriggerAdhocTaskOptions,
+} from './case-app.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
 import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
@@ -33,6 +49,10 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  * const caseInstances = new CaseInstances(sdk);
  * const allInstances = await caseInstances.getAll();
  * ```
+ *
+ * Methods ending in `ForCaseApp` (experimental) call the Case App routes, which authorize by the
+ * caller's Case persona grants rather than Orchestrator folder permissions and are scoped to a
+ * single folder.
  *
  * !!! note
  *     Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`)
@@ -448,6 +468,388 @@ export interface CaseInstancesServiceModel {
    * ```
    */
   getVariables(instanceId: string, folderKey: string, options?: CaseInstanceGetVariablesOptions): Promise<CaseInstanceGetVariablesResponse>;
+
+  /**
+   * Gets the case instances in a folder that the caller's `Cases.View` grants cover.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Instances are filtered after each page is fetched, so a page can hold fewer items than
+   * `pageSize` — or none — while `hasNextPage` is still `true`. Keep following `nextCursor` until
+   * `hasNextPage` is `false`. A caller with no grants gets an empty result.
+   *
+   * @param folderKey - Key of the folder to list case instances from
+   * @param options - Optional filters, sorting and pagination options
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link CaseAppInstanceGetResponse}
+   *          without pagination options, or {@link PaginatedResponse} of
+   *          {@link CaseAppInstanceGetResponse} when pagination options are used.
+   *
+   * @example
+   * ```typescript
+   * const result = await caseInstances.getAllForCaseApp('<folderKey>');
+   * result.items.forEach(instance => console.log(instance.instanceId, instance.latestRunStatus));
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { CaseAppInstanceSortBy, CaseAppSortOrder, InstanceStatus } from '@uipath/uipath-typescript/cases';
+   *
+   * let page = await caseInstances.getAllForCaseApp('<folderKey>', {
+   *   processKey: '<processKey>',
+   *   statuses: [InstanceStatus.RUNNING, InstanceStatus.FAULTED],
+   *   startedTimeStart: new Date('2026-01-01'),
+   *   sortBy: CaseAppInstanceSortBy.StartedTime,
+   *   order: CaseAppSortOrder.Desc,
+   *   pageSize: 50,
+   * });
+   *
+   * while (page.hasNextPage && page.nextCursor) {
+   *   page = await caseInstances.getAllForCaseApp('<folderKey>', { cursor: page.nextCursor });
+   * }
+   * ```
+   */
+  getAllForCaseApp<T extends CaseAppInstanceGetAllWithPaginationOptions = CaseAppInstanceGetAllWithPaginationOptions>(
+    folderKey: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<CaseAppInstanceGetResponse>
+      : NonPaginatedResponse<CaseAppInstanceGetResponse>
+  >;
+
+  /**
+   * Gets each stage of a case instance with its latest status and runtime SLA.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Requires `Cases.View`.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @returns Promise resolving to {@link CaseAppGetStagesResponse}
+   *
+   * @example
+   * ```typescript
+   * // First, get case instances with caseInstances.getAllForCaseApp('<folderKey>')
+   * const { stages } = await caseInstances.getStagesForCaseApp('<instanceId>', '<folderKey>');
+   * stages.forEach(stage => console.log(stage.name, stage.latestStatus, stage.slaStatus));
+   * ```
+   */
+  getStagesForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppGetStagesResponse>;
+
+  /**
+   * Gets the case-level SLA summary of a case instance: its due time, SLA status and escalation state.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Requires `Cases.ViewSummary` on the case; a grant on a single stage is not enough.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @returns Promise resolving to {@link CaseAppGetSlaSummaryResponse}
+   *
+   * @example
+   * ```typescript
+   * const summary = await caseInstances.getSlaSummaryForCaseApp('<instanceId>', '<folderKey>');
+   * console.log(summary.slaStatus, summary.slaDueTime);
+   * ```
+   */
+  getSlaSummaryForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppGetSlaSummaryResponse>;
+
+  /**
+   * Gets the case plan of a case instance — the JSON document the case was designed with.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Returned exactly as stored in the package, so its shape follows the case designer's schema.
+   * Requires `Cases.ViewSummary` on the case.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @returns Promise resolving to the case plan as a `Record<string, unknown>`
+   *
+   * @example
+   * ```typescript
+   * const casePlan = await caseInstances.getCaseJsonForCaseApp('<instanceId>', '<folderKey>');
+   * ```
+   */
+  getCaseJsonForCaseApp(instanceId: string, folderKey: string): Promise<Record<string, unknown>>;
+
+  /**
+   * Gets the element-execution timeline of a case instance, across all of its stages.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Includes each element's runs, links and job keys, plus the case summary and the details
+   * sections configured on the case app. Requires `Cases.ViewSummary` on the case.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param options - Optional element-type filter
+   * @returns Promise resolving to {@link CaseAppGetElementExecutionsResponse}
+   *
+   * @example
+   * ```typescript
+   * const timeline = await caseInstances.getElementExecutionsForCaseApp('<instanceId>', '<folderKey>');
+   * timeline.elementExecutions.forEach(element => console.log(element.elementName, element.status));
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { CaseAppElementType } from '@uipath/uipath-typescript/cases';
+   *
+   * const tasks = await caseInstances.getElementExecutionsForCaseApp('<instanceId>', '<folderKey>', {
+   *   elementTypes: [CaseAppElementType.Hitl, CaseAppElementType.Agent],
+   * });
+   * ```
+   */
+  getElementExecutionsForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseAppGetElementExecutionsOptions
+  ): Promise<CaseAppGetElementExecutionsResponse>;
+
+  /**
+   * Gets the incidents raised on a case instance, across all of its runs.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Requires `Cases.ViewSummary` on the case.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @returns Promise resolving to an array of {@link CaseAppIncidentGetResponse}
+   *
+   * @example
+   * ```typescript
+   * const incidents = await caseInstances.getIncidentsForCaseApp('<instanceId>', '<folderKey>');
+   * incidents.forEach(incident => console.log(incident.errorCode, incident.errorMessage));
+   * ```
+   */
+  getIncidentsForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppIncidentGetResponse[]>;
+
+  /**
+   * Gets the ad-hoc tasks the caller can trigger on a running case instance, grouped by stage.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Only stages the caller holds `Cases.RunAdhocTasks` on are returned, so every task listed can be
+   * passed to `triggerAdhocTaskForCaseApp`. A caller whose grants cover no ad-hoc task gets an empty array.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @returns Promise resolving to an array of {@link CaseAppAdhocTaskStage}
+   *
+   * @example
+   * ```typescript
+   * const stages = await caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>');
+   * stages.forEach(stage => stage.tasks.forEach(task => console.log(stage.stageLabel, task.taskName)));
+   * ```
+   */
+  getAdhocTasksForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppAdhocTaskStage[]>;
+
+  /**
+   * Triggers one ad-hoc (manually-triggered) task on a running case instance.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * `taskName` is matched case-sensitively against the case plan; an unknown or non-ad-hoc name is
+   * rejected as not found. Requires `Cases.RunAdhocTasks` on the stage that owns the task. Resolves
+   * once the trigger is accepted, not once the task has run.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param taskName - Case plan name of the task, as returned by `getAdhocTasksForCaseApp`
+   * @param options - Optional input handed to the task
+   * @returns Promise resolving when the trigger is accepted
+   *
+   * @example
+   * ```typescript
+   * // First, list triggerable tasks with caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>')
+   * await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents', {
+   *   taskInput: { reason: 'Missing proof of address' },
+   * });
+   * ```
+   */
+  triggerAdhocTaskForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    taskName: string,
+    options?: CaseAppTriggerAdhocTaskOptions
+  ): Promise<void>;
+
+  /**
+   * Selects the next stage of a running case instance that is waiting for a user to choose one.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * `stageName` is matched case-sensitively against the case plan's stage labels; an unknown name,
+   * or a stage that is not user-selectable, is rejected as not found. Requires `Cases.SelectStage`
+   * on the case. Resolves once the selection is sent, not once the case has transitioned.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param stageName - Label of the stage to select
+   * @param options - Which waiting stage receives the selection, when several are waiting
+   * @returns Promise resolving when the selection is accepted
+   *
+   * @example
+   * ```typescript
+   * await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review', { waitingStageId: '<stageId>' });
+   * ```
+   */
+  selectStageForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    stageName: string,
+    options?: CaseAppSelectStageOptions
+  ): Promise<void>;
+
+  /**
+   * Sends a case message (`UserAdhocTrigger` or `UserSelectStage`) to a running case instance.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Prefer `triggerAdhocTaskForCaseApp` and `selectStageForCaseApp`, which build the message server-side. The caller
+   * must hold `Cases.RunAdhocTasks` or `Cases.SelectStage` on the targeted case.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param name - Message to send
+   * @param options - Message payload and an optional reference overriding the default target
+   * @returns Promise resolving to {@link CaseAppSendMessageResponse}
+   *
+   * @example
+   * ```typescript
+   * import { CaseInstanceMessageName } from '@uipath/uipath-typescript/cases';
+   *
+   * await caseInstances.sendMessageForCaseApp('<instanceId>', '<folderKey>', CaseInstanceMessageName.UserAdhocTrigger, {
+   *   itemData: { taskNames: ['Request Documents'] },
+   * });
+   * ```
+   */
+  sendMessageForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    name: CaseInstanceMessageName,
+    options?: CaseInstanceSendMessageOptions
+  ): Promise<CaseAppSendMessageResponse>;
+
+  /**
+   * Closes a case instance.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * A running case reports `Canceling` and finishes cancelling asynchronously; an already-terminal
+   * case returns its status unchanged. A case that has already `Completed` is rejected, since
+   * closing it would prevent reopening it. Requires `Cases.Close`.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param options - Optional comment and operation id
+   * @returns Promise resolving to {@link CaseAppCloseResponse}
+   *
+   * @example
+   * ```typescript
+   * const result = await caseInstances.closeForCaseApp('<instanceId>', '<folderKey>');
+   * console.log(result.status);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * await caseInstances.closeForCaseApp('<instanceId>', '<folderKey>', { comment: 'Duplicate case' });
+   * ```
+   */
+  closeForCaseApp(instanceId: string, folderKey: string, options?: CaseAppCloseOptions): Promise<CaseAppCloseResponse>;
+
+  /**
+   * Reopens a completed case instance from a chosen case plan element.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Only `Completed` cases can be reopened. Requires `Cases.Reopen`.
+   *
+   * @param instanceId - ID of the case instance
+   * @param folderKey - Key of the folder the case instance lives in
+   * @param startElementId - ID of the case plan element (e.g. a stage) to restart from
+   * @param options - Optional comment
+   * @returns Promise resolving to {@link CaseInstanceOperationResponse}
+   *
+   * @example
+   * ```typescript
+   * // First, get stage IDs with caseInstances.getStagesForCaseApp('<instanceId>', '<folderKey>')
+   * const result = await caseInstances.reopenForCaseApp('<instanceId>', '<folderKey>', '<stageId>');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * await caseInstances.reopenForCaseApp('<instanceId>', '<folderKey>', '<stageId>', { comment: 'Customer replied' });
+   * ```
+   */
+  reopenForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    startElementId: string,
+    options?: CaseInstanceOperationOptions
+  ): Promise<CaseInstanceOperationResponse>;
 }
 
 // Method interface that will be added to case instance objects
