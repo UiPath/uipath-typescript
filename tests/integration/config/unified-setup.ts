@@ -32,7 +32,6 @@ import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
 import { BusinessApps } from '../../../src/services/maestro/business-apps';
-import { CaseApp } from '../../../src/services/maestro/case-app';
 import { loadIntegrationConfig, IntegrationConfig, resolveAuthModes, AuthRequirement, AuthMode,
   resolveBaseUrl,
 } from './test-config';
@@ -88,7 +87,6 @@ export interface TestServices {
   folders?: Folders;
   settings?: Settings;
   businessApps?: BusinessApps;
-  caseApp?: CaseApp;
   platformUsers?: Users;
   platformRoles?: Roles;
   platformGroups?: Groups;
@@ -214,7 +212,6 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     folders: new Folders(sdk),
     settings: new Settings(sdk),
     businessApps: new BusinessApps(sdk),
-    caseApp: new CaseApp(sdk),
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),
     platformGroups: new Groups(sdk),

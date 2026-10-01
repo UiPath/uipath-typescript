@@ -51,6 +51,34 @@ import { FOLDER_KEY } from '../../../utils/constants/headers';
 import { createHeaders } from '../../../utils/http/headers';
 import { TaskService } from '../../action-center/tasks';
 import { TaskGetAllOptions } from '../../../models/action-center';
+import type {
+  CaseAppAdhocTaskStage,
+  CaseAppCloseOptions,
+  CaseAppCloseResponse,
+  CaseAppElementExecution,
+  CaseAppGetElementExecutionsOptions,
+  CaseAppGetElementExecutionsResponse,
+  CaseAppIncidentGetResponse,
+  CaseAppInstanceGetAllWithPaginationOptions,
+  CaseAppInstanceGetResponse,
+  CaseAppSelectStageOptions,
+  CaseAppSendMessageResponse,
+  CaseAppGetSlaSummaryResponse,
+  CaseAppGetStagesResponse,
+  CaseAppTriggerAdhocTaskOptions,
+} from '../../../models/maestro/case-app.types';
+import type {
+  RawCaseAppInstance,
+  RawCaseAppGetSlaSummaryResponse,
+  RawCaseAppAdhocTasksResponse,
+  RawCaseAppElementExecution,
+  RawCaseAppGetElementExecutionsResponse,
+  CaseAppSendMessageRequestBody,
+} from '../../../models/maestro/case-app.internal-types';
+import type { CaseInstanceMessageName } from '../../../models/maestro/case-instances.types';
+import { CaseAppIncidentMap, CaseAppInstanceFilterMap, CaseAppInstanceMap } from '../../../models/maestro/case-app.constants';
+import { createParams } from '../../../utils/http/params';
+import { transformRequest } from '../../../utils/transform';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
@@ -549,5 +577,206 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     );
 
     return response.data ?? [];
+  }
+
+  @track('CaseInstances.GetAllForCaseApp')
+  async getAllForCaseApp<T extends CaseAppInstanceGetAllWithPaginationOptions = CaseAppInstanceGetAllWithPaginationOptions>(
+    folderKey: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<CaseAppInstanceGetResponse>
+      : NonPaginatedResponse<CaseAppInstanceGetResponse>
+  > {
+    const { statuses, startedTimeStart, startedTimeEnd, ...rest } = options ?? {};
+    const filters = transformRequest(
+      {
+        ...rest,
+        statuses: statuses?.join(','),
+        startedTimeStart: startedTimeStart?.toISOString(),
+        startedTimeEnd: startedTimeEnd?.toISOString(),
+      },
+      CaseAppInstanceFilterMap
+    );
+
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => MAESTRO_ENDPOINTS.CASE_APP.GET_ALL,
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+        transformFn: (item: RawCaseAppInstance) => this.toCaseAppInstance(item),
+        pagination: {
+          paginationType: PaginationType.TOKEN,
+          itemsField: PROCESS_INSTANCE_PAGINATION.ITEMS_FIELD,
+          continuationTokenField: PROCESS_INSTANCE_PAGINATION.CONTINUATION_TOKEN_FIELD,
+          paginationParams: {
+            pageSizeParam: PROCESS_INSTANCE_TOKEN_PARAMS.PAGE_SIZE_PARAM,
+            tokenParam: PROCESS_INSTANCE_TOKEN_PARAMS.TOKEN_PARAM,
+          },
+        },
+        excludeFromPrefix: Object.keys(filters),
+      },
+      filters as T
+    );
+  }
+
+  @track('CaseInstances.GetStagesForCaseApp')
+  async getStagesForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppGetStagesResponse> {
+    const response = await this.get<CaseAppGetStagesResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_STAGES(instanceId),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return response.data;
+  }
+
+  @track('CaseInstances.GetSlaSummaryForCaseApp')
+  async getSlaSummaryForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppGetSlaSummaryResponse> {
+    const response = await this.get<RawCaseAppGetSlaSummaryResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_SLA_SUMMARY(instanceId),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data, CaseAppInstanceMap) as unknown as CaseAppGetSlaSummaryResponse;
+  }
+
+  @track('CaseInstances.GetCaseJsonForCaseApp')
+  async getCaseJsonForCaseApp(instanceId: string, folderKey: string): Promise<Record<string, unknown>> {
+    const response = await this.get<Record<string, unknown>>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_CASE_JSON(instanceId),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return response.data;
+  }
+
+  @track('CaseInstances.GetElementExecutionsForCaseApp')
+  async getElementExecutionsForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseAppGetElementExecutionsOptions
+  ): Promise<CaseAppGetElementExecutionsResponse> {
+    const response = await this.get<RawCaseAppGetElementExecutionsResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_ELEMENT_EXECUTIONS(instanceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+        params: createParams({ elementTypes: options?.elementTypes?.join(',') }),
+      }
+    );
+
+    // Sections carry author-defined details, so only the named time fields are renamed.
+    const { elementExecutions, ...envelope } = response.data;
+    return {
+      ...(transformData(envelope, CaseAppInstanceMap) as unknown as Omit<
+        CaseAppGetElementExecutionsResponse,
+        'elementExecutions'
+      >),
+      elementExecutions: (elementExecutions ?? []).map(execution => this.toCaseAppElementExecution(execution)),
+    };
+  }
+
+  @track('CaseInstances.GetIncidentsForCaseApp')
+  async getIncidentsForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppIncidentGetResponse[]> {
+    const response = await this.get<Record<string, unknown>[]>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_INCIDENTS(instanceId),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data ?? [], CaseAppIncidentMap) as unknown as CaseAppIncidentGetResponse[];
+  }
+
+  @track('CaseInstances.GetAdhocTasksForCaseApp')
+  async getAdhocTasksForCaseApp(instanceId: string, folderKey: string): Promise<CaseAppAdhocTaskStage[]> {
+    const response = await this.get<RawCaseAppAdhocTasksResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.GET_ADHOC_TASKS(instanceId),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return response.data?.stages ?? [];
+  }
+
+  @track('CaseInstances.TriggerAdhocTaskForCaseApp')
+  async triggerAdhocTaskForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    taskName: string,
+    options?: CaseAppTriggerAdhocTaskOptions
+  ): Promise<void> {
+    await this.post<void>(
+      MAESTRO_ENDPOINTS.CASE_APP.TRIGGER_TASK(instanceId),
+      { taskName, ...(options?.taskInput && { taskInput: options.taskInput }) },
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+  }
+
+  @track('CaseInstances.SelectStageForCaseApp')
+  async selectStageForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    stageName: string,
+    options?: CaseAppSelectStageOptions
+  ): Promise<void> {
+    await this.post<void>(
+      MAESTRO_ENDPOINTS.CASE_APP.SELECT_STAGE(instanceId),
+      { stageName, ...(options?.waitingStageId && { waitingStageId: options.waitingStageId }) },
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+  }
+
+  @track('CaseInstances.SendMessageForCaseApp')
+  async sendMessageForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    name: CaseInstanceMessageName,
+    options?: CaseInstanceSendMessageOptions
+  ): Promise<CaseAppSendMessageResponse> {
+    const body: CaseAppSendMessageRequestBody = {
+      name,
+      reference: options?.reference ?? CASE_INSTANCE_MESSAGE_REFERENCE(instanceId),
+      itemData: options?.itemData ?? {},
+    };
+    const response = await this.post<CaseAppSendMessageResponse>(MAESTRO_ENDPOINTS.CASE_APP.SEND_MESSAGE, body, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+    });
+    return response.data;
+  }
+
+  @track('CaseInstances.CloseForCaseApp')
+  async closeForCaseApp(instanceId: string, folderKey: string, options?: CaseAppCloseOptions): Promise<CaseAppCloseResponse> {
+    // The route rejects a missing body, so an empty object is always sent.
+    const response = await this.post<CaseAppCloseResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.CLOSE(instanceId),
+      { ...options },
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return response.data;
+  }
+
+  @track('CaseInstances.ReopenForCaseApp')
+  async reopenForCaseApp(
+    instanceId: string,
+    folderKey: string,
+    startElementId: string,
+    options?: CaseInstanceOperationOptions
+  ): Promise<CaseInstanceOperationResponse> {
+    const response = await this.post<CaseInstanceOperationResponse>(
+      MAESTRO_ENDPOINTS.CASE_APP.REOPEN(instanceId),
+      { startElementId, ...options },
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return response.data;
+  }
+
+  private toCaseAppInstance(item: RawCaseAppInstance): CaseAppInstanceGetResponse {
+    const { instanceRuns, ...rest } = item;
+    return {
+      ...(transformData(rest, CaseAppInstanceMap) as unknown as Omit<CaseAppInstanceGetResponse, 'instanceRuns'>),
+      instanceRuns: instanceRuns
+        ? (transformData(instanceRuns, TimeFieldTransformMap) as unknown as CaseAppInstanceGetResponse['instanceRuns'])
+        : null,
+    };
+  }
+
+  private toCaseAppElementExecution(execution: RawCaseAppElementExecution): CaseAppElementExecution {
+    const { elementRuns, ...rest } = execution;
+    return {
+      ...(transformData(rest, TimeFieldTransformMap) as unknown as Omit<CaseAppElementExecution, 'elementRuns'>),
+      elementRuns: transformData(elementRuns ?? [], TimeFieldTransformMap) as unknown as CaseAppElementExecution['elementRuns'],
+    };
   }
 }

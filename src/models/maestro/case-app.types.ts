@@ -343,7 +343,7 @@ export interface CaseAppIncidentGetResponse {
  * @experimental
  */
 export interface CaseAppAdhocTask {
-  /** Case plan name — the name `triggerAdhocTask` takes */
+  /** Case plan name — the name `triggerAdhocTaskForCaseApp` takes */
   taskName: string;
   taskId: string | null;
 }

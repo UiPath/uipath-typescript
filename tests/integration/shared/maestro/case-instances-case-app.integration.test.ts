@@ -3,11 +3,11 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 import { generateRandomString } from '../../utils/helpers';
 import { isNotFoundError } from '../../../../src/core/errors';
 import {
-  CaseApp,
+  CaseInstances,
   CaseAppElementType,
   CaseInstanceMessageName,
   InstanceStatus,
-} from '../../../../src/services/maestro/case-app';
+} from '../../../../src/services/maestro/cases';
 import type { CaseAppInstanceGetResponse } from '../../../../src/models/maestro';
 
 const modes: InitMode[] = ['v1'];
@@ -24,8 +24,8 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // no instances and every write is rejected with 403. Re-enable once that user is assigned a Case
 // persona (Cases.View, ViewSummary, RunAdhocTasks, SelectStage, Close, Reopen) on the
 // MAESTRO_TEST_CASE_PROCESS_KEY and MAESTRO_TEST_COMPLETED_CASE_PROCESS_KEY processes.
-describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () => {
-  let caseApp!: CaseApp;
+describeIntegration('Maestro Case Instances (Case App v3) - Integration Tests', 'user', modes, () => {
+  let caseInstances!: CaseInstances;
   let folderKey!: string;
   let instance!: CaseAppInstanceGetResponse;
 
@@ -35,7 +35,6 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
   let completedInstanceId: string | null = null;
 
   const waitForStatus = async (instanceId: string, status: InstanceStatus): Promise<void> => {
-    const { caseInstances } = getServices();
     for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
       try {
         const current = await caseInstances.getById(instanceId, folderKey);
@@ -49,11 +48,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
   };
 
   beforeAll(async () => {
-    const service = getServices().caseApp;
-    if (!service) {
-      throw new Error('CaseApp service is not registered for this init mode');
-    }
-    caseApp = service;
+    caseInstances = getServices().caseInstances;
 
     const config = getTestConfig();
     if (!config.folderKey || !config.folderId || !config.maestroCaseProcessKey || !config.maestroCompletedCaseProcessKey) {
@@ -78,7 +73,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     seededInstanceId = runningJob.key;
     await waitForStatus(seededInstanceId, InstanceStatus.RUNNING);
 
-    const result = await caseApp.getAll(folderKey, { processKey: config.maestroCaseProcessKey, pageSize: 50 });
+    const result = await caseInstances.getAllForCaseApp(folderKey, { processKey: config.maestroCaseProcessKey, pageSize: 50 });
     const seeded = result.items.find(item => item.instanceId === seededInstanceId);
     if (!seeded) {
       throw new Error('Seeded case instance is not visible to this credential through getAll');
@@ -86,7 +81,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     instance = seeded;
   }, 240_000);
 
-  describe('getAll', () => {
+  describe('getAllForCaseApp', () => {
     it('should return case instances with SDK field names', async () => {
       expect(instance.instanceId).toBe(seededInstanceId);
       expect(instance.folderKey).toBe(folderKey);
@@ -96,18 +91,18 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
   });
 
-  describe('getStages', () => {
+  describe('getStagesForCaseApp', () => {
     it('should return the stages of the case instance', async () => {
-      const result = await caseApp.getStages(instance.instanceId, folderKey);
+      const result = await caseInstances.getStagesForCaseApp(instance.instanceId, folderKey);
 
       expect(result.caseInstanceId).toBe(instance.instanceId);
       expect(Array.isArray(result.stages)).toBe(true);
     });
   });
 
-  describe('getSlaSummary', () => {
+  describe('getSlaSummaryForCaseApp', () => {
     it('should return the case-level SLA summary', async () => {
-      const result = await caseApp.getSlaSummary(instance.instanceId, folderKey);
+      const result = await caseInstances.getSlaSummaryForCaseApp(instance.instanceId, folderKey);
 
       expect(result.caseInstanceId).toBe(instance.instanceId);
       expect(result.instanceStatus).toBeDefined();
@@ -115,18 +110,18 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
   });
 
-  describe('getCaseJson', () => {
+  describe('getCaseJsonForCaseApp', () => {
     it('should return the case plan as an object', async () => {
-      const result = await caseApp.getCaseJson(instance.instanceId, folderKey);
+      const result = await caseInstances.getCaseJsonForCaseApp(instance.instanceId, folderKey);
 
       expect(typeof result).toBe('object');
       expect(result).not.toBeNull();
     });
   });
 
-  describe('getElementExecutions', () => {
+  describe('getElementExecutionsForCaseApp', () => {
     it('should return the timeline with SDK time field names', async () => {
-      const result = await caseApp.getElementExecutions(instance.instanceId, folderKey);
+      const result = await caseInstances.getElementExecutionsForCaseApp(instance.instanceId, folderKey);
 
       expect(result.instanceId).toBe(instance.instanceId);
       expect(result.startedTime).toBeDefined();
@@ -137,7 +132,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
 
     it('should accept an element-type filter', async () => {
-      const result = await caseApp.getElementExecutions(instance.instanceId, folderKey, {
+      const result = await caseInstances.getElementExecutionsForCaseApp(instance.instanceId, folderKey, {
         elementTypes: [CaseAppElementType.Hitl],
       });
 
@@ -145,9 +140,9 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
   });
 
-  describe('getIncidents', () => {
+  describe('getIncidentsForCaseApp', () => {
     it('should return an array of incidents', async () => {
-      const result = await caseApp.getIncidents(instance.instanceId, folderKey);
+      const result = await caseInstances.getIncidentsForCaseApp(instance.instanceId, folderKey);
 
       expect(Array.isArray(result)).toBe(true);
       result.forEach(incident => {
@@ -157,9 +152,9 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
   });
 
-  describe('getAdhocTasks', () => {
+  describe('getAdhocTasksForCaseApp', () => {
     it('should return the triggerable ad-hoc tasks grouped by stage', async () => {
-      const result = await caseApp.getAdhocTasks(instance.instanceId, folderKey);
+      const result = await caseInstances.getAdhocTasksForCaseApp(instance.instanceId, folderKey);
 
       expect(Array.isArray(result)).toBe(true);
       result.forEach(stage => expect(Array.isArray(stage.tasks)).toBe(true));
@@ -168,25 +163,25 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
 
   // An unmatched name reaches the route, auth, folder header and body parsing without starting
   // any work on the case, which keeps the instance usable by the close test below.
-  describe('triggerAdhocTask', () => {
+  describe('triggerAdhocTaskForCaseApp', () => {
     it('should reject a task name the case plan does not define', async () => {
       await expect(
-        caseApp.triggerAdhocTask(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
+        caseInstances.triggerAdhocTaskForCaseApp(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
       ).rejects.toSatisfy(isNotFoundError);
     });
   });
 
-  describe('selectStage', () => {
+  describe('selectStageForCaseApp', () => {
     it('should reject a stage name the case plan does not define', async () => {
       await expect(
-        caseApp.selectStage(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
+        caseInstances.selectStageForCaseApp(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
       ).rejects.toSatisfy(isNotFoundError);
     });
   });
 
-  describe('sendMessage', () => {
+  describe('sendMessageForCaseApp', () => {
     it('should deliver an ad-hoc trigger message to a running case instance', async () => {
-      const result = await caseApp.sendMessage(
+      const result = await caseInstances.sendMessageForCaseApp(
         instance.instanceId,
         folderKey,
         CaseInstanceMessageName.UserAdhocTrigger,
@@ -197,13 +192,13 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
     });
   });
 
-  describe('close', () => {
+  describe('closeForCaseApp', () => {
     it('should close a running case instance', async () => {
       if (!seededInstanceId) {
         throw new Error('No seeded running case instance to close');
       }
 
-      const result = await caseApp.close(seededInstanceId, folderKey, { comment: 'Closed by the SDK integration suite' });
+      const result = await caseInstances.closeForCaseApp(seededInstanceId, folderKey, { comment: 'Closed by the SDK integration suite' });
 
       expect(result.instanceId).toBe(seededInstanceId);
       expect([InstanceStatus.CANCELING, InstanceStatus.CANCELLED]).toContain(result.status);
@@ -213,19 +208,19 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
 
   // Reopen accepts only Completed cases (close produces Cancelled), so it uses the
   // auto-completing instance started in beforeAll, and closes it afterwards.
-  describe('reopen', () => {
+  describe('reopenForCaseApp', () => {
     it('should reopen a completed case instance from a stage', async () => {
       if (!completedInstanceId) {
         throw new Error('No auto-completing case instance was started');
       }
       await waitForStatus(completedInstanceId, InstanceStatus.COMPLETED);
 
-      const { stages } = await caseApp.getStages(completedInstanceId, folderKey);
+      const { stages } = await caseInstances.getStagesForCaseApp(completedInstanceId, folderKey);
       if (stages.length === 0) {
         throw new Error('Completed case instance has no stages to reopen from');
       }
 
-      const result = await caseApp.reopen(completedInstanceId, folderKey, stages[0].elementId, {
+      const result = await caseInstances.reopenForCaseApp(completedInstanceId, folderKey, stages[0].elementId, {
         comment: 'Reopened by the SDK integration suite',
       });
 
@@ -233,7 +228,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
       expect(result.status).toBeDefined();
 
       // Reopened instances do not re-complete on their own; close it so they don't accumulate.
-      await caseApp.close(completedInstanceId, folderKey);
+      await caseInstances.closeForCaseApp(completedInstanceId, folderKey);
       completedInstanceId = null;
     }, 240_000);
   });
@@ -242,7 +237,7 @@ describeIntegration('Maestro Case App - Integration Tests', 'user', modes, () =>
   // for lack of Case grants still does not leave the seeded instance running.
   afterAll(async () => {
     if (!seededInstanceId) return;
-    await getServices().caseInstances.close(seededInstanceId, folderKey);
+    await caseInstances.close(seededInstanceId, folderKey);
     seededInstanceId = null;
   });
 }, { skip: true });
