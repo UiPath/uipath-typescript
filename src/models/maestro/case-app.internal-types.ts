@@ -29,10 +29,3 @@ export interface RawCaseAppAdhocTasksResponse {
     tasks: { taskName: string; taskId: string | null }[];
   }[];
 }
-
-/** Body of the message-send route */
-export interface CaseAppSendMessageRequestBody {
-  name: string;
-  reference: string;
-  itemData: Record<string, string | string[]>;
-}
