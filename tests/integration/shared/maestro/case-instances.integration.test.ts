@@ -640,7 +640,11 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
 
   // insightsrtm_ rejects PAT — user-token cell only.
   describe.skipIf(authMode !== 'user')('getStagesSlaSummary', () => {
-    it('should retrieve stages SLA summary for case instances', async () => {
+    // skip: the stages SLA aggregation now takes 43-60 s server-side on this tenant
+    // (measured across 12 calls on 2026-10-01; p50 was 26 s a week earlier) and the
+    // gateway answers 504 at 60 s, so no client budget can make it pass. Re-enable
+    // once Insights RTM brings the aggregation back under the gateway limit.
+    it.skip('should retrieve stages SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
       const result = await caseInstances.getStagesSlaSummary();
@@ -671,7 +675,8 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       expect(typeof stage.escalationRuleType).toBe('string');
     }, 90_000);
 
-    it('should support filtering by caseInstanceId', async () => {
+    // skip: same 60 s gateway ceiling as above, and this test calls the endpoint twice.
+    it.skip('should support filtering by caseInstanceId', async () => {
       const { caseInstances } = getServices();
 
       // First get all to find a valid caseInstanceId
