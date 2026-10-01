@@ -308,6 +308,8 @@ $ uip codedapp push [options]
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | `--project-id` | string | Studio Web project ID. If omitted and `UIPATH_PROJECT_ID` is not set, you are prompted to create or select a solution | — |
+| `--solution-name` | string | Name of the Studio Web solution to create when no project ID is set. Required with `--project-name` when the CLI cannot prompt | Prompted |
+| `--project-name` | string | Name of the Coded App project to create in that solution | Prompted |
 | `--build-dir` | string | Build output directory | `dist` |
 | `-v, --version` | string | Code version to set (e.g. `2.0.0`) | — |
 | `--ignore-resources` | boolean | Skip importing referenced resources | — |
@@ -325,7 +327,11 @@ $ uip codedapp push [options]
 $ uip codedapp push --project-id <projectId>
 
 $ uip codedapp push --project-id <projectId> --build-dir build
+
+$ uip codedapp push --solution-name "Product Announcements" --project-name "Announcements Portal"
 ```
+
+`--solution-name` and `--project-name` only apply when no project ID is set. If one is set by `--project-id`, `UIPATH_PROJECT_ID`, or `.env`, push fails instead of pushing into that project.
 
 ---
 
