@@ -699,7 +699,8 @@ export interface CaseInstanceMethods {
    * Closes/cancels this case instance
    * 
    * @param options - Optional close options with comment
-   * @returns Promise resolving to operation result
+   * @returns Promise resolving to operation result. With Case App routes, a case that has already
+   *          completed is rejected, and the result reports `isCompleted`.
    */
   close(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
