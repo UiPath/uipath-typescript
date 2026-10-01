@@ -1,3 +1,5 @@
+// Throwaway demo for #775: a change under src/core/ can affect every service,
+// so the pull-request integration run falls back to the full suite.
 import { UiPathSDKConfig, PartialUiPathConfig, hasOAuthConfig, hasSecretConfig } from './sdk-config';
 import { isBrowser } from '../../utils/platform';
 
