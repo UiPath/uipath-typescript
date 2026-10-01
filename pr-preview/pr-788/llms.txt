@@ -23,7 +23,6 @@
 - [Process Instances](https://uipath.github.io/uipath-typescript/api/interfaces/ProcessInstancesServiceModel/index.md): Process instance methods
 - [Cases](https://uipath.github.io/uipath-typescript/api/interfaces/CasesServiceModel/index.md): Maestro Case methods
 - [Case Instances](https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstancesServiceModel/index.md): Maestro Case instance methods
-- [Case App](https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppServiceModel/index.md): Maestro Case App methods
 - [ConversationalAgentServiceModel](https://uipath.github.io/uipath-typescript/api/interfaces/ConversationalAgentServiceModel/index.md): Conversational Agent main service
 - [ConversationServiceModel](https://uipath.github.io/uipath-typescript/api/interfaces/ConversationServiceModel/index.md): Conversation service methods
 - [Exchanges](https://uipath.github.io/uipath-typescript/api/interfaces/ExchangeServiceModel/index.md): Exchange service methods
