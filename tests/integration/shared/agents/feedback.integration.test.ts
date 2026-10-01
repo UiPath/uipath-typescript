@@ -311,4 +311,9 @@ describeIntegration('Agent Feedback - Integration Tests', 'both', modes, () => {
       createdIds.splice(createdIds.indexOf(created.id), 1);
     });
   });
+}, {
+  // llmopstenant_ stalls for 30 s+ on the CI tenant (three calls that take under a
+  // second on the pat leg timed out on the user leg with no other run on the tenant).
+  // Same budget as the other slow-server suites; no retries, no assertion changes.
+  timeout: 120_000,
 });
