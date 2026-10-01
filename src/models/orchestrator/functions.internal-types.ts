@@ -3,6 +3,8 @@
  * transformation. Not exported through the public barrel.
  */
 
+import type { RawFunctionGetResponse } from './functions.types';
+
 
 /**
  * Raw HTTP trigger row from `GET /odata/HttpTriggers` after
@@ -26,6 +28,11 @@ export interface RawFunctionTrigger {
   inputArguments?: string | null;
   /** Source file path inside the package. */
   entryPointPath?: string | null;
+  /**
+   * The route Orchestrator matches invocations against:
+   * `<Method> <route> <FOLDER_KEY>`, e.g. `Post my-functions/hello 4DBF78CB-…`.
+   */
+  externalReference?: string | null;
   /** Key (GUID) of the release that owns the trigger. */
   releaseKey: string;
   /** Numeric ID of the folder the trigger lives in. */
@@ -35,6 +42,20 @@ export interface RawFunctionTrigger {
     name: string;
     slug: string;
   };
+}
+
+/** Where to send a function's invocation: `orchestrator_/t/<folderKey>/<route>`. */
+export interface FunctionInvokeTarget {
+  /** Folder key (GUID) of the folder the trigger lives in. */
+  folderKey: string;
+  /** The trigger's path within the folder, e.g. `my-functions/hello` or `hello`. */
+  route: string;
+}
+
+/** A function found by name, with the invoke target its trigger declares when it declares one. */
+export interface ResolvedFunction {
+  fn: RawFunctionGetResponse;
+  target?: FunctionInvokeTarget;
 }
 
 /**

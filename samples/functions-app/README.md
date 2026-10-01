@@ -36,8 +36,8 @@ const quote = await functions.invoke<QuoteInput, Quote>(
 ```
 
 A deployed function's registered name is **package-prefixed**: `quote` inside the
-`functions-app-fn` package registers as `functions-app-fn_quote`. Passing the bare name returns a
-not-found error listing what the folder actually exposes.
+`functions-app-fn` package registers as `functions-app-fn_quote`. `invoke` accepts either form. Pass
+`processName` as well when another process in the same folder also declares a `quote` function.
 
 `coded-functions/lib/contract.ts` is the single source of truth for every input and output type.
 The functions import it directly; the app imports it with `import type`, so the two halves share

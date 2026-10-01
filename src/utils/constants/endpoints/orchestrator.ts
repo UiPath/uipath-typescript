@@ -142,9 +142,11 @@ export const FOLDER_ENDPOINTS = {
 export const FUNCTION_ENDPOINTS = {
   /** Folder-scoped list of function HTTP endpoints. */
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/HttpTriggers`,
-  /** Invokes a function through its HTTP endpoint; the response body is the function output. */
-  INVOKE: (folderKey: string, processSlug: string, functionSlug: string) =>
-    `${ORCHESTRATOR_BASE}/t/${folderKey}/${processSlug}/${functionSlug}`,
+  /**
+   * Invokes a function through its HTTP endpoint; the response body is the function output.
+   * `route` is the trigger's path within the folder, e.g. `my-functions/hello` or `hello`.
+   */
+  INVOKE: (folderKey: string, route: string) => `${ORCHESTRATOR_BASE}/t/${folderKey}/${route}`,
 } as const;
 
 /**

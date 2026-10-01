@@ -11,11 +11,31 @@ import { resolveFolderHeaders } from '../utils/folder/folder-headers';
 import { resolveOverride } from '../utils/overrides/resolve-override';
 import type { EffectiveFolder } from '../utils/validation/resolve-ref';
 
-/**
- * Matches single-quote characters in OData string literals — escaped to `''`
- * inside the `$filter=Name eq '…'` clause built by `getByNameLookup`.
- */
+/** Matches single-quote characters in OData string literals, escaped to `''` by `escapeODataString`. */
 const SINGLE_QUOTE_RE = /'/g;
+
+/** Escapes a value for use inside a single-quoted OData string literal. */
+export function escapeODataString(value: string): string {
+  return value.replace(SINGLE_QUOTE_RE, "''");
+}
+
+/**
+ * The resolved inputs of a name lookup, before a filter is built from them.
+ * Returned by {@link FolderScopedService.resolveNameLookup} for services whose
+ * name match is not a plain `Name eq '…'`.
+ */
+export interface NameLookupContext {
+  /** The name to match, after validation and any admin-configured override. */
+  name: string;
+  /** Folder headers for the lookup request. */
+  headers: Record<string, string>;
+  /** The caller's query options, `$`-prefixed and rewritten to API field names. */
+  params: Record<string, unknown>;
+  /** The folder the lookup runs against, for forwarding to a follow-up call. */
+  effectiveFolder: EffectiveFolder;
+  /** Folder description for not-found messages, e.g. ` in folder 'Shared'`. Empty when unknown. */
+  folderHint: string;
+}
 
 /**
  * Base service for services that need folder-specific functionality.
@@ -105,6 +125,53 @@ export class FolderScopedService extends BaseService {
     responseFieldMap?: FieldMapping,
     callerLabel?: string,
   ): Promise<{ result: T; effectiveFolder: EffectiveFolder }> {
+    const lookup = this.resolveNameLookup(resourceType, name, options, responseFieldMap, callerLabel);
+
+    const response = await this.get<CollectionResponse<TRaw>>(endpoint, {
+      headers: lookup.headers,
+      params: {
+        ...lookup.params,
+        '$filter': `Name eq '${escapeODataString(lookup.name)}'`,
+        '$top': '1',
+      },
+    });
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      throw new NotFoundError({
+        message: `${resourceType} '${lookup.name}' not found${lookup.folderHint}.`,
+      });
+    }
+
+    return {
+      result: transform(items[0]),
+      effectiveFolder: lookup.effectiveFolder,
+    };
+  }
+
+  /**
+   * Resolves everything a name lookup needs except the filter itself: validates
+   * the name, applies any admin-configured override, and builds the folder
+   * headers and query options. {@link getByNameLookup} uses it for an exact
+   * `Name` match; services whose resources are stored under a derived name
+   * build their own filter from the result.
+   *
+   * @param resourceType - Resource label used in validation + error messages (e.g. 'Asset', 'Function')
+   * @param name - Resource name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) + OData query options (`expand`, `select`)
+   * @param responseFieldMap - Optional response field map (API → SDK), used to rewrite SDK field
+   *   names back to API names in `expand` / `select`
+   * @param callerLabel - Optional `ServiceName.methodName` label for missing-folder
+   *   `ValidationError` messages. Defaults to `${resourceType}.getByName`.
+   * @throws ValidationError when the name is empty or no folder context is available
+   */
+  protected resolveNameLookup(
+    resourceType: string,
+    name: string,
+    options: FolderScopedOptions,
+    responseFieldMap?: FieldMapping,
+    callerLabel?: string,
+  ): NameLookupContext {
     const validatedName = validateName(resourceType, name);
     const { folderId, folderKey, folderPath, ...queryOptions } = options;
 
@@ -126,28 +193,12 @@ export class FolderScopedService extends BaseService {
       ? transformOptions(queryOptions, responseFieldMap)
       : queryOptions;
 
-    const apiOptions = {
-      ...addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
-      '$filter': `Name eq '${resolvedName.replace(SINGLE_QUOTE_RE, "''")}'`,
-      '$top': '1',
-    };
-
-    const response = await this.get<CollectionResponse<TRaw>>(endpoint, {
-      headers,
-      params: apiOptions,
-    });
-
-    const items = response.data?.value;
-    if (!items?.length) {
-      const folderHint = describeFolderForError(folderId, folderKey, resolvedFolderPath);
-      throw new NotFoundError({
-        message: `${resourceType} '${resolvedName}' not found${folderHint}.`,
-      });
-    }
-
     return {
-      result: transform(items[0]),
+      name: resolvedName,
+      headers,
+      params: addPrefixToKeys(apiFieldOptions, ODATA_PREFIX, Object.keys(apiFieldOptions)),
       effectiveFolder: { folderId, folderKey, folderPath: resolvedFolderPath },
+      folderHint: describeFolderForError(folderId, folderKey, resolvedFolderPath),
     };
   }
 

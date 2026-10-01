@@ -120,8 +120,9 @@ export interface FunctionServiceModel {
    * provisions the robot the function runs on, so an invocation whose license
    * cannot be acquired fails with that error rather than proceeding.
    *
-   * @param func - Function to invoke. Currently identified by `name` (unique within
-   *   a folder); additional identifiers may be added in future releases.
+   * @param func - Function to invoke, by `name`: the name declared in its source
+   *   (`hello`) or the full name `getAll` returns (`my-functions_hello`). Add
+   *   `processName` when several processes in the folder declare the same name.
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`),
@@ -133,6 +134,16 @@ export interface FunctionServiceModel {
    * ```typescript
    * // Invoke a function
    * const result = await functions.invoke({ name: 'hello' }, { name: 'Alice' }, { folderId: <folderId> });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Pick one process when several in the folder declare a `hello` function
+   * const result = await functions.invoke(
+   *   { name: 'hello', processName: 'my-functions' },
+   *   { name: 'Alice' },
+   *   { folderId: <folderId> }
+   * );
    * ```
    *
    * @example
@@ -207,7 +218,7 @@ export interface FunctionMethods {
    * @example
    * ```typescript
    * const deployed = await functions.getAll({ folderId: <folderId> });
-   * const hello = deployed.items.find(f => f.name === 'hello');
+   * const hello = deployed.items.find(f => f.slug === 'hello');
    *
    * if (hello) {
    *   const result = await hello.invoke({ name: 'Alice' });

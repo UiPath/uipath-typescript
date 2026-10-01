@@ -1,4 +1,4 @@
-import { FolderScopedService } from '../../folder-scoped';
+import { FolderScopedService, escapeODataString } from '../../folder-scoped';
 import {
   FunctionGetAllOptions,
   FunctionHttpMethod,
@@ -8,17 +8,20 @@ import {
 } from '../../../models/orchestrator/functions.types';
 import {
   FunctionAcquireLicenseOptions,
+  FunctionInvokeTarget,
   LicenseCacheEntry,
   RawFolderResponse,
   RawFunctionTrigger,
   RawStudioWebLicenseResponse,
+  ResolvedFunction,
   StudioWebLicense,
   StudioWebLicenseTokenClaims,
 } from '../../../models/orchestrator/functions.internal-types';
 import { CollectionResponse, FolderScopedOptions } from '../../../models/common/types';
 import { UiPathError } from '../../../core/errors/base';
 import { NotFoundError } from '../../../core/errors/not-found';
-import { isNotFoundError } from '../../../core/errors/guards';
+import { ServerError } from '../../../core/errors/server';
+import { ValidationError } from '../../../core/errors/validation';
 import {
   FunctionServiceModel,
   FunctionGetResponse,
@@ -41,6 +44,22 @@ import type { IUiPath } from '../../../core/types';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
+
+/**
+ * Rows fetched per name lookup. The suffix match can hit the same function
+ * name in several processes; this is enough to see them all and report them.
+ */
+const MAX_NAME_CANDIDATES = 50;
+
+/** A `:param` segment or `*` wildcard: a route pattern the SDK cannot fill in yet. */
+const ROUTE_PATTERN_RE = /(^|\/):|\*/;
+
+/** Leading and trailing slashes, which Orchestrator strips from both route segments. */
+const EDGE_SLASHES_RE = /^\/+|\/+$/g;
+
+/** A trigger's ExternalReference: `<Method> <route> <FOLDER_KEY>`. */
+const EXTERNAL_REFERENCE_RE =
+  /^\S+ (\S.*?) ([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
 /**
  * How long a license is reused when it states no expiry of its own — the free
@@ -196,7 +215,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     // process configured to treat them as fatal.
     const [licensing, lookup] = await Promise.allSettled([
       this.resolveLicense(refreshLicense),
-      this.findByName(func.name, folderOptions),
+      this.findByName(func, folderOptions),
     ]);
 
     // Licensing is a precondition, not an optimisation: acquiring is what
@@ -206,9 +225,11 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     if (licensing.status === 'rejected') throw licensing.reason;
     if (lookup.status === 'rejected') throw lookup.reason;
 
-    const fn = lookup.value;
-    const folderKey = await this.resolveInvokeFolderKey(fn, folderOptions);
-    return this.invokeFunction<TOutput>(fn, folderKey, input ?? {}, jobKey);
+    // The trigger's ExternalReference names the route and folder key directly;
+    // only a trigger without one needs them derived.
+    const { fn, target } = lookup.value;
+    const invokeTarget = target ?? await this.fallbackTarget(fn, folderOptions);
+    return this.invokeFunction<TOutput>(fn, invokeTarget, input ?? {}, jobKey);
   }
 
   /**
@@ -276,29 +297,53 @@ export class FunctionService extends FolderScopedService implements FunctionServ
   /**
    * Resolves a function by name within the supplied folder context.
    *
-   * A miss is usually a package name passed where a function name belongs, so
-   * the not-found error is enriched with the names the folder actually exposes.
+   * Orchestrator stores a function's trigger as `<process name>_<name>` for
+   * functions deployed since July 2026 and as the bare `<name>` before that, so
+   * both forms match. An exact match on the stored name wins, which keeps a full
+   * name taken from `getAll` working.
    */
   private async findByName(
-    name: string,
+    func: FunctionRef,
     options: FolderScopedOptions
-  ): Promise<RawFunctionGetResponse> {
-    try {
-      const { result } = await this.getByNameLookup<Record<string, unknown>, RawFunctionGetResponse>(
-        'Function',
-        FUNCTION_ENDPOINTS.GET_ALL,
-        name,
-        options,
-        (raw) => this.toFunctionResponse(raw),
-        FunctionMap,
-      );
-      return result;
-    } catch (error) {
-      if (isNotFoundError(error)) {
-        throw await this.withAvailableFunctionNames(error, options);
-      }
-      throw error;
+  ): Promise<ResolvedFunction> {
+    if (func.processName !== undefined && !func.processName.trim()) {
+      throw new ValidationError({ message: 'Functions.invoke: processName cannot be empty.' });
     }
+    const processName = func.processName?.trim();
+
+    const lookup = this.resolveNameLookup('Function', func.name, options, FunctionMap, 'Functions.invoke');
+    const name = escapeODataString(lookup.name);
+    const filter = processName
+      ? `Release/Name eq '${escapeODataString(processName)}' and (Name eq '${name}' or Name eq '${escapeODataString(processName)}_${name}')`
+      : `Name eq '${name}' or endswith(Name,'_${name}')`;
+
+    const response = await this.get<CollectionResponse<Record<string, unknown>>>(FUNCTION_ENDPOINTS.GET_ALL, {
+      headers: lookup.headers,
+      params: { ...lookup.params, '$filter': filter, '$top': String(MAX_NAME_CANDIDATES) },
+    });
+    const candidates: ResolvedFunction[] = (response.data?.value ?? []).map((raw) => ({
+      fn: this.toFunctionResponse(raw),
+      target: parseExternalReference(raw.ExternalReference),
+    }));
+
+    const exact = candidates.find(({ fn }) => sameName(fn.name, lookup.name));
+    if (exact) return exact;
+
+    // The server-side suffix match also catches `pkg_budget_get` for `get`; keep
+    // only rows whose prefix is their own process name.
+    const prefixed = candidates.filter(({ fn }) => sameName(fn.name, `${fn.processName}_${lookup.name}`));
+    if (prefixed.length === 1) return prefixed[0];
+    if (prefixed.length > 1) {
+      const processes = prefixed.map(({ fn }) => fn.processName).join(', ');
+      throw new ValidationError({
+        message: `Function '${lookup.name}' is deployed by several processes${lookup.folderHint}: ${processes}. Pass processName to choose one.`,
+      });
+    }
+
+    const notFound = new NotFoundError({
+      message: `Function '${lookup.name}' not found${processName ? ` in process '${processName}'` : ''}${lookup.folderHint}.`,
+    });
+    throw await this.withAvailableFunctionNames(notFound, options);
   }
 
   /**
@@ -334,11 +379,19 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       // more names but not how many.
       const suffix = names.length > MAX_SUGGESTED_NAMES ? ', and more' : '';
       return new NotFoundError({
-        message: `${error.message} Available functions: ${shown}${suffix}. Note that a function name is not the name of the package it is deployed from.`,
+        message: `${error.message} Available functions: ${shown}${suffix}.`,
       });
     } catch {
       return error;
     }
+  }
+
+  /**
+   * Builds the invoke target for a trigger without a usable ExternalReference,
+   * the same way Orchestrator composes its route.
+   */
+  private async fallbackTarget(fn: RawFunctionGetResponse, options: FolderScopedOptions): Promise<FunctionInvokeTarget> {
+    return { route: buildInvokeRoute(fn), folderKey: await this.resolveInvokeFolderKey(fn, options) };
   }
 
   /**
@@ -376,11 +429,16 @@ export class FunctionService extends FolderScopedService implements FunctionServ
    */
   private async invokeFunction<TOutput>(
     fn: RawFunctionGetResponse,
-    folderKey: string,
+    target: FunctionInvokeTarget,
     input: object,
     jobKey?: string
   ): Promise<TOutput> {
-    const endpoint = FUNCTION_ENDPOINTS.INVOKE(folderKey, fn.processSlug, fn.slug);
+    if (ROUTE_PATTERN_RE.test(target.route)) {
+      throw new ValidationError({
+        message: `Function '${fn.name}' has path parameters ('${target.route}'); invoking these through the SDK is not supported yet.`,
+      });
+    }
+    const endpoint = FUNCTION_ENDPOINTS.INVOKE(target.folderKey, target.route);
     // Attributes the run to the parent job's licensing transaction when set.
     const headers = createHeaders({ [JOB_KEY]: jobKey });
 
@@ -457,4 +515,47 @@ function toQueryParams(input: object): Record<string, string | number | boolean>
     params[key] = typeof value === 'object' ? JSON.stringify(value) : (value as string | number | boolean);
   }
   return params;
+}
+
+/** Orchestrator's name filter is case-insensitive, so the client-side match is too. */
+function sameName(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+/**
+ * Reads the invoke target from a trigger's ExternalReference, the key
+ * Orchestrator matches invocations against. Returns `undefined` when the
+ * reference is absent or not in the expected shape.
+ *
+ * @internal
+ */
+export function parseExternalReference(value: unknown): FunctionInvokeTarget | undefined {
+  if (typeof value !== 'string') return undefined;
+
+  const match = EXTERNAL_REFERENCE_RE.exec(value.trim());
+  const route = match?.[1].replace(EDGE_SLASHES_RE, '');
+  return match && route ? { route, folderKey: match[2].toLowerCase() } : undefined;
+}
+
+/**
+ * Builds the path Orchestrator routes a function's trigger by, the same way it
+ * composes the route itself: `<processSlug>/<slug>`, or `<slug>` alone when the
+ * process has no slug of its own. Used only when the trigger carries no
+ * ExternalReference.
+ *
+ * @internal
+ */
+export function buildInvokeRoute(fn: {
+  name: string;
+  slug: string;
+  /** The API returns null here on tenants where releases have no slug. */
+  processSlug: string | null;
+}): string {
+  const slug = fn.slug?.replace(EDGE_SLASHES_RE, '');
+  if (!slug) {
+    throw new ServerError({ message: `Function '${fn.name}' has no endpoint path, so it cannot be invoked.` });
+  }
+
+  const processSlug = fn.processSlug?.replace(EDGE_SLASHES_RE, '');
+  return processSlug ? `${processSlug}/${slug}` : slug;
 }
