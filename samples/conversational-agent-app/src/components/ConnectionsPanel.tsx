@@ -2,7 +2,7 @@
  * ConnectionsPanel - Settings panel for managing personal connections
  */
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import type {
   AvailableConnectionsItem,
   AvailableConnection,
@@ -138,6 +138,7 @@ function ConnectionRow({ item, selectedConnectionId, onSelect, onConnectionCreat
   const [search, setSearch] = useState('')
   const [isPolling, setIsPolling] = useState(false)
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const cancelledRef = useRef(false)
   const selectedConnection = item.connections.find(c => c.id === selectedConnectionId)
 
   const stopPolling = useCallback(() => {
@@ -145,34 +146,49 @@ function ConnectionRow({ item, selectedConnectionId, onSelect, onConnectionCreat
       clearInterval(pollTimerRef.current)
       pollTimerRef.current = null
     }
-    setIsPolling(false)
+    if (!cancelledRef.current) setIsPolling(false)
   }, [])
+
+  // Cancel in-flight polling when the agent identity changes or the row unmounts
+  useEffect(() => {
+    cancelledRef.current = false
+    return () => {
+      cancelledRef.current = true
+      stopPolling()
+    }
+  }, [conversationalAgent, stopPolling])
 
   const handleAddConnection = useCallback(async () => {
     if (!conversationalAgent) return
     try {
       const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl(item.connectorKey)
+      if (cancelledRef.current) return
       window.open(authUrl, '_blank', 'noopener,noreferrer')
 
       setIsPolling(true)
       pollTimerRef.current = setInterval(async () => {
+        if (cancelledRef.current) { stopPolling(); return }
         if (Date.now() > expiresTime) {
           stopPolling()
           return
         }
         try {
           const session = await conversationalAgent.getConnectionSessionStatus(sessionId)
+          if (cancelledRef.current) return
           if (session.status === 'success') {
             stopPolling()
             onConnectionCreated()
           } else if (session.status === 'failed') {
             stopPolling()
           }
-        } catch {
+        } catch (error) {
+          console.warn('Failed to poll connection session status:', error)
           stopPolling()
         }
       }, POLL_INTERVAL_MS)
-    } catch {
+    } catch (error) {
+      console.warn('Auth URL unavailable, falling back to platform URL:', error)
+      if (cancelledRef.current) return
       // Fallback to the platform URL if auth endpoint isn't available
       const url = await conversationalAgent.getAddConnectionUrl(item)
       if (url) window.open(url, '_blank', 'noopener,noreferrer')

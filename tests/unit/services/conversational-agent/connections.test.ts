@@ -191,11 +191,11 @@ describe('ConversationalAgentService — Connections', () => {
 
   describe('getConnectionAuthUrl', () => {
     it('should call the correct endpoint with the connector key and return sessionId', async () => {
-      // Mock returns raw API wire format (expiresAt, not expiresTime)
+      // Mock returns raw API wire format (expiresAt renamed to expiresTime)
       mockApiClient.post.mockResolvedValue({
         authUrl: 'https://auth.example.com/oauth?connector=jira',
         sessionId: 'session-abc-123',
-        expiresAt: 1700000000,
+        expiresAt: 1790886963000,
       });
 
       const result = await conversationalAgent.getConnectionAuthUrl('jira');
@@ -207,7 +207,8 @@ describe('ConversationalAgentService — Connections', () => {
       );
       expect(result.authUrl).toBe('https://auth.example.com/oauth?connector=jira');
       expect(result.sessionId).toBe('session-abc-123');
-      expect(result.expiresTime).toBe(1700000000);
+      // expiresAt is renamed to expiresTime, value passed through as-is (already ms)
+      expect(result.expiresTime).toBe(1790886963000);
       expect((result as any).expiresAt).toBeUndefined();
     });
 
@@ -228,7 +229,7 @@ describe('ConversationalAgentService — Connections', () => {
       mockApiClient.get.mockResolvedValue({
         status: 'pending',
         connectionId: null,
-        expiresAt: 1700000000,
+        expiresAt: 1790886963000,
       });
 
       const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
@@ -239,7 +240,8 @@ describe('ConversationalAgentService — Connections', () => {
       );
       expect(result.status).toBe('pending');
       expect(result.connectionId).toBeNull();
-      expect(result.expiresTime).toBe(1700000000);
+      // expiresAt is renamed to expiresTime, value passed through as-is (already ms)
+      expect(result.expiresTime).toBe(1790886963000);
       expect((result as any).expiresAt).toBeUndefined();
     });
 
@@ -247,7 +249,7 @@ describe('ConversationalAgentService — Connections', () => {
       mockApiClient.get.mockResolvedValue({
         status: 'success',
         connectionId: 'conn-new-456',
-        expiresAt: 1700000000,
+        expiresAt: 1790886963000,
       });
 
       const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
@@ -260,7 +262,7 @@ describe('ConversationalAgentService — Connections', () => {
       mockApiClient.get.mockResolvedValue({
         status: 'failed',
         connectionId: null,
-        expiresAt: 1700000000,
+        expiresAt: 1790886963000,
       });
 
       const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
@@ -285,7 +287,7 @@ describe('ConversationalAgentService — Connections', () => {
     it('should return authUrl when getConnectionAuthUrl succeeds', async () => {
       mockApiClient.post.mockResolvedValue({
         authUrl: 'https://auth.example.com/oauth?connector=jira',
-        expiresAt: 1700000000,
+        expiresAt: 1790886963000,
       });
 
       const result = await conversationalAgent.getAddConnectionUrl({
