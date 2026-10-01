@@ -1,0 +1,10 @@
+# Files excluded from `uip codedapp push`.
+
+# Template configs: copy to uipath.json locally instead of pushing them.
+*.example
+
+# Studio Web solution templates, imported through Studio Web, not app source.
+*.uis
+
+# Preview GIFs for the README and docs gallery, not app source.
+/screenshots
