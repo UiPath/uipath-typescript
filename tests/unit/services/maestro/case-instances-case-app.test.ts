@@ -2,13 +2,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   CaseInstances,
-  CaseAppElementType,
-  CaseAppInstanceSortBy,
-  CaseAppSortOrder,
+  CaseInstanceElementType,
+  CaseInstanceSortBy,
+  CaseInstanceSortOrder,
   CaseInstanceMessageName,
   InstanceStatus,
 } from '../../../../src/services/maestro/cases';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { ValidationError } from '../../../../src/core/errors';
 import {
   CASE_APP_TEST_CONSTANTS as C,
   createCaseAppAdhocTasksResponse,
@@ -26,12 +27,17 @@ vi.mock('../../../../src/core/http/api-client');
 
 const E = MAESTRO_ENDPOINTS.CASE_APP;
 const FOLDER_HEADERS = { headers: expect.objectContaining({ [FOLDER_KEY]: C.FOLDER_KEY }) };
+const CASE_JSON = {
+  root: { name: C.STAGE_NAME_ALT },
+  nodes: [{ id: C.STAGE_ID, type: 'case-management:Stage', data: { label: C.STAGE_NAME } }],
+};
 
 type RequestSpec = { params?: Record<string, unknown>; headers?: Record<string, string> };
 
 // ===== TEST SUITE =====
-describe('CaseInstances Case App (v3) Unit Tests', () => {
+describe('CaseInstances with Case App routes Unit Tests', () => {
   let caseInstances: CaseInstances;
+  let v1CaseInstances: CaseInstances;
   let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
@@ -41,29 +47,42 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
       return mockApiClient as unknown as ApiClient;
     });
 
-    caseInstances = new CaseInstances(instance);
+    caseInstances = new CaseInstances(instance, { useCaseAppRoutes: true });
+    v1CaseInstances = new CaseInstances(instance);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('getAllForCaseApp', () => {
-    it('should list instances from the v3 route under the folder header', async () => {
-      mockApiClient.get.mockResolvedValue(createCaseAppInstanceListResponse());
+  /** Answers the list route with instances and the case-json route with a case plan */
+  const mockListAndCaseJson = (listResponse = createCaseAppInstanceListResponse()) => {
+    mockApiClient.get.mockImplementation(async (url: string) =>
+      url === E.GET_CASE_JSON(C.INSTANCE_ID) || url === E.GET_CASE_JSON(C.INSTANCE_ID_ALT) ? CASE_JSON : listResponse
+    );
+  };
 
-      const result = await caseInstances.getAllForCaseApp(C.FOLDER_KEY);
+  describe('getAll', () => {
+    it('should list instances from the Case App route under the folder header', async () => {
+      mockListAndCaseJson();
+
+      const result = await caseInstances.getAll({ folderKey: C.FOLDER_KEY });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ALL, expect.objectContaining(FOLDER_HEADERS));
       expect(result.items).toHaveLength(2);
       expect(result.items[1].instanceId).toBe(C.INSTANCE_ID_ALT);
     });
 
-    it('should rename the wire fields on listed instances', async () => {
-      mockApiClient.get.mockResolvedValue(createCaseAppInstanceListResponse());
+    it('should reject a missing folderKey without calling the API', async () => {
+      await expect(caseInstances.getAll()).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
 
-      const [instance] = (await caseInstances.getAllForCaseApp(C.FOLDER_KEY)).items;
-      const [run] = instance.instanceRuns ?? [];
+    it('should rename the wire fields on listed instances and their runs', async () => {
+      mockListAndCaseJson();
+
+      const [instance] = (await caseInstances.getAll({ folderKey: C.FOLDER_KEY })).items;
+      const [run] = instance.instanceRuns;
 
       expect(instance.startedTime).toBe(C.STARTED_TIME);
       expect(instance.createdTime).toBe(C.STARTED_TIME);
@@ -75,17 +94,27 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
       expect((run as unknown as Record<string, unknown>).completedTimeUtc).toBeUndefined();
     });
 
-    it('should send filters as the query parameters the API expects', async () => {
-      mockApiClient.get.mockResolvedValue(createCaseAppInstanceListResponse());
+    it('should enrich instances from the Case App case-json route', async () => {
+      mockListAndCaseJson();
+
+      const [instance] = (await caseInstances.getAll({ folderKey: C.FOLDER_KEY })).items;
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_CASE_JSON(C.INSTANCE_ID), FOLDER_HEADERS);
+      expect(instance.caseType).toBe(C.STAGE_NAME_ALT);
+    });
+
+    it('should send filters as the query parameters the API expects, without processType', async () => {
+      mockListAndCaseJson();
       const startedTimeStart = new Date(C.STARTED_TIME);
 
-      await caseInstances.getAllForCaseApp(C.FOLDER_KEY, {
+      await caseInstances.getAll({
+        folderKey: C.FOLDER_KEY,
         processKey: C.PROCESS_KEY,
         caseId: C.CASE_ID,
         statuses: [InstanceStatus.RUNNING, InstanceStatus.FAULTED],
         startedTimeStart,
-        sortBy: CaseAppInstanceSortBy.StartedTime,
-        order: CaseAppSortOrder.Asc,
+        sortBy: CaseInstanceSortBy.StartedTime,
+        order: CaseInstanceSortOrder.Asc,
       });
 
       const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
@@ -98,15 +127,25 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
         order: 'Asc',
       });
       expect(spec.params).not.toHaveProperty('caseId');
+      expect(spec.params).not.toHaveProperty('folderKey');
+      expect(spec.params).not.toHaveProperty('processType');
       expect(spec.params).not.toHaveProperty('$processKey');
     });
 
-    it('should page with pageSize and expose the next cursor', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createCaseAppInstanceListResponse({ nextPage: C.NEXT_PAGE_TOKEN, hasMoreResults: true })
-      );
+    it('should send the same filters to the v1 route alongside processType', async () => {
+      mockApiClient.get.mockResolvedValue({ instances: [], nextPage: null, hasMoreResults: false });
 
-      const result = await caseInstances.getAllForCaseApp(C.FOLDER_KEY, { pageSize: 10 });
+      await v1CaseInstances.getAll({ caseId: C.CASE_ID, statuses: [InstanceStatus.RUNNING] });
+
+      const [url, spec] = mockApiClient.get.mock.calls[0] as [string, RequestSpec];
+      expect(url).toBe(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL);
+      expect(spec.params).toMatchObject({ externalId: C.CASE_ID, statuses: 'Running', processType: 'CaseManagement' });
+    });
+
+    it('should page with pageSize and expose the next cursor', async () => {
+      mockListAndCaseJson(createCaseAppInstanceListResponse({ nextPage: C.NEXT_PAGE_TOKEN, hasMoreResults: true }));
+
+      const result = await caseInstances.getAll({ folderKey: C.FOLDER_KEY, pageSize: 10 });
 
       const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
       expect(spec.params?.pageSize).toBe(10);
@@ -114,10 +153,229 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
       expect(result.nextCursor).toBeDefined();
     });
 
+    it('should bind instance methods that keep using the Case App routes', async () => {
+      mockListAndCaseJson();
+      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false });
+
+      const [instance] = (await caseInstances.getAll({ folderKey: C.FOLDER_KEY })).items;
+      await instance.close();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(E.CLOSE(C.INSTANCE_ID), {}, FOLDER_HEADERS);
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
 
-      await expect(caseInstances.getAllForCaseApp(C.FOLDER_KEY)).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
+      await expect(caseInstances.getAll({ folderKey: C.FOLDER_KEY })).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
+    });
+  });
+
+  describe('getExecutionHistory', () => {
+    it('should rename time fields on the envelope, executions and runs', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      const result = await caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY);
+      const [execution] = result.elementExecutions;
+      const [run] = execution.elementRuns;
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), expect.objectContaining(FOLDER_HEADERS));
+      expect(result.startedTime).toBe(C.STARTED_TIME);
+      expect(result.caseId).toBe(C.CASE_ID);
+      expect(execution.completedTime).toBe(C.COMPLETED_TIME);
+      expect(run.startedTime).toBe(C.STARTED_TIME);
+      expect((result as unknown as Record<string, unknown>).externalId).toBeUndefined();
+      expect((result as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
+      expect((execution as unknown as Record<string, unknown>).completedTimeUtc).toBeUndefined();
+      expect((run as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
+    });
+
+    it('should leave author-defined section details untouched', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      const result = await caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY);
+
+      expect(result.sections?.[0].details).toEqual({ [C.SECTION_DETAIL_KEY]: C.SECTION_DETAIL_VALUE });
+    });
+
+    it('should send element types as a comma-separated query parameter', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      await caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY, {
+        elementTypes: [CaseInstanceElementType.Hitl, CaseInstanceElementType.Agent],
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), {
+        ...FOLDER_HEADERS,
+        params: { elementTypes: 'hitl,agent' },
+      });
+    });
+
+    it('should send element types to the v1 route too', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      await v1CaseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY, {
+        elementTypes: [CaseInstanceElementType.Rpa],
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), {
+        ...FOLDER_HEADERS,
+        params: { elementTypes: 'rpa' },
+      });
+    });
+
+    it('should omit the element-type parameter when no filter is given', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      await caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY);
+
+      const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
+      expect(spec.params).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
+
+      await expect(caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
+    });
+  });
+
+  describe('getStages', () => {
+    it('should build stages from the Case App element-executions and case-json routes', async () => {
+      mockApiClient.get.mockImplementation(async (url: string) =>
+        url === E.GET_CASE_JSON(C.INSTANCE_ID)
+          ? CASE_JSON
+          : createRawCaseAppGetElementExecutionsResponse({
+              elementExecutions: [{ elementId: C.STAGE_ID, status: 'Completed', elementRuns: [] }],
+            })
+      );
+
+      const [stage] = await caseInstances.getStages(C.INSTANCE_ID, C.FOLDER_KEY);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), expect.objectContaining(FOLDER_HEADERS));
+      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_CASE_JSON(C.INSTANCE_ID), FOLDER_HEADERS);
+      expect(stage).toMatchObject({ id: C.STAGE_ID, name: C.STAGE_NAME, status: 'Completed' });
+    });
+  });
+
+  describe('close', () => {
+    it('should post an empty body to the Case App route when no options are given', async () => {
+      const response = { instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false };
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await caseInstances.close(C.INSTANCE_ID, C.FOLDER_KEY);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(E.CLOSE(C.INSTANCE_ID), {}, FOLDER_HEADERS);
+      expect(result).toEqual({ success: true, data: response });
+    });
+
+    it('should send the comment', async () => {
+      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false });
+
+      await caseInstances.close(C.INSTANCE_ID, C.FOLDER_KEY, { comment: C.COMMENT });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(E.CLOSE(C.INSTANCE_ID), { comment: C.COMMENT }, FOLDER_HEADERS);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_ALREADY_COMPLETED));
+
+      await expect(caseInstances.close(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toThrow(C.ERROR_CASE_ALREADY_COMPLETED);
+    });
+  });
+
+  describe('reopen', () => {
+    it('should post the start element and comment to the Case App route', async () => {
+      const response = { instanceId: C.INSTANCE_ID, status: 'Running' };
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await caseInstances.reopen(C.INSTANCE_ID, C.FOLDER_KEY, { stageId: C.STAGE_ID, comment: C.COMMENT });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        E.REOPEN(C.INSTANCE_ID),
+        { StartElementId: C.STAGE_ID, Comment: C.COMMENT },
+        FOLDER_HEADERS
+      );
+      expect(result).toEqual({ success: true, data: response });
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
+
+      await expect(caseInstances.reopen(C.INSTANCE_ID, C.FOLDER_KEY, { stageId: C.STAGE_ID })).rejects.toThrow(
+        C.ERROR_CASE_NOT_FOUND
+      );
+    });
+  });
+
+  describe('sendMessage', () => {
+    it('should default the reference to the case and the item data to empty', async () => {
+      mockApiClient.post.mockResolvedValue({ id: C.MESSAGE_ID, jobId: C.JOB_ID });
+
+      await caseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserAdhocTrigger);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        E.SEND_MESSAGE,
+        { name: CaseInstanceMessageName.UserAdhocTrigger, reference: `case-${C.INSTANCE_ID}`, itemData: {} },
+        FOLDER_HEADERS
+      );
+    });
+
+    it('should send the given reference and item data', async () => {
+      mockApiClient.post.mockResolvedValue({ id: C.MESSAGE_ID, jobId: C.JOB_ID });
+      const itemData = { taskNames: [C.TASK_NAME] };
+
+      await caseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserAdhocTrigger, {
+        itemData,
+        reference: C.STAGE_ID,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        E.SEND_MESSAGE,
+        { name: CaseInstanceMessageName.UserAdhocTrigger, reference: C.STAGE_ID, itemData },
+        FOLDER_HEADERS
+      );
+    });
+
+    it('should still omit the item data on the v1 route', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await v1CaseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserSelectStage);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
+        { name: CaseInstanceMessageName.UserSelectStage, reference: `case-${C.INSTANCE_ID}` },
+        FOLDER_HEADERS
+      );
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
+
+      await expect(
+        caseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserSelectStage)
+      ).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
+    });
+  });
+
+  describe('methods without a Case App route', () => {
+    it('should reject getById', async () => {
+      await expect(caseInstances.getById(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should reject pause', async () => {
+      await expect(caseInstances.pause(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should reject resume', async () => {
+      await expect(caseInstances.resume(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should reject getVariables', async () => {
+      await expect(caseInstances.getVariables(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 
@@ -176,63 +434,6 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
 
       await expect(caseInstances.getCaseJsonForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
-    });
-  });
-
-  describe('getElementExecutionsForCaseApp', () => {
-    it('should rename time fields on the envelope, executions and runs', async () => {
-      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
-
-      const result = await caseInstances.getElementExecutionsForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY);
-      const [execution] = result.elementExecutions;
-      const [run] = execution.elementRuns;
-
-      expect(result.startedTime).toBe(C.STARTED_TIME);
-      expect(result.caseId).toBe(C.CASE_ID);
-      expect((result as unknown as Record<string, unknown>).externalId).toBeUndefined();
-      expect(execution.completedTime).toBe(C.COMPLETED_TIME);
-      expect(run.startedTime).toBe(C.STARTED_TIME);
-      expect((result as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
-      expect((execution as unknown as Record<string, unknown>).completedTimeUtc).toBeUndefined();
-      expect((run as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
-    });
-
-    it('should leave author-defined section details untouched', async () => {
-      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
-
-      const result = await caseInstances.getElementExecutionsForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY);
-
-      expect(result.sections?.[0].details).toEqual({ [C.SECTION_DETAIL_KEY]: C.SECTION_DETAIL_VALUE });
-    });
-
-    it('should send element types as a comma-separated query parameter', async () => {
-      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
-
-      await caseInstances.getElementExecutionsForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, {
-        elementTypes: [CaseAppElementType.Hitl, CaseAppElementType.Agent],
-      });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), {
-        ...FOLDER_HEADERS,
-        params: { elementTypes: 'hitl,agent' },
-      });
-    });
-
-    it('should omit the element-type parameter when no filter is given', async () => {
-      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
-
-      await caseInstances.getElementExecutionsForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY);
-
-      const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
-      expect(spec.params).toEqual({});
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.get.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
-
-      await expect(caseInstances.getElementExecutionsForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toThrow(
-        C.ERROR_CASE_NOT_FOUND
-      );
     });
   });
 
@@ -347,97 +548,6 @@ describe('CaseInstances Case App (v3) Unit Tests', () => {
       await expect(caseInstances.selectStageForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, C.STAGE_NAME)).rejects.toThrow(
         C.ERROR_STAGE_NOT_FOUND
       );
-    });
-  });
-
-  describe('sendMessageForCaseApp', () => {
-    it('should default the reference to the case and the item data to empty', async () => {
-      mockApiClient.post.mockResolvedValue({ id: C.MESSAGE_ID, jobId: C.JOB_ID });
-
-      const result = await caseInstances.sendMessageForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserAdhocTrigger);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        E.SEND_MESSAGE,
-        { name: CaseInstanceMessageName.UserAdhocTrigger, reference: `case-${C.INSTANCE_ID}`, itemData: {} },
-        FOLDER_HEADERS
-      );
-      expect(result).toEqual({ id: C.MESSAGE_ID, jobId: C.JOB_ID });
-    });
-
-    it('should send the given reference and item data', async () => {
-      mockApiClient.post.mockResolvedValue({ id: C.MESSAGE_ID, jobId: C.JOB_ID });
-      const itemData = { taskNames: [C.TASK_NAME] };
-
-      await caseInstances.sendMessageForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserAdhocTrigger, {
-        itemData,
-        reference: C.STAGE_ID,
-      });
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        E.SEND_MESSAGE,
-        { name: CaseInstanceMessageName.UserAdhocTrigger, reference: C.STAGE_ID, itemData },
-        FOLDER_HEADERS
-      );
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
-
-      await expect(
-        caseInstances.sendMessageForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserSelectStage)
-      ).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
-    });
-  });
-
-  describe('closeForCaseApp', () => {
-    it('should post an empty body when no options are given', async () => {
-      const response = { instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false };
-      mockApiClient.post.mockResolvedValue(response);
-
-      const result = await caseInstances.closeForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(E.CLOSE(C.INSTANCE_ID), {}, FOLDER_HEADERS);
-      expect(result).toEqual(response);
-    });
-
-    it('should send the comment and operation id', async () => {
-      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false });
-
-      await caseInstances.closeForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, { comment: C.COMMENT, operationId: C.OPERATION_ID });
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        E.CLOSE(C.INSTANCE_ID),
-        { comment: C.COMMENT, operationId: C.OPERATION_ID },
-        FOLDER_HEADERS
-      );
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_ALREADY_COMPLETED));
-
-      await expect(caseInstances.closeForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY)).rejects.toThrow(C.ERROR_CASE_ALREADY_COMPLETED);
-    });
-  });
-
-  describe('reopenForCaseApp', () => {
-    it('should post the start element and comment', async () => {
-      const response = { instanceId: C.INSTANCE_ID, status: 'Running' };
-      mockApiClient.post.mockResolvedValue(response);
-
-      const result = await caseInstances.reopenForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, C.STAGE_ID, { comment: C.COMMENT });
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        E.REOPEN(C.INSTANCE_ID),
-        { startElementId: C.STAGE_ID, comment: C.COMMENT },
-        FOLDER_HEADERS
-      );
-      expect(result).toEqual(response);
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
-
-      await expect(caseInstances.reopenForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, C.STAGE_ID)).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
     });
   });
 });

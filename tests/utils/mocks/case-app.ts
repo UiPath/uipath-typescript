@@ -1,12 +1,7 @@
 /**
- * Case App (v3) mock factories — raw wire shapes, so the service's renames actually run.
+ * Case App route mock factories — raw wire shapes, so the service's renames actually run.
  */
 
-import type {
-  RawCaseAppElementExecution,
-  RawCaseAppGetElementExecutionsResponse,
-  RawCaseAppElementRun,
-} from '../../../src/models/maestro/case-app.internal-types';
 import { CASE_APP_TEST_CONSTANTS as C } from '../constants/case-app';
 
 export const createRawCaseAppInstance = (overrides?: Record<string, unknown>) => ({
@@ -32,7 +27,7 @@ export const createCaseAppInstanceListResponse = (overrides?: Record<string, unk
   ...overrides,
 });
 
-export const createRawCaseAppElementRun = (overrides?: Partial<RawCaseAppElementRun>): RawCaseAppElementRun => ({
+export const createRawCaseAppElementRun = (overrides?: Record<string, unknown>) => ({
   elementRunId: C.ELEMENT_RUN_ID,
   status: 'Completed',
   startedTimeUtc: C.STARTED_TIME,
@@ -49,9 +44,7 @@ export const createRawCaseAppElementRun = (overrides?: Partial<RawCaseAppElement
   ...overrides,
 });
 
-export const createRawCaseAppElementExecution = (
-  overrides?: Partial<RawCaseAppElementExecution>
-): RawCaseAppElementExecution => ({
+export const createRawCaseAppElementExecution = (overrides?: Record<string, unknown>) => ({
   elementId: C.ELEMENT_ID,
   elementType: 'userTask',
   elementName: C.ELEMENT_NAME,
@@ -73,9 +66,7 @@ export const createRawCaseAppElementExecution = (
   ...overrides,
 });
 
-export const createRawCaseAppGetElementExecutionsResponse = (
-  overrides?: Partial<RawCaseAppGetElementExecutionsResponse>
-): RawCaseAppGetElementExecutionsResponse => ({
+export const createRawCaseAppGetElementExecutionsResponse = (overrides?: Record<string, unknown>) => ({
   instanceId: C.INSTANCE_ID,
   instanceDisplayName: C.CASE_ID,
   externalId: C.CASE_ID,
