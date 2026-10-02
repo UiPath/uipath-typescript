@@ -1,7 +1,7 @@
 import { BaseService } from './base';
 import { CollectionResponse, FolderScopedOptions } from '../models/common/types';
 import { createHeaders } from '../utils/http/headers';
-import { FOLDER_ID } from '../utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY } from '../utils/constants/headers';
 import { ODATA_PREFIX } from '../utils/constants/common';
 import { addPrefixToKeys, transformOptions, FieldMapping } from '../utils/transform';
 import { NotFoundError, ValidationError } from '../core/errors';
@@ -70,8 +70,9 @@ export class FolderScopedService extends BaseService {
    * Handles:
    * - Name validation via `validateName`
    * - Folder header resolution via `resolveFolderHeaders` (folderId → ID/key
-   *   header by type, folderPath → encoded path header, falls back to
-   *   init-time `config.folderKey` from the `uipath:folder-key` meta tag)
+   *   header by type, folderPath → encoded path header, falls back to the
+   *   init-time `config.folderKey` — a coded function's invocation folder or
+   *   the `uipath:folder-key` meta tag)
    * - OData `$filter=Name eq '…'` with single-quote escaping + `$top=1`
    * - Empty-result → `NotFoundError` with folder context in the message
    *
@@ -139,7 +140,8 @@ export class FolderScopedService extends BaseService {
 
     const items = response.data?.value;
     if (!items?.length) {
-      const folderHint = describeFolderForError(folderId, folderKey, resolvedFolderPath);
+      // The sent key header, not `folderKey`: it carries the init-time fallback when the call named no folder.
+      const folderHint = describeFolderForError(folderId, headers[FOLDER_KEY], resolvedFolderPath);
       throw new NotFoundError({
         message: `${resourceType} '${resolvedName}' not found${folderHint}.`,
       });

@@ -69,6 +69,12 @@ export type {
   RetryOptions,
   BackoffStrategy,
 } from '../models/common/http.types';
+export type {
+  HttpMethod,
+  Headers,
+  QueryParams,
+  ResponseType,
+} from '../models/common/request-spec';
 
 export { trace } from '../utils/tracing/trace';
 

@@ -100,10 +100,10 @@ export const createMockApiClient = () => ({
  * ```
  */
 export const createMockUiPath = (
-  overrides?: Partial<UiPathConfig> & { folderKey?: string },
+  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string },
   tokenManagerOverrides?: Partial<TokenManager>
 ): UiPath => {
-  const { folderKey, ...configOverrides } = overrides ?? {};
+  const { folderKey, metaFolderKey, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -124,6 +124,7 @@ export const createMockUiPath = (
     context: executionContext,
     tokenManager,
     folderKey,
+    metaFolderKey,
   });
 
   return mockInstance;
@@ -146,11 +147,13 @@ export const createMockUiPath = (
  * ```
  */
 export const createServiceTestDependencies = (
-  overrides?: Partial<UiPathConfig> & { folderKey?: string },
+  overrides?: Partial<UiPathConfig> & { folderKey?: string; metaFolderKey?: string },
   tokenManagerOverrides?: Partial<MockableTokenManager>
 ) => {
-  // `folderKey` is meta-tag-only — not on UiPathConfig; lives on PrivateSDK.
-  const { folderKey, ...configOverrides } = overrides ?? {};
+  // The folder keys are not on UiPathConfig; they live on PrivateSDK. `folderKey` is the default for
+  // calls that need a folder (meta tag or coded-function context); `metaFolderKey` is the meta tag's
+  // alone, which Integration Service falls back to.
+  const { folderKey, metaFolderKey, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -175,6 +178,7 @@ export const createServiceTestDependencies = (
     context: executionContext,
     tokenManager,
     folderKey,
+    metaFolderKey,
   });
 
   return {

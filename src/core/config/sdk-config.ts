@@ -1,5 +1,9 @@
 // Base configuration with common required fields
 export interface BaseConfig {
+  /**
+   * Platform origin, such as `https://cloud.uipath.com` — scheme, host and port. The organization
+   * and tenant are appended to it, so a URL that already carries a path addresses the wrong tenant.
+   */
   baseUrl: string;
   orgName: string;
   tenantName: string;
