@@ -1,5 +1,5 @@
 import { RawFunctionGetResponse, FunctionHttpMethod } from '../../../src/models/orchestrator/functions.types';
-import { RawStudioWebLicenseResponse, StudioWebLicenseTokenClaims } from '../../../src/models/orchestrator/functions.internal-types';
+import type { RawStudioWebLicenseResponse, StudioWebLicenseTokenClaims } from '../../../src/core/licensing/types';
 import { FunctionGetResponse } from '../../../src/models/orchestrator/functions.models';
 import { NonPaginatedResponse } from '../../../src/utils/pagination';
 import { FUNCTION_TEST_CONSTANTS, FUNCTION_LICENSE_TEST_CONSTANTS } from '../constants/functions';
