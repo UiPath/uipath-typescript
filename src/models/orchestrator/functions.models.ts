@@ -113,21 +113,17 @@ export interface FunctionServiceModel {
    * one of `folderId`, `folderKey`, or `folderPath` in the options, or initialize
    * the SDK with a folder context.
    *
-   * Before invoking, the SDK acquires a license for the calling user — their own
-   * if they hold one, otherwise the free Attended Studio Web license — and
-   * reuses it while it stays valid, so a burst of invocations costs one
-   * acquisition. Acquiring is a precondition rather than bookkeeping: it
-   * provisions the robot the function runs on, so an invocation whose license
-   * cannot be acquired fails with that error rather than proceeding.
+   * In a coded app, the SDK acquires a license for the signed-in user once per
+   * sign-in — their own if they hold one, otherwise the free Attended Studio Web
+   * license. `invoke` does not wait for it.
    *
    * @param func - Function to invoke, by `name`: the name declared in its source
    *   (`hello`) or the full name `getAll` returns (`my-functions_hello`). Add
    *   `processName` when several processes in the folder declare the same name.
    * @param input - Input for the function, sent as the request body (or as query
    *   parameters for functions declared with the `Get` method). Defaults to an empty object.
-   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`),
-   *   parent job attribution (`jobKey`), and `refreshLicense` to force a fresh
-   *   license acquisition
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and
+   *   parent job attribution (`jobKey`)
    * @returns Promise resolving to the function's output
    *
    * @example
@@ -143,16 +139,6 @@ export interface FunctionServiceModel {
    *   { name: 'hello', processName: 'my-functions' },
    *   { name: 'Alice' },
    *   { folderId: <folderId> }
-   * );
-   * ```
-   *
-   * @example
-   * ```typescript
-   * // Force a fresh license, e.g. just after the user's licensing changed
-   * const result = await functions.invoke(
-   *   { name: 'hello' },
-   *   { name: 'Alice' },
-   *   { folderKey: '<folderKey>', refreshLicense: true }
    * );
    * ```
    *
@@ -179,8 +165,7 @@ export interface FunctionServiceModel {
   /**
    * Acquires a license for the calling user without invoking anything.
    *
-   * {@link FunctionServiceModel.invoke | invoke} already does this, so callers
-   * do not need to.
+   * @deprecated A coded app acquires the license on sign-in; callers do not need to.
    *
    * @internal
    *

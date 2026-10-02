@@ -7,6 +7,7 @@ import { UiPathConfig } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
 import type { OrganizationIdResolver } from '../organization/organization-id-resolver';
+import type { SessionLicense } from '../licensing/session-license';
 
 /**
  * Private SDK components used by services.
@@ -42,4 +43,6 @@ export interface PrivateSDK {
    * service built on the instance shares one resolution.
    */
   organizationIdResolver?: OrganizationIdResolver;
+  /** Per-sign-in license acquisition; present only for interactive app users. */
+  sessionLicense?: SessionLicense;
 }

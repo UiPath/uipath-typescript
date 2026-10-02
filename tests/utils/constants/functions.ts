@@ -58,5 +58,8 @@ export const FUNCTION_LICENSE_TEST_CONSTANTS = {
   LICENSED_UNITS: ['APPS', 'ATTR', 'STDW', 'STDX'],
   /** Orchestrator issues license tokens valid for two hours. */
   TTL_SECONDS: 7200,
-  ERROR_LICENSE_UNAVAILABLE: 'No license available for this user',
+  USER_ID: 'user-a',
+  OTHER_USER_ID: 'user-b',
+  OTHER_TENANT_NAME: 'other-tenant',
+  OPAQUE_TOKEN: 'opaque-personal-access-token',
 } as const;
