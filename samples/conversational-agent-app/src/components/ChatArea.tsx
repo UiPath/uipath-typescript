@@ -60,24 +60,29 @@ export function ChatArea() {
       setConnectionReadiness(hasUnresolved ? readiness : null)
     }
 
+    // Initial fetch, then sequential re-fetch after delay to pick up auto-bind results
+    let timerRef: ReturnType<typeof setTimeout> | undefined
     conversationalAgent
       .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
-      .then(mapItems)
+      .then((items) => {
+        mapItems(items)
+        if (cancelled) return
+        return new Promise<void>((resolve) => {
+          timerRef = setTimeout(resolve, 1500)
+        })
+      })
+      .then(() => {
+        if (cancelled) return
+        return conversationalAgent
+          .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
+          .then(mapItems)
+      })
       .catch((error) => {
         console.warn('Failed to fetch connection readiness:', error)
         if (!cancelled) setConnectionReadiness(null)
       })
 
-    // Re-fetch after delay to pick up auto-bind results
-    const timer = setTimeout(() => {
-      if (cancelled) return
-      conversationalAgent
-        .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
-        .then(mapItems)
-        .catch(() => {})
-    }, 1500)
-
-    return () => { cancelled = true; clearTimeout(timer) }
+    return () => { cancelled = true; if (timerRef) clearTimeout(timerRef) }
   }, [conversationalAgent, selectedAgent])
 
   // Auto-scroll to bottom when new messages arrive

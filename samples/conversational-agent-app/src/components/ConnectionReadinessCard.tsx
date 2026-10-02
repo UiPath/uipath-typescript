@@ -47,6 +47,7 @@ export function ConnectionReadinessCard({
   const [localConnectors, setLocalConnectors] = useState<ConnectorReadiness[]>(connectors)
   const localConnectorsRef = useRef<ConnectorReadiness[]>(connectors)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollInFlightRef = useRef(false)
   const fetchingRef = useRef(false)
   const oauthSessionRef = useRef(0)
 
@@ -133,6 +134,8 @@ export function ConnectionReadinessCard({
       window.open(authUrl, '_blank', 'noopener,noreferrer')
 
       pollingRef.current = setInterval(async () => {
+        if (pollInFlightRef.current) return
+        pollInFlightRef.current = true
         try {
           if (oauthSessionRef.current !== oauthSession) {
             if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
@@ -187,6 +190,8 @@ export function ConnectionReadinessCard({
           }
         } catch (error) {
           console.warn('Failed to poll connection session status:', error)
+        } finally {
+          pollInFlightRef.current = false
         }
       }, POLL_INTERVAL_MS)
     } catch (error) {
