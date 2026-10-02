@@ -4,13 +4,16 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useConversationalAgent } from '../context/ConversationalAgentContext'
+import type { AvailableConnectionsResponse } from '@uipath/uipath-typescript/conversational-agent'
 import { MessageBubble } from './MessageBubble'
 import { WelcomeScreen } from './WelcomeScreen'
 import { ChatInput } from './ChatInput'
+import { ConnectionReadinessCard, type ConnectorReadiness } from './ConnectionReadinessCard'
 import { Spinner } from './Spinner'
 
 export function ChatArea() {
   const {
+    conversationalAgent,
     messages,
     currentConversation,
     selectedAgent,
@@ -23,9 +26,47 @@ export function ChatArea() {
     resolveInterrupt,
   } = useConversationalAgent()
 
+  const [connectionReadiness, setConnectionReadiness] = useState<ConnectorReadiness[] | null>(null)
+
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Fetch connection readiness when agent changes
+  useEffect(() => {
+    if (!conversationalAgent || !selectedAgent) {
+      setConnectionReadiness(null)
+      return
+    }
+    let cancelled = false
+    conversationalAgent
+      .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
+      .then((items: AvailableConnectionsResponse) => {
+        if (cancelled) return
+        if (items.length === 0) { setConnectionReadiness(null); return }
+        const readiness: ConnectorReadiness[] = items.map(item => ({
+          connectorKey: item.connectorKey,
+          connectorName: item.connectorName ?? item.connectorKey,
+          connectorImage: item.connectorImage,
+          isConfigurable: item.isConfigurable !== false,
+          currentConnectionId: item.currentConnectionId,
+          currentConnectionName: item.currentConnectionName,
+          currentConnectionState: item.currentConnectionId
+            ? (item.connections?.find(c => c.id === item.currentConnectionId)?.state === 'Enabled' ? 'Enabled' : 'Expired') as ConnectorReadiness['currentConnectionState']
+            : undefined,
+          connectionsUrl: item.connectionsUrl,
+        }))
+        const hasUnresolved = readiness.some(
+          c => c.isConfigurable && (!c.currentConnectionId || c.currentConnectionState !== 'Enabled'),
+        )
+        setConnectionReadiness(hasUnresolved ? readiness : null)
+      })
+      .catch((error) => {
+        console.warn('Failed to fetch connection readiness:', error)
+        if (!cancelled) setConnectionReadiness(null)
+      })
+    return () => { cancelled = true }
+  }, [conversationalAgent, selectedAgent])
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -47,6 +88,7 @@ export function ChatArea() {
   }, [selectedAgent, createConversation])
 
   const handleSubmit = useCallback(async (content: string, attachments: File[]) => {
+    setConnectionReadiness(null)
     await sendMessage(content, attachments)
   }, [sendMessage])
 
@@ -89,6 +131,18 @@ export function ChatArea() {
           )}
         </div>
       </div>
+
+      {/* Connection readiness card */}
+      {connectionReadiness && conversationalAgent && selectedAgent && (
+        <ConnectionReadinessCard
+          connectors={connectionReadiness}
+          conversationalAgent={conversationalAgent}
+          agentId={selectedAgent.id}
+          folderId={selectedAgent.folderId}
+          onAllConnected={() => setConnectionReadiness(null)}
+          defaultCollapsed={messages.length > 0}
+        />
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">

@@ -2,7 +2,7 @@
  * ConnectionsPanel - Settings panel for managing personal connections
  */
 
-import { useState } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import type {
   AvailableConnectionsItem,
   AvailableConnection,
@@ -10,6 +10,8 @@ import type {
 import { useConnections } from '../hooks/useConnections'
 import type { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent'
 import { Spinner } from './Spinner'
+
+const POLL_INTERVAL_MS = 1500
 
 interface ConnectionsPanelProps {
   conversationalAgent: ConversationalAgent | null
@@ -34,6 +36,7 @@ export function ConnectionsPanel({
     isDirty,
     saveStatus,
     setSaveStatus,
+    load,
     selectConnection,
     save,
     cancel,
@@ -90,6 +93,7 @@ export function ConnectionsPanel({
             item={item}
             selectedConnectionId={stagedSelections[item.connectorKey] ?? ''}
             onSelect={(connectionId) => selectConnection(item.connectorKey, connectionId)}
+            onConnectionCreated={load}
             conversationalAgent={conversationalAgent}
           />
         ))}
@@ -125,13 +129,74 @@ interface ConnectionRowProps {
   item: AvailableConnectionsItem
   selectedConnectionId: string
   onSelect: (connectionId: string) => void
+  onConnectionCreated: () => void
   conversationalAgent: ConversationalAgent | null
 }
 
-function ConnectionRow({ item, selectedConnectionId, onSelect, conversationalAgent }: ConnectionRowProps) {
+function ConnectionRow({ item, selectedConnectionId, onSelect, onConnectionCreated, conversationalAgent }: ConnectionRowProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [isPolling, setIsPolling] = useState(false)
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelledRef = useRef(false)
   const selectedConnection = item.connections.find(c => c.id === selectedConnectionId)
+
+  const stopPolling = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = null
+    }
+    if (!cancelledRef.current) setIsPolling(false)
+  }, [])
+
+  // Cancel in-flight polling when the agent identity changes or the row unmounts
+  useEffect(() => {
+    cancelledRef.current = false
+    return () => {
+      cancelledRef.current = true
+      stopPolling()
+    }
+  }, [conversationalAgent, stopPolling])
+
+  const handleAddConnection = useCallback(async () => {
+    if (!conversationalAgent) return
+    try {
+      const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl(item.connectorKey)
+      if (cancelledRef.current) return
+      window.open(authUrl, '_blank', 'noopener,noreferrer')
+
+      setIsPolling(true)
+      const tick = async () => {
+        if (cancelledRef.current) { stopPolling(); return }
+        if (Date.now() > expiresTime) {
+          stopPolling()
+          return
+        }
+        try {
+          const session = await conversationalAgent.getConnectionSessionStatus(sessionId)
+          if (cancelledRef.current) return
+          if (session.status === 'success') {
+            stopPolling()
+            onConnectionCreated()
+          } else if (session.status === 'failed') {
+            stopPolling()
+          } else {
+            pollTimerRef.current = setTimeout(tick, POLL_INTERVAL_MS)
+          }
+        } catch (error) {
+          console.warn('Failed to poll connection session status:', error)
+          stopPolling()
+        }
+      }
+      pollTimerRef.current = setTimeout(tick, POLL_INTERVAL_MS)
+    } catch (error) {
+      console.warn('Auth URL unavailable, falling back to platform URL:', error)
+      if (cancelledRef.current) return
+      // Fallback to the platform URL if auth endpoint isn't available
+      const url = await conversationalAgent.getAddConnectionUrl(item)
+      if (url) window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }, [conversationalAgent, item, stopPolling, onConnectionCreated])
 
   const query = search.trim().toLowerCase()
 
@@ -196,27 +261,15 @@ function ConnectionRow({ item, selectedConnectionId, onSelect, conversationalAge
         {isOpen && (
           <div className="absolute z-50 mt-1 w-full bg-chat-input border border-white/20 rounded-lg shadow-xl overflow-hidden">
             {/* Search */}
-            <div className="p-2 border-b border-white/10 flex items-center gap-2">
+            <div className="p-2 border-b border-white/10">
               <input
                 type="text"
                 placeholder="Search connections..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-sm placeholder:text-gray-500 focus:outline-none"
+                className="w-full bg-transparent text-sm placeholder:text-gray-500 focus:outline-none"
                 autoFocus
               />
-              {conversationalAgent && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const url = await conversationalAgent.getAddConnectionUrl(item)
-                    if (url) window.open(url, '_blank', 'noopener,noreferrer')
-                  }}
-                  className="text-accent text-xs whitespace-nowrap hover:underline"
-                >
-                  + Connection
-                </button>
-              )}
             </div>
 
             {/* Options */}
@@ -243,6 +296,25 @@ function ConnectionRow({ item, selectedConnectionId, onSelect, conversationalAge
                 </div>
               ))}
             </div>
+
+            {/* Add connection */}
+            {conversationalAgent && (
+              <button
+                type="button"
+                onClick={handleAddConnection}
+                disabled={isPolling}
+                className="w-full text-sm text-center py-3 border-t border-white/10 hover:bg-white/5 transition-colors text-accent disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isPolling ? (
+                  <>
+                    <Spinner className="w-3 h-3 border-accent" />
+                    Waiting for auth...
+                  </>
+                ) : (
+                  '+ Add connection'
+                )}
+              </button>
+            )}
 
             {/* Footer link */}
             {(item.connectionsUrl ?? item.configurationUrl) && (
