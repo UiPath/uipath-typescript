@@ -96,7 +96,7 @@ export interface ConnectionAuthResponse {
   authUrl: string;
   /** Unique session ID used to poll for OAuth completion via {@link getConnectionSessionStatus} */
   sessionId: string;
-  /** Unix timestamp (ms) when the auth session expires */
+  /** Unix timestamp when the auth session expires */
   expiresTime: number;
 }
 
