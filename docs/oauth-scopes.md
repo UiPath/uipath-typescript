@@ -170,6 +170,13 @@ Creating a validation action and polling its result both go through the [Documen
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 | `getStagesSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
+| `getStagesForCaseApp()` | `PIMS` |
+| `getSlaSummaryForCaseApp()` | `PIMS` |
+| `getCaseJsonForCaseApp()` | `PIMS` |
+| `getIncidentsForCaseApp()` | `PIMS` |
+| `getAdhocTasksForCaseApp()` | `PIMS` |
+| `triggerAdhocTaskForCaseApp()` | `PIMS` |
+| `selectStageForCaseApp()` | `PIMS` |
 
 ## Conversational Agent
 
