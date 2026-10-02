@@ -1,4 +1,4 @@
-import type { UiPathConfig } from '../config/config';
+import type { Config } from '../config/config';
 import type { ExecutionContext } from '../context/execution';
 import type { TokenManager } from '../auth/token-manager';
 import type { TokenInfo } from '../auth/types';
@@ -99,11 +99,9 @@ export class SessionLicense {
   readonly #tenantScope: string;
   #identity?: string;
 
-  constructor(config: UiPathConfig, context: ExecutionContext, private readonly tokenManager: TokenManager) {
+  constructor(config: Config, context: ExecutionContext, private readonly tokenManager: TokenManager) {
     this.#apiClient = new ApiClient(config, context, tokenManager);
     this.#tenantScope = `${config.baseUrl}/${config.orgName}/${config.tenantName}`;
-    tokenManager.onTokenChange((tokenInfo) => this.#onTokenChange(tokenInfo));
-    this.#onTokenChange(tokenManager.getTokenInfo());
   }
 
   async acquire(refresh = false): Promise<StudioWebLicense | undefined> {
@@ -111,7 +109,8 @@ export class SessionLicense {
     return identity ? this.#ensure(identity, refresh) : undefined;
   }
 
-  #onTokenChange(tokenInfo: TokenInfo | undefined): void {
+  /** Called by the token manager whenever the token is set, loaded or cleared (`undefined`). */
+  onTokenChange(tokenInfo: TokenInfo | undefined): void {
     const identity = tokenInfo ? this.#identityOf(tokenInfo.token) : undefined;
     if (identity === this.#identity) return;
 

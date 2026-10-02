@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import { UiPathConfig } from '../../src/core/config/config';
 import { ExecutionContext } from '../../src/core/context/execution';
 import { TokenManager } from '../../src/core/auth/token-manager';
-import type { TokenInfo } from '../../src/core/auth/types';
+import type { SessionLicense } from '../../src/core/licensing/session-license';
 import type { UiPath } from '../../src/core/uipath';
 import type { BaseConfig } from '../../src/core/config/sdk-config';
 import { SDKInternalsRegistry, type PrivateSDK } from '../../src/core/internals';
@@ -24,8 +24,7 @@ interface MockableTokenManager {
   getToken: () => string | undefined;
   hasValidToken: () => boolean;
   getValidToken: () => Promise<string>;
-  getTokenInfo: () => TokenInfo | undefined;
-  onTokenChange: (listener: (tokenInfo: TokenInfo | undefined) => void) => void;
+  sessionLicense?: SessionLicense;
 }
 
 // Mock console methods to avoid test output noise
@@ -72,8 +71,6 @@ const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): Toke
     getToken: vi.fn().mockReturnValue('mock-access-token'),
     hasValidToken: vi.fn().mockReturnValue(true),
     getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
-    getTokenInfo: vi.fn().mockReturnValue(undefined),
-    onTokenChange: vi.fn(),
     ...overrides,
   };
   return mock as TokenManager;

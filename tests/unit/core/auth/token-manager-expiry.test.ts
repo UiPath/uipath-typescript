@@ -16,6 +16,8 @@ vi.mock('@/utils/platform', () => ({
   embeddingOrigin: null,
 }));
 
+vi.mock('@/core/licensing/session-license');
+
 const NOW = new Date('2026-01-01T00:00:00.000Z');
 const WITHIN_BUFFER = new Date(NOW.getTime() + TOKEN_EXPIRY_BUFFER_MS / 2);
 const BEYOND_BUFFER = new Date(NOW.getTime() + TOKEN_EXPIRY_BUFFER_MS * 2);

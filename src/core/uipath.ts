@@ -15,8 +15,7 @@ import {
   type CodedFunctionContext,
 } from './config/function-context';
 import type { IUiPath } from './types';
-import { isBrowser, isInActionCenter } from '../utils/platform';
-import { SessionLicense } from './licensing/session-license';
+import { isInActionCenter } from '../utils/platform';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
 
 /**
@@ -179,16 +178,12 @@ export class UiPath implements IUiPath {
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
     // values) and live here on the runtime registry instead.
-    const tokenManager = this.#authService.getTokenManager();
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager,
+      tokenManager: this.#authService.getTokenManager(),
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
-      sessionLicense: isBrowser && !hasSecretAuth
-        ? new SessionLicense(internalConfig, executionContext, tokenManager)
-        : undefined,
     });
 
     // Expose read-only config for user convenience
