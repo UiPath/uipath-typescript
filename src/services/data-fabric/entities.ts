@@ -51,6 +51,11 @@ import {
   EntityClass,
   EntityCreateExternalSource,
   EntityCreateExternalField,
+  EntityCloneRequest,
+  EntityCloneJob,
+  EntityCloneJobState,
+  EntityCloneMode,
+  EntityCloneScopeType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -72,7 +77,7 @@ import {
   MAX_QUERY_JOINS,
   EntityClassToIdMap,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas, RawEntityCloneJob } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 import { resolveOverride } from '../../utils/overrides/resolve-override';
 
@@ -170,6 +175,18 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
   throw new ValidationError({
     message: `${callerLabel}: entityRef must supply exactly one of 'id' or 'name'.`,
   });
+}
+
+/** Map the clone-job wire shape to the public type, renaming `createdAt` to `createdTime`. */
+function toEntityCloneJob(raw: RawEntityCloneJob): EntityCloneJob {
+  return {
+    jobId: raw.jobId,
+    state: raw.state as EntityCloneJobState,
+    createdTime: raw.createdAt,
+    failureReasonCode: raw.failureReasonCode,
+    failurePhase: raw.failurePhase,
+    failureMessage: raw.failureMessage,
+  };
 }
 
 /**
@@ -476,6 +493,37 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
     );
     return response.data;
+  }
+
+  @track('Entities.Clone')
+  async clone(request: EntityCloneRequest): Promise<EntityCloneJob> {
+    if (request.target?.scopeType !== EntityCloneScopeType.Folder || !request.target.folderId?.trim()) {
+      throw new ValidationError({
+        message: 'clone requires a folder-scoped target with a non-empty folderId.',
+      });
+    }
+    if (!request.entityIds?.length) {
+      throw new ValidationError({
+        message: 'clone requires at least one entity id in entityIds.',
+      });
+    }
+    const payload = {
+      source: request.source,
+      target: request.target,
+      entityIds: request.entityIds,
+      options: { mode: request.options?.mode ?? EntityCloneMode.SchemaAndData },
+    };
+    const response = await this.post<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE, payload);
+    return toEntityCloneJob(response.data);
+  }
+
+  @track('Entities.GetCloneJob')
+  async getCloneJob(jobId: string): Promise<EntityCloneJob> {
+    if (!jobId?.trim()) {
+      throw new ValidationError({ message: 'getCloneJob requires a non-empty job id.' });
+    }
+    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_JOB(jobId));
+    return toEntityCloneJob(response.data);
   }
 
   @track('Entities.DeleteById')

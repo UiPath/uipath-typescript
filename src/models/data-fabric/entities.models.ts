@@ -37,6 +37,8 @@ import {
   EntityUpsertOptions,
   EntityUpsertResponse,
   EntityRef,
+  EntityCloneRequest,
+  EntityCloneJob,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -1086,6 +1088,66 @@ export interface EntityServiceModel {
    * @experimental
    */
   create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+
+  /**
+   * Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full
+   * dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the
+   * job descriptor to poll via {@link EntityServiceModel.getCloneJob}.
+   *
+   * Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData`
+   * (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into
+   * a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-,
+   * Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+   *
+   * @param request - Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+   * @returns Promise resolving to the {@link EntityCloneJob} descriptor (initial state `Queued`).
+   * @example
+   * ```typescript
+   * import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const job = await entities.clone({
+   *   source: { scopeType: EntityCloneScopeType.Tenant },
+   *   target: { scopeType: EntityCloneScopeType.Folder, folderId: "<targetFolderId>" },
+   *   entityIds: ["<rootEntityId>", "<choiceSetId>"],
+   *   options: { mode: EntityCloneMode.SchemaAndData },
+   * });
+   *
+   * // Poll to a terminal state.
+   * const terminal = [
+   *   EntityCloneJobState.Done, EntityCloneJobState.Failed,
+   *   EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+   * ];
+   * let status = await entities.getCloneJob(job.jobId);
+   * while (!terminal.includes(status.state)) {
+   *   await new Promise((r) => setTimeout(r, 3000));
+   *   status = await entities.getCloneJob(job.jobId);
+   * }
+   * ```
+   * @experimental
+   */
+  clone(request: EntityCloneRequest): Promise<EntityCloneJob>;
+
+  /**
+   * Gets the current status of a clone job started by {@link EntityServiceModel.clone}; poll until
+   * `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done`
+   * terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+   *
+   * @param jobId - The `jobId` returned when the clone job was started.
+   * @returns Promise resolving to the latest {@link EntityCloneJob}.
+   * @example
+   * ```typescript
+   * import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const status = await entities.getCloneJob("<jobId>");
+   * if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
+   * ```
+   * @experimental
+   */
+  getCloneJob(jobId: string): Promise<EntityCloneJob>;
 
   /**
    * Deletes a Data Fabric entity and all its records
