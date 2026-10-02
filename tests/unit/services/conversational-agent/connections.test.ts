@@ -11,6 +11,7 @@ import { createServiceTestDependencies, createMockApiClient } from '@tests/utils
 import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
 import {
   ConnectionState,
+  ConnectionSessionStatus,
   type AvailableConnection,
   type AvailableConnectionsItem,
   type AvailableConnectionsResponse,
@@ -238,7 +239,7 @@ describe('ConversationalAgentService — Connections', () => {
         AGENT_ENDPOINTS.CONNECTION_SESSION_STATUS('session-abc-123'),
         expect.any(Object),
       );
-      expect(result.status).toBe('pending');
+      expect(result.status).toBe(ConnectionSessionStatus.Pending);
       expect(result.connectionId).toBeNull();
       // expiresAt is renamed to expiresTime, value passed through as-is (already ms)
       expect(result.expiresTime).toBe(1790886963000);
@@ -254,7 +255,7 @@ describe('ConversationalAgentService — Connections', () => {
 
       const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
 
-      expect(result.status).toBe('success');
+      expect(result.status).toBe(ConnectionSessionStatus.Success);
       expect(result.connectionId).toBe('conn-new-456');
     });
 
@@ -267,7 +268,7 @@ describe('ConversationalAgentService — Connections', () => {
 
       const result = await conversationalAgent.getConnectionSessionStatus('session-abc-123');
 
-      expect(result.status).toBe('failed');
+      expect(result.status).toBe(ConnectionSessionStatus.Failed);
       expect(result.connectionId).toBeNull();
     });
 

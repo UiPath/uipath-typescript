@@ -377,8 +377,8 @@ export interface ConversationalAgentServiceModel {
    * Polls the status of a connection auth session started by {@link getConnectionAuthUrl}.
    *
    * After opening the auth URL in a new tab, call this method on an interval
-   * until the returned `status` is `'success'` (the user completed OAuth and
-   * a connection was created) or `'failed'`. When `status` is `'success'`,
+   * until the returned `status` is `ConnectionSessionStatus.Success` (the user completed OAuth and
+   * a connection was created) or `ConnectionSessionStatus.Failed`. When `status` is `Success`,
    * `connectionId` contains the ID of the newly created connection.
    *
    * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
@@ -389,15 +389,17 @@ export interface ConversationalAgentServiceModel {
    *
    * @example
    * ```typescript
+   * import { ConnectionSessionStatus } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl('jira');
    * window.open(authUrl, '_blank');
    *
    * async function poll() {
    *   if (Date.now() > expiresTime) return;
    *   const session = await conversationalAgent.getConnectionSessionStatus(sessionId);
-   *   if (session.status === 'success') {
+   *   if (session.status === ConnectionSessionStatus.Success) {
    *     console.log('Connection created:', session.connectionId);
-   *   } else if (session.status !== 'failed') {
+   *   } else if (session.status !== ConnectionSessionStatus.Failed) {
    *     setTimeout(poll, 500);
    *   }
    * }
