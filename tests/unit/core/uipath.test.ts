@@ -5,6 +5,7 @@ import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
+import { SessionLicense } from '../../../src/core/licensing/session-license';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
@@ -14,6 +15,8 @@ const mockTokenManager = {
   getToken: () => 'mock-access-token',
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
+  getTokenInfo: () => undefined,
+  onTokenChange: vi.fn(),
 };
 
 const mockLogout = vi.fn();
@@ -515,6 +518,48 @@ describe('UiPath Core', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Session license', () => {
+    const oauthConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+      scope: TEST_CONSTANTS.OAUTH_SCOPE,
+    };
+
+    afterEach(() => {
+      mockPlatform.isBrowser = false;
+    });
+
+    it('should attach a session license to an OAuth app in the browser', () => {
+      mockPlatform.isBrowser = true;
+
+      const sdk = new UiPath(oauthConfig);
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
+    });
+
+    it('should not attach a session license for secret auth in the browser', () => {
+      mockPlatform.isBrowser = true;
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+      });
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+    });
+
+    it('should not attach a session license outside the browser, as inside a coded function', () => {
+      const sdk = new UiPath(oauthConfig);
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
     });
   });
 

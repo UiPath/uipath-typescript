@@ -1,12 +1,9 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  FunctionService,
-  clearLicenseCache,
-  licenseExpiryMs,
-  MAX_CACHED_LICENSES,
-} from '../../../../src/services/orchestrator/functions/functions';
+import { FunctionService } from '../../../../src/services/orchestrator/functions/functions';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { SessionLicense, toStudioWebLicense } from '../../../../src/core/licensing/session-license';
+import { SDKInternalsRegistry } from '../../../../src/core/internals';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockRawFunctionTrigger,
@@ -46,15 +43,12 @@ describe('FunctionService Unit Tests', () => {
 
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    // The license cache is process-wide by design, so it survives between tests
-    // unless cleared — otherwise one case inherits another's licenses.
-    clearLicenseCache();
-
     functionService = new FunctionService(instance);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('getAll', () => {
@@ -229,25 +223,6 @@ describe('FunctionService Unit Tests', () => {
   });
 
   describe('invoke', () => {
-    // Warm the license cache with a throwaway invocation, so the mocks in each
-    // test line up with the invocation legs alone. The license leg has its own
-    // describe block below.
-    beforeEach(async () => {
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
-        folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-      });
-      mockApiClient.post.mockReset();
-      mockApiClient.get.mockReset();
-    });
-
     it('should look up the function, resolve the folder key, and post the input', async () => {
       mockApiClient.get
         .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
@@ -526,85 +501,27 @@ describe('FunctionService Unit Tests', () => {
     });
   });
 
-  describe('license acquisition', () => {
-    /** Queues the GETs an invocation makes: the name lookup, then the folder key. */
-    const mockInvocationLookups = () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] })
-        .mockResolvedValueOnce({ Key: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
-    };
+  describe('license handling', () => {
+    it('should not acquire a license when invoking', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
-    const licenseCalls = () =>
-      mockApiClient.post.mock.calls.filter(
-        ([endpoint]) => endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-      );
-
-    /** Invokes with the folder key, which needs no Folders({id}) lookup. */
-    const invoke = (options: Record<string, unknown> = {}) =>
-      functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
+      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
         folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-        ...options,
       });
 
-    /** Whoever the current token belongs to; each caller gets its own cache entry. */
-    let caller = '';
-
-    const invokeAs = (identity: string) => {
-      caller = identity;
-      return invoke();
-    };
-
-    /**
-     * Serves a token per caller so invocations do not share a cache entry.
-     * `expiredFor` hands that one caller a license that is already expired.
-     */
-    const mockDistinctCallers = (expiredFor?: string) => {
-      const staleSeconds = Math.floor(Date.now() / 1000) - 3600;
-      mockApiClient.getValidToken.mockImplementation(() => Promise.resolve(caller));
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense({}, caller === expiredFor ? { exp: staleSeconds } : {})
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-    };
-
-    /** Fills the cache to its cap, one entry per caller. */
-    const fillCache = async () => {
-      for (let i = 0; i < MAX_CACHED_LICENSES; i++) await invokeAs(`user-${i}`);
-    };
-
-    it('should acquire a license before invoking', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockInvocationLookups();
-
-      const result = await functionService.invoke(
-        { name: FUNCTION_TEST_CONSTANTS.NAME },
-        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
-        { folderId: TEST_CONSTANTS.FOLDER_ID }
-      );
-
-      // Bodyless, and not folder-scoped
-      expect(mockApiClient.post).toHaveBeenNthCalledWith(
-        1,
-        STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE,
-        undefined,
-        expect.any(Object)
-      );
-      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.post).not.toHaveBeenCalledWith(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, expect.any(Object));
     });
 
     it('should not send refreshLicense to the discovery lookup as a query param', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
       mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
-      await invoke({ refreshLicense: true });
+      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
+        folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
+        refreshLicense: true,
+      });
 
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         1,
@@ -615,172 +532,45 @@ describe('FunctionService Unit Tests', () => {
       );
     });
 
-    it('should reuse a cached license across invocations', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValue(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke();
-      await invoke();
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should force a fresh acquisition when refreshLicense is set', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT)
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke({ refreshLicense: true });
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should re-acquire once a cached license has expired', async () => {
-      // A license that expired an hour ago must not be served from the cache
-      const staleSeconds = Math.floor(Date.now() / 1000) - 3600;
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense({}, { exp: staleSeconds }))
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT)
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await invoke();
-      await invoke();
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should collapse concurrent invocations into a single acquisition', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await Promise.all([invoke(), invoke(), invoke()]);
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should not invoke when the license cannot be acquired', async () => {
-      mockApiClient.post.mockRejectedValueOnce(
-        createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE)
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-
-      // Only the acquisition was attempted — the invocation itself never went out
-      expect(licenseCalls()).toHaveLength(1);
-      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('should surface the licensing failure rather than a name lookup failure', async () => {
-      // Acquiring provisions the robot the invocation runs on, so licensing is
-      // the precondition and its error is the more useful one to report.
-      mockApiClient.post.mockRejectedValueOnce(
-        createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE)
-      );
-      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-    });
-
-    it('should not cache a failed acquisition', async () => {
-      mockApiClient.post
-        .mockRejectedValueOnce(createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE))
-        .mockResolvedValueOnce(createMockRawStudioWebLicense())
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      await expect(invoke()).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-      // The failure was not cached, so the next invocation acquired afresh
-      await expect(invoke()).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should share the cache across separately constructed services', async () => {
-      // Consumers routinely build a service per request or per render. If the
-      // cache were an instance field, each would start empty and the licensing
-      // round trip would be paid every time — the case this cache exists for.
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
+    it('should refresh the session license in the background when refreshLicense is set', async () => {
       const { instance } = createServiceTestDependencies();
-      const scope = { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY };
-      const ref = { name: FUNCTION_TEST_CONSTANTS.NAME };
+      const internals = SDKInternalsRegistry.get(instance);
+      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
+      const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockReturnValue(new Promise(() => {}));
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
-      await new FunctionService(instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-      await new FunctionService(instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should not share a license between tenants', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense()
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
+      const result = await new FunctionService(instance).invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, refreshLicense: true }
       );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      const scope = { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY };
-      const ref = { name: FUNCTION_TEST_CONSTANTS.NAME };
 
-      const tenantA = createServiceTestDependencies({ tenantName: 'TenantA' });
-      const tenantB = createServiceTestDependencies({ tenantName: 'TenantB' });
-      await new FunctionService(tenantA.instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-      await new FunctionService(tenantB.instance).invoke(ref, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, scope);
-
-      // Same user, different tenant — the second must not reuse the first
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should still invoke when the license token cannot be decoded', async () => {
-      mockApiClient.post
-        .mockResolvedValueOnce(createMockRawStudioWebLicense({ licenseToken: 'not-a-jwt' }))
-        .mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      const result = await invoke();
-
+      expect(acquire).toHaveBeenCalledWith(true);
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
     });
 
-    it('should still invoke when the platform issues no license token', async () => {
-      mockApiClient.post.mockImplementation((endpoint: string) =>
-        Promise.resolve(
-          endpoint === STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE
-            ? createMockRawStudioWebLicense({ licenseToken: null })
-            : FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT
-        )
-      );
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
+    it('should delegate acquireLicense to the session license when the SDK has one', async () => {
+      const { instance } = createServiceTestDependencies();
+      const internals = SDKInternalsRegistry.get(instance);
+      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
+      const held = toStudioWebLicense(createMockRawStudioWebLicense());
+      const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockResolvedValue(held);
 
-      await expect(invoke()).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      const license = await new FunctionService(instance).acquireLicense({ refresh: true });
 
-      // No token means no expiry to read, so the fallback lifetime applies and a
-      // second invocation still reuses the license rather than re-acquiring
-      await invoke();
-      expect(licenseCalls()).toHaveLength(1);
+      expect(acquire).toHaveBeenCalledWith(true);
+      expect(license).toEqual(held);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should acquire a license directly when the SDK has no session license', async () => {
+      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
+
+      const license = await functionService.acquireLicense();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, expect.any(Object));
+      expect(license.isLicensed).toBe(true);
     });
 
     it('should return the license with wire fields renamed to the SDK shape', async () => {
@@ -793,8 +583,6 @@ describe('FunctionService Unit Tests', () => {
       expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
       expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
 
-      // The wire names must not survive the transform, and the token itself is
-      // credential-shaped, so it must not reach the SDK shape at all
       expect('started' in license).toBe(false);
       expect('ubl' in license).toBe(false);
       expect('lu' in license).toBe(false);
@@ -812,109 +600,10 @@ describe('FunctionService Unit Tests', () => {
       expect(license.licensedUnits).toBeUndefined();
     });
 
-    it('should evict the oldest entry once the cache is full', async () => {
-      mockDistinctCallers();
-      await fillCache();
-      const atCap = licenseCalls().length;
+    it('should propagate errors from a direct acquisition', async () => {
+      mockApiClient.post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
-      // One caller past the cap: room is made by dropping the oldest entry
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-
-      // The newest caller is still cached, so no further acquisition
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-
-      // The oldest was evicted, so it has to acquire again
-      await invokeAs('user-0');
-      expect(licenseCalls()).toHaveLength(atCap + 2);
-    });
-
-    it('should drop expired entries before evicting by age', async () => {
-      // Mid-cache, so evicting it cannot be confused with evicting the oldest
-      const expiredFor = `user-${Math.floor(MAX_CACHED_LICENSES / 2)}`;
-      mockDistinctCallers(expiredFor);
-      await fillCache();
-      const atCap = licenseCalls().length;
-
-      await invokeAs(`user-${MAX_CACHED_LICENSES}`);
-
-      // The expired entry made the room, so the oldest live one survived
-      await invokeAs('user-0');
-      expect(licenseCalls()).toHaveLength(atCap + 1);
-    });
-
-    it('should acquire a license without invoking a function', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.isLicensed).toBe(true);
-      expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
-      expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
-      // Only the acquisition — nothing was invoked
-      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
-    });
-
-    it('should reuse the cached license when acquiring directly', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawStudioWebLicense());
-
-      await functionService.acquireLicense();
-      await functionService.acquireLicense();
-
-      expect(licenseCalls()).toHaveLength(1);
-    });
-
-    it('should keep a refreshed license when an earlier acquisition then fails', async () => {
-      let rejectFirst!: (error: Error) => void;
-      let licenseAttempt = 0;
-      mockApiClient.post.mockImplementation((endpoint: string) => {
-        if (endpoint !== STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE) {
-          return Promise.resolve(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-        }
-        licenseAttempt += 1;
-        return licenseAttempt === 1
-          ? new Promise((_resolve, reject) => { rejectFirst = reject; })
-          : Promise.resolve(createMockRawStudioWebLicense());
-      });
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-
-      const failing = invoke();
-      await vi.waitFor(() => expect(licenseCalls()).toHaveLength(1));
-
-      // A refresh replaces the pending entry before the first one settles
-      await invoke({ refreshLicense: true });
-      rejectFirst(createMockError(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE));
-      await expect(failing).rejects.toThrow(FUNCTION_LICENSE_TEST_CONSTANTS.ERROR_LICENSE_UNAVAILABLE);
-
-      // The failure must not evict the newer license, so nothing re-acquires
-      await invoke();
-      expect(licenseCalls()).toHaveLength(2);
-    });
-
-    it('should acquire a fresh license when asked to refresh', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawStudioWebLicense());
-
-      await functionService.acquireLicense();
-      await functionService.acquireLicense({ refresh: true });
-
-      expect(licenseCalls()).toHaveLength(2);
-    });
-  });
-
-  describe('licenseExpiryMs', () => {
-    it('should return undefined when the license carries no expiry', () => {
-      expect(licenseExpiryMs()).toBeUndefined();
-    });
-
-    it('should return undefined when the expiry cannot be parsed', () => {
-      expect(licenseExpiryMs('not-a-date')).toBeUndefined();
-    });
-
-    it('should renew slightly before the stated expiry', () => {
-      const expiresTime = '2026-08-18T12:00:00.000Z';
-
-      expect(licenseExpiryMs(expiresTime)).toBeLessThan(Date.parse(expiresTime));
+      await expect(functionService.acquireLicense()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
