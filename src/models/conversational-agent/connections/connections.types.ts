@@ -10,6 +10,15 @@ import { ConnectionState } from '../../common/types';
 export { ConnectionState };
 
 /**
+ * Status of a connection OAuth session
+ */
+export enum ConnectionSessionStatus {
+  Pending = 'pending',
+  Success = 'success',
+  Failed = 'failed',
+}
+
+/**
  * A single connection available for selection
  */
 export interface AvailableConnection {
@@ -94,6 +103,21 @@ export interface ConnectionAuthRequest {
 export interface ConnectionAuthResponse {
   /** The connector-specific auth URL to open */
   authUrl: string;
-  /** Unix timestamp when the auth URL expires */
+  /** Unique session ID used to poll for OAuth completion via {@link getConnectionSessionStatus} */
+  sessionId: string;
+  /** Unix timestamp when the auth session expires */
+  expiresTime: number;
+}
+
+/**
+ * Status of a connection auth session returned by the polling endpoint.
+ * Poll until `status` is {@link ConnectionSessionStatus.Success} (connection created) or {@link ConnectionSessionStatus.Failed}.
+ */
+export interface ConnectionSessionStatusResponse {
+  /** Current status of the OAuth session */
+  status: ConnectionSessionStatus;
+  /** ID of the newly created connection, or null when status is not 'success' */
+  connectionId: string | null;
+  /** Unix timestamp (ms) when the session expires */
   expiresTime: number;
 }

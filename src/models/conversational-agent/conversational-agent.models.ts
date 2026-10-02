@@ -3,7 +3,7 @@ import type {
   AgentGetByIdResponse
 } from './agents';
 import type { CitationSourceMedia, ConversationServiceModel } from './conversations';
-import type { AvailableConnectionsResponse, ConnectionAuthResponse, UpdateConnectionSelectionsRequest } from './connections';
+import type { AvailableConnectionsResponse, ConnectionAuthResponse, ConnectionSessionStatusResponse, UpdateConnectionSelectionsRequest } from './connections';
 import type { FeatureFlags } from './feature-flags.types';
 import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -291,6 +291,10 @@ export interface ConversationalAgentServiceModel {
    * Gets available connections for each configurable connector binding of an agent.
    * Only returns bindings that are "configurable by users" (not admin-fixed).
    *
+   * **Requires user-scoped authentication.** Personal connections are per-user;
+   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
+   * user identity and these calls will fail.
+   *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
    * @returns Promise resolving to an array of connector items with their available connections
@@ -309,6 +313,10 @@ export interface ConversationalAgentServiceModel {
   /**
    * Updates the current user's connection selections for an agent.
    * Only configurable bindings (not admin-fixed) can be updated.
+   *
+   * **Requires user-scoped authentication.** Personal connections are per-user;
+   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
+   * user identity and these calls will fail.
    *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
@@ -353,12 +361,53 @@ export interface ConversationalAgentServiceModel {
    * Only works when running inside the UiPath platform (Studio Web / portal shell).
    * For a method that handles fallbacks automatically, use {@link getAddConnectionUrl}.
    *
+   * The response includes a `sessionId` that can be passed to
+   * {@link getConnectionSessionStatus} to poll for OAuth completion.
+   *
+   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
+   * `externalUserId`) do not carry a user identity and cannot initiate OAuth flows.
+   *
    * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
-   * @returns Promise resolving to the auth URL and its expiration
-   * {@link ConnectionAuthResponse}
+   * @returns Promise resolving to the {@link ConnectionAuthResponse} containing the auth URL, session ID, and expiration
    * @internal
    */
   getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
+
+  /**
+   * Polls the status of a connection auth session started by {@link getConnectionAuthUrl}.
+   *
+   * After opening the auth URL in a new tab, call this method on an interval
+   * until the returned `status` is `ConnectionSessionStatus.Success` (the user completed OAuth and
+   * a connection was created) or `ConnectionSessionStatus.Failed`. When `status` is `Success`,
+   * `connectionId` contains the ID of the newly created connection.
+   *
+   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
+   * `externalUserId`) do not carry a user identity and cannot poll session status.
+   *
+   * @param sessionId - The session ID returned by {@link getConnectionAuthUrl}
+   * @returns Promise resolving to the current {@link ConnectionSessionStatusResponse}
+   *
+   * @example
+   * ```typescript
+   * import { ConnectionSessionStatus } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl('jira');
+   * window.open(authUrl, '_blank');
+   *
+   * async function poll() {
+   *   if (Date.now() > expiresTime) return;
+   *   const session = await conversationalAgent.getConnectionSessionStatus(sessionId);
+   *   if (session.status === ConnectionSessionStatus.Success) {
+   *     console.log('Connection created:', session.connectionId);
+   *   } else if (session.status !== ConnectionSessionStatus.Failed) {
+   *     setTimeout(poll, 500);
+   *   }
+   * }
+   * poll();
+   * ```
+   * @internal
+   */
+  getConnectionSessionStatus(sessionId: string): Promise<ConnectionSessionStatusResponse>;
 
   /**
    * Gets feature flags for the current tenant
