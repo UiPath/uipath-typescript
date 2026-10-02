@@ -4,7 +4,6 @@ import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { ApiClient } from '@/core/http/api-client';
 import { UiPathConfig } from '@/core/config/config';
-import { AUTH_STORAGE_KEYS } from '@/core/auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '@/utils/constants/endpoints';
 import { TEST_CONSTANTS } from '@tests/utils/constants/common';
 import { createTestJwt } from '@tests/utils/jwt';
@@ -13,44 +12,32 @@ import { FUNCTION_LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/function
 import { createMockError } from '@tests/utils/mocks/core';
 import { createMockApiClient } from '@tests/utils/setup';
 
-const { mockPlatform } = vi.hoisted(() => ({
-  mockPlatform: {
-    isBrowser: true,
-    isInActionCenter: false,
-    isHostEmbedded: false,
-    embeddingOrigin: null as string | null,
-  },
+vi.mock('@/utils/platform', () => ({
+  isBrowser: true,
+  isInActionCenter: false,
+  isHostEmbedded: false,
+  embeddingOrigin: null,
 }));
-vi.mock('@/utils/platform', () => mockPlatform);
 
 vi.mock('@/core/http/api-client');
 
 const mockApiClient = createMockApiClient();
 const post = mockApiClient.post;
 
-function makeConfig(overrides: Partial<UiPathConfig> = {}): UiPathConfig {
+function makeConfig(tenantName: string = TEST_CONSTANTS.TENANT_ID): UiPathConfig {
   return new UiPathConfig({
     baseUrl: TEST_CONSTANTS.BASE_URL,
     orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-    tenantName: TEST_CONSTANTS.TENANT_ID,
-    ...overrides,
+    tenantName,
   });
 }
 
-const oauthOverrides: Partial<UiPathConfig> = {
-  clientId: TEST_CONSTANTS.CLIENT_ID,
-  redirectUri: TEST_CONSTANTS.REDIRECT_URI,
-  scope: TEST_CONSTANTS.OAUTH_SCOPE,
-};
-
-function requireSessionLicense(tokenManager: TokenManager): SessionLicense {
-  if (!tokenManager.sessionLicense) throw new Error('Expected the token manager to hold a session license');
-  return tokenManager.sessionLicense;
-}
-
 function signIn(tenantName?: string): { tokenManager: TokenManager; sessionLicense: SessionLicense } {
-  const tokenManager = new TokenManager(new ExecutionContext(), makeConfig(tenantName ? { tenantName } : {}), false);
-  return { tokenManager, sessionLicense: requireSessionLicense(tokenManager) };
+  const context = new ExecutionContext();
+  const config = makeConfig(tenantName);
+  const tokenManager = new TokenManager(context, config, false);
+  const sessionLicense = new SessionLicense(config, context, tokenManager);
+  return { tokenManager, sessionLicense };
 }
 
 function tokenFor(userId: string): { token: string; type: 'oauth' } {
@@ -91,16 +78,16 @@ describe('SessionLicense', () => {
     );
   });
 
-  it('should acquire for a token loaded from storage on page load', async () => {
-    sessionStorage.setItem(
-      `${AUTH_STORAGE_KEYS.TOKEN_PREFIX}${TEST_CONSTANTS.CLIENT_ID}`,
-      JSON.stringify(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID))
-    );
-    const tokenManager = new TokenManager(new ExecutionContext(), makeConfig(oauthOverrides), true);
+  it('should acquire for a token already held when constructed', async () => {
+    const context = new ExecutionContext();
+    const config = makeConfig();
+    const tokenManager = new TokenManager(context, config, false);
+    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
 
-    expect(tokenManager.loadFromStorage()).toBe(true);
+    const sessionLicense = new SessionLicense(config, context, tokenManager);
     await flush();
 
+    expect(sessionLicense).toBeInstanceOf(SessionLicense);
     expect(post).toHaveBeenCalledTimes(1);
   });
 
@@ -220,35 +207,5 @@ describe('SessionLicense', () => {
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(license?.robotType).toBeDefined();
-  });
-});
-
-describe('TokenManager session license', () => {
-  afterEach(() => {
-    mockPlatform.isBrowser = true;
-  });
-
-  it('should hold a session license for an app user in the browser', () => {
-    const tokenManager = new TokenManager(new ExecutionContext(), makeConfig(oauthOverrides), true);
-
-    expect(tokenManager.sessionLicense).toBeInstanceOf(SessionLicense);
-  });
-
-  it('should not hold a session license for secret auth', () => {
-    const tokenManager = new TokenManager(
-      new ExecutionContext(),
-      makeConfig({ secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN }),
-      false
-    );
-
-    expect(tokenManager.sessionLicense).toBeUndefined();
-  });
-
-  it('should not hold a session license outside the browser, as inside a coded function', () => {
-    mockPlatform.isBrowser = false;
-
-    const tokenManager = new TokenManager(new ExecutionContext(), makeConfig(oauthOverrides), true);
-
-    expect(tokenManager.sessionLicense).toBeUndefined();
   });
 });

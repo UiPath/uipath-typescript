@@ -11,7 +11,6 @@ import { EmbeddedTokenManager } from './embedded-token-manager';
 import { hostEmbeddingOrigin } from './host-token-request';
 import { telemetryClient } from '../telemetry';
 import { extractUserIdFromToken } from '../../utils/encoding';
-import { SessionLicense } from '../licensing/session-license';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -24,8 +23,7 @@ export class TokenManager {
   private refreshPromise: Promise<AuthToken> | null = null;
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
-  /** Per-sign-in license acquisition; present only for interactive app users in the browser. */
-  readonly sessionLicense?: SessionLicense;
+  private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
 
   /**
    * Creates a new TokenManager instance
@@ -44,9 +42,6 @@ export class TokenManager {
     } else if (hostEmbeddingOrigin) {
       this.embeddedTokenManager = new EmbeddedTokenManager(hostEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
       this.isOAuth = false;
-    }
-    if (isBrowser && !config.secret) {
-      this.sessionLicense = new SessionLicense(config, executionContext, this);
     }
   }
 
@@ -270,12 +265,20 @@ export class TokenManager {
   }
 
   /**
+   * Registers a listener called whenever the token is set, loaded or cleared
+   * (with `undefined`).
+   */
+  onTokenChange(listener: (tokenInfo: TokenInfo | undefined) => void): void {
+    this.tokenChangeListeners.push(listener);
+  }
+
+  /**
    * Clears the current token
    */
   clearToken(): void {
     this.currentToken = undefined;
     this.executionContext.set('tokenInfo', undefined);
-    this.sessionLicense?.onTokenChange(undefined);
+    this.tokenChangeListeners.forEach((listener) => listener(undefined));
     
     // Remove from session storage if this is an OAuth token
     if (isBrowser && this.isOAuth) {
@@ -293,7 +296,7 @@ export class TokenManager {
   private _updateExecutionContext(tokenInfo: TokenInfo): void {
     this.executionContext.set('tokenInfo', tokenInfo);
     telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
-    this.sessionLicense?.onTokenChange(tokenInfo);
+    this.tokenChangeListeners.forEach((listener) => listener(tokenInfo));
   }
 
   /**

@@ -55,7 +55,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
    */
   constructor(instance: IUiPath) {
     super(instance);
-    this.sessionLicense = SDKInternalsRegistry.get(instance).tokenManager.sessionLicense;
+    this.sessionLicense = SDKInternalsRegistry.get(instance).sessionLicense;
   }
 
   @track('Functions.GetAll')

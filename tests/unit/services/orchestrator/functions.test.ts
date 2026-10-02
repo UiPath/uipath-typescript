@@ -3,13 +3,14 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FunctionService } from '../../../../src/services/orchestrator/functions/functions';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { SessionLicense, toStudioWebLicense } from '../../../../src/core/licensing/session-license';
+import { SDKInternalsRegistry } from '../../../../src/core/internals';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockRawFunctionTrigger,
   createMockRawStudioWebLicense,
   createMockTransformedFunctionCollection,
 } from '../../../utils/mocks/functions';
-import { createServiceTestDependencies, createMockApiClient, getPrivateSDK } from '../../../utils/setup';
+import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
 import { FunctionGetAllOptions, FunctionHttpMethod } from '../../../../src/models/orchestrator/functions.types';
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
@@ -28,11 +29,6 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
-
-const createSessionLicense = (): SessionLicense => {
-  const { config, context, tokenManager } = getPrivateSDK(createServiceTestDependencies().instance);
-  return new SessionLicense(config, context, tokenManager);
-};
 
 // ===== TEST SUITE =====
 describe('FunctionService Unit Tests', () => {
@@ -537,7 +533,9 @@ describe('FunctionService Unit Tests', () => {
     });
 
     it('should refresh the session license in the background when refreshLicense is set', async () => {
-      const { instance } = createServiceTestDependencies(undefined, { sessionLicense: createSessionLicense() });
+      const { instance } = createServiceTestDependencies();
+      const internals = SDKInternalsRegistry.get(instance);
+      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
       const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockReturnValue(new Promise(() => {}));
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
@@ -553,7 +551,9 @@ describe('FunctionService Unit Tests', () => {
     });
 
     it('should delegate acquireLicense to the session license when the SDK has one', async () => {
-      const { instance } = createServiceTestDependencies(undefined, { sessionLicense: createSessionLicense() });
+      const { instance } = createServiceTestDependencies();
+      const internals = SDKInternalsRegistry.get(instance);
+      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
       const held = toStudioWebLicense(createMockRawStudioWebLicense());
       const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockResolvedValue(held);
 
