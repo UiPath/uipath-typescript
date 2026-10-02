@@ -107,7 +107,7 @@ export interface ConnectionAuthResponse {
 export interface ConnectionSessionStatusResponse {
   /** Current status of the OAuth session */
   status: 'pending' | 'success' | 'failed';
-  /** ID of the newly created connection (only present when status is 'success') */
+  /** ID of the newly created connection, or null when status is not 'success' */
   connectionId: string | null;
   /** Unix timestamp (ms) when the session expires */
   expiresTime: number;
