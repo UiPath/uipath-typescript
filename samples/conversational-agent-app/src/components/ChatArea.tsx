@@ -39,33 +39,45 @@ export function ChatArea() {
       return
     }
     let cancelled = false
+
+    const mapItems = (items: AvailableConnectionsResponse) => {
+      if (cancelled) return
+      if (items.length === 0) { setConnectionReadiness(null); return }
+      const readiness: ConnectorReadiness[] = items.map(item => ({
+        connectorKey: item.connectorKey,
+        connectorName: item.connectorName ?? item.connectorKey,
+        connectorImage: item.connectorImage,
+        isConfigurable: item.isConfigurable !== false,
+        currentConnectionId: item.currentConnectionId,
+        currentConnectionName: item.currentConnectionName,
+        currentConnectionState: (item.connections?.find(c => c.id === item.currentConnectionId)?.state as ConnectorReadiness['currentConnectionState'])
+          ?? (item.currentConnectionId ? 'Expired' : undefined),
+        connectionsUrl: item.connectionsUrl,
+      }))
+      const hasUnresolved = readiness.some(
+        c => c.isConfigurable && (!c.currentConnectionId || c.currentConnectionState !== 'Enabled'),
+      )
+      setConnectionReadiness(hasUnresolved ? readiness : null)
+    }
+
     conversationalAgent
       .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
-      .then((items: AvailableConnectionsResponse) => {
-        if (cancelled) return
-        if (items.length === 0) { setConnectionReadiness(null); return }
-        const readiness: ConnectorReadiness[] = items.map(item => ({
-          connectorKey: item.connectorKey,
-          connectorName: item.connectorName ?? item.connectorKey,
-          connectorImage: item.connectorImage,
-          isConfigurable: item.isConfigurable !== false,
-          currentConnectionId: item.currentConnectionId,
-          currentConnectionName: item.currentConnectionName,
-          currentConnectionState: item.currentConnectionId
-            ? (item.connections?.find(c => c.id === item.currentConnectionId)?.state === 'Enabled' ? 'Enabled' : 'Expired') as ConnectorReadiness['currentConnectionState']
-            : undefined,
-          connectionsUrl: item.connectionsUrl,
-        }))
-        const hasUnresolved = readiness.some(
-          c => c.isConfigurable && (!c.currentConnectionId || c.currentConnectionState !== 'Enabled'),
-        )
-        setConnectionReadiness(hasUnresolved ? readiness : null)
-      })
+      .then(mapItems)
       .catch((error) => {
         console.warn('Failed to fetch connection readiness:', error)
         if (!cancelled) setConnectionReadiness(null)
       })
-    return () => { cancelled = true }
+
+    // Re-fetch after delay to pick up auto-bind results
+    const timer = setTimeout(() => {
+      if (cancelled) return
+      conversationalAgent
+        .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
+        .then(mapItems)
+        .catch(() => {})
+    }, 1500)
+
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [conversationalAgent, selectedAgent])
 
   // Auto-scroll to bottom when new messages arrive

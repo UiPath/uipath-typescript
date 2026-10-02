@@ -45,12 +45,22 @@ export function ConnectionReadinessCard({
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [connectingKey, setConnectingKey] = useState<string | null>(null)
   const [localConnectors, setLocalConnectors] = useState<ConnectorReadiness[]>(connectors)
+  const localConnectorsRef = useRef<ConnectorReadiness[]>(connectors)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const fetchingRef = useRef(false)
+  const oauthSessionRef = useRef(0)
+
+  const updateLocalConnectors = (next: ConnectorReadiness[] | ((prev: ConnectorReadiness[]) => ConnectorReadiness[])) => {
+    setLocalConnectors(prev => {
+      const resolved = typeof next === 'function' ? next(prev) : next
+      localConnectorsRef.current = resolved
+      return resolved
+    })
+  }
 
   // Sync when prop changes
   useEffect(() => {
-    setLocalConnectors(connectors)
+    updateLocalConnectors(connectors)
   }, [connectors])
 
   // Auto-collapse once conversation starts
@@ -79,6 +89,19 @@ export function ConnectionReadinessCard({
     if (allConnected) onAllConnected?.()
   }, [allConnected, onAllConnected])
 
+  const mapItemsToReadiness = (items: AvailableConnectionsResponse): ConnectorReadiness[] =>
+    items.map(item => ({
+      connectorKey: item.connectorKey,
+      connectorName: item.connectorName ?? item.connectorKey,
+      connectorImage: item.connectorImage,
+      isConfigurable: item.isConfigurable !== false,
+      currentConnectionId: item.currentConnectionId,
+      currentConnectionName: item.currentConnectionName,
+      currentConnectionState: (item.connections?.find(c => c.id === item.currentConnectionId)?.state as ConnectorReadiness['currentConnectionState'])
+        ?? (item.currentConnectionId ? 'Expired' : undefined),
+      connectionsUrl: item.connectionsUrl,
+    }))
+
   // Re-fetch connections on tab visibility change
   useEffect(() => {
     const handler = () => {
@@ -88,22 +111,7 @@ export function ConnectionReadinessCard({
       conversationalAgent
         .getAvailableConnections(agentId, folderId)
         .then((items: AvailableConnectionsResponse) => {
-          setLocalConnectors(
-            items.map(item => ({
-              connectorKey: item.connectorKey,
-              connectorName: item.connectorName ?? item.connectorKey,
-              connectorImage: item.connectorImage,
-              isConfigurable: item.isConfigurable !== false,
-              currentConnectionId: item.currentConnectionId,
-              currentConnectionName: item.currentConnectionName,
-              currentConnectionState: item.currentConnectionId
-                ? (item.connections?.find(c => c.id === item.currentConnectionId)?.state === 'Enabled'
-                    ? 'Enabled'
-                    : 'Expired') as ConnectorReadiness['currentConnectionState']
-                : undefined,
-              connectionsUrl: item.connectionsUrl,
-            })),
-          )
+          updateLocalConnectors(mapItemsToReadiness(items))
         })
         .catch((error) => { console.warn('Failed to refresh connection readiness on tab focus:', error) })
         .finally(() => { fetchingRef.current = false })
@@ -114,37 +122,37 @@ export function ConnectionReadinessCard({
 
   const startOAuthFlow = useCallback(async (connectorKey: string) => {
     setConnectingKey(connectorKey)
+
+    // Cancel any previous polling and start a new OAuth session
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+    const oauthSession = ++oauthSessionRef.current
+
     try {
       const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl(connectorKey)
+      if (oauthSessionRef.current !== oauthSession) return
       window.open(authUrl, '_blank', 'noopener,noreferrer')
-
-      if (pollingRef.current) clearInterval(pollingRef.current)
 
       pollingRef.current = setInterval(async () => {
         try {
+          if (oauthSessionRef.current !== oauthSession) {
+            if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+            return
+          }
           if (Date.now() > expiresTime) {
             if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
-            setConnectingKey(null)
+            if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
             return
           }
           const status = await conversationalAgent.getConnectionSessionStatus(sessionId)
+          if (oauthSessionRef.current !== oauthSession) return
           if (status.status === 'success' && status.connectionId) {
             if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
             setConnectingKey(null)
 
-            // Update local state
-            setLocalConnectors(prev =>
-              prev.map(c =>
-                c.connectorKey === connectorKey
-                  ? { ...c, currentConnectionId: status.connectionId, currentConnectionState: 'Enabled' as const }
-                  : c,
-              ),
-            )
-
-            // Auto-save
+            // Auto-save using ref to avoid stale closure
             try {
               await conversationalAgent.updateConnectionSelections(agentId, folderId, {
-                selections: localConnectors.filter(c => c.isConfigurable).map(c => ({
+                selections: localConnectorsRef.current.filter(c => c.isConfigurable).map(c => ({
                   connectorKey: c.connectorKey,
                   connectionId: c.connectorKey === connectorKey ? status.connectionId : c.currentConnectionId,
                 })),
@@ -152,9 +160,30 @@ export function ConnectionReadinessCard({
             } catch (error) {
               console.warn('Failed to auto-save connection selection:', error)
             }
+
+            // Rebuild state from server after auto-save
+            if (oauthSessionRef.current !== oauthSession) return
+            try {
+              const items = await conversationalAgent.getAvailableConnections(agentId, folderId)
+              if (oauthSessionRef.current === oauthSession) {
+                updateLocalConnectors(mapItemsToReadiness(items))
+              }
+            } catch (error) {
+              // Fallback: optimistically update just the connected connector
+              if (oauthSessionRef.current === oauthSession) {
+                updateLocalConnectors(prev =>
+                  prev.map(c =>
+                    c.connectorKey === connectorKey
+                      ? { ...c, currentConnectionId: status.connectionId, currentConnectionState: 'Enabled' as const }
+                      : c,
+                  ),
+                )
+              }
+              console.warn('Failed to re-fetch connections after auto-save:', error)
+            }
           } else if (status.status === 'failed') {
             if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
-            setConnectingKey(null)
+            if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
           }
         } catch (error) {
           console.warn('Failed to poll connection session status:', error)
@@ -162,9 +191,9 @@ export function ConnectionReadinessCard({
       }, POLL_INTERVAL_MS)
     } catch (error) {
       console.warn('Failed to start OAuth flow:', error)
-      setConnectingKey(null)
+      if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
     }
-  }, [conversationalAgent, agentId, folderId, localConnectors])
+  }, [conversationalAgent, agentId, folderId])
 
   const getStatusText = (connector: ConnectorReadiness): string => {
     if (connectingKey === connector.connectorKey) return 'Waiting for sign-in...'
