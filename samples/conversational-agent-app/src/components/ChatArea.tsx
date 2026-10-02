@@ -60,27 +60,29 @@ export function ChatArea() {
       setConnectionReadiness(hasUnresolved ? readiness : null)
     }
 
-    // Initial fetch, then sequential re-fetch after delay to pick up auto-bind results
     let timerRef: ReturnType<typeof setTimeout> | undefined
-    conversationalAgent
-      .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
-      .then((items) => {
+
+    // Initial fetch, then sequential re-fetch after delay to pick up auto-bind results
+    const fetchReadiness = async () => {
+      try {
+        const items = await conversationalAgent.getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
         mapItems(items)
-        if (cancelled) return
-        return new Promise<void>((resolve) => {
-          timerRef = setTimeout(resolve, 1500)
-        })
-      })
-      .then(() => {
-        if (cancelled) return
-        return conversationalAgent
-          .getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
-          .then(mapItems)
-      })
-      .catch((error) => {
+      } catch (error) {
         console.warn('Failed to fetch connection readiness:', error)
         if (!cancelled) setConnectionReadiness(null)
-      })
+        return
+      }
+      if (cancelled) return
+      await new Promise<void>((resolve) => { timerRef = setTimeout(resolve, 1500) })
+      if (cancelled) return
+      try {
+        const items = await conversationalAgent.getAvailableConnections(selectedAgent.id, selectedAgent.folderId)
+        mapItems(items)
+      } catch (error) {
+        console.warn('Failed to refresh connection readiness:', error)
+      }
+    }
+    fetchReadiness()
 
     return () => { cancelled = true; if (timerRef) clearTimeout(timerRef) }
   }, [conversationalAgent, selectedAgent])

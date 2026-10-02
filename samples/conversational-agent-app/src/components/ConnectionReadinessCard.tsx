@@ -51,6 +51,14 @@ export function ConnectionReadinessCard({
   const fetchingRef = useRef(false)
   const oauthSessionRef = useRef(0)
 
+  const clearPoll = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+    pollInFlightRef.current = false
+  }, [])
+
   const updateLocalConnectors = (next: ConnectorReadiness[] | ((prev: ConnectorReadiness[]) => ConnectorReadiness[])) => {
     setLocalConnectors(prev => {
       const resolved = typeof next === 'function' ? next(prev) : next
@@ -71,13 +79,8 @@ export function ConnectionReadinessCard({
 
   // Cleanup polling on unmount
   useEffect(() => {
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current)
-        pollingRef.current = null
-      }
-    }
-  }, [])
+    return () => { clearPoll() }
+  }, [clearPoll])
 
   const unconnected = localConnectors.filter(c => c.isConfigurable && !c.currentConnectionId)
   const broken = localConnectors.filter(
@@ -125,7 +128,7 @@ export function ConnectionReadinessCard({
     setConnectingKey(connectorKey)
 
     // Cancel any previous polling and start a new OAuth session
-    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+    clearPoll()
     const oauthSession = ++oauthSessionRef.current
 
     try {
@@ -138,18 +141,18 @@ export function ConnectionReadinessCard({
         pollInFlightRef.current = true
         try {
           if (oauthSessionRef.current !== oauthSession) {
-            if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+            clearPoll()
             return
           }
           if (Date.now() > expiresTime) {
-            if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+            clearPoll()
             if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
             return
           }
           const status = await conversationalAgent.getConnectionSessionStatus(sessionId)
           if (oauthSessionRef.current !== oauthSession) return
           if (status.status === 'success' && status.connectionId) {
-            if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+            clearPoll()
             setConnectingKey(null)
 
             // Auto-save using ref to avoid stale closure
@@ -185,7 +188,7 @@ export function ConnectionReadinessCard({
               console.warn('Failed to re-fetch connections after auto-save:', error)
             }
           } else if (status.status === 'failed') {
-            if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+            clearPoll()
             if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
           }
         } catch (error) {
@@ -198,7 +201,7 @@ export function ConnectionReadinessCard({
       console.warn('Failed to start OAuth flow:', error)
       if (oauthSessionRef.current === oauthSession) setConnectingKey(null)
     }
-  }, [conversationalAgent, agentId, folderId])
+  }, [conversationalAgent, agentId, folderId, clearPoll])
 
   const getStatusText = (connector: ConnectorReadiness): string => {
     if (connectingKey === connector.connectorKey) return 'Waiting for sign-in...'
