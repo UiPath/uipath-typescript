@@ -1,5 +1,5 @@
 /**
- * Platform field mappings.
+ * Platform settings field mappings.
  */
 
 /**
