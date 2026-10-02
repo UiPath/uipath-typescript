@@ -70,7 +70,7 @@ export function ConnectionReadinessCard({
 
   const unconnected = localConnectors.filter(c => c.isConfigurable && !c.currentConnectionId)
   const broken = localConnectors.filter(
-    c => c.isConfigurable && c.currentConnectionId && c.currentConnectionState && c.currentConnectionState !== 'Enabled',
+    c => c.currentConnectionId && c.currentConnectionState && c.currentConnectionState !== 'Enabled',
   )
   const allConnected = unconnected.length === 0 && broken.length === 0
 
@@ -105,7 +105,7 @@ export function ConnectionReadinessCard({
             })),
           )
         })
-        .catch((error) => { console.warn('Failed to refresh connection readiness on tab focus:', error) })
+        .catch(() => {})
         .finally(() => { fetchingRef.current = false })
     }
     document.addEventListener('visibilitychange', handler)
@@ -144,24 +144,23 @@ export function ConnectionReadinessCard({
             // Auto-save
             try {
               await conversationalAgent.updateConnectionSelections(agentId, folderId, {
-                selections: localConnectors.filter(c => c.isConfigurable).map(c => ({
+                selections: localConnectors.map(c => ({
                   connectorKey: c.connectorKey,
                   connectionId: c.connectorKey === connectorKey ? status.connectionId : c.currentConnectionId,
                 })),
               })
-            } catch (error) {
-              console.warn('Failed to auto-save connection selection:', error)
+            } catch {
+              // Non-critical
             }
           } else if (status.status === 'failed') {
             if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
             setConnectingKey(null)
           }
-        } catch (error) {
-          console.warn('Failed to poll connection session status:', error)
+        } catch {
+          // Keep polling until expired
         }
       }, POLL_INTERVAL_MS)
-    } catch (error) {
-      console.warn('Failed to start OAuth flow:', error)
+    } catch {
       setConnectingKey(null)
     }
   }, [conversationalAgent, agentId, folderId, localConnectors])
@@ -230,7 +229,6 @@ export function ConnectionReadinessCard({
               statusText={getStatusText(connector)}
               isBroken={broken.includes(connector)}
               isConnecting={connectingKey === connector.connectorKey}
-              disabled={connectingKey !== null}
               onConnect={() => startOAuthFlow(connector.connectorKey)}
             />
           ))}
@@ -263,7 +261,7 @@ export function ConnectionReadinessCard({
           <h3 className="text-sm font-semibold">
             {connectedCount === 0
               ? 'One-time setup before I can help'
-              : `${totalConfigurable - connectedCount} of ${totalConfigurable} connections still needed`}
+              : `${connectedCount} of ${totalConfigurable} connections still needed`}
           </h3>
           <p className="mt-1 text-xs text-gray-400">
             Only the tools this agent actually uses are listed. Connect what you need now, the rest can wait.
@@ -288,7 +286,6 @@ export function ConnectionReadinessCard({
               isBroken={false}
               isConnected={isConnected}
               isConnecting={connectingKey === connector.connectorKey}
-              disabled={connectingKey !== null}
               onConnect={() => startOAuthFlow(connector.connectorKey)}
             />
           )
@@ -319,7 +316,6 @@ function ConnectorRow({
   isBroken,
   isConnected,
   isConnecting,
-  disabled,
   onConnect,
 }: {
   connector: ConnectorReadiness
@@ -327,7 +323,6 @@ function ConnectorRow({
   isBroken: boolean
   isConnected?: boolean
   isConnecting: boolean
-  disabled: boolean
   onConnect: () => void
 }) {
   return (
@@ -356,7 +351,7 @@ function ConnectorRow({
       {!isConnected && (
         <button
           onClick={onConnect}
-          disabled={disabled}
+          disabled={isConnecting}
           className="ml-3 flex-shrink-0 px-3 py-1.5 text-sm rounded-lg border border-white/20 hover:bg-white/10 disabled:opacity-50 transition-colors flex items-center gap-2"
         >
           {isConnecting ? (
