@@ -54,6 +54,17 @@ export function useConnections(
     load()
   }, [load])
 
+  // Refresh on tab visibility change (e.g. returning from OAuth popup)
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState !== 'visible') return
+      if (isLoading || isSaving) return
+      load()
+    }
+    document.addEventListener('visibilitychange', handler)
+    return () => document.removeEventListener('visibilitychange', handler)
+  }, [load, isLoading, isSaving])
+
   const selectConnection = useCallback((connectorKey: string, connectionId: string) => {
     setStagedSelections(prev => ({ ...prev, [connectorKey]: connectionId }))
   }, [])

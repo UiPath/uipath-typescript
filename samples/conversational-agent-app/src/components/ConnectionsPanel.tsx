@@ -11,7 +11,7 @@ import { useConnections } from '../hooks/useConnections'
 import type { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent'
 import { Spinner } from './Spinner'
 
-const POLL_INTERVAL_MS = 1500
+const POLL_INTERVAL_MS = 500
 
 interface ConnectionsPanelProps {
   conversationalAgent: ConversationalAgent | null
