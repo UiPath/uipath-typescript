@@ -368,8 +368,7 @@ export interface ConversationalAgentServiceModel {
    * `externalUserId`) do not carry a user identity and cannot initiate OAuth flows.
    *
    * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
-   * @returns Promise resolving to the auth URL, session ID, and expiration
-   * {@link ConnectionAuthResponse}
+   * @returns Promise resolving to the {@link ConnectionAuthResponse} containing the auth URL, session ID, and expiration
    * @internal
    */
   getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
@@ -386,8 +385,7 @@ export interface ConversationalAgentServiceModel {
    * `externalUserId`) do not carry a user identity and cannot poll session status.
    *
    * @param sessionId - The session ID returned by {@link getConnectionAuthUrl}
-   * @returns Promise resolving to the current session status
-   * {@link ConnectionSessionStatusResponse}
+   * @returns Promise resolving to the current {@link ConnectionSessionStatusResponse}
    *
    * @example
    * ```typescript
