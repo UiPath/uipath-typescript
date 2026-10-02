@@ -177,7 +177,8 @@ export class ConversationalAgentService extends BaseService implements Conversat
     try {
       const { authUrl } = await this.fetchConnectionAuthUrl(item.connectorKey);
       return authUrl;
-    } catch {
+    } catch (error) {
+      console.warn(error);
       return item.connectionsUrl ?? item.configurationUrl ?? null;
     }
   }

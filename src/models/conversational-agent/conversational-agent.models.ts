@@ -394,16 +394,16 @@ export interface ConversationalAgentServiceModel {
    * const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl('jira');
    * window.open(authUrl, '_blank');
    *
-   * const poll = setInterval(async () => {
-   *   if (Date.now() > expiresTime) { clearInterval(poll); return; }
+   * async function poll() {
+   *   if (Date.now() > expiresTime) return;
    *   const session = await conversationalAgent.getConnectionSessionStatus(sessionId);
    *   if (session.status === 'success') {
-   *     clearInterval(poll);
    *     console.log('Connection created:', session.connectionId);
-   *   } else if (session.status === 'failed') {
-   *     clearInterval(poll);
+   *   } else if (session.status !== 'failed') {
+   *     setTimeout(poll, 500);
    *   }
-   * }, 500);
+   * }
+   * poll();
    * ```
    * @internal
    */
