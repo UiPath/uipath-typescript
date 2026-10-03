@@ -23,6 +23,9 @@ jobs:
     secrets: inherit
     with:
       ref_label: ${{ github.base_ref }}
+      # Run only the integration suites the PR's changed files can affect;
+      # weekly-coverage.yml keeps running the full suite against main.
+      scope_to_changes: true
 
   test-and-build:
     # Gate job that reports the flat `test-and-build` status check required by
