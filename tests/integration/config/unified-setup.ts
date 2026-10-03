@@ -27,6 +27,7 @@ import { ConversationalAgentService } from '../../../src/services/conversational
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
 import { Platform } from '../../../src/services/platform';
+import { Directory } from '../../../src/services/platform/directory';
 import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
@@ -89,6 +90,7 @@ export interface TestServices {
   platformUsers?: Users;
   platformRoles?: Roles;
   platformGroups?: Groups;
+  platformDirectory?: Directory;
 }
 
 /**
@@ -213,6 +215,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),
     platformGroups: new Groups(sdk),
+    platformDirectory: new Directory(sdk),
   };
 }
 
