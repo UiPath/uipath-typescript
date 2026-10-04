@@ -27,7 +27,12 @@ export interface UiPathEnvironment {}
  */
 export type UiPathEnv = Readonly<UiPathEnvironment> &
   Readonly<Record<string, string | undefined>> & {
-    /** Value of `name`, or `undefined` when the deployment did not set it. */
+    /**
+     * Reads one variable by name; the same read as property access.
+     *
+     * @param name - Variable name including its `UIPATH_PUBLIC_` prefix, e.g. `UIPATH_PUBLIC_REGION`
+     * @returns The value, or `undefined` when the deployment did not set it
+     */
     get(name: string): string | undefined;
   };
 
@@ -47,6 +52,11 @@ function readGlobal(): EnvTable {
 
 let cached: EnvTable | undefined;
 
+// `in` and plain indexing would also see Object.prototype, so `env.toString` would look set.
+function hasOwn(table: EnvTable, name: string): boolean {
+  return Object.prototype.hasOwnProperty.call(table, name);
+}
+
 // Read on first use rather than at import: the SDK can be imported before the page exists (SSR
 // tooling, tests) and the global is guaranteed only once the document has run its head scripts.
 function table(): EnvTable {
@@ -63,17 +73,17 @@ const GET = 'get';
 
 export const env: UiPathEnv = new Proxy({} as UiPathEnv, {
   get(_target, property) {
-    if (property === GET) return (name: string) => table()[name];
-    return typeof property === 'string' ? table()[property] : undefined;
+    if (property === GET) return (name: string) => (hasOwn(table(), name) ? table()[name] : undefined);
+    return typeof property === 'string' && hasOwn(table(), property) ? table()[property] : undefined;
   },
   has(_target, property) {
-    return property === GET || (typeof property === 'string' && property in table());
+    return property === GET || (typeof property === 'string' && hasOwn(table(), property));
   },
   ownKeys() {
     return Object.keys(table());
   },
   getOwnPropertyDescriptor(_target, property) {
-    if (typeof property !== 'string' || !(property in table())) return undefined;
+    if (typeof property !== 'string' || !hasOwn(table(), property)) return undefined;
     return { value: table()[property], enumerable: true, configurable: true, writable: false };
   },
   set() {

@@ -30,3 +30,13 @@ export function readEnvValues(files: readonly string[] = DEV_ENV_FILES, cwd: str
   }
   return values
 }
+
+/**
+ * Values to expose for a build, or `undefined` when there is nothing to inject: outside development,
+ * or with no `UIPATH_PUBLIC_*` value in any env file.
+ */
+export function readDevEnvValues(isDev: boolean): EnvironmentVariables | undefined {
+  if (!isDev) return undefined
+  const values = readEnvValues()
+  return Object.keys(values).length > 0 ? values : undefined
+}
