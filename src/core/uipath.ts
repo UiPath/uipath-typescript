@@ -7,7 +7,6 @@ import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
-import { env, type UiPathEnv } from './env';
 import { loadFromEnvironment } from './config/environment';
 import { configFromFunctionContext, isFunctionContext, type CodedFunctionContext } from './config/function-context';
 import type { IUiPath } from './types';
@@ -98,9 +97,6 @@ export class UiPath implements IUiPath {
 
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
-
-  /** The deployment's environment variables; the same object as the root `env` export. */
-  public readonly env: UiPathEnv = env;
 
   /**
    * Creates a UiPath SDK instance.

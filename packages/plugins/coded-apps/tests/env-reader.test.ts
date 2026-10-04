@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { readEnvValues } from '../src/core/env-reader'
+import { readDevEnvValues, readEnvValues } from '../src/core/env-reader'
 
 let dir: string
 
@@ -51,5 +51,40 @@ describe('readEnvValues', () => {
     write('.env.development', 'UIPATH_PUBLIC_REGION=EU\n')
     expect(readEnvValues(undefined, dir)).toEqual({ UIPATH_PUBLIC_REGION: 'EU' })
     expect(warn).toHaveBeenCalledOnce()
+  })
+})
+
+describe('readDevEnvValues', () => {
+  it('returns undefined outside development', () => {
+    write('.env.local', 'UIPATH_PUBLIC_REGION=EU\n')
+    const cwd = process.cwd()
+    process.chdir(dir)
+    try {
+      expect(readDevEnvValues(false)).toBeUndefined()
+    } finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('returns undefined in development when no env file sets a UIPATH_PUBLIC_ value', () => {
+    write('.env.local', 'OTHER=1\n')
+    const cwd = process.cwd()
+    process.chdir(dir)
+    try {
+      expect(readDevEnvValues(true)).toBeUndefined()
+    } finally {
+      process.chdir(cwd)
+    }
+  })
+
+  it('returns the values in development', () => {
+    write('.env.local', 'UIPATH_PUBLIC_REGION=EU\n')
+    const cwd = process.cwd()
+    process.chdir(dir)
+    try {
+      expect(readDevEnvValues(true)).toEqual({ UIPATH_PUBLIC_REGION: 'EU' })
+    } finally {
+      process.chdir(cwd)
+    }
   })
 })

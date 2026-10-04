@@ -3,9 +3,8 @@ import path from 'node:path'
 import type { UnpluginFactory, UnpluginInstance } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { Options } from './types'
-import { PLUGIN_NAME, DEV_MODE } from './constants'
-import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml, readEnvValues, generateEnvScriptForVite, injectEnvScriptHtml } from './core/index'
-import { DEV_ENV_FILES } from './constants'
+import { PLUGIN_NAME, DEV_MODE, DEV_ENV_FILES } from './constants'
+import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml, readDevEnvValues, generateEnvScriptForVite, injectEnvScriptHtml } from './core/index'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
@@ -40,7 +39,8 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         }
         const tags = generateMetaTagsForVite(cachedConfig)
         // Dev only: a production build gets env.js from the deployment, never from a local file.
-        return isDev ? [...generateEnvScriptForVite(readEnvValues()), ...tags] : tags
+        const envValues = readDevEnvValues(isDev)
+        return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
       },
     },
 
@@ -56,7 +56,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
-          const envValues = isDev ? readEnvValues() : undefined
+          const envValues = readDevEnvValues(isDev)
 
           if (!metaTagsHtml && !envValues) {
             callback()
@@ -97,7 +97,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
-          const envValues = isDev ? readEnvValues() : undefined
+          const envValues = readDevEnvValues(isDev)
           if (!metaTagsHtml && !envValues) return
 
           for (const fileName of Object.keys(bundle)) {
@@ -130,7 +130,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
           try {
             const config = readConfig({ ...options, isDev })
             const metaTagsHtml = generateMetaTagsHtml(config)
-            const envValues = isDev ? readEnvValues() : undefined
+            const envValues = readDevEnvValues(isDev)
             if (!metaTagsHtml && !envValues) return
 
             const outdir = build.initialOptions.outdir

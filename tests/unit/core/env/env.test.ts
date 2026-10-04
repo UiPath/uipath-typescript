@@ -71,6 +71,14 @@ describe('env', () => {
     expect(env.UIPATH_PUBLIC_A).toBe('first');
   });
 
+  it('does not report inherited object members as variables', () => {
+    setGlobal({ UIPATH_PUBLIC_A: 'x' });
+    expect(env.toString).toBeUndefined();
+    expect(env.get('constructor')).toBeUndefined();
+    expect('hasOwnProperty' in env).toBe(false);
+    expect(Object.getOwnPropertyDescriptor(env, 'valueOf')).toBeUndefined();
+  });
+
   it('is read-only', () => {
     setGlobal({ UIPATH_PUBLIC_A: 'x' });
     expect(() => {
