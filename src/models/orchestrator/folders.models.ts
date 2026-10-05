@@ -27,9 +27,8 @@ export interface FolderServiceModel {
   /**
    * Gets the folders the calling user has access to, across the tenant.
    *
-   * Returns only folders the user can actually operate in, so the result is
-   * safe to offer as a picker. Each folder carries its id, key, fully
-   * qualified path and parent reference.
+   * Each folder carries its id, key, display name, fully qualified path,
+   * folder type and parent reference.
    *
    * @param options - Optional pagination options.
    * @returns Promise resolving to a {@link NonPaginatedResponse} of {@link FolderGetAllResponse} without pagination options, or a {@link PaginatedResponse} of {@link FolderGetAllResponse} when pagination options are used.

@@ -26,15 +26,16 @@ describeIntegration('Orchestrator Folders - Integration Tests', 'both', modes, (
       const folder = result.items[0];
       expect(typeof folder.id).toBe('number');
       expect(typeof folder.key).toBe('string');
+      expect(typeof folder.displayName).toBe('string');
       expect(typeof folder.fullyQualifiedName).toBe('string');
-      expect(typeof folder.folderPath).toBe('string');
-      expect(typeof folder.rootType).toBe('number');
-      expect(typeof folder.isPersonal).toBe('boolean');
+      expect(typeof folder.folderType).toBe('string');
+      expect(folder.parentId === null || typeof folder.parentId === 'number').toBe(true);
+      expect(folder.parentKey === null || typeof folder.parentKey === 'string').toBe(true);
 
+      expect((folder as any).DisplayName).toBeUndefined();
       expect((folder as any).FullyQualifiedName).toBeUndefined();
-      expect((folder as any).FolderPath).toBeUndefined();
-      expect((folder as any).RootType).toBeUndefined();
-      expect((folder as any).IsPersonal).toBeUndefined();
+      expect((folder as any).FolderType).toBeUndefined();
+      expect((folder as any).ParentKey).toBeUndefined();
     });
 
     it('should page with pageSize and report a total count', async () => {

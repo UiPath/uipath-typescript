@@ -78,31 +78,13 @@ export interface FolderGetResponse {
 export interface FolderGetByKeyOptions extends Omit<BaseOptions, 'expand'> {}
 
 /**
- * Where a folder sits in the tenant's folder tree.
+ * A folder returned by {@link FolderServiceModel.getAll}: the identity, path
+ * and parent fields of {@link FolderGetResponse}.
  */
-export enum FolderRootType {
-  /** A classic, tenant-level folder. */
-  Classic = 0,
-  /** A personal workspace. */
-  Personal = 1,
-  /** A modern, hierarchy-enabled folder. */
-  Modern = 2,
-}
-
-/**
- * A folder returned by {@link FolderServiceModel.getAll}.
- *
- * Everything {@link FolderGetResponse} carries, plus the three fields the
- * folder list returns and the single-folder lookup does not.
- */
-export type FolderGetAllResponse = FolderGetResponse & {
-  /** Dot-separated chain of ancestor keys, ending in this folder's own key. */
-  folderPath: string;
-  /** Where the folder sits in the tenant's folder tree. */
-  rootType: FolderRootType;
-  /** Whether the folder is a personal workspace. */
-  isPersonal: boolean;
-};
+export interface FolderGetAllResponse extends Pick<
+  FolderGetResponse,
+  'id' | 'key' | 'displayName' | 'fullyQualifiedName' | 'description' | 'folderType' | 'parentId' | 'parentKey'
+> {}
 
 /**
  * Query options for {@link FolderServiceModel.getAll}.

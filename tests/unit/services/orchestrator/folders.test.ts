@@ -91,16 +91,17 @@ describe('FolderService Unit Tests', () => {
       ) as FolderGetAllResponse;
 
       expect(folder.id).toBe(123);
+      expect(folder.key).toBe(FOLDER_TEST_CONSTANTS.FOLDER_KEY);
+      expect(folder.displayName).toBe('Finance');
       expect(folder.fullyQualifiedName).toBe('Shared/Finance');
-      expect(folder.folderPath).toBe(
-        `${FOLDER_TEST_CONSTANTS.PARENT_KEY}.${FOLDER_TEST_CONSTANTS.FOLDER_KEY}`,
-      );
-      expect(folder.rootType).toBe(2);
-      expect(folder.isPersonal).toBe(false);
+      expect(folder.description).toBe('AP invoices');
+      expect(folder.folderType).toBe('Standard');
+      expect(folder.parentId).toBe(10);
+      expect(folder.parentKey).toBe(FOLDER_TEST_CONSTANTS.PARENT_KEY);
+      expect((folder as any).DisplayName).toBeUndefined();
       expect((folder as any).FullyQualifiedName).toBeUndefined();
-      expect((folder as any).FolderPath).toBeUndefined();
-      expect((folder as any).RootType).toBeUndefined();
-      expect((folder as any).IsPersonal).toBeUndefined();
+      expect((folder as any).FolderType).toBeUndefined();
+      expect((folder as any).ParentKey).toBeUndefined();
     });
 
     it('should propagate an error raised while listing folders', async () => {

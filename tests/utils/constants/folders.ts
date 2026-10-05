@@ -25,10 +25,7 @@ export const FOLDER_TEST_CONSTANTS = {
     IsActive: true,
     '@odata.context': 'https://uipath.com/odata/$metadata#Folders',
   },
-  /**
-   * One folder as the folder-list endpoint returns it: everything the
-   * single-folder lookup sends, plus FolderPath, RootType and IsPersonal.
-   */
+  /** One folder as the folder-list endpoint returns it. */
   RAW_LIST_FOLDER: {
     Id: 123,
     Key: FOLDER_KEY,
@@ -36,13 +33,7 @@ export const FOLDER_TEST_CONSTANTS = {
     FullyQualifiedName: 'Shared/Finance',
     Description: 'AP invoices',
     FolderType: 'Standard',
-    ProvisionType: 'Automatic',
-    PermissionModel: 'FineGrained',
     ParentId: 10,
     ParentKey: PARENT_KEY,
-    FeedType: 'Processes',
-    FolderPath: `${PARENT_KEY}.${FOLDER_KEY}`,
-    RootType: 2,
-    IsPersonal: false,
   },
 } as const;
