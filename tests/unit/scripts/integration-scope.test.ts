@@ -27,6 +27,9 @@ describe('integration-scope resolveScope', () => {
       'tests/utils/setup.ts',
       'README.md',
       'rollup.config.js',
+      '.github/workflows/coverage.yml',
+      REGISTRY, // the shared harness: a harness-only change is knowingly uncovered
+      'tests/integration/config/test-config.ts',
       'package.json', // exports, scripts, version; a dependency change also edits the lock file, which runs everything
       'scripts/check-samples.mjs', // CI tooling, not part of the integration run
       'scripts/integration-scope.mjs', // the resolver itself: covered by this file, fail-closed in the workflow
@@ -74,21 +77,9 @@ describe('integration-scope resolveScope', () => {
     ]);
   });
 
-  it('runs only the always-on suites for an additions-only change to the service registry', () => {
-    const scope = resolveScope([REGISTRY], DOMAINS, SERVICES, new Set([REGISTRY]));
-    expect(scope).toMatchObject({ run: true, all: false, domains: [], paths: [...ALWAYS_ON] });
-    expect(toOutputs(scope)[2]).toBe('scope=always-on');
-    expect(scope.notes[0]).toContain('only adds lines');
-  });
-
   it("adds the registered service's suite when its folders change alongside the registry", () => {
     const scope = resolveScope([REGISTRY, 'src/services/platform/groups/groups.ts'], DOMAINS, SERVICES, new Set([REGISTRY]));
     expect(scope).toMatchObject({ run: true, all: false, domains: ['platform'] });
-  });
-
-  it('runs everything for a registry change that removes or edits lines', () => {
-    const { files, additive } = parseNumstat(`5\t2\t${REGISTRY}\n`);
-    expect(resolveScope(files, DOMAINS, SERVICES, additive).all).toBe(true);
   });
 
   it('treats an endpoint-constants folder like its service folder', () => {
@@ -114,12 +105,11 @@ describe('integration-scope resolveScope', () => {
     'src/models/document-understanding/du.types.ts', // models-only folder with no service: shared code
     `${SHARED}/brand-new-domain/x.integration.test.ts`, // not a service either
     'src/index.ts',
-    REGISTRY, // without additions-only information (the --files path) the registry runs everything
     'tests/integration/utils/helpers.ts',
     `${SHARED}/loose.integration.test.ts`, // a loose file that is not always-on
     'vitest.integration.config.ts',
     'package-lock.json', // a dependency change
-    '.github/workflows/coverage.yml',
+    '.github/workflows/pr-checks.yml',
     'new-top-level-dir/thing.ts',
   ])('runs everything for anything outside the per-domain folders: %s', (file) => {
     const scope = resolveScope(['docs/index.md', file], DOMAINS, SERVICES);
