@@ -79,6 +79,7 @@ The conventions in agent_docs are comprehensive, but review agents consistently 
 - `export type * from` in barrel files instead of `export * from` (drops runtime values silently)
 - Mock factories typed as `{Entity}GetResponse` instead of `Raw{Entity}GetResponse`
 - Missing `docs/oauth-scopes.md` entry for new methods
+- Relative imports that climb out of the current directory (`'../'`, `'../../../core/...'`, `'../../../../src/...'`) on added/changed lines — must use `@/` (src) or `@tests/` (tests) per conventions.md. Same-directory `./` imports are fine. Auto-fixable: rewrite the specifier, then run `npm run build` and confirm `grep -rl "from '@/" dist/<module>` stays empty for the touched subpath
 
 **Ambiguous (ask user, don't auto-fix):**
 - Whether a new method should have bound methods (depends on entity lifecycle)

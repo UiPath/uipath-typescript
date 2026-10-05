@@ -41,6 +41,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 
 | Method | OAuth Scope |
 |--------|-------------|
+| `getAll()` | `OR.Folders` or `OR.Folders.Read` |
 | `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Document Understanding

@@ -6,6 +6,7 @@
 - **PascalCase**: classes, interfaces, types, enums (`TaskService`, `TaskType`)
 - **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
+- **Use path aliases for any import that leaves the current directory** — `@/` resolves to `src/`, `@tests/` to `tests/` (configured in `tsconfig.json`, `rollup.config.js` and both vitest configs). Write `import { track } from '@/core/telemetry'`, not `'../../../core/telemetry'`; in integration tests write `'@tests/integration/config/unified-setup'` and `'@/core/errors'`, not `'../../config/unified-setup'` or `'../../../../src/core/errors'`. Deep relative chains break silently when a file moves and hide which layer is being imported. Same-directory imports (`./folders.types`, `./folders`) stay relative. Applies to new and modified lines only — do not churn untouched imports in unrelated files.
 - Prefer `private` keyword over underscore prefix for private methods
 - **Place private methods at the bottom of the class** — public methods first, private helpers last. This keeps the public API surface visible at the top without requiring readers to scroll past implementation details.
 - **Keep inline code comments concise** — say what is non-obvious in a single phrase. Avoid restating what the code already expresses or adding multi-sentence commentary where a short comment suffices.

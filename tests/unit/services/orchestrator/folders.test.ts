@@ -7,9 +7,13 @@ import { NotFoundError, ValidationError } from '@/core/errors';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { FOLDER_TEST_CONSTANTS } from '@tests/utils/constants/folders';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { FOLDER_PAGINATION, FOLDER_OFFSET_PARAMS } from '@/utils/constants/common';
+import type { FolderGetAllResponse } from '@/models/orchestrator/folders.types';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
+vi.mock('@/utils/pagination/helpers');
 
 // ===== TEST SUITE =====
 describe('FolderService Unit Tests', () => {
@@ -23,10 +27,90 @@ describe('FolderService Unit Tests', () => {
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
 
     folderService = new FolderService(instance);
+    vi.mocked(PaginationHelpers.getAll).mockReset();
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('getAll', () => {
+    const PAGE = {
+      items: [FOLDER_TEST_CONSTANTS.RAW_LIST_FOLDER],
+      totalCount: 1,
+      hasNextPage: false,
+    };
+
+    it('should list folders using the folder-list endpoint and pagination shape', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(PAGE);
+
+      const result = await folderService.getAll();
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.any(Function),
+          transformFn: expect.any(Function),
+          pagination: expect.objectContaining({
+            itemsField: FOLDER_PAGINATION.ITEMS_FIELD,
+            totalCountField: FOLDER_PAGINATION.TOTAL_COUNT_FIELD,
+            paginationParams: {
+              pageSizeParam: FOLDER_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+              offsetParam: FOLDER_OFFSET_PARAMS.OFFSET_PARAM,
+              countParam: FOLDER_OFFSET_PARAMS.COUNT_PARAM,
+            },
+          }),
+        }),
+        undefined,
+      );
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(config.getEndpoint()).toBe(FOLDER_ENDPOINTS.GET_ALL);
+      expect(result).toEqual(PAGE);
+    });
+
+    it('should forward pagination options to the pagination helper', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(PAGE);
+
+      await folderService.getAll({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+      );
+    });
+
+    it('should map list fields to camelCase and drop the raw PascalCase fields', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(PAGE);
+
+      await folderService.getAll();
+
+      const [config] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const folder = config.transformFn(
+        FOLDER_TEST_CONSTANTS.RAW_LIST_FOLDER,
+      ) as FolderGetAllResponse;
+
+      expect(folder.id).toBe(123);
+      expect(folder.key).toBe(FOLDER_TEST_CONSTANTS.FOLDER_KEY);
+      expect(folder.displayName).toBe('Finance');
+      expect(folder.fullyQualifiedName).toBe('Shared/Finance');
+      expect(folder.description).toBe('AP invoices');
+      expect(folder.folderType).toBe('Standard');
+      expect(folder.parentId).toBe(10);
+      expect(folder.parentKey).toBe(FOLDER_TEST_CONSTANTS.PARENT_KEY);
+      expect((folder as any).DisplayName).toBeUndefined();
+      expect((folder as any).FullyQualifiedName).toBeUndefined();
+      expect((folder as any).FolderType).toBeUndefined();
+      expect((folder as any).ParentKey).toBeUndefined();
+    });
+
+    it('should propagate an error raised while listing folders', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(
+        createMockError(TEST_CONSTANTS.ERROR_MESSAGE),
+      );
+
+      await expect(folderService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
   });
 
   describe('getByKey', () => {

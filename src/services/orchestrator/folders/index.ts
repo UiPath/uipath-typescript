@@ -21,5 +21,5 @@
 
 export { FolderService as Folders } from './folders';
 
-export * from '../../../models/orchestrator/folders.types';
-export * from '../../../models/orchestrator/folders.models';
+export * from '@/models/orchestrator/folders.types';
+export * from '@/models/orchestrator/folders.models';

@@ -131,6 +131,8 @@ export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
  * Orchestrator Folder Endpoints
  */
 export const FOLDER_ENDPOINTS = {
+  /** Folders the calling user has access to. Not an OData route. */
+  GET_ALL: `${ORCHESTRATOR_BASE}/api/Folders/GetAllForCurrentUser`,
   GET_BY_KEY: (identifier: string) =>
     `${ORCHESTRATOR_BASE}/odata/Folders/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
   GET_BY_ID: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Folders(${folderId})`,

@@ -228,6 +228,31 @@ export const FEEDBACK_OFFSET_PARAMS = {
 };
 
 /**
+ * Folder pagination response shape constants
+ */
+export const FOLDER_PAGINATION = {
+  /** Field name for items in the folder list response */
+  ITEMS_FIELD: 'PageItems',
+
+  /** Field name for total count in the folder list response */
+  TOTAL_COUNT_FIELD: 'Count'
+};
+
+/**
+ * Folder OFFSET pagination parameter names (take/skip style)
+ */
+export const FOLDER_OFFSET_PARAMS = {
+  /** Folder page size parameter name */
+  PAGE_SIZE_PARAM: 'take',
+
+  /** Folder offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** Folder count parameter (not used) */
+  COUNT_PARAM: undefined
+};
+
+/**
  * Entity OFFSET pagination parameter names (limit/start style)
  */
 export const ENTITY_OFFSET_PARAMS = {
