@@ -381,7 +381,8 @@ export class FunctionService extends FolderScopedService implements FunctionServ
       return new NotFoundError({
         message: `${error.message} Available functions: ${shown}${suffix}.`,
       });
-    } catch {
+    } catch (listError) {
+      console.warn('Failed to list function names for the not-found error:', listError);
       return error;
     }
   }

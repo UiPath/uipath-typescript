@@ -690,10 +690,12 @@ describe('FunctionService Unit Tests', () => {
       ).rejects.toThrow(/exposes no functions/);
     });
 
-    it('should keep the original error when the name listing itself fails', async () => {
+    it('should keep the original error and warn when the name listing itself fails', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const listError = createMockError();
       mockApiClient.get
         .mockResolvedValueOnce({ value: [] })
-        .mockRejectedValueOnce(createMockError());
+        .mockRejectedValueOnce(listError);
 
       await expect(
         functionService.invoke(
@@ -702,6 +704,9 @@ describe('FunctionService Unit Tests', () => {
           { folderId: TEST_CONSTANTS.FOLDER_ID }
         )
       ).rejects.toThrow(NotFoundError);
+      expect(warn).toHaveBeenCalledWith(expect.any(String), listError);
+
+      warn.mockRestore();
     });
 
     it('should throw ValidationError when no folder context is available', async () => {
