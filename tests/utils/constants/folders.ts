@@ -14,6 +14,7 @@ export const FOLDER_TEST_CONSTANTS = {
     Key: FOLDER_KEY,
     DisplayName: 'Finance',
     FullyQualifiedName: 'Shared/Finance',
+    FullyQualifiedNameOrderable: 'Shared/Finance',
     Description: 'AP invoices',
     FolderType: 'Standard',
     ProvisionType: 'Automatic',
@@ -21,6 +22,8 @@ export const FOLDER_TEST_CONSTANTS = {
     ParentId: 10,
     ParentKey: PARENT_KEY,
     FeedType: 'Processes',
+    IsActive: true,
+    '@odata.context': 'https://uipath.com/odata/$metadata#Folders',
   },
   /**
    * One folder as the folder-list endpoint returns it: everything the

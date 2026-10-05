@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -8,6 +8,8 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
+  DataDirectionType,
+  EntityClass,
   EntityFieldDataType,
   EntityRecord,
   FieldDisplayType,
@@ -206,22 +208,208 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       const updated = after.fields.find(f => f.name === 'toUpdate');
       expect(updated?.displayName).toBe('After Update');
     }, 90_000);
+
+    it('should enable analytics via isAnalyticsEnabled at create time', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const displayName = `SDK Analytics ${name}`;
+      // isInsightsEnabled is immutable after creation, so analytics must be set on create.
+      const entityId = await createEntityAwaitingReady(entities, name, [], { displayName, isAnalyticsEnabled: true });
+      createdEntityIds.push(entityId);
+
+      const created = await entities.getById(entityId);
+      expect(created.isAnalyticsEnabled).toBe(true);
+    }, 90_000);
+  });
+
+  // Skipped unless a live Integration Service connection fixture is configured (a federated
+  // entity requires a connector source), plus DataFabric.Schema.Write scope. Standard CI has
+  // neither. To run locally against a federated-capable tenant, set: DF_FED_CONNECTION_ID,
+  // DF_FED_ELEMENT_INSTANCE_ID, DF_FED_CONNECTOR_KEY, DF_FED_OBJECT, DF_FED_OBJECT_METHOD
+  // (the operations-catalog JSON string from `is resources describe <connector> <object>
+  // --operation List`), DF_FED_PRIMARY_KEY, DF_FED_FIELD (an external field name on the object).
+  const federatedEnvReady = Boolean(
+    process.env.DF_FED_CONNECTION_ID &&
+      process.env.DF_FED_ELEMENT_INSTANCE_ID &&
+      process.env.DF_FED_CONNECTOR_KEY &&
+      process.env.DF_FED_OBJECT &&
+      process.env.DF_FED_OBJECT_METHOD &&
+      process.env.DF_FED_FIELD,
+  );
+  describe.skipIf(!federatedEnvReady)('updateById — federated source & join deltas', () => {
+    const entityFolderKey = getTestConfig().folderKey;
+    const conn = {
+      connectionId: process.env.DF_FED_CONNECTION_ID ?? '',
+      elementInstanceId: Number(process.env.DF_FED_ELEMENT_INSTANCE_ID ?? 0),
+      connectorKey: process.env.DF_FED_CONNECTOR_KEY ?? '',
+      connectorName: process.env.DF_FED_CONNECTOR_NAME ?? process.env.DF_FED_CONNECTOR_KEY ?? '',
+      folderKey: process.env.DF_FED_FOLDER_KEY ?? entityFolderKey,
+    };
+    const objectName = process.env.DF_FED_OBJECT ?? '';
+    const method = process.env.DF_FED_OBJECT_METHOD ?? '';
+    const primaryKey = process.env.DF_FED_PRIMARY_KEY ?? 'Id';
+    const externalField = process.env.DF_FED_FIELD ?? '';
+
+    async function createSingleSourceFederated(): Promise<string> {
+      const { entities } = getServices();
+      const name = `sdk_fed_${generateRandomString(8).toLowerCase()}`;
+      const id = await entities.create(name, [], {
+        folderKey: entityFolderKey,
+        entityClass: EntityClass.Federated,
+        externalFields: [
+          {
+            externalConnectionDetail: conn,
+            externalObjectDetail: { externalObjectName: objectName, primaryKey, isPrimarySource: true, method },
+            fields: [
+              {
+                field: { name: 'PkField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: primaryKey, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      createdEntityIds.push(id);
+      return id;
+    }
+
+    it('should create a single-source federated entity with EntityClass.Federated', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.entityClass).toBe(EntityClass.Federated);
+      expect(got.externalFields?.length).toBe(1);
+    }, 90_000);
+
+    it('should add a field to an existing source and preserve the source', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'AddedField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(names).toContain('PkField');
+      expect(names).toContain('AddedField');
+    }, 90_000);
+
+    it('should remove a field from a source and keep the source and its other fields', async () => {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+
+      // Add a second field, then remove it — a real removeFieldsFromSource round-trip.
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addFieldsToSource: [
+          {
+            sourceObjectName: objectName,
+            fields: [
+              {
+                field: { name: 'RemovableField', type: EntityFieldDataType.STRING },
+                externalFieldMappingDetail: { externalFieldName: externalField, externalFieldType: 'string', directionType: DataDirectionType.ReadOnly },
+              },
+            ],
+          },
+        ],
+      });
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        removeFieldsFromSource: [{ sourceObjectName: objectName, fieldNames: ['RemovableField'] }],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      const source = got.externalFields?.find(s => s.externalObjectDetail?.externalObjectName === objectName);
+      const names = (source?.fields ?? []).map(f => f.fieldMetaData?.name);
+      expect(got.externalFields?.length).toBe(1);
+      expect(names).toContain('PkField');
+      expect(names).not.toContain('RemovableField');
+    }, 90_000);
+
+    // Cascade (join dropped when its source is removed via removeExternalSources) needs a
+    // two-source + join fixture — a second connector object that standard env vars don't
+    // configure. Left visible rather than faked on a single-source entity.
+    it.todo('should cascade-remove a join when its source is removed');
   });
 
   describe('sqlType constraint defaults', () => {
-    it('should create STRING field with default lengthLimit 200', async () => {
-      const { entities } = getServices();
-      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'strField', type: EntityFieldDataType.STRING },
-      ]);
-      createdEntityIds.push(entityId);
+    // Read-only default/fixed-limit assertions share one entity created in
+    // beforeAll — cuts seven CreateEntity + SoftDeleteEntity DDL cycles down to
+    // one, easing the alpha entity SQL pool during CI runs. Custom-constraint
+    // and mutation tests below still use their own entities.
+    describe('default and fixed constraints (shared fixture entity)', () => {
+      let sharedEntity!: Awaited<ReturnType<ReturnType<typeof getServices>['entities']['getById']>>;
 
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'strField');
-      expect(field).toBeDefined();
-      expect(field?.fieldDataType.lengthLimit).toBe(200);
-    }, 90_000);
+      beforeAll(async () => {
+        const { entities } = getServices();
+        const name = `sdk_defaults_${generateRandomString(8).toLowerCase()}`;
+        const entityId = await createEntityAwaitingReady(entities, name, [
+          { name: 'strField', type: EntityFieldDataType.STRING },
+          { name: 'mlField', type: EntityFieldDataType.MULTILINE_TEXT },
+          { name: 'mlmaxField', type: EntityFieldDataType.MULTILINE_MAX },
+          { name: 'decField', type: EntityFieldDataType.DECIMAL },
+          { name: 'boolField', type: EntityFieldDataType.BOOLEAN },
+          { name: 'dateField', type: EntityFieldDataType.DATE },
+          { name: 'dtzField', type: EntityFieldDataType.DATETIME_WITH_TZ },
+        ]);
+        createdEntityIds.push(entityId);
+        sharedEntity = await entities.getById(entityId);
+      }, 90_000);
+
+      it('should create STRING field with default lengthLimit 200', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'strField');
+        expect(field).toBeDefined();
+        expect(field?.fieldDataType.lengthLimit).toBe(200);
+      });
+
+      it('should create MULTILINE_TEXT field with default lengthLimit 200', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'mlField');
+        expect(field?.fieldDataType.lengthLimit).toBe(200);
+      });
+
+      it('should create MULTILINE_MAX field with default lengthLimit 128 KB', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'mlmaxField');
+        expect(field?.fieldDataType.name).toBe(EntityFieldDataType.MULTILINE_MAX);
+        expect(field?.fieldDataType.lengthLimit).toBe(128 * 1024);
+      });
+
+      it('should create DECIMAL field with correct default constraints', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'decField');
+        expect(field?.fieldDataType.lengthLimit).toBe(1000);
+        expect(field?.fieldDataType.decimalPrecision).toBe(2);
+        expect(field?.fieldDataType.maxValue).toBe(1000000000000);
+        expect(field?.fieldDataType.minValue).toBe(-1000000000000);
+      });
+
+      it('should create BOOLEAN field with fixed lengthLimit 100', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'boolField');
+        expect(field?.fieldDataType.lengthLimit).toBe(100);
+      });
+
+      it('should create DATE field with fixed lengthLimit 1000', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'dateField');
+        expect(field?.fieldDataType.lengthLimit).toBe(1000);
+      });
+
+      it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', () => {
+        const field = sharedEntity.fields.find(f => f.name === 'dtzField');
+        expect(field?.fieldDataType.lengthLimit).toBe(1000);
+      });
+    });
 
     it('should create STRING field with user-provided lengthLimit', async () => {
       const { entities } = getServices();
@@ -234,49 +422,6 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       const entity = await entities.getById(entityId);
       const field = entity.fields.find(f => f.name === 'strField');
       expect(field?.fieldDataType.lengthLimit).toBe(500);
-    }, 90_000);
-
-    it('should create MULTILINE_TEXT field with default lengthLimit 200', async () => {
-      const { entities } = getServices();
-      const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'mlField', type: EntityFieldDataType.MULTILINE_TEXT },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'mlField');
-      expect(field?.fieldDataType.lengthLimit).toBe(200);
-    }, 90_000);
-
-    it('should create MULTILINE_MAX field with default lengthLimit 128 KB', async () => {
-      const { entities } = getServices();
-      const name = `sdk_mlmax_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'mlmaxField', type: EntityFieldDataType.MULTILINE_MAX },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'mlmaxField');
-      expect(field?.fieldDataType.name).toBe(EntityFieldDataType.MULTILINE_MAX);
-      expect(field?.fieldDataType.lengthLimit).toBe(128 * 1024);
-    }, 90_000);
-
-    it('should create DECIMAL field with correct default constraints', async () => {
-      const { entities } = getServices();
-      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'decField', type: EntityFieldDataType.DECIMAL },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'decField');
-      expect(field?.fieldDataType.lengthLimit).toBe(1000);
-      expect(field?.fieldDataType.decimalPrecision).toBe(2);
-      expect(field?.fieldDataType.maxValue).toBe(1000000000000);
-      expect(field?.fieldDataType.minValue).toBe(-1000000000000);
     }, 90_000);
 
     it('should create DECIMAL field with user-provided constraints', async () => {
@@ -298,45 +443,6 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       expect(field?.fieldDataType.decimalPrecision).toBe(4);
       expect(field?.fieldDataType.maxValue).toBe(99999);
       expect(field?.fieldDataType.minValue).toBe(-99999);
-    }, 90_000);
-
-    it('should create BOOLEAN field with fixed lengthLimit 100', async () => {
-      const { entities } = getServices();
-      const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'boolField', type: EntityFieldDataType.BOOLEAN },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'boolField');
-      expect(field?.fieldDataType.lengthLimit).toBe(100);
-    }, 90_000);
-
-    it('should create DATE field with fixed lengthLimit 1000', async () => {
-      const { entities } = getServices();
-      const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'dateField', type: EntityFieldDataType.DATE },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'dateField');
-      expect(field?.fieldDataType.lengthLimit).toBe(1000);
-    }, 90_000);
-
-    it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', async () => {
-      const { entities } = getServices();
-      const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'dtzField', type: EntityFieldDataType.DATETIME_WITH_TZ },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'dtzField');
-      expect(field?.fieldDataType.lengthLimit).toBe(1000);
     }, 90_000);
 
     it('should allow updating STRING field lengthLimit without "Field type cannot be changed" error', async () => {
@@ -386,21 +492,6 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       expect(updated?.fieldDataType.decimalPrecision).toBe(4);
       expect(updated?.fieldDataType.maxValue).toBe(9999);
       expect(updated?.fieldDataType.minValue).toBe(-9999);
-    }, 90_000);
-
-    it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', async () => {
-      const { entities } = getServices();
-      const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
-
-      const entityId = await createEntityAwaitingReady(entities, name, [
-        { name: 'strField', type: EntityFieldDataType.STRING },
-      ]);
-      createdEntityIds.push(entityId);
-
-      const entity = await entities.getById(entityId);
-      const field = entity.fields.find(f => f.name === 'strField');
-      // Default is applied client-side and round-trips through the API as 200
-      expect(field?.fieldDataType.lengthLimit).toBe(200);
     }, 90_000);
 
   });
@@ -474,7 +565,7 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       for (const [level, rec] of [[1, l1], [2, l2], [3, l3]] as const) {
         expect(typeof rec.parent, `L${level} parent should be object`).toBe('object');
         expect(rec.parent, `L${level} parent should not be null`).not.toBeNull();
-        expect(rec.parent, `L${level} parent should carry target Id`).toHaveProperty('Id', targetRecordId);
+        expect(rec.parent.Id, `L${level} parent should carry target Id`).toBe(targetRecordId);
       }
 
       // L2 surfaces the user-defined `label` field from the target record.

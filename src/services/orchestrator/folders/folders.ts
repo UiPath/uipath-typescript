@@ -66,6 +66,8 @@ export class FolderService extends BaseService implements FolderServiceModel {
       { params: apiOptions },
     );
 
-    return pascalToCamelCaseKeys(response.data) as FolderGetResponse;
+    const camelCased = pascalToCamelCaseKeys(response.data) as FolderGetResponse & { '@odata.context'?: string };
+    const { '@odata.context': _odataContext, ...folder } = camelCased;
+    return folder;
   }
 }

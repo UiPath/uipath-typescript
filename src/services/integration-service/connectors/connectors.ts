@@ -64,7 +64,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     const { headers, queryOptions } = resolveFolderScope(
       options ?? {},
       'Connectors.getDefaultConnection',
-      this.config.folderKey,
+      this.config.metaFolderKey,
     );
     const response = await this.get<ConnectionGetResponse>(
       CONNECTOR_ENDPOINTS.GET_DEFAULT_CONNECTION(keyOrId),
@@ -87,7 +87,7 @@ export class ConnectorsService extends BaseService implements ConnectorsServiceM
     const { headers, queryOptions } = resolveFolderScope(
       options ?? {},
       'Connectors.getConnections',
-      this.config.folderKey,
+      this.config.metaFolderKey,
     );
     const response = await this.get<ConnectionGetResponse[]>(
       CONNECTOR_ENDPOINTS.GET_CONNECTIONS(keyOrId),

@@ -122,6 +122,7 @@ describe('FolderService Unit Tests', () => {
       expect(result.key).toBe(FOLDER_TEST_CONSTANTS.FOLDER_KEY);
       expect(result.displayName).toBe('Finance');
       expect(result.fullyQualifiedName).toBe('Shared/Finance');
+      expect(result.fullyQualifiedNameOrderable).toBe('Shared/Finance');
       expect(result.description).toBe('AP invoices');
       expect(result.folderType).toBe('Standard');
       expect(result.provisionType).toBe('Automatic');
@@ -129,10 +130,13 @@ describe('FolderService Unit Tests', () => {
       expect(result.parentId).toBe(10);
       expect(result.parentKey).toBe(FOLDER_TEST_CONSTANTS.PARENT_KEY);
       expect(result.feedType).toBe('Processes');
+      expect(result.isActive).toBe(true);
       expect((result as any).DisplayName).toBeUndefined();
       expect((result as any).FullyQualifiedName).toBeUndefined();
       expect((result as any).FolderType).toBeUndefined();
       expect((result as any).ParentId).toBeUndefined();
+      expect((result as any).IsActive).toBeUndefined();
+      expect(result).not.toHaveProperty('@odata.context');
     });
 
     it('should call GetByKey with select options and no folder headers', async () => {

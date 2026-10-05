@@ -216,6 +216,16 @@
                 "default": "./dist/agents/index.cjs"
             }
         },
+        "./agenthub": {
+            "import": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.cjs"
+            }
+        },
         "./governance": {
             "import": {
                 "types": "./dist/governance/index.d.ts",
@@ -318,6 +328,7 @@
         "check:samples": "node scripts/check-samples.mjs",
         "typecheck": "tsc --noEmit",
         "release-metadata:gen": "node scripts/gen-release-metadata.mjs",
+        "api-surface": "node scripts/check-api-surface.mjs --base origin/main",
         "test": "vitest",
         "test:unit": "vitest run",
         "test:integration": "vitest --config vitest.integration.config.ts",

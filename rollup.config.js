@@ -211,7 +211,7 @@ const serviceEntries = [
   },
   {
     name: 'document-understanding',
-    input: 'src/models/document-understanding/index.ts',
+    input: 'src/services/document-understanding/index.ts',
     output: 'document-understanding/index'
   },
   {
@@ -223,6 +223,11 @@ const serviceEntries = [
     name: 'agents',
     input: 'src/services/agents/index.ts',
     output: 'agents/index'
+  },
+  {
+    name: 'agenthub',
+    input: 'src/services/agenthub/index.ts',
+    output: 'agenthub/index'
   },
   {
     name: 'governance',

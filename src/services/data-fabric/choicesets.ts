@@ -136,9 +136,8 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
 
   @track('Choicesets.DeleteById')
   async deleteById(choiceSetId: string, options?: ChoiceSetDeleteByIdOptions): Promise<void> {
-    await this.post(
+    await this.delete(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(choiceSetId),
-      {},
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
   }

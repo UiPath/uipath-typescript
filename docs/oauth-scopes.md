@@ -44,6 +44,15 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getAll()` | `OR.Folders` or `OR.Folders.Read` |
 | `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
+## Document Understanding
+
+Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `startExtractionValidation()` | `Du.Validation.Api` |
+| `getExtractionValidationResult()` | `Du.Validation.Api` |
+
 ## Attachments
 
 | Method | OAuth Scope |
@@ -60,7 +69,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getByName()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `getFileMetaData()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `getReadUri()` | `OR.Buckets` or `OR.Buckets.Read` |
-| `uploadFile()` | `OR.Buckets` |
+| `uploadFile()` | `OR.Buckets` or `OR.Buckets.Write` |
 | `deleteFile()` | `OR.Buckets` or `OR.Buckets.Write` |
 | `getFiles()` | `OR.Buckets` or `OR.Buckets.Read` |
 
@@ -81,6 +90,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `deleteRecordById()` / `deleteRecord()` | `DataFabric.Data.Write` |
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
+| `upsert()` | `DataFabric.Data.Write`, `DataFabric.Schema.Read` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
 | `uploadAttachment()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |
@@ -294,7 +304,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
 | `getByName()` | `OR.Execution` or `OR.Execution.Read` |
-| `start()` | `OR.Jobs` or `OR.Jobs.Write` |
+| `start()` | (`OR.Jobs` or `OR.Jobs.Write`) **and** (`OR.Execution` or `OR.Execution.Read`) |
 
 ## Queues
 

@@ -18,6 +18,8 @@ export * from './models/action-center';
 export * from './models/conversational-agent';
 export * from './models/agents';
 export * as DuFramework from './models/document-understanding/framework';
+export * from './models/document-understanding/validation.types';
+export * from './models/document-understanding/validation.models';
 export * from './models/governance';
 export * from './models/platform';
 export * from './models/integration-service';
@@ -30,6 +32,7 @@ export * from './utils/pagination';
 export * from './utils/runtime';
 export { httpRequest } from './utils/http/http-request';
 export { wait } from './utils/http/fetch-with-retry';
+export { trace } from './utils/tracing/trace';
 
 // Export telemetry
 export * from './core/telemetry';

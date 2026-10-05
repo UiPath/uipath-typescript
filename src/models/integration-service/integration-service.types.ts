@@ -10,8 +10,10 @@
  * is supplied, all are forwarded; the server applies precedence
  * `folderPath` > `folderKey` > `folderId`.
  *
- * Folder context is optional — omit it to fall back to the folder context the
- * SDK was initialized with.
+ * Folder context is optional — omit it to fall back to a deployed coded app's
+ * folder. A coded function's invocation folder is not applied. To address a
+ * connection under a folder, name the connection's own: Integration Service
+ * rejects a connection outside the folder named.
  */
 export interface IntegrationServiceFolderContextOptions {
   /** Numeric folder ID. */

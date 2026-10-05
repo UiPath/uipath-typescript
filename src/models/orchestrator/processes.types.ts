@@ -248,6 +248,31 @@ export interface ProcessStartRequestWithName extends BaseProcessStartRequest {
 export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
 
 /**
+ * Selects a process by exactly one identifier. Used by `ProcessServiceModel.start`.
+ *
+ * - `{ name }` — process name. Requires a folder scope (`folderId` / `folderKey` /
+ *   `folderPath`) to disambiguate across folders.
+ * - `{ key }` — process GUID. A folder scope is still required so the job routes
+ *   to the right folder.
+ *
+ * `{ id }` is intentionally not supported. Every {@link ProcessGetResponse}
+ * already exposes `key` alongside `id`, so any caller that has the id has the
+ * key too — pass `{ key: process.key }` directly.
+ */
+export type ProcessRef =
+  | { name: string; key?: never }
+  | { key: string; name?: never };
+
+/**
+ * Options for the ref-based `start(processRef, options?)` signature. Combines folder
+ * scoping (`folderId` / `folderKey` / `folderPath`), response-shape controls
+ * (`expand`, `select`, `filter`, `orderby`) and every `BaseProcessStartRequest`
+ * startInfo field. Identity fields (`processKey` / `processName`) do not appear
+ * here — they come from the `ProcessRef` argument.
+ */
+export interface ProcessStartRefOptions extends ProcessStartOptions, BaseProcessStartRequest {}
+
+/**
  * Interface for robot metadata
  */
 export interface RobotMetadata {
@@ -394,8 +419,9 @@ export interface ProcessGetByNameOptions extends FolderScopedOptions {}
  * (`expand`, `select`, `filter`, `orderby`) accepted by the start endpoint.
  *
  * Folder scoping is optional in the type — the SDK falls back to the
- * init-time folderKey (e.g. `<meta name="uipath:folder-key">` in coded-app
- * deployments). A `ValidationError` is raised when neither is provided.
+ * init-time folderKey (a coded function's `ctx.platform.folderKey`, or
+ * `<meta name="uipath:folder-key">` in coded-app deployments). A
+ * `ValidationError` is raised when neither is provided.
  */
 export interface ProcessStartOptions extends FolderScopedOptions, RequestOptions {}
 

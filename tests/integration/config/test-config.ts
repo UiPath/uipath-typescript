@@ -21,7 +21,8 @@ export interface IntegrationConfig {
    * User access token, minted by a browser login (Minter) rather than issued to
    * an external application. Required by services that reject PAT and
    * client-credentials tokens outright: everything under `insightsrtm_` (Agents,
-   * Agent Memory, Agent Traces, Governance) and the notification service.
+   * Agent Memory, Agent Traces, Governance), `agenthub_` (LLM gateway), and the
+   * notification service.
    * Unset by default — suites that need it skip rather than fail.
    */
   userToken?: string;
@@ -62,6 +63,10 @@ export interface IntegrationConfig {
   dataFabricTestJoinFieldName?: string;
   dataFabricTestJoinRelatedEntityName?: string;
   dataFabricTestJoinRelatedFieldName?: string;
+  // Parent/child fixture for the upsert tests. Both are required, and the child must have
+  // a foreign key to the parent.
+  dataFabricTestTreeEntityName?: string;
+  dataFabricTestTreeChildEntityName?: string;
   orchestratorAttachmentId?: string;
   /**
    * Name of a dedicated queue used by the queue item / transaction
@@ -169,6 +174,8 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestJoinFieldName: typeof rawConfig.dataFabricTestJoinFieldName === 'string' ? rawConfig.dataFabricTestJoinFieldName : undefined,
     dataFabricTestJoinRelatedEntityName: typeof rawConfig.dataFabricTestJoinRelatedEntityName === 'string' ? rawConfig.dataFabricTestJoinRelatedEntityName : undefined,
     dataFabricTestJoinRelatedFieldName: typeof rawConfig.dataFabricTestJoinRelatedFieldName === 'string' ? rawConfig.dataFabricTestJoinRelatedFieldName : undefined,
+    dataFabricTestTreeEntityName: typeof rawConfig.dataFabricTestTreeEntityName === 'string' ? rawConfig.dataFabricTestTreeEntityName : undefined,
+    dataFabricTestTreeChildEntityName: typeof rawConfig.dataFabricTestTreeChildEntityName === 'string' ? rawConfig.dataFabricTestTreeChildEntityName : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     queuesTestQueueName: typeof rawConfig.queuesTestQueueName === 'string' ? rawConfig.queuesTestQueueName : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
@@ -226,6 +233,8 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestJoinFieldName: process.env.DATA_FABRIC_TEST_JOIN_FIELD_NAME || undefined,
     dataFabricTestJoinRelatedEntityName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME || undefined,
     dataFabricTestJoinRelatedFieldName: process.env.DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME || undefined,
+    dataFabricTestTreeEntityName: process.env.DATA_FABRIC_TEST_TREE_ENTITY_NAME || undefined,
+    dataFabricTestTreeChildEntityName: process.env.DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     queuesTestQueueName: process.env.QUEUES_TEST_QUEUE_NAME || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
@@ -248,7 +257,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
 /**
  * What a suite needs from its credential:
  * - 'pat'  — the external-application identity
- * - 'user' — a user access token (insightsrtm_, notification service)
+ * - 'user' — a user access token (insightsrtm_, agenthub_, notification service)
  * - 'both' — either works; runs once under each configured credential
  */
 export type AuthRequirement = 'pat' | 'user' | 'both';
