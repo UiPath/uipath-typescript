@@ -83,6 +83,8 @@ describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
       expect(Array.isArray(result.items)).toBe(true);
     }, 15000);
 
+    // Data Fabric on the CI tenant answers in seconds normally but queues behind
+    // schema DDL from concurrent runs; a connectivity check should outlast that.
     it('should successfully make an API call to Data Fabric', async () => {
       const { entities } = getServices();
 
@@ -90,6 +92,6 @@ describeIntegration('SDK Initialization - Smoke Tests', 'both', modes, () => {
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-    }, 15000);
+    }, 60_000);
   });
 });

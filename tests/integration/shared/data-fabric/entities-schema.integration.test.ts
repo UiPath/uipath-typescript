@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
   DataDirectionType,
