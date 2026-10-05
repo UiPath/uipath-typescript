@@ -5,11 +5,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // The PR integration-test scoping rules. Imported directly (the script only runs
 // its CLI when executed as main), so the pure resolver is exercised here.
-import { ALWAYS_ON, FULL_RUN_LABEL, classify, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
+import { ALWAYS_ON, FULL_RUN_LABEL, classify, parseNumstat, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const SHARED = 'tests/integration/shared';
 const ENDPOINTS = 'src/utils/constants/endpoints';
+const REGISTRY = 'tests/integration/config/unified-setup.ts';
 const DOMAINS = ['action-center', 'data-fabric', 'maestro', 'orchestrator', 'platform'];
 // Service folders: the suite domains plus one nothing tests.
 const SERVICES = [...DOMAINS, 'integration-service'];
@@ -22,8 +23,13 @@ describe('integration-scope resolveScope', () => {
       'packages/coded-action-app/src/types.ts',
       'tests/unit/services/data-fabric/entities.test.ts',
       'tests/utils/mocks/entities.ts',
+      'tests/utils/constants/platform.ts', // fixtures: a fixture-only edit is knowingly uncovered
+      'tests/utils/setup.ts',
       'README.md',
       'rollup.config.js',
+      'package.json', // exports, scripts, version; a dependency change also edits the lock file, which runs everything
+      'scripts/check-samples.mjs', // CI tooling, not part of the integration run
+      'scripts/integration-scope.mjs', // the resolver itself: covered by this file, fail-closed in the workflow
       'tests/.env.integration.example',
       `${ENDPOINTS}/index.ts`, // the barrel only re-exports
       `${ENDPOINTS}/base.ts`, // every new service adds a base path; its own folder covers it
@@ -68,6 +74,23 @@ describe('integration-scope resolveScope', () => {
     ]);
   });
 
+  it('runs only the always-on suites for an additions-only change to the service registry', () => {
+    const scope = resolveScope([REGISTRY], DOMAINS, SERVICES, new Set([REGISTRY]));
+    expect(scope).toMatchObject({ run: true, all: false, domains: [], paths: [...ALWAYS_ON] });
+    expect(toOutputs(scope)[2]).toBe('scope=always-on');
+    expect(scope.notes[0]).toContain('only adds lines');
+  });
+
+  it("adds the registered service's suite when its folders change alongside the registry", () => {
+    const scope = resolveScope([REGISTRY, 'src/services/platform/groups/groups.ts'], DOMAINS, SERVICES, new Set([REGISTRY]));
+    expect(scope).toMatchObject({ run: true, all: false, domains: ['platform'] });
+  });
+
+  it('runs everything for a registry change that removes or edits lines', () => {
+    const { files, additive } = parseNumstat(`5\t2\t${REGISTRY}\n`);
+    expect(resolveScope(files, DOMAINS, SERVICES, additive).all).toBe(true);
+  });
+
   it('treats an endpoint-constants folder like its service folder', () => {
     expect(classify(`${ENDPOINTS}/platform/identity.ts`, DOMAINS, SERVICES)).toEqual({ kind: 'domain', domain: 'platform' });
     expect(classify(`${ENDPOINTS}/integration-service/integration-service.ts`, DOMAINS, SERVICES).kind).toBe('no-suite');
@@ -91,14 +114,12 @@ describe('integration-scope resolveScope', () => {
     'src/models/document-understanding/du.types.ts', // models-only folder with no service: shared code
     `${SHARED}/brand-new-domain/x.integration.test.ts`, // not a service either
     'src/index.ts',
-    'tests/integration/config/unified-setup.ts',
+    REGISTRY, // without additions-only information (the --files path) the registry runs everything
     'tests/integration/utils/helpers.ts',
-    'tests/utils/constants/agents.ts', // imported by the agents suites
     `${SHARED}/loose.integration.test.ts`, // a loose file that is not always-on
     'vitest.integration.config.ts',
-    'package.json',
+    'package-lock.json', // a dependency change
     '.github/workflows/coverage.yml',
-    'scripts/integration-scope.mjs',
     'new-top-level-dir/thing.ts',
   ])('runs everything for anything outside the per-domain folders: %s', (file) => {
     const scope = resolveScope(['docs/index.md', file], DOMAINS, SERVICES);
@@ -107,9 +128,10 @@ describe('integration-scope resolveScope', () => {
     expect(toOutputs(scope)).toEqual(['run_integration=true', 'test_paths=', 'scope=all']);
   });
 
-  it('runs everything for a version-bump PR', () => {
+  it('runs everything for a version bump or dependency change, through the lock file', () => {
     const scope = resolveScope(['package.json', 'package-lock.json', 'release-metadata.json'], DOMAINS, SERVICES);
     expect(scope).toMatchObject({ run: true, all: true });
+    expect(scope.reasons).toEqual(['package-lock.json is outside the per-domain folders']);
   });
 
   it('lets a single shared file override any number of scoped ones', () => {
@@ -150,7 +172,7 @@ describe('integration-scope resolveArgs', () => {
 
   it('reads the changed files from git for --base', () => {
     // HEAD...HEAD is an empty diff, so this exercises the git call without depending on history.
-    expect(resolveArgs(['--base', 'HEAD'])).toEqual({ files: [] });
+    expect(resolveArgs(['--base', 'HEAD'])).toEqual({ files: [], additive: new Set() });
   });
 
   // "A diff problem must never skip the run": a ref git does not know makes it exit non-zero.
@@ -164,7 +186,13 @@ describe('integration-scope resolveArgs', () => {
   it('reads a file list for --files, dropping blanks and surrounding whitespace', () => {
     const list = join(mkdtempSync(join(tmpdir(), 'integration-scope-')), 'files.txt');
     writeFileSync(list, ' docs/a.md \n\nsrc/services/maestro/cases.ts\n');
-    expect(resolveArgs(['--files', list])).toEqual({ files: ['docs/a.md', 'src/services/maestro/cases.ts'] });
+    expect(resolveArgs(['--files', list])).toEqual({ files: ['docs/a.md', 'src/services/maestro/cases.ts'], additive: new Set() });
+  });
+
+  it('parses git numstat into the file list and its additions-only subset', () => {
+    const { files, additive } = parseNumstat(`3\t0\t${REGISTRY}\n5\t2\tsrc/core/config.ts\n-\t-\tdocs/img.png\n0\t4\tREADME.md\n0\t0\tscripts/mode-only.sh\n`);
+    expect(files).toEqual([REGISTRY, 'src/core/config.ts', 'docs/img.png', 'README.md', 'scripts/mode-only.sh']);
+    expect([...additive]).toEqual([REGISTRY]);
   });
 });
 
@@ -193,23 +221,26 @@ describe('integration-scope suites', () => {
   });
 });
 
+// Identifier-level usage scan, for the guards that keep a domain's files to that domain.
+type Source = { path: string; text: string };
+function* walk(dir: string): Generator<string> {
+  for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+    if (entry.isDirectory()) yield* walk(`${dir}/${entry.name}`);
+    else if (entry.name.endsWith('.ts')) yield `${dir}/${entry.name}`;
+  }
+}
+const readSources = (dir: string): Source[] => [...walk(dir)].map(path => ({ path, text: readFileSync(join(ROOT, path), 'utf8') }));
+const exportsOf = (file: string) => [...readFileSync(join(ROOT, file), 'utf8').matchAll(/^export\s+(?:const|function|enum)\s+(\w+)/gm)].map(match => match[1]);
+const usersOf = (file: string, sources: Source[]) => {
+  const names = exportsOf(file);
+  const used = new RegExp(`\\b(?:${names.join('|')})\\b`);
+  return names.length === 0 ? [] : sources.filter(source => source.path !== file && used.test(source.text)).map(source => source.path);
+};
+
 describe('integration-scope endpoint constants', () => {
   const entries = readdirSync(join(ROOT, ENDPOINTS), { withFileTypes: true });
   const folders = entries.filter(entry => entry.isDirectory()).map(entry => entry.name);
-  const sources = [...walk('src')].map(path => ({ path, text: readFileSync(join(ROOT, path), 'utf8') }));
-
-  function* walk(dir: string): Generator<string> {
-    for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
-      if (entry.isDirectory()) yield* walk(`${dir}/${entry.name}`);
-      else if (entry.name.endsWith('.ts')) yield `${dir}/${entry.name}`;
-    }
-  }
-  const exportsOf = (file: string) => [...readFileSync(join(ROOT, file), 'utf8').matchAll(/^export\s+const\s+(\w+)/gm)].map(match => match[1]);
-  const usersOf = (file: string) => {
-    const names = exportsOf(file);
-    const used = new RegExp(`\\b(?:${names.join('|')})\\b`);
-    return names.length === 0 ? [] : sources.filter(source => source.path !== file && used.test(source.text)).map(source => source.path);
-  };
+  const sources = readSources('src');
 
   // A folder the script cannot match to a service would scope to nothing useful.
   it('names every endpoint folder after a src/services folder', () => {
@@ -227,7 +258,7 @@ describe('integration-scope endpoint constants', () => {
       const allowed = [`src/services/${name}/`, `src/models/${name}/`, `${ENDPOINTS}/${name}/`, 'src/core/'];
       for (const entry of readdirSync(join(ROOT, ENDPOINTS, name))) {
         const file = `${ENDPOINTS}/${name}/${entry}`;
-        for (const user of usersOf(file)) {
+        for (const user of usersOf(file, sources)) {
           expect(allowed.some(prefix => user.startsWith(prefix)), `${file} is used by ${user}, outside ${name}`).toBe(true);
         }
       }
@@ -238,7 +269,7 @@ describe('integration-scope endpoint constants', () => {
   it('keeps the loose files for code outside the service folders', () => {
     for (const entry of entries.filter(entry => entry.isFile() && entry.name !== 'index.ts')) {
       const file = `${ENDPOINTS}/${entry.name}`;
-      for (const user of usersOf(file)) {
+      for (const user of usersOf(file, sources)) {
         expect(user.startsWith('src/services/') || user.startsWith('src/models/'), `${file} is used by ${user}; move it into that service's folder`).toBe(false);
       }
     }

@@ -2,8 +2,10 @@
 // Picks the integration suites a PR needs from its changed files: a change under
 // src/services/<name>, src/models/<name>, src/utils/constants/endpoints/<name> or
 // tests/integration/shared/<name> runs tests/integration/shared/<name>, or nothing
-// when no such suite folder exists;
-// docs/samples/packages/unit tests run nothing; anything else runs everything.
+// when no such suite folder exists; an additions-only change to the service registry
+// (tests/integration/config/unified-setup.ts) runs just the always-on suites;
+// docs/samples/packages/scripts/tests/unit/tests/utils and package.json run nothing;
+// anything else runs everything.
 // Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
@@ -25,14 +27,18 @@ export const ALWAYS_ON = Object.freeze([
 export const FULL_RUN_LABEL = 'ci:full-integration';
 
 const IGNORED_PATTERNS = [
-  /^(docs|samples|packages|plugins|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
+  // scripts/ is CI and release tooling; tests/unit and tests/utils are unit-test code and
+  // fixtures (a few fixture values are read by suites; a fixture-only edit is knowingly uncovered).
+  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils)\//,
   /\.md$/,
-  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
+  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|package\.json|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
 ];
 // The endpoint-constants folders are named after their service folder. base.ts and
 // the barrel beside them are ignored: every new service adds a line to each, and its
 // own folder and suite trigger its run.
 const DOMAIN_PATH = /^(?:src\/services|src\/models|src\/utils\/constants\/endpoints|tests\/integration\/shared)\/([^/]+)\//;
+/** New services are registered here; a change that only adds lines is loaded by the always-on suites. */
+const REGISTRY = 'tests/integration/config/unified-setup.ts';
 
 const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
 
@@ -48,10 +54,14 @@ export function services() {
   return folders(SERVICES);
 }
 
-/** One path → { kind: 'ignore' | 'always-on' | 'domain' | 'no-suite' | 'all' }. */
-export function classify(file, domains, serviceDomains) {
+/**
+ * One path → { kind: 'ignore' | 'always-on' | 'domain' | 'no-suite' | 'all' }.
+ * `additive` holds the changed files that only gained lines (from `git diff --numstat`).
+ */
+export function classify(file, domains, serviceDomains, additive = new Set()) {
   if (IGNORED_PATTERNS.some(pattern => pattern.test(file))) return { kind: 'ignore' };
   if (isAlwaysOn(file)) return { kind: 'always-on' };
+  if (file === REGISTRY && additive.has(file)) return { kind: 'always-on', note: `${file} only adds lines (a service registration); the always-on suites load it` };
   const domain = file.match(DOMAIN_PATH)?.[1];
   if (domain && domains.includes(domain)) return { kind: 'domain', domain };
   // A service nothing tests (e.g. integration-service): nothing to run for it. Other
@@ -61,18 +71,21 @@ export function classify(file, domains, serviceDomains) {
 }
 
 /** Changed files → { run, all, domains, paths (vitest filters; empty = all), reasons, notes }. */
-export function resolveScope(changedFiles, domains = suites(), serviceDomains = services()) {
+export function resolveScope(changedFiles, domains = suites(), serviceDomains = services(), additive = new Set()) {
   const selected = new Set();
   const reasons = [];
   const notes = [];
   let alwaysOn = false;
 
   for (const file of changedFiles) {
-    const result = classify(file, domains, serviceDomains);
+    const result = classify(file, domains, serviceDomains, additive);
     if (result.kind === 'all') reasons.push(result.reason);
     else if (result.kind === 'domain') selected.add(result.domain);
-    else if (result.kind === 'always-on') alwaysOn = true;
     else if (result.kind === 'no-suite') notes.push(result.note);
+    else if (result.kind === 'always-on') {
+      alwaysOn = true;
+      if (result.note) notes.push(result.note);
+    }
   }
   if (reasons.length > 0) return { run: true, all: true, domains: [], paths: [], reasons, notes };
 
@@ -89,16 +102,28 @@ export function toOutputs(scope) {
   return [`run_integration=${scope.run}`, `test_paths=${scope.paths.join(' ')}`, `scope=${label}`];
 }
 
+/** `git diff --numstat` text → { files, additive: the files with added lines and no deleted ones }. */
+export function parseNumstat(text) {
+  const files = [];
+  const additive = new Set();
+  for (const line of text.split('\n').filter(Boolean)) {
+    const [added, deleted, path] = line.split('\t');
+    files.push(path);
+    if (deleted === '0' && added !== '0') additive.add(path);
+  }
+  return { files, additive };
+}
+
 // ---- CLI ----
 
-/** argv → { scope } when the answer is fixed up front, else { files } to classify. */
+/** argv → { scope } when the answer is fixed up front, else { files, additive } to classify. */
 export function resolveArgs(argv) {
   const at = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
   if (argv.includes('--all')) return { scope: fullScope('full run requested') };
   const labels = (at('--labels') ?? '').split(',').map(l => l.trim()).filter(Boolean);
   if (labels.includes(FULL_RUN_LABEL)) return { scope: fullScope(`the PR carries the ${FULL_RUN_LABEL} label`) };
   const list = at('--files');
-  if (list) return { files: readFileSync(list, 'utf8').split('\n').map(l => l.trim()).filter(Boolean) };
+  if (list) return { files: readFileSync(list, 'utf8').split('\n').map(l => l.trim()).filter(Boolean), additive: new Set() };
   const base = at('--base');
   if (!base) {
     console.error('usage: integration-scope.mjs (--base <ref> [--labels <a,b,...>] | --files <list> | --all)');
@@ -106,8 +131,8 @@ export function resolveArgs(argv) {
   }
   try {
     // --no-renames: both sides of a move count as changed.
-    const diff = execFileSync('git', ['diff', '--name-only', '--no-renames', `${base}...HEAD`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-    return { files: diff.split('\n').filter(Boolean) };
+    const diff = execFileSync('git', ['diff', '--numstat', '--no-renames', `${base}...HEAD`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return parseNumstat(diff);
   } catch (error) {
     // A diff problem must never skip the run.
     return { scope: fullScope(`could not diff against ${base}: ${error.message.split('\n')[0]}`) };
@@ -115,8 +140,8 @@ export function resolveArgs(argv) {
 }
 
 function run() {
-  const { files, scope: forced } = resolveArgs(process.argv.slice(2));
-  const scope = forced ?? resolveScope(files);
+  const { files, additive, scope: forced } = resolveArgs(process.argv.slice(2));
+  const scope = forced ?? resolveScope(files, suites(), services(), additive);
   const outputs = toOutputs(scope);
 
   if (files) console.log(`integration-scope: ${files.length} changed file(s)`);
