@@ -120,7 +120,7 @@ $ uip codedapp convert <file> [options]
 
 Requires the **.NET 10 Runtime** on the machine (`dotnet --list-runtimes` lists `Microsoft.NETCore.App 10.`). The converter ships with the `codedapp` tool. Only `.uiapp` (VB apps) is accepted; a `.uis` Solution is refused.
 
-`Code` in the result says what the numbers mean: `ConvertCompleted` (nothing blamed on the converter), `ConvertCompletedWithGaps` (the project runs; `conversion-report.json` lists what the converter did not manage), `ConvertOutputCannotRun` (written, but cannot run as is). The output includes the `fix-converted-app` skill; `uip skills install --repo ./.uipath/agent-skills --path .` installs it for your coding agent.
+`Code` in the result is one of: `ConvertCompleted` (nothing blamed on the converter), `ConvertCompletedWithGaps` (the project runs; `conversion-report.json` lists what the converter did not manage), `ConvertOutputCannotRun` (written, but cannot run as is). The output includes the `fix-converted-app` skill; `uip skills install --repo ./.uipath/agent-skills --path .` installs it for your coding agent.
 
 **Examples**
 
