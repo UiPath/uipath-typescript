@@ -8,7 +8,7 @@ import {
   AgentGovernanceVerdict,
   AgentGovernanceSection,
 } from '../../../../../src/models/observability/traces/agent/agent.types';
-import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
+import { TEST_AGENT } from '../../../../utils/constants';
 
 /**
  * Integration tests for Agent Traces — Traceview on `/insightsrtm_/Traceview/*`
@@ -74,8 +74,8 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
         startTime,
         endTime,
         folderKeys: [folderKey],
-        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
-        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        agentId: TEST_AGENT.AGENT_ID,
+        agentVersion: TEST_AGENT.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
       });
 
@@ -103,8 +103,8 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
         startTime,
         endTime,
         folderKeys: [folderKey],
-        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
-        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        agentId: TEST_AGENT.AGENT_ID,
+        agentVersion: TEST_AGENT.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
       });
 
@@ -134,8 +134,8 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
         startTime,
         endTime,
         folderKeys: [folderKey],
-        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
-        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        agentId: TEST_AGENT.AGENT_ID,
+        agentVersion: TEST_AGENT.AGENT_VERSION,
         executionType: AgentTraceExecutionType.Runtime,
       });
 
@@ -167,7 +167,7 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
     const { startTime, endTime } = recentWindow();
 
     it('should retrieve spans matching a reference id in the hierarchy', async () => {
-      const result = await trace.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await trace.getSpansByReference(TEST_AGENT.REFERENCE_ID);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
@@ -180,7 +180,7 @@ describeIntegration('Agent Traces - Integration Tests', 'user', modes, () => {
     });
 
     it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
-      const result = await trace.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, {
+      const result = await trace.getSpansByReference(TEST_AGENT.REFERENCE_ID, {
         traceId: traceId,
         startTime,
         endTime,

@@ -648,29 +648,34 @@ vitest path filters. The rule is name-based:
 
 | Changed file | Suites run |
 |--------------|------------|
-| `src/services/<name>/**`, `src/models/<name>/**`, `src/utils/constants/endpoints/<name>/**` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
-| `src/services/<name>/**`, `src/models/<name>/**` or `src/utils/constants/endpoints/<name>/**` where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
+| `src/services/<name>/**`, `src/models/<name>/**`, `src/utils/constants/endpoints/<name>/**`, `tests/utils/constants/<name>.ts` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
+| The same paths where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
+| `tests/integration/config/unified-setup.ts` when the change only adds lines, which is how a new service is registered | The always-on suites only: they load the file, and the new service's own folders select its suite |
 | One of the always-on suites: `shared/smoke.integration.test.ts`, `shared/http/`, `auth-errors.integration.test.ts` | The always-on suites only |
-| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
-| Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package.json` | Everything |
+| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, `package.json`, the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
+| Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, any other change to `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package-lock.json` | Everything |
 
-The only shared files deliberately ignored are `endpoints/base.ts` and `endpoints/index.ts`:
-every new service adds a line to each and is covered by its own folder and suite, so
-editing an existing base path there is not covered by a pull-request run. Otherwise no
+The only shared files deliberately ignored are `package.json`, `endpoints/base.ts` and
+`endpoints/index.ts`: every new service adds lines to each and is covered by its own
+folders and suite, so editing an existing base path or npm script there is not covered
+by a pull-request run. Likewise an additions-only edit to
+`tests/integration/config/unified-setup.ts` runs the always-on suites only. Otherwise no
 suite is ever excluded. A path the script does not recognise runs the full suite, a
-version bump (it edits `package.json`) runs the full suite, and the weekly run always
-does. To force the full run on a pull request, add the `ci:full-integration` label and
-push a commit: the labels are read from the event that starts the run, and `labeled` is
-not one of the `pull_request` triggers in `pr-checks.yml`.
+version bump or dependency change runs the full suite through `package-lock.json`, and
+the weekly run always does. To force the full run on a pull request, add the
+`ci:full-integration` label and push a commit: the labels are read from the event that
+starts the run, and `labeled` is not one of the `pull_request` triggers in
+`pr-checks.yml`.
 
 Two things follow for suite authors:
 
-- **Name a new service's suite folder and its endpoint folder after its `src/services/`
-  folder.** The script finds both only by that name. Unit tests in
-  `tests/unit/scripts/integration-scope.test.ts` fail for a suite or endpoint folder with
-  no matching `src/services/` folder, and for an endpoint constant used by another
-  domain's code, so a mis-placed file is caught by `npm run test:unit` rather than
-  silently skipping a suite.
+- **Name a new service's suite folder, endpoint folder and shared test-constants file
+  after its `src/services/` folder.** The script finds all three only by that name. Unit
+  tests in `tests/unit/scripts/integration-scope.test.ts` fail for a suite or endpoint
+  folder with no matching `src/services/` folder, for an endpoint constant used by
+  another domain's code, and for a domain-named test-constants file used by another
+  suite, so a mis-placed file is caught by `npm run test:unit` rather than silently
+  skipping a suite.
 - The script follows folder names, not imports. A suite that exercises another domain's
   service (for example Maestro cases wrapping the Action Center task service) does not
   run when only that other domain changes, and a change to `endpoints/platform/identity.ts`
