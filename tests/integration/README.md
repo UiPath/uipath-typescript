@@ -652,7 +652,7 @@ vitest path filters. The rule is name-based:
 | The same paths where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
 | `tests/integration/config/unified-setup.ts` when the change only adds lines, which is how a new service is registered | The always-on suites only: they load the file, and the new service's own folders select its suite |
 | One of the always-on suites: `shared/smoke.integration.test.ts`, `shared/http/`, `auth-errors.integration.test.ts` | The always-on suites only |
-| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, `package.json`, the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
+| `docs/`, `samples/`, `packages/`, `scripts/` (CI and release tooling), `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, `package.json`, the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
 | Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, any other change to `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package-lock.json` | Everything |
 
 The only shared files deliberately ignored are `package.json`, `endpoints/base.ts` and

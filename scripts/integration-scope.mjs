@@ -5,7 +5,7 @@
 // shared test-constants file tests/utils/constants/<name>.ts, or nothing when no such
 // suite folder exists; an additions-only change to the service registry
 // (tests/integration/config/unified-setup.ts) runs just the always-on suites;
-// docs/samples/packages/unit tests and package.json run nothing; anything else runs everything.
+// docs/samples/packages/scripts/unit tests and package.json run nothing; anything else runs everything.
 // Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
@@ -27,7 +27,8 @@ export const ALWAYS_ON = Object.freeze([
 export const FULL_RUN_LABEL = 'ci:full-integration';
 
 const IGNORED_PATTERNS = [
-  /^(docs|samples|packages|plugins|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
+  // scripts/ is CI and release tooling; nothing there takes part in an integration run.
+  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
   /\.md$/,
   /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|package\.json|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
 ];

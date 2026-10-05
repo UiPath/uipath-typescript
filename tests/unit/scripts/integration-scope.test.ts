@@ -27,6 +27,8 @@ describe('integration-scope resolveScope', () => {
       'README.md',
       'rollup.config.js',
       'package.json', // exports, scripts, version; a dependency change also edits the lock file, which runs everything
+      'scripts/check-samples.mjs', // CI tooling, not part of the integration run
+      'scripts/integration-scope.mjs', // the resolver itself: covered by this file, fail-closed in the workflow
       'tests/.env.integration.example',
       `${ENDPOINTS}/index.ts`, // the barrel only re-exports
       `${ENDPOINTS}/base.ts`, // every new service adds a base path; its own folder covers it
@@ -125,7 +127,6 @@ describe('integration-scope resolveScope', () => {
     'vitest.integration.config.ts',
     'package-lock.json', // a dependency change
     '.github/workflows/coverage.yml',
-    'scripts/integration-scope.mjs',
     'new-top-level-dir/thing.ts',
   ])('runs everything for anything outside the per-domain folders: %s', (file) => {
     const scope = resolveScope(['docs/index.md', file], DOMAINS, SERVICES);
