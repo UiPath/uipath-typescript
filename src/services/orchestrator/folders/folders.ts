@@ -1,20 +1,20 @@
-import { track } from '../../../core/telemetry';
-import { ValidationError } from '../../../core/errors';
+import { track } from '@/core/telemetry';
+import { ValidationError } from '@/core/errors';
 import type {
   FolderGetAllOptions,
   FolderGetAllResponse,
   FolderGetByKeyOptions,
   FolderGetResponse,
-} from '../../../models/orchestrator/folders.types';
-import type { FolderServiceModel } from '../../../models/orchestrator/folders.models';
-import { FOLDER_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { ODATA_PREFIX, FOLDER_PAGINATION, FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
-import { addPrefixToKeys, pascalToCamelCaseKeys } from '../../../utils/transform';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
-import { PaginationHelpers } from '../../../utils/pagination/helpers';
-import { PaginationType } from '../../../utils/pagination/internal-types';
-import { GUID_REGEX } from '../../../utils/validation/guid';
-import { BaseService } from '../../base';
+} from '@/models/orchestrator/folders.types';
+import type { FolderServiceModel } from '@/models/orchestrator/folders.models';
+import { FOLDER_ENDPOINTS } from '@/utils/constants/endpoints';
+import { ODATA_PREFIX, FOLDER_PAGINATION, FOLDER_OFFSET_PARAMS } from '@/utils/constants/common';
+import { addPrefixToKeys, pascalToCamelCaseKeys } from '@/utils/transform';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
+import { PaginationHelpers } from '@/utils/pagination/helpers';
+import { PaginationType } from '@/utils/pagination/internal-types';
+import { GUID_REGEX } from '@/utils/validation/guid';
+import { BaseService } from '@/services/base';
 
 /**
  * Service for looking up UiPath Orchestrator folders.
@@ -42,9 +42,9 @@ export class FolderService extends BaseService implements FolderServiceModel {
         itemsField: FOLDER_PAGINATION.ITEMS_FIELD,
         totalCountField: FOLDER_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-          offsetParam: FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM,
-          countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM
+          pageSizeParam: FOLDER_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: FOLDER_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: FOLDER_OFFSET_PARAMS.COUNT_PARAM
         }
       },
       // `take` / `skip` are not OData params — keep them unprefixed.

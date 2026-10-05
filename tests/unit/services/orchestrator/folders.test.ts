@@ -8,7 +8,7 @@ import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { FOLDER_TEST_CONSTANTS } from '@tests/utils/constants/folders';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
-import { FOLDER_PAGINATION, FEEDBACK_OFFSET_PARAMS } from '@/utils/constants/common';
+import { FOLDER_PAGINATION, FOLDER_OFFSET_PARAMS } from '@/utils/constants/common';
 import type { FolderGetAllResponse } from '@/models/orchestrator/folders.types';
 
 // ===== MOCKING =====
@@ -55,9 +55,9 @@ describe('FolderService Unit Tests', () => {
             itemsField: FOLDER_PAGINATION.ITEMS_FIELD,
             totalCountField: FOLDER_PAGINATION.TOTAL_COUNT_FIELD,
             paginationParams: {
-              pageSizeParam: FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-              offsetParam: FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM,
-              countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM,
+              pageSizeParam: FOLDER_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+              offsetParam: FOLDER_OFFSET_PARAMS.OFFSET_PARAM,
+              countParam: FOLDER_OFFSET_PARAMS.COUNT_PARAM,
             },
           }),
         }),

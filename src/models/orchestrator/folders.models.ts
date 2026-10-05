@@ -4,7 +4,7 @@ import type {
   FolderGetByKeyOptions,
   FolderGetResponse,
 } from './folders.types';
-import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 
 /**
  * Service for looking up UiPath Orchestrator folders.
@@ -36,8 +36,8 @@ export interface FolderServiceModel {
    * @example
    * ```typescript
    * // Get all folders
-   * const folders_ = await folders.getAll();
-   * folders_.items.forEach(folder => console.log(folder.fullyQualifiedName));
+   * const allFolders = await folders.getAll();
+   * allFolders.items.forEach(folder => console.log(folder.fullyQualifiedName));
    * ```
    *
    * @example

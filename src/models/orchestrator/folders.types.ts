@@ -1,5 +1,5 @@
-import type { BaseOptions } from '../common/types';
-import type { PaginationOptions } from '../../utils/pagination/types';
+import type { BaseOptions } from '@/models/common/types';
+import type { PaginationOptions } from '@/utils/pagination/types';
 
 /**
  * Orchestrator folder type.

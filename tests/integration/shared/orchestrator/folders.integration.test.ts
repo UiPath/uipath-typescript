@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
-import { isNotFoundError } from '../../../../src/core/errors';
-import { Folders } from '../../../../src/services/orchestrator/folders';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '@tests/integration/config/unified-setup';
+import { isNotFoundError } from '@/core/errors';
+import { Folders } from '@/services/orchestrator/folders';
 
 const modes: InitMode[] = ['v1'];
 
