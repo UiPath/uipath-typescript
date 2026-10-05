@@ -556,52 +556,142 @@ export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
 
   // ── Federated source/join deltas ──
 
-  /** External sources to add to a Federated entity (same shape as create's `externalFields`). @experimental */
+  /**
+   * External sources to add to a Federated entity (same shape as create's `externalFields`).
+   * A new source is not primary: it must be joined to the entity's join graph in the same
+   * call, with `addSourceJoins` (or `replaceSourceJoins`), or the backend rejects the update.
+   *
+   * @experimental
+   */
   addExternalSources?: EntityCreateExternalSource[];
-  /** External sources to remove, by `externalObjectName`. @experimental */
-  removeExternalSources?: string[];
-  /** Fields to add to an existing source, keyed by the source's `externalObjectName`. @experimental */
-  addFieldsToSource?: EntityAddFieldsToSource[];
-  /** Fields to remove from an existing source, keyed by the source's `externalObjectName`. @experimental */
-  removeFieldsFromSource?: EntityRemoveFieldsFromSource[];
-  /** Field-mapping updates (searchability/direction/sortable) on an existing external field. @experimental */
-  updateExternalFieldMapping?: EntityUpdateExternalFieldMapping[];
-  /** Cross-source joins to add (typically paired with `addExternalSources` — a new
-   * non-primary source must be connected to the graph by a join). @experimental */
+  /**
+   * External sources to remove, each identified by object name + connection id. Joins that
+   * use a removed source are removed with it. A Federated entity has at least one source, so
+   * removing the last one needs a replacement source (`addExternalSources`) in the same call.
+   * The remaining sources must still form a valid join graph (the backend enforces this), so
+   * removing the primary source requires `replaceSourceJoins` to re-join them in the same call.
+   *
+   * @experimental
+   */
+  removeExternalSources?: FederatedSourceRef[];
+  /**
+   * Fields to add to an existing source (or one added in the same call), identified by object
+   * name + connection id. A field name must be unique across all sources of the entity.
+   *
+   * @experimental
+   */
+  addExternalFields?: EntityAddExternalFields[];
+  /**
+   * Fields to remove from a source, identified by object name + connection id, and by the
+   * field's name on the entity (`fieldDefinition.name`). A source must keep at least one
+   * field (the backend rejects a source with none): to swap all of a source's fields, remove
+   * them and add the new ones in the same call.
+   * Joins that use a removed field are removed with it.
+   *
+   * @experimental
+   */
+  removeExternalFields?: EntityRemoveExternalFields[];
+  /**
+   * Joins to add. Use it to connect a source added in the same call (`addExternalSources`)
+   * to the entity's primary source. A Federated entity with N sources has exactly N-1
+   * joins; the backend rejects any other number.
+   *
+   * Cannot be combined with `replaceSourceJoins`.
+   *
+   * @experimental
+   */
   addSourceJoins?: SourceJoinConditionDetail[];
-  /** Update an existing join in place — change its join fields and/or type. Identified by
-   * source + related object names. (There is no standalone remove-join: a join can't
-   * outlive its source, so `removeExternalSources` cascades its joins automatically.) @experimental */
+  /**
+   * Change the join fields (`sourceJoinField` and/or `relatedSourceJoinField`) of an existing
+   * join, identified by both sides' object name + connection id. It cannot change which
+   * sources the join connects, its direction or its join type: to change the primary source,
+   * use `replaceSourceJoins`.
+   *
+   * Cannot be combined with `replaceSourceJoins`.
+   *
+   * @experimental
+   */
   updateSourceJoin?: EntityUpdateSourceJoin[];
+  /**
+   * Replace the entity's whole set of joins with this list. This is the way to change the
+   * primary source: the primary source is the one every join starts from, so pass the
+   * complete new join set rooted at the new primary. Every non-primary source must be the
+   * related side of exactly one join.
+   *
+   * A join cannot be removed on its own, because every source except the primary has to stay
+   * joined. Pass the full set even if only some joins change. An empty list is valid only for
+   * an entity with a single source.
+   *
+   * Cannot be combined with `addSourceJoins` or `updateSourceJoin`.
+   *
+   * @experimental
+   */
+  replaceSourceJoins?: SourceJoinConditionDetail[];
+  /**
+   * Point a connector source at a different Integration Service connection, identified by
+   * object name + current connection id. The source keeps its object, fields and joins, and
+   * the joins that reference it are updated to the new connection id.
+   *
+   * The SDK does not check the new connection. The caller must make sure it belongs to the
+   * same connector and exposes the same object with every field the source maps. Native
+   * (entity-backed) sources cannot be changed this way.
+   *
+   * @experimental
+   */
+  updateExternalConnection?: EntityUpdateExternalConnection[];
 }
 
-/** Fields to add to a Federated source, identified by the source object name. @experimental */
-export interface EntityAddFieldsToSource {
+/** Identifies one Federated source on the entity by its external object name plus the
+ * connection it reads from. Both are required: an object name alone is ambiguous, because a
+ * Federated entity may have two sources with the same object name on different connections.
+ * `sourceConnectionId` is a connector `connectionId`, or the `entityId` for a native
+ * (entity-backed) source. @experimental */
+export interface FederatedSourceRef {
+  /** Name of the source's external object (for a native source, the name of the referenced entity). */
   sourceObjectName: string;
+  /** Connection the source reads from: an Integration Service `connectionId`, or the `entityId` for a native source. */
+  sourceConnectionId: string;
+}
+
+/** Fields to add to a Federated source, identified by object name + connection id. @experimental */
+export interface EntityAddExternalFields extends FederatedSourceRef {
+  /** Fields to map on the source. Each field's name on the entity must be unique across all sources. */
   fields: EntityCreateExternalField[];
 }
 
-/** Fields to remove from a Federated source, identified by the source object name. @experimental */
-export interface EntityRemoveFieldsFromSource {
-  sourceObjectName: string;
+/** Fields to remove from a Federated source, identified by object name + connection id. @experimental */
+export interface EntityRemoveExternalFields extends FederatedSourceRef {
+  /** Names of the fields to remove, as they are named on the entity (`fieldDefinition.name`), not the external field names. */
   fieldNames: string[];
 }
 
-/** A mapping update for one external field on a Federated source. @experimental */
-export interface EntityUpdateExternalFieldMapping {
-  sourceObjectName: string;
-  fieldName: string;
-  mapping: Partial<EntityCreateExternalFieldMapping>;
+/** Changes the join fields of an existing Federated cross-source join, identified by both
+ * sides' object name + connection id. Only the supplied fields change; the other is kept.
+ * The join's sources, direction and type cannot be changed here. @experimental */
+export interface EntityUpdateSourceJoin extends FederatedSourceRef {
+  /** Name of the related side's external object. Together with `relatedSourceConnectionId` it identifies the join. */
+  relatedSourceObjectName: string;
+  /** Connection of the related side: a `connectionId`, or the `entityId` for a native source. */
+  relatedSourceConnectionId: string;
+  /** New join field on the source object, as an external field name. Omit to keep the current one. */
+  sourceJoinField?: string;
+  /** New join field on the related object, as an external field name. Omit to keep the current one. */
+  relatedSourceJoinField?: string;
 }
 
-/** Updates an existing Federated cross-source join in place, identified by the two object
- * names. Only the supplied fields change; the others are kept. @experimental */
-export interface EntityUpdateSourceJoin {
-  sourceObjectName: string;
-  relatedSourceObjectName: string;
-  sourceJoinField?: string;
-  relatedSourceJoinField?: string;
-  joinType?: JoinType;
+/** Replaces the connection a Federated connector source reads from. The source is
+ * identified by object name + current connection id. The connector and object stay the
+ * same; the connection id and, when supplied, its element instance id, folder key and
+ * name are swapped. @experimental */
+export interface EntityUpdateExternalConnection extends FederatedSourceRef {
+  /** Integration Service id of the connection the source should read from from now on. */
+  newConnectionId: string;
+  /** Element instance id of the new connection. Pass it together with `newConnectionId`: the old value belongs to the old connection. */
+  newElementInstanceId?: number;
+  /** Folder that owns the new connection. Pass it when it differs from the old connection's folder. */
+  newFolderKey?: string;
+  /** Display name of the new connection. */
+  newConnectionName?: string;
 }
 
 /**
@@ -1005,19 +1095,19 @@ export interface SourceJoinCriteria {
  * @experimental
  */
 export interface SourceJoinConditionDetail {
-  /** Name of the object on the owning side of the join. */
+  /** Name of the object on the owning side of the join. The owning side of every join is the entity's primary source. */
   sourceObjectName: string;
-  /** Field on the source object used to match. */
+  /** External field name on the source object that is matched. It must be mapped on the source. */
   sourceJoinField: string;
-  /** Connection id of the source object (the external connection this object belongs to). */
+  /** Connection of the source object: an Integration Service `connectionId`, or the `entityId` for a native source. Identifies the source when two sources share an object name. */
   sourceObjectConnectionId?: string;
-  /** How records are matched across the two sources. */
+  /** How records are matched across the two sources. The backend stores every join as a left join, whatever value is passed. */
   joinType: JoinType;
   /** Name of the object on the related side of the join. */
   relatedSourceObjectName: string;
-  /** Field on the related source object used to match. */
+  /** External field name on the related object that is matched. It must be mapped on the related source. */
   relatedSourceJoinField: string;
-  /** Connection id of the related source object. */
+  /** Connection of the related object: an Integration Service `connectionId`, or the `entityId` for a native source. */
   relatedSourceObjectConnectionId?: string;
 }
 
@@ -1028,7 +1118,7 @@ export interface SourceJoinConditionDetail {
 export interface EntityCreateExternalConnection {
   /** Integration Service connection id. */
   connectionId: string;
-  /** Element instance id of the connection. */
+  /** Element instance id of the connection, as Integration Service reports it. Without it the entity reads no rows. */
   elementInstanceId?: number;
   /** Folder that owns the connection. */
   folderKey?: string;
@@ -1049,11 +1139,11 @@ export interface EntityCreateExternalObject {
   externalObjectName: string;
   /** Display name of the external object. */
   externalObjectDisplayName?: string;
-  /** Primary key field on the external object. */
+  /** Primary key field on the external object (`Id` for a native source). */
   primaryKey?: string;
-  /** Whether this is the primary source of the federated entity. */
+  /** Not used to pick the primary source: the backend derives it from the joins (the source every join starts from). */
   isPrimarySource?: boolean;
-  /** External access method for the object. */
+  /** Operations catalog of the object as a JSON string, as Integration Service describes it for the List operation. It carries the required List parameters the entity needs to read the object. Not used for a native source. */
   method?: string;
 }
 
@@ -1062,19 +1152,19 @@ export interface EntityCreateExternalObject {
  * @experimental
  */
 export interface EntityCreateExternalFieldMapping {
-  /** Name of the field on the external source. */
+  /** Name of the field on the external source (for a native source, the column name). Joins refer to a field by this name. */
   externalFieldName: string;
   /** Display name of the external source field. */
   externalFieldDisplayName?: string;
-  /** Type of the field on the external source. */
+  /** Type of the field on the external source, as the source reports it (for example `string`). */
   externalFieldType?: string;
   /** Read-only vs read/write direction for this field. */
   directionType: DataDirectionType;
-  /** Field searchability metadata. */
+  /** Whether and how the field can be filtered, as the source reports it. Without it the field cannot be used in filters. */
   searchability?: Searchability;
-  /** Whether this external field is required for read operations. */
+  /** Whether the source needs this field's value to read the object at all (a required List parameter). */
   isRequiredForRead?: boolean;
-  /** Whether this external field can be used for sorting. */
+  /** Whether the entity can be sorted on this field. */
   sortable?: boolean;
 }
 

@@ -193,6 +193,15 @@ jobs:
           DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME=${{ steps.config.outputs.data_fabric_test_join_related_field_name }}
           DATA_FABRIC_TEST_TREE_ENTITY_NAME=${{ steps.config.outputs.data_fabric_test_tree_entity_name }}
           DATA_FABRIC_TEST_TREE_CHILD_ENTITY_NAME=${{ steps.config.outputs.data_fabric_test_tree_child_entity_name }}
+          DF_FED_CONNECTION_ID=${{ secrets.UIPATH_DF_FED_CONNECTION_ID_DEV || secrets.UIPATH_DF_FED_CONNECTION_ID }}
+          DF_FED_ELEMENT_INSTANCE_ID=${{ secrets.UIPATH_DF_FED_ELEMENT_INSTANCE_ID_DEV || secrets.UIPATH_DF_FED_ELEMENT_INSTANCE_ID }}
+          DF_FED_CONNECTOR_KEY=${{ secrets.UIPATH_DF_FED_CONNECTOR_KEY_DEV || secrets.UIPATH_DF_FED_CONNECTOR_KEY }}
+          DF_FED_CONNECTOR_NAME=${{ secrets.UIPATH_DF_FED_CONNECTOR_NAME_DEV || secrets.UIPATH_DF_FED_CONNECTOR_NAME }}
+          DF_FED_FOLDER_KEY=${{ secrets.UIPATH_DF_FED_FOLDER_KEY_DEV || secrets.UIPATH_DF_FED_FOLDER_KEY }}
+          DF_FED_OBJECT=${{ secrets.UIPATH_DF_FED_OBJECT_DEV || secrets.UIPATH_DF_FED_OBJECT }}
+          DF_FED_OBJECT_METHOD=${{ secrets.UIPATH_DF_FED_OBJECT_METHOD_DEV || secrets.UIPATH_DF_FED_OBJECT_METHOD }}
+          DF_FED_PRIMARY_KEY=${{ secrets.UIPATH_DF_FED_PRIMARY_KEY_DEV || secrets.UIPATH_DF_FED_PRIMARY_KEY }}
+          DF_FED_FIELD=${{ secrets.UIPATH_DF_FED_FIELD_DEV || secrets.UIPATH_DF_FED_FIELD }}
           ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
           QUEUES_TEST_QUEUE_NAME=${{ steps.config.outputs.queues_test_queue_name }}
           ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
