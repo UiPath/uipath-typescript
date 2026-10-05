@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldsFromSource/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveExternalFields/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>EntityRemoveFieldsFromSource - UiPath TypeScript SDK</title>
+        <title>EntityRemoveExternalFields - UiPath TypeScript SDK</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EntityRemoveFieldsFromSource
+              EntityRemoveExternalFields
             
           </span>
         </div>
@@ -3715,6 +3715,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extends
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3745,10 +3756,14 @@
   
 
 
-  <h1>EntityRemoveFieldsFromSource</h1>
+  <h1>EntityRemoveExternalFields</h1>
 
 <p><strong><code>Experimental</code></strong></p>
-<p>Fields to remove from a Federated source, identified by the source object name.</p>
+<p>Fields to remove from a Federated source, identified by object name + connection id.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FederatedSourceRef/"><code>FederatedSourceRef</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3762,12 +3777,17 @@
 <tr>
 <td><a id="fieldnames"></a> <code>fieldNames</code></td>
 <td><code>string</code>[]</td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> Names of the fields to remove, as they are named on the entity (<code>fieldDefinition.name</code>), not the external field names.</td>
+</tr>
+<tr>
+<td><a id="sourceconnectionid"></a> <code>sourceConnectionId</code></td>
+<td><code>string</code></td>
+<td><strong><code>Experimental</code></strong> Connection the source reads from: an Integration Service <code>connectionId</code>, or the <code>entityId</code> for a native source.</td>
 </tr>
 <tr>
 <td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> Name of the source's external object (for a native source, the name of the referenced entity).</td>
 </tr>
 </tbody>
 </table>

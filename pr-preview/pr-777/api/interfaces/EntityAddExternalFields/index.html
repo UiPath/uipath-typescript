@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateByIdOptions/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddExternalFields/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>EntityUpdateByIdOptions - UiPath TypeScript SDK</title>
+        <title>EntityAddExternalFields - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EntityUpdateByIdOptions
+              EntityAddExternalFields
             
           </span>
         </div>
@@ -3756,15 +3756,13 @@
   
 
 
-  <h1>EntityUpdateByIdOptions</h1>
+  <h1>EntityAddExternalFields</h1>
 
-<p>Options for updating an existing entity — schema and/or metadata in a single call.</p>
-<p>Schema changes (<code>addFields</code>, <code>removeFields</code>, <code>updateFields</code>) and metadata changes
-(<code>displayName</code>, <code>description</code>, <code>isRbacEnabled</code>) can be combined; each is applied
-only when the corresponding fields are provided.</p>
+<p><strong><code>Experimental</code></strong></p>
+<p>Fields to add to a Federated source, identified by object name + connection id.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../EntityFolderScopedOptions/"><code>EntityFolderScopedOptions</code></a></li>
+<li><a href="../FederatedSourceRef/"><code>FederatedSourceRef</code></a></li>
 </ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
@@ -3777,79 +3775,19 @@ only when the corresponding fields are provided.</p>
 </thead>
 <tbody>
 <tr>
-<td><a id="addexternalfields"></a> <code>addExternalFields?</code></td>
-<td><a href="../EntityAddExternalFields/"><code>EntityAddExternalFields</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Fields to add to an existing source (or one added in the same call), identified by object name + connection id. A field name must be unique across all sources of the entity.</td>
+<td><a id="fields"></a> <code>fields</code></td>
+<td><a href="../EntityCreateExternalField/"><code>EntityCreateExternalField</code></a>[]</td>
+<td><strong><code>Experimental</code></strong> Fields to map on the source. Each field's name on the entity must be unique across all sources.</td>
 </tr>
 <tr>
-<td><a id="addexternalsources"></a> <code>addExternalSources?</code></td>
-<td><a href="../EntityCreateExternalSource/"><code>EntityCreateExternalSource</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> External sources to add to a Federated entity (same shape as create's <code>externalFields</code>). A new source is not primary: it must be joined to the entity's join graph in the same call, with <code>addSourceJoins</code> (or <code>replaceSourceJoins</code>), or the backend rejects the update.</td>
-</tr>
-<tr>
-<td><a id="addfields"></a> <code>addFields?</code></td>
-<td><a href="../EntityCreateFieldOptions/"><code>EntityCreateFieldOptions</code></a>[]</td>
-<td>New fields to add</td>
-</tr>
-<tr>
-<td><a id="addsourcejoins"></a> <code>addSourceJoins?</code></td>
-<td><a href="../SourceJoinConditionDetail/"><code>SourceJoinConditionDetail</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Joins to add. Use it to connect a source added in the same call (<code>addExternalSources</code>) to the entity's primary source. A Federated entity with N sources has exactly N-1 joins; the backend rejects any other number. Cannot be combined with <code>replaceSourceJoins</code>.</td>
-</tr>
-<tr>
-<td><a id="description"></a> <code>description?</code></td>
+<td><a id="sourceconnectionid"></a> <code>sourceConnectionId</code></td>
 <td><code>string</code></td>
-<td>New description for the entity</td>
+<td><strong><code>Experimental</code></strong> Connection the source reads from: an Integration Service <code>connectionId</code>, or the <code>entityId</code> for a native source.</td>
 </tr>
 <tr>
-<td><a id="displayname"></a> <code>displayName?</code></td>
+<td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
 <td><code>string</code></td>
-<td>New display name for the entity</td>
-</tr>
-<tr>
-<td><a id="folderkey"></a> <code>folderKey?</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Key identifying the folder the entity belongs to. Omit for tenant-level entities. Folder-scoped Data Fabric is in preview — the contract may change.</td>
-</tr>
-<tr>
-<td><a id="isrbacenabled"></a> <code>isRbacEnabled?</code></td>
-<td><code>boolean</code></td>
-<td>Whether role-based access control is enabled for this entity</td>
-</tr>
-<tr>
-<td><a id="removeexternalfields"></a> <code>removeExternalFields?</code></td>
-<td><a href="../EntityRemoveExternalFields/"><code>EntityRemoveExternalFields</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Fields to remove from a source, identified by object name + connection id, and by the field's name on the entity (<code>fieldDefinition.name</code>). A source must keep at least one field (the backend rejects a source with none): to swap all of a source's fields, remove them and add the new ones in the same call. Joins that use a removed field are removed with it.</td>
-</tr>
-<tr>
-<td><a id="removeexternalsources"></a> <code>removeExternalSources?</code></td>
-<td><a href="../FederatedSourceRef/"><code>FederatedSourceRef</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> External sources to remove, each identified by object name + connection id. Joins that use a removed source are removed with it. A Federated entity has at least one source, so removing the last one needs a replacement source (<code>addExternalSources</code>) in the same call. The remaining sources must still form a valid join graph (the backend enforces this), so removing the primary source requires <code>replaceSourceJoins</code> to re-join them in the same call.</td>
-</tr>
-<tr>
-<td><a id="removefields"></a> <code>removeFields?</code></td>
-<td><a href="../EntityRemoveFieldOptions/"><code>EntityRemoveFieldOptions</code></a>[]</td>
-<td>Fields to remove, each identified by field name</td>
-</tr>
-<tr>
-<td><a id="replacesourcejoins"></a> <code>replaceSourceJoins?</code></td>
-<td><a href="../SourceJoinConditionDetail/"><code>SourceJoinConditionDetail</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Replace the entity's whole set of joins with this list. This is the way to change the primary source: the primary source is the one every join starts from, so pass the complete new join set rooted at the new primary. Every non-primary source must be the related side of exactly one join. A join cannot be removed on its own, because every source except the primary has to stay joined. Pass the full set even if only some joins change. An empty list is valid only for an entity with a single source. Cannot be combined with <code>addSourceJoins</code> or <code>updateSourceJoin</code>.</td>
-</tr>
-<tr>
-<td><a id="updateexternalconnection"></a> <code>updateExternalConnection?</code></td>
-<td><a href="../EntityUpdateExternalConnection/"><code>EntityUpdateExternalConnection</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Point a connector source at a different Integration Service connection, identified by object name + current connection id. The source keeps its object, fields and joins, and the joins that reference it are updated to the new connection id. The SDK does not check the new connection. The caller must make sure it belongs to the same connector and exposes the same object with every field the source maps. Native (entity-backed) sources cannot be changed this way.</td>
-</tr>
-<tr>
-<td><a id="updatefields"></a> <code>updateFields?</code></td>
-<td><a href="../EntityFieldUpdateOptions/"><code>EntityFieldUpdateOptions</code></a>[]</td>
-<td>Fields to update, each identified by its field ID</td>
-</tr>
-<tr>
-<td><a id="updatesourcejoin"></a> <code>updateSourceJoin?</code></td>
-<td><a href="../EntityUpdateSourceJoin/"><code>EntityUpdateSourceJoin</code></a>[]</td>
-<td><strong><code>Experimental</code></strong> Change the join fields (<code>sourceJoinField</code> and/or <code>relatedSourceJoinField</code>) of an existing join, identified by both sides' object name + connection id. It cannot change which sources the join connects, its direction or its join type: to change the primary source, use <code>replaceSourceJoins</code>. Cannot be combined with <code>replaceSourceJoins</code>.</td>
+<td><strong><code>Experimental</code></strong> Name of the source's external object (for a native source, the name of the referenced entity).</td>
 </tr>
 </tbody>
 </table>

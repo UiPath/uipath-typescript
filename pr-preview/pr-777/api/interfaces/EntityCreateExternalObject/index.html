@@ -3772,17 +3772,17 @@
 <tr>
 <td><a id="isprimarysource"></a> <code>isPrimarySource?</code></td>
 <td><code>boolean</code></td>
-<td><strong><code>Experimental</code></strong> Whether this is the primary source of the federated entity.</td>
+<td><strong><code>Experimental</code></strong> Not used to pick the primary source: the backend derives it from the joins (the source every join starts from).</td>
 </tr>
 <tr>
 <td><a id="method"></a> <code>method?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> External access method for the object.</td>
+<td><strong><code>Experimental</code></strong> Operations catalog of the object as a JSON string, as Integration Service describes it for the List operation. It carries the required List parameters the entity needs to read the object. Not used for a native source.</td>
 </tr>
 <tr>
 <td><a id="primarykey"></a> <code>primaryKey?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Primary key field on the external object.</td>
+<td><strong><code>Experimental</code></strong> Primary key field on the external object (<code>Id</code> for a native source).</td>
 </tr>
 </tbody>
 </table>

@@ -2057,7 +2057,7 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddFieldsToSource/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddExternalFields/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2257,11 +2257,11 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldOptions/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveExternalFields/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldsFromSource/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldOptions/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2269,7 +2269,7 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalFieldMapping/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalConnection/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2410,6 +2410,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FailureRecord/</loc>
+         <lastmod>2026-10-05</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FederatedSourceRef/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
