@@ -233,6 +233,7 @@ nav:
             - Settings: api/interfaces/PlatformSettingServiceModel.md
             - Users: api/interfaces/PlatformUserServiceModel.md
             - Roles: api/interfaces/PlatformRoleServiceModel.md
+            - Groups: api/interfaces/PlatformGroupServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks:

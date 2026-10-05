@@ -21,16 +21,18 @@ function hasFolderContext(
  * Splits folder context out of an Integration Service options bag and resolves
  * it into folder headers, leaving the remaining fields as query params.
  *
- * Folder scoping is optional here — for Integration Service a folder narrows a
- * query rather than addressing the resource, and an unscoped call returns every
- * folder the caller can access. So a missing folder context yields no headers,
- * where the shared `resolveFolderHeaders` would throw. When the SDK was
- * initialized with a folder context (`uipath:folder-key` meta tag), that key is
- * used as the fallback.
+ * Folder scoping is optional here — without a folder header, Integration Service
+ * resolves a connection by ID wherever it lives and lists the caller's personal
+ * workspace (empty for a robot account, which has none). So a missing folder
+ * context yields no headers, where the shared `resolveFolderHeaders` would
+ * throw. When the SDK was initialized with a folder context (`uipath:folder-key`
+ * meta tag), that key is used as the fallback. A coded function's invocation
+ * folder is not: Integration Service rejects a connection outside the header's
+ * folder, and the connection a function uses often lives in another folder.
  *
  * @param options - Caller-supplied options, including any folder context
  * @param resourceType - Label used in error messages (e.g. `'Connections.getAll'`)
- * @param fallbackFolderKey - Init-time folder key used when no folder context is supplied
+ * @param fallbackFolderKey - Meta-tag folder key used when no folder context is supplied
  * @internal
  */
 export function resolveFolderScope<T extends IntegrationServiceFolderContextOptions>(

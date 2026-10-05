@@ -1,4 +1,5 @@
 import { UiPathSDKConfig, PartialUiPathConfig, hasOAuthConfig, hasSecretConfig } from './sdk-config';
+import type { CodedFunctionContext } from './function-context';
 import { isBrowser } from '../../utils/platform';
 import { UiPathMetaTags } from '../../utils/runtime/constants';
 import { UiPathEnvVars } from './environment';
@@ -13,6 +14,8 @@ const OAUTH_FIELDS = ['clientId', 'redirectUri', 'scope'] as const;
 const AUTH_FIELDS = ['secret', ...OAUTH_FIELDS] as const;
 
 type AuthField = typeof AUTH_FIELDS[number];
+
+const HTTP_PROTOCOLS = new Set(['http:', 'https:']);
 
 /**
  * Check if config has all required base fields
@@ -31,6 +34,40 @@ function hasValidAuthConfig(config: PartialUiPathConfig): boolean {
 
   // XOR: exactly one auth method, not both, not neither
   return hasSecret !== hasOAuth;
+}
+
+/**
+ * `value` trimmed, or undefined when it is null, undefined or blank: a coordinate a host left empty
+ * is missing, not set.
+ */
+export function nonBlank(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+/**
+ * The http(s) origin of `value` — scheme, host and port — or null when it is not an absolute
+ * http(s) URL.
+ */
+export function toHttpOrigin(value: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch (error) {
+    console.warn(`[UiPath SDK] baseUrl "${value}" is not a URL:`, error);
+    return null;
+  }
+  if (!HTTP_PROTOCOLS.has(url.protocol)) {
+    console.warn(`[UiPath SDK] baseUrl "${value}" is not an http(s) URL; ignored.`);
+    return null;
+  }
+  return url.origin;
+}
+
+/** `names` as prose: "A", "A and B", "A, B and C". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names.slice(-1).join('')}`;
 }
 
 /**
@@ -55,7 +92,7 @@ export function compactConfig(config: PartialUiPathConfig): PartialUiPathConfig 
 
 export function normalizeBaseUrl(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
-} 
+}
 
 function describeGaps(found: PartialUiPathConfig): string {
   const gaps: string[] = [];
@@ -89,8 +126,16 @@ function describeGaps(found: PartialUiPathConfig): string {
  * field is empty (clientId or redirectUri), name the missing field(s) instead
  * of claiming nothing was found. scope is not required here: Identity falls
  * back to the client's registered scopes when it is omitted.
+ *
+ * @param found - The merged configuration that came up incomplete, when there is one
+ * @param context - The coded-function context the instance was built from, when there was one; the
+ *   message then names the coordinates that context lacks instead of advising to pass it
  */
-export function missingConfigMessage(found?: PartialUiPathConfig): string {
+export function missingConfigMessage(found?: PartialUiPathConfig, context?: CodedFunctionContext): string {
+  if (context) {
+    return missingContextMessage(found ?? {}, context);
+  }
+
   if (isBrowser) {
     // An injected-but-empty clientId/redirectUri is the likeliest cause in a
     // coded app and names its own fix, so it precedes the generic text.
@@ -122,6 +167,41 @@ export function missingConfigMessage(found?: PartialUiPathConfig): string {
 
   if (!found) return `UiPath SDK configuration not found. ${guidance}`;
   return `UiPath SDK configuration is incomplete: ${describeGaps(found)}. ${guidance}`;
+}
+
+/**
+ * The context was passed and the environment merged in, yet the configuration is still incomplete:
+ * name each coordinate the merge lacks by its place on the context and the variable that could fill
+ * it. Judged on the merged config, so a coordinate the environment did supply is never reported.
+ */
+function missingContextMessage(config: PartialUiPathConfig, context: CodedFunctionContext): string {
+  const missing: string[] = [];
+  if (!hasRequiredBaseFields(config)) {
+    if (!context.platform) {
+      const variables: string[] = [];
+      if (!config.baseUrl) variables.push(UiPathEnvVars.BASE_URL);
+      if (!config.orgName) variables.push(UiPathEnvVars.ORG_NAME);
+      if (!config.tenantName) variables.push(UiPathEnvVars.TENANT_NAME);
+      missing.push(`ctx.platform is null (or set ${joinNames(variables)})`);
+    } else {
+      if (!config.baseUrl) {
+        const baseUrl = nonBlank(context.platform.baseUrl);
+        const problem = baseUrl === undefined ? 'is empty' : `"${baseUrl}" is not an http(s) URL`;
+        missing.push(`ctx.platform.baseUrl ${problem} (or set ${UiPathEnvVars.BASE_URL})`);
+      }
+      if (!config.orgName) missing.push(`ctx.platform.orgId is empty (or set ${UiPathEnvVars.ORG_NAME})`);
+      if (!config.tenantName) missing.push(`ctx.platform.tenantId is empty (or set ${UiPathEnvVars.TENANT_NAME})`);
+    }
+  }
+  if (!hasSecretConfig(config) && !hasOAuthConfig(config)) {
+    missing.push(`ctx.robot.accessToken is null (or set ${UiPathEnvVars.ACCESS_TOKEN})`);
+  }
+  if (missing.length === 0) {
+    return 'UiPath SDK configuration is incomplete: ' +
+      'the handler context passed to new UiPath(ctx) does not form a complete configuration.';
+  }
+  return `UiPath SDK configuration is incomplete: ${missing.join('; ')}. ` +
+    'A deployed Function receives these coordinates on the handler context; a local run sets the variables named.';
 }
 
 /**

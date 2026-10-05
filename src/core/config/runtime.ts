@@ -4,8 +4,9 @@ import { isBrowser } from '../../utils/platform';
 
 /**
  * Meta-tag-derived config. Extends {@link PartialUiPathConfig} with
- * `folderKey`, which is sourced only from `<meta name="uipath:folder-key">`
- * (not accepted via the public SDK constructor).
+ * `folderKey`, sourced from `<meta name="uipath:folder-key">` (the
+ * configuration object has no such field; a coded function's context is the
+ * other source).
  */
 export type MetaTagConfig = PartialUiPathConfig & { folderKey?: string };
 
