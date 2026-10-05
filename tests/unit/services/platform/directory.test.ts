@@ -133,8 +133,11 @@ describe('Directory Service Unit Tests', () => {
       expect(results).toEqual([]);
     });
 
-    it('should throw ValidationError when startsWith is empty — the API requires a search term', async () => {
-      await expect(directoryService.search('')).rejects.toBeInstanceOf(ValidationError);
+    it.each([
+      ['empty', ''],
+      ['whitespace-only', '   '],
+    ])('should throw ValidationError when startsWith is %s — the API requires a search term', async (_label, term) => {
+      await expect(directoryService.search(term)).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 

@@ -50,7 +50,8 @@ export class PlatformDirectoryService extends BaseService implements PlatformDir
 
   @track('PlatformDirectory.Search')
   async search(startsWith: string, options?: PlatformDirectorySearchOptions): Promise<PlatformDirectoryEntry[]> {
-    if (!startsWith) {
+    // Whitespace-only is as empty as '' to the API (400 Invalid search term)
+    if (!startsWith || !startsWith.trim()) {
       throw new ValidationError({ message: 'startsWith is required for search' });
     }
     const organizationId = await this.#organizationIdResolver.resolve();
