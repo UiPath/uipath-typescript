@@ -602,6 +602,8 @@
       
         
       
+        
+      
     
     
     
@@ -1420,6 +1422,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../api/interfaces/DuValidationServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Document Understanding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../api/interfaces/FolderServiceModel/" class="md-nav__link">
         
   
@@ -1524,10 +1554,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_10" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_11" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_10" id="__nav_2_1_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_11" id="__nav_2_1_11_label" tabindex="0">
             
   
   
@@ -1545,8 +1575,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_10">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1729,10 +1759,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_13" >
         
           
-          <label class="md-nav__link" for="__nav_2_1_12" id="__nav_2_1_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1_13" id="__nav_2_1_13_label" tabindex="0">
             
   
   
@@ -1750,8 +1780,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_13">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1934,7 +1964,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_15" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_16" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1956,14 +1986,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_15" id="__nav_2_1_15_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_16" id="__nav_2_1_16_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_15">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_16">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2036,7 +2066,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_16" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1_17" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2058,14 +2088,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_1_16" id="__nav_2_1_16_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_1_17" id="__nav_2_1_17_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1_16">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_1_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4026,7 +4056,7 @@
 </code></pre></div>
 <hr />
 <h2 id="pack">Pack<a class="headerlink" href="#pack" title="Permanent link">&para;</a></h2>
-<p><code>uip functions pack</code> reads your <code>defineFunction</code> calls and generates two manifest files before zipping everything into a <code>.nupkg</code>.</p>
+<p><code>uip functions pack</code> reads each function file's default-exported <code>defineFunction</code> and generates two manifest files before zipping everything into a <code>.nupkg</code>.</p>
 <h3 id="what-pack-generates">What pack generates<a class="headerlink" href="#what-pack-generates" title="Permanent link">&para;</a></h3>
 <h4 id="entry-pointsjson">entry-points.json<a class="headerlink" href="#entry-pointsjson" title="Permanent link">&para;</a></h4>
 <p>One entry per function. The <code>uniqueId</code> is stable across re-packs — preserved from the previous file if one exists. Re-packing does not create duplicate triggers; Orchestrator updates existing ones in place.</p>
@@ -4073,7 +4103,7 @@
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="definefunction-api-trigger-field-mapping">defineFunction → API Trigger field mapping<a class="headerlink" href="#definefunction-api-trigger-field-mapping" title="Permanent link">&para;</a></h3>
-<p>Each <code>defineFunction</code> call maps directly to one API Trigger in Orchestrator:</p>
+<p>Each function file's default-exported <code>defineFunction</code> maps to one API Trigger in Orchestrator:</p>
 <table>
 <thead>
 <tr>

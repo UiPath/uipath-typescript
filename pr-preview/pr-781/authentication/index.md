@@ -40,6 +40,10 @@ const sdk = new UiPath();
 await sdk.initialize();
 ```
 
+### Token renewal
+
+With OAuth sign-in, the SDK renews the access token about a minute before it expires, on the next request your app makes, so users stay signed in.
+
 ### Enforcing sign-in through the organization's identity provider
 
 By default users see the UiPath account sign-in screen. Set `enforceSso: true` to send them straight to the organization's configured identity provider instead.
@@ -71,7 +75,7 @@ const sdk = new UiPath({
 
 Using externally obtained tokens
 
-If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.
+If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side. In a deployed coded app the platform has already injected OAuth meta tags; passing `secret` still selects secret authentication and those injected fields are dropped.
 
 To Generate a PAT Token:
 
@@ -126,6 +130,8 @@ export default defineFunction({
 
 Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
 
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the `orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and `ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the fallback folder for a call that needs a folder and names none, such as a lookup by name, which runs against the invocation's folder. Integration Service calls are left unscoped: Integration Service rejects a connection outside the folder a call names, and the connection a function uses often lives in another folder. Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local run, where `ctx.platform` is null, the constructor falls through to the environment contract below; when neither supplies a coordinate, the error names it.
+
 ## Server-side and scripts (environment contract)
 
 Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
@@ -163,6 +169,8 @@ The access token is consumed internally and is never exposed on `sdk.config`.
 Precedence
 
 Constructor arguments win over meta tags, which win over the environment. Meta tags apply in the browser only; the environment contract applies outside it.
+
+Precedence is per field, so a config passing only `secret` still inherits any injected `clientId`, `redirectUri` and `scope`. Naming one method drops the other's inherited fields. If the merge still carries `secret` beside a **complete** OAuth set, the constructor throws, naming each field and its source.
 
 ## SDK Initialization - The initialize() Method
 
