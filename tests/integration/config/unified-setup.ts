@@ -26,7 +26,7 @@ import { Notifications, Subscriptions } from '../../../src/services/notification
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
-import { Platform } from '../../../src/services/platform';
+import { Settings } from '../../../src/services/platform/settings';
 import { Groups } from '../../../src/services/platform/groups';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
@@ -84,7 +84,7 @@ export interface TestServices {
   conversationalAgent?: ConversationalAgentService;
   functions?: Functions;
   folders?: Folders;
-  platform?: Platform;
+  settings?: Settings;
   businessApps?: BusinessApps;
   platformUsers?: Users;
   platformRoles?: Roles;
@@ -208,7 +208,7 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     conversationalAgent: new ConversationalAgentService(sdk),
     functions: new Functions(sdk),
     folders: new Folders(sdk),
-    platform: new Platform(sdk),
+    settings: new Settings(sdk),
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),
     platformRoles: new Roles(sdk),

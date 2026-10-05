@@ -2,9 +2,8 @@
 // Picks the integration suites a PR needs from its changed files: a change under
 // src/services/<name>, src/models/<name>, src/utils/constants/endpoints/<name> or
 // tests/integration/shared/<name> runs tests/integration/shared/<name>, or nothing
-// when no such suite folder exists; an additions-only change to the service registry
-// (tests/integration/config/unified-setup.ts) runs just the always-on suites;
-// docs/samples/packages/scripts/tests/unit/tests/utils and package.json run nothing;
+// when no such suite folder exists; docs/samples/packages/scripts/tests/unit/tests/utils,
+// tests/integration/config, package.json and coverage.yml run nothing;
 // anything else runs everything.
 // Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
@@ -29,9 +28,9 @@ export const FULL_RUN_LABEL = 'ci:full-integration';
 const IGNORED_PATTERNS = [
   // scripts/ is CI and release tooling; tests/unit and tests/utils are unit-test code and
   // fixtures (a few fixture values are read by suites; a fixture-only edit is knowingly uncovered).
-  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils)\//,
+  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils|tests\/integration\/config)\//,
   /\.md$/,
-  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|package\.json|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
+  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|package\.json|\.github\/workflows\/coverage\.yml|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
 ];
 // The endpoint-constants folders are named after their service folder. base.ts and
 // the barrel beside them are ignored: every new service adds a line to each, and its

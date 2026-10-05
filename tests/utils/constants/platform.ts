@@ -5,7 +5,7 @@
  * during onboarding.
  */
 
-import { PlatformSettingKey } from '../../../src/models/platform/platform.types';
+import { PlatformSettingKey } from '../../../src/models/platform/settings.types';
 
 export const PLATFORM_TEST_CONSTANTS = {
   // Scope GUIDs. The API calls the organization a "partition" on the wire; the SDK
