@@ -5432,6 +5432,33 @@ describe("EntityService Unit Tests", () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
+    it("rejects when the target folderId is whitespace-only", async () => {
+      await expect(
+        entityService.clone({
+          ...cloneRequest,
+          target: { scopeType: EntityCloneScopeType.Folder, folderId: "   " },
+        }),
+      ).rejects.toThrow(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it("sends the target folderId trimmed when it has surrounding whitespace", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({
+        ...cloneRequest,
+        target: { scopeType: EntityCloneScopeType.Folder, folderId: `  ${TARGET_FOLDER}  ` },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+        }),
+        expect.any(Object),
+      );
+    });
+
     it("rejects when no entity ids are supplied", async () => {
       await expect(
         entityService.clone({ ...cloneRequest, entityIds: [] }),

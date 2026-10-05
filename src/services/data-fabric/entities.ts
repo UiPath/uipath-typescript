@@ -480,7 +480,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.Clone')
   async clone(request: EntityCloneRequest): Promise<EntityCloneJob> {
-    if (request.target?.scopeType !== EntityCloneScopeType.Folder || !request.target.folderId?.trim()) {
+    const targetFolderId = request.target?.scopeType === EntityCloneScopeType.Folder
+      ? request.target.folderId?.trim()
+      : undefined;
+    if (!targetFolderId) {
       throw new ValidationError({
         message: 'clone requires a folder-scoped target with a non-empty folderId.',
       });
@@ -492,7 +495,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
     const payload = {
       source: request.source,
-      target: request.target,
+      target: { ...request.target, folderId: targetFolderId },
       entityIds: request.entityIds,
       options: { mode: request.options?.mode ?? EntityCloneMode.SchemaAndData },
     };
