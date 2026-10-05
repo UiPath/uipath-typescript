@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalFieldMapping/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformGroupMethods/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>EntityUpdateExternalFieldMapping - UiPath TypeScript SDK</title>
+        <title>PlatformGroupMethods - UiPath TypeScript SDK</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#methods" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EntityUpdateExternalFieldMapping
+              PlatformGroupMethods
             
           </span>
         </div>
@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3715,13 +3745,52 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#methods" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties
+        Methods
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        delete()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getmembers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getMembers()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3745,37 +3814,90 @@
   
 
 
-  <h1>EntityUpdateExternalFieldMapping</h1>
+  <h1>PlatformGroupMethods</h1>
 
-<p><strong><code>Experimental</code></strong></p>
-<p>A mapping update for one external field on a Federated source.</p>
-<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
+<p>Methods attached to group objects returned by the Groups service.</p>
+<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
+<h3 id="delete">delete()<a class="headerlink" href="#delete" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>delete</strong>(): <code>Promise</code>&lt;<code>void</code>&gt;</p>
+</blockquote>
+<p>Deletes this group.</p>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>void</code>&gt;</p>
+<p>Promise resolving when the group has been deleted</p>
+<hr />
+<h3 id="getmembers">getMembers()<a class="headerlink" href="#getmembers" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>getMembers</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt;&gt;</p>
+</blockquote>
+<p>Gets the local members of this group.</p>
+<h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Property</th>
+<th>Type Parameter</th>
+<th>Default type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>T</code> <em>extends</em> <a href="../../type-aliases/PaginationOptions/"><code>PaginationOptions</code></a></td>
+<td><a href="../../type-aliases/PaginationOptions/"><code>PaginationOptions</code></a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
 <th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a id="fieldname"></a> <code>fieldName</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="mapping"></a> <code>mapping</code></td>
-<td><code>Partial</code>&lt;<a href="../EntityCreateExternalFieldMapping/"><code>EntityCreateExternalFieldMapping</code></a>&gt;</td>
-<td><strong><code>Experimental</code></strong></td>
-</tr>
-<tr>
-<td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
-<td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><code>options?</code></td>
+<td><code>T</code></td>
+<td>Pagination options</td>
 </tr>
 </tbody>
 </table>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../PlatformGroupMember/"><code>PlatformGroupMember</code></a>&gt;&gt;</p>
+<p>Promise resolving to the group's members</p>
+<hr />
+<h3 id="update">update()<a class="headerlink" href="#update" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>update</strong>(<code>update</code>: <a href="../PlatformGroupUpdateOptions/"><code>PlatformGroupUpdateOptions</code></a>): <code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+</blockquote>
+<p>Updates this group. Only the fields present in <code>update</code> are changed.</p>
+<p>Membership is edited incrementally through <code>memberUserIdsToAdd</code> /
+<code>memberUserIdsToRemove</code>. The name must be sent on every write, so a
+membership-only update (no <code>name</code>) first reads the group's current name; a
+rename that lands between that read and the write is overwritten with the
+earlier name. Pass <code>name</code> explicitly to skip the read.</p>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>update</code></td>
+<td><a href="../PlatformGroupUpdateOptions/"><code>PlatformGroupUpdateOptions</code></a></td>
+<td>The fields to change</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<p><code>Promise</code>&lt;<a href="../../type-aliases/PlatformGroupGetResponse/"><code>PlatformGroupGetResponse</code></a>&gt;</p>
+<p>Promise resolving to the group as stored after the update</p>
 
 
 
