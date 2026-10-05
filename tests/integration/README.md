@@ -97,7 +97,7 @@ tests/integration/
    UIPATH_SECRET=your-pat-token-here
 
    # Optional: Test Settings
-   INTEGRATION_TEST_TIMEOUT=30000
+   INTEGRATION_TEST_TIMEOUT=60000
    INTEGRATION_TEST_SKIP_CLEANUP=false
    INTEGRATION_TEST_FOLDER_ID=
 
@@ -397,7 +397,7 @@ passes `'both'` and runs under both.
 |----------|-------------|---------|
 | `UIPATH_USER_TOKEN` | User access token for services that reject PATs — see [Authentication modes](#authentication-modes) | (those suites skip) |
 | `MINTER_BASE_URL` | Base URL for user-token suites — see [Host per credential](#host-per-credential) | (falls back to `UIPATH_BASE_URL`) |
-| `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
+| `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `60000` |
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |
 | `MAESTRO_TEST_PROCESS_KEY` | Pre-existing Maestro process for read-only tests | (optional) |
@@ -596,15 +596,17 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 
 ### Test Timeouts
 
-**Error**: `Test timeout of 30000ms exceeded`
+**Error**: `Test timeout of 60000ms exceeded`
 
 **Solutions**:
 1. Increase timeout in `.env.integration`:
    ```env
-   INTEGRATION_TEST_TIMEOUT=60000
+   INTEGRATION_TEST_TIMEOUT=90000
    ```
 2. Check network connectivity
 3. Verify UiPath services are responsive
+
+> In CI, failed integration tests are automatically retried up to 2 times (`retry` in `vitest.integration.config.ts`) to absorb transient live-environment failures. Local runs do not retry.
 
 ### Resource Creation Failures
 
