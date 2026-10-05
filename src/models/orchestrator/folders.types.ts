@@ -89,7 +89,7 @@ export interface FolderGetAllResponse extends Pick<
 /**
  * Query options for {@link FolderServiceModel.getAll}.
  *
- * Pagination only — the folder list is not an OData route, so it accepts no
- * `filter`, `orderby`, `select` or `expand`.
+ * Pagination only — `filter`, `orderby`, `select` and `expand` are not
+ * supported.
  */
 export type FolderGetAllOptions = PaginationOptions;
