@@ -6,6 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
   DataDirectionType,
@@ -13,6 +14,7 @@ import {
   EntityFieldDataType,
   EntityRecord,
   FieldDisplayType,
+  JoinType,
 } from '../../../../src/models/data-fabric/entities.types';
 
 // Schema management APIs (create/updateById/deleteById) shipped in the modular-SDK
@@ -228,6 +230,9 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
   // DF_FED_ELEMENT_INSTANCE_ID, DF_FED_CONNECTOR_KEY, DF_FED_OBJECT, DF_FED_OBJECT_METHOD
   // (the operations-catalog JSON string from `is resources describe <connector> <object>
   // --operation List`), DF_FED_PRIMARY_KEY, DF_FED_FIELD (an external field name on the object).
+  // The join tests use a native entity created by the test as the second source, so they need no
+  // extra connector object. The connection-swap test also needs DF_FED_NEW_CONNECTION_ID and
+  // DF_FED_NEW_ELEMENT_INSTANCE_ID (a second connection on the same connector that exposes the object).
   const federatedEnvReady = Boolean(
     process.env.DF_FED_CONNECTION_ID &&
       process.env.DF_FED_ELEMENT_INSTANCE_ID &&
@@ -288,9 +293,10 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
 
       await entities.updateById(id, {
         folderKey: entityFolderKey,
-        addFieldsToSource: [
+        addExternalFields: [
           {
             sourceObjectName: objectName,
+            sourceConnectionId: conn.connectionId,
             fields: [
               {
                 field: { name: 'AddedField', type: EntityFieldDataType.STRING },
@@ -312,12 +318,13 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       const { entities } = getServices();
       const id = await createSingleSourceFederated();
 
-      // Add a second field, then remove it — a real removeFieldsFromSource round-trip.
+      // Add a second field, then remove it — a real removeExternalFields round-trip.
       await entities.updateById(id, {
         folderKey: entityFolderKey,
-        addFieldsToSource: [
+        addExternalFields: [
           {
             sourceObjectName: objectName,
+            sourceConnectionId: conn.connectionId,
             fields: [
               {
                 field: { name: 'RemovableField', type: EntityFieldDataType.STRING },
@@ -329,7 +336,7 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       });
       await entities.updateById(id, {
         folderKey: entityFolderKey,
-        removeFieldsFromSource: [{ sourceObjectName: objectName, fieldNames: ['RemovableField'] }],
+        removeExternalFields: [{ sourceObjectName: objectName, sourceConnectionId: conn.connectionId, fieldNames: ['RemovableField'] }],
       });
 
       const got = await entities.getById(id, { folderKey: entityFolderKey });
@@ -340,10 +347,132 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
       expect(names).not.toContain('RemovableField');
     }, 90_000);
 
-    // Cascade (join dropped when its source is removed via removeExternalSources) needs a
-    // two-source + join fixture — a second connector object that standard env vars don't
-    // configure. Left visible rather than faked on a single-source entity.
-    it.todo('should cascade-remove a join when its source is removed');
+    async function createNativeSource(): Promise<{ id: string; name: string }> {
+      const { entities } = getServices();
+      const name = `sdk_fednative_${generateRandomString(8).toLowerCase()}`;
+      const id = await createEntityAwaitingReady(
+        entities,
+        name,
+        [{ name: 'joinKey', type: EntityFieldDataType.STRING }],
+        { folderKey: entityFolderKey },
+      );
+      createdEntityIds.push(id);
+      return { id, name };
+    }
+
+    function nativeSourceOf(native: { id: string; name: string }) {
+      return {
+        nativeConnectionDetail: { entityId: native.id, folderKey: entityFolderKey ?? DATA_FABRIC_TENANT_FOLDER_ID },
+        externalObjectDetail: { externalObjectName: native.name, primaryKey: 'Id' },
+        fields: [
+          {
+            field: { name: 'NativeKey', type: EntityFieldDataType.STRING },
+            externalFieldMappingDetail: { externalFieldName: 'joinKey', externalFieldType: 'text', directionType: DataDirectionType.ReadOnly },
+          },
+        ],
+      };
+    }
+
+    function joinConnectorToNative(native: { id: string; name: string }) {
+      return {
+        sourceObjectName: objectName,
+        sourceJoinField: primaryKey,
+        sourceObjectConnectionId: conn.connectionId,
+        joinType: JoinType.LeftJoin,
+        relatedSourceObjectName: native.name,
+        relatedSourceJoinField: 'joinKey',
+        relatedSourceObjectConnectionId: native.id,
+      };
+    }
+
+    async function createJoinedFederated(): Promise<{ id: string; native: { id: string; name: string } }> {
+      const { entities } = getServices();
+      const id = await createSingleSourceFederated();
+      const native = await createNativeSource();
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        addExternalSources: [nativeSourceOf(native)],
+        addSourceJoins: [joinConnectorToNative(native)],
+      });
+      return { id, native };
+    }
+
+    it('should add a native source together with its join', async () => {
+      const { entities } = getServices();
+      const { id } = await createJoinedFederated();
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.externalFields?.length).toBe(2);
+      expect(got.sourceJoinCriterias?.length).toBe(1);
+    }, 180_000);
+
+    it('should change the primary source by replacing the join set', async () => {
+      const { entities } = getServices();
+      const { id, native } = await createJoinedFederated();
+
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        replaceSourceJoins: [
+          {
+            sourceObjectName: native.name,
+            sourceJoinField: 'joinKey',
+            sourceObjectConnectionId: native.id,
+            joinType: JoinType.LeftJoin,
+            relatedSourceObjectName: objectName,
+            relatedSourceJoinField: primaryKey,
+            relatedSourceObjectConnectionId: conn.connectionId,
+          },
+        ],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.sourceJoinCriterias?.length).toBe(1);
+      const joinSource = got.externalFields?.find(s => s.externalObjectDetail?.id === got.sourceJoinCriterias?.[0].sourceObjectId);
+      expect(joinSource?.externalObjectDetail?.externalObjectName).toBe(native.name);
+    }, 180_000);
+
+    it('should remove the join when its source is removed', async () => {
+      const { entities } = getServices();
+      const { id, native } = await createJoinedFederated();
+
+      await entities.updateById(id, {
+        folderKey: entityFolderKey,
+        removeExternalSources: [{ sourceObjectName: native.name, sourceConnectionId: native.id }],
+      });
+
+      const got = await entities.getById(id, { folderKey: entityFolderKey });
+      expect(got.externalFields?.length).toBe(1);
+      expect(got.externalFields?.[0].externalObjectDetail?.externalObjectName).toBe(objectName);
+      expect(got.sourceJoinCriterias ?? []).toHaveLength(0);
+    }, 180_000);
+
+    it.skipIf(!process.env.DF_FED_NEW_CONNECTION_ID || !process.env.DF_FED_NEW_ELEMENT_INSTANCE_ID)(
+      'should point a connector source at another connection via updateExternalConnection',
+      async () => {
+        const { entities } = getServices();
+        const id = await createSingleSourceFederated();
+        const newConnectionId = process.env.DF_FED_NEW_CONNECTION_ID ?? '';
+
+        await entities.updateById(id, {
+          folderKey: entityFolderKey,
+          updateExternalConnection: [
+            {
+              sourceObjectName: objectName,
+              sourceConnectionId: conn.connectionId,
+              newConnectionId,
+              newElementInstanceId: Number(process.env.DF_FED_NEW_ELEMENT_INSTANCE_ID),
+            },
+          ],
+        });
+
+        const got = await entities.getById(id, { folderKey: entityFolderKey });
+        expect(got.externalFields?.[0].externalConnectionDetail?.connectionId).toBe(newConnectionId);
+      },
+      90_000,
+    );
+
+    // A second joinable field pair on the same two sources isn't available from the standard env vars.
+    it.todo('should change the join fields of an existing join via updateSourceJoin');
   });
 
   describe('sqlType constraint defaults', () => {
