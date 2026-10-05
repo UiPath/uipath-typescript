@@ -651,10 +651,13 @@ vitest path filters. The rule is name-based:
 | `src/services/<name>/**`, `src/models/<name>/**`, `src/utils/constants/endpoints/<name>/**` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
 | `src/services/<name>/**`, `src/models/<name>/**` or `src/utils/constants/endpoints/<name>/**` where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
 | One of the always-on suites: `shared/smoke.integration.test.ts`, `shared/http/`, `auth-errors.integration.test.ts` | The always-on suites only |
-| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, the endpoint barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
-| Anything else: `src/core/`, the rest of `src/utils/` including the shared `endpoints/base.ts`, `src/models/common/`, `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package.json` | Everything |
+| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
+| Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package.json` | Everything |
 
-No suite is ever excluded. A path the script does not recognise runs the full suite, a
+The only shared files deliberately ignored are `endpoints/base.ts` and `endpoints/index.ts`:
+every new service adds a line to each and is covered by its own folder and suite, so
+editing an existing base path there is not covered by a pull-request run. Otherwise no
+suite is ever excluded. A path the script does not recognise runs the full suite, a
 version bump (it edits `package.json`) runs the full suite, and the weekly run always
 does. To force the full run on a pull request, add the `ci:full-integration` label and
 push a commit: the labels are read from the event that starts the run, and `labeled` is

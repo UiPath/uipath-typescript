@@ -26,6 +26,7 @@ describe('integration-scope resolveScope', () => {
       'rollup.config.js',
       'tests/.env.integration.example',
       `${ENDPOINTS}/index.ts`, // the barrel only re-exports
+      `${ENDPOINTS}/base.ts`, // every new service adds a base path; its own folder covers it
     ], DOMAINS, SERVICES);
     expect(scope).toMatchObject({ run: false, all: false, domains: [], paths: [] });
     expect(toOutputs(scope)).toEqual(['run_integration=false', 'test_paths=', 'scope=none']);
@@ -84,7 +85,6 @@ describe('integration-scope resolveScope', () => {
 
   it.each([
     'src/core/http/api-client.ts',
-    `${ENDPOINTS}/base.ts`, // shared base paths
     'src/utils/constants/common.ts',
     'src/services/base.ts',
     'src/models/common/types.ts', // shared models, not a service

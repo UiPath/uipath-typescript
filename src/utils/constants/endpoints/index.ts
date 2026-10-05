@@ -3,7 +3,8 @@
  *
  * One folder per service domain, named after its `src/services/` folder, so a
  * change to a domain's endpoints runs only that domain's integration suite.
- * `base.ts` is shared and runs everything.
+ * `base.ts` and this barrel are ignored by that scoping: every new service adds
+ * a line to each, and its own folder and suite trigger its run.
  */
 
 // Base paths

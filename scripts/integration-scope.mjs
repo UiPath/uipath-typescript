@@ -27,10 +27,11 @@ export const FULL_RUN_LABEL = 'ci:full-integration';
 const IGNORED_PATTERNS = [
   /^(docs|samples|packages|plugins|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
   /\.md$/,
-  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/index\.ts)$/,
+  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
 ];
-// The endpoint-constants folders are named after their service folder; base.ts
-// beside them is shared and falls through to the full run.
+// The endpoint-constants folders are named after their service folder. base.ts and
+// the barrel beside them are ignored: every new service adds a line to each, and its
+// own folder and suite trigger its run.
 const DOMAIN_PATH = /^(?:src\/services|src\/models|src\/utils\/constants\/endpoints|tests\/integration\/shared)\/([^/]+)\//;
 
 const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
