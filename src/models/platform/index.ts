@@ -8,3 +8,5 @@ export * from './users.types';
 export * from './users.models';
 export * from './roles.types';
 export * from './roles.models';
+export * from './groups.types';
+export * from './groups.models';
