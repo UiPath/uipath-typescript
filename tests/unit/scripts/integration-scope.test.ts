@@ -1,13 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // The PR integration-test scoping rules. Imported directly (the script only runs
 // its CLI when executed as main), so the pure resolver is exercised here.
 import { ALWAYS_ON, FULL_RUN_LABEL, classify, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
 
+const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const SHARED = 'tests/integration/shared';
-const DOMAINS = ['action-center', 'data-fabric', 'maestro', 'orchestrator'];
+const ENDPOINTS = 'src/utils/constants/endpoints';
+const DOMAINS = ['action-center', 'data-fabric', 'maestro', 'orchestrator', 'platform'];
 // Service folders: the suite domains plus one nothing tests.
 const SERVICES = [...DOMAINS, 'integration-service'];
 
@@ -22,6 +25,8 @@ describe('integration-scope resolveScope', () => {
       'README.md',
       'rollup.config.js',
       'tests/.env.integration.example',
+      `${ENDPOINTS}/index.ts`, // the barrel only re-exports
+      `${ENDPOINTS}/base.ts`, // every new service adds a base path; its own folder covers it
     ], DOMAINS, SERVICES);
     expect(scope).toMatchObject({ run: false, all: false, domains: [], paths: [] });
     expect(toOutputs(scope)).toEqual(['run_integration=false', 'test_paths=', 'scope=none']);
@@ -46,20 +51,26 @@ describe('integration-scope resolveScope', () => {
     expect(scope).toMatchObject({ run: true, all: false, domains: ['maestro'] });
   });
 
-  it('scopes service, model and suite changes to the same-named suite plus the always-on suites', () => {
+  it('scopes service, model, endpoint and suite changes to the same-named suite plus the always-on suites', () => {
     const scope = resolveScope([
       'src/services/data-fabric/entities.ts',
       'src/models/maestro/cases.types.ts',
+      `${ENDPOINTS}/action-center/tasks.ts`,
       `${SHARED}/orchestrator/jobs.integration.test.ts`,
       'docs/data-fabric.md',
     ], DOMAINS, SERVICES);
-    expect(scope).toMatchObject({ run: true, all: false, domains: ['data-fabric', 'maestro', 'orchestrator'] });
-    expect(scope.paths).toEqual([...ALWAYS_ON, `${SHARED}/data-fabric`, `${SHARED}/maestro`, `${SHARED}/orchestrator`]);
+    expect(scope).toMatchObject({ run: true, all: false, domains: ['action-center', 'data-fabric', 'maestro', 'orchestrator'] });
+    expect(scope.paths).toEqual([...ALWAYS_ON, `${SHARED}/action-center`, `${SHARED}/data-fabric`, `${SHARED}/maestro`, `${SHARED}/orchestrator`]);
     expect(toOutputs(scope)).toEqual([
       'run_integration=true',
       `test_paths=${scope.paths.join(' ')}`,
-      'scope=data-fabric,maestro,orchestrator',
+      'scope=action-center,data-fabric,maestro,orchestrator',
     ]);
+  });
+
+  it('treats an endpoint-constants folder like its service folder', () => {
+    expect(classify(`${ENDPOINTS}/platform/identity.ts`, DOMAINS, SERVICES)).toEqual({ kind: 'domain', domain: 'platform' });
+    expect(classify(`${ENDPOINTS}/integration-service/integration-service.ts`, DOMAINS, SERVICES).kind).toBe('no-suite');
   });
 
   it.each([
@@ -74,7 +85,7 @@ describe('integration-scope resolveScope', () => {
 
   it.each([
     'src/core/http/api-client.ts',
-    'src/utils/constants/endpoints/orchestrator.ts',
+    'src/utils/constants/common.ts',
     'src/services/base.ts',
     'src/models/common/types.ts', // shared models, not a service
     'src/models/document-understanding/du.types.ts', // models-only folder with no service: shared code
@@ -178,6 +189,58 @@ describe('integration-scope suites', () => {
     const known = services();
     for (const name of suites()) {
       expect(known, `${SHARED}/${name} has no src/services/${name}`).toContain(name);
+    }
+  });
+});
+
+describe('integration-scope endpoint constants', () => {
+  const entries = readdirSync(join(ROOT, ENDPOINTS), { withFileTypes: true });
+  const folders = entries.filter(entry => entry.isDirectory()).map(entry => entry.name);
+  const sources = [...walk('src')].map(path => ({ path, text: readFileSync(join(ROOT, path), 'utf8') }));
+
+  function* walk(dir: string): Generator<string> {
+    for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+      if (entry.isDirectory()) yield* walk(`${dir}/${entry.name}`);
+      else if (entry.name.endsWith('.ts')) yield `${dir}/${entry.name}`;
+    }
+  }
+  const exportsOf = (file: string) => [...readFileSync(join(ROOT, file), 'utf8').matchAll(/^export\s+const\s+(\w+)/gm)].map(match => match[1]);
+  const usersOf = (file: string) => {
+    const names = exportsOf(file);
+    const used = new RegExp(`\\b(?:${names.join('|')})\\b`);
+    return names.length === 0 ? [] : sources.filter(source => source.path !== file && used.test(source.text)).map(source => source.path);
+  };
+
+  // A folder the script cannot match to a service would scope to nothing useful.
+  it('names every endpoint folder after a src/services folder', () => {
+    const known = services();
+    for (const name of folders) {
+      expect(known, `${ENDPOINTS}/${name} has no src/services/${name}`).toContain(name);
+    }
+  });
+
+  // The scoping trusts the folder name, so a constant in the wrong folder would
+  // skip the suite that actually exercises it. Use from src/core is accepted
+  // (platform/identity.ts serves the OAuth flow): core's own changes run everything.
+  it("keeps each folder's exports to that domain's code", () => {
+    for (const name of folders) {
+      const allowed = [`src/services/${name}/`, `src/models/${name}/`, `${ENDPOINTS}/${name}/`, 'src/core/'];
+      for (const entry of readdirSync(join(ROOT, ENDPOINTS, name))) {
+        const file = `${ENDPOINTS}/${name}/${entry}`;
+        for (const user of usersOf(file)) {
+          expect(allowed.some(prefix => user.startsWith(prefix)), `${file} is used by ${user}, outside ${name}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  // Loose files beside the folders run everything, so only shared code belongs there.
+  it('keeps the loose files for code outside the service folders', () => {
+    for (const entry of entries.filter(entry => entry.isFile() && entry.name !== 'index.ts')) {
+      const file = `${ENDPOINTS}/${entry.name}`;
+      for (const user of usersOf(file)) {
+        expect(user.startsWith('src/services/') || user.startsWith('src/models/'), `${file} is used by ${user}; move it into that service's folder`).toBe(false);
+      }
     }
   });
 });

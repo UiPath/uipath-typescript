@@ -14,7 +14,7 @@ src/
   models/                # TypeScript interfaces/types per service domain
   utils/                 # Constants, pagination, encoding, HTTP helpers
     constants/
-      endpoints/         # Endpoint constants per domain (data-fabric.ts, maestro.ts, etc.)
+      endpoints/         # Endpoint constants, one folder per domain (data-fabric/, maestro/, etc.)
 tests/
   unit/                  # Mirrors src/ structure
   integration/           # Integration tests (real API calls)

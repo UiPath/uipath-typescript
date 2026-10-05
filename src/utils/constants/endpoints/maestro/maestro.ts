@@ -2,7 +2,7 @@
  * Maestro Service Endpoints
  */
 
-import { PIMS_BASE, LLMOPS_BASE, INSIGHTS_RTM_BASE } from './base';
+import { PIMS_BASE, LLMOPS_BASE, INSIGHTS_RTM_BASE } from '../base';
 
 /**
  * Maestro Process Service Endpoints

@@ -1,4 +1,4 @@
-import { INSIGHTS_RTM_BASE } from './base';
+import { INSIGHTS_RTM_BASE } from '../base';
 
 /**
  * Agent Memory Service Endpoints

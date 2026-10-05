@@ -2,7 +2,7 @@
  * Data Fabric Service Endpoints
  */
 
-import { DATAFABRIC_BASE } from './base';
+import { DATAFABRIC_BASE } from '../base';
 
 /**
  * Default folder key used for tenant-level Data Fabric entities.

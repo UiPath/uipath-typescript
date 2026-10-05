@@ -8,7 +8,7 @@
  * URLs route at the **organization** level (no tenant segment); see {@link NOTIFICATION_BASE}.
  */
 
-import { NOTIFICATION_BASE } from './base';
+import { NOTIFICATION_BASE } from '../base';
 
 const NOTIFICATION_API_BASE = `${NOTIFICATION_BASE}/notificationserviceapi`;
 const SUBSCRIPTION_API_BASE = `${NOTIFICATION_BASE}/usersubscriptionservice`;

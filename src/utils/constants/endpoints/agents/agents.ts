@@ -2,7 +2,7 @@
  * Agent Service Endpoints
  */
 
-import { INSIGHTS_RTM_BASE } from './base';
+import { INSIGHTS_RTM_BASE } from '../base';
 
 export const AGENTS_ENDPOINTS = {
   /** Paginated list of agents with consumption and health metadata. */

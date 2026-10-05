@@ -2,7 +2,7 @@
  * Governance Service Endpoints
  */
 
-import { INSIGHTS_RTM_BASE } from './base';
+import { INSIGHTS_RTM_BASE } from '../base';
 
 /**
  * Governance Service Endpoints
