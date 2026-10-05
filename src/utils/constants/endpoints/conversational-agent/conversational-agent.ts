@@ -2,7 +2,7 @@
  * Conversational Agent Service Endpoints
  */
 
-import { AUTOPILOT_BASE } from './base';
+import { AUTOPILOT_BASE } from '../base';
 
 const API_VERSION = 'v1';
 

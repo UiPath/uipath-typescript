@@ -2,7 +2,7 @@
  * AgentHub LLM Gateway Service Endpoints
  */
 
-import { AGENTHUB_LLM_BASE } from './base';
+import { AGENTHUB_LLM_BASE } from '../base';
 
 /**
  * OpenAI-compatible chat completion endpoint served by the LLM gateway.

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Picks the integration suites a PR needs from its changed files: a change under
-// src/services/<name>, src/models/<name> or tests/integration/shared/<name> runs
-// tests/integration/shared/<name>, or nothing when no such suite folder exists;
+// src/services/<name>, src/models/<name>, src/utils/constants/endpoints/<name> or
+// tests/integration/shared/<name> runs tests/integration/shared/<name>, or nothing
+// when no such suite folder exists;
 // docs/samples/packages/unit tests run nothing; anything else runs everything.
 // Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
@@ -26,9 +27,11 @@ export const FULL_RUN_LABEL = 'ci:full-integration';
 const IGNORED_PATTERNS = [
   /^(docs|samples|packages|plugins|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
   /\.md$/,
-  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example)$/,
+  /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/index\.ts)$/,
 ];
-const DOMAIN_PATH = /^(?:src\/services|src\/models|tests\/integration\/shared)\/([^/]+)\//;
+// The endpoint-constants folders are named after their service folder; base.ts
+// beside them is shared and falls through to the full run.
+const DOMAIN_PATH = /^(?:src\/services|src\/models|src\/utils\/constants\/endpoints|tests\/integration\/shared)\/([^/]+)\//;
 
 const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
 

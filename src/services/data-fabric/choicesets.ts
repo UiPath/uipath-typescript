@@ -15,7 +15,7 @@ import {
   ChoiceSetValueDeleteOptions,
 } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
-import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric/data-fabric';
 import { FOLDER_KEY } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
 import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';

@@ -1,56 +1,54 @@
 /**
  * API Endpoint Constants
- * Centralized location for all API endpoints used throughout the SDK
+ *
+ * One folder per service domain, named after its `src/services/` folder, so a
+ * change to a domain's endpoints runs only that domain's integration suite.
+ * `base.ts` is shared and runs everything.
  */
 
 // Base paths
 export * from './base';
 
-// Orchestrator endpoints
-export * from './orchestrator';
+// Action Center
+export * from './action-center/tasks';
 
-// Maestro endpoints
-export * from './maestro';
+// Agents
+export * from './agents/agents';
+export * from './agents/feedback';
+export * from './agents/memory';
 
-// Data Fabric endpoints
-export * from './data-fabric';
+// AgentHub LLM gateway
+export * from './agenthub/agenthub';
 
-// Identity endpoints
-export * from './identity';
-export * from './authorization';
+// Conversational Agent
+export * from './conversational-agent/conversational-agent';
 
-// Platform endpoints
-export * from './platform';
+// Data Fabric
+export * from './data-fabric/data-fabric';
 
-// Conversational Agent endpoints
-export * from './conversational-agent';
+// Document Understanding framework
+export * from './document-understanding/document-understanding';
 
-// Agent Feedback endpoints
-export * from './feedback';
+// Governance
+export * from './governance/governance';
 
-// Agent Memory endpoints
-export * from './memory';
+// Integration Service
+export * from './integration-service/integration-service';
 
-// Agent Traces endpoints
-export * from './agent-traces';
+// Maestro
+export * from './maestro/maestro';
 
-// Traces endpoints
-export * from './traces';
+// Notification
+export * from './notification/notification';
 
-// Agent endpoints
-export * from './agents';
+// Observability
+export * from './observability/agent-traces';
+export * from './observability/traces';
 
-// AgentHub LLM gateway endpoints
-export * from './agenthub';
+// Orchestrator
+export * from './orchestrator/orchestrator';
 
-// Governance endpoints
-export * from './governance';
-
-// Document Understanding framework endpoints
-export * from './document-understanding';
-
-// Notification endpoints
-export * from './notification';
-
-// Integration Service endpoints
-export * from './integration-service';
+// Platform
+export * from './platform/authorization';
+export * from './platform/identity';
+export * from './platform/platform';

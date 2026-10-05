@@ -21,7 +21,7 @@ import type { TokenManager } from '../auth/token-manager';
 import { ValidationError } from '../errors';
 import { decodeJwtClaims } from '../../utils/encoding/jwt';
 import { decodeBase64 } from '../../utils/encoding/base64';
-import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints/identity';
+import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints/platform/identity';
 import { TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 import { fetchWithRetry } from '../../utils/http/fetch-with-retry';
 import { DEFAULT_RETRY_OPTIONS } from '../../utils/http/retry-policy';

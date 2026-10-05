@@ -13,7 +13,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import { CHOICESET_TEST_CONSTANTS } from '../../../utils/constants/choicesets';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric/data-fabric';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import type { ChoiceSetGetResponse } from '../../../../src/models/data-fabric/choicesets.types';
 import { ValidationError, NotFoundError } from '../../../../src/core/errors';

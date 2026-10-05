@@ -2,7 +2,7 @@
  * Platform Endpoints
  */
 
-import { IDENTITY_API_BASE } from './base';
+import { IDENTITY_API_BASE } from '../base';
 
 /**
  * Platform Setting Endpoints

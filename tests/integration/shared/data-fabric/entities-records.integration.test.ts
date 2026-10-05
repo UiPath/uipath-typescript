@@ -20,7 +20,7 @@ import {
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
-import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric/data-fabric';
 import { isNotFoundError } from '../../../../src/core/errors/guards';
 
 // Cache for choice set values to avoid repeated API calls within a test run

@@ -648,11 +648,11 @@ vitest path filters. The rule is name-based:
 
 | Changed file | Suites run |
 |--------------|------------|
-| `src/services/<name>/**`, `src/models/<name>/**` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
-| `src/services/<name>/**` or `src/models/<name>/**` where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
+| `src/services/<name>/**`, `src/models/<name>/**`, `src/utils/constants/endpoints/<name>/**` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
+| `src/services/<name>/**`, `src/models/<name>/**` or `src/utils/constants/endpoints/<name>/**` where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
 | One of the always-on suites: `shared/smoke.integration.test.ts`, `shared/http/`, `auth-errors.integration.test.ts` | The always-on suites only |
-| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config | Nothing: the `integration` job is skipped |
-| Anything else: `src/core/`, `src/utils/`, `src/models/` folders that are not a service (`common`, `document-understanding`), `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package.json` | Everything |
+| `docs/`, `samples/`, `packages/`, `tests/unit/`, `tests/utils/mocks/`, `*.md`, lint/build/docs config, the endpoint barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
+| Anything else: `src/core/`, the rest of `src/utils/` including the shared `endpoints/base.ts`, `src/models/common/`, `tests/integration/config/` and `utils/`, the rest of `tests/utils/`, workflows, `package.json` | Everything |
 
 No suite is ever excluded. A path the script does not recognise runs the full suite, a
 version bump (it edits `package.json`) runs the full suite, and the weekly run always
@@ -662,14 +662,17 @@ not one of the `pull_request` triggers in `pr-checks.yml`.
 
 Two things follow for suite authors:
 
-- **Name a new service's suite folder after its `src/services/` folder.** The script
-  finds a suite only by that name. A unit test in `tests/unit/scripts/integration-scope.test.ts`
-  fails for a suite folder with no matching `src/services/` folder, so a mis-named suite
-  is caught by `npm run test:unit` rather than silently never run.
+- **Name a new service's suite folder and its endpoint folder after its `src/services/`
+  folder.** The script finds both only by that name. Unit tests in
+  `tests/unit/scripts/integration-scope.test.ts` fail for a suite or endpoint folder with
+  no matching `src/services/` folder, and for an endpoint constant used by another
+  domain's code, so a mis-placed file is caught by `npm run test:unit` rather than
+  silently skipping a suite.
 - The script follows folder names, not imports. A suite that exercises another domain's
   service (for example Maestro cases wrapping the Action Center task service) does not
-  run when only that other domain changes; shared code under `src/core/`, `src/utils/`
-  and `tests/utils/` runs everything for the same reason.
+  run when only that other domain changes, and a change to `endpoints/platform/identity.ts`
+  runs the platform suite only although core's OAuth flow uses it too; shared code under
+  `src/core/`, `src/utils/` and `tests/utils/` runs everything for the same reason.
 
 To see what a branch would run locally:
 
