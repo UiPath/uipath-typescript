@@ -3902,12 +3902,11 @@ most Orchestrator API calls. <a href="https://docs.uipath.com/orchestrator/autom
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="getall">getAll()<a class="headerlink" href="#getall" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
+<p><strong>getAll</strong>&lt;<code>T</code>&gt;(<code>options?</code>: <code>T</code>): <code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Gets the folders the calling user has access to, across the tenant.</p>
-<p>Returns only folders the user can actually operate in, so the result is
-safe to offer as a picker. Each folder carries its id, key, fully
-qualified path and parent reference.</p>
+<p>Each folder carries its id, key, display name, fully qualified path,
+folder type and parent reference.</p>
 <h4 id="type-parameters">Type Parameters<a class="headerlink" href="#type-parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3941,8 +3940,8 @@ qualified path and parent reference.</p>
 </tbody>
 </table>
 <h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../../type-aliases/FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../../type-aliases/FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
-<p>Promise resolving to a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> of <a href="../../type-aliases/FolderGetAllResponse/">FolderGetAllResponse</a> without pagination options, or a <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../../type-aliases/FolderGetAllResponse/">FolderGetAllResponse</a> when pagination options are used.</p>
+<p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../FolderGetAllResponse/"><code>FolderGetAllResponse</code></a>&gt;&gt;</p>
+<p>Promise resolving to a <a href="../NonPaginatedResponse/">NonPaginatedResponse</a> of <a href="../FolderGetAllResponse/">FolderGetAllResponse</a> without pagination options, or a <a href="../PaginatedResponse/">PaginatedResponse</a> of <a href="../FolderGetAllResponse/">FolderGetAllResponse</a> when pagination options are used.</p>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Get all folders</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allFolders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">folders</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>

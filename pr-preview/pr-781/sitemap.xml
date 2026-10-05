@@ -809,10 +809,6 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderRootType/</loc>
-         <lastmod>2026-10-05</lastmod>
-    </url>
-    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/enumerations/FolderType/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
@@ -2049,7 +2045,7 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddFieldsToSource/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityAddExternalFields/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2229,11 +2225,11 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldOptions/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveExternalFields/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldsFromSource/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldOptions/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2241,7 +2237,7 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalFieldMapping/</loc>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/EntityUpdateExternalConnection/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -2385,6 +2381,10 @@
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FederatedSourceRef/</loc>
+         <lastmod>2026-10-05</lastmod>
+    </url>
+    <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FeedbackCategory/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
@@ -2446,6 +2446,10 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FileUploadAccess/</loc>
+         <lastmod>2026-10-05</lastmod>
+    </url>
+    <url>
+         <loc>https://uipath.github.io/uipath-typescript/api/interfaces/FolderGetAllResponse/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
@@ -3474,10 +3478,6 @@
     </url>
     <url>
          <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FolderGetAllOptions/</loc>
-         <lastmod>2026-10-05</lastmod>
-    </url>
-    <url>
-         <loc>https://uipath.github.io/uipath-typescript/api/type-aliases/FolderGetAllResponse/</loc>
          <lastmod>2026-10-05</lastmod>
     </url>
     <url>
