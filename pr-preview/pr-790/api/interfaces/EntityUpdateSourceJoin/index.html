@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#properties" class="md-skip">
+        <a href="#extends" class="md-skip">
           Skip to content
         </a>
       
@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3715,6 +3745,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#extends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extends
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3748,8 +3789,13 @@
   <h1>EntityUpdateSourceJoin</h1>
 
 <p><strong><code>Experimental</code></strong></p>
-<p>Updates an existing Federated cross-source join in place, identified by the two object
-names. Only the supplied fields change; the others are kept.</p>
+<p>Changes the join fields of an existing Federated cross-source join, identified by both
+sides' object name + connection id. Only the supplied fields change; the other is kept.
+The join's sources, direction and type cannot be changed here.</p>
+<h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../FederatedSourceRef/"><code>FederatedSourceRef</code></a></li>
+</ul>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3761,29 +3807,34 @@ names. Only the supplied fields change; the others are kept.</p>
 </thead>
 <tbody>
 <tr>
-<td><a id="jointype"></a> <code>joinType?</code></td>
-<td><a href="../../enumerations/JoinType/"><code>JoinType</code></a></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><a id="relatedsourceconnectionid"></a> <code>relatedSourceConnectionId</code></td>
+<td><code>string</code></td>
+<td><strong><code>Experimental</code></strong> Connection of the related side: a <code>connectionId</code>, or the <code>entityId</code> for a native source.</td>
 </tr>
 <tr>
 <td><a id="relatedsourcejoinfield"></a> <code>relatedSourceJoinField?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> New join field on the related object, as an external field name. Omit to keep the current one.</td>
 </tr>
 <tr>
 <td><a id="relatedsourceobjectname"></a> <code>relatedSourceObjectName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> Name of the related side's external object. Together with <code>relatedSourceConnectionId</code> it identifies the join.</td>
+</tr>
+<tr>
+<td><a id="sourceconnectionid"></a> <code>sourceConnectionId</code></td>
+<td><code>string</code></td>
+<td><strong><code>Experimental</code></strong> Connection the source reads from: an Integration Service <code>connectionId</code>, or the <code>entityId</code> for a native source.</td>
 </tr>
 <tr>
 <td><a id="sourcejoinfield"></a> <code>sourceJoinField?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> New join field on the source object, as an external field name. Omit to keep the current one.</td>
 </tr>
 <tr>
 <td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td><strong><code>Experimental</code></strong> Name of the source's external object (for a native source, the name of the referenced entity).</td>
 </tr>
 </tbody>
 </table>

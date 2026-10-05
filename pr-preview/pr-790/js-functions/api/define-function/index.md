@@ -119,9 +119,10 @@ Both variants above declare the **same contract** — the TS type lowers to exac
 | `foo?: T`                                               | property present, not in `required`                                                   |
 | `Record<string, T>`                                     | `{ "type": "object", "additionalProperties": <schema of T> }`                         |
 | `unknown` (value position)                              | `{}` — accepts any JSON value (e.g. `Record<string, unknown>` for arbitrary job args) |
-| `Date`                                                  | `{ "type": "string", "format": "date-time" }`                                         |
+| `string` tagged `/** @format date-time */`              | `{ "type": "string", "format": "date-time" }` (see [Dates](#dates))                   |
 | `A \| B` (non-literal)                                  | `{ "anyOf": [...] }`                                                                  |
 | `any`, `bigint`, tuples, functions, top-level `unknown` | rejected at build time with an actionable diagnostic                                  |
+| `Date`                                                  | rejected at build time with `unsupported-date` (see [Dates](#dates))                  |
 
 ### JSDoc `@default`
 
@@ -138,6 +139,53 @@ interface HelloInput {
 ```
 
 This lowers to `{ "type": "string", "default": "World" }`; the runtime fills the field when the caller omits it. The tag text is parsed as JSON (`"World"` → string, `3` → number, `true` → boolean).
+
+### JSDoc `@format`
+
+A `@format` tag on a `string` property adds a `format` to its schema. The supported formats are `date-time`, `date`, `time`, `email`, `uri` and `uuid`.
+
+```
+interface ContactInput {
+  /** @format email */
+  email: string;
+}
+```
+
+This lowers to `{ "type": "string", "format": "email" }`. The runtime rejects a value outside the format with a `400` on input and a `500` on output. The tag goes on a `string` or `string | null` property; any other format or placement stops the build with `unsupported-format`. Put the tag on its own line above the property: TypeScript drops a JSDoc written on the same line as the opening `{`.
+
+### Dates
+
+JSON carries a date as an ISO 8601 string. Declare it as a `string` tagged `@format date-time`, and build the `Date` in the handler:
+
+```
+import { badRequest, defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface ReminderInput {
+  /** @format date-time */
+  dueAt: string;
+}
+
+interface ReminderOutput {
+  /** @format date-time */
+  remindAt: string;
+}
+
+export default defineFunction({
+  name: "remind",
+  method: "POST",
+  path: "/reminders",
+  input: defineSchema<ReminderInput>(),
+  output: defineSchema<ReminderOutput>(),
+  handler: async (input) => {
+    const dueAt = new Date(input.dueAt);
+    if (Number.isNaN(dueAt.getTime())) return badRequest("dueAt is not a representable date");
+    const remindAt = new Date(dueAt.getTime() - 60 * 60 * 1000);
+    return { remindAt: remindAt.toISOString() };
+  },
+});
+```
+
+The runtime validates `dueAt` as a date-time before the handler runs. Check the parsed `Date` as well: a leap second such as `23:59:60` passes the format and parses to an invalid date.
 
 ### The curated subset
 

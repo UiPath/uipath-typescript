@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/EntityRemoveFieldsFromSource/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/RawPlatformGroupGetResponse/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>EntityRemoveFieldsFromSource - UiPath TypeScript SDK</title>
+        <title>RawPlatformGroupGetResponse - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              EntityRemoveFieldsFromSource
+              RawPlatformGroupGetResponse
             
           </span>
         </div>
@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3745,10 +3775,9 @@
   
 
 
-  <h1>EntityRemoveFieldsFromSource</h1>
+  <h1>RawPlatformGroupGetResponse</h1>
 
-<p><strong><code>Experimental</code></strong></p>
-<p>Fields to remove from a Federated source, identified by the source object name.</p>
+<p>A group, before entity methods are attached.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3760,14 +3789,34 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="fieldnames"></a> <code>fieldNames</code></td>
-<td><code>string</code>[]</td>
-<td><strong><code>Experimental</code></strong></td>
+<td><a id="createdtime"></a> <code>createdTime</code></td>
+<td><code>string</code></td>
+<td>When the group was created.</td>
 </tr>
 <tr>
-<td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
+<td><a id="displayname"></a> <code>displayName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong></td>
+<td>Display name shown in the UI.</td>
+</tr>
+<tr>
+<td><a id="id"></a> <code>id</code></td>
+<td><code>string</code></td>
+<td>GUID of the group.</td>
+</tr>
+<tr>
+<td><a id="lastmodifiedtime"></a> <code>lastModifiedTime</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>When the group was last modified.</td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name</code></td>
+<td><code>string</code></td>
+<td>Group name.</td>
+</tr>
+<tr>
+<td><a id="type"></a> <code>type</code></td>
+<td><a href="../../enumerations/PlatformGroupType/"><code>PlatformGroupType</code></a></td>
+<td>Whether the group is built-in or custom.</td>
 </tr>
 </tbody>
 </table>

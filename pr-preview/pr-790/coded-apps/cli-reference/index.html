@@ -1749,6 +1749,8 @@
       
         
       
+        
+      
     
     
     
@@ -1862,6 +1864,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/interfaces/PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -4319,7 +4349,7 @@
 </tbody>
 </table>
 <p>Requires the <strong>.NET 10 Runtime</strong> on the machine (<code>dotnet --list-runtimes</code> lists <code>Microsoft.NETCore.App 10.</code>). The converter ships with the <code>codedapp</code> tool. Only <code>.uiapp</code> (VB apps) is accepted; a <code>.uis</code> Solution is refused.</p>
-<p><code>Code</code> in the result says what the numbers mean: <code>ConvertCompleted</code> (nothing blamed on the converter), <code>ConvertCompletedWithGaps</code> (the project runs; <code>conversion-report.json</code> lists what the converter did not manage), <code>ConvertOutputCannotRun</code> (written, but cannot run as is). The output includes the <code>fix-converted-app</code> skill; <code>uip skills install --repo ./.uipath/agent-skills --path .</code> installs it for your coding agent.</p>
+<p><code>Code</code> in the result is one of: <code>ConvertCompleted</code> (nothing blamed on the converter), <code>ConvertCompletedWithGaps</code> (the project runs; <code>conversion-report.json</code> lists what the converter did not manage), <code>ConvertOutputCannotRun</code> (written, but cannot run as is). The output includes the <code>fix-converted-app</code> skill; <code>uip skills install --repo ./.uipath/agent-skills --path .</code> installs it for your coding agent.</p>
 <p><strong>Examples</strong></p>
 <div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp convert ./expense-app.uiapp</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp convert ./expense-app.uiapp --out ./apps/expense</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp convert ./expense-app.uiapp --force --refresh</span><span data-ty></span></div>
 

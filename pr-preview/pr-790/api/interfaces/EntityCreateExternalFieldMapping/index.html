@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3772,27 +3802,27 @@
 <tr>
 <td><a id="externalfieldname"></a> <code>externalFieldName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Name of the field on the external source.</td>
+<td><strong><code>Experimental</code></strong> Name of the field on the external source (for a native source, the column name). Joins refer to a field by this name.</td>
 </tr>
 <tr>
 <td><a id="externalfieldtype"></a> <code>externalFieldType?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Type of the field on the external source.</td>
+<td><strong><code>Experimental</code></strong> Type of the field on the external source, as the source reports it (for example <code>string</code>).</td>
 </tr>
 <tr>
 <td><a id="isrequiredforread"></a> <code>isRequiredForRead?</code></td>
 <td><code>boolean</code></td>
-<td><strong><code>Experimental</code></strong> Whether this external field is required for read operations.</td>
+<td><strong><code>Experimental</code></strong> Whether the source needs this field's value to read the object at all (a required List parameter).</td>
 </tr>
 <tr>
 <td><a id="searchability"></a> <code>searchability?</code></td>
 <td><a href="../Searchability/"><code>Searchability</code></a></td>
-<td><strong><code>Experimental</code></strong> Field searchability metadata.</td>
+<td><strong><code>Experimental</code></strong> Whether and how the field can be filtered, as the source reports it. Without it the field cannot be used in filters.</td>
 </tr>
 <tr>
 <td><a id="sortable"></a> <code>sortable?</code></td>
 <td><code>boolean</code></td>
-<td><strong><code>Experimental</code></strong> Whether this external field can be used for sorting.</td>
+<td><strong><code>Experimental</code></strong> Whether the entity can be sorted on this field.</td>
 </tr>
 </tbody>
 </table>
