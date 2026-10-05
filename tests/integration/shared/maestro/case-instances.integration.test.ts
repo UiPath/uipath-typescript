@@ -404,7 +404,10 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
       // settles on Paused without running again, re-issue the resume: it is idempotent
       // from Paused and no longer races the pause transition.
       let resumedStatus = '';
-      for (let attempt = 0; attempt < 30; attempt++) {
+      // Deadline rather than a poll count: under load the Resuming -> Running transition
+      // alone has outlasted 30 x 2 s polls (observed: still Resuming at the last read)
+      const runningDeadline = Date.now() + 120_000;
+      for (let attempt = 0; Date.now() < runningDeadline; attempt++) {
         const current = await caseInstances.getById(target.instanceId, target.folderKey);
         resumedStatus = current.latestRunStatus;
         if (resumedStatus === InstanceStatus.RUNNING) {
@@ -419,7 +422,8 @@ describeIntegration('Maestro Case Instances - Integration Tests', 'both', modes,
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       expect(resumedStatus).toBe(InstanceStatus.RUNNING);
-    }, 120_000);
+      // pause poll (~20 s) + up to 120 s for the resume to settle, plus a possible re-seed
+    }, 240_000);
   });
 
   // Runs after pause/resume (see note there): the ad-hoc trigger spawns an in-flight task
