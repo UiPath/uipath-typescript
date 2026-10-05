@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1794,7 +1796,7 @@
   
   
     <li class="md-nav__item">
-      <a href="interfaces/PlatformServiceModel/" class="md-nav__link">
+      <a href="interfaces/PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="interfaces/PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3883,6 +3913,7 @@
 <li><a href="enumerations/PackageSourceType/">PackageSourceType</a></li>
 <li><a href="enumerations/PackageType/">PackageType</a></li>
 <li><a href="enumerations/PlatformActionScopeType/">PlatformActionScopeType</a></li>
+<li><a href="enumerations/PlatformGroupType/">PlatformGroupType</a></li>
 <li><a href="enumerations/PlatformPrincipalType/">PlatformPrincipalType</a></li>
 <li><a href="enumerations/PlatformRoleScopeType/">PlatformRoleScopeType</a></li>
 <li><a href="enumerations/PlatformRoleSortField/">PlatformRoleSortField</a></li>
@@ -4172,7 +4203,7 @@
 <li><a href="interfaces/ElementRunMetadata/">ElementRunMetadata</a></li>
 <li><a href="interfaces/ElementsServiceModel/">ElementsServiceModel</a></li>
 <li><a href="interfaces/ElementStats/">ElementStats</a></li>
-<li><a href="interfaces/EntityAddFieldsToSource/">EntityAddFieldsToSource</a></li>
+<li><a href="interfaces/EntityAddExternalFields/">EntityAddExternalFields</a></li>
 <li><a href="interfaces/EntityAggregate/">EntityAggregate</a></li>
 <li><a href="interfaces/EntityBatchInsertOptions/"><del>EntityBatchInsertOptions</del></a></li>
 <li><a href="interfaces/EntityBatchInsertResponse/">EntityBatchInsertResponse</a></li>
@@ -4217,11 +4248,11 @@
 <li><a href="interfaces/EntityQueryRecordsResponse/">EntityQueryRecordsResponse</a></li>
 <li><a href="interfaces/EntityQuerySortOption/">EntityQuerySortOption</a></li>
 <li><a href="interfaces/EntityRecord/">EntityRecord</a></li>
+<li><a href="interfaces/EntityRemoveExternalFields/">EntityRemoveExternalFields</a></li>
 <li><a href="interfaces/EntityRemoveFieldOptions/">EntityRemoveFieldOptions</a></li>
-<li><a href="interfaces/EntityRemoveFieldsFromSource/">EntityRemoveFieldsFromSource</a></li>
 <li><a href="interfaces/EntityServiceModel.md">EntityServiceModel</a></li>
 <li><a href="interfaces/EntityUpdateByIdOptions/">EntityUpdateByIdOptions</a></li>
-<li><a href="interfaces/EntityUpdateExternalFieldMapping/">EntityUpdateExternalFieldMapping</a></li>
+<li><a href="interfaces/EntityUpdateExternalConnection/">EntityUpdateExternalConnection</a></li>
 <li><a href="interfaces/EntityUpdateOptions/"><del>EntityUpdateOptions</del></a></li>
 <li><a href="interfaces/EntityUpdateRecordOptions/">EntityUpdateRecordOptions</a></li>
 <li><a href="interfaces/EntityUpdateRecordResponse/">EntityUpdateRecordResponse</a></li>
@@ -4257,6 +4288,7 @@
 <li><a href="interfaces/ExternalSourceFields/">ExternalSourceFields</a></li>
 <li><a href="interfaces/ExternalValue/">ExternalValue</a></li>
 <li><a href="interfaces/FailureRecord/">FailureRecord</a></li>
+<li><a href="interfaces/FederatedSourceRef/">FederatedSourceRef</a></li>
 <li><a href="interfaces/FeedbackCategory/">FeedbackCategory</a></li>
 <li><a href="interfaces/FeedbackCategoryInput/">FeedbackCategoryInput</a></li>
 <li><a href="interfaces/FeedbackCategoryResponse/">FeedbackCategoryResponse</a></li>
@@ -4338,6 +4370,11 @@
 <li><a href="interfaces/PlatformEffectiveAccessResponse/">PlatformEffectiveAccessResponse</a></li>
 <li><a href="interfaces/PlatformEffectiveRole/">PlatformEffectiveRole</a></li>
 <li><a href="interfaces/PlatformEffectiveRoleAssignment/">PlatformEffectiveRoleAssignment</a></li>
+<li><a href="interfaces/PlatformGroupCreateOptions/">PlatformGroupCreateOptions</a></li>
+<li><a href="interfaces/PlatformGroupMember/">PlatformGroupMember</a></li>
+<li><a href="interfaces/PlatformGroupMethods/">PlatformGroupMethods</a></li>
+<li><a href="interfaces/PlatformGroupServiceModel/">PlatformGroupServiceModel</a></li>
+<li><a href="interfaces/PlatformGroupUpdateOptions/">PlatformGroupUpdateOptions</a></li>
 <li><a href="interfaces/PlatformPrincipalRoleAssignments/">PlatformPrincipalRoleAssignments</a></li>
 <li><a href="interfaces/PlatformRoleAction/">PlatformRoleAction</a></li>
 <li><a href="interfaces/PlatformRoleActionGetAllOptions/">PlatformRoleActionGetAllOptions</a></li>
@@ -4350,9 +4387,8 @@
 <li><a href="interfaces/PlatformRoleServiceModel/">PlatformRoleServiceModel</a></li>
 <li><a href="interfaces/PlatformRoleUpdateOptions/">PlatformRoleUpdateOptions</a></li>
 <li><a href="interfaces/PlatformServiceMetadata/">PlatformServiceMetadata</a></li>
-<li><a href="interfaces/PlatformServiceModel/">PlatformServiceModel</a></li>
 <li><a href="interfaces/PlatformSetting/">PlatformSetting</a></li>
-<li><a href="interfaces/PlatformSettingGetOptions/">PlatformSettingGetOptions</a></li>
+<li><a href="interfaces/PlatformSettingServiceModel/">PlatformSettingServiceModel</a></li>
 <li><a href="interfaces/PlatformSettingUpsert/">PlatformSettingUpsert</a></li>
 <li><a href="interfaces/PlatformUserMethods/">PlatformUserMethods</a></li>
 <li><a href="interfaces/PlatformUserServiceModel/">PlatformUserServiceModel</a></li>
@@ -4407,6 +4443,7 @@
 <li><a href="interfaces/RawFunctionGetResponse/">RawFunctionGetResponse</a></li>
 <li><a href="interfaces/RawJobGetResponse/">RawJobGetResponse</a></li>
 <li><a href="interfaces/RawMaestroProcessGetAllResponse/">RawMaestroProcessGetAllResponse</a></li>
+<li><a href="interfaces/RawPlatformGroupGetResponse/">RawPlatformGroupGetResponse</a></li>
 <li><a href="interfaces/RawPlatformRoleGetResponse/">RawPlatformRoleGetResponse</a></li>
 <li><a href="interfaces/RawPlatformUserGetResponse/">RawPlatformUserGetResponse</a></li>
 <li><a href="interfaces/RawProcessInstanceGetResponse/">RawProcessInstanceGetResponse</a></li>
@@ -4553,6 +4590,7 @@
 <li><a href="type-aliases/PaginationOptions/">PaginationOptions</a></li>
 <li><a href="type-aliases/PartialUiPathConfig/">PartialUiPathConfig</a></li>
 <li><a href="type-aliases/PlatformEffectiveAccessPrincipal/">PlatformEffectiveAccessPrincipal</a></li>
+<li><a href="type-aliases/PlatformGroupGetResponse/">PlatformGroupGetResponse</a></li>
 <li><a href="type-aliases/PlatformRoleAssignmentGetAllOptions/">PlatformRoleAssignmentGetAllOptions</a></li>
 <li><a href="type-aliases/PlatformRoleGetAllOptions/">PlatformRoleGetAllOptions</a></li>
 <li><a href="type-aliases/PlatformRoleGetResponse/">PlatformRoleGetResponse</a></li>
@@ -4614,6 +4652,7 @@
 <li><a href="functions/createEntityWithMethods/">createEntityWithMethods</a></li>
 <li><a href="functions/createFunctionWithMethods/">createFunctionWithMethods</a></li>
 <li><a href="functions/createJobWithMethods/">createJobWithMethods</a></li>
+<li><a href="functions/createPlatformGroupWithMethods/">createPlatformGroupWithMethods</a></li>
 <li><a href="functions/createPlatformRoleWithMethods/">createPlatformRoleWithMethods</a></li>
 <li><a href="functions/createPlatformUserWithMethods/">createPlatformUserWithMethods</a></li>
 <li><a href="functions/createProcessInstanceWithMethods/">createProcessInstanceWithMethods</a></li>

@@ -1745,6 +1745,8 @@
       
         
       
+        
+      
     
     
     
@@ -1794,7 +1796,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PlatformServiceModel/" class="md-nav__link">
+      <a href="../PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1858,6 +1860,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -3762,17 +3792,17 @@
 <tr>
 <td><a id="jointype"></a> <code>joinType</code></td>
 <td><a href="../../enumerations/JoinType/"><code>JoinType</code></a></td>
-<td><strong><code>Experimental</code></strong> How records are matched across the two sources.</td>
+<td><strong><code>Experimental</code></strong> How records are matched across the two sources. The backend stores every join as a left join, whatever value is passed.</td>
 </tr>
 <tr>
 <td><a id="relatedsourcejoinfield"></a> <code>relatedSourceJoinField</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Field on the related source object used to match.</td>
+<td><strong><code>Experimental</code></strong> External field name on the related object that is matched. It must be mapped on the related source.</td>
 </tr>
 <tr>
 <td><a id="relatedsourceobjectconnectionid"></a> <code>relatedSourceObjectConnectionId?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Connection id of the related source object.</td>
+<td><strong><code>Experimental</code></strong> Connection of the related object: an Integration Service <code>connectionId</code>, or the <code>entityId</code> for a native source.</td>
 </tr>
 <tr>
 <td><a id="relatedsourceobjectname"></a> <code>relatedSourceObjectName</code></td>
@@ -3782,17 +3812,17 @@
 <tr>
 <td><a id="sourcejoinfield"></a> <code>sourceJoinField</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Field on the source object used to match.</td>
+<td><strong><code>Experimental</code></strong> External field name on the source object that is matched. It must be mapped on the source.</td>
 </tr>
 <tr>
 <td><a id="sourceobjectconnectionid"></a> <code>sourceObjectConnectionId?</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Connection id of the source object (the external connection this object belongs to).</td>
+<td><strong><code>Experimental</code></strong> Connection of the source object: an Integration Service <code>connectionId</code>, or the <code>entityId</code> for a native source. Identifies the source when two sources share an object name.</td>
 </tr>
 <tr>
 <td><a id="sourceobjectname"></a> <code>sourceObjectName</code></td>
 <td><code>string</code></td>
-<td><strong><code>Experimental</code></strong> Name of the object on the owning side of the join.</td>
+<td><strong><code>Experimental</code></strong> Name of the object on the owning side of the join. The owning side of every join is the entity's primary source.</td>
 </tr>
 </tbody>
 </table>
