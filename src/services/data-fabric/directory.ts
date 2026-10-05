@@ -17,7 +17,7 @@ import {
   DataFabricDirectoryRevokePayload,
   RawDataFabricDirectoryListResponse,
 } from '../../models/data-fabric/directory.internal-types';
-import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
 

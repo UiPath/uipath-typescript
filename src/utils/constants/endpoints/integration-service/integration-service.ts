@@ -6,7 +6,7 @@
  * - `elements_/v3/element` — connector elements and metadata (ELEMENT_ENDPOINTS)
  */
 
-import { CONNECTIONS_BASE, ELEMENTS_BASE } from './base';
+import { CONNECTIONS_BASE, ELEMENTS_BASE } from '../base';
 
 export const CONNECTOR_ENDPOINTS = {
   GET_ALL: `${CONNECTIONS_BASE}/api/v1/Connectors`,

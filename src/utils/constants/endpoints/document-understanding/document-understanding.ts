@@ -2,7 +2,7 @@
  * Document Understanding Framework Service Endpoints
  */
 
-import { DU_FRAMEWORK_BASE } from './base';
+import { DU_FRAMEWORK_BASE } from '../base';
 
 /**
  * Validation-station flow endpoints: start a validation action for an extraction

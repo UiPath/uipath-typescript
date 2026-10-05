@@ -2,7 +2,7 @@
  * Identity/Authentication Endpoints
  */
 
-import { IDENTITY_BASE, IDENTITY_API_BASE } from './base';
+import { IDENTITY_BASE, IDENTITY_API_BASE } from '../base';
 
 /**
  * Identity Service Endpoints

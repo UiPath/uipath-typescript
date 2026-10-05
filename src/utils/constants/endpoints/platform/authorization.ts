@@ -2,7 +2,7 @@
  * Authorization Service Endpoints (platform roles and role assignments)
  */
 
-import { AUTHORIZATION_BASE } from './base';
+import { AUTHORIZATION_BASE } from '../base';
 
 /**
  * Platform Role Endpoints

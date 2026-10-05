@@ -1,4 +1,4 @@
-import { LLMOPS_BASE } from './base';
+import { LLMOPS_BASE } from '../base';
 
 /**
  * Traces Service Endpoints

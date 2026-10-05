@@ -60,8 +60,7 @@ import {
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { OVERRIDE_TEST_CONSTANTS } from "../../../utils/constants/overrides";
-import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
-import { DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints/data-fabric";
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from "../../../../src/utils/constants/endpoints";
 import { ValidationError } from "../../../../src/core/errors";
 import { SqlFieldType, FieldSchemaPayload, EntityClassId } from "@/models/data-fabric/entities.internal-types";
 

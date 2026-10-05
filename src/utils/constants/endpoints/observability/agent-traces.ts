@@ -1,4 +1,4 @@
-import { INSIGHTS_RTM_BASE, LLMOPS_BASE } from './base';
+import { INSIGHTS_RTM_BASE, LLMOPS_BASE } from '../base';
 
 /**
  * Agent Traces Service Endpoints
