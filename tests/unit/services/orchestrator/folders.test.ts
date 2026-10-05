@@ -69,14 +69,14 @@ describe('FolderService Unit Tests', () => {
       expect(result).toEqual(PAGE);
     });
 
-    it('should forward pagination options and keep take/skip unprefixed', async () => {
+    it('should forward pagination options to the pagination helper', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(PAGE);
 
       await folderService.getAll({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ excludeFromPrefix: ['pageSize'] }),
-        expect.objectContaining({ pageSize: TEST_CONSTANTS.PAGE_SIZE }),
+        expect.any(Object),
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE },
       );
     });
 

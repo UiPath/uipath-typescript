@@ -46,9 +46,7 @@ export class FolderService extends BaseService implements FolderServiceModel {
           offsetParam: FOLDER_OFFSET_PARAMS.OFFSET_PARAM,
           countParam: FOLDER_OFFSET_PARAMS.COUNT_PARAM
         }
-      },
-      // `take` / `skip` are not OData params — keep them unprefixed.
-      excludeFromPrefix: Object.keys(options || {})
+      }
     }, options);
   }
 
