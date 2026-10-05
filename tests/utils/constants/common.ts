@@ -2,17 +2,6 @@
  * Common test constants used across all services
  */
 
-/**
- * The agent deployed in the integration test tenant. Both the agents and the
- * observability (agent traces) suites exercise it, so it lives in this shared file
- * rather than in a domain's constants file: a change to it runs every suite.
- */
-export const TEST_AGENT = {
-  AGENT_ID: '632fabd7-891d-425f-ad5d-1b3a4ce9ba4b',
-  AGENT_VERSION: '1.0.0',
-  REFERENCE_ID: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-} as const;
-
 export const TEST_CONSTANTS = {
   // Basic identifiers
   USER_ID: 123,

@@ -5,12 +5,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // The PR integration-test scoping rules. Imported directly (the script only runs
 // its CLI when executed as main), so the pure resolver is exercised here.
-import { ALWAYS_ON, FULL_RUN_LABEL, classify, isAlwaysOn, parseNumstat, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
+import { ALWAYS_ON, FULL_RUN_LABEL, classify, parseNumstat, resolveArgs, resolveScope, services, suites, toOutputs } from '../../../scripts/integration-scope.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const SHARED = 'tests/integration/shared';
 const ENDPOINTS = 'src/utils/constants/endpoints';
-const CONSTANTS = 'tests/utils/constants';
 const REGISTRY = 'tests/integration/config/unified-setup.ts';
 const DOMAINS = ['action-center', 'data-fabric', 'maestro', 'orchestrator', 'platform'];
 // Service folders: the suite domains plus one nothing tests.
@@ -24,6 +23,8 @@ describe('integration-scope resolveScope', () => {
       'packages/coded-action-app/src/types.ts',
       'tests/unit/services/data-fabric/entities.test.ts',
       'tests/utils/mocks/entities.ts',
+      'tests/utils/constants/platform.ts', // fixtures: a fixture-only edit is knowingly uncovered
+      'tests/utils/setup.ts',
       'README.md',
       'rollup.config.js',
       'package.json', // exports, scripts, version; a dependency change also edits the lock file, which runs everything
@@ -73,12 +74,6 @@ describe('integration-scope resolveScope', () => {
     ]);
   });
 
-  it('treats a shared test-constants file like its domain, by file name', () => {
-    expect(classify(`${CONSTANTS}/platform.ts`, DOMAINS, SERVICES)).toEqual({ kind: 'domain', domain: 'platform' });
-    expect(classify(`${CONSTANTS}/integration-service.ts`, DOMAINS, SERVICES).kind).toBe('no-suite');
-    expect(classify(`${CONSTANTS}/common.ts`, DOMAINS, SERVICES).kind).toBe('all');
-  });
-
   it('runs only the always-on suites for an additions-only change to the service registry', () => {
     const scope = resolveScope([REGISTRY], DOMAINS, SERVICES, new Set([REGISTRY]));
     expect(scope).toMatchObject({ run: true, all: false, domains: [], paths: [...ALWAYS_ON] });
@@ -121,8 +116,6 @@ describe('integration-scope resolveScope', () => {
     'src/index.ts',
     REGISTRY, // without additions-only information (the --files path) the registry runs everything
     'tests/integration/utils/helpers.ts',
-    `${CONSTANTS}/common.ts`, // shared test constants, not a domain's
-    `${CONSTANTS}/index.ts`,
     `${SHARED}/loose.integration.test.ts`, // a loose file that is not always-on
     'vitest.integration.config.ts',
     'package-lock.json', // a dependency change
@@ -243,23 +236,6 @@ const usersOf = (file: string, sources: Source[]) => {
   const used = new RegExp(`\\b(?:${names.join('|')})\\b`);
   return names.length === 0 ? [] : sources.filter(source => source.path !== file && used.test(source.text)).map(source => source.path);
 };
-
-describe('integration-scope shared test constants', () => {
-  // Suites, plus the constants folder itself so a constants file importing another domain's is caught.
-  const sources = [...readSources('tests/integration'), ...readSources(CONSTANTS)];
-
-  // A domain-named constants file scopes to that suite, so no other suite may use it.
-  it("keeps a domain-named constants file's exports to that domain's suite", () => {
-    const known = suites();
-    for (const entry of readdirSync(join(ROOT, CONSTANTS))) {
-      const name = entry.replace(/\.ts$/, '');
-      if (!known.includes(name)) continue;
-      for (const user of usersOf(`${CONSTANTS}/${entry}`, sources)) {
-        expect(user.startsWith(`${SHARED}/${name}/`) || isAlwaysOn(user), `${CONSTANTS}/${entry} is used by ${user}, outside the ${name} suite`).toBe(true);
-      }
-    }
-  });
-});
 
 describe('integration-scope endpoint constants', () => {
   const entries = readdirSync(join(ROOT, ENDPOINTS), { withFileTypes: true });

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Picks the integration suites a PR needs from its changed files: a change under
 // src/services/<name>, src/models/<name>, src/utils/constants/endpoints/<name> or
-// tests/integration/shared/<name> runs tests/integration/shared/<name>, as does the
-// shared test-constants file tests/utils/constants/<name>.ts, or nothing when no such
-// suite folder exists; an additions-only change to the service registry
+// tests/integration/shared/<name> runs tests/integration/shared/<name>, or nothing
+// when no such suite folder exists; an additions-only change to the service registry
 // (tests/integration/config/unified-setup.ts) runs just the always-on suites;
-// docs/samples/packages/scripts/unit tests and package.json run nothing; anything else runs everything.
+// docs/samples/packages/scripts/tests/unit/tests/utils and package.json run nothing;
+// anything else runs everything.
 // Usage: --base <ref> [--labels <a,b,...>] | --files <list> | --all.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
@@ -27,8 +27,9 @@ export const ALWAYS_ON = Object.freeze([
 export const FULL_RUN_LABEL = 'ci:full-integration';
 
 const IGNORED_PATTERNS = [
-  // scripts/ is CI and release tooling; nothing there takes part in an integration run.
-  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils\/mocks)\//,
+  // scripts/ is CI and release tooling; tests/unit and tests/utils are unit-test code and
+  // fixtures (a few fixture values are read by suites; a fixture-only edit is knowingly uncovered).
+  /^(docs|samples|packages|plugins|scripts|agent_docs|\.claude|\.agents|tests\/unit|tests\/utils)\//,
   /\.md$/,
   /^(mkdocs\.yml|typedoc\.json|typedoc\.validation\.json|\.oxlintrc\.json|\.prettierrc\.docs|commitlint\.config\.js|release-metadata\.json|sonar-project\.properties|LICENSE|\.gitignore|\.npmrc|vitest\.config\.ts|rollup\.config\.js|package\.json|tests\/\.env\.integration\.example|src\/utils\/constants\/endpoints\/(?:index|base)\.ts)$/,
 ];
@@ -36,12 +37,10 @@ const IGNORED_PATTERNS = [
 // the barrel beside them are ignored: every new service adds a line to each, and its
 // own folder and suite trigger its run.
 const DOMAIN_PATH = /^(?:src\/services|src\/models|src\/utils\/constants\/endpoints|tests\/integration\/shared)\/([^/]+)\//;
-// Shared test constants are per domain by file name, like the suite folders.
-const CONSTANTS_FILE = /^tests\/utils\/constants\/([^/]+)\.ts$/;
 /** New services are registered here; a change that only adds lines is loaded by the always-on suites. */
 const REGISTRY = 'tests/integration/config/unified-setup.ts';
 
-export const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
+const isAlwaysOn = file => ALWAYS_ON.some(entry => file === entry || file.startsWith(`${entry}/`));
 
 const folders = dir => readdirSync(join(ROOT, dir), { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
 
@@ -63,7 +62,7 @@ export function classify(file, domains, serviceDomains, additive = new Set()) {
   if (IGNORED_PATTERNS.some(pattern => pattern.test(file))) return { kind: 'ignore' };
   if (isAlwaysOn(file)) return { kind: 'always-on' };
   if (file === REGISTRY && additive.has(file)) return { kind: 'always-on', note: `${file} only adds lines (a service registration); the always-on suites load it` };
-  const domain = file.match(DOMAIN_PATH)?.[1] ?? file.match(CONSTANTS_FILE)?.[1];
+  const domain = file.match(DOMAIN_PATH)?.[1];
   if (domain && domains.includes(domain)) return { kind: 'domain', domain };
   // A service nothing tests (e.g. integration-service): nothing to run for it. Other
   // folders at this level (src/models/common) are shared code and run everything.

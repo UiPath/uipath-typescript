@@ -2,8 +2,6 @@
  * Test constants for the Agents service
  */
 
-import { TEST_AGENT } from './common';
-
 export const AGENT_TEST_CONSTANTS = {
   FOLDER_KEY_1: 'c2751834-1f05-4f4e-9cb8-509406f6faac',
   FOLDER_KEY_2: 'f1537e42-50a0-4598-8305-ac95260132cf',
@@ -13,7 +11,7 @@ export const AGENT_TEST_CONSTANTS = {
   START_TIME: '2025-05-01T00:00:00Z',
   END_TIME: '2026-05-14T00:00:00Z',
   TIMELINE_DATE: '2025-04-12T00:00:00Z',
-  AGENT_ID: TEST_AGENT.AGENT_ID,
+  AGENT_ID: '632fabd7-891d-425f-ad5d-1b3a4ce9ba4b',
   JOB_KEY: 'fa574767-4544-4949-ac6f-bc178ecaf0df',
   PROCESS_KEY: 'eb19ab4e-7fc6-48ed-b43f-8f3ec322cf77',
   JOB_START_TIME: '2025-06-11T12:24:58Z',
@@ -22,7 +20,7 @@ export const AGENT_TEST_CONSTANTS = {
   FOLDER_PATH: 'APPS_TestPass_Folder/conv_agent',
   PROJECT_KEY: 'proj-1',
   PROCESS_VERSION: '1.0.0',
-  AGENT_VERSION: TEST_AGENT.AGENT_VERSION,
+  AGENT_VERSION: '1.0.0',
   TRACE_ERROR_NAME: 'SystemDesignQuiz.agent.ConvSystemDesignAgent',
   TRACE_AGENT_UNITS_CONSUMED: 1.4,
   TRACE_PLATFORM_UNITS_CONSUMED: 0.6,
@@ -35,7 +33,7 @@ export const AGENT_TEST_CONSTANTS = {
   LATENCY_PERCENTILE_P95: 'P95',
   SUMMARY_LAST_JOB_STATUS: 'Success',
   TRACE_ID: 'b3f1c2d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
-  REFERENCE_ID: TEST_AGENT.REFERENCE_ID,
+  REFERENCE_ID: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   SPAN_ID: '0af7651916cd43dd8448eb211c80319c',
   PARENT_SPAN_ID: 'b9c7c989f97918e1',
   SPAN_NAME: 'agent.invoke',
