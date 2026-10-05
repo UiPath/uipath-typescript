@@ -4390,6 +4390,17 @@ credential fields and never touches the workload token:</p>
 <p>Construct the SDK <strong>inside the handler</strong>, once per invocation. A single instance
 hoisted to module scope would keep serving the org, tenant and token of whichever
 invocation created it.</p>
+<p>The constructor reads <code>ctx.platform</code> — <code>baseUrl</code>, reduced to its origin, and the
+<code>orgId</code> and <code>tenantId</code> GUIDs, which the platform accepts in place of names — and
+<code>ctx.robot.accessToken</code> as the bearer token. <code>ctx.platform.folderKey</code> is the
+fallback folder for a call that needs a folder and names none, such as a lookup
+by name, which runs against the invocation's folder. Integration Service calls
+are left unscoped: Integration Service rejects a connection outside the folder a
+call names, and the connection a function uses often lives in another folder.
+Explicit <code>folderId</code>, <code>folderKey</code> or <code>folderPath</code> options still win. On a local
+run, where <code>ctx.platform</code> is null, the constructor
+falls through to the environment contract below; when neither supplies a
+coordinate, the error names it.</p>
 <h2 id="server-side-and-scripts-environment-contract">Server-side and scripts (environment contract)<a class="headerlink" href="#server-side-and-scripts-environment-contract" title="Permanent link">&para;</a></h2>
 <p>Outside the browser — a script, a test, a CI job — the SDK configures itself
 from environment variables, so <code>new UiPath()</code> needs no arguments:</p>

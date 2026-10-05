@@ -3833,8 +3833,9 @@
 (<code>folderId</code> / <code>folderKey</code> / <code>folderPath</code>) with the OData query options
 (<code>expand</code>, <code>select</code>, <code>filter</code>, <code>orderby</code>) accepted by the start endpoint.</p>
 <p>Folder scoping is optional in the type — the SDK falls back to the
-init-time folderKey (e.g. <code>&lt;meta name="uipath:folder-key"&gt;</code> in coded-app
-deployments). A <code>ValidationError</code> is raised when neither is provided.</p>
+init-time folderKey (a coded function's <code>ctx.platform.folderKey</code>, or
+<code>&lt;meta name="uipath:folder-key"&gt;</code> in coded-app deployments). A
+<code>ValidationError</code> is raised when neither is provided.</p>
 <h2 id="extends">Extends<a class="headerlink" href="#extends" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../FolderScopedOptions/"><code>FolderScopedOptions</code></a>.<a href="../RequestOptions/"><code>RequestOptions</code></a></li>
