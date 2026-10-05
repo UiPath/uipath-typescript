@@ -258,6 +258,8 @@ export default defineFunction({
 
 Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
 
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the `orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and `ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the fallback folder for a call that needs a folder and names none, such as a lookup by name, which runs against the invocation's folder. Integration Service calls are left unscoped: Integration Service rejects a connection outside the folder a call names, and the connection a function uses often lives in another folder. Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local run, where `ctx.platform` is null, the constructor falls through to the environment contract below; when neither supplies a coordinate, the error names it.
+
 ## Server-side and scripts (environment contract)
 
 Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
@@ -605,10 +607,11 @@ console.log(`Total count: ${allAssets.totalCount}`);
 
 Standalone helper functions that you call directly. Unlike the SDK's services, they need no `UiPath` instance and no `initialize()` call — just import them from `@uipath/uipath-typescript/core`.
 
-| Helper          | Description                                                               |
-| --------------- | ------------------------------------------------------------------------- |
-| `httpRequest()` | Calls any URL, with optional retries and backoff                          |
-| `wait()`        | Pauses for a given duration, useful between calls you are pacing yourself |
+| Helper          | Description                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `httpRequest()` | Calls any URL, with optional retries and backoff                                                      |
+| `wait()`        | Pauses for a given duration, useful between calls you are pacing yourself                             |
+| `trace()`       | Marks a point in your code, or every call of a method, so you can see its values without a breakpoint |
 
 For third-party endpoints
 
@@ -732,6 +735,42 @@ import { wait } from '@uipath/uipath-typescript/core';
 
 await wait(1000); // pause for one second
 ```
+
+## trace()
+
+Records a point in your code, with optional named values, so you can inspect it without a breakpoint. Call it as a statement to mark a line, or apply it as a decorator to record every call of a class method.
+
+```
+import { trace } from '@uipath/uipath-typescript/core';
+
+const total = lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+trace('after-total', { orderId: '<orderId>', total });
+```
+
+When tracing is available, such as in a UiPath coded function, the marker is added to the trace. Otherwise it is printed with `console.debug`. `trace` never throws.
+
+### Tracing a Method
+
+```
+import { trace } from '@uipath/uipath-typescript/core';
+
+class ApprovalPolicy {
+  @trace
+  approve(total: number): boolean {
+    return total <= 1000;
+  }
+}
+```
+
+Each call is recorded under the method's name, with its arguments and its result, or the error it threw. Markers recorded during the call appear under it. The method behaves exactly as before.
+
+- Apply `@trace` without parentheses.
+- It works with standard decorators and with `experimentalDecorators`.
+- It applies to class methods only.
+
+What gets recorded
+
+Markers can include the values you pass, the arguments and results of traced methods, and the local variables of the calling function. Do not trace code that handles secrets or personal data.
 # API Reference
 
 Service for managing UiPath Assets.
@@ -3186,6 +3225,8 @@ const allEntities = await entities.getAll();
 
 Creates a new Data Fabric entity with the given schema
 
+To create a **Federated** entity — a read-only view over one or more external (Integration Service) or native sources — set `entityClass` to `Federated`, describe each source in `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1 `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
+
 #### Parameters
 
 - `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
@@ -3251,8 +3292,11 @@ await entities.create("<entityName>", [], {
     }],
   }],
   // Multi-source: add more entries to `externalFields` and join them:
-  // sourceJoinConditionDetails: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>",
-  //   joinType: JoinType.LeftJoin, relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>" }],
+  // sourceJoinConditionDetails: [{
+  //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin,
+  //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+  // }],
 });
 ```
 
@@ -4207,12 +4251,17 @@ Updates an existing Data Fabric entity — schema and/or metadata.
 
 Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
 
-For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources` (also removes that source's joins), `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, and `updateSourceJoin`. `addFieldsToSource` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field.
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+
+- **Identifying things.** A delta that targets an existing source identifies it by **both** `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId` for a native source), because an entity may have two sources with the same object name on different connections.
+- **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one source, the *primary source*. The primary source is not stored: it is the source on the left of every join. A join cannot be removed on its own, since every other source must stay joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`. To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`. `updateSourceJoin` only changes the join fields of an existing join.
+- **Fields.** `addExternalFields` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field. A source must keep at least one field, and a field name must be unique across all sources. Mapping settings (direction, searchable, sortable) cannot be changed after a source is added.
+- **Sources.** A Federated entity always has at least one source: to replace its only source, remove it and add the new one in the same call. The saved result is validated by the backend (join graph, duplicate sources, duplicate field names, empty sources).
 
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -4260,28 +4309,42 @@ await entities.updateById(<id>, {
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
 });
 
-// Federated: add a source joined to the existing graph
+// Federated: add a source joined to the existing graph. Every source is identified by
+// (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
 await entities.updateById(<id>, {
   addExternalSources: [{
     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
     externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
     fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
   }],
-  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
 });
 
 // Federated: add a field to an existing source (maps a field that already exists on it)
 await entities.updateById(<id>, {
-  addFieldsToSource: [{ sourceObjectName: "<objectName>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+  addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
 });
 
-// Federated: change an existing join in place
+// Federated: change the join fields of an existing join (its sources and direction stay the same)
 await entities.updateById(<id>, {
-  updateSourceJoin: [{ sourceObjectName: "<objectName>", relatedSourceObjectName: "<relatedObjectName>", sourceJoinField: "<externalFieldName>" }],
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
 });
 
-// Federated: remove a source (its joins are removed automatically)
-await entities.updateById(<id>, { removeExternalSources: ["<relatedObjectName>"] });
+// Federated: change the primary source. Pass the complete new join set, rooted at the new
+// primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+await entities.updateById(<id>, {
+  replaceSourceJoins: [
+    { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+  ],
+});
+
+// Federated: swap a connector source's connection id
+await entities.updateById(<id>, {
+  updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+});
+
+// Federated: remove a non-primary source (its join is removed with it)
+await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
 ```
 
 ### updateRecord()

@@ -3952,8 +3952,10 @@ or inspect a single connection.</p>
 via <code>pageIndex</code>/<code>pageSize</code>; there is no continuation cursor, so callers
 paginate by incrementing <code>pageIndex</code> until a short page is returned.</p>
 <p>Folder scoping is optional — pass <code>folderId</code>, <code>folderKey</code>, or <code>folderPath</code>
-to narrow the query. When none is supplied, the folder context the SDK was
-initialized with is used.</p>
+to list a folder's connections. When none is supplied, a deployed coded
+app's folder is used; elsewhere, including in a coded function, the service
+lists the caller's personal workspace, so a robot account, which has none,
+gets an empty list.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
