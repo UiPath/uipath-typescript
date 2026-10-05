@@ -116,6 +116,16 @@
                 "default": "./dist/processes/index.cjs"
             }
         },
+        "./folders": {
+            "import": {
+                "types": "./dist/folders/index.d.ts",
+                "default": "./dist/folders/index.mjs"
+            },
+            "require": {
+                "types": "./dist/folders/index.d.ts",
+                "default": "./dist/folders/index.cjs"
+            }
+        },
         "./cases": {
             "import": {
                 "types": "./dist/cases/index.d.ts",
@@ -204,6 +214,16 @@
             "require": {
                 "types": "./dist/agents/index.d.ts",
                 "default": "./dist/agents/index.cjs"
+            }
+        },
+        "./agenthub": {
+            "import": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agenthub/index.d.ts",
+                "default": "./dist/agenthub/index.cjs"
             }
         },
         "./governance": {

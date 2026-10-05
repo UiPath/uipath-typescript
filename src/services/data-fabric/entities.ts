@@ -79,6 +79,7 @@ import {
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta, EntityJoinPayload, FederatedUpsertParts, FederatedUpdateDeltas, RawEntityCloneJob } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
+import { resolveOverride } from '../../utils/overrides/resolve-override';
 
 /** Wire values for join types on the name-based multi-entity query route. */
 const JOIN_TYPE_WIRE: Record<JoinType, EntityJoinPayload['type']> = {
@@ -138,9 +139,25 @@ function carryForwardSource(source: Record<string, unknown>): Record<string, unk
 }
 
 /**
+ * Applies the runtime resource-overrides table to a design-time entity name. Data Fabric does
+ * not accept a `folderPath` header, so the redirect's `folderPath` field is intentionally ignored
+ * — only the redirected `name` is used. Unscoped `entity.<name>` publisher keys still match.
+ *
+ * Deliberately not named `resolveEntityName` to avoid colliding with the class-private async
+ * lookup `EntityService.resolveEntityName(id, folderKey)` (id → name via `GET_BY_ID`).
+ */
+function applyEntityNameOverride(entityName: string): string {
+  const override = resolveOverride('Entity', entityName);
+  return override?.name ?? entityName;
+}
+
+/**
  * Unwraps an {@link EntityRef} into the identifier and which Data Fabric route to hit.
  * Data Fabric exposes parallel by-id and by-name record/attachment routes, so a ref maps
  * to a direct endpoint switch — this is a synchronous check, not a lookup call.
+ *
+ * The `{name}` branch is routed through {@link applyEntityNameOverride} so a runtime override
+ * redirects the design-time entity name to the target before it becomes part of the URL.
  */
 function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boolean; identifier: string } {
   const { id, name } = (entityRef ?? {}) as { id?: string; name?: string };
@@ -153,7 +170,7 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
     return { byId: true, identifier: id };
   }
   if (name) {
-    return { byId: false, identifier: name };
+    return { byId: false, identifier: applyEntityNameOverride(name) };
   }
   throw new ValidationError({
     message: `${callerLabel}: entityRef must supply exactly one of 'id' or 'name'.`,
@@ -183,7 +200,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetByName')
   async getByName(entityName: string, options?: EntityGetByNameOptions): Promise<EntityGetResponse> {
-    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(entityName), options?.folderKey);
+    return this.fetchEntityMetadata(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_NAME(applyEntityNameOverride(entityName)), options?.folderKey);
   }
 
   @track('Entities.GetAllRecords')
@@ -207,7 +224,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
-    return this.getRecordsImpl<T>(false, entityName, options);
+    return this.getRecordsImpl<T>(false, applyEntityNameOverride(entityName), options);
   }
 
   @track('Entities.GetRecordById')
@@ -225,7 +242,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     recordId: string,
     options: EntityGetRecordByNameOptions = {}
   ): Promise<EntityRecord> {
-    return this.getRecordImpl(false, entityName, recordId, options);
+    return this.getRecordImpl(false, applyEntityNameOverride(entityName), recordId, options);
   }
 
   @track('Entities.InsertRecord')

@@ -219,6 +219,8 @@ nav:
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
+          - Document Understanding: api/interfaces/DuValidationServiceModel.md
+          - Folders: api/interfaces/FolderServiceModel.md
           - Functions: api/interfaces/FunctionServiceModel.md
           - Governance: api/interfaces/GovernanceServiceModel.md
           - Maestro:

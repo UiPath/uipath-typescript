@@ -23,6 +23,9 @@ jobs:
     secrets: inherit
     with:
       ref_label: ${{ github.base_ref }}
+      # Run only the integration suites the PR's changed files can affect;
+      # weekly-coverage.yml keeps running the full suite against main.
+      scope_to_changes: true
 
   test-and-build:
     # Gate job that reports the flat `test-and-build` status check required by
@@ -116,7 +119,16 @@ jobs:
     # enforced the next time it is changed). Not an oxlint rule — these are
     # filesystem/structural checks (file presence, README media, favicon) that a
     # source-code linter can't express, so they live as a script + this job.
+    # Also installs and builds each changed sample project from a clean checkout.
     runs-on: uipath-ubuntu-latest
+    # Sample builds run one after another; a full rebuild of every sample takes ~5 min.
+    timeout-minutes: 20
+    # Job-level so superseded integration runs aren't cancelled before cleanup.
+    # Only a new push changes the head SHA; opened/reopened can fire on a SHA
+    # with a run already in flight, and cancelling it would fail this check there.
+    concurrency:
+      group: check-samples-${{ github.event.number || github.ref }}
+      cancel-in-progress: ${{ github.event.action == 'synchronize' }}
     permissions:
       contents: read
     steps:
@@ -128,15 +140,35 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
         with:
-          node-version: '20'
+          # Angular 22 needs Node >=24.15.
+          node-version: '24'
+          # For the root npm ci; sample builds use a fresh cache each (build-samples.sh).
           cache: 'npm'
 
+      # Runs before the root npm ci: a root node_modules would let a sample
+      # resolve packages it never declared, hiding a missing dependency.
+      - name: Build changed sample projects
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            targets=$(node scripts/sample-build-targets.mjs --all)
+          else
+            targets=$(node scripts/sample-build-targets.mjs --changed "origin/$BASE_REF")
+          fi
+          # One path per line; sample directory names contain no whitespace.
+          bash scripts/build-samples.sh $targets
+
+      # This and the convention check run even if a build failed, so a PR sees both kinds of failure.
       - name: Install dependencies
+        if: ${{ !cancelled() }}
         run: npm ci
 
       # The rule logic is unit-tested in tests/unit/scripts/check-samples.test.ts
       # (runs with the normal test suite); this job only gates changed apps.
       - name: Check changed sample apps
+        if: ${{ !cancelled() }}
         # base_ref is empty on workflow_dispatch; fall back to main so the ref
         # is always valid (origin/main) instead of an invalid "origin/".
         env:

@@ -18,12 +18,14 @@ import {
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Agents } from '../../../src/services/agents';
 import { AgentMemory } from '../../../src/services/agents/memory';
+import { AgentHub } from '../../../src/services/agenthub';
 import { AgentTraces } from '../../../src/services/observability/traces/agent';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
 import { Functions } from '../../../src/services/orchestrator/functions';
+import { Folders } from '../../../src/services/orchestrator/folders';
 import { Platform } from '../../../src/services/platform';
 import { Roles } from '../../../src/services/platform/roles';
 import { Users } from '../../../src/services/platform/users';
@@ -74,11 +76,13 @@ export interface TestServices {
   agentTraces?: AgentTraces;
   traces?: Traces;
   agents?: Agents;
+  agentHub?: AgentHub;
   governance?: Governance;
   notifications?: Notifications;
   subscriptions?: Subscriptions;
   conversationalAgent?: ConversationalAgentService;
   functions?: Functions;
+  folders?: Folders;
   platform?: Platform;
   businessApps?: BusinessApps;
   platformUsers?: Users;
@@ -195,11 +199,13 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     agentTraces: new AgentTraces(sdk),
     traces: new Traces(sdk),
     agents: new Agents(sdk),
+    agentHub: new AgentHub(sdk),
     governance: new Governance(sdk),
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
     conversationalAgent: new ConversationalAgentService(sdk),
     functions: new Functions(sdk),
+    folders: new Folders(sdk),
     platform: new Platform(sdk),
     businessApps: new BusinessApps(sdk),
     platformUsers: new Users(sdk),

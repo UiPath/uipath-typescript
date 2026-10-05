@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  camelToSnakeCaseKeys,
   rewriteODataIdentifiers,
+  snakeToCamelCaseKeys,
   transformData,
   transformOptions,
 } from '../../../src/utils/transform';
@@ -219,5 +221,45 @@ describe('transformOptions', () => {
     const out = transformOptions(input, responseMap);
     expect(input.filter).toBe("processName eq 'X'");
     expect(out.filter).toBe("releaseName eq 'X'");
+  });
+});
+
+describe('snakeToCamelCaseKeys', () => {
+  it('converts snake_case keys including nested objects and arrays', () => {
+    expect(
+      snakeToCamelCaseKeys({
+        finish_reason: 'stop',
+        choices: [{ max_tokens: 16, nested_value: { prompt_tokens: 4 } }],
+      }),
+    ).toEqual({
+      finishReason: 'stop',
+      choices: [{ maxTokens: 16, nestedValue: { promptTokens: 4 } }],
+    });
+  });
+
+  it('drops the original snake_case key', () => {
+    const result = snakeToCamelCaseKeys({ finish_reason: 'stop' });
+    expect(result.finishReason).toBe('stop');
+    expect(result.finish_reason).toBeUndefined();
+  });
+});
+
+describe('camelToSnakeCaseKeys', () => {
+  it('converts camelCase keys including nested objects and arrays', () => {
+    expect(
+      camelToSnakeCaseKeys({
+        finishReason: 'stop',
+        choices: [{ maxTokens: 16, nestedValue: { promptTokens: 4 } }],
+      }),
+    ).toEqual({
+      finish_reason: 'stop',
+      choices: [{ max_tokens: 16, nested_value: { prompt_tokens: 4 } }],
+    });
+  });
+
+  it('drops the original camelCase key', () => {
+    const result = camelToSnakeCaseKeys({ maxTokens: 2048 });
+    expect(result.max_tokens).toBe(2048);
+    expect(result.maxTokens).toBeUndefined();
   });
 });
