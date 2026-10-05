@@ -7,7 +7,7 @@ import {
   DataFabricRoleType,
 } from '../../models/data-fabric/roles.types';
 import { FOLDER_KEY } from '../../utils/constants/headers';
-import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric/data-fabric';
+import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
