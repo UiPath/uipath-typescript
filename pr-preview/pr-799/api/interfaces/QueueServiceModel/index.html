@@ -1753,6 +1753,8 @@
       
         
       
+        
+      
     
     
     
@@ -1802,7 +1804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../PlatformServiceModel/" class="md-nav__link">
+      <a href="../PlatformSettingServiceModel/" class="md-nav__link">
         
   
   
@@ -1866,6 +1868,34 @@
     
   
     Roles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformGroupServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Groups
   
 
     
@@ -4453,7 +4483,9 @@ serialized to ISO-8601 strings.</p>
 marks it <code>InProgress</code></p>
 <p>Requires a robot session. Orchestrator allocates the item to the robot
 that sent the request, so user and application identities always receive
-<code>null</code>, however many items are waiting. Queue items are normally consumed
+<code>null</code>, however many items are waiting. Inside a coded function, build the
+SDK with <code>new UiPath(ctx)</code>: the SDK then sends the function's robot key,
+which Orchestrator needs to allocate the item. Queue items are normally consumed
 by a robot running a process — apps produce with <code>insertItemByName</code> and
 observe with <code>getAllItems</code>, leaving acquisition to the robot.</p>
 <p><code>null</code> covers both "no eligible items" and "no allocation target" — the
