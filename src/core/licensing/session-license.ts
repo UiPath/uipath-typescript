@@ -7,7 +7,7 @@ import { ApiClient } from '../http/api-client';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { decodeJwtClaims, extractUserIdFromToken } from '../../utils/encoding/jwt';
-import { isBrowser } from '../../utils/platform';
+import { readSessionJson, removeSession, writeSessionJson } from '../../utils/storage/session-storage';
 import type { RawStudioWebLicenseResponse, StudioWebLicense, StudioWebLicenseTokenClaims } from './types';
 
 const ACQUISITIONS_KEY = Symbol.for('@uipath/sdk-license-acquisitions');
@@ -33,34 +33,9 @@ function storageKey(identity: string): string {
   return `${AUTH_STORAGE_KEYS.LICENSE_PREFIX}${identity}`;
 }
 
-function readHeld(identity: string): StudioWebLicense | undefined {
-  if (!isBrowser) return undefined;
-  try {
-    const stored = sessionStorage.getItem(storageKey(identity));
-    return stored ? (JSON.parse(stored) as StudioWebLicense) : undefined;
-  } catch (error) {
-    console.warn('Failed to read the held license from session storage', error);
-    return undefined;
-  }
-}
-
-function writeHeld(identity: string, license: StudioWebLicense): void {
-  if (!isBrowser) return;
-  try {
-    sessionStorage.setItem(storageKey(identity), JSON.stringify(license));
-  } catch (error) {
-    console.warn('Failed to store the license in session storage', error);
-  }
-}
-
 function forget(identity: string): void {
   acquisitions().delete(identity);
-  if (!isBrowser) return;
-  try {
-    sessionStorage.removeItem(storageKey(identity));
-  } catch (error) {
-    console.warn('Failed to remove the license from session storage', error);
-  }
+  removeSession(storageKey(identity));
 }
 
 /**
@@ -128,7 +103,7 @@ export class SessionLicense {
     const store = acquisitions();
     const pending = store.get(identity);
     if (pending) return pending;
-    const held = readHeld(identity);
+    const held = readSessionJson<StudioWebLicense>(storageKey(identity));
     if (held) return held;
 
     const acquisition = this.#apiClient
@@ -138,7 +113,7 @@ export class SessionLicense {
 
     try {
       const license = await acquisition;
-      writeHeld(identity, license);
+      writeSessionJson(storageKey(identity), license);
       return license;
     } catch (error) {
       if (store.get(identity) === acquisition) store.delete(identity);

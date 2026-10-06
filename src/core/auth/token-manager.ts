@@ -1,5 +1,6 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser, isInActionCenter } from '../../utils/platform';
+import { isInActionCenter } from '../../utils/platform';
+import { readSessionJson, removeSession, writeSessionJson } from '../../utils/storage/session-storage';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -125,79 +126,65 @@ export class TokenManager {
    */
   public loadFromStorage(): boolean {
     // Only OAuth tokens are stored in session storage
-    if (!isBrowser || !this.isOAuth) {
+    if (!this.isOAuth) {
       return false;
     }
     
-    try {
-      const storedToken = sessionStorage.getItem(this._getStorageKey());
-      if (!storedToken) {
-        return false;
-      }
-      
-      const tokenInfo = this._parseTokenInfo(storedToken);
-      if (!tokenInfo) {
-        // Invalid token format, clear it
-        sessionStorage.removeItem(this._getStorageKey());
-        return false;
-      }
-      
-      // Check if token is expired
-      if (this.isTokenExpired(tokenInfo)) {
-        // Token expired, clear it
-        sessionStorage.removeItem(this._getStorageKey());
-        return false;
-      }
-      
-      // Valid token found, use it
-      this.currentToken = tokenInfo;
-      this._updateExecutionContext(tokenInfo);
-      return true;
-    } catch (error) {
-      console.warn('Failed to load token from session storage', error);
+    const storedToken = readSessionJson<TokenInfo>(this._getStorageKey());
+    if (storedToken === undefined) {
       return false;
     }
+    
+    const tokenInfo = this._parseTokenInfo(storedToken);
+    if (!tokenInfo) {
+      // Invalid token format, clear it
+      removeSession(this._getStorageKey());
+      return false;
+    }
+    
+    // Check if token is expired
+    if (this.isTokenExpired(tokenInfo)) {
+      // Token expired, clear it
+      removeSession(this._getStorageKey());
+      return false;
+    }
+    
+    // Valid token found, use it
+    this.currentToken = tokenInfo;
+    this._updateExecutionContext(tokenInfo);
+    return true;
   }
   
   /**
    * Parse and validate token info from storage
-   * @param storedToken JSON string from storage
+   * @param parsed Value read from storage
    * @returns Valid TokenInfo or undefined if invalid
    */
-  private _parseTokenInfo(storedToken: string): TokenInfo | undefined {
-    try {
-      const parsed = JSON.parse(storedToken);
-      
-      // Basic validation
-      if (typeof parsed !== 'object' || !parsed) {
-        return undefined;
-      }
-      
-      if (typeof parsed.token !== 'string' || !parsed.token) {
-        return undefined;
-      }
-      
-      if (parsed.type !== 'secret' && parsed.type !== 'oauth') {
-        return undefined;
-      }
-      
-      const tokenInfo = parsed as TokenInfo;
-      
-      // Convert string date back to Date object
-      if (tokenInfo.expiresAt) {
-        tokenInfo.expiresAt = new Date(tokenInfo.expiresAt);
-        
-        // Verify it's a valid date
-        if (isNaN(tokenInfo.expiresAt.getTime())) {
-          return undefined;
-        }
-      }
-      
-      return tokenInfo;
-    } catch (error) {
-      console.warn('Failed to parse token info', error);
+  private _parseTokenInfo(parsed: TokenInfo): TokenInfo | undefined {
+    // Basic validation
+    if (typeof parsed !== 'object' || !parsed) {
       return undefined;
     }
+    
+    if (typeof parsed.token !== 'string' || !parsed.token) {
+      return undefined;
+    }
+    
+    if (parsed.type !== 'secret' && parsed.type !== 'oauth') {
+      return undefined;
+    }
+    
+    // Convert string date back to Date object
+    if (parsed.expiresAt) {
+      parsed.expiresAt = new Date(parsed.expiresAt);
+      
+      // Verify it's a valid date
+      if (isNaN(parsed.expiresAt.getTime())) {
+        return undefined;
+      }
+    }
+    
+    return parsed;
   }
 
   /**
@@ -209,13 +196,9 @@ export class TokenManager {
     // Store token in execution context
     this._updateExecutionContext(tokenInfo);
     
-    // Store in session storage if in browser and this is an OAuth token
-    if (isBrowser && this.isOAuth) {
-      try {
-        sessionStorage.setItem(this._getStorageKey(), JSON.stringify(tokenInfo));
-      } catch (error) {
-        console.warn('Failed to store token in session storage', error);
-      }
+    // Store in session storage if this is an OAuth token
+    if (this.isOAuth) {
+      writeSessionJson(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -281,12 +264,8 @@ export class TokenManager {
     this.tokenChangeListeners.forEach((listener) => listener(undefined));
     
     // Remove from session storage if this is an OAuth token
-    if (isBrowser && this.isOAuth) {
-      try {
-        sessionStorage.removeItem(this._getStorageKey());
-      } catch (error) {
-        console.warn('Failed to remove token from session storage', error);
-      }
+    if (this.isOAuth) {
+      removeSession(this._getStorageKey());
     }
   }
   
