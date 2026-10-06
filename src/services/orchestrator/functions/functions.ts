@@ -57,9 +57,9 @@ const ROUTE_PATTERN_RE = /(^|\/):|\*/;
 /** Leading and trailing slashes, which Orchestrator strips from both route segments. */
 const EDGE_SLASHES_RE = /^\/+|\/+$/g;
 
-/** A trigger's ExternalReference: `<Method> <route> <FOLDER_KEY>`. */
+/** A trigger's ExternalReference: `<Method> <route> <FOLDER_KEY>`. Orchestrator routes contain no spaces. */
 const EXTERNAL_REFERENCE_RE =
-  /^\S+ (\S.*?) ([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
+  /^\S+ (\S+) ([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
 /**
  * How long a license is reused when it states no expiry of its own — the free

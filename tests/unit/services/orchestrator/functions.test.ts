@@ -1136,6 +1136,10 @@ describe('FunctionService Unit Tests', () => {
       expect(parseExternalReference(`${FUNCTION_TEST_CONSTANTS.METHOD} ${FUNCTION_TEST_CONSTANTS.ROUTE}`)).toBeUndefined();
     });
 
+    it('should return undefined when the route contains a space', () => {
+      expect(parseExternalReference(FUNCTION_TEST_CONSTANTS.EXTERNAL_REFERENCE_SPACED_ROUTE)).toBeUndefined();
+    });
+
     it('should return undefined when the route is only slashes', () => {
       expect(
         parseExternalReference(`${FUNCTION_TEST_CONSTANTS.METHOD} / ${FUNCTION_TEST_CONSTANTS.FOLDER_KEY}`)

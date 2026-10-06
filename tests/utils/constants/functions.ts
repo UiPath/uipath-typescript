@@ -22,6 +22,8 @@ export const FUNCTION_TEST_CONSTANTS = {
   EXTERNAL_REFERENCE: 'Post my-functions/hello 4DBF78CB-576C-4847-9959-788AB5E6DD9D',
   /** ExternalReference on a tenant where processes have no slug: the route is the function slug alone. */
   EXTERNAL_REFERENCE_NO_PROCESS_SLUG: 'Post hello 4DBF78CB-576C-4847-9959-788AB5E6DD9D',
+  /** A malformed ExternalReference whose route contains a space. */
+  EXTERNAL_REFERENCE_SPACED_ROUTE: 'Post my-functions/hello world 4DBF78CB-576C-4847-9959-788AB5E6DD9D',
   /** ExternalReference of a function whose path has a parameter segment. */
   EXTERNAL_REFERENCE_PARAM: 'Get my-functions/invoices/:id 4DBF78CB-576C-4847-9959-788AB5E6DD9D',
   /** A second process in the folder that also declares a `hello` function. */
