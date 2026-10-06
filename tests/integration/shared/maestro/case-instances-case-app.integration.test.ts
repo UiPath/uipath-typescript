@@ -35,6 +35,8 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
   let seededInstanceId: string | null = null;
   // Auto-completing instance started in beforeAll so it completes while the earlier tests run.
   let completedInstanceId: string | null = null;
+  // Set once reopen succeeds, so afterAll closes it if the test fails before its own close.
+  let reopenedInstanceId: string | null = null;
 
   const waitForStatus = async (instanceId: string, status: InstanceStatus): Promise<void> => {
     for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
@@ -242,20 +244,25 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
         comment: 'Reopened by the SDK integration suite',
       });
 
-      expect(result.data.instanceId).toBe(completedInstanceId);
+      reopenedInstanceId = completedInstanceId;
+      completedInstanceId = null;
+      expect(result.data.instanceId).toBe(reopenedInstanceId);
       expect(result.data.status).toBeDefined();
 
       // Reopened instances do not re-complete on their own; close it so they don't accumulate.
-      await caseApp.close(completedInstanceId, folderKey);
-      completedInstanceId = null;
+      await caseApp.close(reopenedInstanceId, folderKey);
+      reopenedInstanceId = null;
     }, 240_000);
   });
 
   // Cleanup goes through the v1 close, which folder permissions authorize, so a run that fails
-  // for lack of Case grants still does not leave the seeded instance running.
+  // for lack of Case grants still does not leave an instance running. A still-Completed instance
+  // needs no cleanup.
   afterAll(async () => {
-    if (!seededInstanceId) return;
-    await caseInstances.close(seededInstanceId, folderKey);
+    for (const instanceId of [seededInstanceId, reopenedInstanceId]) {
+      if (instanceId) await caseInstances.close(instanceId, folderKey);
+    }
     seededInstanceId = null;
+    reopenedInstanceId = null;
   });
 }, { skip: true });
