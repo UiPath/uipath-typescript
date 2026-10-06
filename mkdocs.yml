@@ -100,6 +100,14 @@ plugins:
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
           - helpers.md: Helper methods guide
+        React Widgets:
+          - react-widgets/index.md: React widgets overview
+          - react-widgets/validation-station.md: Validation Station widget
+          - react-widgets/conversational-agent-chat.md: Conversational Agent Chat widget
+          - react-widgets/datatable.md: DataTable widget
+          - react-widgets/multi-file-upload.md: Multi File Upload widget
+          - react-widgets/pdf-viewer.md: PDF Viewer widget
+          - react-widgets/external-auth.md: External Auth widget
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/JobServiceModel.md: Job service methods
@@ -249,6 +257,14 @@ nav:
       - Coded Action App SDK:
         - Getting Started: coded-action-app-sdk/getting-started.md
         - SDK Reference: coded-action-app-sdk/interfaces/CodedActionAppServiceModel.md
+  - React Widgets:
+      - Overview: react-widgets/index.md
+      - Validation Station: react-widgets/validation-station.md
+      - Conversational Agent Chat: react-widgets/conversational-agent-chat.md
+      - DataTable: react-widgets/datatable.md
+      - Multi File Upload: react-widgets/multi-file-upload.md
+      - PDF Viewer: react-widgets/pdf-viewer.md
+      - External Auth: react-widgets/external-auth.md
   - JS Functions:
       - Overview: js-functions/index.md
       - Getting Started: js-functions/getting-started.md

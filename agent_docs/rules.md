@@ -61,6 +61,19 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - When adding methods, update `docs/oauth-scopes.md` with required OAuth scopes. **NEVER** skip this — missing scopes break the OAuth integration guide. **Exception: methods tagged `@internal` in their JSDoc do not get an OAuth scope entry** — they are not part of the public API surface and do not appear in the OAuth integration guide. Similarly, `mkdocs.yml` nav entries and docs site pages are not needed for services where every public-facing method is tagged `@internal` (i.e., the service has no user-visible API).
 - Run `npm run docs:api` to regenerate.
 
+**Docs pages fetched from other repos — never hand-edit:**
+
+`npm run docs:api` materializes two sections from the repo that owns the code they document. Both are gitignored and rebuilt on every docs build, so an edit here is silently overwritten on the next one.
+
+| Section | Authored in | Fetched by |
+|---------|-------------|------------|
+| `docs/js-functions/` | `UiPath/coded-functions-js`, as its `docs/` | `scripts/fetch-js-functions-docs.sh` |
+| `docs/react-widgets/*.md` (except `index.md`) | `UiPath/uipath-ui-widgets`, as each `packages/<widget>/README.md` | `scripts/fetch-widget-docs.mjs` |
+
+To change one of those pages, open a PR on the source repo. Each repo dispatches to `docs.yml` on merge, so the site refreshes without an SDK release. `docs/react-widgets/index.md` is the exception — the section overview is written here, because it documents the collection rather than any one package.
+
+A widget README must render on npm and GitHub too, so MkDocs-only syntax is written in a portable form and translated on the way in — `> **Note:** …` for admonitions, `<!-- tabs -->` / `<!-- details type: Title -->` for tabs and collapsibles, and absolute `https://uipath.github.io/uipath-typescript/…` URLs for cross-page links. The contract is spelled out at the top of `scripts/fetch-widget-docs.mjs`.
+
 **JSDoc quality rules:**
 - Link response types with `{@link TypeName}` in every method's JSDoc `@returns`, embedded **inline within the sentence** — a `{@link}` placed on a standalone line after `@returns` renders as stray text in TypeDoc, not a clickable link. **NEVER** add `{@link TypeName}` inside `@param` descriptions — TypeDoc automatically links parameter types, so adding it is redundant noise.
 - Show how to get prerequisite IDs (e.g., "First, get entities with `entities.getAll()`").
