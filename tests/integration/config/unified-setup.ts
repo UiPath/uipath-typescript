@@ -39,6 +39,7 @@ export { resolveAuthModes } from './test-config';
 export type { AuthRequirement, AuthMode } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
+import { cleanupAllTestResources } from '../utils/cleanup';
 
 // Re-export cleanup functions from cleanup.ts for convenience
 export {
@@ -322,7 +323,12 @@ export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
     await initializeServices(mode, authMode);
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    // Runs after the suite's own afterAll (hooks unwind in reverse), so whatever a
+    // failed or timed-out test registered but could not delete is still removed.
+    if (!getTestConfig().skipCleanup) {
+      await cleanupAllTestResources();
+    }
     cleanupServices();
   });
 }
