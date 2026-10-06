@@ -130,7 +130,7 @@ export class TokenManager {
       return false;
     }
     
-    const storedToken = sessionStore.read<TokenInfo>(this._getStorageKey());
+    const storedToken = sessionStore?.read<TokenInfo>(this._getStorageKey());
     if (storedToken === undefined) {
       return false;
     }
@@ -138,14 +138,14 @@ export class TokenManager {
     const tokenInfo = this._parseTokenInfo(storedToken);
     if (!tokenInfo) {
       // Invalid token format, clear it
-      sessionStore.remove(this._getStorageKey());
+      sessionStore?.remove(this._getStorageKey());
       return false;
     }
     
     // Check if token is expired
     if (this.isTokenExpired(tokenInfo)) {
       // Token expired, clear it
-      sessionStore.remove(this._getStorageKey());
+      sessionStore?.remove(this._getStorageKey());
       return false;
     }
     
@@ -198,7 +198,7 @@ export class TokenManager {
     
     // Store in session storage if this is an OAuth token
     if (this.isOAuth) {
-      sessionStore.write(this._getStorageKey(), tokenInfo);
+      sessionStore?.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -265,7 +265,7 @@ export class TokenManager {
     
     // Remove from session storage if this is an OAuth token
     if (this.isOAuth) {
-      sessionStore.remove(this._getStorageKey());
+      sessionStore?.remove(this._getStorageKey());
     }
   }
   

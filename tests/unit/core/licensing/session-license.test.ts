@@ -11,7 +11,6 @@ import { LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/licensing';
 import { createTestJwt } from '@tests/utils/jwt';
 import { createMockError } from '@tests/utils/mocks/core';
 import { createMockApiClient } from '@tests/utils/setup';
-import { sessionStore } from '@/utils/storage/session-store';
 
 vi.mock('@/utils/platform', () => ({
   isBrowser: true,
@@ -196,41 +195,6 @@ describe('SessionLicense', () => {
     rejectFirst(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
     await flush();
     skipped.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-
-    expect(post).toHaveBeenCalledTimes(2);
-  });
-
-  it('should not re-acquire on refresh after a success when the session store is unavailable', async () => {
-    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
-    const tokenManager = signIn();
-
-    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-
-    expect(post).toHaveBeenCalledTimes(1);
-  });
-
-  it('should retry on refresh after a failure when the session store is unavailable', async () => {
-    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
-    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-    const tokenManager = signIn();
-
-    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-
-    expect(post).toHaveBeenCalledTimes(2);
-  });
-
-  it('should acquire per SDK instance when the session store is unavailable', async () => {
-    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
-
-    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);

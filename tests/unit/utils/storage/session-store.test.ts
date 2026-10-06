@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SessionStore } from '../../../../src/utils/storage/session-store';
+import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 const { mockPlatform } = vi.hoisted(() => ({ mockPlatform: { isBrowser: true } }));
 vi.mock('../../../../src/utils/platform', () => mockPlatform);
-import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 const KEY = 'uipath_sdk_test';
 const TEXT = 'stored-value';
@@ -20,6 +20,12 @@ function stubStorage(overrides: Partial<Storage> = {}): Map<string, string> {
   return entries;
 }
 
+function openStore(): SessionStore {
+  const store = SessionStore.open();
+  if (!store) throw new Error('Expected the session store to open');
+  return store;
+}
+
 const failing = () => {
   throw new Error(TEST_CONSTANTS.ERROR_MESSAGE);
 };
@@ -32,20 +38,16 @@ describe('SessionStore', () => {
   });
 
   afterEach(() => {
+    mockPlatform.isBrowser = true;
+    Reflect.deleteProperty(globalThis, 'sessionStorage');
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
   describe('when the store exists', () => {
-    it('should report itself available', () => {
-      stubStorage();
-
-      expect(new SessionStore().isAvailable).toBe(true);
-    });
-
     it('should round-trip a string', () => {
       stubStorage();
-      const store = new SessionStore();
+      const store = openStore();
 
       expect(store.write(KEY, TEXT)).toBe(true);
       expect(store.read<string>(KEY)).toBe(TEXT);
@@ -53,7 +55,7 @@ describe('SessionStore', () => {
 
     it('should round-trip an object', () => {
       stubStorage();
-      const store = new SessionStore();
+      const store = openStore();
 
       expect(store.write(KEY, RECORD)).toBe(true);
       expect(store.read(KEY)).toEqual(RECORD);
@@ -62,12 +64,12 @@ describe('SessionStore', () => {
     it('should return undefined for a missing key', () => {
       stubStorage();
 
-      expect(new SessionStore().read(KEY)).toBeUndefined();
+      expect(openStore().read(KEY)).toBeUndefined();
     });
 
     it('should remove a value', () => {
       const entries = stubStorage();
-      const store = new SessionStore();
+      const store = openStore();
       store.write(KEY, TEXT);
 
       store.remove(KEY);
@@ -79,73 +81,39 @@ describe('SessionStore', () => {
       const entries = stubStorage();
       entries.set(KEY, TEXT);
 
-      expect(new SessionStore().read(KEY)).toBeUndefined();
+      expect(openStore().read(KEY)).toBeUndefined();
       expect(warn).toHaveBeenCalledTimes(1);
     });
 
     it('should return undefined for a stored null', () => {
       stubStorage();
-      const store = new SessionStore();
+      const store = openStore();
       store.write(KEY, null);
 
       expect(store.read(KEY)).toBeUndefined();
     });
   });
 
-  describe('when the store does not exist', () => {
-    beforeEach(() => {
+  describe('when it cannot open', () => {
+    it('should not open, and not warn, when the runtime has no session storage', () => {
       vi.stubGlobal('sessionStorage', undefined);
-    });
 
-    it('should read undefined, report a dropped write, and not warn', () => {
-      const store = new SessionStore();
-
-      expect(store.isAvailable).toBe(false);
-
-      expect(store.read(KEY)).toBeUndefined();
-      expect(store.write(KEY, RECORD)).toBe(false);
-      expect(() => store.remove(KEY)).not.toThrow();
-
+      expect(SessionStore.open()).toBeUndefined();
       expect(warn).not.toHaveBeenCalled();
     });
-  });
 
-  describe('outside a browser', () => {
-    beforeEach(() => {
+    it('should not open outside a browser, even when the runtime provides session storage', () => {
+      stubStorage();
       mockPlatform.isBrowser = false;
+
+      expect(SessionStore.open()).toBeUndefined();
     });
 
-    afterEach(() => {
-      mockPlatform.isBrowser = true;
-    });
-
-    it('should not use a sessionStorage the runtime provides', () => {
-      const entries = stubStorage();
-      const store = new SessionStore();
-
-      expect(store.write(KEY, TEXT)).toBe(false);
-      expect(store.read(KEY)).toBeUndefined();
-      expect(entries.size).toBe(0);
-    });
-  });
-
-  describe('when the browser denies the store', () => {
-    beforeEach(() => {
+    it('should not open, and should warn, when the browser denies session storage', () => {
       Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, get: failing });
-    });
 
-    afterEach(() => {
-      Reflect.deleteProperty(globalThis, 'sessionStorage');
-    });
-
-    it('should read undefined, report a dropped write, and warn instead of throwing', () => {
-      const store = new SessionStore();
-
-      expect(store.read(KEY)).toBeUndefined();
-      expect(store.write(KEY, TEXT)).toBe(false);
-      expect(() => store.remove(KEY)).not.toThrow();
-
-      expect(warn).toHaveBeenCalled();
+      expect(SessionStore.open()).toBeUndefined();
+      expect(warn).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -153,21 +121,21 @@ describe('SessionStore', () => {
     it('should report a failed write and warn', () => {
       stubStorage({ setItem: failing });
 
-      expect(new SessionStore().write(KEY, TEXT)).toBe(false);
+      expect(openStore().write(KEY, TEXT)).toBe(false);
       expect(warn).toHaveBeenCalledTimes(1);
     });
 
     it('should return undefined and warn when a read fails', () => {
       stubStorage({ getItem: failing });
 
-      expect(new SessionStore().read(KEY)).toBeUndefined();
+      expect(openStore().read(KEY)).toBeUndefined();
       expect(warn).toHaveBeenCalledTimes(1);
     });
 
     it('should warn instead of throwing when a removal fails', () => {
       stubStorage({ removeItem: failing });
 
-      expect(() => new SessionStore().remove(KEY)).not.toThrow();
+      expect(() => openStore().remove(KEY)).not.toThrow();
       expect(warn).toHaveBeenCalledTimes(1);
     });
   });

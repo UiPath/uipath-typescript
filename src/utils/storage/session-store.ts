@@ -4,24 +4,26 @@ import type { KeyValueStore } from './key-value-store';
 /**
  * Values kept for the length of the user's browser session.
  *
- * The store is not guaranteed to exist — there is none outside a browser, and a
- * browser can deny it or refuse a write. A read then comes back `undefined` and
- * a write returns `false`; no call ever throws.
+ * There is none outside a browser, and a browser can deny it, so `open()` and
+ * the shared `sessionStore` are `undefined` there. A browser can still refuse a
+ * read or a write; the read then comes back `undefined` and the write returns
+ * `false`. No call ever throws.
  */
 export class SessionStore implements KeyValueStore {
-  readonly #storage: Storage | undefined;
+  readonly #storage: Storage;
 
-  constructor() {
-    this.#storage = SessionStore.#resolve();
+  constructor(storage: Storage) {
+    this.#storage = storage;
   }
 
-  get isAvailable(): boolean {
-    return this.#storage !== undefined;
+  static open(): SessionStore | undefined {
+    const storage = SessionStore.#resolve();
+    return storage ? new SessionStore(storage) : undefined;
   }
 
   read<T>(key: string): T | undefined {
     try {
-      const stored = this.#storage?.getItem(key);
+      const stored = this.#storage.getItem(key);
       return stored ? ((JSON.parse(stored) as T | null) ?? undefined) : undefined;
     } catch (error) {
       console.warn(`[UiPath SDK] Could not read ${key} from the session store`, error);
@@ -30,7 +32,6 @@ export class SessionStore implements KeyValueStore {
   }
 
   write(key: string, value: unknown): boolean {
-    if (!this.#storage) return false;
     try {
       this.#storage.setItem(key, JSON.stringify(value));
       return true;
@@ -42,7 +43,7 @@ export class SessionStore implements KeyValueStore {
 
   remove(key: string): void {
     try {
-      this.#storage?.removeItem(key);
+      this.#storage.removeItem(key);
     } catch (error) {
       console.warn(`[UiPath SDK] Could not remove ${key} from the session store`, error);
     }
@@ -59,4 +60,4 @@ export class SessionStore implements KeyValueStore {
   }
 }
 
-export const sessionStore = new SessionStore();
+export const sessionStore = SessionStore.open();

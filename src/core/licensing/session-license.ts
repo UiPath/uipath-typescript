@@ -17,7 +17,7 @@ const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retry
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #claimKey: string;
-  readonly #claims: KeyValueStore = sessionStore.isAvailable ? sessionStore : new MemoryStore();
+  readonly #claims: KeyValueStore = sessionStore ?? new MemoryStore();
   #userId?: string;
 
   constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
