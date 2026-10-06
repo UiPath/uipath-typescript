@@ -73,7 +73,7 @@ export interface CaseInstanceGetAllOptions {
   processKey?: string;
   /** Incident error code */
   errorCode?: string;
-  /** Limits results to one folder. Required when the service uses Case App routes. */
+  /** Folder to list from. Required with Case App routes, which list one folder; ignored otherwise. */
   folderKey?: string;
   /** Instance statuses to include */
   statuses?: InstanceStatus[];

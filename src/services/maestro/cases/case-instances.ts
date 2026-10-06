@@ -122,7 +122,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const result = await PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => this.useCaseAppRoutes ? MAESTRO_ENDPOINTS.CASE_APP.GET_ALL : MAESTRO_ENDPOINTS.INSTANCES.GET_ALL,
-      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      headers: this.useCaseAppRoutes ? createHeaders({ [FOLDER_KEY]: folderKey }) : undefined,
       transformFn: transformCaseInstance,
       pagination: {
         paginationType: PaginationType.TOKEN,

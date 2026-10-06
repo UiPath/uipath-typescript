@@ -142,6 +142,16 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       expect(spec.params).toMatchObject({ externalId: C.CASE_ID, statuses: 'Running', processType: 'CaseManagement' });
     });
 
+    it('should ignore folderKey on the v1 route', async () => {
+      mockApiClient.get.mockResolvedValue({ instances: [], nextPage: null, hasMoreResults: false });
+
+      await v1CaseInstances.getAll({ folderKey: C.FOLDER_KEY });
+
+      const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
+      expect(spec.headers?.[FOLDER_KEY]).toBeUndefined();
+      expect(spec.params).not.toHaveProperty('folderKey');
+    });
+
     it('should page with pageSize and expose the next cursor', async () => {
       mockListAndCaseJson(createCaseAppInstanceListResponse({ nextPage: C.NEXT_PAGE_TOKEN, hasMoreResults: true }));
 
