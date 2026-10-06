@@ -7,7 +7,7 @@ import { ApiClient } from '../http/api-client';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { decodeJwtClaims, extractUserIdFromToken } from '../../utils/encoding/jwt';
-import { readSessionJson, removeSession, writeSessionJson } from '../../utils/storage/session-storage';
+import { SessionStore } from '../../utils/storage/session-store';
 import type { RawStudioWebLicenseResponse, StudioWebLicense, StudioWebLicenseTokenClaims } from './types';
 
 const ACQUISITIONS_KEY = Symbol.for('@uipath/sdk-license-acquisitions');
@@ -31,11 +31,6 @@ export function clearSessionLicenses(): void {
 
 function storageKey(identity: string): string {
   return `${AUTH_STORAGE_KEYS.LICENSE_PREFIX}${identity}`;
-}
-
-function forget(identity: string): void {
-  acquisitions().delete(identity);
-  removeSession(storageKey(identity));
 }
 
 /**
@@ -72,6 +67,7 @@ export function toStudioWebLicense(raw: RawStudioWebLicenseResponse): StudioWebL
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #tenantScope: string;
+  readonly #sessionStore = new SessionStore();
   #identity?: string;
 
   constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
@@ -85,7 +81,7 @@ export class SessionLicense {
     const identity = tokenInfo ? this.#identityOf(tokenInfo.token) : undefined;
     if (identity === this.#identity) return;
 
-    if (this.#identity) forget(this.#identity);
+    if (this.#identity) this.#forget(this.#identity);
     this.#identity = identity;
     if (identity) {
       this.#ensure(identity).catch((error: unknown) => {
@@ -100,24 +96,29 @@ export class SessionLicense {
   }
 
   async #ensure(identity: string): Promise<StudioWebLicense> {
-    const store = acquisitions();
-    const pending = store.get(identity);
+    const inFlight = acquisitions();
+    const pending = inFlight.get(identity);
     if (pending) return pending;
-    const held = readSessionJson<StudioWebLicense>(storageKey(identity));
+    const held = this.#sessionStore.read<StudioWebLicense>(storageKey(identity));
     if (held) return held;
 
     const acquisition = this.#apiClient
       .post<RawStudioWebLicenseResponse>(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
       .then(toStudioWebLicense);
-    store.set(identity, acquisition);
+    inFlight.set(identity, acquisition);
 
     try {
       const license = await acquisition;
-      writeSessionJson(storageKey(identity), license);
+      this.#sessionStore.write(storageKey(identity), license);
       return license;
     } catch (error) {
-      if (store.get(identity) === acquisition) store.delete(identity);
+      if (inFlight.get(identity) === acquisition) inFlight.delete(identity);
       throw error;
     }
+  }
+
+  #forget(identity: string): void {
+    acquisitions().delete(identity);
+    this.#sessionStore.remove(storageKey(identity));
   }
 }
