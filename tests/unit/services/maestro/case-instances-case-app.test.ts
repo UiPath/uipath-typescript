@@ -552,6 +552,13 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       );
     });
 
+    it('should reject an empty waiting stage id without calling the API', async () => {
+      await expect(
+        caseInstances.selectStageForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY, C.STAGE_NAME, { waitingStageId: '' })
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_STAGE_NOT_FOUND));
 

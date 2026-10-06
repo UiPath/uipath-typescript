@@ -672,9 +672,12 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     stageName: string,
     options?: CaseAppSelectStageOptions
   ): Promise<void> {
+    if (options?.waitingStageId !== undefined && !options.waitingStageId) {
+      throw new ValidationError({ message: 'waitingStageId must not be empty' });
+    }
     await this.post<void>(
       MAESTRO_ENDPOINTS.CASE_APP.SELECT_STAGE(instanceId),
-      { stageName, ...(options?.waitingStageId && { waitingStageId: options.waitingStageId }) },
+      { stageName, ...(options?.waitingStageId !== undefined && { waitingStageId: options.waitingStageId }) },
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
   }
