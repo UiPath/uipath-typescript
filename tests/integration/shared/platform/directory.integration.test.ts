@@ -5,6 +5,7 @@ import { Groups } from '../../../../src/services/platform/groups';
 import { PlatformDirectoryEntityType, PlatformDirectorySource } from '../../../../src/models/platform';
 import type { PlatformGroupGetResponse } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 
 const modes: InitMode[] = ['v1'];
 
@@ -38,11 +39,13 @@ describeIntegration('Directory - Integration Tests', 'both', modes, () => {
     probeGroup = await groups.create(`sdk-it-${generateRandomString(8)}`, {
       memberUserIds: [mutableUserId],
     });
+    registerResource('groups', { id: probeGroup.id });
   });
 
   afterAll(async () => {
     if (!groups || !probeGroup) return;
     await groups.deleteById(probeGroup.id);
+    unregisterResource('groups', (g) => g.id === probeGroup.id);
   });
 
   describe('search', () => {
