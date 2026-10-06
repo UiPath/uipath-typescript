@@ -103,25 +103,25 @@ export interface ConnectionAuthRequest {
  * Response from the connection auth endpoint
  * @internal
  */
-export interface ConnectionAuthResponse {
+export type ConnectionAuthResponse = {
   /** The connector-specific auth URL to open */
   authUrl: string;
   /** Unique session ID used to poll for OAuth completion */
   sessionId: string;
   /** Unix timestamp (ms) when the auth session expires */
   expiresTime: number;
-}
+};
 
 /**
  * Status of a connection auth session returned by the polling endpoint.
  * Poll until `status` is {@link ConnectionSessionStatus.Success} (connection created) or {@link ConnectionSessionStatus.Failed}.
  * @internal
  */
-export interface ConnectionSessionStatusResponse {
+export type ConnectionSessionStatusResponse = {
   /** Current status of the OAuth session */
   status: ConnectionSessionStatus;
   /** ID of the newly created connection, or null when status is not 'success' */
   connectionId: string | null;
   /** Unix timestamp (ms) when the session expires */
   expiresTime: number;
-}
+};
