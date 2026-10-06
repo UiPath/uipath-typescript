@@ -30,5 +30,6 @@ export * from '../../../models/maestro/cases.models';
 export * from '../../../models/maestro/case-instances.types';
 export * from '../../../models/maestro/case-instances.models';
 export * from '../../../models/maestro/case-app.types';
+export * from '../../../models/maestro/incidents.types';
 export * from '../../../models/maestro/insights.types';
 export * from '../../../models/maestro/instance-variables.types';

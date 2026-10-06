@@ -4,7 +4,7 @@
  */
 
 import { EscalationTriggerType, InstanceStatus } from './case-instances.types';
-import { ProcessIncidentStatus, ProcessIncidentType, ProcessIncidentSeverity, DebugMode } from './process-incidents.types';
+import { ProcessIncidentStatus, ProcessIncidentType, ProcessIncidentSeverity, DebugMode } from './incidents.types';
 
 /**
  * SLA status of a case or stage, as the Case App routes report it.
