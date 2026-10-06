@@ -254,6 +254,16 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       });
     });
 
+    it('should keep the v1 envelope fields other than the time renames', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      const result = await v1CaseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY);
+
+      expect(result.startedTime).toBe(C.STARTED_TIME);
+      expect((result as unknown as Record<string, unknown>).externalId).toBe(C.CASE_ID);
+      expect(result.caseId).toBeUndefined();
+    });
+
     it('should send element types to the v1 route too', async () => {
       mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
 

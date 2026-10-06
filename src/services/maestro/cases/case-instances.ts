@@ -335,8 +335,11 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       }
     );
     
-    // Transform the main response; sections carry author-defined details and stay untouched
-    const transformedResponse = transformData(response.data, CaseInstanceMap);
+    // Only the Case App route returns externalId; sections stay untouched either way
+    const transformedResponse = transformData(
+      response.data,
+      this.useCaseAppRoutes ? CaseInstanceMap : TimeFieldTransformMap
+    );
     
     // Transform each element execution and its nested element runs
     if (transformedResponse.elementExecutions && Array.isArray(transformedResponse.elementExecutions)) {
