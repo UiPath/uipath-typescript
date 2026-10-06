@@ -12,19 +12,6 @@ import { sessionStore } from '../../utils/storage/session-store';
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
 
-/**
- * Acquires a Studio Web license once per sign-in of an interactive user, which
- * provisions the personal robot that user's jobs run on. Never blocks the
- * sign-in or any call; a failed acquisition is logged and left to the server
- * to answer for.
- *
- * The session store holds one claim per tenant — the user it was acquired for —
- * written before the request starts, so every SDK instance on the page sees it
- * and the acquisition runs once. A token refresh keeps the claim, a different
- * user replaces it, a logout or a failed acquisition removes it.
- *
- * @internal
- */
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #claimKey: string;
@@ -47,6 +34,7 @@ export class SessionLicense {
   }
 
   #acquire(userId: string): void {
+    // Claimed before the request starts, so other SDK instances on the page skip it.
     sessionStore.write(this.#claimKey, userId);
     this.#apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
