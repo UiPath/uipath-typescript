@@ -8,6 +8,7 @@ import { telemetryClient } from '../../../src/core/telemetry';
 import { SessionLicense } from '../../../src/core/licensing/session-license';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
+import { functionContext } from '../../utils/function-context';
 
 // ===== MOCKING =====
 const mockTokenManagerDestroy = vi.fn();
@@ -531,33 +532,14 @@ describe('UiPath Core', () => {
       scope: TEST_CONSTANTS.OAUTH_SCOPE,
     };
 
-    afterEach(() => {
-      mockPlatform.isBrowser = false;
-    });
-
-    it('should attach a session license to an OAuth app in the browser', () => {
-      mockPlatform.isBrowser = true;
-
+    it('should attach a session license to a coded app', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
     });
 
-    it('should not attach a session license for secret auth in the browser', () => {
-      mockPlatform.isBrowser = true;
-
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
-      });
-
-      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
-    });
-
-    it('should not attach a session license outside the browser, as inside a coded function', () => {
-      const sdk = new UiPath(oauthConfig);
+    it('should not attach a session license inside a coded function', () => {
+      const sdk = new UiPath(functionContext());
 
       expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
     });

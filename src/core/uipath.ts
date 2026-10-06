@@ -16,7 +16,7 @@ import {
   type CodedFunctionContext,
 } from './config/function-context';
 import type { IUiPath } from './types';
-import { isBrowser, isInActionCenter } from '../utils/platform';
+import { isInActionCenter } from '../utils/platform';
 import { SessionLicense } from './licensing/session-license';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
 
@@ -188,9 +188,9 @@ export class UiPath implements IUiPath {
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
-      sessionLicense: isBrowser && !hasSecretAuth
-        ? new SessionLicense(internalConfig, executionContext, tokenManager)
-        : undefined,
+      sessionLicense: this.#functionContext
+        ? undefined
+        : new SessionLicense(internalConfig, executionContext, tokenManager),
     });
 
     // Expose read-only config for user convenience
