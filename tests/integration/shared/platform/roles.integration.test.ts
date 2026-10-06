@@ -24,7 +24,8 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
   };
   /** Forgets a role the test deleted itself. */
   const forgetRole = (id: string): void => {
-    createdRoleIds.splice(createdRoleIds.indexOf(id), 1);
+    const idx = createdRoleIds.indexOf(id);
+    if (idx !== -1) createdRoleIds.splice(idx, 1);
     unregisterResource('roles', (r) => r.id === id);
   };
 

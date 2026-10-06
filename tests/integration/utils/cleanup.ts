@@ -368,7 +368,6 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestRole(role.id);
   }
 
-
   console.log('Emergency cleanup completed');
 }
 
