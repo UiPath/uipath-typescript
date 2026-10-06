@@ -97,9 +97,11 @@ export function toStudioWebLicense(raw: RawStudioWebLicenseResponse): StudioWebL
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #tenantScope: string;
+  readonly #tokenManager: TokenManager;
   #identity?: string;
 
-  constructor(config: UiPathConfig, context: ExecutionContext, private readonly tokenManager: TokenManager) {
+  constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
+    this.#tokenManager = tokenManager;
     this.#apiClient = new ApiClient(config, context, tokenManager);
     this.#tenantScope = `${config.baseUrl}/${config.orgName}/${config.tenantName}`;
     tokenManager.onTokenChange((tokenInfo) => this.#onTokenChange(tokenInfo));
@@ -107,7 +109,7 @@ export class SessionLicense {
   }
 
   async acquire(refresh = false): Promise<StudioWebLicense | undefined> {
-    const identity = this.#identityOf(await this.tokenManager.getValidToken());
+    const identity = this.#identityOf(await this.#tokenManager.getValidToken());
     return identity ? this.#ensure(identity, refresh) : undefined;
   }
 
