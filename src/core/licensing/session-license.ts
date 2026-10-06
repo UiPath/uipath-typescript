@@ -16,6 +16,7 @@ export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #claimKey: string;
   #userId?: string;
+  #localClaim?: string;
 
   constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
     this.#apiClient = new ApiClient(config, context, tokenManager);
@@ -26,16 +27,20 @@ export class SessionLicense {
 
   #onTokenChange(tokenInfo: TokenInfo | undefined): void {
     const userId = (tokenInfo && extractUserIdFromToken(tokenInfo.token)) || undefined;
-    if (userId === this.#userId) return;
+    if (userId !== this.#userId) {
+      if (this.#userId) this.#release(this.#userId);
+      this.#userId = userId;
+    }
+    if (userId && this.#claimed() !== userId) this.#acquire(userId);
+  }
 
-    if (this.#userId) this.#release(this.#userId);
-    this.#userId = userId;
-    if (userId && sessionStore.read<string>(this.#claimKey) !== userId) this.#acquire(userId);
+  #claimed(): string | undefined {
+    return sessionStore.read<string>(this.#claimKey) ?? this.#localClaim;
   }
 
   #acquire(userId: string): void {
     // Claimed before the request starts, so other SDK instances on the page skip it.
-    sessionStore.write(this.#claimKey, userId);
+    if (!sessionStore.write(this.#claimKey, userId)) this.#localClaim = userId;
     this.#apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
       .catch((error: unknown) => {
@@ -46,5 +51,6 @@ export class SessionLicense {
 
   #release(userId: string): void {
     if (sessionStore.read<string>(this.#claimKey) === userId) sessionStore.remove(this.#claimKey);
+    if (this.#localClaim === userId) this.#localClaim = undefined;
   }
 }

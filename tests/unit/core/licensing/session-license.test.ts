@@ -174,6 +174,60 @@ describe('SessionLicense', () => {
     expect(post).toHaveBeenCalledTimes(2);
   });
 
+  it('should retry on the next token refresh after a failed acquisition', async () => {
+    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    const tokenManager = signIn();
+
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+
+    expect(post).toHaveBeenCalledTimes(2);
+    expect([...memorySessionStorage.entries.values()]).toEqual([JSON.stringify(LICENSE_TEST_CONSTANTS.USER_ID)]);
+  });
+
+  it('should retry from an instance that skipped while the acquisition of another instance failed', async () => {
+    let rejectFirst!: (error: Error) => void;
+    post.mockReturnValueOnce(new Promise((_resolve, reject) => { rejectFirst = reject; }));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    const skipped = signIn();
+    skipped.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    expect(post).toHaveBeenCalledTimes(1);
+
+    rejectFirst(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    await flush();
+    skipped.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not re-acquire on refresh after a success when the claim cannot be stored', async () => {
+    memorySessionStorage.setItem.mockImplementationOnce(failing);
+    const tokenManager = signIn();
+
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it('should retry on refresh after a failure when the claim cannot be stored', async () => {
+    memorySessionStorage.setItem.mockImplementationOnce(failing).mockImplementationOnce(failing);
+    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    const tokenManager = signIn();
+
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
+
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
   it('should acquire per SDK instance when the claim cannot be stored', async () => {
     memorySessionStorage.setItem.mockImplementationOnce(failing).mockImplementationOnce(failing);
 
