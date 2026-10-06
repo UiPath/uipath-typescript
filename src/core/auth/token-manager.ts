@@ -1,6 +1,6 @@
 import { ExecutionContext } from '../context/execution';
 import { isInActionCenter } from '../../utils/platform';
-import { SessionStore } from '../../utils/storage/session-store';
+import { sessionStore } from '../../utils/storage/session-store';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -25,7 +25,6 @@ export class TokenManager {
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
-  private readonly sessionStore = new SessionStore();
 
   /**
    * Creates a new TokenManager instance
@@ -131,7 +130,7 @@ export class TokenManager {
       return false;
     }
     
-    const storedToken = this.sessionStore.read<TokenInfo>(this._getStorageKey());
+    const storedToken = sessionStore.read<TokenInfo>(this._getStorageKey());
     if (storedToken === undefined) {
       return false;
     }
@@ -139,14 +138,14 @@ export class TokenManager {
     const tokenInfo = this._parseTokenInfo(storedToken);
     if (!tokenInfo) {
       // Invalid token format, clear it
-      this.sessionStore.remove(this._getStorageKey());
+      sessionStore.remove(this._getStorageKey());
       return false;
     }
     
     // Check if token is expired
     if (this.isTokenExpired(tokenInfo)) {
       // Token expired, clear it
-      this.sessionStore.remove(this._getStorageKey());
+      sessionStore.remove(this._getStorageKey());
       return false;
     }
     
@@ -199,7 +198,7 @@ export class TokenManager {
     
     // Store in session storage if this is an OAuth token
     if (this.isOAuth) {
-      this.sessionStore.write(this._getStorageKey(), tokenInfo);
+      sessionStore.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -266,7 +265,7 @@ export class TokenManager {
     
     // Remove from session storage if this is an OAuth token
     if (this.isOAuth) {
-      this.sessionStore.remove(this._getStorageKey());
+      sessionStore.remove(this._getStorageKey());
     }
   }
   

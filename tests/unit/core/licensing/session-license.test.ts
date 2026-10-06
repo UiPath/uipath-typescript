@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { memorySessionStorage } from '@tests/utils/session-storage';
 import { SessionLicense, clearSessionLicenses, toStudioWebLicense } from '@/core/licensing/session-license';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
@@ -48,12 +49,7 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('SessionLicense', () => {
   beforeEach(() => {
-    const storage = new Map<string, string>();
-    vi.stubGlobal('sessionStorage', {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => storage.set(key, value),
-      removeItem: (key: string) => storage.delete(key),
-    });
+    memorySessionStorage.reset();
     clearSessionLicenses();
     post.mockReset().mockResolvedValue(createMockRawStudioWebLicense());
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
