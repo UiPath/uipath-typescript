@@ -4,6 +4,7 @@ import { Roles } from '../../../../src/services/platform/roles';
 import { PlatformRoleType, PlatformRoleScopeType, PlatformPrincipalType } from '../../../../src/models/platform';
 import type { PlatformRoleAction } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 
 const modes: InitMode[] = ['v1'];
 
@@ -15,6 +16,17 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
   let probeAction!: PlatformRoleAction;
   /** IDs of custom roles created by this suite; deleted in afterAll. */
   const createdRoleIds: string[] = [];
+
+  /** Tracks a created role locally and in the emergency-cleanup registry. */
+  const trackRole = (id: string): void => {
+    createdRoleIds.push(id);
+    registerResource('roles', { id });
+  };
+  /** Forgets a role the test deleted itself. */
+  const forgetRole = (id: string): void => {
+    createdRoleIds.splice(createdRoleIds.indexOf(id), 1);
+    unregisterResource('roles', (r) => r.id === id);
+  };
 
   beforeAll(async () => {
     const service = getServices().platformRoles;
@@ -42,9 +54,16 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
   afterAll(async () => {
     if (!roles) return;
+    // Keep going past a failed delete — the emergency cleanup retries whatever is left
     for (const id of createdRoleIds) {
-      await roles.deleteById(id);
+      try {
+        await roles.deleteById(id);
+        unregisterResource('roles', (r) => r.id === id);
+      } catch (error) {
+        console.warn(`Failed to delete test role ${id}; leaving it to the emergency cleanup:`, error);
+      }
     }
+    createdRoleIds.length = 0;
   });
 
   describe('getAll', () => {
@@ -98,7 +117,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
         description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
-      createdRoleIds.push(created.id);
+      trackRole(created.id);
       expect(created.name).toBe(roleName);
       expect(created.type).toBe(PlatformRoleType.Custom);
       expect(created.scopeType).toBe(PlatformRoleScopeType.Organization);
@@ -122,7 +141,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
       // Delete via bound method
       await renamed.delete();
-      createdRoleIds.splice(createdRoleIds.indexOf(created.id), 1);
+      forgetRole(created.id);
     });
   });
 
@@ -134,7 +153,7 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
         description: 'SDK integration probe role',
         actionsGrantedByRole: [probeAction.name],
       });
-      createdRoleIds.push(created.id);
+      trackRole(created.id);
 
       // Grant
       await roles.updateAssignments({
@@ -156,12 +175,15 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
       if (!assignment) {
         throw new Error('Granted assignment did not appear in the principal role assignments');
       }
+      // Registered so a failure below still gets the grant revoked before the role is deleted
+      registerResource('roleAssignments', { id: assignment.id });
       expect(assignment.roleName).toBe(created.name);
       expect((assignment as any).createdOn).toBeUndefined();
       expect(typeof assignment.createdTime).toBe('string');
 
       // Revoke
       await roles.updateAssignments({ toDelete: [assignment.id] });
+      unregisterResource('roleAssignments', (a) => a.id === assignment.id);
       const after = await roles.getAssignments('/', { securityPrincipalId: mutableUserId });
       const principalAfter = after.items.find((p) => p.securityPrincipalId === mutableUserId);
       const stillThere = principalAfter?.roleAssignments.some((a) => a.id === assignment.id) ?? false;

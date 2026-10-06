@@ -470,7 +470,15 @@ If tests fail before cleanup, manually delete resources with names starting with
    registerResource('tasks', { id: createdTaskId, folderId });
    ```
 
-4. **Clean up in afterAll**: Always implement cleanup
+   Registration is the safety net, not the cleanup itself: `describeIntegration` runs
+   `cleanupAllTestResources()` after every suite's own `afterAll`, so anything a failed or
+   timed-out test registered but never deleted is still removed (unless
+   `INTEGRATION_TEST_SKIP_CLEANUP=true`). When a test deletes a resource itself, call
+   `unregisterResource(type, match)` so the sweep does not try again. Adding a new
+   registry slot means adding a `cleanupTest{Entity}()` helper and a loop in
+   `cleanupAllTestResources()` too — a slot without them is inert.
+
+4. **Clean up in afterAll**: Always implement cleanup, and keep going past a failed delete
    ```typescript
    import { cleanupTestTask } from '../../config/unified-setup';
 
@@ -478,6 +486,18 @@ If tests fail before cleanup, manually delete resources with names starting with
      const config = getTestConfig();
      if (!config.skipCleanup && createdTaskId) {
        await cleanupTestTask(createdTaskId);
+     }
+   });
+
+   // For several resources, one failure must not abandon the rest — the sweep above
+   // retries whatever is left behind
+   afterAll(async () => {
+     for (const id of createdIds) {
+       try {
+         await service.deleteById(id);
+       } catch (error) {
+         console.warn(`Failed to delete ${id}; leaving it to the emergency cleanup:`, error);
+       }
      }
    });
    ```

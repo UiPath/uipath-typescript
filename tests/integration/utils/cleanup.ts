@@ -1,5 +1,6 @@
 import { getServices } from '../config/unified-setup';
 import { retryWithBackoff } from './helpers';
+import { isNotFoundError } from '../../../src/core/errors';
 
 /**
  * Registry to track created resources for emergency cleanup.
@@ -16,6 +17,8 @@ interface ResourceRegistry {
   feedbackCategories: Array<{ id: string }>;
   bucketFiles: Array<{ bucketId: number; path: string; folderId?: number }>;
   businessApps: Array<{ id: string }>;
+  roles: Array<{ id: string }>;
+  roleAssignments: Array<{ id: string }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -27,16 +30,37 @@ const resourceRegistry: ResourceRegistry = {
   feedbackCategories: [],
   bucketFiles: [],
   businessApps: [],
+  roles: [],
+  roleAssignments: [],
 };
 
 /**
  * Registers a resource for potential emergency cleanup.
  */
-export function registerResource(
-  type: keyof ResourceRegistry,
-  resource: any
+export function registerResource<K extends keyof ResourceRegistry>(
+  type: K,
+  resource: ResourceRegistry[K][number]
 ): void {
-  resourceRegistry[type].push(resource);
+  (resourceRegistry[type] as Array<ResourceRegistry[K][number]>).push(resource);
+}
+
+/**
+ * Removes a resource from the registry once a test has deleted it itself, so the
+ * emergency cleanup does not try again.
+ */
+export function unregisterResource<K extends keyof ResourceRegistry>(
+  type: K,
+  matches: (resource: ResourceRegistry[K][number]) => boolean
+): void {
+  const entries = resourceRegistry[type] as Array<ResourceRegistry[K][number]>;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    if (matches(entries[i])) entries.splice(i, 1);
+  }
+}
+
+/** Whether anything is waiting to be cleaned up. */
+function hasRegisteredResources(): boolean {
+  return Object.values(resourceRegistry).some((entries) => entries.length > 0);
 }
 
 /**
@@ -221,10 +245,64 @@ export async function cleanupTestBusinessApp(id: string): Promise<void> {
 }
 
 /**
+ * Revokes a test role assignment.
+ *
+ * @param id - GUID of the role assignment
+ */
+export async function cleanupTestRoleAssignment(id: string): Promise<void> {
+  try {
+    const { platformRoles } = getServices();
+    if (!platformRoles) return;
+    // A 404 means the test already revoked it — no retries, nothing to log
+    const removed = await retryWithBackoff(async () => {
+      try {
+        await platformRoles.updateAssignments({ toDelete: [id] });
+        return true;
+      } catch (error) {
+        if (isNotFoundError(error)) return false;
+        throw error;
+      }
+    });
+    if (removed) console.log(`Cleaned up test role assignment: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup role assignment ${id}:`, error);
+  }
+}
+
+/**
+ * Deletes a test custom role.
+ *
+ * @param id - GUID of the role
+ */
+export async function cleanupTestRole(id: string): Promise<void> {
+  try {
+    const { platformRoles } = getServices();
+    if (!platformRoles) return;
+    // A 404 means the test already deleted it — no retries, nothing to log
+    const removed = await retryWithBackoff(async () => {
+      try {
+        await platformRoles.deleteById(id);
+        return true;
+      } catch (error) {
+        if (isNotFoundError(error)) return false;
+        throw error;
+      }
+    });
+    if (removed) console.log(`Cleaned up test role: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup role ${id}:`, error);
+  }
+}
+
+/**
  * Emergency cleanup function that attempts to delete all registered resources.
- * Should be called as a last resort in afterAll hooks.
+ * Runs at the end of every suite declared with `describeIntegration`, after the
+ * suite's own `afterAll`, so resources a failed or timed-out test left behind are
+ * still removed. Each helper swallows and logs its own failure, so one bad delete
+ * never stops the rest.
  */
 export async function cleanupAllTestResources(): Promise<void> {
+  if (!hasRegisteredResources()) return;
   console.log('Running emergency cleanup for all registered resources...');
 
   // Cleanup tasks
@@ -267,6 +345,16 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestBusinessApp(app.id);
   }
 
+  // Revoke role assignments before deleting the roles they point at
+  for (const assignment of resourceRegistry.roleAssignments) {
+    await cleanupTestRoleAssignment(assignment.id);
+  }
+
+  // Cleanup custom roles
+  for (const role of resourceRegistry.roles) {
+    await cleanupTestRole(role.id);
+  }
+
   // Clear registry
   resourceRegistry.tasks = [];
   resourceRegistry.entityRecords = [];
@@ -276,6 +364,8 @@ export async function cleanupAllTestResources(): Promise<void> {
   resourceRegistry.feedbackCategories = [];
   resourceRegistry.bucketFiles = [];
   resourceRegistry.businessApps = [];
+  resourceRegistry.roleAssignments = [];
+  resourceRegistry.roles = [];
 
   console.log('Emergency cleanup completed');
 }
