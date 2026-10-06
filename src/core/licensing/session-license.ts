@@ -10,7 +10,7 @@ import { decodeJwtClaims, extractUserIdFromToken } from '../../utils/encoding/jw
 import { isBrowser } from '../../utils/platform';
 import type { RawStudioWebLicenseResponse, StudioWebLicense, StudioWebLicenseTokenClaims } from './types';
 
-const ACQUISITIONS_KEY = Symbol.for('@uipath/session-license-acquisitions');
+const ACQUISITIONS_KEY = Symbol.for('@uipath/sdk-license-acquisitions');
 
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
