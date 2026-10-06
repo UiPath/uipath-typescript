@@ -15,6 +15,7 @@ import {
   createCaseAppAdhocTasksResponse,
   createCaseAppInstanceListResponse,
   createMockError,
+  createRawCaseAppInstance,
   createRawCaseAppGetElementExecutionsResponse,
   createRawCaseAppIncident,
 } from '../../../utils/mocks';
@@ -149,6 +150,28 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
       const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
       expect(spec.params?.statuses).toBeUndefined();
+    });
+
+    it('should rename instance run times on the v1 route', async () => {
+      mockApiClient.get.mockResolvedValue(createCaseAppInstanceListResponse());
+
+      const [instance] = (await v1CaseInstances.getAll()).items;
+      const [run] = instance.instanceRuns;
+
+      expect(run.startedTime).toBe(C.STARTED_TIME);
+      expect(run.completedTime).toBe(C.COMPLETED_TIME);
+      expect((run as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
+      expect((run as unknown as Record<string, unknown>).completedTimeUtc).toBeUndefined();
+    });
+
+    it('should leave a missing instanceRuns as is', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createCaseAppInstanceListResponse({ instances: [createRawCaseAppInstance({ instanceRuns: null })] })
+      );
+
+      const [instance] = (await v1CaseInstances.getAll()).items;
+
+      expect(instance.instanceRuns).toBeNull();
     });
 
     it('should ignore folderKey on the v1 route', async () => {
@@ -382,6 +405,23 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       await expect(
         caseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserSelectStage)
       ).rejects.toThrow(C.ERROR_CASE_NOT_FOUND);
+    });
+  });
+
+  describe('getById (v1)', () => {
+    it('should rename instance run times', async () => {
+      mockApiClient.get.mockImplementation(async (url: string) =>
+        url === MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(C.INSTANCE_ID) ? createRawCaseAppInstance() : null
+      );
+
+      const instance = await v1CaseInstances.getById(C.INSTANCE_ID, C.FOLDER_KEY);
+      const [run] = instance.instanceRuns;
+
+      expect(instance.startedTime).toBe(C.STARTED_TIME);
+      expect(run.startedTime).toBe(C.STARTED_TIME);
+      expect(run.completedTime).toBe(C.COMPLETED_TIME);
+      expect((run as unknown as Record<string, unknown>).startedTimeUtc).toBeUndefined();
+      expect((run as unknown as Record<string, unknown>).completedTimeUtc).toBeUndefined();
     });
   });
 
