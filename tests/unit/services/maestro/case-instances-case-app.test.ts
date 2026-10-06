@@ -1,6 +1,8 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  CaseAppSlaStatus,
+  CaseAppState,
   CaseInstances,
   CaseInstanceElementType,
   CaseInstanceSortBy,
@@ -470,7 +472,12 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
   describe('getSlaSummaryForCaseApp', () => {
     it('should return the SLA summary with externalId renamed to caseId', async () => {
-      const summary = { caseInstanceId: C.INSTANCE_ID, slaDueTime: C.SLA_DUE_TIME, slaStatus: 'OnTrack' };
+      const summary = {
+        caseInstanceId: C.INSTANCE_ID,
+        slaDueTime: C.SLA_DUE_TIME,
+        slaStatus: CaseAppSlaStatus.OnTrack,
+        state: CaseAppState.Open,
+      };
       mockApiClient.get.mockResolvedValue({ ...summary, externalId: C.CASE_ID });
 
       const result = await caseInstances.getSlaSummaryForCaseApp(C.INSTANCE_ID, C.FOLDER_KEY);

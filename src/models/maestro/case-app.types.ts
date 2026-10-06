@@ -25,6 +25,22 @@ export enum CaseAppSlaStatus {
 }
 
 /**
+ * Coarse state of a case, as the Case App SLA summary reports it.
+ *
+ * @experimental
+ */
+export enum CaseAppState {
+  /** Pending, running, retrying, resuming or upgrading */
+  Open = 'Open',
+  /** Paused or pausing */
+  Paused = 'Paused',
+  /** Cancelled or canceling */
+  Cancelled = 'Cancelled',
+  Completed = 'Completed',
+  Faulted = 'Faulted',
+}
+
+/**
  * Latest status and runtime SLA of one stage of a case instance.
  *
  * @experimental
@@ -75,8 +91,8 @@ export interface CaseAppGetSlaSummaryResponse {
   escalationRuleType: EscalationTriggerType | null;
   escalationRuleName: string | null;
   instanceStatus: InstanceStatus;
-  /** Coarse case state (`Open`, `Paused`, `Cancelled`, `Completed`, `Faulted`) */
-  state: string;
+  /** Coarse case state, collapsing transitional instance statuses onto settled ones */
+  state: CaseAppState;
   lastModifiedTime: string | null;
 }
 
