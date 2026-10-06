@@ -6,12 +6,9 @@ import {
   parseExternalReference,
 } from '../../../../src/services/orchestrator/functions/functions';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { SessionLicense, toStudioWebLicense } from '../../../../src/core/licensing/session-license';
-import { SDKInternalsRegistry } from '../../../../src/core/internals';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockRawFunctionTrigger,
-  createMockRawStudioWebLicense,
   createMockTransformedFunctionCollection,
 } from '../../../utils/mocks/functions';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -20,7 +17,7 @@ import { FunctionGetAllOptions, FunctionHttpMethod, FunctionRef } from '../../..
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { FUNCTION_TEST_CONSTANTS, FUNCTION_LICENSE_TEST_CONSTANTS } from '../../../utils/constants/functions';
+import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
 import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS, STUDIO_WEB_LICENSE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, JOB_KEY } from '../../../../src/utils/constants/headers';
 import { ValidationError, NotFoundError, ServerError } from '../../../../src/core/errors';
@@ -708,7 +705,7 @@ describe('FunctionService Unit Tests', () => {
     });
   });
 
-  describe('license handling', () => {
+  describe('licensing', () => {
     it('should not acquire a license when invoking', async () => {
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
@@ -719,98 +716,6 @@ describe('FunctionService Unit Tests', () => {
 
       expect(mockApiClient.post).toHaveBeenCalledTimes(1);
       expect(mockApiClient.post).not.toHaveBeenCalledWith(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, expect.any(Object));
-    });
-
-    it('should not send refreshLicense to the discovery lookup as a query param', async () => {
-      mockApiClient.get.mockResolvedValue({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-
-      await functionService.invoke({ name: FUNCTION_TEST_CONSTANTS.NAME }, FUNCTION_TEST_CONSTANTS.INVOKE_INPUT, {
-        folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY,
-        refreshLicense: true,
-      });
-
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        1,
-        FUNCTION_ENDPOINTS.GET_ALL,
-        expect.objectContaining({
-          params: expect.not.objectContaining({ refreshLicense: expect.anything() }),
-        })
-      );
-    });
-
-    it('should refresh the session license in the background when refreshLicense is set', async () => {
-      const { instance } = createServiceTestDependencies();
-      const internals = SDKInternalsRegistry.get(instance);
-      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
-      const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockReturnValue(new Promise(() => {}));
-      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
-      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-
-      const result = await new FunctionService(instance).invoke(
-        { name: FUNCTION_TEST_CONSTANTS.NAME },
-        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
-        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, refreshLicense: true }
-      );
-
-      expect(acquire).toHaveBeenCalledWith(true);
-      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
-    });
-
-    it('should delegate acquireLicense to the session license when the SDK has one', async () => {
-      const { instance } = createServiceTestDependencies();
-      const internals = SDKInternalsRegistry.get(instance);
-      internals.sessionLicense = new SessionLicense(internals.config, internals.context, internals.tokenManager);
-      const held = toStudioWebLicense(createMockRawStudioWebLicense());
-      const acquire = vi.spyOn(SessionLicense.prototype, 'acquire').mockResolvedValue(held);
-
-      const license = await new FunctionService(instance).acquireLicense({ refresh: true });
-
-      expect(acquire).toHaveBeenCalledWith(true);
-      expect(license).toEqual(held);
-      expect(mockApiClient.post).not.toHaveBeenCalled();
-    });
-
-    it('should acquire a license directly when the SDK has no session license', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
-
-      const license = await functionService.acquireLicense();
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, expect.any(Object));
-      expect(license.isLicensed).toBe(true);
-    });
-
-    it('should return the license with wire fields renamed to the SDK shape', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense());
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
-      expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
-      expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
-      expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
-
-      expect('started' in license).toBe(false);
-      expect('ubl' in license).toBe(false);
-      expect('lu' in license).toBe(false);
-      expect('licenseToken' in license).toBe(false);
-    });
-
-    it('should report no tier or expiry when the platform issues no token', async () => {
-      mockApiClient.post.mockResolvedValueOnce(createMockRawStudioWebLicense({ licenseToken: null }));
-
-      const license = await functionService.acquireLicense();
-
-      expect(license.isLicensed).toBe(true);
-      expect(license.expiresTime).toBeUndefined();
-      expect(license.licenseTier).toBeUndefined();
-      expect(license.licensedUnits).toBeUndefined();
-    });
-
-    it('should propagate errors from a direct acquisition', async () => {
-      mockApiClient.post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-
-      await expect(functionService.acquireLicense()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

@@ -97,20 +97,13 @@ export function toStudioWebLicense(raw: RawStudioWebLicenseResponse): StudioWebL
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #tenantScope: string;
-  readonly #tokenManager: TokenManager;
   #identity?: string;
 
   constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
-    this.#tokenManager = tokenManager;
     this.#apiClient = new ApiClient(config, context, tokenManager);
     this.#tenantScope = `${config.baseUrl}/${config.orgName}/${config.tenantName}`;
     tokenManager.onTokenChange((tokenInfo) => this.#onTokenChange(tokenInfo));
     this.#onTokenChange(tokenManager.getTokenInfo());
-  }
-
-  async acquire(refresh = false): Promise<StudioWebLicense | undefined> {
-    const identity = this.#identityOf(await this.#tokenManager.getValidToken());
-    return identity ? this.#ensure(identity, refresh) : undefined;
   }
 
   #onTokenChange(tokenInfo: TokenInfo | undefined): void {
@@ -120,7 +113,7 @@ export class SessionLicense {
     if (this.#identity) forget(this.#identity);
     this.#identity = identity;
     if (identity) {
-      this.#ensure(identity, false).catch((error: unknown) => {
+      this.#ensure(identity).catch((error: unknown) => {
         console.warn('[UiPath SDK] Could not acquire a Studio Web license for the signed-in user', error);
       });
     }
@@ -131,14 +124,12 @@ export class SessionLicense {
     return userId ? `${this.#tenantScope}:${userId}` : undefined;
   }
 
-  async #ensure(identity: string, refresh: boolean): Promise<StudioWebLicense> {
+  async #ensure(identity: string): Promise<StudioWebLicense> {
     const store = acquisitions();
-    if (!refresh) {
-      const pending = store.get(identity);
-      if (pending) return pending;
-      const held = readHeld(identity);
-      if (held) return held;
-    }
+    const pending = store.get(identity);
+    if (pending) return pending;
+    const held = readHeld(identity);
+    if (held) return held;
 
     const acquisition = this.#apiClient
       .post<RawStudioWebLicenseResponse>(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })

@@ -4,7 +4,6 @@ import {
   FunctionRef,
   RawFunctionGetResponse,
 } from './functions.types';
-import { FunctionAcquireLicenseOptions, StudioWebLicense } from './functions.internal-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { ValidationError } from '../../core/errors/validation';
 
@@ -157,18 +156,6 @@ export interface FunctionServiceModel {
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput>;
-
-  /**
-   * Acquires a license for the calling user without invoking anything.
-   *
-   * @deprecated A coded app acquires the license on sign-in; callers do not need to.
-   *
-   * @internal
-   *
-   * @param options - Whether to force a fresh acquisition rather than reusing the license already held
-   * @returns Promise resolving to the acquired license
-   */
-  acquireLicense(options?: FunctionAcquireLicenseOptions): Promise<StudioWebLicense>;
 }
 
 /**

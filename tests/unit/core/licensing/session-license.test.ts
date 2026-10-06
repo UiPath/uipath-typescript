@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SessionLicense, clearSessionLicenses } from '@/core/licensing/session-license';
+import { SessionLicense, clearSessionLicenses, toStudioWebLicense } from '@/core/licensing/session-license';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { ApiClient } from '@/core/http/api-client';
@@ -178,34 +178,37 @@ describe('SessionLicense', () => {
 
   it('should not remember a failed acquisition', async () => {
     post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-    const { tokenManager, sessionLicense } = signIn();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
-    const license = await sessionLicense.acquire();
-
-    expect(post).toHaveBeenCalledTimes(2);
-    expect(license?.isLicensed).toBe(true);
-  });
-
-  it('should acquire afresh when asked to refresh', async () => {
-    const { tokenManager, sessionLicense } = signIn();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
-
-    await sessionLicense.acquire(true);
 
     expect(post).toHaveBeenCalledTimes(2);
   });
+});
 
-  it('should return the held license without a request', async () => {
-    const { tokenManager, sessionLicense } = signIn();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
+describe('toStudioWebLicense', () => {
+  it('should rename wire fields to the SDK shape and drop the license token', () => {
+    const license = toStudioWebLicense(createMockRawStudioWebLicense());
 
-    const license = await sessionLicense.acquire();
+    expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
+    expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
+    expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
+    expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
 
-    expect(post).toHaveBeenCalledTimes(1);
-    expect(license?.robotType).toBeDefined();
+    expect('started' in license).toBe(false);
+    expect('ubl' in license).toBe(false);
+    expect('lu' in license).toBe(false);
+    expect('licenseToken' in license).toBe(false);
+  });
+
+  it('should report no tier or expiry when the platform issues no token', () => {
+    const license = toStudioWebLicense(createMockRawStudioWebLicense({ licenseToken: null }));
+
+    expect(license.isLicensed).toBe(true);
+    expect(license.expiresTime).toBeUndefined();
+    expect(license.licenseTier).toBeUndefined();
+    expect(license.licensedUnits).toBeUndefined();
   });
 });

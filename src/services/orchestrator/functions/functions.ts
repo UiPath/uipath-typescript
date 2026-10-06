@@ -7,14 +7,11 @@ import {
   RawFunctionGetResponse,
 } from '../../../models/orchestrator/functions.types';
 import {
-  FunctionAcquireLicenseOptions,
   FunctionInvokeTarget,
   RawFolderResponse,
   RawFunctionTrigger,
   ResolvedFunction,
 } from '../../../models/orchestrator/functions.internal-types';
-import type { RawStudioWebLicenseResponse, StudioWebLicense } from '../../../core/licensing/types';
-import { SessionLicense, toStudioWebLicense } from '../../../core/licensing/session-license';
 import { CollectionResponse, FolderScopedOptions } from '../../../models/common/types';
 import { UiPathError } from '../../../core/errors/base';
 import { NotFoundError } from '../../../core/errors/not-found';
@@ -27,7 +24,7 @@ import {
 } from '../../../models/orchestrator/functions.models';
 import { FunctionMap } from '../../../models/orchestrator/functions.constants';
 import { pascalToCamelCaseKeys, transformOptions } from '../../../utils/transform';
-import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS, STUDIO_WEB_LICENSE_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { JOB_KEY } from '../../../utils/constants/headers';
@@ -36,8 +33,6 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
-import { SDKInternalsRegistry } from '../../../core/internals';
-import type { IUiPath } from '../../../core/types';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
@@ -64,18 +59,6 @@ const EXTERNAL_REFERENCE_RE =
 export class FunctionService extends FolderScopedService implements FunctionServiceModel {
   /** Folder ID → folder key (GUID); folder keys are immutable, so cache hits stay valid. */
   private readonly folderKeyCache = new Map<number, string>();
-
-  private readonly sessionLicense?: SessionLicense;
-
-  /**
-   * Creates an instance of the Functions service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-    this.sessionLicense = SDKInternalsRegistry.get(instance).sessionLicense;
-  }
 
   @track('Functions.GetAll')
   async getAll<T extends FunctionGetAllOptions = FunctionGetAllOptions>(
@@ -121,31 +104,15 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     >;
   }
 
-  @track('Functions.AcquireLicense')
-  async acquireLicense(options?: FunctionAcquireLicenseOptions): Promise<StudioWebLicense> {
-    const held = await this.sessionLicense?.acquire(options?.refresh ?? false);
-    if (held) return held;
-
-    const response = await this.post<RawStudioWebLicenseResponse>(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE);
-    return toStudioWebLicense(response.data);
-  }
-
   @track('Functions.Invoke')
   async invoke<TInput extends object = Record<string, unknown>, TOutput = unknown>(
     func: FunctionRef,
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput> {
-    // jobKey and refreshLicense are not discovery options — keep them out of
-    // the folder-scoped discovery lookup, which would forward them as query
-    // params.
-    const { jobKey, refreshLicense = false, ...folderOptions } = options ?? {};
-
-    if (refreshLicense) {
-      this.sessionLicense?.acquire(true).catch((error: unknown) => {
-        console.warn('[UiPath SDK] Could not refresh the Studio Web license', error);
-      });
-    }
+    // jobKey is not a discovery option — keep it out of the folder-scoped
+    // discovery lookup, which would forward it as a query param.
+    const { jobKey, ...folderOptions } = options ?? {};
 
     // The trigger's ExternalReference names the route and folder key directly;
     // only a trigger without one needs them derived.

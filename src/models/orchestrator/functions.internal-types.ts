@@ -66,19 +66,3 @@ export interface RawFolderResponse {
   /** Folder key (GUID) — the `t/{key}` segment of the function invoke URL. */
   Key: string;
 }
-
-export type { StudioWebLicense } from '../../core/licensing/types';
-
-/**
- * Options for acquiring a license directly.
- *
- * @internal
- */
-export interface FunctionAcquireLicenseOptions {
-  /**
-   * Acquires a fresh license instead of returning the one already held.
-   * Defaults to `false`.
-   */
-  refresh?: boolean;
-}
-
