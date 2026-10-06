@@ -13,6 +13,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # coverage.yml's schema DDL leg reads other runs' jobs to take its turn.
+  actions: read
 
 # One run per pull request. A push supersedes the run already in flight for the
 # same PR, so two legs of the same branch never share the dev tenant (they
