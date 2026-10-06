@@ -230,9 +230,10 @@ nav:
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
           - Platform:
-            - Settings: api/interfaces/PlatformServiceModel.md
+            - Settings: api/interfaces/PlatformSettingServiceModel.md
             - Users: api/interfaces/PlatformUserServiceModel.md
             - Roles: api/interfaces/PlatformRoleServiceModel.md
+            - Groups: api/interfaces/PlatformGroupServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks:

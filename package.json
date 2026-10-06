@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.7.2",
+    "version": "1.8.0",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -256,14 +256,14 @@
                 "default": "./dist/functions/index.cjs"
             }
         },
-        "./platform": {
+        "./settings": {
             "import": {
-                "types": "./dist/platform/index.d.ts",
-                "default": "./dist/platform/index.mjs"
+                "types": "./dist/settings/index.d.ts",
+                "default": "./dist/settings/index.mjs"
             },
             "require": {
-                "types": "./dist/platform/index.d.ts",
-                "default": "./dist/platform/index.cjs"
+                "types": "./dist/settings/index.d.ts",
+                "default": "./dist/settings/index.cjs"
             }
         },
         "./business-apps": {
@@ -304,6 +304,16 @@
             "require": {
                 "types": "./dist/roles/index.d.ts",
                 "default": "./dist/roles/index.cjs"
+            }
+        },
+        "./groups": {
+            "import": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.mjs"
+            },
+            "require": {
+                "types": "./dist/groups/index.d.ts",
+                "default": "./dist/groups/index.cjs"
             }
         }
     },

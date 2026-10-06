@@ -35,7 +35,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
     const { headers, queryOptions } = resolveFolderScope(
       options ?? {},
       'Connections.getAll',
-      this.config.folderKey,
+      this.config.metaFolderKey,
     );
     const response = await this.get<ConnectionGetResponse[]>(CONNECTION_ENDPOINTS.GET_ALL, {
       headers,
@@ -52,7 +52,7 @@ export class ConnectionsService extends BaseService implements ConnectionsServic
     const { headers, queryOptions } = resolveFolderScope(
       options ?? {},
       'Connections.getById',
-      this.config.folderKey,
+      this.config.metaFolderKey,
     );
     const response = await this.get<ConnectionGetResponse>(CONNECTION_ENDPOINTS.GET_BY_ID(connectionId), {
       headers,

@@ -8,7 +8,13 @@ import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
 import { loadFromEnvironment } from './config/environment';
-import { configFromFunctionContext, isFunctionContext, type CodedFunctionContext } from './config/function-context';
+import {
+  configFromFunctionContext,
+  folderKeyFromFunctionContext,
+  isFunctionContext,
+  robotKeyFromFunctionContext,
+  type CodedFunctionContext,
+} from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
@@ -82,10 +88,18 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
-  // Folder key sourced only from `<meta name="uipath:folder-key">` (coded-app
-  // deployments). Not accepted via the public constructor; lives here so the
-  // SDK can flow it through to BaseService.config without polluting BaseConfig.
+  // Folder key from `<meta name="uipath:folder-key">` (coded-app deployments).
+  // Not a configuration field; lives here so the SDK can flow it through to
+  // BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
+  // Folder key off a coded function's `ctx.platform`; its own field because
+  // #loadConfig rewrites the meta one from a re-read. Beats the meta tag, as
+  // constructor input beats meta tags everywhere else — except as Integration
+  // Service's fallback, which stays the meta tag's alone.
+  #contextFolderKey?: string;
+  // The context the instance was built from, so a configuration that comes up
+  // incomplete can be reported by the coordinate the context lacks.
+  #functionContext?: CodedFunctionContext;
   // Org/tenant ids captured from the meta tags before the constructor config
   // is merged in. Deployments inject the organization GUID as `uipath:org-id`
   // (`uipath:org-name` is the logical name) and the tenant GUID as
@@ -110,9 +124,14 @@ export class UiPath implements IUiPath {
   constructor(config?: PartialUiPathConfig | CodedFunctionContext) {
     // A coded function passes its ctx here. A context with no coordinates (the
     // local case) resolves to undefined and falls through to the other sources.
-    const resolved = config && isFunctionContext(config)
-      ? configFromFunctionContext(config) ?? undefined
-      : config;
+    let resolved: PartialUiPathConfig | undefined;
+    if (config && isFunctionContext(config)) {
+      this.#functionContext = config;
+      this.#contextFolderKey = folderKeyFromFunctionContext(config);
+      resolved = configFromFunctionContext(config) ?? undefined;
+    } else {
+      resolved = config;
+    }
 
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
@@ -126,8 +145,13 @@ export class UiPath implements IUiPath {
 
     if (mergedConfig && isCompleteConfig(mergedConfig)) {
       this.#initializeWithConfig(mergedConfig);
-    } else if (resolved) {
-      this.#partialConfig = resolved;
+    } else {
+      if (resolved) {
+        this.#partialConfig = resolved;
+      }
+      // Coded functions never call initialize(), so the service constructor is where they learn
+      // what is missing; recording it here gives that path the same message initialize() throws.
+      SDKInternalsRegistry.setUnconfigured(this, missingConfigMessage(mergedConfig, this.#functionContext));
     }
   }
 
@@ -153,13 +177,15 @@ export class UiPath implements IUiPath {
     this.#config = internalConfig;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
-    // `folderKey` is meta-tag-only — kept off `UiPathConfig` (which mirrors
-    // user-passed values) and lives here on the runtime registry instead.
+    // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
+    // values) and live here on the runtime registry instead.
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
       tokenManager: this.#authService.getTokenManager(),
-      folderKey: this.#metaFolderKey,
+      folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
+      metaFolderKey: this.#metaFolderKey,
+      robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
     });
 
     // Expose read-only config for user convenience
@@ -259,7 +285,7 @@ export class UiPath implements IUiPath {
     const merged = UiPath.#mergeConfigSources(metaConfig, this.#partialConfig);
 
     if (!merged || !isCompleteConfig(merged)) {
-      throw new Error(missingConfigMessage(merged));
+      throw new Error(missingConfigMessage(merged, this.#functionContext));
     }
 
     return merged;
