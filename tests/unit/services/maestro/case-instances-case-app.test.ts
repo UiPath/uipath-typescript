@@ -142,6 +142,15 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       expect(spec.params).toMatchObject({ externalId: C.CASE_ID, statuses: 'Running', processType: 'CaseManagement' });
     });
 
+    it('should omit the statuses parameter when the list is empty', async () => {
+      mockListAndCaseJson();
+
+      await caseInstances.getAll({ folderKey: C.FOLDER_KEY, statuses: [] });
+
+      const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
+      expect(spec.params?.statuses).toBeUndefined();
+    });
+
     it('should ignore folderKey on the v1 route', async () => {
       mockApiClient.get.mockResolvedValue({ instances: [], nextPage: null, hasMoreResults: false });
 
@@ -231,6 +240,15 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
         ...FOLDER_HEADERS,
         params: { elementTypes: 'rpa' },
       });
+    });
+
+    it('should omit the element-type parameter when the filter is empty', async () => {
+      mockApiClient.get.mockResolvedValue(createRawCaseAppGetElementExecutionsResponse());
+
+      await caseInstances.getExecutionHistory(C.INSTANCE_ID, C.FOLDER_KEY, { elementTypes: [] });
+
+      const spec = mockApiClient.get.mock.calls[0][1] as RequestSpec;
+      expect(spec.params).toBeUndefined();
     });
 
     it('should omit the element-type parameter when no filter is given', async () => {

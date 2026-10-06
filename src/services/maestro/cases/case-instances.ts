@@ -102,7 +102,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const filters = transformRequest(
       {
         ...rest,
-        statuses: statuses?.join(','),
+        statuses: statuses?.length ? statuses.join(',') : undefined,
         startedTimeStart: startedTimeStart?.toISOString(),
         startedTimeEnd: startedTimeEnd?.toISOString(),
       },
@@ -331,7 +331,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
         : MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(instanceId),
       {
         headers: createHeaders({ [FOLDER_KEY]: folderKey }),
-        ...(options?.elementTypes && { params: { elementTypes: options.elementTypes.join(',') } })
+        ...(options?.elementTypes?.length && { params: { elementTypes: options.elementTypes.join(',') } })
       }
     );
     
