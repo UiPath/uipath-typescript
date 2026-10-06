@@ -184,7 +184,7 @@ export class UiPath implements IUiPath {
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager,
+      tokenManager: tokenManager,
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
