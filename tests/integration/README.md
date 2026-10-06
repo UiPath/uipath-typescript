@@ -478,7 +478,7 @@ If tests fail before cleanup, manually delete resources with names starting with
    registry slot means adding a `cleanupTest{Entity}()` helper and a loop in
    `cleanupAllTestResources()` too — a slot without them is inert.
 
-4. **Clean up in afterAll**: Always implement cleanup, and keep going past a failed delete
+4. **Clean up in afterAll**: Always implement cleanup
    ```typescript
    import { cleanupTestTask } from '../../config/unified-setup';
 
@@ -489,15 +489,13 @@ If tests fail before cleanup, manually delete resources with names starting with
      }
    });
 
-   // For several resources, one failure must not abandon the rest — the sweep above
-   // retries whatever is left behind
+   // Several resources: delete each and unregister it. Do not wrap the calls in try/catch —
+   // a failed delete should fail the suite, and whatever is still registered when it throws
+   // is removed by the sweep that runs after this hook.
    afterAll(async () => {
      for (const id of createdIds) {
-       try {
-         await service.deleteById(id);
-       } catch (error) {
-         console.warn(`Failed to delete ${id}; leaving it to the emergency cleanup:`, error);
-       }
+       await service.deleteById(id);
+       unregisterResource('roles', (r) => r.id === id);
      }
    });
    ```

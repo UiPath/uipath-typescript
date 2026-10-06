@@ -64,6 +64,24 @@ function hasRegisteredResources(): boolean {
 }
 
 /**
+ * Runs a delete with retries, treating "not found" as already gone: a resource the
+ * test removed itself must not burn the retry backoff or log a failure.
+ *
+ * @returns `true` when the call removed something, `false` when it was already gone
+ */
+async function attemptDelete(remove: () => Promise<unknown>): Promise<boolean> {
+  return retryWithBackoff(async () => {
+    try {
+      await remove();
+      return true;
+    } catch (error) {
+      if (isNotFoundError(error)) return false;
+      throw error;
+    }
+  });
+}
+
+/**
  * Cancels or unassigns a test task.
  * Note: The SDK does not have a delete method for tasks.
  *
@@ -128,10 +146,8 @@ export async function cleanupTestProcessInstance(
 ): Promise<void> {
   try {
     const { processInstances } = getServices();
-    await retryWithBackoff(async () => {
-      await processInstances.cancel(instanceId, folderKey || '');
-    });
-    console.log(`Cleaned up test process instance: ${instanceId}`);
+    const removed = await attemptDelete(() => processInstances.cancel(instanceId, folderKey || ''));
+    if (removed) console.log(`Cleaned up test process instance: ${instanceId}`);
   } catch (error) {
     console.warn(`Failed to cleanup process instance ${instanceId}:`, error);
   }
@@ -149,10 +165,8 @@ export async function cleanupTestCaseInstance(
 ): Promise<void> {
   try {
     const { caseInstances } = getServices();
-    await retryWithBackoff(async () => {
-      await caseInstances.close(caseId, folderKey || '');
-    });
-    console.log(`Cleaned up test case instance: ${caseId}`);
+    const removed = await attemptDelete(() => caseInstances.close(caseId, folderKey || ''));
+    if (removed) console.log(`Cleaned up test case instance: ${caseId}`);
   } catch (error) {
     console.warn(`Failed to cleanup case instance ${caseId}:`, error);
   }
@@ -172,10 +186,8 @@ export async function cleanupTestFeedbackEntry(
     const { feedback } = getServices();
     if (!feedback) return;
     if (!folderKey) return;
-    await retryWithBackoff(async () => {
-      await feedback.deleteById(id, { folderKey });
-    });
-    console.log(`Cleaned up test feedback entry: ${id}`);
+    const removed = await attemptDelete(() => feedback.deleteById(id, { folderKey }));
+    if (removed) console.log(`Cleaned up test feedback entry: ${id}`);
   } catch (error) {
     console.warn(`Failed to cleanup feedback entry ${id}:`, error);
   }
@@ -195,14 +207,10 @@ export async function cleanupTestBucketFile(
 ): Promise<void> {
   try {
     const { buckets } = getServices();
-    await retryWithBackoff(async () => {
-      await buckets.deleteFile(
-        bucketId,
-        path,
-        folderId !== undefined ? { folderId } : undefined
-      );
-    });
-    console.log(`Cleaned up test bucket file: ${path} (bucket ${bucketId})`);
+    const removed = await attemptDelete(() =>
+      buckets.deleteFile(bucketId, path, folderId !== undefined ? { folderId } : undefined)
+    );
+    if (removed) console.log(`Cleaned up test bucket file: ${path} (bucket ${bucketId})`);
   } catch (error) {
     console.warn(`Failed to cleanup bucket file ${path} in bucket ${bucketId}:`, error);
   }
@@ -217,10 +225,8 @@ export async function cleanupTestFeedbackCategory(id: string): Promise<void> {
   try {
     const { feedback } = getServices();
     if (!feedback) return;
-    await retryWithBackoff(async () => {
-      await feedback.deleteCategory(id);
-    });
-    console.log(`Cleaned up test feedback category: ${id}`);
+    const removed = await attemptDelete(() => feedback.deleteCategory(id));
+    if (removed) console.log(`Cleaned up test feedback category: ${id}`);
   } catch (error) {
     console.warn(`Failed to cleanup feedback category ${id}:`, error);
   }
@@ -235,10 +241,8 @@ export async function cleanupTestBusinessApp(id: string): Promise<void> {
   try {
     const { businessApps } = getServices();
     if (!businessApps) return;
-    await retryWithBackoff(async () => {
-      await businessApps.deleteById(id);
-    });
-    console.log(`Cleaned up test business app: ${id}`);
+    const removed = await attemptDelete(() => businessApps.deleteById(id));
+    if (removed) console.log(`Cleaned up test business app: ${id}`);
   } catch (error) {
     console.warn(`Failed to cleanup business app ${id}:`, error);
   }
@@ -253,16 +257,7 @@ export async function cleanupTestRoleAssignment(id: string): Promise<void> {
   try {
     const { platformRoles } = getServices();
     if (!platformRoles) return;
-    // A 404 means the test already revoked it — no retries, nothing to log
-    const removed = await retryWithBackoff(async () => {
-      try {
-        await platformRoles.updateAssignments({ toDelete: [id] });
-        return true;
-      } catch (error) {
-        if (isNotFoundError(error)) return false;
-        throw error;
-      }
-    });
+    const removed = await attemptDelete(() => platformRoles.updateAssignments({ toDelete: [id] }));
     if (removed) console.log(`Cleaned up test role assignment: ${id}`);
   } catch (error) {
     console.warn(`Failed to cleanup role assignment ${id}:`, error);
@@ -278,16 +273,7 @@ export async function cleanupTestRole(id: string): Promise<void> {
   try {
     const { platformRoles } = getServices();
     if (!platformRoles) return;
-    // A 404 means the test already deleted it — no retries, nothing to log
-    const removed = await retryWithBackoff(async () => {
-      try {
-        await platformRoles.deleteById(id);
-        return true;
-      } catch (error) {
-        if (isNotFoundError(error)) return false;
-        throw error;
-      }
-    });
+    const removed = await attemptDelete(() => platformRoles.deleteById(id));
     if (removed) console.log(`Cleaned up test role: ${id}`);
   } catch (error) {
     console.warn(`Failed to cleanup role ${id}:`, error);
