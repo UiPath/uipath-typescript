@@ -19,6 +19,7 @@ interface ResourceRegistry {
   businessApps: Array<{ id: string }>;
   roles: Array<{ id: string }>;
   roleAssignments: Array<{ id: string }>;
+  groups: Array<{ id: string }>;
 }
 
 function createEmptyRegistry(): ResourceRegistry {
@@ -33,6 +34,7 @@ function createEmptyRegistry(): ResourceRegistry {
   businessApps: [],
   roles: [],
   roleAssignments: [],
+  groups: [],
   };
 }
 
@@ -307,6 +309,20 @@ export async function cleanupTestRole(id: string): Promise<void> {
 }
 
 /**
+ * Cleanup a test group (platform Groups service)
+ */
+export async function cleanupTestGroup(id: string): Promise<void> {
+  try {
+    const { platformGroups } = getServices();
+    if (!platformGroups) return;
+    const removed = await attemptDelete(() => platformGroups.deleteById(id));
+    if (removed) console.log(`Cleaned up test group: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup group ${id}:`, error);
+  }
+}
+
+/**
  * Emergency cleanup function that attempts to delete all registered resources.
  * Runs at the end of every suite declared with `describeIntegration`, after the
  * suite's own `afterAll`, so resources a failed or timed-out test left behind are
@@ -366,6 +382,11 @@ export async function cleanupAllTestResources(): Promise<void> {
   // Cleanup custom roles
   for (const role of pending.roles) {
     await cleanupTestRole(role.id);
+  }
+
+  // Cleanup groups last — assignments above may have named them as principals
+  for (const group of pending.groups) {
+    await cleanupTestGroup(group.id);
   }
 
   console.log('Emergency cleanup completed');

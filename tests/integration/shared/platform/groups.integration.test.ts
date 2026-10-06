@@ -4,6 +4,7 @@ import { Groups } from '../../../../src/services/platform/groups';
 import { Users } from '../../../../src/services/platform/users';
 import { PlatformGroupType, PlatformUserType } from '../../../../src/models/platform';
 import { generateRandomString } from '../../utils/helpers';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 
 const modes: InitMode[] = ['v1'];
 
@@ -14,6 +15,19 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
   let mutableUserId!: string;
   /** IDs of groups created by this suite; deleted in afterAll. */
   const createdGroupIds: string[] = [];
+
+  /** Remembers a created group for afterAll and registers it for the emergency cleanup sweep. */
+  const trackGroup = (id: string) => {
+    createdGroupIds.push(id);
+    registerResource('groups', { id });
+  };
+
+  /** Forgets a group the test deleted itself, so neither afterAll nor the sweep delete it again. */
+  const forgetGroup = (id: string) => {
+    const idx = createdGroupIds.indexOf(id);
+    if (idx !== -1) createdGroupIds.splice(idx, 1);
+    unregisterResource('groups', (g) => g.id === id);
+  };
 
   beforeAll(async () => {
     const groupsService = getServices().platformGroups;
@@ -36,9 +50,13 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
 
   afterAll(async () => {
     if (!groups) return;
+    // A failed delete throws (and fails the suite); whatever is still registered at that
+    // point is deleted by the emergency cleanup sweep that runs after this hook
     for (const id of createdGroupIds) {
       await groups.deleteById(id);
+      unregisterResource('groups', (g) => g.id === id);
     }
+    createdGroupIds.length = 0;
   });
 
   describe('getAll', () => {
@@ -80,7 +98,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
 
       // Create
       const created = await groups.create(name);
-      createdGroupIds.push(created.id);
+      trackGroup(created.id);
       expect(created.name).toBe(name);
       expect(created.type).toBe(PlatformGroupType.Custom);
 
@@ -95,7 +113,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
 
       // Delete
       await groups.deleteById(created.id);
-      createdGroupIds.splice(createdGroupIds.indexOf(created.id), 1);
+      forgetGroup(created.id);
 
       const remaining = await groups.getAll();
       expect(remaining.map((g) => g.id)).not.toContain(created.id);
@@ -105,7 +123,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
       const name = `sdk-it-${generateRandomString(8)}`;
 
       const created = await groups.create(name, { memberUserIds: [mutableUserId] });
-      createdGroupIds.push(created.id);
+      trackGroup(created.id);
 
       const members = await groups.getMembers(created.id);
       expect(members.totalCount).toBe(1);
@@ -117,7 +135,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
   describe('membership editing (group side and user side)', () => {
     it('should add and remove a member through updateById and bound methods', async () => {
       const created = await groups.create(`sdk-it-${generateRandomString(8)}`);
-      createdGroupIds.push(created.id);
+      trackGroup(created.id);
 
       // Add from the group side — the SDK carries the current name the API requires
       await groups.updateById(created.id, {
@@ -138,7 +156,7 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
 
     it('should add and remove a member from the user side via users.updateById', async () => {
       const created = await groups.create(`sdk-it-${generateRandomString(8)}`);
-      createdGroupIds.push(created.id);
+      trackGroup(created.id);
 
       // Grant from the user side — the RBAC "make this user an admin" call
       await users.updateById(mutableUserId, { groupIdsToAdd: [created.id] });
@@ -179,10 +197,10 @@ describeIntegration('Platform Groups - Integration Tests', 'both', modes, () => 
   describe('deleteById via bound method', () => {
     it('should delete a group through the bound delete()', async () => {
       const created = await groups.create(`sdk-it-${generateRandomString(8)}`);
-      createdGroupIds.push(created.id);
+      trackGroup(created.id);
 
       await created.delete();
-      createdGroupIds.splice(createdGroupIds.indexOf(created.id), 1);
+      forgetGroup(created.id);
 
       const remaining = await groups.getAll();
       expect(remaining.map((g) => g.id)).not.toContain(created.id);
