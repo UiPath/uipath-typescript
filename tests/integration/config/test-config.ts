@@ -157,7 +157,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     userToken: typeof rawConfig.userToken === 'string' && rawConfig.userToken.length > 0
       ? rawConfig.userToken
       : undefined,
-    timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 60000,
+    timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
     folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
@@ -216,7 +216,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     userToken: process.env.UIPATH_USER_TOKEN || undefined,
     timeout: process.env.INTEGRATION_TEST_TIMEOUT
       ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
-      : 60000,
+      : 30000,
     skipCleanup: process.env.INTEGRATION_TEST_SKIP_CLEANUP === 'true',
     folderId: process.env.INTEGRATION_TEST_FOLDER_ID || undefined,
     folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
