@@ -54,14 +54,11 @@ describeIntegration('Platform Roles - Integration Tests', 'both', modes, () => {
 
   afterAll(async () => {
     if (!roles) return;
-    // Keep going past a failed delete — the emergency cleanup retries whatever is left
+    // A failed delete throws (and fails the suite); whatever is still registered at that
+    // point is deleted by the emergency cleanup sweep that runs after this hook
     for (const id of createdRoleIds) {
-      try {
-        await roles.deleteById(id);
-        unregisterResource('roles', (r) => r.id === id);
-      } catch (error) {
-        console.warn(`Failed to delete test role ${id}; leaving it to the emergency cleanup:`, error);
-      }
+      await roles.deleteById(id);
+      unregisterResource('roles', (r) => r.id === id);
     }
     createdRoleIds.length = 0;
   });

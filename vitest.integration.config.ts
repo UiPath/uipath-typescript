@@ -28,7 +28,9 @@ export default defineConfig({
           name: "integration",
           include: [INTEGRATION_SUITES],
           exclude: [...configDefaults.exclude, DATA_FABRIC_SCHEMA_SUITE],
-          sequence: { groupOrder: 0 },
+          // `hooks: 'stack'` (vitest's default) runs afterAll hooks in reverse order, which is
+          // what lets the cleanup sweep in setupUnifiedTests run after each suite's own afterAll
+          sequence: { groupOrder: 0, hooks: 'stack' },
         },
       },
       {
@@ -36,7 +38,7 @@ export default defineConfig({
         test: {
           name: "integration-ddl",
           include: [DATA_FABRIC_SCHEMA_SUITE],
-          sequence: { groupOrder: 1 },
+          sequence: { groupOrder: 1, hooks: 'stack' },
         },
       },
     ],

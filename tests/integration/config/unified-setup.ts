@@ -41,6 +41,9 @@ import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll, describe } from 'vitest';
 import { cleanupAllTestResources } from '../utils/cleanup';
 
+/** The sweep may have several leftovers to delete serially, each with retries — give it room. */
+const CLEANUP_SWEEP_TIMEOUT_MS = 90_000;
+
 // Re-export cleanup functions from cleanup.ts for convenience
 export {
   cleanupTestTask,
@@ -330,7 +333,7 @@ export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
       await cleanupAllTestResources();
     }
     cleanupServices();
-  });
+  }, CLEANUP_SWEEP_TIMEOUT_MS);
 }
 
 /** Extra knobs for {@link describeIntegration}. */
