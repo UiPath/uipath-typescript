@@ -44,7 +44,7 @@ export class BaseService {
    * SDK configuration (read-only). Available to subclasses so they can
    * fall back to init-time defaults like `folderKey`.
    */
-  protected readonly config: { folderKey?: string; metaFolderKey?: string };
+  protected readonly config: { folderKey?: string; metaFolderKey?: string; robotKey?: string };
 
   /**
    * Creates a base service instance with dependency injection.
@@ -77,9 +77,9 @@ export class BaseService {
    * ```
    */
   constructor(instance: IUiPath, headers?: Record<string, string>) {
-    const { config, context, tokenManager, folderKey, metaFolderKey } = SDKInternalsRegistry.get(instance);
+    const { config, context, tokenManager, folderKey, metaFolderKey, robotKey } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
-    this.config = { folderKey, metaFolderKey };
+    this.config = { folderKey, metaFolderKey, robotKey };
   }
 
   /**
