@@ -532,10 +532,33 @@ describe('UiPath Core', () => {
       scope: TEST_CONSTANTS.OAUTH_SCOPE,
     };
 
-    it('should attach a session license to a coded app', () => {
+    afterEach(() => {
+      mockPlatform.isInActionCenter = false;
+    });
+
+    it('should attach a session license to a coded app that signs its user in', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
+    });
+
+    it('should attach a session license to a coded app whose host supplies the user token', () => {
+      mockPlatform.isInActionCenter = true;
+
+      const sdk = new UiPath(oauthConfig);
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
+    });
+
+    it('should not attach a session license when the SDK holds its own credential', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
+      });
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
     });
 
     it('should not attach a session license inside a coded function', () => {

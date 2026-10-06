@@ -188,7 +188,7 @@ export class UiPath implements IUiPath {
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
-      sessionLicense: this.#functionContext
+      sessionLicense: hasSecretAuth
         ? undefined
         : new SessionLicense(internalConfig, executionContext, tokenManager),
     });

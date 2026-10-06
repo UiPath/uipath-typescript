@@ -1,15 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { memorySessionStorage } from '@tests/utils/session-storage';
-import { SessionLicense, clearSessionLicenses, toStudioWebLicense } from '@/core/licensing/session-license';
+import { SessionLicense } from '@/core/licensing/session-license';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { ApiClient } from '@/core/http/api-client';
 import { UiPathConfig } from '@/core/config/config';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '@/utils/constants/endpoints';
 import { TEST_CONSTANTS } from '@tests/utils/constants/common';
+import { LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/licensing';
 import { createTestJwt } from '@tests/utils/jwt';
-import { createMockRawStudioWebLicense } from '@tests/utils/mocks/functions';
-import { FUNCTION_LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/functions';
 import { createMockError } from '@tests/utils/mocks/core';
 import { createMockApiClient } from '@tests/utils/setup';
 
@@ -33,37 +32,40 @@ function makeConfig(tenantName: string = TEST_CONSTANTS.TENANT_ID): UiPathConfig
   });
 }
 
-function signIn(tenantName?: string): { tokenManager: TokenManager; sessionLicense: SessionLicense } {
+const sessionLicenses: SessionLicense[] = [];
+
+function signIn(tenantName?: string): TokenManager {
   const context = new ExecutionContext();
   const config = makeConfig(tenantName);
   const tokenManager = new TokenManager(context, config, false);
-  const sessionLicense = new SessionLicense(config, context, tokenManager);
-  return { tokenManager, sessionLicense };
+  sessionLicenses.push(new SessionLicense(config, context, tokenManager));
+  return tokenManager;
 }
 
 function tokenFor(userId: string): { token: string; type: 'oauth' } {
   return { token: createTestJwt({ sub: userId }), type: 'oauth' };
 }
 
+const failing = () => {
+  throw new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+};
+
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('SessionLicense', () => {
   beforeEach(() => {
     memorySessionStorage.reset();
-    clearSessionLicenses();
-    post.mockReset().mockResolvedValue(createMockRawStudioWebLicense());
+    post.mockReset().mockResolvedValue(undefined);
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    sessionLicenses.length = 0;
     vi.clearAllMocks();
   });
 
   it('should acquire once when a user signs in, retrying the idempotent POST', async () => {
-    const { tokenManager } = signIn();
-
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(1);
@@ -78,133 +80,107 @@ describe('SessionLicense', () => {
     const context = new ExecutionContext();
     const config = makeConfig();
     const tokenManager = new TokenManager(context, config, false);
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
 
-    const sessionLicense = new SessionLicense(config, context, tokenManager);
+    sessionLicenses.push(new SessionLicense(config, context, tokenManager));
     await flush();
 
-    expect(sessionLicense).toBeInstanceOf(SessionLicense);
     expect(post).toHaveBeenCalledTimes(1);
   });
 
   it('should not acquire again when the token is refreshed for the same user', async () => {
-    const { tokenManager } = signIn();
+    const tokenManager = signIn();
 
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(1);
   });
 
-  it('should acquire again when a different user signs in', async () => {
-    const { tokenManager } = signIn();
+  it('should acquire again when a different user signs in, keeping only their claim', async () => {
+    const tokenManager = signIn();
 
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.OTHER_USER_ID));
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.OTHER_USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);
+    expect([...memorySessionStorage.entries.values()]).toEqual([JSON.stringify(LICENSE_TEST_CONSTANTS.OTHER_USER_ID)]);
   });
 
-  it('should acquire again after a logout and a new sign-in', async () => {
-    const { tokenManager } = signIn();
+  it('should release the claim on logout and acquire again on the next sign-in', async () => {
+    const tokenManager = signIn();
 
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     tokenManager.clearToken();
-    tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    expect(memorySessionStorage.entries.size).toBe(0);
+
+    tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);
   });
 
-  it('should reuse the license held in session storage after a page reload', async () => {
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+  it('should not acquire again after a page reload for the same user', async () => {
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
-    clearSessionLicenses();
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(1);
   });
 
-  it('should share one acquisition across SDK instances for the same sign-in', async () => {
-    let resolve!: (value: unknown) => void;
-    post.mockReturnValue(new Promise((r) => { resolve = r; }));
+  it('should acquire once across SDK instances signing in while the request is in flight', () => {
+    post.mockReturnValue(new Promise(() => {}));
 
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    resolve(createMockRawStudioWebLicense());
-    await flush();
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
 
     expect(post).toHaveBeenCalledTimes(1);
   });
 
   it('should acquire separately per tenant', async () => {
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    signIn(FUNCTION_LICENSE_TEST_CONSTANTS.OTHER_TENANT_NAME).tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn(LICENSE_TEST_CONSTANTS.OTHER_TENANT_NAME).setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);
   });
 
-  it('should not acquire for an opaque token', async () => {
-    signIn().tokenManager.setToken({ token: FUNCTION_LICENSE_TEST_CONSTANTS.OPAQUE_TOKEN, type: 'oauth' });
+  it('should not acquire for a token without a user', async () => {
+    signIn().setToken({ token: LICENSE_TEST_CONSTANTS.OPAQUE_TOKEN, type: 'oauth' });
     await flush();
 
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('should warn and not block when the acquisition fails', async () => {
+  it('should warn, not block, and release the claim when the acquisition fails', async () => {
     post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-    const { tokenManager } = signIn();
 
-    expect(() => tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID))).not.toThrow();
+    expect(() => signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID))).not.toThrow();
     await flush();
 
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not acquire a Studio Web license'),
       expect.anything()
     );
-  });
+    expect(memorySessionStorage.entries.size).toBe(0);
 
-  it('should not remember a failed acquisition', async () => {
-    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-
-    signIn().tokenManager.setToken(tokenFor(FUNCTION_LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);
   });
-});
 
-describe('toStudioWebLicense', () => {
-  it('should rename wire fields to the SDK shape and drop the license token', () => {
-    const license = toStudioWebLicense(createMockRawStudioWebLicense());
+  it('should acquire per SDK instance when the claim cannot be stored', async () => {
+    memorySessionStorage.setItem.mockImplementationOnce(failing).mockImplementationOnce(failing);
 
-    expect(license.startedTime).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.STARTED);
-    expect(license.licenseTier).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.LICENSE_TIER);
-    expect(license.licensedUnits).toEqual([...FUNCTION_LICENSE_TEST_CONSTANTS.LICENSED_UNITS]);
-    expect(license.robotType).toBe(FUNCTION_LICENSE_TEST_CONSTANTS.ROBOT_TYPE);
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await flush();
 
-    expect('started' in license).toBe(false);
-    expect('ubl' in license).toBe(false);
-    expect('lu' in license).toBe(false);
-    expect('licenseToken' in license).toBe(false);
-  });
-
-  it('should report no tier or expiry when the platform issues no token', () => {
-    const license = toStudioWebLicense(createMockRawStudioWebLicense({ licenseToken: null }));
-
-    expect(license.isLicensed).toBe(true);
-    expect(license.expiresTime).toBeUndefined();
-    expect(license.licenseTier).toBeUndefined();
-    expect(license.licensedUnits).toBeUndefined();
+    expect(post).toHaveBeenCalledTimes(2);
   });
 });
