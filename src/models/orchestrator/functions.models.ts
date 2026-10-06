@@ -113,10 +113,6 @@ export interface FunctionServiceModel {
    * one of `folderId`, `folderKey`, or `folderPath` in the options, or initialize
    * the SDK with a folder context.
    *
-   * In a coded app, the SDK acquires a license for the signed-in user once per
-   * sign-in — their own if they hold one, otherwise the free Attended Studio Web
-   * license. `invoke` does not wait for it.
-   *
    * @param func - Function to invoke, by `name`: the name declared in its source
    *   (`hello`) or the full name `getAll` returns (`my-functions_hello`). Add
    *   `processName` when several processes in the folder declare the same name.

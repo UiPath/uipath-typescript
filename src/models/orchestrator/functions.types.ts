@@ -67,9 +67,7 @@ export interface FunctionInvokeOptions extends FolderScopedOptions {
   /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
   /**
-   * Re-acquires the signed-in user's license in the background. Defaults to `false`.
-   *
-   * @deprecated A coded app acquires the license on sign-in; the invocation never waits for it.
+   * @deprecated No longer needed; has no effect on the invocation.
    */
   refreshLicense?: boolean;
 }
