@@ -474,9 +474,12 @@ If tests fail before cleanup, manually delete resources with names starting with
    `cleanupAllTestResources()` after every suite's own `afterAll`, so anything a failed or
    timed-out test registered but never deleted is still removed (unless
    `INTEGRATION_TEST_SKIP_CLEANUP=true`). When a test deletes a resource itself, call
-   `unregisterResource(type, match)` so the sweep does not try again. Adding a new
-   registry slot means adding a `cleanupTest{Entity}()` helper and a loop in
-   `cleanupAllTestResources()` too — a slot without them is inert.
+   `unregisterResource(type, match)` so the sweep does not try again. The sweep's
+   helpers retry only transient failures (network, 5xx, 429); a 4xx answer fails fast
+   and "not found" counts as already gone, so a stale registration costs one request,
+   never the retry backoff. Adding a new registry slot means adding a
+   `cleanupTest{Entity}()` helper and a loop in `cleanupAllTestResources()` too — a
+   slot without them is inert.
 
 4. **Clean up in afterAll**: Always implement cleanup
    ```typescript

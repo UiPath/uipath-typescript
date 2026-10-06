@@ -323,13 +323,19 @@ export function setupUnifiedTests(mode: InitMode, authMode: AuthMode): void {
     await initializeServices(mode, authMode);
   });
 
+  // afterAll hooks unwind in reverse: the suite's own afterAll runs first, then the
+  // sweep below, then this one. It is a separate hook on purpose — a sweep that hits
+  // its timeout keeps running in the background, and must not tear the services down
+  // later while the next cell is using them.
+  afterAll(() => {
+    cleanupServices();
+  });
+
   afterAll(async () => {
-    // Runs after the suite's own afterAll (hooks unwind in reverse), so whatever a
-    // failed or timed-out test registered but could not delete is still removed.
+    // Whatever a failed or timed-out test registered but could not delete is still removed
     if (!getTestConfig().skipCleanup) {
       await cleanupAllTestResources();
     }
-    cleanupServices();
   }, CLEANUP_SWEEP_TIMEOUT_MS);
 }
 

@@ -1,6 +1,6 @@
 import { getServices } from '../config/unified-setup';
 import { retryWithBackoff } from './helpers';
-import { isNotFoundError } from '../../../src/core/errors';
+import { isNetworkError, isNotFoundError, isRateLimitError, isServerError } from '../../../src/core/errors';
 
 /**
  * Registry to track created resources for emergency cleanup.
@@ -21,7 +21,8 @@ interface ResourceRegistry {
   roleAssignments: Array<{ id: string }>;
 }
 
-const resourceRegistry: ResourceRegistry = {
+function createEmptyRegistry(): ResourceRegistry {
+  return {
   tasks: [],
   entityRecords: [],
   processInstances: [],
@@ -32,7 +33,10 @@ const resourceRegistry: ResourceRegistry = {
   businessApps: [],
   roles: [],
   roleAssignments: [],
-};
+  };
+}
+
+let resourceRegistry = createEmptyRegistry();
 
 /**
  * Registers a resource for potential emergency cleanup.
@@ -64,21 +68,45 @@ function hasRegisteredResources(): boolean {
 }
 
 /**
- * Runs a delete with retries, treating "not found" as already gone: a resource the
- * test removed itself must not burn the retry backoff or log a failure.
+ * Empties the registry and hands back what it held. The sweep takes its work this
+ * way, before its first await, so a sweep that outlives its hook timeout can
+ * neither delete nor discard what the next suite registers in the meantime.
+ */
+function takeRegisteredResources(): ResourceRegistry {
+  const taken = resourceRegistry;
+  resourceRegistry = createEmptyRegistry();
+  return taken;
+}
+
+const CLEANUP_MAX_RETRIES = 3;
+const CLEANUP_INITIAL_DELAY_MS = 1000;
+
+/** A 4xx answer will not change on the next attempt — only these are worth retrying. */
+function isTransientError(error: unknown): boolean {
+  return isNetworkError(error) || isServerError(error) || isRateLimitError(error);
+}
+
+/**
+ * Runs a delete, retrying only transient failures and treating "not found" as
+ * already gone: a stale registration costs one request, never the full backoff.
  *
  * @returns `true` when the call removed something, `false` when it was already gone
  */
 async function attemptDelete(remove: () => Promise<unknown>): Promise<boolean> {
-  return retryWithBackoff(async () => {
-    try {
-      await remove();
-      return true;
-    } catch (error) {
-      if (isNotFoundError(error)) return false;
-      throw error;
-    }
-  });
+  return retryWithBackoff(
+    async () => {
+      try {
+        await remove();
+        return true;
+      } catch (error) {
+        if (isNotFoundError(error)) return false;
+        throw error;
+      }
+    },
+    CLEANUP_MAX_RETRIES,
+    CLEANUP_INITIAL_DELAY_MS,
+    isTransientError
+  );
 }
 
 /**
@@ -125,10 +153,8 @@ export async function cleanupTestEntityRecords(
 
   try {
     const { entities } = getServices();
-    await retryWithBackoff(async () => {
-      await entities.deleteRecordsById(entityId, recordIds);
-    });
-    console.log(`Cleaned up ${recordIds.length} test entity records for entity ${entityId}`);
+    const removed = await attemptDelete(() => entities.deleteRecordsById(entityId, recordIds));
+    if (removed) console.log(`Cleaned up ${recordIds.length} test entity records for entity ${entityId}`);
   } catch (error) {
     console.warn(`Failed to cleanup entity records for ${entityId}:`, error);
   }
@@ -289,69 +315,59 @@ export async function cleanupTestRole(id: string): Promise<void> {
  */
 export async function cleanupAllTestResources(): Promise<void> {
   if (!hasRegisteredResources()) return;
+  const pending = takeRegisteredResources();
   console.log('Running emergency cleanup for all registered resources...');
 
   // Cleanup tasks
-  for (const task of resourceRegistry.tasks) {
+  for (const task of pending.tasks) {
     await cleanupTestTask(task.id, task.folderId);
   }
 
   // Cleanup entity records
-  for (const entity of resourceRegistry.entityRecords) {
+  for (const entity of pending.entityRecords) {
     await cleanupTestEntityRecords(entity.entityId, entity.recordIds);
   }
 
   // Cleanup process instances
-  for (const instance of resourceRegistry.processInstances) {
+  for (const instance of pending.processInstances) {
     await cleanupTestProcessInstance(instance.id, instance.folderKey);
   }
 
   // Cleanup case instances
-  for (const caseInstance of resourceRegistry.caseInstances) {
+  for (const caseInstance of pending.caseInstances) {
     await cleanupTestCaseInstance(caseInstance.id, caseInstance.folderKey);
   }
 
   // Cleanup feedback entries
-  for (const entry of resourceRegistry.feedbackEntries) {
+  for (const entry of pending.feedbackEntries) {
     await cleanupTestFeedbackEntry(entry.id, entry.folderKey);
   }
 
   // Cleanup feedback categories
-  for (const category of resourceRegistry.feedbackCategories) {
+  for (const category of pending.feedbackCategories) {
     await cleanupTestFeedbackCategory(category.id);
   }
 
   // Cleanup bucket files
-  for (const file of resourceRegistry.bucketFiles) {
+  for (const file of pending.bucketFiles) {
     await cleanupTestBucketFile(file.bucketId, file.path, file.folderId);
   }
 
   // Cleanup business apps
-  for (const app of resourceRegistry.businessApps) {
+  for (const app of pending.businessApps) {
     await cleanupTestBusinessApp(app.id);
   }
 
   // Revoke role assignments before deleting the roles they point at
-  for (const assignment of resourceRegistry.roleAssignments) {
+  for (const assignment of pending.roleAssignments) {
     await cleanupTestRoleAssignment(assignment.id);
   }
 
   // Cleanup custom roles
-  for (const role of resourceRegistry.roles) {
+  for (const role of pending.roles) {
     await cleanupTestRole(role.id);
   }
 
-  // Clear registry
-  resourceRegistry.tasks = [];
-  resourceRegistry.entityRecords = [];
-  resourceRegistry.processInstances = [];
-  resourceRegistry.caseInstances = [];
-  resourceRegistry.feedbackEntries = [];
-  resourceRegistry.feedbackCategories = [];
-  resourceRegistry.bucketFiles = [];
-  resourceRegistry.businessApps = [];
-  resourceRegistry.roleAssignments = [];
-  resourceRegistry.roles = [];
 
   console.log('Emergency cleanup completed');
 }
