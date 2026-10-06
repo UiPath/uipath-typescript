@@ -11,6 +11,7 @@ export { ConnectionState };
 
 /**
  * Status of a connection OAuth session
+ * @internal
  */
 export enum ConnectionSessionStatus {
   Pending = 'pending',
@@ -91,6 +92,7 @@ export interface UpdateConnectionSelectionsRequest {
 
 /**
  * Request body for generating a connector-specific auth URL
+ * @internal
  */
 export interface ConnectionAuthRequest {
   /** Connector key to generate the auth URL for */
@@ -99,19 +101,21 @@ export interface ConnectionAuthRequest {
 
 /**
  * Response from the connection auth endpoint
+ * @internal
  */
 export interface ConnectionAuthResponse {
   /** The connector-specific auth URL to open */
   authUrl: string;
-  /** Unique session ID used to poll for OAuth completion via {@link getConnectionSessionStatus} */
+  /** Unique session ID used to poll for OAuth completion */
   sessionId: string;
-  /** Unix timestamp when the auth session expires */
+  /** Unix timestamp (ms) when the auth session expires */
   expiresTime: number;
 }
 
 /**
  * Status of a connection auth session returned by the polling endpoint.
  * Poll until `status` is {@link ConnectionSessionStatus.Success} (connection created) or {@link ConnectionSessionStatus.Failed}.
+ * @internal
  */
 export interface ConnectionSessionStatusResponse {
   /** Current status of the OAuth session */
