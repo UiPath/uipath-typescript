@@ -1,5 +1,5 @@
 /**
- * Platform service model — the ServiceModel interface that drives generated
+ * Platform settings service model — the ServiceModel interface that drives generated
  * API documentation.
  */
 
@@ -7,11 +7,10 @@ import type {
   PlatformSetting,
   PlatformSettingKey,
   PlatformSettingUpsert,
-  PlatformSettingGetOptions,
-} from './platform.types';
+} from './settings.types';
 
 /**
- * Public surface of the Platform service.
+ * Public surface of the Settings service.
  *
  * Every operation is user-scoped: `userId` identifies whose settings are read or written.
  *
@@ -20,17 +19,13 @@ import type {
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
- * import { Platform, PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+ * import { Settings, PlatformSettingKey } from '@uipath/uipath-typescript/settings';
  *
- * const platform = new Platform(sdk);
- * const settings = await platform.getUserSettings(
- *   [PlatformSettingKey.UserTheme],
- *   '<userId>',
- *   { organizationId: '<organizationId>' }
- * );
+ * const settings = new Settings(sdk);
+ * const stored = await settings.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
  * ```
  */
-export interface PlatformServiceModel {
+export interface PlatformSettingServiceModel {
   /**
    * Gets a user's platform settings by key.
    *
@@ -41,48 +36,40 @@ export interface PlatformServiceModel {
    *
    * @param keys - Setting keys to fetch
    * @param userId - GUID of the user whose settings to read
-   * @param options - Organization scoping; supply `organizationId` unless you intend the host partition
    * @returns The user's stored settings for the requested keys, as {@link PlatformSetting} rows
    *
    * @example Basic usage
    * ```typescript
    * import { UiPath } from '@uipath/uipath-typescript/core';
-   * import { Platform, PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { Settings, PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
    *
-   * const platform = new Platform(sdk);
-   * const settings = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
-   *   organizationId: '<organizationId>',
-   * });
-   * const theme = settings.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
+   * const settings = new Settings(sdk);
+   * const stored = await settings.getUserSettings([PlatformSettingKey.UserTheme], '<userId>');
+   * const theme = stored.find(s => s.key === PlatformSettingKey.UserTheme)?.value;
    * ```
    *
-   * @example Fetch several keys, naming the organization explicitly
+   * @example Fetch several keys at once
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * const settings = await platform.getUserSettings(
+   * const stored = await settings.getUserSettings(
    *   [
    *     PlatformSettingKey.UserTheme,
    *     PlatformSettingKey.UserAccessibility,
    *     PlatformSettingKey.UserCasePinnedInstancesByTenant,
    *   ],
-   *   '<userId>',
-   *   { organizationId: '<organizationId>' }
+   *   '<userId>'
    * );
    *
    * // Structured settings arrive as a JSON string
-   * const pinned = settings.find(s => s.key === PlatformSettingKey.UserCasePinnedInstancesByTenant);
+   * const pinned = stored.find(s => s.key === PlatformSettingKey.UserCasePinnedInstancesByTenant);
    * const parsed = pinned ? JSON.parse(pinned.value) : {};
    * ```
    */
-  getUserSettings(
-    keys: PlatformSettingKey[],
-    userId: string,
-    options?: PlatformSettingGetOptions
-  ): Promise<PlatformSetting[]>;
+  getUserSettings(keys: PlatformSettingKey[], userId: string): Promise<PlatformSetting[]>;
 
   /**
    * Creates or updates a user's platform settings in bulk.
@@ -92,47 +79,35 @@ export interface PlatformServiceModel {
    * there is no need to send back the settings you are not changing. Returns the stored
    * rows as they are after the write, including their generated `id`.
    *
-   * The organization must be supplied — on a write it is a required argument, and on a read
-   * omitting it targets the host partition instead. Read a setting first if you do not have
-   * it: every {@link PlatformSetting} carries its `organizationId`.
-   *
    * @param settings - Settings to create or update
    * @param userId - GUID of the user whose settings to write
-   * @param organizationId - Organization (account) GUID to write to
    * @returns The settings as stored after the write, as {@link PlatformSetting} rows
    *
    * @example Update a setting
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * const [current] = await platform.getUserSettings([PlatformSettingKey.UserTheme], '<userId>', {
-   *   organizationId: '<organizationId>',
-   * });
-   *
-   * const updated = await platform.updateUserSettings(
+   * const updated = await settings.updateUserSettings(
    *   [{ key: PlatformSettingKey.UserTheme, value: 'dark' }],
-   *   current.userId,
-   *   current.organizationId
+   *   '<userId>'
    * );
    * ```
    *
    * @example Update several settings at once
    * ```typescript
-   * import { PlatformSettingKey } from '@uipath/uipath-typescript/platform';
+   * import { PlatformSettingKey } from '@uipath/uipath-typescript/settings';
    *
-   * await platform.updateUserSettings(
+   * await settings.updateUserSettings(
    *   [
    *     { key: PlatformSettingKey.UserTheme, value: 'dark' },
    *     { key: PlatformSettingKey.UserAccessibility, value: 'true' },
    *   ],
-   *   '<userId>',
-   *   '<organizationId>'
+   *   '<userId>'
    * );
    * ```
    */
   updateUserSettings(
     settings: PlatformSettingUpsert[],
-    userId: string,
-    organizationId: string
+    userId: string
   ): Promise<PlatformSetting[]>;
 }

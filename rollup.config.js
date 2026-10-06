@@ -250,9 +250,9 @@ const serviceEntries = [
     output: 'folders/index'
   },
   {
-    name: 'platform',
-    input: 'src/services/platform/index.ts',
-    output: 'platform/index'
+    name: 'settings',
+    input: 'src/services/platform/settings/index.ts',
+    output: 'settings/index'
   },
   {
     name: 'business-apps',

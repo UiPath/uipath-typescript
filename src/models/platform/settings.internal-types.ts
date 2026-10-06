@@ -1,8 +1,8 @@
 /**
- * Internal Platform types — raw API wire shapes before transformation.
+ * Internal Platform settings types — raw API wire shapes before transformation.
  */
 
-import type { PlatformSettingKey } from './platform.types';
+import type { PlatformSettingKey } from './settings.types';
 
 /**
  * A setting row exactly as the API returns it.

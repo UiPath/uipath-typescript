@@ -110,6 +110,10 @@ function getWritableFields(fields: FieldMetaData[]): FieldMetaData[] {
       f.fieldDisplayType !== FieldDisplayType.AutoNumber &&
       f.fieldDisplayType !== FieldDisplayType.Relationship &&
       f.fieldDisplayType !== FieldDisplayType.File &&
+      // A choice-set value must be an existing choice id; a generated string is
+      // rejected ("Single choiceset value Test_x is not integer")
+      f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+      f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple &&
       f.fieldDataType?.name !== EntityFieldDataType.UUID
   );
 }
