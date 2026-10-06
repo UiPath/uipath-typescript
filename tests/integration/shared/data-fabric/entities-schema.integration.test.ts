@@ -5,7 +5,7 @@ import {
   describeIntegration,
   InitMode,
 } from '../../config/unified-setup';
-import { registerResource } from '../../utils/cleanup';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString } from '../../utils/helpers';
 import {
@@ -797,6 +797,8 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
             ids.map(async (entityId) => {
               try {
                 await entities.deleteById(entityId);
+                // The entity took its records with it — nothing left for the sweep to delete
+                unregisterResource('entityRecords', (r) => r.entityId === entityId);
                 return null;
               } catch (error) {
                 // First pass stays quiet — failures there are expected FK-race

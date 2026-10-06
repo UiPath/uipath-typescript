@@ -6,7 +6,7 @@ import {
   cleanupTestEntityRecords,
   InitMode,
 } from '../../config/unified-setup';
-import { registerResource } from '../../utils/cleanup';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 import { awaitRecordVisible, createEntityAwaitingReady, generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination, wait } from '../../utils/helpers';
 import {
   EntityCreateFieldOptions,
@@ -240,6 +240,11 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;
   const createdRecordIds: string[] = [];
+
+  /** Drops records a test deleted itself from the emergency cleanup registry. */
+  const forgetRecords = (ids: string[]) => {
+    unregisterResource('entityRecords', (r) => r.recordIds.every((id) => ids.includes(id)));
+  };
 
   describe('getAll', () => {
     it('should retrieve all entities', async () => {
@@ -661,6 +666,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(result.successRecords).toBeDefined();
 
       // Remove deleted IDs from the global tracking list
+      forgetRecords(serviceLevelRecordIds);
       for (const id of serviceLevelRecordIds) {
         const idx = createdRecordIds.indexOf(id);
         if (idx !== -1) {
@@ -783,6 +789,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       expect(result).toBeDefined();
       expect(result.successRecords).toBeDefined();
 
+      forgetRecords(entityMethodRecordIds);
       for (const id of entityMethodRecordIds) {
         const idx = createdRecordIds.indexOf(id);
         if (idx !== -1) {
@@ -917,6 +924,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
 
       await entities.deleteRecordById(entityId, inserted.Id);
 
+      forgetRecords([inserted.Id]);
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
     });
@@ -963,6 +971,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
       await awaitRecordVisible(entities, entityId, inserted.Id);
       await entity.deleteRecord(inserted.Id);
 
+      forgetRecords([inserted.Id]);
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
     }, 90_000);
@@ -1313,6 +1322,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
         expect(Array.isArray(result.successRecords)).toBe(true);
 
         // Deleted here — drop from the shared tracking list so afterAll doesn't re-delete.
+        forgetRecords(byNameRecordIds);
         for (const id of byNameRecordIds) {
           const idx = createdRecordIds.indexOf(id);
           if (idx !== -1) createdRecordIds.splice(idx, 1);

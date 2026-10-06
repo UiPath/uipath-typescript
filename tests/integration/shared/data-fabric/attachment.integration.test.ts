@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { describeIntegration, getServices, InitMode } from '../../config/unified-setup';
-import { registerResource } from '../../utils/cleanup';
+import { registerResource, unregisterResource } from '../../utils/cleanup';
 import { awaitRecordVisible } from '../../utils/helpers';
 
 /**
@@ -74,6 +74,7 @@ describeIntegration(
       if (recordIds.length === 0) return;
       const { entities } = getServices();
       await entities.deleteRecordsById(ATTACHMENT_CONFIG.entityId, recordIds);
+      unregisterResource('entityRecords', (r) => r.recordIds.every((id) => recordIds.includes(id)));
     }, 90_000);
 
     describe('uploadAttachment', () => {

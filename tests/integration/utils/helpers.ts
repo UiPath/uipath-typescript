@@ -74,12 +74,14 @@ export function wait(ms: number): Promise<void> {
  * @param fn - Async function to retry
  * @param maxRetries - Maximum number of retry attempts
  * @param initialDelay - Initial delay in milliseconds
+ * @param shouldRetry - Decides per error whether another attempt is worthwhile; defaults to always
  * @returns {Promise<T>} Result of the function
  */
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  initialDelay: number = 1000
+  initialDelay: number = 1000,
+  shouldRetry: (error: unknown) => boolean = () => true
 ): Promise<T> {
   let lastError: Error | unknown;
 
@@ -88,6 +90,7 @@ export async function retryWithBackoff<T>(
       return await fn();
     } catch (error) {
       lastError = error;
+      if (!shouldRetry(error)) break;
       if (attempt < maxRetries) {
         const delay = initialDelay * Math.pow(2, attempt);
         await wait(delay);
