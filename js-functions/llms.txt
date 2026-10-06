@@ -36,7 +36,7 @@ export default defineFunction({
 });
 ```
 
-Contracts are declared **schema-first**: in TypeScript as a type via `defineSchema<T>()` (lowered to a JSON Schema at build time), in JavaScript as a JSON Schema literal — see [defineFunction — Declaring contracts](api/define-function/#declaring-contracts). Nothing executes to extract a contract, and validation runs in the platform runtime.
+Contracts are declared **schema-first**: in TypeScript as a type via `defineSchema<T>()` (lowered to a JSON Schema at build time), in JavaScript as a JSON Schema literal — see [defineFunction — Declaring contracts](api/define-function/#declaring-contracts). `pack` lowers the type into the manifest, and validation runs in the platform runtime.
 
 **Job-only** — omit `method` and `path` for a function invoked purely as a job (Trigger, Maestro, Flow, Orchestrator):
 
@@ -171,7 +171,7 @@ The rules discovery applies, in full:
 | **Not discovered at all**    | subfolders — `functions/lib/util.ts` is never registered, and a hand-written map entry pointing at one is pruned on the next sync |
 | **Key**                      | the filename without its extension, so `functions/create-order.ts` → `"create-order"`                                             |
 
-Discovery is by filename, not by content: a file lands in the map whether or not it defines a function. Every registered file must therefore default-export its function definition, normally the result of `defineFunction(...)`; only the default export is served. The call may sit behind your own helper (`export default appFunction({...})` where `appFunction` returns `defineFunction(...)`); the CLI then reads the contract by executing the module instead of statically, and the runtime rejects the file by name if what it exports is not a function definition. `defineSchema<T>()` markers are lowered only inside a literal `defineFunction(...)` call — behind a helper, declare `input`/`output` as a JSON Schema literal or a zod schema.
+Discovery is by filename, not by content: a file lands in the map whether or not it defines a function. Every registered file must therefore default-export its function definition, normally the result of `defineFunction(...)`; only the default export is served. The call may sit behind your own helper (`export default appFunction({...})` where `appFunction` returns `defineFunction(...)`); the CLI then reads the contract by executing the module, and the runtime rejects the file by name if what it exports is not a function definition. Where a `defineSchema<T>()` contract goes: [defineFunction — Declaring contracts](../api/define-function/#declaring-contracts).
 
 Anything else that lives next to your functions is a **helper**, and needs to be either `_`-prefixed or moved out of `functions/` (e.g. to `lib/`). Both work; the `_` prefix is handy when you want the helper to stay beside its function.
 
@@ -387,7 +387,9 @@ Path parameters work identically in local `serve` and when deployed. `path` beco
     "details": { "formErrors": ["must NOT have additional properties"], "fieldErrors": {} } }
   ```
 
-Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all. Values coerce to the declared type (`id: number` on `/users/:id{[0-9]+}` arrives as a number), whereas `ctx.params` is always strings.
+Declaring it is also the convenient path: `input.id` is typed, so the handler rarely needs `ctx.params` at all.
+
+- **Declare a path param as a `string`,** and convert it in the handler. A URL carries text, and the contract states what arrives, so `input.id` is the segment as sent. The same holds for a `GET` query string. See [text-sourced input](../production-rules/#text-sourced-input-a-query-string-and-a-path-segment-are-strings).
 
 A function with **no** `input` schema receives the path params alone as its input.
 
@@ -798,29 +800,27 @@ handler: async (input, ctx) => Promise.race([
 
 ______________________________________________________________________
 
-## GET functions: query-string coercion is automatic for schema-first contracts
+## Text-sourced input: a query string and a path segment are strings
 
-Query string values always arrive as strings. With a schema-first contract — `defineSchema<T>()` or a JSON Schema literal — the runtime coerces them to the declared type before validation, so this just works:
+A URL carries text and nothing else, and the runtime does not convert it. A contract declaring `folderId: number` for a query parameter describes something the request cannot deliver, so validation rejects it. Declare what arrives and convert in the handler, where you also decide what an unconvertible value means:
 
 ```
 interface ListInput {
-  folderId: number;   // "123" arrives as a string; the runtime coerces it to 123
+  folderId: string;   // "123" arrives as text, because that is what a query string carries
 }
 
-input: defineSchema<ListInput>()
+handler: (input) => {
+  const folderId = Number(input.folderId);
+  if (!Number.isInteger(folderId)) {
+    return { status: 400, body: { error: "folderId must be an integer" } };
+  }
+  ...
+}
 ```
 
-Only functions still using a **zod** schema must opt into coercion themselves — a plain `z.number()` fails validation on any GET input:
+The same holds for a path segment on any verb. A **JSON body** is unaffected: it carries its own types, so `{"folderId": 123}` is a number and `{"folderId": "123"}` is rejected.
 
-```
-// ❌ validation error with zod — "123" is a string, not a number
-input: z.object({ folderId: z.number() })
-
-// ✅ zod-authored functions need z.coerce
-input: z.object({ folderId: z.coerce.number() })
-```
-
-This does not apply to POST functions — JSON body values preserve their types.
+A zod contract follows the same rule, and can state the conversion itself: `z.number()` rejects a query value, `z.coerce.number()` accepts and converts it.
 
 ______________________________________________________________________
 
@@ -965,7 +965,7 @@ ______________________________________________________________________
 
 ## Pack
 
-`uip functions pack` reads your `defineFunction` calls and generates two manifest files before zipping everything into a `.nupkg`.
+`uip functions pack` reads each function file's default-exported `defineFunction` and generates two manifest files before zipping everything into a `.nupkg`.
 
 ### What pack generates
 
@@ -1023,7 +1023,7 @@ One `HttpTrigger` resource per function. Non-HttpTrigger resources (Storage, Que
 
 ### defineFunction → API Trigger field mapping
 
-Each `defineFunction` call maps directly to one API Trigger in Orchestrator:
+Each function file's default-exported `defineFunction` maps to one API Trigger in Orchestrator:
 
 | `defineFunction` field | Orchestrator API Trigger field                 |
 | ---------------------- | ---------------------------------------------- |
@@ -1456,7 +1456,7 @@ export default defineFunction({
 });
 ```
 
-`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest.
+`defineSchema<T>()` is inert at runtime. At build time (`pack`/`serve`/`run`) the type is **lowered** to the equivalent JSON Schema literal, which is what the runtime validates and what lands in the manifest. Write it in place in the `defineFunction(...)` call that the file default-exports, as above; that call may also sit in a `const` the file exports as default and uses nowhere else. Anywhere else, declare `input`/`output` as a JSON Schema literal or a validator.
 
 **JavaScript — write the JSON Schema literal directly:**
 
@@ -1504,9 +1504,10 @@ Both variants above declare the **same contract** — the TS type lowers to exac
 | `foo?: T`                                               | property present, not in `required`                                                   |
 | `Record<string, T>`                                     | `{ "type": "object", "additionalProperties": <schema of T> }`                         |
 | `unknown` (value position)                              | `{}` — accepts any JSON value (e.g. `Record<string, unknown>` for arbitrary job args) |
-| `Date`                                                  | `{ "type": "string", "format": "date-time" }`                                         |
+| `string` tagged `/** @format date-time */`              | `{ "type": "string", "format": "date-time" }` (see [Dates](#dates))                   |
 | `A \| B` (non-literal)                                  | `{ "anyOf": [...] }`                                                                  |
 | `any`, `bigint`, tuples, functions, top-level `unknown` | rejected at build time with an actionable diagnostic                                  |
+| `Date`                                                  | rejected at build time with `unsupported-date` (see [Dates](#dates))                  |
 
 ### JSDoc `@default`
 
@@ -1523,6 +1524,53 @@ interface HelloInput {
 ```
 
 This lowers to `{ "type": "string", "default": "World" }`; the runtime fills the field when the caller omits it. The tag text is parsed as JSON (`"World"` → string, `3` → number, `true` → boolean).
+
+### JSDoc `@format`
+
+A `@format` tag on a `string` property adds a `format` to its schema. The supported formats are `date-time`, `date`, `time`, `email`, `uri` and `uuid`.
+
+```
+interface ContactInput {
+  /** @format email */
+  email: string;
+}
+```
+
+This lowers to `{ "type": "string", "format": "email" }`. The runtime rejects a value outside the format with a `400` on input and a `500` on output. The tag goes on a `string` or `string | null` property; any other format or placement stops the build with `unsupported-format`. Put the tag on its own line above the property: TypeScript drops a JSDoc written on the same line as the opening `{`.
+
+### Dates
+
+JSON carries a date as an ISO 8601 string. Declare it as a `string` tagged `@format date-time`, and build the `Date` in the handler:
+
+```
+import { badRequest, defineFunction, defineSchema } from "@uipath/coded-functions-js-sdk";
+
+interface ReminderInput {
+  /** @format date-time */
+  dueAt: string;
+}
+
+interface ReminderOutput {
+  /** @format date-time */
+  remindAt: string;
+}
+
+export default defineFunction({
+  name: "remind",
+  method: "POST",
+  path: "/reminders",
+  input: defineSchema<ReminderInput>(),
+  output: defineSchema<ReminderOutput>(),
+  handler: async (input) => {
+    const dueAt = new Date(input.dueAt);
+    if (Number.isNaN(dueAt.getTime())) return badRequest("dueAt is not a representable date");
+    const remindAt = new Date(dueAt.getTime() - 60 * 60 * 1000);
+    return { remindAt: remindAt.toISOString() };
+  },
+});
+```
+
+The runtime validates `dueAt` as a date-time before the handler runs. Check the parsed `Date` as well: a leap second such as `23:59:60` passes the format and parses to an invalid date.
 
 ### The curated subset
 
@@ -1546,7 +1594,7 @@ No `$ref`/`$defs`, no custom keywords, no custom format functions — a contract
 The runtime compiles the contract with ajv (ajv never appears in your project):
 
 - **Input** is validated before the handler runs; failures return `400` with per-field errors.
-- **GET query strings** are coerced to their schema types (`"42"` → `42`, `"true"` → `true`).
+- **Values are validated as they arrive.** Query and path values are strings; declare them as `string` and convert in the handler (see [path parameters](../../platform-context/#path-parameters)).
 - **`default`** values are filled into missing input fields.
 - **Output** (when declared) is validated after the handler; failures return `500`.
 

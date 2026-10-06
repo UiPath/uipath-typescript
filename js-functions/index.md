@@ -32,7 +32,7 @@ export default defineFunction({
 });
 ```
 
-Contracts are declared **schema-first**: in TypeScript as a type via `defineSchema<T>()` (lowered to a JSON Schema at build time), in JavaScript as a JSON Schema literal — see [defineFunction — Declaring contracts](api/define-function/#declaring-contracts). Nothing executes to extract a contract, and validation runs in the platform runtime.
+Contracts are declared **schema-first**: in TypeScript as a type via `defineSchema<T>()` (lowered to a JSON Schema at build time), in JavaScript as a JSON Schema literal — see [defineFunction — Declaring contracts](api/define-function/#declaring-contracts). `pack` lowers the type into the manifest, and validation runs in the platform runtime.
 
 **Job-only** — omit `method` and `path` for a function invoked purely as a job (Trigger, Maestro, Flow, Orchestrator):
 
