@@ -11,6 +11,7 @@ import { LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/licensing';
 import { createTestJwt } from '@tests/utils/jwt';
 import { createMockError } from '@tests/utils/mocks/core';
 import { createMockApiClient } from '@tests/utils/setup';
+import { sessionStore } from '@/utils/storage/session-store';
 
 vi.mock('@/utils/platform', () => ({
   isBrowser: true,
@@ -46,10 +47,6 @@ function tokenFor(userId: string): { token: string; type: 'oauth' } {
   return { token: createTestJwt({ sub: userId }), type: 'oauth' };
 }
 
-const failing = () => {
-  throw new Error(TEST_CONSTANTS.ERROR_MESSAGE);
-};
-
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('SessionLicense', () => {
@@ -62,6 +59,7 @@ describe('SessionLicense', () => {
   afterEach(() => {
     sessionLicenses.length = 0;
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should acquire once when a user signs in, retrying the idempotent POST', async () => {
@@ -203,8 +201,8 @@ describe('SessionLicense', () => {
     expect(post).toHaveBeenCalledTimes(2);
   });
 
-  it('should not re-acquire on refresh after a success when the claim cannot be stored', async () => {
-    memorySessionStorage.setItem.mockImplementationOnce(failing);
+  it('should not re-acquire on refresh after a success when the session store is unavailable', async () => {
+    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
     const tokenManager = signIn();
 
     tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
@@ -215,8 +213,8 @@ describe('SessionLicense', () => {
     expect(post).toHaveBeenCalledTimes(1);
   });
 
-  it('should retry on refresh after a failure when the claim cannot be stored', async () => {
-    memorySessionStorage.setItem.mockImplementationOnce(failing).mockImplementationOnce(failing);
+  it('should retry on refresh after a failure when the session store is unavailable', async () => {
+    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
     post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
     const tokenManager = signIn();
 
@@ -228,8 +226,8 @@ describe('SessionLicense', () => {
     expect(post).toHaveBeenCalledTimes(2);
   });
 
-  it('should acquire per SDK instance when the claim cannot be stored', async () => {
-    memorySessionStorage.setItem.mockImplementationOnce(failing).mockImplementationOnce(failing);
+  it('should acquire per SDK instance when the session store is unavailable', async () => {
+    vi.spyOn(sessionStore, 'isAvailable', 'get').mockReturnValue(false);
 
     signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     signIn().setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));

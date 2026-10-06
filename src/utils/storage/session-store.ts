@@ -1,4 +1,5 @@
 import { isBrowser } from '../platform';
+import type { KeyValueStore } from './key-value-store';
 
 /**
  * Values kept for the length of the user's browser session.
@@ -7,11 +8,15 @@ import { isBrowser } from '../platform';
  * browser can deny it or refuse a write. A read then comes back `undefined` and
  * a write returns `false`; no call ever throws.
  */
-export class SessionStore {
+export class SessionStore implements KeyValueStore {
   readonly #storage: Storage | undefined;
 
   constructor() {
     this.#storage = SessionStore.#resolve();
+  }
+
+  get isAvailable(): boolean {
+    return this.#storage !== undefined;
   }
 
   read<T>(key: string): T | undefined {

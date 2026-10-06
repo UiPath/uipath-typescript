@@ -37,6 +37,12 @@ describe('SessionStore', () => {
   });
 
   describe('when the store exists', () => {
+    it('should report itself available', () => {
+      stubStorage();
+
+      expect(new SessionStore().isAvailable).toBe(true);
+    });
+
     it('should round-trip a string', () => {
       stubStorage();
       const store = new SessionStore();
@@ -93,6 +99,8 @@ describe('SessionStore', () => {
 
     it('should read undefined, report a dropped write, and not warn', () => {
       const store = new SessionStore();
+
+      expect(store.isAvailable).toBe(false);
 
       expect(store.read(KEY)).toBeUndefined();
       expect(store.write(KEY, RECORD)).toBe(false);

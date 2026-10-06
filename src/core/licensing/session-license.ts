@@ -8,6 +8,8 @@ import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { extractUserIdFromToken } from '../../utils/encoding/jwt';
 import { sessionStore } from '../../utils/storage/session-store';
+import { MemoryStore } from '../../utils/storage/memory-store';
+import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
@@ -15,8 +17,8 @@ const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retry
 export class SessionLicense {
   readonly #apiClient: ApiClient;
   readonly #claimKey: string;
+  readonly #claims: KeyValueStore = sessionStore.isAvailable ? sessionStore : new MemoryStore();
   #userId?: string;
-  #localClaim?: string;
 
   constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
     this.#apiClient = new ApiClient(config, context, tokenManager);
@@ -31,16 +33,12 @@ export class SessionLicense {
       if (this.#userId) this.#release(this.#userId);
       this.#userId = userId;
     }
-    if (userId && this.#claimed() !== userId) this.#acquire(userId);
-  }
-
-  #claimed(): string | undefined {
-    return sessionStore.read<string>(this.#claimKey) ?? this.#localClaim;
+    if (userId && this.#claims.read<string>(this.#claimKey) !== userId) this.#acquire(userId);
   }
 
   #acquire(userId: string): void {
     // Claimed before the request starts, so other SDK instances on the page skip it.
-    if (!sessionStore.write(this.#claimKey, userId)) this.#localClaim = userId;
+    this.#claims.write(this.#claimKey, userId);
     this.#apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
       .catch((error: unknown) => {
@@ -50,7 +48,6 @@ export class SessionLicense {
   }
 
   #release(userId: string): void {
-    if (sessionStore.read<string>(this.#claimKey) === userId) sessionStore.remove(this.#claimKey);
-    if (this.#localClaim === userId) this.#localClaim = undefined;
+    if (this.#claims.read<string>(this.#claimKey) === userId) this.#claims.remove(this.#claimKey);
   }
 }
