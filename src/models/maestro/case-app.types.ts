@@ -36,7 +36,9 @@ export enum CaseAppState {
   Paused = 'Paused',
   /** Cancelled or canceling */
   Cancelled = 'Cancelled',
+  /** The completed instance status only */
   Completed = 'Completed',
+  /** The faulted instance status only */
   Faulted = 'Faulted',
 }
 
