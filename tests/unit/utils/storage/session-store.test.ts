@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SessionStore } from '../../../../src/utils/storage/session-store';
+
+const { mockPlatform } = vi.hoisted(() => ({ mockPlatform: { isBrowser: true } }));
+vi.mock('../../../../src/utils/platform', () => mockPlatform);
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 const KEY = 'uipath_sdk_test';
@@ -96,6 +99,25 @@ describe('SessionStore', () => {
       expect(() => store.remove(KEY)).not.toThrow();
 
       expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('outside a browser', () => {
+    beforeEach(() => {
+      mockPlatform.isBrowser = false;
+    });
+
+    afterEach(() => {
+      mockPlatform.isBrowser = true;
+    });
+
+    it('should not use a sessionStorage the runtime provides', () => {
+      const entries = stubStorage();
+      const store = new SessionStore();
+
+      expect(store.write(KEY, TEXT)).toBe(false);
+      expect(store.read(KEY)).toBeUndefined();
+      expect(entries.size).toBe(0);
     });
   });
 

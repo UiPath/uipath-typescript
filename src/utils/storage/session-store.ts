@@ -1,3 +1,5 @@
+import { isBrowser } from '../platform';
+
 /**
  * Values kept for the length of the user's browser session.
  *
@@ -42,6 +44,7 @@ export class SessionStore {
   }
 
   static #resolve(): Storage | undefined {
+    if (!isBrowser) return undefined;
     try {
       return globalThis.sessionStorage;
     } catch (error) {
