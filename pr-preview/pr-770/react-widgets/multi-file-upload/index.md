@@ -1,8 +1,8 @@
 # Multi File Upload
 
-A React widget for uploading multiple files simultaneously to an [Orchestrator Storage Bucket](../../api/interfaces/BucketServiceModel/).
-
 Package: `@uipath/ui-widgets-multi-file-upload`
+
+A React widget for uploading multiple files simultaneously to an [Orchestrator Storage Bucket](../../api/interfaces/BucketServiceModel/).
 
 ## Features
 
@@ -125,4 +125,12 @@ const buckets = await new Buckets(sdk).getAll();
   maxFileSizeInMb={5}
   accept=".pdf,.docx,.xlsx"
 />
+```
+
+## TypeScript
+
+This package is written in TypeScript and ships its own type definitions — prop types are exported for use in your own component signatures:
+
+```
+import type { MultiFileUploadProps } from "@uipath/ui-widgets-multi-file-upload";
 ```

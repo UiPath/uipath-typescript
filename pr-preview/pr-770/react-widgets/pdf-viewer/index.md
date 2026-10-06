@@ -1,8 +1,8 @@
 # PDF Viewer
 
-A React PDF viewer for UiPath coded apps. Renders PDFs from **Orchestrator Storage Buckets**, **Data Fabric entity attachments**, or plain **URLs / Blobs** — with a prop-toggleable toolbar, selectable text, and built-in loading and error states.
-
 Package: `@uipath/ui-widgets-pdf-viewer`
+
+A React PDF viewer for UiPath coded apps. Renders PDFs from **Orchestrator Storage Buckets**, **Data Fabric entity attachments**, or plain **URLs / Blobs** — with a prop-toggleable toolbar, selectable text, and built-in loading and error states.
 
 Built on [react-pdf](https://www.npmjs.com/package/react-pdf) (Mozilla pdf.js). The pdf.js worker **ships inside the package** — no CDN, no bundler configuration — so the widget works behind enterprise CSP and firewalls, including coded apps deployed on `*.uipath.host`. The packaged worker is byte-exact to the `pdfjs-dist` version the widget pins, so the pdf.js API and the worker can never mismatch regardless of what your dependency tree hoists.
 
@@ -20,7 +20,7 @@ npm install react@^19.2.0 react-dom@^19.2.0 @uipath/uipath-typescript@^1.4.1
 
 ## Usage
 
-OAuth is the flow for a browser app, so the instance is built once in an effect and `initialize()` is awaited before anything renders — see [Pass an initialized SDK instance](../#pass-an-initialized-sdk-instance).
+OAuth is the flow for a browser app, so the instance is built once in an effect and `initialize()` is awaited before anything renders — see [Pass an initialized SDK instance](../../authentication/).
 
 ```
 import { PdfViewer } from "@uipath/ui-widgets-pdf-viewer";
@@ -170,3 +170,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 Non-Latin / CJK PDFs may render blank glyphs
 
 pdf.js needs cMap assets to render some non-Latin scripts (for example Chinese, Japanese and Korean), which v1 does not bundle.
+
+## TypeScript
+
+This package is written in TypeScript and ships its own type definitions — prop types are exported for use in your own component signatures:
+
+```
+import type { PdfViewerProps } from "@uipath/ui-widgets-pdf-viewer";
+```

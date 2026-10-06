@@ -1,8 +1,8 @@
 # DataTable
 
-A powerful and flexible React datatable built with ag-Grid, designed for managing [Data Fabric entity](../../api/interfaces/entity/) records.
-
 Package: `@uipath/ui-widgets-datatable`
+
+A powerful and flexible React datatable built with ag-Grid, designed for managing [Data Fabric entity](../../api/interfaces/entity/) records.
 
 ## Features
 
@@ -51,7 +51,8 @@ function App() {
         tenantName: "your-tenant",
         clientId: "your-client-id",
         redirectUri: "http://localhost:3000/callback",
-        scope: "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
+        scope:
+          "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -89,7 +90,7 @@ const entities = await new Entities(sdk).getAll();
 | `sdk`                         | `UiPath`                 | Yes      | —       | UiPath SDK instance                                           |
 | `entityId`                    | `string`                 | Yes      | —       | The UUID of the Data Fabric entity to display                 |
 | `pageSize`                    | `number`                 | No       | `50`    | Number of rows per page                                       |
-| `showIdColumn`                | `boolean`                | No       | —       | Whether to show the Id column in the grid                     |
+| `showIdColumn`                | `boolean`                | No       | `true`  | Whether to show the Id column in the grid                     |
 | `columnConfig`                | `Record<string, ColDef>` | No       | —       | Column configuration overrides, keyed by display name         |
 | `rowClassRules`               | `RowClassRules`          | No       | —       | ag-Grid row class rules for conditional row styling           |
 | `customPaddingForExpandedRow` | `number`                 | No       | —       | Custom padding (in pixels) for expanded rows in group-by mode |

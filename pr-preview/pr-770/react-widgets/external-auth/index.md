@@ -1,8 +1,8 @@
 # External Auth
 
-A provider-agnostic React sign-in widget. It renders one button per configured authentication provider and starts the login **directly at that provider's IdP**.
-
 Package: `@uipath/ui-widgets-external-auth`
+
+A provider-agnostic React sign-in widget. It renders one button per configured authentication provider and starts the login **directly at that provider's IdP**.
 
 For OIDC providers (Google, UAE PASS, or any other) it ships a built-in default sign-in — a standard authorization-code redirect with CSRF `state` and PKCE — enabled per provider via an `oauth` config. A per-provider `onSignIn` handler always wins over the default. Everything after the redirect — callback validation, token exchange, session creation — is the consumer's responsibility.
 
@@ -136,3 +136,11 @@ OIDC only — SAML needs an explicit `onSignIn`
 The default covers **OIDC-style providers only** (Google, UAE PASS). SAML cannot be started from the browser and must use an explicit `onSignIn` that points at a backend Service Provider.
 
 The default also only *starts* the flow — you still own the callback route that exchanges and validates the code and creates the session. The helpers `buildOAuthAuthorizeUrl(clientId, config)` and `createDefaultSignIn(config)` are exported too, if you want to call them directly inside your own `onSignIn`.
+
+## TypeScript
+
+This package is written in TypeScript and ships its own type definitions — prop types are exported for use in your own component signatures:
+
+```
+import type { ExternalAuthProps } from "@uipath/ui-widgets-external-auth";
+```

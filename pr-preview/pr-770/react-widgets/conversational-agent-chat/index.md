@@ -1,8 +1,8 @@
 # Conversational Agent Chat
 
-A React chat interface powered by [UiPath Conversational Agents](../../api/interfaces/ConversationalAgentServiceModel/). Built on UiPath Apollo React chat components, it drops an AI chat experience into your application with streaming, attachments and tool-call visibility.
-
 Package: `@uipath/ui-widgets-conversational-agent-chat`
+
+A React chat interface powered by [UiPath Conversational Agents](../../api/interfaces/ConversationalAgentServiceModel/). Built on UiPath Apollo React chat components, it drops an AI chat experience into your application with streaming, attachments and tool-call visibility.
 
 ## Features
 
@@ -49,7 +49,8 @@ function App() {
         tenantName: "your-tenant",
         clientId: "your-client-id",
         redirectUri: "http://localhost:3000/callback",
-        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
+        scope:
+          "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);
@@ -100,7 +101,8 @@ function App() {
         tenantName: "your-tenant",
         clientId: "your-client-id",
         redirectUri: "http://localhost:3000/callback",
-        scope: "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
+        scope:
+          "OR.Execution OR.Folders OR.Users OR.Jobs ConversationalAgents Traces.Api",
       });
       await uipath.initialize();
       setSdk(uipath);
