@@ -159,6 +159,7 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(result[0].processKey).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_PROCESS_KEY);
       expect(result[0].folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
       expect(result[0].feedId).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_FEED_ID);
+      expect(result[0].processType).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_PROCESS_TYPE);
       expect(result[1].id).toBe(789);
       expect(result[1].name).toBe('Agent 2');
 
@@ -289,6 +290,32 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(result.appearance?.startingPrompts?.[0].displayPrompt).toBe(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.STARTING_PROMPT_DISPLAY
       );
+    });
+
+    it('should include processType for a Flow release', async () => {
+      const mockAgent = createMockRawAgentById({
+        processType: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FLOW_PROCESS_TYPE,
+      });
+      mockApiClient.get.mockResolvedValue(mockAgent);
+
+      const result = await conversationalAgent.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result.processType).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.FLOW_PROCESS_TYPE);
+    });
+
+    it('should leave processType undefined when the API omits it', async () => {
+      const mockAgent = createMockRawAgentById({ processType: undefined });
+      mockApiClient.get.mockResolvedValue(mockAgent);
+
+      const result = await conversationalAgent.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result.processType).toBeUndefined();
     });
 
     it('should transform field names correctly', async () => {

@@ -1,23 +1,7 @@
-import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions, PackageType } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
-/**
- * Enum for package types
- */
-export enum PackageType {
-  Undefined = 'Undefined',
-  Process = 'Process',
-  ProcessOrchestration = 'ProcessOrchestration',
-  WebApp = 'WebApp',
-  Agent = 'Agent',
-  TestAutomationProcess = 'TestAutomationProcess',
-  Api = 'Api',
-  MCPServer = 'MCPServer',
-  BusinessRules = 'BusinessRules',
-  CaseManagement = 'CaseManagement',
-  Flow = 'Flow',
-  Function = 'Function',
-}
+export { PackageType };
 
 /**
  * Enum for job priority
