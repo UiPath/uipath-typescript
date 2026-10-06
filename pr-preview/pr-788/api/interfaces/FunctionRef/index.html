@@ -1747,6 +1747,8 @@
       
         
       
+        
+      
     
     
     
@@ -1888,6 +1890,34 @@
     
   
     Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -3777,8 +3807,8 @@
 
   <h1>FunctionRef</h1>
 
-<p>Identifies the function to invoke. Currently only <code>name</code> is supported;
-additional identifiers (for example, <code>id</code>) may be added in future releases.</p>
+<p>Identifies the function to invoke by name; additional identifiers (for
+example, <code>id</code>) may be added in future releases.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3792,7 +3822,12 @@ additional identifiers (for example, <code>id</code>) may be added in future rel
 <tr>
 <td><a id="name"></a> <code>name</code></td>
 <td><code>string</code></td>
-<td>Name of the function to invoke (unique within a folder).</td>
+<td>Name of the function to invoke: either the name it is declared with in its source (<code>hello</code>) or the full name shown by <code>getAll</code> (<code>my-functions_hello</code>).</td>
+</tr>
+<tr>
+<td><a id="processname"></a> <code>processName?</code></td>
+<td><code>string</code></td>
+<td>Name of the process the function is deployed as. Only needed when several processes in the folder declare a function with the same name.</td>
 </tr>
 </tbody>
 </table>
