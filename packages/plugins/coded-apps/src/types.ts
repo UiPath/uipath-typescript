@@ -62,3 +62,17 @@ export interface ViteMetaTag {
   attrs: { name: string; content: string }
   injectTo: 'head'
 }
+
+/**
+ * Environment variables exposed to the app: prefixed name → string value.
+ */
+export type EnvironmentVariables = Record<string, string>
+
+/**
+ * Vite inline script tag format, prepended to <head> so it runs before any module script.
+ */
+export interface ViteScriptTag {
+  tag: 'script'
+  children: string
+  injectTo: 'head-prepend'
+}
