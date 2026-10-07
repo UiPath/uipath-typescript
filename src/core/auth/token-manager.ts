@@ -1,6 +1,8 @@
 import { ExecutionContext } from '../context/execution';
 import { isInActionCenter } from '../../utils/platform';
-import { authStore } from './auth-store';
+import { SessionStore } from '../../utils/storage/session-store';
+import { NoOpStore } from '../../utils/storage/no-op-store';
+import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -25,6 +27,7 @@ export class TokenManager {
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
+  private readonly store: KeyValueStore = SessionStore.open() ?? new NoOpStore();
 
   /**
    * Creates a new TokenManager instance
@@ -130,9 +133,9 @@ export class TokenManager {
       return false;
     }
     
-    const tokenInfo = this._parseTokenInfo(authStore.read(this._getStorageKey()));
+    const tokenInfo = this._parseTokenInfo(this.store.read(this._getStorageKey()));
     if (!tokenInfo || this.isTokenExpired(tokenInfo)) {
-      authStore.remove(this._getStorageKey());
+      this.store.remove(this._getStorageKey());
       return false;
     }
     
@@ -185,7 +188,7 @@ export class TokenManager {
     this._updateExecutionContext(tokenInfo);
     
     if (this.isOAuth) {
-      authStore.write(this._getStorageKey(), tokenInfo);
+      this.store.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -251,7 +254,7 @@ export class TokenManager {
     this._updateExecutionContext(undefined);
     
     if (this.isOAuth) {
-      authStore.remove(this._getStorageKey());
+      this.store.remove(this._getStorageKey());
     }
   }
   

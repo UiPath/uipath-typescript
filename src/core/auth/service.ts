@@ -5,12 +5,15 @@ import { AuthToken, TokenInfo, OAuthContext, LogoutOptions } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
-import { authStore } from './auth-store';
+import { SessionStore } from '../../utils/storage/session-store';
+import { NoOpStore } from '../../utils/storage/no-op-store';
+import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
 const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class AuthService {
+  private static readonly store: KeyValueStore = SessionStore.open() ?? new NoOpStore();
   private config: Config;
   private tokenManager: TokenManager;
 
@@ -54,12 +57,12 @@ export class AuthService {
    * Get stored OAuth context
    */
   public static getStoredOAuthContext(): OAuthContext | null {
-    const context = authStore.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    const context = AuthService.store.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
     
     // Validate required fields
     if (!context?.codeVerifier || !context.clientId || !context.redirectUri || 
         !context.baseUrl || !context.orgName) {
-      authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+      AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
       return null;
     }
     
@@ -72,11 +75,11 @@ export class AuthService {
    * is left over from a failed or abandoned flow.
    */
   private static _clearStoredOAuthContext(): void {
-    authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
   }
 
   private static _readCodeVerifier(): string | undefined {
-    return authStore.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)?.codeVerifier;
+    return AuthService.store.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)?.codeVerifier;
   }
 
   /**
@@ -173,7 +176,7 @@ export class AuthService {
       // We're expecting a callback - validate parameters
       if (!code) {
         // Clear stored state on error
-        authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+        AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         throw new Error('Authorization code missing in OAuth callback');
       }
       
@@ -182,7 +185,7 @@ export class AuthService {
       const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
       if (!codePattern.test(code)) {
         // Clear stored state on error
-        authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+        AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         throw new Error('Invalid authorization code format');
       }
       
@@ -249,7 +252,7 @@ export class AuthService {
 
     // Clear stored OAuth context — it would be left behind if logout() is
     // called mid-OAuth-flow (before the callback completes the cleanup).
-    authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
 
     if (options?.endSession && isBrowser && idTokenHint) {
       window.location.href = this._buildEndSessionUrl({
@@ -443,7 +446,7 @@ export class AuthService {
     };
     
     // The callback cannot complete without this state, so do not redirect when it was not stored.
-    if (!authStore.write(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, oauthContext)) {
+    if (!AuthService.store.write(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, oauthContext)) {
       throw new Error('Could not store the OAuth sign-in state in session storage');
     }
 
@@ -471,7 +474,7 @@ export class AuthService {
     });
 
     // Clear OAuth context after successful token exchange
-    authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    AuthService.store.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
 
     const url = new URL(window.location.href);
     url.searchParams.delete('code');
