@@ -8,6 +8,7 @@ import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
 import type { OrganizationIdResolver } from '../organization/organization-id-resolver';
 import type { SessionLicense } from '../licensing/session-license';
+import { PublicAppClient } from '../http/public-app-client';
 
 /**
  * Private SDK components used by services.
@@ -48,4 +49,10 @@ export interface PrivateSDK {
    * service built on the instance shares one resolution.
    */
   organizationIdResolver?: OrganizationIdResolver;
+  /**
+   * Present only in public (anonymous) coded-app mode. Routes supported calls
+   * through the Apps service with a session cookie instead of a user token.
+   * @internal
+   */
+  publicAppClient?: PublicAppClient;
 }

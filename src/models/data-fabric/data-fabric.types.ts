@@ -16,3 +16,14 @@ export interface EntityFolderScopedOptions {
    */
   folderKey?: string;
 }
+
+/**
+ * Folder of an entity's binding, for a public coded app.
+ */
+export interface EntityPublicAppOptions {
+  /**
+   * Public coded apps only: the folder path the entity's binding was declared with, so the binding key is
+   * `name.folderPath` as in `bindings_v2.json`. Omit for a binding without a folder. Ignored outside public mode.
+   */
+  folderPath?: string;
+}

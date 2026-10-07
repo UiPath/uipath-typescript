@@ -5,10 +5,15 @@ import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { ServerError } from '../errors/server';
+import { ValidationError } from '../errors/validation';
 import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 import { toSearchParams } from '../../utils/http/params';
 import { fetchWithRetry } from '../../utils/http/fetch-with-retry';
 import { DEFAULT_API_CLIENT_RETRY, resolveRetryOptions } from '../../utils/http/retry-policy';
+
+export const PUBLIC_APP_UNSUPPORTED_CALL =
+  "This call isn't available in a public coded app. A public app can start processes, read their job output, " +
+  'insert and read entity records, and upload files to buckets.';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -39,6 +44,10 @@ export class ApiClient {
    * @throws AuthenticationError if no token available or refresh fails
    */
   public async getValidToken(): Promise<string> {
+    // A public app has no user token; only the calls routed through the Apps service work there.
+    if (this.config.appKey) {
+      throw new ValidationError({ message: PUBLIC_APP_UNSUPPORTED_CALL });
+    }
     return this.tokenManager.getValidToken();
   }
 

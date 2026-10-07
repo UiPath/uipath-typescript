@@ -265,4 +265,10 @@ export interface BucketUploadResponse {
    * HTTP status code from the upload operation
    */
   statusCode: number;
+
+  /**
+   * Where the file was stored. Set only in a public coded app, where the service picks the path
+   * (`<name>_<id>.<ext>`) so an upload can never overwrite another file.
+   */
+  path?: string;
 }
