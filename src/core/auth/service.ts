@@ -45,7 +45,7 @@ export class AuthService {
     
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    const hasCodeVerifier = authStore.read<string>(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+    const hasCodeVerifier = AuthService._readCodeVerifier();
     
     return !!(code && hasCodeVerifier);
   }
@@ -73,7 +73,10 @@ export class AuthService {
    */
   private static _clearStoredOAuthContext(): void {
     authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
-    authStore.remove(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+  }
+
+  private static _readCodeVerifier(): string | undefined {
+    return authStore.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)?.codeVerifier;
   }
 
   /**
@@ -159,7 +162,7 @@ export class AuthService {
     }
 
     // Check if we have a stored code verifier indicating we're in an OAuth flow
-    const codeVerifier = authStore.read<string>(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+    const codeVerifier = AuthService._readCodeVerifier();
     const isInOAuthFlow = codeVerifier !== undefined;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -170,7 +173,7 @@ export class AuthService {
       // We're expecting a callback - validate parameters
       if (!code) {
         // Clear stored state on error
-        authStore.remove(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+        authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         throw new Error('Authorization code missing in OAuth callback');
       }
       
@@ -179,7 +182,7 @@ export class AuthService {
       const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
       if (!codePattern.test(code)) {
         // Clear stored state on error
-        authStore.remove(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+        authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         throw new Error('Invalid authorization code format');
       }
       
@@ -247,7 +250,6 @@ export class AuthService {
     // Clear stored OAuth context — it would be left behind if logout() is
     // called mid-OAuth-flow (before the callback completes the cleanup).
     authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
-    authStore.remove(AUTH_STORAGE_KEYS.CODE_VERIFIER);
 
     if (options?.endSession && isBrowser && idTokenHint) {
       window.location.href = this._buildEndSessionUrl({
@@ -441,8 +443,7 @@ export class AuthService {
     };
     
     // The callback cannot complete without this state, so do not redirect when it was not stored.
-    if (!authStore.write(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, oauthContext) ||
-        !authStore.write(AUTH_STORAGE_KEYS.CODE_VERIFIER, codeVerifier)) {
+    if (!authStore.write(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, oauthContext)) {
       throw new Error('Could not store the OAuth sign-in state in session storage');
     }
 
@@ -457,7 +458,7 @@ export class AuthService {
   }
 
   private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {
-    const codeVerifier = authStore.read<string>(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+    const codeVerifier = AuthService._readCodeVerifier();
     if (!codeVerifier) {
       throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
     }
@@ -469,9 +470,8 @@ export class AuthService {
       codeVerifier
     });
 
-    // Clear OAuth context and code verifier after successful token exchange
+    // Clear OAuth context after successful token exchange
     authStore.remove(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
-    authStore.remove(AUTH_STORAGE_KEYS.CODE_VERIFIER);
 
     const url = new URL(window.location.href);
     url.searchParams.delete('code');

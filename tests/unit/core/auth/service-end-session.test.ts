@@ -51,13 +51,11 @@ describe('AuthService logout end-session (browser)', () => {
 
   it('should clear stored OAuth context without navigating when called with no options', () => {
     memorySessionStorage.entries.set(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, '{"codeVerifier":"v"}');
-    memorySessionStorage.entries.set(AUTH_STORAGE_KEYS.CODE_VERIFIER, 'v');
     const service = createService();
 
     service.logout();
 
     expect(memorySessionStorage.entries.get(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)).toBeUndefined();
-    expect(memorySessionStorage.entries.get(AUTH_STORAGE_KEYS.CODE_VERIFIER)).toBeUndefined();
     expect(windowStub.location.href).toBe('');
   });
 
@@ -106,13 +104,11 @@ describe('AuthService logout end-session (browser)', () => {
 
   it('should clear stored OAuth context before redirecting', () => {
     memorySessionStorage.entries.set(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, '{"codeVerifier":"v"}');
-    memorySessionStorage.entries.set(AUTH_STORAGE_KEYS.CODE_VERIFIER, 'v');
     const service = createServiceWithIdToken();
 
     service.logout({ endSession: true });
 
     expect(memorySessionStorage.entries.get(AUTH_STORAGE_KEYS.OAUTH_CONTEXT)).toBeUndefined();
-    expect(memorySessionStorage.entries.get(AUTH_STORAGE_KEYS.CODE_VERIFIER)).toBeUndefined();
     expect(windowStub.location.href).toContain(IDENTITY_ENDPOINTS.END_SESSION);
   });
 
