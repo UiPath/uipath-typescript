@@ -314,9 +314,7 @@ export interface ConversationalAgentServiceModel {
    * Updates the current user's connection selections for an agent.
    * Only configurable bindings (not admin-fixed) can be updated.
    *
-   * **Requires user-scoped authentication.** Personal connections are per-user;
-   * app-scoped tokens (client credentials / `externalUserId`) do not carry a
-   * user identity and these calls will fail.
+   * **Not supported with External App tokens.**
    *
    * @param agentId - ID of the agent release
    * @param folderId - ID of the folder containing the agent
@@ -330,6 +328,7 @@ export interface ConversationalAgentServiceModel {
    *   selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
    * });
    * ```
+   * @internal
    */
   updateConnectionSelections(
     agentId: number,
@@ -353,6 +352,7 @@ export interface ConversationalAgentServiceModel {
    * const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
    * if (url) window.open(url, '_blank');
    * ```
+   * @internal
    */
   getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null>;
 
@@ -364,12 +364,10 @@ export interface ConversationalAgentServiceModel {
    * The response includes a `sessionId` that can be passed to
    * {@link getConnectionSessionStatus} to poll for OAuth completion.
    *
-   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
-   * `externalUserId`) do not carry a user identity and cannot initiate OAuth flows.
+   * **Not supported with External App tokens.**
    *
    * @param connectorKey - The connector key (e.g. 'uipath-microsoft-outlook365')
-   * @returns Promise resolving to the auth URL, session ID, and expiration
-   * {@link ConnectionAuthResponse}
+   * @returns Promise resolving to the {@link ConnectionAuthResponse} containing the auth URL, session ID, and expiration
    * @internal
    */
   getConnectionAuthUrl(connectorKey: string): Promise<ConnectionAuthResponse>;
@@ -378,28 +376,35 @@ export interface ConversationalAgentServiceModel {
    * Polls the status of a connection auth session started by {@link getConnectionAuthUrl}.
    *
    * After opening the auth URL in a new tab, call this method on an interval
-   * until the returned `status` is `'success'` (the user completed OAuth and
-   * a connection was created) or `'failed'`. When `status` is `'success'`,
+   * until the returned `status` is `ConnectionSessionStatus.Success` (the user completed OAuth and
+   * a connection was created) or `ConnectionSessionStatus.Failed`. When `status` is `Success`,
    * `connectionId` contains the ID of the newly created connection.
    *
-   * **Requires user-scoped authentication.** App-scoped tokens (client credentials /
-   * `externalUserId`) do not carry a user identity and cannot poll session status.
+   * **Not supported with External App tokens.**
    *
    * @param sessionId - The session ID returned by {@link getConnectionAuthUrl}
-   * @returns Promise resolving to the current session status
-   * {@link ConnectionSessionStatusResponse}
+   * @returns Promise resolving to the current {@link ConnectionSessionStatusResponse}
    *
    * @example
    * ```typescript
-   * const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl('jira');
+   * import { ConnectionSessionStatus } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * const { authUrl, sessionId, expiresTime } = await conversationalAgent.getConnectionAuthUrl('<connectorKey>');
    * window.open(authUrl, '_blank');
    *
-   * async function poll() {
+   * async function poll(): Promise<void> {
    *   if (Date.now() > expiresTime) return;
-   *   const session = await conversationalAgent.getConnectionSessionStatus(sessionId);
-   *   if (session.status === 'success') {
-   *     console.log('Connection created:', session.connectionId);
-   *   } else if (session.status !== 'failed') {
+   *   try {
+   *     const session = await conversationalAgent.getConnectionSessionStatus(sessionId);
+   *     if (session.status === ConnectionSessionStatus.Success) {
+   *       console.log('Connection created:', session.connectionId);
+   *     } else if (session.status === ConnectionSessionStatus.Failed) {
+   *       console.log('Connection failed');
+   *     } else {
+   *       setTimeout(poll, 500);
+   *     }
+   *   } catch (error) {
+   *     console.warn('Poll error, retrying:', error);
    *     setTimeout(poll, 500);
    *   }
    * }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.7.2",
+  "sdkVersion": "1.8.0",
   "services": [
     {
       "name": "AgentMemory",
@@ -565,6 +565,10 @@
         {
           "name": "uploadAttachment",
           "since": null
+        },
+        {
+          "name": "upsert",
+          "since": "1.8.0"
         }
       ]
     },
@@ -627,6 +631,17 @@
       ]
     },
     {
+      "name": "Folders",
+      "subpath": "@uipath/uipath-typescript/folders",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "getByKey",
+          "since": "1.8.0"
+        }
+      ]
+    },
+    {
       "name": "Functions",
       "subpath": "@uipath/uipath-typescript/functions",
       "since": "1.6.1",
@@ -653,6 +668,37 @@
         {
           "name": "getPolicyTraces",
           "since": "1.4.1"
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "subpath": "@uipath/uipath-typescript/groups",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.0"
+        },
+        {
+          "name": "deleteById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getMembers",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateById",
+          "since": "1.8.0"
         }
       ]
     },
@@ -770,7 +816,8 @@
           "name": "updateUserSettings",
           "since": "1.6.1"
         }
-      ]
+      ],
+      "deleted": "1.8.0"
     },
     {
       "name": "Processes",
@@ -899,6 +946,68 @@
         {
           "name": "startTransaction",
           "since": "1.6.2"
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "subpath": "@uipath/uipath-typescript/roles",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "create",
+          "since": "1.8.0"
+        },
+        {
+          "name": "deleteById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "exportAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getActions",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAll",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getById",
+          "since": "1.8.0"
+        },
+        {
+          "name": "getEffectiveAccess",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateAssignments",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateById",
+          "since": "1.8.0"
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "subpath": "@uipath/uipath-typescript/settings",
+      "since": "1.8.0",
+      "methods": [
+        {
+          "name": "getUserSettings",
+          "since": "1.8.0"
+        },
+        {
+          "name": "updateUserSettings",
+          "since": "1.8.0"
         }
       ]
     },

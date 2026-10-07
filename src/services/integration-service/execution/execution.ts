@@ -72,7 +72,7 @@ class Execution extends BaseService {
     const { headers: folderHeaders } = resolveFolderScope(
       options,
       'Execution.execute',
-      this.config.folderKey,
+      this.config.metaFolderKey,
     );
 
     const headers: Record<string, string> = {

@@ -221,8 +221,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
-| `updateConnectionSelections()` | `OR.Execution`, `IS.Connections.Read` |
-| `getAddConnectionUrl()` | `OR.Execution` or `OR.Execution.Read` |
 
 ### User Settings
 
@@ -266,7 +264,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
-## Platform
+## Settings
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -295,6 +293,24 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `exportAssignments()` | None — caller's platform roles govern access |
 | `getEffectiveAccess()` | None — caller's platform roles govern access |
 | `getActions()` | None — caller's platform roles govern access |
+
+## Groups
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PM.Group` or `PM.Group.Read` |
+| `getById()` | `PM.Group` or `PM.Group.Read` |
+| `create()` | `PM.Group` or `PM.Group.Write` |
+| `updateById()` | `PM.Group` or `PM.Group.Write` |
+| `deleteById()` | `PM.Group` or `PM.Group.Write` |
+| `getMembers()` | `PM.Group` or `PM.Group.Read` |
+
+## Directory
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `search()` | `PM.Directory.Read` |
+| `getGroupMembership()` | `PM.Directory.Read` |
 
 ## Processes
 

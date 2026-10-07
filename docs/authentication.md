@@ -134,6 +134,18 @@ Construct the SDK **inside the handler**, once per invocation. A single instance
 hoisted to module scope would keep serving the org, tenant and token of whichever
 invocation created it.
 
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the
+`orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and
+`ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the
+fallback folder for a call that needs a folder and names none, such as a lookup
+by name, which runs against the invocation's folder. Integration Service calls
+are left unscoped: Integration Service rejects a connection outside the folder a
+call names, and the connection a function uses often lives in another folder.
+Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local
+run, where `ctx.platform` is null, the constructor
+falls through to the environment contract below; when neither supplies a
+coordinate, the error names it.
+
 ## Server-side and scripts (environment contract)
 
 Outside the browser — a script, a test, a CI job — the SDK configures itself

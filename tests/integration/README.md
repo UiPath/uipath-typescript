@@ -407,7 +407,6 @@ passes `'both'` and runs under both.
 | `DATA_FABRIC_TEST_JOIN_RELATED_ENTITY_NAME` | Related entity name to join in | (required for the join test) |
 | `DATA_FABRIC_TEST_JOIN_RELATED_FIELD_NAME` | Join key field on the related entity | (required for the join test) |
 | `IDENTITY_TEST_USER_ID` | GUID of the user whose platform settings are read and round-tripped; must be in the test PAT's organization | (required for the Platform tests) |
-| `UIPATH_ORGANIZATION_ID` | Organization (account) GUID; platform settings reads fall back to the host partition without it | (required for the Platform tests) |
 
 ## Test Data Management
 
@@ -618,7 +617,9 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 
 ## CI/CD Integration
 
-These integration tests are designed for local execution. To run in CI/CD:
+In this repository, `.github/workflows/coverage.yml` runs the suites on every pull
+request (scoped to the changed files, see below) and `weekly-coverage.yml` runs the
+full set against `main` every Monday. To run them in another CI/CD pipeline:
 
 1. Store secrets securely (GitHub Secrets, etc.)
 2. Configure environment variables in CI pipeline
@@ -637,6 +638,58 @@ Example GitHub Actions workflow:
   run: npm run test:integration
 ```
 
+### Which suites run on a pull request
+
+`pr-checks.yml` calls `coverage.yml` with `scope_to_changes: true`, so the `integration-scope` job
+runs `scripts/integration-scope.mjs` against the files the pull request changes
+(compared with its base branch) and hands the result to the `integration` job as
+vitest path filters. The rule is name-based:
+
+| Changed file | Suites run |
+|--------------|------------|
+| `src/services/<name>/**`, `src/models/<name>/**`, `src/utils/constants/endpoints/<name>/**` or `tests/integration/shared/<name>/**`, where the folder `tests/integration/shared/<name>/` exists | `tests/integration/shared/<name>/` plus the always-on suites |
+| The same paths where the service folder `src/services/<name>/` exists but `tests/integration/shared/<name>/` does not (for example `integration-service`) | Nothing: there is no suite for it |
+| One of the always-on suites: `shared/smoke.integration.test.ts`, `shared/http/`, `auth-errors.integration.test.ts` | The always-on suites only |
+| A file beside the service folders, `src/services/<file>.ts` (`folder-scoped.ts`, `base.ts`) | The suites of the domains whose code imports it, following imports through the barrel; everything when `src/core/` or `src/utils/` imports it (so `base.ts` runs everything, `folder-scoped.ts` runs action-center and orchestrator) |
+| `docs/`, `samples/`, `packages/`, `scripts/` (CI and release tooling), `tests/unit/`, `tests/utils/` (unit-test fixtures and helpers), `*.md`, lint/build/docs config, `package.json`, `.github/workflows/coverage.yml`, `tests/integration/config/` (the shared harness), the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
+| Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, `tests/integration/utils/`, other workflows, `package-lock.json` | Everything |
+
+The only shared files deliberately ignored are `package.json`, `endpoints/base.ts` and
+`endpoints/index.ts`: every new service adds lines to each and is covered by its own
+folders and suite, so editing an existing base path or npm script there is not covered
+by a pull-request run. Likewise `tests/integration/config/` is ignored, so a harness-only
+change is not covered until the weekly run, and
+`tests/utils/` is ignored as a whole although a few fixture values under
+`tests/utils/constants/` are read by the agents, http and observability suites, so a
+fixture-only edit is not covered until the weekly run or the next change to that suite.
+Otherwise no suite is ever excluded. A path the script does not recognise runs the full suite, a
+version bump or dependency change runs the full suite through `package-lock.json`, and
+the weekly run always does. To force the full run on a pull request, add the
+`ci:full-integration` label and push a commit: the labels are read from the event that
+starts the run, and `labeled` is not one of the `pull_request` triggers in
+`pr-checks.yml`.
+
+Two things follow for suite authors:
+
+- **Name a new service's suite folder and endpoint folder after its `src/services/`
+  folder.** The script finds both only by that name. Unit tests in
+  `tests/unit/scripts/integration-scope.test.ts` fail for a suite or endpoint folder with
+  no matching `src/services/` folder, and for an endpoint constant used by another
+  domain's code, so a mis-placed file is caught by `npm run test:unit` rather than
+  silently skipping a suite.
+- The script follows folder names, not imports, except for the loose files beside the
+  service folders. A suite that exercises another domain's service (for example Maestro
+  cases wrapping the Action Center task service) does not run when only that other domain
+  changes, and a change to `endpoints/platform/identity.ts` runs the platform suite only
+  although core's OAuth flow uses it too; shared code under `src/core/`, `src/utils/` and
+  `tests/utils/` runs everything for the same reason.
+
+To see what a branch would run locally:
+
+```bash
+node scripts/integration-scope.mjs --base origin/main
+```
+
 ## Contributing
 
 When adding new integration tests:
@@ -651,6 +704,8 @@ When adding new integration tests:
 7. Handle optional configurations gracefully
 8. Document any prerequisites in test comments
 9. Update this README if adding new test categories
+10. Put a new service's suite in `shared/<name>/`, named after its `src/services/<name>/`
+    folder, so pull-request runs pick it up (see "Which suites run on a pull request")
 
 ## Support
 

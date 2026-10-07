@@ -9,7 +9,7 @@ import { ConversationalAgentService } from '../../../../src/services/conversatio
 import type {
   AvailableConnectionsResponse,
 } from '../../../../src/models/conversational-agent';
-import { ConnectionState } from '../../../../src/models/conversational-agent';
+import { ConnectionState, ConnectionSessionStatus } from '../../../../src/models/conversational-agent';
 
 const modes: InitMode[] = ['v1'];
 
@@ -261,7 +261,8 @@ describeIntegration(
         const auth = await service.getConnectionAuthUrl(configurableItem.connectorKey);
         const result = await service.getConnectionSessionStatus(auth.sessionId);
 
-        expect(['pending', 'success', 'failed']).toContain(result.status);
+        const validStatuses = new Set<string>(Object.values(ConnectionSessionStatus));
+        expect(validStatuses.has(result.status)).toBe(true);
         expect('connectionId' in result).toBe(true);
         expect(typeof result.expiresTime).toBe('number');
         // Wire field should be renamed

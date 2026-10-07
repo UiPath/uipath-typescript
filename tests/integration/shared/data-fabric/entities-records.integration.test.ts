@@ -20,7 +20,7 @@ import {
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 import { EntityGetResponse } from '../../../../src/models/data-fabric/entities.models';
-import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints';
 import { isNotFoundError } from '../../../../src/core/errors/guards';
 
 // Cache for choice set values to avoid repeated API calls within a test run
@@ -110,6 +110,10 @@ function getWritableFields(fields: FieldMetaData[]): FieldMetaData[] {
       f.fieldDisplayType !== FieldDisplayType.AutoNumber &&
       f.fieldDisplayType !== FieldDisplayType.Relationship &&
       f.fieldDisplayType !== FieldDisplayType.File &&
+      // A choice-set value must be an existing choice id; a generated string is
+      // rejected ("Single choiceset value Test_x is not integer")
+      f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+      f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple &&
       f.fieldDataType?.name !== EntityFieldDataType.UUID
   );
 }
@@ -1254,10 +1258,14 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           throw new Error('No record available to update via updateRecord (by name ref)');
         }
 
-        const writableFields = getWritableFields(byNameMetadata.fields);
+        const updateField = getWritableFields(byNameMetadata.fields).find(
+          (f) =>
+            f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+            f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple,
+        );
         const updates: Record<string, any> = {};
-        if (writableFields.length > 0) {
-          updates[writableFields[0].name] = generateFieldValue(writableFields[0]);
+        if (updateField) {
+          updates[updateField.name] = generateFieldValue(updateField);
         }
 
         const result = await entities.updateRecord({ name: byNameEntityName }, byNameRecordIds[0], updates);
@@ -1273,11 +1281,15 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           throw new Error('No records available to update via updateRecords (by name ref)');
         }
 
-        const writableFields = getWritableFields(byNameMetadata.fields);
+        const updateField = getWritableFields(byNameMetadata.fields).find(
+          (f) =>
+            f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
+            f.fieldDisplayType !== FieldDisplayType.ChoiceSetMultiple,
+        );
         const updateData: EntityRecord[] = byNameRecordIds.map((id) => {
           const updates = { Id: id } as EntityRecord;
-          if (writableFields.length > 0) {
-            updates[writableFields[0].name] = generateFieldValue(writableFields[0]);
+          if (updateField) {
+            updates[updateField.name] = generateFieldValue(updateField);
           }
           return updates;
         });

@@ -1,0 +1,118 @@
+/**
+ * Orchestrator Service Endpoints
+ */
+
+import { ORCHESTRATOR_BASE } from '../base';
+
+/**
+ * Orchestrator Bucket Endpoints
+ */
+export const BUCKET_ENDPOINTS = {
+  GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Buckets`,
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})`,
+  GET_FILE_META_DATA: (id: number) => `${ORCHESTRATOR_BASE}/api/Buckets/${id}/ListFiles`,
+  GET_READ_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
+  GET_WRITE_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
+  DELETE_FILE: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.DeleteFile`,
+  GET_FILES: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetFiles`,
+} as const;
+
+/**
+ * Orchestrator Process Service Endpoints
+ */
+export const PROCESS_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Releases`,
+  START_PROCESS: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Releases(${id})`,
+} as const;
+
+/**
+ * Orchestrator Queue Service Endpoints
+ */
+export const QUEUE_ENDPOINTS = {
+  GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions`,
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/QueueDefinitions(${id})`,
+  GET_ITEMS: `${ORCHESTRATOR_BASE}/odata/QueueItems`,
+  ADD_ITEM: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.AddQueueItem`,
+  START_TRANSACTION: `${ORCHESTRATOR_BASE}/odata/Queues/UiPathODataSvc.StartTransaction`,
+  SET_TRANSACTION_RESULT: (itemId: number) => `${ORCHESTRATOR_BASE}/odata/Queues(${itemId})/UiPathODataSvc.SetTransactionResult`,
+} as const;
+
+/**
+ * Orchestrator Job Service Endpoints
+ */
+export const JOB_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+  GET_BY_KEY: (identifier: string) => `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
+  STOP: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
+  RESUME: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob`,
+  RESTART: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob`,
+  ATTACHMENTS: {
+    /** Attachments linked to a job; the job is addressed by the `jobKey` query param. */
+    GET_BY_JOB_KEY: `${ORCHESTRATOR_BASE}/api/JobAttachments/GetByJobKey`,
+    /** Links an existing attachment to a job. */
+    LINK: `${ORCHESTRATOR_BASE}/api/JobAttachments/Post`,
+  },
+} as const;
+
+/**
+ * Orchestrator Asset Service Endpoints
+ */
+export const ASSET_ENDPOINTS = {
+  GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered`,
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Assets(${id})`,
+} as const;
+
+/**
+ * Orchestrator Attachment Service Endpoints
+ */
+export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
+  GET_BY_ID: (id: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${id})`,
+  /** Creates an attachment record and returns a short-lived URI to upload its content to. */
+  CREATE: `${ORCHESTRATOR_BASE}/odata/Attachments`,
+} as const;
+
+/**
+ * Orchestrator DU Module Endpoints (validation flows)
+ */
+export const ORCHESTRATOR_DU_MODULE_ENDPOINTS = {
+  SUBMIT_EXCEPTION_REPORT: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/SubmitExceptionReport`,
+  PROCESS_EXTRACTED_DATA: `${ORCHESTRATOR_BASE}/doc-understanding/DocumentModule/ProcessExtractedData`,
+} as const;
+
+/**
+ * Orchestrator Folder Endpoints
+ */
+export const FOLDER_ENDPOINTS = {
+  GET_BY_KEY: (identifier: string) =>
+    `${ORCHESTRATOR_BASE}/odata/Folders/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
+  GET_BY_ID: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Folders(${folderId})`,
+} as const;
+
+/**
+ * Coded Functions Endpoints
+ */
+export const FUNCTION_ENDPOINTS = {
+  /** Folder-scoped list of function HTTP endpoints. */
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/HttpTriggers`,
+  /**
+   * Invokes a function through its HTTP endpoint; the response body is the function output.
+   * `route` is the trigger's path within the folder, e.g. `my-functions/hello` or `hello`.
+   */
+  INVOKE: (folderKey: string, route: string) => `${ORCHESTRATOR_BASE}/t/${folderKey}/${route}`,
+} as const;
+
+/**
+ * Studio Web Licensing Endpoints
+ */
+export const STUDIO_WEB_LICENSE_ENDPOINTS = {
+  /**
+   * Acquires a license for the calling user, falling back to the free
+   * "Attended Studio Web" license. `POST` only, no request body, not
+   * folder-scoped.
+   */
+  ACQUIRE: `${ORCHESTRATOR_BASE}/api/StudioWeb/AcquireLicense`,
+} as const;
