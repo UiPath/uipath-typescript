@@ -27,7 +27,7 @@ export interface RawCaseAppConfig {
 export interface CaseInstanceSendMessageRequestBody {
   name: string;
   reference: string;
-  itemData?: Record<string, string | string[]>;
+  itemData: Record<string, string | string[]>;
 }
 
 /**

@@ -400,18 +400,6 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       );
     });
 
-    it('should still omit the item data on the v1 route', async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
-
-      await v1CaseInstances.sendMessage(C.INSTANCE_ID, C.FOLDER_KEY, CaseInstanceMessageName.UserSelectStage);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSTANCES.SEND_MESSAGE,
-        { name: CaseInstanceMessageName.UserSelectStage, reference: `case-${C.INSTANCE_ID}` },
-        FOLDER_HEADERS
-      );
-    });
-
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(createMockError(C.ERROR_CASE_NOT_FOUND));
 

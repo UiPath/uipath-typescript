@@ -303,12 +303,10 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
 
   @track('CaseInstances.SendMessage')
   async sendMessage(instanceId: string, folderKey: string, name: string, options?: CaseInstanceSendMessageOptions): Promise<void> {
-    // The Case App route requires itemData.
-    const itemData = options?.itemData ?? (this.useCaseAppRoutes ? {} : undefined);
     const requestBody: CaseInstanceSendMessageRequestBody = {
       name,
       reference: options?.reference ?? CASE_INSTANCE_MESSAGE_REFERENCE(instanceId),
-      ...(itemData && { itemData })
+      itemData: options?.itemData ?? {}
     };
     const endpoint = this.useCaseAppRoutes
       ? MAESTRO_ENDPOINTS.CASE_APP.SEND_MESSAGE
