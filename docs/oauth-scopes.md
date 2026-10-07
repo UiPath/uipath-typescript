@@ -189,13 +189,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getSettings()` | `OR.Users` or `OR.Users.Read` |
 | `updateSettings()` | `OR.Users` |
 
-## Directory
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `search()` | `PM.Directory.Read` |
-| `getGroupMembership()` | `PM.Directory.Read` |
-
 ## Document Understanding
 
 Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
@@ -255,17 +248,6 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 |--------|-------------|
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-
-## Groups
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `PM.Group` or `PM.Group.Read` |
-| `getById()` | `PM.Group` or `PM.Group.Read` |
-| `create()` | `PM.Group` or `PM.Group.Write` |
-| `updateById()` | `PM.Group` or `PM.Group.Write` |
-| `deleteById()` | `PM.Group` or `PM.Group.Write` |
-| `getMembers()` | `PM.Group` or `PM.Group.Read` |
 
 ## Jobs
 
@@ -342,6 +324,56 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Platform
+
+### Directory
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `search()` | `PM.Directory.Read` |
+| `getGroupMembership()` | `PM.Directory.Read` |
+
+### Groups
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PM.Group` or `PM.Group.Read` |
+| `getById()` | `PM.Group` or `PM.Group.Read` |
+| `create()` | `PM.Group` or `PM.Group.Write` |
+| `updateById()` | `PM.Group` or `PM.Group.Write` |
+| `deleteById()` | `PM.Group` or `PM.Group.Write` |
+| `getMembers()` | `PM.Group` or `PM.Group.Read` |
+
+### Roles
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | None — caller's platform roles govern access |
+| `getById()` | None — caller's platform roles govern access |
+| `create()` | None — caller's platform roles govern access |
+| `updateById()` | None — caller's platform roles govern access |
+| `deleteById()` | None — caller's platform roles govern access |
+| `getAssignments()` | None — caller's platform roles govern access |
+| `updateAssignments()` | None — caller's platform roles govern access |
+| `exportAssignments()` | None — caller's platform roles govern access |
+| `getEffectiveAccess()` | None — caller's platform roles govern access |
+| `getActions()` | None — caller's platform roles govern access |
+
+### Settings
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
+| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
+
+### Users
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PM.User` or `PM.User.Read` |
+| `getById()` | `PM.User` or `PM.User.Read` |
+| `updateById()` | `PM.User` or `PM.User.Write` |
+
 ## Processes
 
 | Method | OAuth Scope |
@@ -363,28 +395,6 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `insertItemByName()` / `insertItem()` | `OR.Queues` or `OR.Queues.Write` |
 | `startTransaction()` | `OR.Queues` or `OR.Queues.Write` |
 | `completeTransaction()` | `OR.Queues` or `OR.Queues.Write` |
-
-## Roles
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | None — caller's platform roles govern access |
-| `getById()` | None — caller's platform roles govern access |
-| `create()` | None — caller's platform roles govern access |
-| `updateById()` | None — caller's platform roles govern access |
-| `deleteById()` | None — caller's platform roles govern access |
-| `getAssignments()` | None — caller's platform roles govern access |
-| `updateAssignments()` | None — caller's platform roles govern access |
-| `exportAssignments()` | None — caller's platform roles govern access |
-| `getEffectiveAccess()` | None — caller's platform roles govern access |
-| `getActions()` | None — caller's platform roles govern access |
-
-## Settings
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
-| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
 
 ## TaskCatalogs
 
@@ -424,11 +434,3 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 |--------|-------------|
 | `getById()` | `Traces.Api` |
 | `getSpansByIds()` | `Traces.Api` |
-
-## Users
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `PM.User` or `PM.User.Read` |
-| `getById()` | `PM.User` or `PM.User.Read` |
-| `updateById()` | `PM.User` or `PM.User.Write` |
