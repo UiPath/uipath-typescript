@@ -15,6 +15,11 @@ const modes: InitMode[] = ['v1'];
 const POLL_INTERVAL_MS = 5000;
 const POLL_ATTEMPTS = 36;
 
+/** Prefix for task, stage and message names the case plan does not define */
+const UNKNOWN_NAME_PREFIX = 'sdk-it-';
+const CLOSE_COMMENT = 'Closed by the SDK integration suite';
+const REOPEN_COMMENT = 'Reopened by the SDK integration suite';
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 'user': the Case App routes authorize through the caller's Case persona grants, and the grant lookup
@@ -178,7 +183,7 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
   describe('triggerAdhocTaskForCaseApp', () => {
     it('should reject a task name the case plan does not define', async () => {
       await expect(
-        caseApp.triggerAdhocTaskForCaseApp(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
+        caseApp.triggerAdhocTaskForCaseApp(instance.instanceId, folderKey, `${UNKNOWN_NAME_PREFIX}${generateRandomString(8)}`)
       ).rejects.toSatisfy(isNotFoundError);
     });
   });
@@ -186,7 +191,7 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
   describe('selectStageForCaseApp', () => {
     it('should reject a stage name the case plan does not define', async () => {
       await expect(
-        caseApp.selectStageForCaseApp(instance.instanceId, folderKey, `sdk-it-${generateRandomString(8)}`)
+        caseApp.selectStageForCaseApp(instance.instanceId, folderKey, `${UNKNOWN_NAME_PREFIX}${generateRandomString(8)}`)
       ).rejects.toSatisfy(isNotFoundError);
     });
   });
@@ -204,7 +209,7 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
     it('should deliver an ad-hoc trigger message to a running case instance', async () => {
       await expect(
         caseApp.sendMessage(instance.instanceId, folderKey, CaseInstanceMessageName.UserAdhocTrigger, {
-          itemData: { taskNames: [`sdk-it-${generateRandomString(8)}`] },
+          itemData: { taskNames: [`${UNKNOWN_NAME_PREFIX}${generateRandomString(8)}`] },
         })
       ).resolves.toBeUndefined();
     });
@@ -216,7 +221,7 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
         throw new Error('No seeded running case instance to close');
       }
 
-      const result = await caseApp.close(seededInstanceId, folderKey, { comment: 'Closed by the SDK integration suite' });
+      const result = await caseApp.close(seededInstanceId, folderKey, { comment: CLOSE_COMMENT });
 
       expect(result.data.instanceId).toBe(seededInstanceId);
       expect([InstanceStatus.CANCELING, InstanceStatus.CANCELLED]).toContain(result.data.status);
@@ -241,7 +246,7 @@ describeIntegration('Maestro Case Instances (Case App routes) - Integration Test
 
       const result = await caseApp.reopen(completedInstanceId, folderKey, {
         stageId: stages[0].elementId,
-        comment: 'Reopened by the SDK integration suite',
+        comment: REOPEN_COMMENT,
       });
 
       reopenedInstanceId = completedInstanceId;

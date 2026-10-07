@@ -24,6 +24,7 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -32,7 +33,7 @@ const E = MAESTRO_ENDPOINTS.CASE_APP;
 const FOLDER_HEADERS = { headers: expect.objectContaining({ [FOLDER_KEY]: C.FOLDER_KEY }) };
 const CASE_JSON = {
   root: { name: C.STAGE_NAME_ALT },
-  nodes: [{ id: C.STAGE_ID, type: 'case-management:Stage', data: { label: C.STAGE_NAME } }],
+  nodes: [{ id: C.STAGE_ID, type: C.STAGE_NODE_TYPE, data: { label: C.STAGE_NAME } }],
 };
 
 type RequestSpec = { params?: Record<string, unknown>; headers?: Record<string, string> };
@@ -124,10 +125,10 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
       expect(spec.params).toMatchObject({
         processKey: C.PROCESS_KEY,
         externalId: C.CASE_ID,
-        statuses: 'Running,Faulted',
+        statuses: `${InstanceStatus.RUNNING},${InstanceStatus.FAULTED}`,
         startedTimeUtcStart: startedTimeStart.toISOString(),
-        sortBy: 'startedTimeUtc',
-        order: 'Asc',
+        sortBy: CaseInstanceSortBy.StartedTime,
+        order: CaseInstanceSortOrder.Asc,
       });
       expect(spec.params).not.toHaveProperty('caseId');
       expect(spec.params).not.toHaveProperty('folderKey');
@@ -142,7 +143,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
       const [url, spec] = mockApiClient.get.mock.calls[0] as [string, RequestSpec];
       expect(url).toBe(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL);
-      expect(spec.params).toMatchObject({ externalId: C.CASE_ID, statuses: 'Running', processType: 'CaseManagement' });
+      expect(spec.params).toMatchObject({ externalId: C.CASE_ID, statuses: InstanceStatus.RUNNING, processType: ProcessType.CaseManagement });
     });
 
     it('should omit the statuses parameter when the list is empty', async () => {
@@ -199,7 +200,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
     it('should bind instance methods that keep using the Case App routes', async () => {
       mockListAndCaseJson();
-      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false });
+      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: InstanceStatus.CANCELING, isCompleted: false });
 
       const [instance] = (await caseInstances.getAll({ folderKey: C.FOLDER_KEY })).items;
       await instance.close();
@@ -250,7 +251,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), {
         ...FOLDER_HEADERS,
-        params: { elementTypes: 'hitl,agent' },
+        params: { elementTypes: `${CaseInstanceElementType.Hitl},${CaseInstanceElementType.Agent}` },
       });
     });
 
@@ -273,7 +274,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), {
         ...FOLDER_HEADERS,
-        params: { elementTypes: 'rpa' },
+        params: { elementTypes: CaseInstanceElementType.Rpa },
       });
     });
 
@@ -308,7 +309,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
         url === E.GET_CASE_JSON(C.INSTANCE_ID)
           ? CASE_JSON
           : createRawCaseAppGetElementExecutionsResponse({
-              elementExecutions: [{ elementId: C.STAGE_ID, status: 'Completed', elementRuns: [] }],
+              elementExecutions: [{ elementId: C.STAGE_ID, status: InstanceStatus.COMPLETED, elementRuns: [] }],
             })
       );
 
@@ -316,13 +317,13 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_ELEMENT_EXECUTIONS(C.INSTANCE_ID), expect.objectContaining(FOLDER_HEADERS));
       expect(mockApiClient.get).toHaveBeenCalledWith(E.GET_CASE_JSON(C.INSTANCE_ID), FOLDER_HEADERS);
-      expect(stage).toMatchObject({ id: C.STAGE_ID, name: C.STAGE_NAME, status: 'Completed' });
+      expect(stage).toMatchObject({ id: C.STAGE_ID, name: C.STAGE_NAME, status: InstanceStatus.COMPLETED });
     });
   });
 
   describe('close', () => {
     it('should post an empty body to the Case App route when no options are given', async () => {
-      const response = { instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false };
+      const response = { instanceId: C.INSTANCE_ID, status: InstanceStatus.CANCELING, isCompleted: false };
       mockApiClient.post.mockResolvedValue(response);
 
       const result = await caseInstances.close(C.INSTANCE_ID, C.FOLDER_KEY);
@@ -332,7 +333,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
     });
 
     it('should send the comment', async () => {
-      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: 'Canceling', isCompleted: false });
+      mockApiClient.post.mockResolvedValue({ instanceId: C.INSTANCE_ID, status: InstanceStatus.CANCELING, isCompleted: false });
 
       await caseInstances.close(C.INSTANCE_ID, C.FOLDER_KEY, { comment: C.COMMENT });
 
@@ -348,7 +349,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
 
   describe('reopen', () => {
     it('should post the start element and comment to the Case App route', async () => {
-      const response = { instanceId: C.INSTANCE_ID, status: 'Running' };
+      const response = { instanceId: C.INSTANCE_ID, status: InstanceStatus.RUNNING };
       mockApiClient.post.mockResolvedValue(response);
 
       const result = await caseInstances.reopen(C.INSTANCE_ID, C.FOLDER_KEY, { stageId: C.STAGE_ID, comment: C.COMMENT });
@@ -463,7 +464,7 @@ describe('CaseInstances with Case App routes Unit Tests', () => {
     it('should return the stages response', async () => {
       const stages = {
         caseInstanceId: C.INSTANCE_ID,
-        stages: [{ elementId: C.STAGE_ID, name: C.STAGE_NAME, latestStatus: 'InProgress', slaStatus: 'AtRisk' }],
+        stages: [{ elementId: C.STAGE_ID, name: C.STAGE_NAME, latestStatus: C.STAGE_LATEST_STATUS, slaStatus: CaseAppSlaStatus.AtRisk }],
       };
       mockApiClient.get.mockResolvedValue(stages);
 

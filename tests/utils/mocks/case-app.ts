@@ -3,6 +3,9 @@
  */
 
 import { CASE_APP_TEST_CONSTANTS as C } from '../constants/case-app';
+import { InstanceStatus } from '../../../src/models/maestro/case-instances.types';
+import { ProcessIncidentStatus } from '../../../src/models/maestro/incidents.types';
+import { ProcessType } from '../../../src/models/maestro/cases.internal-types';
 
 export const createRawCaseAppInstance = (overrides?: Record<string, unknown>) => ({
   instanceId: C.INSTANCE_ID,
@@ -10,13 +13,13 @@ export const createRawCaseAppInstance = (overrides?: Record<string, unknown>) =>
   processKey: C.PROCESS_KEY,
   packageId: C.PACKAGE_ID,
   latestRunId: C.RUN_ID,
-  latestRunStatus: 'Running',
+  latestRunStatus: InstanceStatus.RUNNING,
   externalId: C.CASE_ID,
   startedTimeUtc: C.STARTED_TIME,
   createdTimeUtc: C.STARTED_TIME,
   completedTimeUtc: null,
-  processType: 'CaseManagement',
-  instanceRuns: [{ runId: C.RUN_ID, status: 'Running', startedTimeUtc: C.STARTED_TIME, completedTimeUtc: C.COMPLETED_TIME }],
+  processType: ProcessType.CaseManagement,
+  instanceRuns: [{ runId: C.RUN_ID, status: InstanceStatus.RUNNING, startedTimeUtc: C.STARTED_TIME, completedTimeUtc: C.COMPLETED_TIME }],
   ...overrides,
 });
 
@@ -29,14 +32,14 @@ export const createCaseAppInstanceListResponse = (overrides?: Record<string, unk
 
 export const createRawCaseAppElementRun = (overrides?: Record<string, unknown>) => ({
   elementRunId: C.ELEMENT_RUN_ID,
-  status: 'Completed',
+  status: InstanceStatus.COMPLETED,
   startedTimeUtc: C.STARTED_TIME,
   completedTimeUtc: C.COMPLETED_TIME,
   incomingFlowId: null,
   incomingFlowIds: [],
   markerItemIndex: null,
   workflowId: null,
-  version: 1,
+  version: C.ELEMENT_RUN_VERSION,
   parentElementRunId: null,
   jobKey: null,
   externalLink: null,
@@ -46,10 +49,10 @@ export const createRawCaseAppElementRun = (overrides?: Record<string, unknown>) 
 
 export const createRawCaseAppElementExecution = (overrides?: Record<string, unknown>) => ({
   elementId: C.ELEMENT_ID,
-  elementType: 'userTask',
+  elementType: C.ELEMENT_TYPE,
   elementName: C.ELEMENT_NAME,
-  elementExtensionType: 'action',
-  status: 'Completed',
+  elementExtensionType: C.ELEMENT_EXTENSION_TYPE,
+  status: InstanceStatus.COMPLETED,
   startedTimeUtc: C.STARTED_TIME,
   completedTimeUtc: C.COMPLETED_TIME,
   runId: C.RUN_ID,
@@ -70,16 +73,16 @@ export const createRawCaseAppGetElementExecutionsResponse = (overrides?: Record<
   instanceId: C.INSTANCE_ID,
   instanceDisplayName: C.CASE_ID,
   externalId: C.CASE_ID,
-  organizationId: C.OPERATION_ID,
-  tenantId: C.OPERATION_ID,
+  organizationId: C.ORGANIZATION_ID,
+  tenantId: C.TENANT_ID,
   folderKey: C.FOLDER_KEY,
   processKey: C.PROCESS_KEY,
   packageId: C.PACKAGE_ID,
   packageKey: C.PACKAGE_ID,
-  packageVersion: '1.0.0',
-  source: 'Manual',
+  packageVersion: C.PACKAGE_VERSION,
+  source: C.INSTANCE_SOURCE,
   creationUserKey: null,
-  status: 'Running',
+  status: InstanceStatus.RUNNING,
   startedTimeUtc: C.STARTED_TIME,
   completedTimeUtc: null,
   traceId: null,
@@ -104,7 +107,7 @@ export const createRawCaseAppIncident = (overrides?: Record<string, unknown>) =>
   runId: C.RUN_ID,
   folderKey: C.FOLDER_KEY,
   elementId: C.ELEMENT_ID,
-  incidentStatus: 'Open',
+  incidentStatus: ProcessIncidentStatus.Open,
   errorMessage: C.ERROR_CASE_NOT_FOUND,
   errorTimeUtc: C.ERROR_TIME,
   incidentUpdateTimeUtc: C.INCIDENT_UPDATE_TIME,

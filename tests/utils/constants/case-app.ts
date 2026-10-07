@@ -17,11 +17,22 @@ export const CASE_APP_TEST_CONSTANTS = {
   STAGE_ID_ALT: 'Stage_4d5e6f',
   ELEMENT_ID: 'Task_7g8h9i',
   OPERATION_ID: '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
+  ORGANIZATION_ID: '3d4e5f6a-7b8c-4d9e-9f0a-2b3c4d5e6f7a',
+  TENANT_ID: '4e5f6a7b-8c9d-4e0f-8a1b-3c4d5e6f7a8b',
   MESSAGE_ID: '1b2c3d4e-5f6a-4b7c-9d8e-0f1a2b3c4d5e',
   JOB_ID: '2c3d4e5f-6a7b-4c8d-8e9f-1a2b3c4d5e6f',
   CASE_ID: 'CASE-00042',
   PACKAGE_ID: 'Claims.Case',
+  PACKAGE_VERSION: '1.0.0',
   NEXT_PAGE_TOKEN: 'eyJwYWdlIjoyfQ==',
+
+  // Wire values with no SDK enum
+  ELEMENT_TYPE: 'userTask',
+  ELEMENT_EXTENSION_TYPE: 'action',
+  INSTANCE_SOURCE: 'Manual',
+  ELEMENT_RUN_VERSION: 1,
+  STAGE_NODE_TYPE: 'case-management:Stage',
+  STAGE_LATEST_STATUS: 'InProgress',
 
   // Names
   STAGE_NAME: 'Review',
