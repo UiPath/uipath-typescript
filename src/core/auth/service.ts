@@ -6,14 +6,14 @@ import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { SessionStore } from '../../utils/storage/session-store';
-import { NoOpStore } from '../../utils/storage/no-op-store';
+import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
 const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class AuthService {
-  private static readonly store: KeyValueStore = SessionStore.open() ?? new NoOpStore();
+  private static readonly store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
   private config: Config;
   private tokenManager: TokenManager;
 

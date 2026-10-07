@@ -1,7 +1,7 @@
 import { ExecutionContext } from '../context/execution';
 import { isInActionCenter } from '../../utils/platform';
 import { SessionStore } from '../../utils/storage/session-store';
-import { NoOpStore } from '../../utils/storage/no-op-store';
+import { NO_OP_STORE } from '../../utils/storage/no-op-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
@@ -27,7 +27,7 @@ export class TokenManager {
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
-  private readonly store: KeyValueStore = SessionStore.open() ?? new NoOpStore();
+  private readonly store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
 
   /**
    * Creates a new TokenManager instance

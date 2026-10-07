@@ -1,22 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { NoOpStore } from '../../../../src/utils/storage/no-op-store';
+import { NO_OP_STORE } from '../../../../src/utils/storage/no-op-store';
 
 const KEY = 'uipath_sdk_test';
 const VALUE = { token: 'stored-value', count: 2 };
 
-describe('NoOpStore', () => {
+describe('NO_OP_STORE', () => {
   it('should report a write as not kept', () => {
-    expect(new NoOpStore().write(KEY, VALUE)).toBe(false);
+    expect(NO_OP_STORE.write(KEY, VALUE)).toBe(false);
   });
 
   it('should read nothing back after a write', () => {
-    const store = new NoOpStore();
-    store.write(KEY, VALUE);
+    NO_OP_STORE.write(KEY, VALUE);
 
-    expect(store.read(KEY)).toBeUndefined();
+    expect(NO_OP_STORE.read(KEY)).toBeUndefined();
   });
 
   it('should remove without throwing', () => {
-    expect(() => new NoOpStore().remove(KEY)).not.toThrow();
+    expect(() => NO_OP_STORE.remove(KEY)).not.toThrow();
   });
 });
