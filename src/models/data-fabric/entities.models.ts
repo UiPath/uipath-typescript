@@ -1107,6 +1107,9 @@ export interface EntityServiceModel {
    * a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-,
    * Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
    *
+   * `DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes
+   * are required only for `SchemaAndData` mode (which creates the target schema).
+   *
    * @param request - Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
    * @returns Promise resolving to the {@link EntityCloneJob} descriptor (initial state `Queued`).
    * @example
