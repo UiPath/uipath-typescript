@@ -511,12 +511,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.Clone')
   async clone(request: EntityCloneRequest): Promise<EntityCloneJob> {
-    const targetFolderId = request.target?.scopeType === EntityCloneScopeType.Folder
-      ? request.target.folderId?.trim()
+    const targetFolderKey = request.target?.scopeType === EntityCloneScopeType.Folder
+      ? request.target.folderKey?.trim()
       : undefined;
-    if (!targetFolderId) {
+    if (!targetFolderKey) {
       throw new ValidationError({
-        message: 'clone requires a folder-scoped target with a non-empty folderId.',
+        message: 'clone requires a folder-scoped target with a non-empty folderKey.',
       });
     }
     if (!request.entityIds?.length) {
@@ -524,9 +524,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
         message: 'clone requires at least one entity id in entityIds.',
       });
     }
+    // The SDK surfaces the user-facing `folderKey`; the clone API wire shape expects `folderId`.
+    const sourceFolderKey = request.source?.folderKey?.trim();
     const payload = {
-      source: request.source,
-      target: { ...request.target, folderId: targetFolderId },
+      source: {
+        scopeType: request.source.scopeType,
+        ...(sourceFolderKey && { folderId: sourceFolderKey }),
+      },
+      target: { scopeType: request.target.scopeType, folderId: targetFolderKey },
       entityIds: request.entityIds,
       options: { mode: request.options?.mode ?? EntityCloneMode.SchemaAndData },
     };
@@ -536,10 +541,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetCloneJob')
   async getCloneJob(jobId: string): Promise<EntityCloneJob> {
-    if (!jobId?.trim()) {
+    const trimmedJobId = jobId?.trim();
+    if (!trimmedJobId) {
       throw new ValidationError({ message: 'getCloneJob requires a non-empty job id.' });
     }
-    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_JOB(jobId));
+    const response = await this.get<RawEntityCloneJob>(DATA_FABRIC_ENDPOINTS.ENTITY.CLONE_JOB(trimmedJobId));
     return toEntityCloneJob(response.data);
   }
 

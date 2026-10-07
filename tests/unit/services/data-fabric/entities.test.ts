@@ -5637,12 +5637,13 @@ describe("EntityService Unit Tests", () => {
 
   describe("clone", () => {
     const TARGET_FOLDER = "b1b1b1b1-0000-0000-0000-000000000001";
+    const SOURCE_FOLDER = "c1c1c1c1-0000-0000-0000-000000000001";
     const ENTITY_A = "e1e1e1e1-0000-0000-0000-000000000001";
     const JOB_ID = "a1a1a1a1-0000-0000-0000-000000000001";
 
     const cloneRequest: EntityCloneRequest = {
       source: { scopeType: EntityCloneScopeType.Tenant },
-      target: { scopeType: EntityCloneScopeType.Folder, folderId: TARGET_FOLDER },
+      target: { scopeType: EntityCloneScopeType.Folder, folderKey: TARGET_FOLDER },
       entityIds: [ENTITY_A],
       options: { mode: EntityCloneMode.SchemaAndData },
     };
@@ -5712,13 +5713,13 @@ describe("EntityService Unit Tests", () => {
       await expect(
         entityService.clone({
           ...cloneRequest,
-          target: { scopeType: EntityCloneScopeType.Tenant, folderId: TARGET_FOLDER } as any,
+          target: { scopeType: EntityCloneScopeType.Tenant, folderKey: TARGET_FOLDER } as any,
         }),
       ).rejects.toThrow(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it("rejects when the target folderId is missing", async () => {
+    it("rejects when the target folderKey is missing", async () => {
       await expect(
         entityService.clone({
           ...cloneRequest,
@@ -5728,22 +5729,22 @@ describe("EntityService Unit Tests", () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it("rejects when the target folderId is whitespace-only", async () => {
+    it("rejects when the target folderKey is whitespace-only", async () => {
       await expect(
         entityService.clone({
           ...cloneRequest,
-          target: { scopeType: EntityCloneScopeType.Folder, folderId: "   " },
+          target: { scopeType: EntityCloneScopeType.Folder, folderKey: "   " },
         }),
       ).rejects.toThrow(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it("sends the target folderId trimmed when it has surrounding whitespace", async () => {
+    it("remaps the target folderKey to the wire folderId, trimmed, when it has surrounding whitespace", async () => {
       mockApiClient.post.mockResolvedValue(queuedJob);
 
       await entityService.clone({
         ...cloneRequest,
-        target: { scopeType: EntityCloneScopeType.Folder, folderId: `  ${TARGET_FOLDER}  ` },
+        target: { scopeType: EntityCloneScopeType.Folder, folderKey: `  ${TARGET_FOLDER}  ` },
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -5753,6 +5754,33 @@ describe("EntityService Unit Tests", () => {
         }),
         expect.any(Object),
       );
+    });
+
+    it("remaps a folder-scoped source folderKey to the wire folderId, trimmed", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone({
+        ...cloneRequest,
+        source: { scopeType: EntityCloneScopeType.Folder, folderKey: `  ${SOURCE_FOLDER}  ` },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          source: { scopeType: EntityCloneScopeType.Folder, folderId: SOURCE_FOLDER },
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it("omits folderId from a tenant-scoped source on the wire", async () => {
+      mockApiClient.post.mockResolvedValue(queuedJob);
+
+      await entityService.clone(cloneRequest);
+
+      const [, sentPayload] = mockApiClient.post.mock.calls[0];
+      expect(sentPayload.source).toEqual({ scopeType: EntityCloneScopeType.Tenant });
+      expect(sentPayload.source).not.toHaveProperty("folderId");
     });
 
     it("rejects when no entity ids are supplied", async () => {
@@ -5812,6 +5840,19 @@ describe("EntityService Unit Tests", () => {
         entityService.getCloneJob("  "),
       ).rejects.toThrow(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it("sends the job id trimmed when it has surrounding whitespace", async () => {
+      mockApiClient.get.mockResolvedValue(doneJob);
+
+      await entityService.getCloneJob(`  ${JOB_ID}  `);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        expect.stringContaining(`/api/v3/clone/entities/${JOB_ID}`),
+        expect.any(Object),
+      );
+      const [sentUrl] = mockApiClient.get.mock.calls[0];
+      expect(sentUrl).not.toContain(" ");
     });
 
     it("propagates API errors", async () => {

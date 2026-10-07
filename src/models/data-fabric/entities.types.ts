@@ -1266,16 +1266,16 @@ export enum EntityCloneJobState {
   RollbackFailed = "RollbackFailed",
 }
 
-/** Where a clone reads from. `folderId` is required only when `scopeType` is `Folder`. */
+/** Where a clone reads from. `folderKey` is required only when `scopeType` is `Folder`. */
 export interface EntityCloneSource {
   scopeType: EntityCloneScopeType;
-  folderId?: string | null;
+  folderKey?: string | null;
 }
 
-/** Where a clone writes to. Always folder-scoped with a concrete `folderId`. */
+/** Where a clone writes to. Always folder-scoped with a concrete `folderKey`. */
 export interface EntityCloneTarget {
   scopeType: EntityCloneScopeType.Folder;
-  folderId: string;
+  folderKey: string;
 }
 
 /** Clone tuning. `mode` defaults to `SchemaAndData` when omitted. */

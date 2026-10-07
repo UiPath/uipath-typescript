@@ -1117,7 +1117,7 @@ export interface EntityServiceModel {
    *
    * const job = await entities.clone({
    *   source: { scopeType: EntityCloneScopeType.Tenant },
-   *   target: { scopeType: EntityCloneScopeType.Folder, folderId: "<targetFolderId>" },
+   *   target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
    *   entityIds: ["<rootEntityId>", "<choiceSetId>"],
    *   options: { mode: EntityCloneMode.SchemaAndData },
    * });

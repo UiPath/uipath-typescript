@@ -58,7 +58,7 @@ describeIntegration('Data Fabric Entities Clone - Integration Tests', 'both', mo
     // 2. Start the clone.
     const job = await entities.clone({
       source: { scopeType: EntityCloneScopeType.Tenant },
-      target: { scopeType: EntityCloneScopeType.Folder, folderId: targetFolderKey },
+      target: { scopeType: EntityCloneScopeType.Folder, folderKey: targetFolderKey },
       entityIds: [sourceId],
       options: { mode: EntityCloneMode.SchemaAndData },
     });
