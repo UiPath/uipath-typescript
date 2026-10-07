@@ -17,7 +17,6 @@ vi.mock('@/core/auth/service', () => {
           getToken: () => 'token',
           hasValidToken: () => true,
           destroy: vi.fn(),
-          getTokenInfo: () => undefined,
           onTokenChange: vi.fn(),
         }),
         hasValidToken: () => true,

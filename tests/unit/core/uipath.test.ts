@@ -5,7 +5,7 @@ import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
-import { SessionLicense } from '../../../src/core/licensing/session-license';
+import { acquireLicenseOnSignIn } from '../../../src/core/licensing/session-license';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { functionContext } from '../../utils/function-context';
@@ -16,8 +16,6 @@ const mockTokenManager = {
   getToken: () => 'mock-access-token',
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
-  getTokenInfo: () => undefined,
-  onTokenChange: vi.fn(),
 };
 
 const mockLogout = vi.fn();
@@ -41,6 +39,7 @@ vi.mock('../../../src/core/auth/service', () => {
 });
 
 vi.mock('../../../src/core/http/api-client');
+vi.mock('../../../src/core/licensing/session-license');
 
 // Mock meta-tag loading so the telemetry tests can drive the org/tenant ids
 // the deployment injects. Defaults to no meta tags (matching server-side use).
@@ -532,39 +531,43 @@ describe('UiPath Core', () => {
       scope: TEST_CONSTANTS.OAUTH_SCOPE,
     };
 
+    beforeEach(() => {
+      vi.mocked(acquireLicenseOnSignIn).mockClear();
+    });
+
     afterEach(() => {
       mockPlatform.isInActionCenter = false;
     });
 
-    it('should attach a session license to a coded app that signs its user in', () => {
+    it('should acquire the license on sign-in for a coded app that signs its user in', () => {
       const sdk = new UiPath(oauthConfig);
 
-      expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
+      expect(acquireLicenseOnSignIn).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), getContext(sdk), getTokenManager(sdk));
     });
 
-    it('should attach a session license to a coded app whose host supplies the user token', () => {
+    it('should acquire the license on sign-in for a coded app whose host supplies the user token', () => {
       mockPlatform.isInActionCenter = true;
 
       const sdk = new UiPath(oauthConfig);
 
-      expect(getPrivateSDK(sdk).sessionLicense).toBeInstanceOf(SessionLicense);
+      expect(acquireLicenseOnSignIn).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), getContext(sdk), getTokenManager(sdk));
     });
 
-    it('should not attach a session license when the SDK holds its own credential', () => {
-      const sdk = new UiPath({
+    it('should not acquire the license when the SDK holds its own credential', () => {
+      void new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
       });
 
-      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+      expect(acquireLicenseOnSignIn).not.toHaveBeenCalled();
     });
 
-    it('should not attach a session license inside a coded function', () => {
-      const sdk = new UiPath(functionContext());
+    it('should not acquire the license inside a coded function', () => {
+      void new UiPath(functionContext());
 
-      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+      expect(acquireLicenseOnSignIn).not.toHaveBeenCalled();
     });
   });
 

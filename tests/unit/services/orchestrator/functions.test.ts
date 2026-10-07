@@ -18,7 +18,7 @@ import { FunctionGetResponse } from '../../../../src/models/orchestrator/functio
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { FUNCTION_TEST_CONSTANTS } from '../../../utils/constants/functions';
-import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS, STUDIO_WEB_LICENSE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { FUNCTION_ENDPOINTS, FOLDER_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, JOB_KEY } from '../../../../src/utils/constants/headers';
 import { ValidationError, NotFoundError, ServerError } from '../../../../src/core/errors';
 
@@ -383,9 +383,6 @@ describe('FunctionService Unit Tests', () => {
     it('should fall back to the SDK folder context when no folder options are given', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
       const service = new FunctionService(instance);
-
-      // No separate warm-up needed: the license cache is shared across service
-      // instances, so the one warmed above already covers this service.
       mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
       mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
 
@@ -715,7 +712,6 @@ describe('FunctionService Unit Tests', () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledTimes(1);
-      expect(mockApiClient.post).not.toHaveBeenCalledWith(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, expect.any(Object));
     });
   });
 

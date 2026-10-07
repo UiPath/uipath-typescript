@@ -4,10 +4,10 @@ import type { KeyValueStore } from './key-value-store';
 /**
  * Values kept for the length of the user's browser session.
  *
- * There is none outside a browser, and a browser can deny it, so `open()` and
- * the shared `sessionStore` are `undefined` there. A browser can still refuse a
- * read or a write; the read then comes back `undefined` and the write returns
- * `false`. No call ever throws.
+ * There is none outside a browser, and a browser can deny it, so `open()` is
+ * `undefined` there. A browser can still refuse a read or a write; the read
+ * then comes back `undefined` and the write returns `false`. No call ever
+ * throws.
  */
 export class SessionStore implements KeyValueStore {
   readonly #storage: Storage;
@@ -59,5 +59,3 @@ export class SessionStore implements KeyValueStore {
     }
   }
 }
-
-export const sessionStore = SessionStore.open();

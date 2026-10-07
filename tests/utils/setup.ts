@@ -24,7 +24,6 @@ interface MockableTokenManager {
   getToken: () => string | undefined;
   hasValidToken: () => boolean;
   getValidToken: () => Promise<string>;
-  getTokenInfo: () => TokenInfo | undefined;
   onTokenChange: (listener: (tokenInfo: TokenInfo | undefined) => void) => void;
 }
 
@@ -72,7 +71,6 @@ const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): Toke
     getToken: vi.fn().mockReturnValue('mock-access-token'),
     hasValidToken: vi.fn().mockReturnValue(true),
     getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
-    getTokenInfo: vi.fn().mockReturnValue(undefined),
     onTokenChange: vi.fn(),
     ...overrides,
   };

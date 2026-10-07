@@ -1,6 +1,6 @@
 import { ExecutionContext } from '../context/execution';
 import { isInActionCenter } from '../../utils/platform';
-import { sessionStore } from '../../utils/storage/session-store';
+import { authStore } from './auth-store';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from './constants';
 import { getExpiryMs } from './token-expiry';
@@ -130,26 +130,12 @@ export class TokenManager {
       return false;
     }
     
-    const storedToken = sessionStore?.read<TokenInfo>(this._getStorageKey());
-    if (storedToken === undefined) {
+    const tokenInfo = this._parseTokenInfo(authStore.read(this._getStorageKey()));
+    if (!tokenInfo || this.isTokenExpired(tokenInfo)) {
+      authStore.remove(this._getStorageKey());
       return false;
     }
     
-    const tokenInfo = this._parseTokenInfo(storedToken);
-    if (!tokenInfo) {
-      // Invalid token format, clear it
-      sessionStore?.remove(this._getStorageKey());
-      return false;
-    }
-    
-    // Check if token is expired
-    if (this.isTokenExpired(tokenInfo)) {
-      // Token expired, clear it
-      sessionStore?.remove(this._getStorageKey());
-      return false;
-    }
-    
-    // Valid token found, use it
     this.currentToken = tokenInfo;
     this._updateExecutionContext(tokenInfo);
     return true;
@@ -157,14 +143,16 @@ export class TokenManager {
   
   /**
    * Parse and validate token info from storage
-   * @param parsed Value read from storage
+   * @param stored Value read from storage
    * @returns Valid TokenInfo or undefined if invalid
    */
-  private _parseTokenInfo(parsed: TokenInfo): TokenInfo | undefined {
+  private _parseTokenInfo(stored: unknown): TokenInfo | undefined {
     // Basic validation
-    if (typeof parsed !== 'object' || !parsed) {
+    if (typeof stored !== 'object' || !stored) {
       return undefined;
     }
+    
+    const parsed = stored as TokenInfo;
     
     if (typeof parsed.token !== 'string' || !parsed.token) {
       return undefined;
@@ -196,9 +184,8 @@ export class TokenManager {
     // Store token in execution context
     this._updateExecutionContext(tokenInfo);
     
-    // Store in session storage if this is an OAuth token
     if (this.isOAuth) {
-      sessionStore?.write(this._getStorageKey(), tokenInfo);
+      authStore.write(this._getStorageKey(), tokenInfo);
     }
   }
 
@@ -248,11 +235,12 @@ export class TokenManager {
   }
 
   /**
-   * Registers a listener called whenever the token is set, loaded or cleared
-   * (with `undefined`).
+   * Registers a listener called with the current token, then whenever the
+   * token is set, loaded or cleared (with `undefined`).
    */
   onTokenChange(listener: (tokenInfo: TokenInfo | undefined) => void): void {
     this.tokenChangeListeners.push(listener);
+    listener(this.currentToken);
   }
 
   /**
@@ -260,21 +248,19 @@ export class TokenManager {
    */
   clearToken(): void {
     this.currentToken = undefined;
-    this.executionContext.set('tokenInfo', undefined);
-    this.tokenChangeListeners.forEach((listener) => listener(undefined));
+    this._updateExecutionContext(undefined);
     
-    // Remove from session storage if this is an OAuth token
     if (this.isOAuth) {
-      sessionStore?.remove(this._getStorageKey());
+      authStore.remove(this._getStorageKey());
     }
   }
   
   /**
    * Updates execution context with token information
    */
-  private _updateExecutionContext(tokenInfo: TokenInfo): void {
+  private _updateExecutionContext(tokenInfo: TokenInfo | undefined): void {
     this.executionContext.set('tokenInfo', tokenInfo);
-    telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
+    if (tokenInfo) telemetryClient.setUserId(extractUserIdFromToken(tokenInfo.token));
     this.tokenChangeListeners.forEach((listener) => listener(tokenInfo));
   }
 

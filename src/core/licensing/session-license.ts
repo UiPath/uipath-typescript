@@ -1,53 +1,45 @@
 import type { UiPathConfig } from '../config/config';
 import type { ExecutionContext } from '../context/execution';
 import type { TokenManager } from '../auth/token-manager';
-import type { TokenInfo } from '../auth/types';
 import type { RetryOptions } from '../../models/common/http.types';
 import { ApiClient } from '../http/api-client';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { extractUserIdFromToken } from '../../utils/encoding/jwt';
-import { sessionStore } from '../../utils/storage/session-store';
+import { SessionStore } from '../../utils/storage/session-store';
 import { MemoryStore } from '../../utils/storage/memory-store';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
 
-export class SessionLicense {
-  readonly #apiClient: ApiClient;
-  readonly #claimKey: string;
-  readonly #claims: KeyValueStore = sessionStore ?? new MemoryStore();
-  #userId?: string;
+export function acquireLicenseOnSignIn(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager): void {
+  const apiClient = new ApiClient(config, context, tokenManager);
+  const claimKey = `${AUTH_STORAGE_KEYS.LICENSE_PREFIX}${config.baseUrl}/${config.orgName}/${config.tenantName}`;
+  const claims: KeyValueStore = SessionStore.open() ?? new MemoryStore();
+  let currentUserId: string | undefined;
 
-  constructor(config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) {
-    this.#apiClient = new ApiClient(config, context, tokenManager);
-    this.#claimKey = `${AUTH_STORAGE_KEYS.LICENSE_PREFIX}${config.baseUrl}/${config.orgName}/${config.tenantName}`;
-    tokenManager.onTokenChange((tokenInfo) => this.#onTokenChange(tokenInfo));
-    this.#onTokenChange(tokenManager.getTokenInfo());
-  }
+  const release = (userId: string): void => {
+    if (claims.read<string>(claimKey) === userId) claims.remove(claimKey);
+  };
 
-  #onTokenChange(tokenInfo: TokenInfo | undefined): void {
-    const userId = (tokenInfo && extractUserIdFromToken(tokenInfo.token)) || undefined;
-    if (userId !== this.#userId) {
-      if (this.#userId) this.#release(this.#userId);
-      this.#userId = userId;
-    }
-    if (userId && this.#claims.read<string>(this.#claimKey) !== userId) this.#acquire(userId);
-  }
-
-  #acquire(userId: string): void {
+  const acquire = (userId: string): void => {
     // Claimed before the request starts, so other SDK instances on the page skip it.
-    this.#claims.write(this.#claimKey, userId);
-    this.#apiClient
+    claims.write(claimKey, userId);
+    apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
       .catch((error: unknown) => {
-        this.#release(userId);
+        release(userId);
         console.warn('[UiPath SDK] Could not acquire a Studio Web license for the signed-in user', error);
       });
-  }
+  };
 
-  #release(userId: string): void {
-    if (this.#claims.read<string>(this.#claimKey) === userId) this.#claims.remove(this.#claimKey);
-  }
+  tokenManager.onTokenChange((tokenInfo) => {
+    const userId = (tokenInfo && extractUserIdFromToken(tokenInfo.token)) || undefined;
+    if (userId !== currentUserId) {
+      if (currentUserId) release(currentUserId);
+      currentUserId = userId;
+    }
+    if (userId && claims.read<string>(claimKey) !== userId) acquire(userId);
+  });
 }

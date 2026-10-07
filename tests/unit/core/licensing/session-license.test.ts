@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { memorySessionStorage } from '@tests/utils/session-storage';
-import { SessionLicense } from '@/core/licensing/session-license';
+import { acquireLicenseOnSignIn } from '@/core/licensing/session-license';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { ApiClient } from '@/core/http/api-client';
@@ -32,13 +32,11 @@ function makeConfig(tenantName: string = TEST_CONSTANTS.TENANT_ID): UiPathConfig
   });
 }
 
-const sessionLicenses: SessionLicense[] = [];
-
 function signIn(tenantName?: string): TokenManager {
   const context = new ExecutionContext();
   const config = makeConfig(tenantName);
   const tokenManager = new TokenManager(context, config, false);
-  sessionLicenses.push(new SessionLicense(config, context, tokenManager));
+  acquireLicenseOnSignIn(config, context, tokenManager);
   return tokenManager;
 }
 
@@ -48,7 +46,7 @@ function tokenFor(userId: string): { token: string; type: 'oauth' } {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe('SessionLicense', () => {
+describe('acquireLicenseOnSignIn', () => {
   beforeEach(() => {
     memorySessionStorage.reset();
     post.mockReset().mockResolvedValue(undefined);
@@ -56,7 +54,6 @@ describe('SessionLicense', () => {
   });
 
   afterEach(() => {
-    sessionLicenses.length = 0;
     vi.clearAllMocks();
     vi.restoreAllMocks();
   });
@@ -73,13 +70,13 @@ describe('SessionLicense', () => {
     );
   });
 
-  it('should acquire for a token already held when constructed', async () => {
+  it('should acquire for a token already held when called', async () => {
     const context = new ExecutionContext();
     const config = makeConfig();
     const tokenManager = new TokenManager(context, config, false);
     tokenManager.setToken(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
 
-    sessionLicenses.push(new SessionLicense(config, context, tokenManager));
+    acquireLicenseOnSignIn(config, context, tokenManager);
     await flush();
 
     expect(post).toHaveBeenCalledTimes(1);

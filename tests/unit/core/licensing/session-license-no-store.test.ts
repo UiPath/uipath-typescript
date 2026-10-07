@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SessionLicense } from '@/core/licensing/session-license';
+import { acquireLicenseOnSignIn } from '@/core/licensing/session-license';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { ApiClient } from '@/core/http/api-client';
@@ -10,12 +10,11 @@ import { createTestJwt } from '@tests/utils/jwt';
 import { createMockError } from '@tests/utils/mocks/core';
 import { createMockApiClient } from '@tests/utils/setup';
 
-vi.mock('@/utils/storage/session-store', () => ({ sessionStore: undefined }));
+vi.mock('@/utils/storage/session-store', () => ({ SessionStore: { open: () => undefined } }));
 vi.mock('@/core/http/api-client');
 
 const mockApiClient = createMockApiClient();
 const post = mockApiClient.post;
-const sessionLicenses: SessionLicense[] = [];
 
 function signIn(): TokenManager {
   const context = new ExecutionContext();
@@ -25,7 +24,7 @@ function signIn(): TokenManager {
     tenantName: TEST_CONSTANTS.TENANT_ID,
   });
   const tokenManager = new TokenManager(context, config, false);
-  sessionLicenses.push(new SessionLicense(config, context, tokenManager));
+  acquireLicenseOnSignIn(config, context, tokenManager);
   return tokenManager;
 }
 
@@ -35,14 +34,13 @@ function tokenFor(userId: string): { token: string; type: 'oauth' } {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe('SessionLicense without a session store', () => {
+describe('acquireLicenseOnSignIn without a session store', () => {
   beforeEach(() => {
     post.mockReset().mockResolvedValue(undefined);
     vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
   });
 
   afterEach(() => {
-    sessionLicenses.length = 0;
     vi.clearAllMocks();
   });
 
