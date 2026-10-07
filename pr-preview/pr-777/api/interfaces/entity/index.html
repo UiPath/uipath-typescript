@@ -4208,6 +4208,8 @@ job descriptor to poll via <a href="#getclonejob">EntityServiceModel.getCloneJob
 (default) clones schema, rows, and attachments into a clean target; <code>DataOnly</code> copies rows into
 a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-,
 Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.</p>
+<p><code>DataOnly</code> mode needs only the <code>DataFabric.Data.*</code> scopes — the <code>DataFabric.Schema.*</code> scopes
+are required only for <code>SchemaAndData</code> mode (which creates the target schema).</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

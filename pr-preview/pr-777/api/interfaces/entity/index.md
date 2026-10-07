@@ -23,6 +23,8 @@ Starts an async job that clones the entities/choicesets listed in `entityIds` (p
 
 Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
 
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
+
 #### Parameters
 
 - `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
