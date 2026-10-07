@@ -6146,11 +6146,11 @@ await items[0].close({ comment: 'Resolved' });
 
 **Method behavior with `useCaseAppRoutes: true`**
 
-| Methods                                                                          | Behavior                                             |
-| -------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `getAll`, `getCaseJson`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
-| `getById`, `pause`, `resume`, `getVariables`                                     | Throw a `ValidationError` — no Case App route exists |
-| Methods ending in `ForCaseApp`                                                   | Always call the Case App routes, whatever the option |
+| Methods                                                                        | Behavior                                             |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `getAll`, `getStages`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
+| `getById`, `pause`, `resume`, `getVariables`                                   | Throw a `ValidationError` — no Case App route exists |
+| Methods ending in `ForCaseApp`                                                 | Always call the Case App routes, whatever the option |
 
 Note
 
