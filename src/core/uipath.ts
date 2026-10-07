@@ -91,6 +91,7 @@ export class UiPath implements IUiPath {
   #config?: UiPathConfig;
   #authService?: AuthService;
   #initialized: boolean = false;
+  #sessionLicense?: SessionLicense;
   #partialConfig?: PartialUiPathConfig;
   // Folder key from `<meta name="uipath:folder-key">` (coded-app deployments).
   // Not a configuration field; lives here so the SDK can flow it through to
@@ -200,6 +201,7 @@ export class UiPath implements IUiPath {
         SessionStore.open() ?? new MemoryStore(),
       );
       tokenManager.onTokenChange((tokenInfo) => license.onTokenChange(tokenInfo));
+      this.#sessionLicense = license;
     }
 
     // Expose read-only config for user convenience
@@ -381,6 +383,7 @@ export class UiPath implements IUiPath {
     try {
       const success = await this.#authService!.authenticate(this.#config!);
       if (success && this.isAuthenticated()) {
+        await this.#sessionLicense?.settled();
         this.#initialized = true;
         return true;
       }

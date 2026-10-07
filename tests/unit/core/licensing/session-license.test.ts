@@ -143,50 +143,56 @@ describe('SessionLicense', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('should warn, not block, and release the claim when the acquisition fails', async () => {
+  it('should warn, not block, and keep the claim when the acquisition fails', async () => {
     post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    const license = createLicense();
 
-    expect(() => createLicense().onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID))).not.toThrow();
-    await flush();
+    expect(() => license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID))).not.toThrow();
+    await expect(license.settled()).resolves.toBeUndefined();
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not acquire a Studio Web license'),
+      expect.stringContaining('Could not provision a personal robot'),
       expect.anything()
     );
-    expect(claimFor()).toBeUndefined();
-
-    createLicense().onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
-
-    expect(post).toHaveBeenCalledTimes(2);
+    expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
   });
 
-  it('should retry on the next token refresh after a failed acquisition', async () => {
+  it('should not retry a failed acquisition on token refresh or reload until sign-out', async () => {
     post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
     const license = createLicense();
 
     license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
+    await license.settled();
+    license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    createLicense().onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    expect(post).toHaveBeenCalledTimes(1);
+
+    license.onTokenChange(undefined);
     license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
     expect(post).toHaveBeenCalledTimes(2);
-    expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
   });
 
-  it('should retry from an instance that skipped while the acquisition of another instance failed', async () => {
-    let rejectFirst!: (error: Error) => void;
-    post.mockReturnValueOnce(new Promise((_resolve, reject) => { rejectFirst = reject; }));
-    createLicense().onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    const skipped = createLicense();
-    skipped.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    expect(post).toHaveBeenCalledTimes(1);
+  it('should settle once the acquisition completes', async () => {
+    let resolvePost!: () => void;
+    post.mockReturnValueOnce(new Promise<void>((resolve) => { resolvePost = resolve; }));
+    const license = createLicense();
+    license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    let settled = false;
+    const settling = license.settled().then(() => { settled = true; });
 
-    rejectFirst(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
     await flush();
-    skipped.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
-    await flush();
+    expect(settled).toBe(false);
 
-    expect(post).toHaveBeenCalledTimes(2);
+    resolvePost();
+    await settling;
+
+    expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
+  });
+  it('should settle at once when nothing was acquired', async () => {
+    await expect(createLicense().settled()).resolves.toBeUndefined();
+
+    expect(post).not.toHaveBeenCalled();
   });
 });

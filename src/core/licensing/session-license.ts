@@ -15,6 +15,7 @@ export class SessionLicense {
   readonly #claims: KeyValueStore;
   readonly #claimKey: string;
   #userId?: string;
+  #acquisition: Promise<void> = Promise.resolve();
 
   constructor(config: UiPathConfig, apiClient: ApiClient, claims: KeyValueStore) {
     this.#apiClient = apiClient;
@@ -31,15 +32,22 @@ export class SessionLicense {
     if (userId && this.#claims.read<string>(this.#claimKey) !== userId) this.#acquire(userId);
   }
 
+  settled(): Promise<void> {
+    return this.#acquisition;
+  }
+
   #acquire(userId: string): void {
     // Claimed before the request starts, so other SDK instances on the page skip it.
+    // Kept until sign-out even when the request fails: a failure is not retried.
     this.#claims.write(this.#claimKey, userId);
-    this.#apiClient
+    this.#acquisition = this.#apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
-      .catch((error: unknown) => {
-        this.#release(userId);
-        console.warn('[UiPath SDK] Could not acquire a Studio Web license for the signed-in user', error);
-      });
+      .then(
+        () => undefined,
+        (error: unknown) => {
+          console.warn('[UiPath SDK] Could not provision a personal robot for the signed-in user', error);
+        },
+      );
   }
 
   #release(userId: string): void {

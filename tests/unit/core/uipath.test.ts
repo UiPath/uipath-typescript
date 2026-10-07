@@ -6,6 +6,7 @@ import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
 import { SessionLicense } from '../../../src/core/licensing/session-license';
+import { AuthService } from '../../../src/core/auth/service';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
@@ -566,6 +567,23 @@ describe('UiPath Core', () => {
       expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
     });
 
+    it('should complete the OAuth sign-in only after the license acquisition settles', async () => {
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      const sdk = new UiPath(oauthConfig);
+      let settleLicense!: () => void;
+      vi.mocked(vi.mocked(SessionLicense).mock.instances[0].settled).mockReturnValue(
+        new Promise<void>((resolve) => { settleLicense = resolve; })
+      );
+
+      const completing = sdk.completeOAuth();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(sdk.isInitialized()).toBe(false);
+
+      settleLicense();
+
+      await expect(completing).resolves.toBe(true);
+      expect(sdk.isInitialized()).toBe(true);
+    });
     it('should not subscribe a session license when the SDK holds its own credential', () => {
       void new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
