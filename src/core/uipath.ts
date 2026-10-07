@@ -17,7 +17,10 @@ import {
 } from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
-import { acquireLicenseOnSignIn } from './licensing/session-license';
+import { SessionLicense } from './licensing/session-license';
+import { ApiClient } from './http/api-client';
+import { SessionStore } from '../utils/storage/session-store';
+import { MemoryStore } from '../utils/storage/memory-store';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
 
 /**
@@ -180,17 +183,23 @@ export class UiPath implements IUiPath {
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
     // values) and live here on the runtime registry instead.
+    const tokenManager = this.#authService.getTokenManager();
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager: this.#authService.getTokenManager(),
+      tokenManager: tokenManager,
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
     });
 
     if (!hasSecretAuth) {
-      acquireLicenseOnSignIn(internalConfig, executionContext, this.#authService.getTokenManager());
+      const license = new SessionLicense(
+        internalConfig,
+        new ApiClient(internalConfig, executionContext, tokenManager),
+        SessionStore.open() ?? new MemoryStore(),
+      );
+      tokenManager.onTokenChange((tokenInfo) => license.onTokenChange(tokenInfo));
     }
 
     // Expose read-only config for user convenience

@@ -5,7 +5,10 @@ import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
-import { acquireLicenseOnSignIn } from '../../../src/core/licensing/session-license';
+import { SessionLicense } from '../../../src/core/licensing/session-license';
+import { ApiClient } from '../../../src/core/http/api-client';
+import { MemoryStore } from '../../../src/utils/storage/memory-store';
+import type { TokenInfo } from '../../../src/core/auth/types';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 import { functionContext } from '../../utils/function-context';
@@ -16,6 +19,7 @@ const mockTokenManager = {
   getToken: () => 'mock-access-token',
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
+  onTokenChange: vi.fn(),
 };
 
 const mockLogout = vi.fn();
@@ -532,28 +536,37 @@ describe('UiPath Core', () => {
     };
 
     beforeEach(() => {
-      vi.mocked(acquireLicenseOnSignIn).mockClear();
+      vi.mocked(SessionLicense).mockClear();
+      mockTokenManager.onTokenChange.mockClear();
     });
 
     afterEach(() => {
       mockPlatform.isInActionCenter = false;
     });
 
-    it('should acquire the license on sign-in for a coded app that signs its user in', () => {
+    it('should feed token changes to a session license for a coded app that signs its user in', () => {
       const sdk = new UiPath(oauthConfig);
 
-      expect(acquireLicenseOnSignIn).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), getContext(sdk), getTokenManager(sdk));
+      expect(SessionLicense).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), expect.any(ApiClient), expect.any(MemoryStore));
+      expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
+
+      const [listener] = mockTokenManager.onTokenChange.mock.calls[0];
+      const tokenInfo: TokenInfo = { token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, type: 'oauth' };
+      listener(tokenInfo);
+
+      expect(vi.mocked(SessionLicense).mock.instances[0].onTokenChange).toHaveBeenCalledWith(tokenInfo);
     });
 
-    it('should acquire the license on sign-in for a coded app whose host supplies the user token', () => {
+    it('should feed token changes to a session license for a coded app whose host supplies the user token', () => {
       mockPlatform.isInActionCenter = true;
 
-      const sdk = new UiPath(oauthConfig);
+      void new UiPath(oauthConfig);
 
-      expect(acquireLicenseOnSignIn).toHaveBeenCalledExactlyOnceWith(getConfig(sdk), getContext(sdk), getTokenManager(sdk));
+      expect(SessionLicense).toHaveBeenCalledTimes(1);
+      expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
     });
 
-    it('should not acquire the license when the SDK holds its own credential', () => {
+    it('should not subscribe a session license when the SDK holds its own credential', () => {
       void new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
@@ -561,16 +574,17 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
       });
 
-      expect(acquireLicenseOnSignIn).not.toHaveBeenCalled();
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
     });
 
-    it('should not acquire the license inside a coded function', () => {
+    it('should not subscribe a session license inside a coded function', () => {
       void new UiPath(functionContext());
 
-      expect(acquireLicenseOnSignIn).not.toHaveBeenCalled();
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
     });
   });
-
   describe('Telemetry', () => {
     let initializeSpy: ReturnType<typeof vi.spyOn>;
 
