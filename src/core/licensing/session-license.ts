@@ -9,7 +9,7 @@ import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
-const ACQUIRE_TIMEOUT_MS = 3_000;
+const ACQUIRE_TIMEOUT_MS = 5_000;
 
 export class SessionLicense {
   readonly #apiClient: ApiClient;
