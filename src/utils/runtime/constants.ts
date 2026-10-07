@@ -21,6 +21,9 @@ export enum UiPathMetaTags {
   // Folder context (injected during coded-app deployment)
   FOLDER_KEY = 'uipath:folder-key',
 
+  // Public (anonymous) coded apps: injected at deploy only for public apps; its presence switches the SDK to public mode.
+  APP_KEY = 'uipath:app-key',
+
 }
 
 /**

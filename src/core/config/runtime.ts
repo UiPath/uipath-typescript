@@ -38,6 +38,7 @@ export function loadFromMetaTags(): MetaTagConfig | null {
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),
     folderKey: getMetaTagContent(UiPathMetaTags.FOLDER_KEY),
+    appKey: getMetaTagContent(UiPathMetaTags.APP_KEY),
   };
 
   const hasAnyValue = Object.values(config).some(Boolean);

@@ -23,6 +23,19 @@ describe('ErrorResponseParser Unit Tests', () => {
       expect(result.requestId).toBe(ERROR_PARSER_TEST_CONSTANTS.ORCHESTRATOR_TRACE_ID);
     });
 
+    it('should keep a plain { message } body as the message, even with no status text', async () => {
+      // The Apps service's public app routes answer `{ message }`; over HTTP/2 there is no status text to fall back on.
+      const response = new Response(JSON.stringify({ message: "This app isn't allowed to upload to the \"Uploads\" bucket." }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      });
+
+      const result = await errorResponseParser.parse(response);
+
+      expect(result.message).toBe("This app isn't allowed to upload to the \"Uploads\" bucket.");
+      expect(result.code).toBe('403');
+    });
+
     it('should preserve a non-JSON error body in responseText', async () => {
       // Blob storage answers with XML, not JSON. Parsing the response directly
       // consumes the body, leaving nothing for the fallback to read — so the

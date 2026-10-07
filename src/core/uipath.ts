@@ -2,8 +2,9 @@ import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
-import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage } from './config/config-utils';
+import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig, isPublicMode } from './config/sdk-config';
+import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage, hasRequiredBaseFields } from './config/config-utils';
+import { PublicAppClient } from './http/public-app-client';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
@@ -143,7 +144,8 @@ export class UiPath implements IUiPath {
     // override the ambient execution-context environment contract.
     const mergedConfig = UiPath.#mergeConfigSources(configFromMetaTags, resolved);
 
-    if (mergedConfig && isCompleteConfig(mergedConfig)) {
+    // Public (anonymous) mode is complete without OAuth/secret: the Apps service holds the app's identity.
+    if (mergedConfig && (isCompleteConfig(mergedConfig) || (isPublicMode(mergedConfig) && hasRequiredBaseFields(mergedConfig)))) {
       this.#initializeWithConfig(mergedConfig);
     } else {
       if (resolved) {
@@ -155,26 +157,36 @@ export class UiPath implements IUiPath {
     }
   }
 
-  #initializeWithConfig(config: UiPathSDKConfig): void {
+  #initializeWithConfig(config: PartialUiPathConfig): void {
+    const publicMode = isPublicMode(config);
     const hasSecretAuth = hasSecretConfig(config);
-    const hasOAuthAuth = hasOAuthConfig(config);
+    // A public app's page still carries its OAuth meta tags; they must not start a sign-in.
+    const hasOAuthAuth = !publicMode && hasOAuthConfig(config);
 
     // Initialize core components
     const internalConfig = new UiPathConfig({
-      baseUrl: normalizeBaseUrl(config.baseUrl),
-      orgName: config.orgName,
-      tenantName: config.tenantName,
+      baseUrl: normalizeBaseUrl(config.baseUrl!),
+      orgName: config.orgName!,
+      tenantName: config.tenantName!,
       organizationId: config.organizationId,
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
       scope: hasOAuthAuth ? config.scope : undefined,
       enforceSso: config.enforceSso,
+      appKey: config.appKey,
     });
 
     const executionContext = new ExecutionContext();
+    // AuthService is safe without creds (no token manager work happens until a call
+    // needs one, which public-mode services never do — they call the Apps service).
     this.#authService = new AuthService(internalConfig, executionContext);
     this.#config = internalConfig;
+
+    // In public mode, build the client the supported services call the Apps service through.
+    const publicAppClient = publicMode
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!)
+      : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
@@ -186,6 +198,7 @@ export class UiPath implements IUiPath {
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
+      publicAppClient,
     });
 
     // Expose read-only config for user convenience
@@ -307,6 +320,12 @@ export class UiPath implements IUiPath {
 
     // For secret-based auth, it's already initialized in constructor
     if (hasSecretConfig(this.#config!)) {
+      return;
+    }
+
+    // Public mode has no user to sign in: the Apps service holds the app's identity.
+    if (isPublicMode(this.#config!)) {
+      this.#initialized = true;
       return;
     }
 

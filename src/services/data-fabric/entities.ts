@@ -56,6 +56,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
+import { DEFAULT_PAGE_SIZE } from '../../utils/pagination/constants';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints';
 import { FOLDER_KEY, RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
@@ -187,6 +188,18 @@ function unwrapEntityRef(entityRef: EntityRef, callerLabel: string): { byId: boo
 }
 
 /**
+ * A public app reaches an entity through the app's binding, which the Apps service resolves (overrides included),
+ * so it takes the design-time name as is and never an id.
+ */
+function publicEntityName(entityRef: EntityRef, callerLabel: string): string {
+  const { name } = (entityRef ?? {}) as { name?: string };
+  if (!name) {
+    throw new ValidationError({ message: `${callerLabel}: a public app reaches an entity by its binding name (\`{ name }\`), not by id.` });
+  }
+  return name;
+}
+
+/**
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
@@ -221,6 +234,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
+    if (this.publicApp) {
+      return this.getPublicAppRecords(entityName, options) as any;
+    }
     return this.getRecordsImpl<T>(false, applyEntityNameOverride(entityName), options);
   }
 
@@ -239,11 +255,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
     recordId: string,
     options: EntityGetRecordByNameOptions = {}
   ): Promise<EntityRecord> {
+    if (this.publicApp) {
+      return (await this.publicApp.getRecord(entityName, recordId)) as EntityRecord;
+    }
     return this.getRecordImpl(false, applyEntityNameOverride(entityName), recordId, options);
   }
 
   @track('Entities.InsertRecord')
   async insertRecord(entityRef: EntityRef, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+    if (this.publicApp) {
+      return (await this.publicApp.insertRecord(publicEntityName(entityRef, 'Entities.insertRecord'), data)) as EntityInsertResponse;
+    }
     const { byId, identifier } = unwrapEntityRef(entityRef, 'Entities.insertRecord');
     return this.insertRecordImpl(byId, identifier, data, options);
   }
@@ -1164,6 +1186,36 @@ export class EntityService extends BaseService implements EntityServiceModel {
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
     }, downstreamOptions);
+  }
+
+  // Public apps can only list a shared entity. Offset paging maps onto the Apps service's start/limit.
+  private async getPublicAppRecords(
+    entityName: string,
+    options?: EntityGetAllRecordsOptions,
+  ): Promise<PaginatedResponse<EntityRecord> | NonPaginatedResponse<EntityRecord>> {
+    const { pageSize, jumpToPage, cursor } = (options ?? {}) as { pageSize?: number; jumpToPage?: number; cursor?: { value: string } };
+    const paginated = pageSize !== undefined || jumpToPage !== undefined || cursor !== undefined;
+    const limit = pageSize ?? (paginated ? DEFAULT_PAGE_SIZE : undefined);
+    const start = cursor ? Number(cursor.value) : jumpToPage && limit ? (jumpToPage - 1) * limit : undefined;
+    const body = (await this.publicApp!.listRecords(entityName, { start, limit })) as { value?: EntityRecord[]; totalRecordCount?: number } | undefined;
+    const items = body?.value ?? [];
+    const totalCount = body?.totalRecordCount;
+    if (!paginated) {
+      return { items, totalCount };
+    }
+    const offset = start ?? 0;
+    const nextOffset = offset + items.length;
+    const hasNextPage = totalCount !== undefined ? nextOffset < totalCount : items.length === limit;
+    return {
+      items,
+      totalCount,
+      hasNextPage,
+      nextCursor: hasNextPage ? { value: String(nextOffset) } : undefined,
+      previousCursor: offset > 0 ? { value: String(Math.max(0, offset - limit!)) } : undefined,
+      currentPage: Math.floor(offset / limit!) + 1,
+      totalPages: totalCount !== undefined ? Math.ceil(totalCount / limit!) : undefined,
+      supportsPageJump: true,
+    };
   }
 
   private async getRecordImpl(
