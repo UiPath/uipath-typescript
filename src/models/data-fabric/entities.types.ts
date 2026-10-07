@@ -1,6 +1,6 @@
 import { PaginationOptions } from "../../utils/pagination/types";
 import { ResourceRef } from "../common/types";
-import { EntityFolderScopedOptions } from "./data-fabric.types";
+import { EntityFolderScopedOptions, EntityPublicAppOptions } from "./data-fabric.types";
 
 // Re-export — canonical definition is in `./data-fabric.types`.
 export type { EntityFolderScopedOptions };
@@ -82,7 +82,7 @@ export type EntityGetRecordsByIdOptions = {
 /**
  * Options for getting all records of an entity
  */
-export type EntityGetAllRecordsOptions = EntityGetRecordsByIdOptions;
+export type EntityGetAllRecordsOptions = EntityGetRecordsByIdOptions & EntityPublicAppOptions;
 
 /**
  * Options for getting a single entity record by entity ID and record ID
@@ -95,7 +95,7 @@ export interface EntityGetRecordByIdOptions extends EntityFolderScopedOptions {
 /**
  * Options for getting a single entity record by entity name and record ID
  */
-export interface EntityGetRecordByNameOptions extends EntityGetRecordByIdOptions {}
+export interface EntityGetRecordByNameOptions extends EntityGetRecordByIdOptions, EntityPublicAppOptions {}
 
 /**
  * Common options for entity operations that modify multiple records
@@ -119,7 +119,7 @@ export interface EntityInsertOptions extends EntityFolderScopedOptions {
 /**
  * Options for inserting a single record into an entity
  */
-export interface EntityInsertRecordOptions extends EntityInsertOptions {}
+export interface EntityInsertRecordOptions extends EntityInsertOptions, EntityPublicAppOptions {}
 
 /**
  * Options for batch inserting data into an entity

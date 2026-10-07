@@ -25,6 +25,7 @@ import { track } from '../../../core/telemetry';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { resolveOverride } from '../../../utils/overrides/resolve-override';
 import { ValidationError } from '../../../core/errors';
+import { publicBindingKey } from '../../../core/http/public-app-client';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -83,6 +84,10 @@ export class ProcessService extends FolderScopedService implements ProcessServic
       throw new ValidationError({
         message: 'Processes.start: first argument must be a ProcessRef (`{ name }` or `{ key }`) or a ProcessStartRequest (`{ processKey }` or `{ processName }`).',
       });
+    }
+
+    if (this.publicApp) {
+      return this.startAsPublicApp(firstArg, optionsOrFolderId);
     }
 
     let folderId: number | undefined;
@@ -172,6 +177,32 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     );
 
     return transformedProcess;
+  }
+
+  // The Apps service starts the job as the app, resolving the process from the app's binding, so only the binding
+  // key and the input arguments go over the wire. A process key names a release, which a public app can't reach.
+  private async startAsPublicApp(
+    firstArg: ProcessRef | ProcessStartRequest,
+    optionsOrFolderId?: ProcessStartRefOptions | ProcessStartOptions | number,
+  ): Promise<ProcessStartResponse[]> {
+    const options = typeof optionsOrFolderId === 'object' ? optionsOrFolderId : undefined;
+    const name = isProcessRef(firstArg) ? (firstArg as ProcessRef).name : (firstArg as ProcessStartRequest).processName;
+    if (!name) {
+      throw new ValidationError({
+        message: 'Processes.start: a public app starts a process by its binding name (`{ name }`), not by key.',
+      });
+    }
+    const inputArguments = isProcessRef(firstArg)
+      ? (options as ProcessStartRefOptions | undefined)?.inputArguments
+      : (firstArg as ProcessStartRequest).inputArguments;
+
+    const started = (await this.publicApp!.startProcess(
+      publicBindingKey(name, options?.folderPath),
+      inputArguments,
+    )) as CollectionResponse<ProcessStartResponse> | undefined;
+    return (started?.value ?? []).map(process =>
+      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
+    );
   }
 
   @track('Processes.GetById')

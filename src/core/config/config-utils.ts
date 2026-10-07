@@ -20,7 +20,7 @@ const HTTP_PROTOCOLS = new Set(['http:', 'https:']);
 /**
  * Check if config has all required base fields
  */
-function hasRequiredBaseFields(config: PartialUiPathConfig): boolean {
+export function hasRequiredBaseFields(config: PartialUiPathConfig): boolean {
   return Boolean(config.baseUrl && config.orgName && config.tenantName);
 }
 

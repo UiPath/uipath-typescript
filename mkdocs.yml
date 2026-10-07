@@ -246,6 +246,7 @@ nav:
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md
+      - Public Apps: coded-apps/public-apps.md
       - CI/CD:
         - GitHub Actions: coded-apps/ci-cd-github-actions.md
   - Coded Action Apps:
