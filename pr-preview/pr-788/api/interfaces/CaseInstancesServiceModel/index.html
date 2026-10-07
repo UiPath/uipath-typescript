@@ -4379,15 +4379,49 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
 <h3 id="case-app-routes-experimental">Case App routes (experimental)<a class="headerlink" href="#case-app-routes-experimental" title="Permanent link">&para;</a></h3>
-<p>Create the service with <code>{ useCaseAppRoutes: true }</code> to authorize by the caller's Case persona
-grants rather than Orchestrator folder permissions. This needs a user token for a user holding
-Case persona grants; PAT and client-credentials tokens are rejected. In this mode <code>getAll</code> needs
-a <code>folderKey</code>, and <code>getById</code>, <code>pause</code>, <code>resume</code> and <code>getVariables</code> throw, having no Case App
-route. Instances returned by <code>getAll</code> keep using the Case App routes. Methods ending in
-<code>ForCaseApp</code> call the Case App routes in either mode.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseApp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useCaseAppRoutes</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseApp</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Preview: Case App routes are experimental and may change or be removed in future releases.</p>
+</div>
+<p>Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder
+permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.</p>
+<p><strong>Requirements</strong></p>
+<ul>
+<li>A user token for a user holding Case persona grants. PAT and client-credentials tokens are rejected.</li>
+<li><code>folderKey</code> on <code>getAll</code>, since Case App routes list one folder at a time.</li>
+</ul>
+<p><strong>Enable</strong> by creating the service with <code>{ useCaseAppRoutes: true }</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/cases&#39;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">caseApp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">CaseInstances</span><span class="p">(</span><span class="nx">sdk</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useCaseAppRoutes</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">items</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseApp</span><span class="p">.</span><span class="nx">getAll</span><span class="p">({</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1">// Bound methods on returned instances keep using Case App routes</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">await</span><span class="w"> </span><span class="nx">items</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">close</span><span class="p">({</span><span class="w"> </span><span class="nx">comment</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Resolved&#39;</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
+<p><strong>Method behavior with <code>useCaseAppRoutes: true</code></strong></p>
+<table>
+<thead>
+<tr>
+<th>Methods</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>getAll</code>, <code>getCaseJson</code>, <code>close</code>, <code>reopen</code>, <code>sendMessage</code>, <code>getExecutionHistory</code></td>
+<td>Call the Case App routes</td>
+</tr>
+<tr>
+<td><code>getById</code>, <code>pause</code>, <code>resume</code>, <code>getVariables</code></td>
+<td>Throw a <code>ValidationError</code> — no Case App route exists</td>
+</tr>
+<tr>
+<td>Methods ending in <code>ForCaseApp</code></td>
+<td>Always call the Case App routes, whatever the option</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Methods that rely on the Insights Real-Time Monitoring service (<code>getSlaSummary</code>, <code>getStagesSlaSummary</code>)

@@ -6121,12 +6121,36 @@ const allInstances = await caseInstances.getAll();
 
 ### Case App routes (experimental)
 
-Create the service with `{ useCaseAppRoutes: true }` to authorize by the caller's Case persona grants rather than Orchestrator folder permissions. This needs a user token for a user holding Case persona grants; PAT and client-credentials tokens are rejected. In this mode `getAll` needs a `folderKey`, and `getById`, `pause`, `resume` and `getVariables` throw, having no Case App route. Instances returned by `getAll` keep using the Case App routes. Methods ending in `ForCaseApp` call the Case App routes in either mode.
+Warning
+
+Preview: Case App routes are experimental and may change or be removed in future releases.
+
+Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.
+
+**Requirements**
+
+- A user token for a user holding Case persona grants. PAT and client-credentials tokens are rejected.
+- `folderKey` on `getAll`, since Case App routes list one folder at a time.
+
+**Enable** by creating the service with `{ useCaseAppRoutes: true }`:
 
 ```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
 const caseApp = new CaseInstances(sdk, { useCaseAppRoutes: true });
 const { items } = await caseApp.getAll({ folderKey: '<folderKey>' });
+
+// Bound methods on returned instances keep using Case App routes
+await items[0].close({ comment: 'Resolved' });
 ```
+
+**Method behavior with `useCaseAppRoutes: true`**
+
+| Methods                                                                          | Behavior                                             |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `getAll`, `getCaseJson`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
+| `getById`, `pause`, `resume`, `getVariables`                                     | Throw a `ValidationError` — no Case App route exists |
+| Methods ending in `ForCaseApp`                                                   | Always call the Case App routes, whatever the option |
 
 Note
 
