@@ -2,6 +2,8 @@
  * Conversational Agent test constants used across agent and conversation tests
  */
 
+import { PackageType } from '../../../src/models/conversational-agent/agents/agents.types';
+
 export const CONVERSATIONAL_AGENT_TEST_CONSTANTS = {
   // Agent identifiers
   AGENT_ID: 456,
@@ -10,6 +12,8 @@ export const CONVERSATIONAL_AGENT_TEST_CONSTANTS = {
   AGENT_PROCESS_VERSION: '1.0.0',
   AGENT_PROCESS_KEY: 'test-process-key',
   AGENT_FEED_ID: 'test-feed-id',
+  AGENT_PROCESS_TYPE: PackageType.Agent,
+  FLOW_PROCESS_TYPE: PackageType.Flow,
 
   // Agent appearance
   WELCOME_TITLE: 'Welcome!',
