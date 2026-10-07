@@ -50,7 +50,7 @@ describe('SessionLicense', () => {
     vi.clearAllMocks();
   });
 
-  it('should acquire once when a user signs in, retrying the idempotent POST', async () => {
+  it('should acquire once when a user signs in, retrying the idempotent POST with a per-attempt timeout', async () => {
     createLicense().onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
     await flush();
 
@@ -58,7 +58,7 @@ describe('SessionLicense', () => {
     expect(post).toHaveBeenCalledWith(
       STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE,
       undefined,
-      { retry: expect.objectContaining({ retryMethods: ['POST'] }) }
+      { retry: expect.objectContaining({ retryMethods: ['POST'] }), timeoutMs: expect.any(Number) }
     );
     expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
   });

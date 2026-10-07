@@ -9,6 +9,7 @@ import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
 /** AcquireLicense is idempotent, so the POST is safe to repeat. */
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
+const ACQUIRE_TIMEOUT_MS = 3_000;
 
 export class SessionLicense {
   readonly #apiClient: ApiClient;
@@ -41,7 +42,7 @@ export class SessionLicense {
     // Kept until sign-out even when the request fails: a failure is not retried.
     this.#claims.write(this.#claimKey, userId);
     this.#acquisition = this.#apiClient
-      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY })
+      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY, timeoutMs: ACQUIRE_TIMEOUT_MS })
       .then(
         () => undefined,
         (error: unknown) => {
