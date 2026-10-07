@@ -129,6 +129,48 @@ describe('UiPath Core', () => {
     });
   });
 
+  describe('Public mode', () => {
+    // A deployed public app's page carries both its app key and its OAuth meta tags.
+    const publicPage = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'OR.Jobs',
+      appKey: 'uapp_key',
+    };
+
+    it('drops the OAuth credentials when an app key is present', () => {
+      const config = getConfig(new UiPath(publicPage));
+
+      expect(config.appKey).toBe('uapp_key');
+      expect(config.clientId).toBeUndefined();
+      expect(config.scope).toBeUndefined();
+    });
+
+    it('initializes without starting a sign-in', async () => {
+      const authenticate = vi.fn();
+      vi.mocked(AuthService).mockImplementationOnce(function () {
+        return {
+          getTokenManager: () => mockTokenManager,
+          hasValidToken: () => false,
+          getToken: () => undefined,
+          authenticateWithSecret: vi.fn(),
+          authenticate,
+          setMultiLogin: vi.fn(),
+          logout: vi.fn(),
+        };
+      } as any);
+
+      const sdk = new UiPath(publicPage);
+      await sdk.initialize();
+
+      expect(authenticate).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
+    });
+  });
+
   describe('Secret-based Authentication', () => {
     let sdk: UiPath;
 
@@ -789,6 +831,14 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
       });
+
+      expect(SessionLicense).not.toHaveBeenCalled();
+      expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
+    });
+
+    it('should not subscribe a session license for a public app', () => {
+      const sdk = new UiPath({ ...oauthConfig, appKey: 'uapp_key' });
 
       expect(SessionLicense).not.toHaveBeenCalled();
       expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();

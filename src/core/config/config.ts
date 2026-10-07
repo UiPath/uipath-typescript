@@ -10,6 +10,7 @@ export const ConfigSchema = z.object({
   redirectUri: z.string().url().optional(),
   scope: z.string().optional(),
   enforceSso: z.boolean().optional(),
+  appKey: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -24,6 +25,7 @@ interface ConfigOptions {
   redirectUri?: string;
   scope?: string;
   enforceSso?: boolean;
+  appKey?: string;
 }
 
 export class UiPathConfig {
@@ -37,6 +39,8 @@ export class UiPathConfig {
   public readonly redirectUri?: string;
   public readonly scope?: string;
   public readonly enforceSso?: boolean;
+  /** Names the app to the Apps service in public mode; its presence is what turns public mode on. */
+  public readonly appKey?: string;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -48,6 +52,7 @@ export class UiPathConfig {
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
     this.enforceSso = options.enforceSso;
+    this.appKey = options.appKey;
   }
 }
 

@@ -1,5 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
 import { ValidationError, HttpStatus } from '../../../core/errors';
+import { publicBindingKey } from '../../../core/http/public-app-client';
 import {
   BucketGetResponse,
   BucketGetAllOptions,
@@ -259,6 +260,17 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
     if (!resolvedContent) {
       throw new ValidationError({ message: 'content is required for uploadFile' });
+    }
+
+    // A public app uploads through the Apps service, which resolves the bucket from the app's binding and picks the
+    // stored path itself, so the file can only ever be added, never overwrite another.
+    if (this.publicApp) {
+      const name = typeof bucketIdOrRef === 'object' ? bucketIdOrRef.name : undefined;
+      if (!name) {
+        throw new ValidationError({ message: 'Buckets.uploadFile: a public app uploads to a bucket by its binding name (`{ name }`), not by id.' });
+      }
+      const { path: storedPath } = await this.publicApp.uploadFile(publicBindingKey(name, folderPath), resolvedPath, resolvedContent);
+      return { success: true, statusCode: 200, path: storedPath };
     }
 
     const { id: bucketId, effectiveFolder } = await this.resolveBucketRef(
