@@ -198,6 +198,8 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 ## Document Understanding
 
+Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
+
 | Method | OAuth Scope |
 |--------|-------------|
 | `startExtractionValidation()` | `Du.Validation.Api` |
@@ -237,6 +239,10 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Functions
+
+Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
+
+Before running the function, `invoke()` also acquires a Studio Web license for the calling user. That call requires a valid Orchestrator token but no scope of its own, so it adds nothing to the table below.
 
 | Method | OAuth Scope |
 |--------|-------------|
