@@ -1757,6 +1757,8 @@
       
         
       
+        
+      
     
     
     
@@ -1898,6 +1900,34 @@
     
   
     Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -4205,7 +4235,7 @@ Insights-, or template-enabled entities and non-Legacy/Native classes are not cl
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">job</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">entities</span><span class="p">.</span><span class="nx">clone</span><span class="p">({</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">scopeType</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityCloneScopeType.Tenant</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">scopeType</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityCloneScopeType.Folder</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;targetFolderId&gt;&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">scopeType</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityCloneScopeType.Folder</span><span class="p">,</span><span class="w"> </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;&lt;targetFolderKey&gt;&quot;</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nx">entityIds</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&lt;rootEntityId&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&lt;choiceSetId&gt;&quot;</span><span class="p">],</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nx">options</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">mode</span><span class="o">:</span><span class="w"> </span><span class="kt">EntityCloneMode.SchemaAndData</span><span class="w"> </span><span class="p">},</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">});</span>
