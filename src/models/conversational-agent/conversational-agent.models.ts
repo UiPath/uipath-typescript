@@ -324,6 +324,7 @@ export interface ConversationalAgentServiceModel {
    *   selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
    * });
    * ```
+   * @internal
    */
   updateConnectionSelections(
     agentId: number,
@@ -347,6 +348,7 @@ export interface ConversationalAgentServiceModel {
    * const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
    * if (url) window.open(url, '_blank');
    * ```
+   * @internal
    */
   getAddConnectionUrl(item: { connectorKey: string; connectionsUrl?: string; configurationUrl?: string }): Promise<string | null>;
 

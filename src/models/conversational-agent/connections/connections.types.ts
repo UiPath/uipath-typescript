@@ -74,6 +74,7 @@ export type AvailableConnectionsResponse = AvailableConnectionsItem[];
 
 /**
  * A single connection selection mapping a connector to a chosen connection
+ * @internal
  */
 export interface ConnectionSelection {
   /** Connector key to update */
@@ -84,6 +85,7 @@ export interface ConnectionSelection {
 
 /**
  * Request body for updating the user's connection selections
+ * @internal
  */
 export interface UpdateConnectionSelectionsRequest {
   /** List of connection selections to apply */

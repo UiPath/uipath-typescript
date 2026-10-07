@@ -221,8 +221,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
-| `updateConnectionSelections()` | `OR.Execution`, `IS.Connections.Read` |
-| `getAddConnectionUrl()` | `OR.Execution` or `OR.Execution.Read` |
 
 ### User Settings
 
