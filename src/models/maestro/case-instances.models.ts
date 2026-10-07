@@ -73,7 +73,7 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  *
  * | Methods | Behavior |
  * | --- | --- |
- * | `getAll`, `getCaseJson`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes |
+ * | `getAll`, `getStages`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes |
  * | `getById`, `pause`, `resume`, `getVariables` | Throw a `ValidationError` — no Case App route exists |
  * | Methods ending in `ForCaseApp` | Always call the Case App routes, whatever the option |
  *
