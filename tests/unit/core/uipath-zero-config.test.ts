@@ -13,7 +13,12 @@ vi.mock('@/core/auth/service', () => {
   const AuthService = Object.assign(
     vi.fn().mockImplementation(function () {
       return {
-        getTokenManager: () => ({ getToken: () => 'token', hasValidToken: () => true, destroy: vi.fn() }),
+        getTokenManager: () => ({
+          getToken: () => 'token',
+          hasValidToken: () => true,
+          destroy: vi.fn(),
+          onTokenChange: vi.fn(),
+        }),
         hasValidToken: () => true,
         authenticateWithSecret: vi.fn(),
         authenticate: vi.fn().mockResolvedValue(true),

@@ -27,10 +27,17 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
 import { ElementExecutionsApiResponse, TraceSpan } from '../../../models/maestro/process-instances.internal-types';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
+  constructor(instance: IUiPath) {
+    const { sessionLicense } = SDKInternalsRegistry.get(instance);
+    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+  }
+
   @track('ProcessInstances.GetAll')
   async getAll<T extends ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllWithPaginationOptions>(
     options?: T

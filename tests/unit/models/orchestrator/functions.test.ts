@@ -13,7 +13,6 @@ describe('Function Models Unit Tests', () => {
     mockService = {
       getAll: vi.fn(),
       invoke: vi.fn(),
-      acquireLicense: vi.fn(),
     };
   });
 

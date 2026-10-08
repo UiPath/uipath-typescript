@@ -1,5 +1,6 @@
 import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
 import {
   CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
@@ -61,7 +62,8 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
   constructor(instance: IUiPath) {
-    super(instance);
+    const { sessionLicense } = SDKInternalsRegistry.get(instance);
+    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
     this.taskService = new TaskService(instance);
   }
 

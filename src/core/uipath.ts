@@ -17,6 +17,10 @@ import {
 } from './config/function-context';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
+import { SessionLicense } from './licensing/session-license';
+import { ApiClient } from './http/api-client';
+import { SessionStore } from '../utils/storage/session-store';
+import { MemoryStore } from '../utils/storage/memory-store';
 import { hostEmbeddingOrigin } from './auth/host-token-request';
 
 /**
@@ -176,16 +180,25 @@ export class UiPath implements IUiPath {
     this.#authService = new AuthService(internalConfig, executionContext);
     this.#config = internalConfig;
 
+    const tokenManager = this.#authService.getTokenManager();
+    const sessionLicense = hasSecretAuth ? undefined : new SessionLicense(
+      internalConfig,
+      new ApiClient(internalConfig, executionContext, tokenManager),
+      SessionStore.open() ?? new MemoryStore(),
+    );
+    if (sessionLicense) tokenManager.onTokenChange((tokenInfo) => sessionLicense.onTokenChange(tokenInfo));
+
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
     // values) and live here on the runtime registry instead.
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager: this.#authService.getTokenManager(),
+      tokenManager: tokenManager,
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
+      sessionLicense,
     });
 
     // Expose read-only config for user convenience

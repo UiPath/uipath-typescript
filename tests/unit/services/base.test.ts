@@ -103,6 +103,17 @@ describe('BaseService Unit Tests', () => {
       expect(clientConfig).toEqual({ headers });
     });
 
+    it('should pass a wait for every request through to the ApiClient', () => {
+      vi.mocked(ApiClient).mockClear();
+      const beforeSend = vi.fn().mockResolvedValue(undefined);
+
+      const held = new TestableBaseService(instance, undefined, beforeSend);
+      expect(held).toBeDefined();
+
+      const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
+      expect(clientConfig).toEqual({ beforeSend });
+    });
+
     it('should throw when constructed with an instance not registered in SDKInternalsRegistry', () => {
       const unknownInstance = {} as IUiPath;
       expect(() => new TestableBaseService(unknownInstance)).toThrow(
