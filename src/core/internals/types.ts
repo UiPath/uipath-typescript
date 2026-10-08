@@ -7,6 +7,7 @@ import { UiPathConfig } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from '../auth/token-manager';
 import type { OrganizationIdResolver } from '../organization/organization-id-resolver';
+import type { SessionLicense } from '../licensing/session-license';
 
 /**
  * Private SDK components used by services.
@@ -36,6 +37,7 @@ export interface PrivateSDK {
    * Orchestrator needs it to hand a queue item to the function's robot.
    */
   robotKey?: string;
+  sessionLicense?: SessionLicense;
   /**
    * Organization GUID resolver, created lazily by
    * `SDKInternalsRegistry.getOrganizationIdResolver()` and cached here so every

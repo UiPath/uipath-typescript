@@ -33,6 +33,8 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
@@ -59,6 +61,11 @@ const EXTERNAL_REFERENCE_RE =
 export class FunctionService extends FolderScopedService implements FunctionServiceModel {
   /** Folder ID → folder key (GUID); folder keys are immutable, so cache hits stay valid. */
   private readonly folderKeyCache = new Map<number, string>();
+
+  constructor(instance: IUiPath) {
+    const { sessionLicense } = SDKInternalsRegistry.get(instance);
+    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+  }
 
   @track('Functions.GetAll')
   async getAll<T extends FunctionGetAllOptions = FunctionGetAllOptions>(

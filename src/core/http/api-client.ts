@@ -12,6 +12,7 @@ import { DEFAULT_API_CLIENT_RETRY, resolveRetryOptions } from '../../utils/http/
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
+  beforeSend?: () => Promise<void>;
 }
 
 export class ApiClient {
@@ -74,6 +75,7 @@ export class ApiClient {
     // the request method.
     const isBodyless = isFormData || method === 'GET' || method === 'HEAD';
     const defaultHeaders = await this.getDefaultHeaders(!isBodyless);
+    await this.clientConfig.beforeSend?.();
 
     const traceId = crypto.randomUUID().replace(/-/g, '');
     const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);

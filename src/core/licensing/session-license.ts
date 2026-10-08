@@ -16,7 +16,7 @@ export class SessionLicense {
   readonly #claims: KeyValueStore;
   readonly #claimKey: string;
   #userId?: string;
-  #acquisition: Promise<void> = Promise.resolve();
+  #acquisition?: Promise<void>;
 
   constructor(config: UiPathConfig, apiClient: ApiClient, claims: KeyValueStore) {
     this.#apiClient = apiClient;
@@ -29,26 +29,29 @@ export class SessionLicense {
     if (userId !== this.#userId) {
       if (this.#userId) this.#release(this.#userId);
       this.#userId = userId;
+      this.#acquisition = undefined;
     }
-    if (userId && this.#claims.read<string>(this.#claimKey) !== userId) this.#acquire(userId);
   }
 
-  settled(): Promise<void> {
+  ensure(): Promise<void> {
+    const userId = this.#userId;
+    if (!userId) return Promise.resolve();
+    this.#acquisition ??= this.#claims.read<string>(this.#claimKey) === userId ? Promise.resolve() : this.#acquire(userId);
     return this.#acquisition;
   }
 
-  #acquire(userId: string): void {
-    // Claimed before the request starts, so other SDK instances on the page skip it.
-    // Kept until sign-out even when the request fails: a failure is not retried.
-    this.#claims.write(this.#claimKey, userId);
-    this.#acquisition = this.#apiClient
+  #acquire(userId: string): Promise<void> {
+    return this.#apiClient
       .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY, timeoutMs: ACQUIRE_TIMEOUT_MS })
       .then(
         () => undefined,
         (error: unknown) => {
           console.warn('[UiPath SDK] Could not provision a personal robot for the signed-in user', error);
         },
-      );
+      )
+      .finally(() => {
+        if (this.#userId === userId) this.#claims.write(this.#claimKey, userId);
+      });
   }
 
   #release(userId: string): void {

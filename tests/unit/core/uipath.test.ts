@@ -567,25 +567,25 @@ describe('UiPath Core', () => {
       expect(mockTokenManager.onTokenChange).toHaveBeenCalledTimes(1);
     });
 
-    it('should complete the OAuth sign-in only after the license acquisition settles', async () => {
+    it('should hand the session license to services through the SDK internals', () => {
+      const sdk = new UiPath(oauthConfig);
+
+      expect(getPrivateSDK(sdk).sessionLicense).toBe(vi.mocked(SessionLicense).mock.instances[0]);
+    });
+
+    it('should complete the OAuth sign-in without requiring a personal robot', async () => {
       vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
       const sdk = new UiPath(oauthConfig);
-      let settleLicense!: () => void;
-      vi.mocked(vi.mocked(SessionLicense).mock.instances[0].settled).mockReturnValue(
-        new Promise<void>((resolve) => { settleLicense = resolve; })
-      );
+      const license = vi.mocked(SessionLicense).mock.instances[0];
 
-      const completing = sdk.completeOAuth();
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      expect(sdk.isInitialized()).toBe(false);
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
 
-      settleLicense();
-
-      await expect(completing).resolves.toBe(true);
       expect(sdk.isInitialized()).toBe(true);
+      expect(license.ensure).not.toHaveBeenCalled();
     });
+
     it('should not subscribe a session license when the SDK holds its own credential', () => {
-      void new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -594,6 +594,7 @@ describe('UiPath Core', () => {
 
       expect(SessionLicense).not.toHaveBeenCalled();
       expect(mockTokenManager.onTokenChange).not.toHaveBeenCalled();
+      expect(getPrivateSDK(sdk).sessionLicense).toBeUndefined();
     });
 
     it('should not subscribe a session license inside a coded function', () => {

@@ -170,6 +170,33 @@ describe('ApiClient Content-Type header', () => {
   });
 });
 
+describe('ApiClient beforeSend', () => {
+  it('waits for beforeSend once the token resolves and before sending the request', async () => {
+    const order: string[] = [];
+    mockTokenManager.getValidToken.mockImplementationOnce(async () => {
+      order.push('token');
+      return TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN;
+    });
+    let release!: () => void;
+    const beforeSend = vi.fn(() => {
+      order.push('beforeSend');
+      return new Promise<void>((resolve) => { release = resolve; });
+    });
+    const client = createClient({ beforeSend });
+
+    const request = client.get('/test');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(order).toEqual(['token', 'beforeSend']);
+    expect(global.fetch).not.toHaveBeenCalled();
+
+    release();
+    await request;
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('ApiClient error handling', () => {
   it('throws ServerError when server returns a non-JSON body on a successful response', async () => {
     global.fetch = vi.fn().mockResolvedValue({

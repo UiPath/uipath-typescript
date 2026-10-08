@@ -25,11 +25,18 @@ import { track } from '../../../core/telemetry';
 import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { resolveOverride } from '../../../utils/overrides/resolve-override';
 import { ValidationError } from '../../../core/errors';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends FolderScopedService implements ProcessServiceModel {
+  constructor(instance: IUiPath) {
+    const { sessionLicense } = SDKInternalsRegistry.get(instance);
+    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+  }
+
   @track('Processes.GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
     options?: T

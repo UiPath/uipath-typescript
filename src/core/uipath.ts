@@ -91,7 +91,6 @@ export class UiPath implements IUiPath {
   #config?: UiPathConfig;
   #authService?: AuthService;
   #initialized: boolean = false;
-  #sessionLicense?: SessionLicense;
   #partialConfig?: PartialUiPathConfig;
   // Folder key from `<meta name="uipath:folder-key">` (coded-app deployments).
   // Not a configuration field; lives here so the SDK can flow it through to
@@ -181,10 +180,17 @@ export class UiPath implements IUiPath {
     this.#authService = new AuthService(internalConfig, executionContext);
     this.#config = internalConfig;
 
+    const tokenManager = this.#authService.getTokenManager();
+    const sessionLicense = hasSecretAuth ? undefined : new SessionLicense(
+      internalConfig,
+      new ApiClient(internalConfig, executionContext, tokenManager),
+      SessionStore.open() ?? new MemoryStore(),
+    );
+    if (sessionLicense) tokenManager.onTokenChange((tokenInfo) => sessionLicense.onTokenChange(tokenInfo));
+
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
     // values) and live here on the runtime registry instead.
-    const tokenManager = this.#authService.getTokenManager();
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
@@ -192,17 +198,8 @@ export class UiPath implements IUiPath {
       folderKey: this.#contextFolderKey ?? this.#metaFolderKey,
       metaFolderKey: this.#metaFolderKey,
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
+      sessionLicense,
     });
-
-    if (!hasSecretAuth) {
-      const license = new SessionLicense(
-        internalConfig,
-        new ApiClient(internalConfig, executionContext, tokenManager),
-        SessionStore.open() ?? new MemoryStore(),
-      );
-      tokenManager.onTokenChange((tokenInfo) => license.onTokenChange(tokenInfo));
-      this.#sessionLicense = license;
-    }
 
     // Expose read-only config for user convenience
     (this as any).config = {
@@ -383,7 +380,6 @@ export class UiPath implements IUiPath {
     try {
       const success = await this.#authService!.authenticate(this.#config!);
       if (success && this.isAuthenticated()) {
-        await this.#sessionLicense?.settled();
         this.#initialized = true;
         return true;
       }
