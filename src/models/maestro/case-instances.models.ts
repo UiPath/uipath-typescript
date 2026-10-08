@@ -756,6 +756,9 @@ export interface CaseInstanceMethods {
   /**
    * Gets execution history for this case instance
    *
+   * With Case App routes the response also carries the case id, the case summary and the
+   * details sections configured on the case app.
+   *
    * @param options - Optional element-type filter
    * @returns Promise resolving to instance execution history
    */
