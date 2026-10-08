@@ -46,7 +46,8 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  * ### Case App routes (experimental)
  *
  * Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder
- * permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.
+ * permissions. Use them to build apps for case workers who hold Case persona grants. Grant users
+ * roles inside Maestro Case Instances.
  *
  * **Requirements**
  *
