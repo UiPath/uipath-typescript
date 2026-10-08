@@ -98,6 +98,7 @@ Creating a validation action and polling its result both go through the [Documen
 | `create()` | `DataFabric.Schema.Write` |
 | `updateById()` / `update()` | `DataFabric.Schema.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
+| `entityOperationHost()` | `DataFabric.Data.Read` |
 
 ## ChoiceSets
 
