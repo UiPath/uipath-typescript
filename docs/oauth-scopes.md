@@ -195,6 +195,10 @@ Creating a validation action and polling its result both go through the [Documen
 |--------|-------------|
 | `startExtractionValidation()` | `Du.Validation.Api` |
 | `getExtractionValidationResult()` | `Du.Validation.Api` |
+| `getModelByName()` | `Du.Extraction.Api` or `Du.Digitization.Api` |
+| `startExtractionValidationArtifacts()` | `Du.Validation.Api` |
+| `getExtractionValidationArtifacts()` | `Du.Validation.Api` |
+| `getExtractionValidationArtifactsResult()` | `Du.Validation.Api` |
 
 ## Entities
 
