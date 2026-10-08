@@ -18,6 +18,8 @@ const SETTLED_STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 const CANCEL_RUNNING_WAIT_MS = 300_000;
+// Outlasts the stale Faulted readings that follow a retry
+const FAULT_RETRY_COOLDOWN_MS = 20_000;
 
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
@@ -232,13 +234,14 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       );
 
       // Wait for Running specifically — cancelling while still Pending is rejected.
-      // If the instance faults before the poll catches the brief Running window, retry
-      // it once: the retried run re-enters Running, which is cancellable. The status may
-      // keep reading Faulted for a few polls after the retry (propagation lag), so a
-      // repeat Faulted reading is not treated as a second fault — the attempt cap bounds
-      // a genuinely stuck instance instead.
+      // If the instance faults before the poll catches the brief Running window, retry it:
+      // the retried run re-enters Running, which is cancellable. The status may keep
+      // reading Faulted for a few polls after a retry (propagation lag), so only a Faulted
+      // reading that outlasts the cooldown triggers another retry — the deadline bounds
+      // a genuinely stuck instance.
       let running = false;
-      let faultRetried = false;
+      let retryCount = 0;
+      let lastRetryAt = 0;
       let lastStatus: string | null = null;
       // PIMS can take several minutes to bring a fresh instance to Running under load
       const runningDeadline = Date.now() + CANCEL_RUNNING_WAIT_MS;
@@ -255,10 +258,11 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
           running = true;
           break;
         }
-        if (status === InstanceStatus.FAULTED && !faultRetried) {
+        if (status === InstanceStatus.FAULTED && Date.now() - lastRetryAt >= FAULT_RETRY_COOLDOWN_MS) {
           // Outside the visibility catch: a failing retry() must propagate, not be
           // silently swallowed and re-attempted every poll
-          faultRetried = true;
+          retryCount++;
+          lastRetryAt = Date.now();
           await processInstances.retry(job.key, config.folderKey);
         }
 
@@ -267,7 +271,7 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       if (!running) {
         throw new Error(
           `Seeded instance ${job.key} did not reach Running within ${CANCEL_RUNNING_WAIT_MS / 1000}s ` +
-            `(last status: ${lastStatus ?? 'not visible'}, fault retried: ${faultRetried}) — cannot test cancel`
+            `(last status: ${lastStatus ?? 'not visible'}, retries: ${retryCount}) — cannot test cancel`
         );
       }
 
