@@ -51,7 +51,6 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  *
  * **Requirements**
  *
- * - A user token for a user holding Case persona grants. PAT and client-credentials tokens are rejected.
  * - `folderKey` on `getAll`, since Case App routes list one folder at a time.
  *
  * **Enable** by creating the service with `{ useCaseAppRoutes: true }`:
