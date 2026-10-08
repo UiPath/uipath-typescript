@@ -17,6 +17,8 @@ const SETTLED_STATUSES: ReadonlySet<string> = new Set([
   InstanceStatus.CANCELLED,
 ]);
 
+const CANCEL_RUNNING_WAIT_MS = 300_000;
+
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
   let testFolderKey: string | null = null;
@@ -237,9 +239,9 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       // a genuinely stuck instance instead.
       let running = false;
       let faultRetried = false;
-      // PIMS takes over a minute to bring a fresh instance to Running under load
-      // (observed four times in the first days of October with 20 x 2 s polls)
-      const runningDeadline = Date.now() + 120_000;
+      let lastStatus: string | null = null;
+      // PIMS can take several minutes to bring a fresh instance to Running under load
+      const runningDeadline = Date.now() + CANCEL_RUNNING_WAIT_MS;
       while (Date.now() < runningDeadline) {
         let status: string | null = null;
         try {
@@ -247,6 +249,7 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
         } catch {
           // not yet visible in PIMS
         }
+        lastStatus = status;
 
         if (status === InstanceStatus.RUNNING) {
           running = true;
@@ -262,7 +265,10 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
       if (!running) {
-        throw new Error('Seeded instance did not reach Running within 120s — cannot test cancel');
+        throw new Error(
+          `Seeded instance ${job.key} did not reach Running within ${CANCEL_RUNNING_WAIT_MS / 1000}s ` +
+            `(last status: ${lastStatus ?? 'not visible'}, fault retried: ${faultRetried}) — cannot test cancel`
+        );
       }
 
       const result = await processInstances.cancel(job.key, config.folderKey);
@@ -272,8 +278,8 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
       const instance = await processInstances.getById(job.key, config.folderKey);
       expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
-      // the wait-for-Running poll alone may take 120s before the cancel call and verification
-    }, 180_000);
+      // leave room for the cancel call and verification after the wait-for-Running poll
+    }, CANCEL_RUNNING_WAIT_MS + 60_000);
   });
 
   // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in
