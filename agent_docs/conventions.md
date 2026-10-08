@@ -121,6 +121,13 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent.
 
+**OData `@odata.context` must be destructured out** — OData `getById` responses include an `@odata.context` metadata key (and sometimes other `@odata.*` keys) that must never be forwarded to callers. Destructure and discard it before applying other transforms:
+```typescript
+const { '@odata.context': _ctx, ...data } = response.data as Record<string, unknown>;
+return pascalToCamelCaseKeys(data) as EntityGetResponse;
+```
+Reference implementation: `src/services/orchestrator/attachments/attachments.ts`.
+
 **User-defined nested payloads:** If a response field is typed as an open map (`Record<string, unknown>` / `unknown`) or the contract calls it custom/schema data, split it out and pass it verbatim — `pascalToCamelCaseKeys()` recurses and would rewrite its keys. Transform only the named envelope fields (same principle as the Data Fabric exception above):
 ```typescript
 const { data: userPayload, ...envelope } = response.data;
@@ -300,3 +307,4 @@ Watch for read-only sentinel enum values a write endpoint rejects (e.g. a `None`
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
 - **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure. Additionally, when the same regex is needed across two or more service files, extract it to a shared constant in `src/utils/` rather than duplicating it — duplicated patterns silently diverge when one copy is updated.
 - **Silent catches must emit a `console.warn`** — when a `try/catch` swallows an error without re-throwing (e.g., best-effort reads from an ambient channel or optional DOM lookup), always call `console.warn(error)` so issues remain observable in the runtime console (browser, Node.js, and Workers). A completely silent catch makes failures invisible during development and debugging.
+- **Validate before mutating shared state** — always run all guard checks (throw `ValidationError` on invalid input) before mutating any object. Mutating first means that when validation fails and throws, the mutation has already applied to any shared reference, corrupting objects reused by callers or test fixtures. Additionally, `{ ...obj }` creates a shallow copy that shares nested object references — when a nested object needs to be mutated, create an explicit shallow copy of that nested object: `const updated = { ...nested, newField: value }; return { ...obj, nested: updated }` rather than assigning directly into `nested`.

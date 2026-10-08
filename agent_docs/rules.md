@@ -2,7 +2,7 @@
 
 ## Testing guidelines
 
-- Tests use `vitest` with `vi.mock()` and `vi.hoisted()`. Shared mocks in `tests/utils/mocks/`. Use `createMockApiClient()` and `createServiceTestDependencies()` from `tests/utils/setup.ts`.
+- Tests use `vitest` with `vi.mock()` and `vi.hoisted()`. Shared mocks in `tests/utils/mocks/`. Use `createMockApiClient()` and `createServiceTestDependencies()` from `tests/utils/setup.ts`. **Type `mockApiClient` as `ReturnType<typeof createMockApiClient>`, not `any`** — using `any` defeats type safety in tests and hides real type errors. Pattern: `let mockApiClient: ReturnType<typeof createMockApiClient>;`.
 - **Arrange-Act-Assert** pattern. Reset mocks in `afterEach`.
 - Test both **success and error scenarios** for every public method.
 - Test descriptions must match what's being tested — **NEVER** write `'should call entity.insert'` if testing `insertRecord()`. Mismatched descriptions make failures misleading.
