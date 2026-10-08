@@ -45,10 +45,6 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  *
  * ### Case App routes (experimental)
  *
- * /// warning
- * Preview: Case App routes are experimental and may change or be removed in future releases.
- * ///
- *
  * Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder
  * permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.
  *
