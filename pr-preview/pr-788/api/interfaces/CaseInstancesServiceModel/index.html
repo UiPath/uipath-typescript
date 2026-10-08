@@ -4379,15 +4379,11 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allInstances</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">caseInstances</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 </code></pre></div>
 <h3 id="case-app-routes-experimental">Case App routes (experimental)<a class="headerlink" href="#case-app-routes-experimental" title="Permanent link">&para;</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Preview: Case App routes are experimental and may change or be removed in future releases.</p>
-</div>
 <p>Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder
-permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.</p>
+permissions. Use them to build apps for case workers who hold Case persona grants. Grant users
+roles inside Maestro Case Instances.</p>
 <p><strong>Requirements</strong></p>
 <ul>
-<li>A user token for a user holding Case persona grants. PAT and client-credentials tokens are rejected.</li>
 <li><code>folderKey</code> on <code>getAll</code>, since Case App routes list one folder at a time.</li>
 </ul>
 <p><strong>Enable</strong> by creating the service with <code>{ useCaseAppRoutes: true }</code>:</p>

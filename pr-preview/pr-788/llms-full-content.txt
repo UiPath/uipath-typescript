@@ -6121,15 +6121,10 @@ const allInstances = await caseInstances.getAll();
 
 ### Case App routes (experimental)
 
-Warning
-
-Preview: Case App routes are experimental and may change or be removed in future releases.
-
-Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants but no folder roles.
+Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants. Grant users roles inside Maestro Case Instances.
 
 **Requirements**
 
-- A user token for a user holding Case persona grants. PAT and client-credentials tokens are rejected.
 - `folderKey` on `getAll`, since Case App routes list one folder at a time.
 
 **Enable** by creating the service with `{ useCaseAppRoutes: true }`:
