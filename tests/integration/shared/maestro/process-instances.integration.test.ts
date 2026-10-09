@@ -23,6 +23,8 @@ const FAULT_RETRY_COOLDOWN_MS = 20_000;
 
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
+  // Pause/resume need an instance that is actually Running; any other state is rejected
+  let runningInstance: { instanceId: string; folderKey: string } | null = null;
   let testFolderKey: string | null = null;
 
   // Faulting-process instance started at suite start for the retry test. It faults in the
@@ -82,6 +84,16 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
         if (instance) {
           testInstanceId = instance.instanceId;
           testFolderKey = instance.folderKey;
+        }
+
+        const running = result.items.find(
+          (item) =>
+            item.latestRunStatus === InstanceStatus.RUNNING &&
+            item.folderKey &&
+            item.instanceId !== seededFaultedJobKey
+        );
+        if (running) {
+          runningInstance = { instanceId: running.instanceId, folderKey: running.folderKey };
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -168,49 +180,39 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
   describe('Instance lifecycle operations', () => {
     it('should pause a process instance', async () => {
-      if (!testInstanceId || !testFolderKey) {
-        throw new Error('No process instance with a folder key available — cannot test pause');
+      if (!runningInstance) {
+        throw new Error('No Running process instance with a folder key available — cannot test pause');
       }
 
       const { processInstances } = getServices();
+      const { instanceId, folderKey } = runningInstance;
 
-      try {
-        const result = await processInstances.pause(testInstanceId, testFolderKey);
+      const result = await processInstances.pause(instanceId, folderKey);
 
-        expect(result).toBeDefined();
-        expect(result.success).toBe(true);
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
 
-        const instance = await processInstances.getById(testInstanceId, testFolderKey);
-        expect(instance.latestRunStatus).toMatch(/paused|suspended/i);
-      } catch (error: any) {
-        console.log(
-          'Pause test failed. Instance may not be in a pausable state:',
-          error.message
-        );
-      }
+      // Pausing is transitional, so accept it alongside the settled Paused state
+      const instance = await processInstances.getById(instanceId, folderKey);
+      expect(instance.latestRunStatus).toMatch(/paus|suspend/i);
     });
 
     it('should resume a paused process instance', async () => {
-      if (!testInstanceId || !testFolderKey) {
-        throw new Error('No process instance with a folder key available — cannot test resume');
+      if (!runningInstance) {
+        throw new Error('No Running process instance with a folder key available — cannot test resume');
       }
 
       const { processInstances } = getServices();
+      const { instanceId, folderKey } = runningInstance;
 
-      try {
-        const result = await processInstances.resume(testInstanceId, testFolderKey);
+      const result = await processInstances.resume(instanceId, folderKey);
 
-        expect(result).toBeDefined();
-        expect(result.success).toBe(true);
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
 
-        const instance = await processInstances.getById(testInstanceId, testFolderKey);
-        expect(instance.latestRunStatus).toMatch(/running|active|resumed/i);
-      } catch (error: any) {
-        console.log(
-          'Resume test failed. Instance may not be in a resumable state:',
-          error.message
-        );
-      }
+      // Resuming is transitional, so accept it alongside the settled Running state
+      const instance = await processInstances.getById(instanceId, folderKey);
+      expect(instance.latestRunStatus).toMatch(/running|active|resum/i);
     });
 
     it('should cancel a process instance', async () => {
