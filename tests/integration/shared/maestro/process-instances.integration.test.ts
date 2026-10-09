@@ -90,13 +90,17 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
   // The status lags an accepted pause/resume, so poll until it matches; returns the last
   // status read, letting the caller's assertion report it on timeout
-  async function waitForStatus(instanceId: string, folderKey: string, expected: RegExp): Promise<string> {
+  async function waitForStatus(
+    instanceId: string,
+    folderKey: string,
+    expected: readonly InstanceStatus[]
+  ): Promise<string> {
     const { processInstances } = getServices();
     const deadline = Date.now() + STATUS_CHANGE_WAIT_MS;
     let status = '';
     while (Date.now() < deadline) {
       status = (await processInstances.getById(instanceId, folderKey)).latestRunStatus;
-      if (expected.test(status)) {
+      if ((expected as readonly string[]).includes(status)) {
         return status;
       }
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -252,8 +256,11 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
 
-      // Pausing is transitional, so accept it alongside the settled Paused state
-      expect(await waitForStatus(instanceId, folderKey, /paus|suspend/i)).toMatch(/paus|suspend/i);
+      // Wait for the settled Paused state: a resume sent while still Pausing is overtaken
+      // by the pause completing, leaving the instance Paused
+      expect(await waitForStatus(instanceId, folderKey, [InstanceStatus.PAUSED])).toBe(
+        InstanceStatus.PAUSED
+      );
     }, RUNNING_WAIT_MS + STATUS_CHANGE_WAIT_MS + 60_000);
 
     it('should resume a paused process instance', async () => {
@@ -271,9 +278,8 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
       // Resuming is transitional, so accept it alongside the settled Running state.
       // The resumed run faults on its own shortly after, so nothing is left executing.
-      expect(await waitForStatus(instanceId, folderKey, /running|active|resum/i)).toMatch(
-        /running|active|resum/i
-      );
+      const resumedStatuses = [InstanceStatus.RESUMING, InstanceStatus.RUNNING];
+      expect(resumedStatuses).toContain(await waitForStatus(instanceId, folderKey, resumedStatuses));
     }, STATUS_CHANGE_WAIT_MS + 60_000);
 
     it('should cancel a process instance', async () => {
