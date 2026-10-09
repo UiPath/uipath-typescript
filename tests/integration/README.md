@@ -654,6 +654,12 @@ vitest path filters. The rule is name-based:
 | `docs/`, `samples/`, `packages/`, `scripts/` (CI and release tooling), `tests/unit/`, `tests/utils/` (unit-test fixtures and helpers), `*.md`, lint/build/docs config, `package.json`, `.github/workflows/coverage.yml`, `tests/integration/config/` (the shared harness), the shared `endpoints/base.ts` and the barrel `endpoints/index.ts` | Nothing: the `integration` job is skipped |
 | Anything else: `src/core/`, the rest of `src/utils/`, `src/models/common/`, `tests/integration/utils/`, other workflows, `package-lock.json` | Everything |
 
+The Data Fabric schema suite (`entities-schema.integration.test.ts`, the `integration-ddl`
+vitest project) runs as its own leg, after the other suites and only when Data Fabric is in
+scope. Its table creates are the heaviest load on the shared tenant, so before it starts the
+leg waits for any older run's schema leg to finish; one schema leg runs on the tenant at a
+time across the whole repository, the other suites are not queued.
+
 The only shared files deliberately ignored are `package.json`, `endpoints/base.ts` and
 `endpoints/index.ts`: every new service adds lines to each and is covered by its own
 folders and suite, so editing an existing base path or npm script there is not covered

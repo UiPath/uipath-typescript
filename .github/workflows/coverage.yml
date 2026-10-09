@@ -20,6 +20,8 @@ on:
 
 permissions:
   contents: read
+  # The schema DDL leg lists other runs' jobs to take its turn on the tenant.
+  actions: read
 
 jobs:
   unit:
@@ -67,6 +69,7 @@ jobs:
       run_integration: ${{ steps.resolve.outputs.run_integration }}
       test_paths: ${{ steps.resolve.outputs.test_paths }}
       scope: ${{ steps.resolve.outputs.scope }}
+      projects: ${{ steps.resolve.outputs.projects }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
@@ -102,10 +105,15 @@ jobs:
     runs-on: uipath-ubuntu-latest
     strategy:
       fail-fast: false
-      # The two legs share one tenant and mutate the same fixtures (assets, bucket
+      # The legs share one tenant and mutate the same fixtures (assets, bucket
       # files); run them one at a time so they cannot clobber each other's writes.
       max-parallel: 1
       matrix:
+        # vitest projects from vitest.integration.config.ts. `integration-ddl` is the
+        # Data Fabric schema suite: its table creates are the heaviest load on the
+        # shared tenant, so it runs as its own leg, after the others, and only when
+        # Data Fabric is in scope. A missing output runs both.
+        project: ${{ fromJSON(needs.integration-scope.outputs.projects || '["integration","integration-ddl"]') }}
         auth: [pat, user]
     env:
       NODE_OPTIONS: --max-old-space-size=6144
@@ -296,12 +304,40 @@ jobs:
           rm -f "$RUNNER_TEMP/minter/tokens.json"
           echo "Minted a user access token; user-token suites will run, and either-credential suites will run under both."
 
+      # One schema DDL leg on the tenant at a time, across every run of this repo.
+      # A GitHub concurrency group cannot do this: it keeps a single pending job per
+      # group and cancels the older one when a third arrives, so under load it would
+      # cancel legs instead of queueing them. Older runs (lower id) go first, which
+      # also means two waiters cannot block each other. The wait is bounded; on
+      # expiry the leg runs anyway rather than failing for a lock.
+      - name: Wait for the schema DDL slot
+        if: matrix.project == 'integration-ddl'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          deadline=$((SECONDS + 2400))
+          while :; do
+            busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?status=in_progress&per_page=50" \
+              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | .id" \
+              | while read -r run; do
+                  gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs?per_page=100" \
+                    --jq '.jobs[] | select(.status == "in_progress") | select(.name | test("integration \\(integration-ddl,")) | .html_url'
+                done)
+            [ -z "$busy" ] && break
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::warning::schema DDL slot still busy after 40 minutes; running anyway"
+              break
+            fi
+            echo "waiting for: $busy"
+            sleep 30
+          done
+
       - name: Run Integration Tests
         env:
           INTEGRATION_AUTH_MODE: ${{ matrix.auth }}
           # vitest path filters (empty = whole suite); built from suite folder names only.
           TEST_PATHS: ${{ needs.integration-scope.outputs.test_paths }}
-        run: npm run test:integration:coverage -- --run --maxWorkers=2 $TEST_PATHS
+        run: npm run test:integration:coverage -- --run --maxWorkers=2 --project ${{ matrix.project }} $TEST_PATHS
 
       # Runners are reused, so the config file — which holds the minted token —
       # must not outlive the job.
@@ -312,7 +348,7 @@ jobs:
       - name: Upload integration test coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: integration-coverage-${{ matrix.auth }}
+          name: integration-coverage-${{ matrix.project }}-${{ matrix.auth }}
           path: coverage-integration/lcov.info
 
   sonar:
