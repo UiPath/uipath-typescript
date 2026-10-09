@@ -26,7 +26,9 @@ import { RequestSpec } from '../../../models/common/request-spec';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse,
-  CaseInstanceSendMessageRequestBody
+  CaseInstanceSendMessageRequestBody,
+  CaseInstanceStageStatus,
+  RawCaseInstanceStagesResponse
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -317,9 +319,10 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   @track('CaseInstances.GetStages')
   async getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]> {
     // Fetch both execution history and case JSON in parallel, but handle execution failures gracefully
-    const [executionHistoryResponse, caseJsonResponse] = await Promise.allSettled([
+    const [executionHistoryResponse, caseJsonResponse, stageStatusResponse] = await Promise.allSettled([
       this.getExecutionHistory(caseInstanceId, folderKey),
-      this.getCaseJson(caseInstanceId, folderKey)
+      this.getCaseJson(caseInstanceId, folderKey),
+      this.getStageStatusMap(caseInstanceId, folderKey)
     ]);
 
     // Extract execution history if successful, otherwise use null
@@ -331,6 +334,10 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const caseJson = caseJsonResponse.status === 'fulfilled' 
       ? caseJsonResponse.value 
       : null;
+
+    const stageStatusMap = stageStatusResponse.status === 'fulfilled'
+      ? stageStatusResponse.value
+      : new Map<string, CaseInstanceStageStatus>();
     
     if (!caseJson || !caseJson.nodes) {
       return [];
@@ -343,9 +350,20 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     // Process nodes to extract stages (exclude triggers)
     const stages: CaseGetStageResponse[] = caseJson.nodes
       .filter((node: any) => node.type !== CASE_STAGE_CONSTANTS.TRIGGER_NODE_TYPE)
-      .map((node: any) => this.createStageFromNode(node, executionMap, bindingsMap));
+      .map((node: any) => this.createStageFromNode(node, executionMap, bindingsMap, stageStatusMap));
 
     return stages;
+  }
+
+  private async getStageStatusMap(caseInstanceId: string, folderKey: string): Promise<Map<string, CaseInstanceStageStatus>> {
+    const response = await this.get<RawCaseInstanceStagesResponse>(
+      MAESTRO_ENDPOINTS.CASES.GET_STAGES(caseInstanceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
+    );
+    const stages = transformData(response.data.stages, TimeFieldTransformMap) as unknown as CaseInstanceStageStatus[];
+    return new Map(stages.map(stage => [stage.elementId, stage]));
   }
 
   /**
@@ -450,21 +468,26 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param node - The case node to process
    * @param executionMap - Map of element IDs to execution data
    * @param bindingsMap - Map of binding IDs to binding objects
+   * @param stageStatusMap - Map of stage element IDs to stages API entries
    * @returns CaseGetStageResponse object
    * @private
    */
   private createStageFromNode(
     node: any,
     executionMap: Map<string, ElementExecutionMetadata>,
-    bindingsMap: Map<string, any>
+    bindingsMap: Map<string, any>,
+    stageStatusMap: Map<string, CaseInstanceStageStatus>
   ): CaseGetStageResponse {
     const execution = executionMap.get(node.id);
+    const stageStatus = stageStatusMap.get(node.id);
     
     const stage: CaseGetStageResponse = {
       id: node.id,
       name: node.data?.label || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
       sla: node.data?.sla ? transformData(node.data.sla, StageSLAMap) : undefined,
-      status: execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
+      status: stageStatus?.latestStatus || execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
+      ...(stageStatus?.startedTime && { startedTime: stageStatus.startedTime }),
+      ...(stageStatus?.completedTime && { completedTime: stageStatus.completedTime }),
       tasks: this.processTasks(node, executionMap, bindingsMap)
     };
 
