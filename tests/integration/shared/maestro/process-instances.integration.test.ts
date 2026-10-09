@@ -17,19 +17,75 @@ const SETTLED_STATUSES: ReadonlySet<string> = new Set([
   InstanceStatus.CANCELLED,
 ]);
 
-const CANCEL_RUNNING_WAIT_MS = 300_000;
+const RUNNING_WAIT_MS = 300_000;
 // Outlasts the stale Faulted readings that follow a retry
 const FAULT_RETRY_COOLDOWN_MS = 20_000;
 
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
-  // Pause/resume need an instance that is actually Running; any other state is rejected
-  let runningInstance: { instanceId: string; folderKey: string } | null = null;
+  // Seeded by the pause test and reused by the resume test
+  let pausedInstance: { instanceId: string; folderKey: string } | null = null;
   let testFolderKey: string | null = null;
 
   // Faulting-process instance started at suite start for the retry test. It faults in the
   // background (~15s idle, minutes under full-suite load) while earlier tests run.
   let seededFaultedJobKey: string | null = null;
+
+  // Starts a fresh instance of the deliberately-faulting process and waits until it is
+  // Running — pause and cancel are rejected in any other state. Operating only on our own
+  // instance keeps the tests safe under parallel runs.
+  async function startRunningInstance(purpose: string): Promise<{ instanceId: string; folderKey: string }> {
+    const { processes, processInstances } = getServices();
+    const config = getTestConfig();
+
+    if (!config.maestroTestProcessKey || !config.folderId || !config.folderKey) {
+      throw new Error(
+        `MAESTRO_TEST_PROCESS_KEY / folder config not set — cannot seed an instance for ${purpose}`
+      );
+    }
+
+    const [job] = await processes.start(
+      { processKey: config.maestroTestProcessKey },
+      { folderId: Number(config.folderId) }
+    );
+
+    // The process runs ~15s before it faults. If it faults before the poll catches the
+    // brief Running window, retry it: the retried run re-enters Running. The status may
+    // keep reading Faulted for a few polls after a retry (propagation lag), so only a
+    // Faulted reading that outlasts the cooldown triggers another retry — the deadline
+    // bounds a genuinely stuck instance.
+    let retryCount = 0;
+    let lastRetryAt = 0;
+    let lastStatus: string | null = null;
+    // PIMS can take several minutes to bring a fresh instance to Running under load
+    const runningDeadline = Date.now() + RUNNING_WAIT_MS;
+    while (Date.now() < runningDeadline) {
+      let status: string | null = null;
+      try {
+        status = (await processInstances.getById(job.key, config.folderKey)).latestRunStatus;
+      } catch {
+        // not yet visible in PIMS
+      }
+      lastStatus = status;
+
+      if (status === InstanceStatus.RUNNING) {
+        return { instanceId: job.key, folderKey: config.folderKey };
+      }
+      if (status === InstanceStatus.FAULTED && Date.now() - lastRetryAt >= FAULT_RETRY_COOLDOWN_MS) {
+        // Outside the visibility catch: a failing retry() must propagate, not be
+        // silently swallowed and re-attempted every poll
+        retryCount++;
+        lastRetryAt = Date.now();
+        await processInstances.retry(job.key, config.folderKey);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    throw new Error(
+      `Seeded instance ${job.key} did not reach Running within ${RUNNING_WAIT_MS / 1000}s ` +
+        `(last status: ${lastStatus ?? 'not visible'}, retries: ${retryCount}) — cannot test ${purpose}`
+    );
+  }
 
   beforeAll(async () => {
     const { processes, processInstances } = getServices();
@@ -84,16 +140,6 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
         if (instance) {
           testInstanceId = instance.instanceId;
           testFolderKey = instance.folderKey;
-        }
-
-        const running = result.items.find(
-          (item) =>
-            item.latestRunStatus === InstanceStatus.RUNNING &&
-            item.folderKey &&
-            item.instanceId !== seededFaultedJobKey
-        );
-        if (running) {
-          runningInstance = { instanceId: running.instanceId, folderKey: running.folderKey };
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -180,12 +226,9 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
   describe('Instance lifecycle operations', () => {
     it('should pause a process instance', async () => {
-      if (!runningInstance) {
-        throw new Error('No Running process instance with a folder key available — cannot test pause');
-      }
-
       const { processInstances } = getServices();
-      const { instanceId, folderKey } = runningInstance;
+      pausedInstance = await startRunningInstance('pause');
+      const { instanceId, folderKey } = pausedInstance;
 
       const result = await processInstances.pause(instanceId, folderKey);
 
@@ -195,97 +238,40 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       // Pausing is transitional, so accept it alongside the settled Paused state
       const instance = await processInstances.getById(instanceId, folderKey);
       expect(instance.latestRunStatus).toMatch(/paus|suspend/i);
-    });
+    }, RUNNING_WAIT_MS + 60_000);
 
     it('should resume a paused process instance', async () => {
-      if (!runningInstance) {
-        throw new Error('No Running process instance with a folder key available — cannot test resume');
+      if (!pausedInstance) {
+        throw new Error('The pause test did not leave a paused instance — cannot test resume');
       }
 
       const { processInstances } = getServices();
-      const { instanceId, folderKey } = runningInstance;
+      const { instanceId, folderKey } = pausedInstance;
 
       const result = await processInstances.resume(instanceId, folderKey);
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
 
-      // Resuming is transitional, so accept it alongside the settled Running state
+      // Resuming is transitional, so accept it alongside the settled Running state.
+      // The resumed run faults on its own shortly after, so nothing is left executing.
       const instance = await processInstances.getById(instanceId, folderKey);
       expect(instance.latestRunStatus).toMatch(/running|active|resum/i);
     });
 
     it('should cancel a process instance', async () => {
       const { processInstances } = getServices();
+      const { instanceId, folderKey } = await startRunningInstance('cancel');
 
-      const { processes } = getServices();
-      const config = getTestConfig();
-
-      if (!config.maestroTestProcessKey || !config.folderId || !config.folderKey) {
-        throw new Error(
-          'MAESTRO_TEST_PROCESS_KEY / folder config not set — cannot seed an instance for cancel'
-        );
-      }
-
-      // Seed our own instance and cancel it during its Pending/Running window (the
-      // faulting process runs ~15s before it faults). Operating only on our own
-      // instance keeps the test safe under parallel runs.
-      const [job] = await processes.start(
-        { processKey: config.maestroTestProcessKey },
-        { folderId: Number(config.folderId) }
-      );
-
-      // Wait for Running specifically — cancelling while still Pending is rejected.
-      // If the instance faults before the poll catches the brief Running window, retry it:
-      // the retried run re-enters Running, which is cancellable. The status may keep
-      // reading Faulted for a few polls after a retry (propagation lag), so only a Faulted
-      // reading that outlasts the cooldown triggers another retry — the deadline bounds
-      // a genuinely stuck instance.
-      let running = false;
-      let retryCount = 0;
-      let lastRetryAt = 0;
-      let lastStatus: string | null = null;
-      // PIMS can take several minutes to bring a fresh instance to Running under load
-      const runningDeadline = Date.now() + CANCEL_RUNNING_WAIT_MS;
-      while (Date.now() < runningDeadline) {
-        let status: string | null = null;
-        try {
-          status = (await processInstances.getById(job.key, config.folderKey)).latestRunStatus;
-        } catch {
-          // not yet visible in PIMS
-        }
-        lastStatus = status;
-
-        if (status === InstanceStatus.RUNNING) {
-          running = true;
-          break;
-        }
-        if (status === InstanceStatus.FAULTED && Date.now() - lastRetryAt >= FAULT_RETRY_COOLDOWN_MS) {
-          // Outside the visibility catch: a failing retry() must propagate, not be
-          // silently swallowed and re-attempted every poll
-          retryCount++;
-          lastRetryAt = Date.now();
-          await processInstances.retry(job.key, config.folderKey);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      }
-      if (!running) {
-        throw new Error(
-          `Seeded instance ${job.key} did not reach Running within ${CANCEL_RUNNING_WAIT_MS / 1000}s ` +
-            `(last status: ${lastStatus ?? 'not visible'}, retries: ${retryCount}) — cannot test cancel`
-        );
-      }
-
-      const result = await processInstances.cancel(job.key, config.folderKey);
+      const result = await processInstances.cancel(instanceId, folderKey);
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
 
-      const instance = await processInstances.getById(job.key, config.folderKey);
+      const instance = await processInstances.getById(instanceId, folderKey);
       expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
       // leave room for the cancel call and verification after the wait-for-Running poll
-    }, CANCEL_RUNNING_WAIT_MS + 60_000);
+    }, RUNNING_WAIT_MS + 60_000);
   });
 
   // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in
