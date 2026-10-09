@@ -4688,6 +4688,7 @@ don't cover are dropped after each page is fetched, so a page can hold fewer ite
 <p><strong>getById</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../../type-aliases/CaseInstanceGetResponse/"><code>CaseInstanceGetResponse</code></a>&gt;</p>
 </blockquote>
 <p>Get a specific case instance by ID</p>
+<p>Throws a <code>ValidationError</code> with Case App routes, which have no route for this operation.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -5121,6 +5122,7 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p>Get global variables for a case instance</p>
 <p>Returns the case instance's elements with their inputs/outputs and the global variables
 enriched with metadata (name, type, source element) parsed from the case's BPMN definition.</p>
+<p>Throws a <code>ValidationError</code> with Case App routes, which have no route for this operation.</p>
 <h4 id="parameters_13">Parameters<a class="headerlink" href="#parameters_13" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -5182,6 +5184,7 @@ enriched with metadata (name, type, source element) parsed from the case's BPMN 
 <p><strong>pause</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Pause a case instance</p>
+<p>Throws a <code>ValidationError</code> with Case App routes, which have no route for this operation.</p>
 <h4 id="parameters_14">Parameters<a class="headerlink" href="#parameters_14" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -5283,6 +5286,7 @@ enriched with metadata (name, type, source element) parsed from the case's BPMN 
 <p><strong>resume</strong>(<code>instanceId</code>: <code>string</code>, <code>folderKey</code>: <code>string</code>, <code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Resume a case instance</p>
+<p>Throws a <code>ValidationError</code> with Case App routes, which have no route for this operation.</p>
 <h4 id="parameters_16">Parameters<a class="headerlink" href="#parameters_16" title="Permanent link">&para;</a></h4>
 <table>
 <thead>

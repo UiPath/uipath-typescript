@@ -6351,6 +6351,8 @@ if (page1.hasNextPage) {
 
 Get a specific case instance by ID
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The case instance ID
@@ -6684,6 +6686,8 @@ Get global variables for a case instance
 
 Returns the case instance's elements with their inputs/outputs and the global variables enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance to get variables for
@@ -6729,6 +6733,8 @@ const instanceVariables = await instance.getVariables();
 > **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceOperationOptions`): `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Pause a case instance
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -6796,6 +6802,8 @@ const result = await instance.reopen({ stageId: stages[0].id });
 > **resume**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceOperationOptions`): `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Resume a case instance
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 

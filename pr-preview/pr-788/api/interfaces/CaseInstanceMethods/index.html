@@ -4096,6 +4096,8 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>getVariables</strong>(<code>options?</code>: <a href="../CaseInstanceGetVariablesOptions/"><code>CaseInstanceGetVariablesOptions</code></a>): <code>Promise</code>&lt;<a href="../CaseInstanceGetVariablesResponse/"><code>CaseInstanceGetVariablesResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets global variables for this case instance</p>
+<p>Throws a <code>ValidationError</code> on an instance from Case App routes, which have no route for this
+operation.</p>
 <h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4122,6 +4124,8 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>pause</strong>(<code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Pauses this case instance</p>
+<p>Throws a <code>ValidationError</code> on an instance from Case App routes, which have no route for this
+operation.</p>
 <h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4174,6 +4178,8 @@ The default page size is 50, so only the top 50 items are returned when no pagin
 <p><strong>resume</strong>(<code>options?</code>: <a href="../CaseInstanceOperationOptions/"><code>CaseInstanceOperationOptions</code></a>): <code>Promise</code>&lt;<a href="../OperationResponse/"><code>OperationResponse</code></a>&lt;<a href="../CaseInstanceOperationResponse/"><code>CaseInstanceOperationResponse</code></a>&gt;&gt;</p>
 </blockquote>
 <p>Resumes this case instance</p>
+<p>Throws a <code>ValidationError</code> on an instance from Case App routes, which have no route for this
+operation.</p>
 <h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
