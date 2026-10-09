@@ -20,6 +20,7 @@ const SETTLED_STATUSES: ReadonlySet<string> = new Set([
 const RUNNING_WAIT_MS = 300_000;
 // Outlasts the stale Faulted readings that follow a retry
 const FAULT_RETRY_COOLDOWN_MS = 20_000;
+const STATUS_CHANGE_WAIT_MS = 60_000;
 
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
@@ -85,6 +86,22 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       `Seeded instance ${job.key} did not reach Running within ${RUNNING_WAIT_MS / 1000}s ` +
         `(last status: ${lastStatus ?? 'not visible'}, retries: ${retryCount}) — cannot test ${purpose}`
     );
+  }
+
+  // The status lags an accepted pause/resume, so poll until it matches; returns the last
+  // status read, letting the caller's assertion report it on timeout
+  async function waitForStatus(instanceId: string, folderKey: string, expected: RegExp): Promise<string> {
+    const { processInstances } = getServices();
+    const deadline = Date.now() + STATUS_CHANGE_WAIT_MS;
+    let status = '';
+    while (Date.now() < deadline) {
+      status = (await processInstances.getById(instanceId, folderKey)).latestRunStatus;
+      if (expected.test(status)) {
+        return status;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    return status;
   }
 
   beforeAll(async () => {
@@ -236,9 +253,8 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       expect(result.success).toBe(true);
 
       // Pausing is transitional, so accept it alongside the settled Paused state
-      const instance = await processInstances.getById(instanceId, folderKey);
-      expect(instance.latestRunStatus).toMatch(/paus|suspend/i);
-    }, RUNNING_WAIT_MS + 60_000);
+      expect(await waitForStatus(instanceId, folderKey, /paus|suspend/i)).toMatch(/paus|suspend/i);
+    }, RUNNING_WAIT_MS + STATUS_CHANGE_WAIT_MS + 60_000);
 
     it('should resume a paused process instance', async () => {
       if (!pausedInstance) {
@@ -255,9 +271,10 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
       // Resuming is transitional, so accept it alongside the settled Running state.
       // The resumed run faults on its own shortly after, so nothing is left executing.
-      const instance = await processInstances.getById(instanceId, folderKey);
-      expect(instance.latestRunStatus).toMatch(/running|active|resum/i);
-    });
+      expect(await waitForStatus(instanceId, folderKey, /running|active|resum/i)).toMatch(
+        /running|active|resum/i
+      );
+    }, STATUS_CHANGE_WAIT_MS + 60_000);
 
     it('should cancel a process instance', async () => {
       const { processInstances } = getServices();
