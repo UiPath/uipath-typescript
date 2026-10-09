@@ -1,6 +1,19 @@
 import { EntityType, FieldDisplayType, EntityRecord, ReferenceType, SqlType, EntityUpdateByIdOptions } from './entities.types';
 
 /**
+ * Wire shape of a clone job from the v3 clone API, before the SDK renames the
+ * API's `createdAt` to the SDK-standard `createdTime`.
+ */
+export interface RawEntityCloneJob {
+  jobId: string;
+  state: string;
+  createdAt: string;
+  failureReasonCode?: string | null;
+  failurePhase?: string | null;
+  failureMessage?: string | null;
+}
+
+/**
  * Numeric v3 entity-class discriminator sent on create as
  * `entityDefinition.entityClassId`. Wire-format counterpart of {@link EntityClass};
  * internal — consumers pass {@link EntityClass} and the SDK translates via `EntityClassToIdMap`.

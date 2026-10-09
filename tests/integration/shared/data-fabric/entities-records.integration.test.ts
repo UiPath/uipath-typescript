@@ -1258,6 +1258,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           throw new Error('No record available to update via updateRecord (by name ref)');
         }
 
+        // Skip ChoiceSet fields — they need a numeric CS-value id, not the string generateFieldValue falls back to.
         const updateField = getWritableFields(byNameMetadata.fields).find(
           (f) =>
             f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
@@ -1281,6 +1282,7 @@ describeIntegration('Data Fabric Entities Records - Integration Tests', 'both', 
           throw new Error('No records available to update via updateRecords (by name ref)');
         }
 
+        // Skip ChoiceSet fields — they need a numeric CS-value id, not the string generateFieldValue falls back to.
         const updateField = getWritableFields(byNameMetadata.fields).find(
           (f) =>
             f.fieldDisplayType !== FieldDisplayType.ChoiceSetSingle &&
