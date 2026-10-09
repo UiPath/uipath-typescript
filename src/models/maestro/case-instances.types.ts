@@ -350,6 +350,10 @@ export interface CaseGetStageResponse {
   name: string;
   sla?: StageSLA;
   status: string;
+  /** Start time of the stage's latest entry */
+  startedTime?: string;
+  /** Completion time of the stage's latest entry */
+  completedTime?: string;
   tasks: StageTask[][];
 }
 

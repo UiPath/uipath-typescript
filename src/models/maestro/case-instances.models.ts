@@ -266,7 +266,7 @@ export interface CaseInstancesServiceModel {
    * Get stages and its associated tasks information for a case instance 
    * @param caseInstanceId - The ID of the case instance
    * @param folderKey - Required folder key
-   * @returns Promise resolving to an array of case stages with their tasks and status
+   * @returns Promise resolving to an array of case stages with their tasks, status, and start and completion times
    * @example
    * ```typescript
    * // Get stages for a case instance
@@ -503,7 +503,7 @@ export interface CaseInstanceMethods {
   /**
    * Gets stages and their associated tasks for this case instance
    *
-   * @returns Promise resolving to an array of case stages with their tasks and status
+   * @returns Promise resolving to an array of case stages with their tasks, status, and start and completion times
    */
   getStages(): Promise<CaseGetStageResponse[]>;
 

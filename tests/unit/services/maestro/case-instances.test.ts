@@ -14,6 +14,8 @@ import {
   createMockCaseJsonWithStages,
   createMockCaseJsonWithSections,
   createMockCaseInstanceExecutionHistory,
+  createMockCaseStageElementExecution,
+  createMockCaseInstanceStages,
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
   createMockSlaSummaryResponse,
@@ -37,6 +39,7 @@ import { CaseInstanceMessageName } from '../../../../src/models/maestro';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 import { SlaSummaryStatus } from '../../../../src/models/maestro/case-instances.types';
+import { CASE_STAGE_CONSTANTS } from '../../../../src/models/maestro/case-instances.constants';
 import { PaginationType } from '../../../../src/utils/pagination/internal-types';
 
 // ===== MOCKING =====
@@ -824,6 +827,108 @@ describe('CaseInstancesService', () => {
       expect(task.status).toBe(MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED);
       expect(task.startedTime).toBe(MAESTRO_TEST_CONSTANTS.START_TIME);
       expect(task.completedTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+    });
+
+    it('should take stage status and times from the stages API', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockResolvedValueOnce(createMockCaseInstanceStages());
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.CASES.GET_STAGES(instanceId),
+        { headers: expect.objectContaining({ [FOLDER_KEY]: folderKey }) }
+      );
+      expect(result).toHaveLength(1);
+      const stage = result[0];
+      expect(stage.status).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_COMPLETED);
+      expect(stage.startedTime).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STARTED_TIME);
+      expect(stage.completedTime).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_COMPLETED_TIME);
+      expect(stage).not.toHaveProperty('startedTimeUtc');
+      expect(stage).not.toHaveProperty('completedTimeUtc');
+      expect(stage.tasks[0][0].status).toBe(MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED);
+      expect(stage.tasks[0][0].startedTime).toBe(MAESTRO_TEST_CONSTANTS.START_TIME);
+    });
+
+    it('should not let an InProgress CaseStage execution row override a Completed stages API status', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory({
+          elementExecutions: [createMockCaseStageElementExecution()]
+        }))
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockResolvedValueOnce(createMockCaseInstanceStages());
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].status).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_COMPLETED);
+    });
+
+    it('should fall back to the execution row status when the stages call fails', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory({
+          elementExecutions: [createMockCaseStageElementExecution()]
+        }))
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockRejectedValueOnce(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_IN_PROGRESS);
+      expect(result[0]).not.toHaveProperty('startedTime');
+      expect(result[0]).not.toHaveProperty('completedTime');
+    });
+
+    it('should fall back to the execution row status when the stages API has no entry for the stage', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory({
+          elementExecutions: [createMockCaseStageElementExecution()]
+        }))
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockResolvedValueOnce(createMockCaseInstanceStages({
+          stages: [{
+            elementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID_2,
+            latestStatus: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_COMPLETED
+          }]
+        }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].status).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_IN_PROGRESS);
+      expect(result[0]).not.toHaveProperty('startedTime');
+    });
+
+    it('should return Not Started when neither the stages API nor element executions have the stage', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockResolvedValueOnce(createMockCaseInstanceStages({ stages: [] }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].status).toBe(CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS);
+    });
+
+    it('should omit the stage times the stages API does not return', async () => {
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockCaseInstanceExecutionHistory())
+        .mockResolvedValueOnce(createMockCaseJsonWithStages())
+        .mockResolvedValueOnce(createMockCaseInstanceStages({
+          stages: [{
+            elementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+            latestStatus: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_IN_PROGRESS,
+            startedTimeUtc: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STARTED_TIME,
+            completedTimeUtc: null
+          }]
+        }));
+
+      const result = await service.getStages(instanceId, folderKey);
+
+      expect(result[0].status).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_IN_PROGRESS);
+      expect(result[0].startedTime).toBe(MAESTRO_TEST_CONSTANTS.CASE_STAGE_STARTED_TIME);
+      expect(result[0]).not.toHaveProperty('completedTime');
     });
 
     it('should handle edge cases gracefully', async () => {

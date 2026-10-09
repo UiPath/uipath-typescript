@@ -9,6 +9,7 @@ import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
 import type { IncidentTimelineResponse, InstanceStatusTimelineResponse, GetTopRunCountResponse, GetTopDurationResponse } from '../../../src/models/maestro/insights.types';
+import type { RawCaseInstanceStagesResponse } from '../../../src/models/maestro/case-instances.internal-types';
 
 // Maestro-Specific Mock Factories
 
@@ -509,6 +510,43 @@ export const createMockCaseInstanceExecutionHistory = (overrides: Partial<any> =
             parentElementRunId: null
           }
         ]
+      }
+    ]
+  }, overrides);
+};
+
+/**
+ * Creates a mock CaseStage element execution row with raw API fields (before transformation)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock CaseStage element execution object with raw API fields
+ */
+export const createMockCaseStageElementExecution = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    elementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+    elementName: MAESTRO_TEST_CONSTANTS.CASE_STAGE_NAME,
+    elementType: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ELEMENT_TYPE,
+    status: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_IN_PROGRESS,
+    startedTimeUtc: MAESTRO_TEST_CONSTANTS.START_TIME,
+    completedTimeUtc: null,
+    parentElementId: null,
+    elementRuns: []
+  }, overrides);
+};
+
+/**
+ * Creates a mock case instance stages API response with raw API fields (before transformation)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock case instance stages response object with raw API fields
+ */
+export const createMockCaseInstanceStages = (overrides: Partial<RawCaseInstanceStagesResponse> = {}): RawCaseInstanceStagesResponse => {
+  return createMockBaseResponse({
+    caseInstanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+    stages: [
+      {
+        elementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+        latestStatus: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STATUS_COMPLETED,
+        startedTimeUtc: MAESTRO_TEST_CONSTANTS.CASE_STAGE_STARTED_TIME,
+        completedTimeUtc: MAESTRO_TEST_CONSTANTS.CASE_STAGE_COMPLETED_TIME
       }
     ]
   }, overrides);
