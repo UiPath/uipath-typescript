@@ -13,6 +13,7 @@ import type {
   ErrorEndEvent,
   ErrorStartEvent,
   ExchangeStartEvent,
+  ConversationEndEvent,
   LabelUpdatedEvent,
   MetaEvent,
   SessionEndEvent,
@@ -309,6 +310,26 @@ export interface SessionStream {
    * ```
    */
   onLabelUpdated(cb: (event: LabelUpdatedEvent) => void): () => void;
+
+  /**
+   * Registers a handler for the end of the conversation
+   *
+   * Fired when the service permanently ends the conversation, for example when the agent's
+   * process finishes. After this the conversation accepts no new input, so disable sending
+   * and show a message based on the end reason.
+   *
+   * @param cb - Callback receiving the {@link ConversationEndEvent} with the end reason
+   * @returns Cleanup function to remove the handler
+   *
+   * @example
+   * ```typescript
+   * session.onEndConversation((event) => {
+   *   console.log(`Conversation ended: ${event.reason}`);
+   *   disableChatInput();
+   * });
+   * ```
+   */
+  onEndConversation(cb: (event: ConversationEndEvent) => void): () => void;
 
   /**
    * Sends a session started event

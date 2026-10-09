@@ -13,6 +13,7 @@ export const ConversationMap: { [key: string]: string } = {
   ...CommonFieldMap,
   conversationId: 'id',
   lastActivityAt: 'lastActivityTime',
+  endedAt: 'endedTime',
   agentReleaseId: 'agentId'
 };
 

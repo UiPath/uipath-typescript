@@ -5,6 +5,7 @@ import type {
   ContentPartChunkEvent,
   ContentPartEndEvent,
   ContentPartStartEvent,
+  ConversationEndEvent,
   ConversationEvent,
   ErrorEndEvent,
   ErrorStartEvent,
@@ -61,6 +62,7 @@ export type AnyErrorStartHandler = (errorStart: AnyErrorStartHandlerArgs) => voi
 export type AnyErrorEndHandler = (errorEnd: AnyErrorEndHandlerArgs) => void;
 export type UnhandledErrorStartHandler = (errorStart: UnhandledErrorStartHandlerArgs) => void;
 export type UnhandledErrorEndHandler = (errorStart: UnhandledErrorEndHandlerArgs) => void;
+export type EndConversationHandler = (endConversation: ConversationEndEvent) => void;
 export type ExchangeEndHandler = (endExchange: ExchangeEndEvent) => void;
 export type ExchangeStartHandler = (exchange: ExchangeEventHelper) => void;
 export type ExchangeStartHandlerAsync = (exchange: ExchangeEventHelper) => Promise<ExchangeEndEvent | void>;
