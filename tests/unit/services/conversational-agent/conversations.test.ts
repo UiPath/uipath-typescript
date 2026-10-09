@@ -14,6 +14,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { ConversationEndReason } from '@/models/conversational-agent';
 import type { ConversationGetAllOptions } from '@/models/conversational-agent';
 
 // ===== MOCKING =====
@@ -251,6 +252,20 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect((result as any).updatedAt).toBeUndefined();
     });
 
+    it('should map endedAt to endedTime and keep endReason for an ended conversation', async () => {
+      const mockConversation = createMockRawConversation({
+        endedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ENDED_AT,
+        endReason: ConversationEndReason.Cancelled,
+      });
+      mockApiClient.get.mockResolvedValue(mockConversation);
+
+      const result = await conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+
+      expect(result.endedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ENDED_AT);
+      expect(result.endReason).toBe(ConversationEndReason.Cancelled);
+      expect((result as any).endedAt).toBeUndefined();
+    });
+
     it('should return agentInput from getById response', async () => {
       const agentInput = CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_INPUT;
       const mockConversation = createMockRawConversation({ agentInput });
@@ -293,6 +308,22 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       );
 
       expect(result).toEqual(mockResponse);
+    });
+
+    it('should map endedAt to endedTime in each listed conversation', async () => {
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(createMockTransformedConversationCollection());
+
+      await conversationalAgent.conversations.getAll();
+
+      const { transformFn } = vi.mocked(PaginationHelpers.getAllPaginated).mock.calls[0][0];
+      const result = transformFn(createMockRawConversation({
+        endedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ENDED_AT,
+        endReason: ConversationEndReason.Completed,
+      }));
+
+      expect(result.endedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ENDED_AT);
+      expect(result.endReason).toBe(ConversationEndReason.Completed);
+      expect((result as any).endedAt).toBeUndefined();
     });
 
     it('should return paginated conversations when pagination options provided', async () => {
