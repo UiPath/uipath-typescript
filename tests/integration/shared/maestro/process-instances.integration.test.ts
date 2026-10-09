@@ -6,6 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { InstanceStatus } from '../../../../src/models/maestro';
+import { isValidationError } from '../../../../src/core/errors/guards';
 import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/models/maestro/process-instances.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -21,6 +22,10 @@ const RUNNING_WAIT_MS = 300_000;
 // Outlasts the stale Faulted readings that follow a retry
 const FAULT_RETRY_COOLDOWN_MS = 20_000;
 const STATUS_CHANGE_WAIT_MS = 60_000;
+// The seeded process can fault between the Running poll and the operation; each attempt
+// seeds a fresh instance
+const FAULTED_OPERATION_ATTEMPTS = 3;
+const FAULTED_TRANSITION = /Faulted->/;
 
 describeIntegration('Maestro Process Instances - Integration Tests', 'both', modes, () => {
   let testInstanceId: string | null = null;
@@ -86,6 +91,26 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       `Seeded instance ${job.key} did not reach Running within ${RUNNING_WAIT_MS / 1000}s ` +
         `(last status: ${lastStatus ?? 'not visible'}, retries: ${retryCount}) — cannot test ${purpose}`
     );
+  }
+
+  // Runs an operation that needs a Running instance, starting over on a fresh instance when
+  // the seeded process faults before the operation lands. Only that rejection is caught;
+  // any other error propagates.
+  async function withRunningInstance<T>(
+    purpose: string,
+    operation: (instanceId: string, folderKey: string) => Promise<T>
+  ): Promise<{ instanceId: string; folderKey: string; result: T }> {
+    for (let attempt = 1; ; attempt++) {
+      const { instanceId, folderKey } = await startRunningInstance(purpose);
+      try {
+        return { instanceId, folderKey, result: await operation(instanceId, folderKey) };
+      } catch (error) {
+        const faultedFirst = isValidationError(error) && FAULTED_TRANSITION.test(error.message);
+        if (!faultedFirst || attempt >= FAULTED_OPERATION_ATTEMPTS) {
+          throw error;
+        }
+      }
+    }
   }
 
   // The status lags an accepted pause/resume, so poll until it matches; returns the last
@@ -248,10 +273,9 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
   describe('Instance lifecycle operations', () => {
     it('should pause a process instance', async () => {
       const { processInstances } = getServices();
-      pausedInstance = await startRunningInstance('pause');
-      const { instanceId, folderKey } = pausedInstance;
-
-      const result = await processInstances.pause(instanceId, folderKey);
+      const { instanceId, folderKey, result } = await withRunningInstance('pause', (id, key) =>
+        processInstances.pause(id, key)
+      );
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
@@ -261,7 +285,8 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
       expect(await waitForStatus(instanceId, folderKey, [InstanceStatus.PAUSED])).toBe(
         InstanceStatus.PAUSED
       );
-    }, RUNNING_WAIT_MS + STATUS_CHANGE_WAIT_MS + 60_000);
+      pausedInstance = { instanceId, folderKey };
+    }, FAULTED_OPERATION_ATTEMPTS * RUNNING_WAIT_MS + STATUS_CHANGE_WAIT_MS + 60_000);
 
     it('should resume a paused process instance', async () => {
       if (!pausedInstance) {
@@ -284,17 +309,17 @@ describeIntegration('Maestro Process Instances - Integration Tests', 'both', mod
 
     it('should cancel a process instance', async () => {
       const { processInstances } = getServices();
-      const { instanceId, folderKey } = await startRunningInstance('cancel');
-
-      const result = await processInstances.cancel(instanceId, folderKey);
+      const { instanceId, folderKey, result } = await withRunningInstance('cancel', (id, key) =>
+        processInstances.cancel(id, key)
+      );
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
 
       const instance = await processInstances.getById(instanceId, folderKey);
       expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
-      // leave room for the cancel call and verification after the wait-for-Running poll
-    }, RUNNING_WAIT_MS + 60_000);
+      // leave room for the cancel call and verification after the wait-for-Running polls
+    }, FAULTED_OPERATION_ATTEMPTS * RUNNING_WAIT_MS + 60_000);
   });
 
   // Self-seeding: starts a fresh instance of the deliberately-faulting process (faults in
