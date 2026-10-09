@@ -4,10 +4,20 @@
 export const CaseInstanceMap: { [key: string]: string } = {
     startedTimeUtc: 'startedTime',
     completedTimeUtc: 'completedTime',
+    createdTimeUtc: 'createdTime',
     expiryTimeUtc: 'expiredTime',
     createdAt: 'createdTime',
     updatedAt: 'updatedTime',
     externalId: 'caseId',
+  };
+
+/**
+ * Maps list-filter query parameters to SDK option names; `transformRequest` reverses it
+ */
+export const CaseInstanceFilterMap: { [key: string]: string } = {
+    externalId: 'caseId',
+    startedTimeUtcStart: 'startedTimeStart',
+    startedTimeUtcEnd: 'startedTimeEnd',
   };
 
 /**

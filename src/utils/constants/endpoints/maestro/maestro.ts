@@ -43,6 +43,21 @@ export const MAESTRO_ENDPOINTS = {
     GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,
     REOPEN: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/reopen`,
   },
+  /** Case App (v3) routes, authorized by Case persona grants rather than folder permissions. */
+  CASE_APP: {
+    GET_ALL: `${PIMS_BASE}/api/v3/caseapp/instances`,
+    SEND_MESSAGE: `${PIMS_BASE}/api/v3/caseapp/instances/messages/send`,
+    GET_STAGES: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/stages`,
+    GET_SLA_SUMMARY: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/sla-summary`,
+    GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/case-json`,
+    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/element-executions`,
+    GET_INCIDENTS: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/incidents`,
+    GET_ADHOC_TASKS: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/tasks/adhoc`,
+    TRIGGER_TASK: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/tasks/trigger`,
+    SELECT_STAGE: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/stages/select`,
+    CLOSE: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/close`,
+    REOPEN: (instanceId: string) => `${PIMS_BASE}/api/v3/caseapp/instances/${instanceId}/reopen`,
+  },
   INSIGHTS: {
     /** SLA summary for case instances */
     SLA_SUMMARY: `${INSIGHTS_RTM_BASE}/caseManagement/slaSummary`,
