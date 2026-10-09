@@ -135,6 +135,9 @@ export interface CaseInstancesServiceModel {
 
   /**
    * Get a specific case instance by ID
+   *
+   * Throws a `ValidationError` with Case App routes, which have no route for this operation.
+   *
    * @param instanceId - The case instance ID
    * @param folderKey - Required folder key
    * @returns Promise resolving to case instance with methods
@@ -191,6 +194,9 @@ export interface CaseInstancesServiceModel {
 
   /**
    * Pause a case instance
+   *
+   * Throws a `ValidationError` with Case App routes, which have no route for this operation.
+   *
    * @param instanceId - The ID of the instance to pause
    * @param folderKey - Required folder key
    * @param options - Optional pause options with comment
@@ -239,6 +245,9 @@ export interface CaseInstancesServiceModel {
 
   /**
    * Resume a case instance
+   *
+   * Throws a `ValidationError` with Case App routes, which have no route for this operation.
+   *
    * @param instanceId - The ID of the instance to resume
    * @param folderKey - Required folder key
    * @param options - Optional resume options with comment
@@ -483,6 +492,8 @@ export interface CaseInstancesServiceModel {
    * Returns the case instance's elements with their inputs/outputs and the global variables
    * enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
    *
+   * Throws a `ValidationError` with Case App routes, which have no route for this operation.
+   *
    * @param instanceId The ID of the case instance to get variables for
    * @param folderKey The folder key for authorization
    * @param options Optional options including parentElementId to filter by parent element
@@ -723,6 +734,9 @@ export interface CaseInstanceMethods {
   /**
    * Pauses this case instance
    *
+   * Throws a `ValidationError` on an instance from Case App routes, which have no route for this
+   * operation.
+   *
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result
    */
@@ -738,6 +752,9 @@ export interface CaseInstanceMethods {
 
   /**
    * Resumes this case instance
+   *
+   * Throws a `ValidationError` on an instance from Case App routes, which have no route for this
+   * operation.
    *
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result
@@ -809,6 +826,9 @@ export interface CaseInstanceMethods {
 
   /**
    * Gets global variables for this case instance
+   *
+   * Throws a `ValidationError` on an instance from Case App routes, which have no route for this
+   * operation.
    *
    * @param options - Optional options including parentElementId to filter by parent element
    * @returns Promise resolving to variables response with elements and enriched global variables
