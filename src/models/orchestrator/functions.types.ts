@@ -66,6 +66,12 @@ export type FunctionGetAllOptions = RequestOptions & PaginationOptions & FolderS
 export interface FunctionInvokeOptions extends FolderScopedOptions {
   /** Key (GUID) of the job this invocation belongs to, so the run is attributed to it. */
   jobKey?: string;
+  /**
+   * Ignored. The SDK acquires the license for the signed-in user on its own.
+   *
+   * @deprecated Has no effect and will be removed in a future version.
+   */
+  refreshLicense?: boolean;
 }
 
 /**

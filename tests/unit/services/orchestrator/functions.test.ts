@@ -380,6 +380,26 @@ describe('FunctionService Unit Tests', () => {
       );
     });
 
+    it('should accept the deprecated refreshLicense option without forwarding it', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      const result = await functionService.invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY, refreshLicense: true }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FUNCTION_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.not.objectContaining({ '$refreshLicense': expect.anything() }),
+        })
+      );
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+    });
+
     it('should fall back to the SDK folder context when no folder options are given', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: FUNCTION_TEST_CONSTANTS.FOLDER_KEY });
       const service = new FunctionService(instance);

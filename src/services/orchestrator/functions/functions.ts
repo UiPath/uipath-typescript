@@ -117,9 +117,9 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     input?: TInput,
     options?: FunctionInvokeOptions
   ): Promise<TOutput> {
-    // jobKey is not a discovery option — keep it out of the folder-scoped
-    // discovery lookup, which would forward it as a query param.
-    const { jobKey, ...folderOptions } = options ?? {};
+    // jobKey and refreshLicense are not discovery options — keep them out of the
+    // folder-scoped discovery lookup, which would forward them as query params.
+    const { jobKey, refreshLicense: _refreshLicense, ...folderOptions } = options ?? {};
 
     // The trigger's ExternalReference names the route and folder key directly;
     // only a trigger without one needs them derived.
