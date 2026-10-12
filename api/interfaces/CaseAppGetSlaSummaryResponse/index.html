@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ConnectionSelection/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseAppGetSlaSummaryResponse/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>ConnectionSelection - UiPath TypeScript SDK</title>
+        <title>CaseAppGetSlaSummaryResponse - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ConnectionSelection
+              CaseAppGetSlaSummaryResponse
             
           </span>
         </div>
@@ -1747,6 +1747,8 @@
       
         
       
+        
+      
     
     
     
@@ -1888,6 +1890,34 @@
     
   
     Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -3775,9 +3805,10 @@
   
 
 
-  <h1>ConnectionSelection</h1>
+  <h1>CaseAppGetSlaSummaryResponse</h1>
 
-<p>A single connection selection mapping a connector to a chosen connection</p>
+<p><strong><code>Experimental</code></strong></p>
+<p>Case-level SLA summary for a case instance.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3789,14 +3820,79 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="connectionid"></a> <code>connectionId</code></td>
+<td><a id="caseid"></a> <code>caseId</code></td>
 <td><code>null</code> | <code>string</code></td>
-<td>ID of the selected connection, or null to clear the selection</td>
+<td><strong><code>Experimental</code></strong> Human-readable case reference number</td>
 </tr>
 <tr>
-<td><a id="connectorkey"></a> <code>connectorKey</code></td>
+<td><a id="caseinstanceid"></a> <code>caseInstanceId</code></td>
 <td><code>string</code></td>
-<td>Connector key to update</td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="casesummary"></a> <code>caseSummary</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="escalationruleindex"></a> <code>escalationRuleIndex</code></td>
+<td><code>null</code> | <code>number</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="escalationrulename"></a> <code>escalationRuleName</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="escalationruletype"></a> <code>escalationRuleType</code></td>
+<td><code>null</code> | <a href="../../enumerations/EscalationTriggerType/"><code>EscalationTriggerType</code></a></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="folderkey"></a> <code>folderKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="instancestatus"></a> <code>instanceStatus</code></td>
+<td><a href="../../enumerations/InstanceStatus/"><code>InstanceStatus</code></a></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="lastmodifiedtime"></a> <code>lastModifiedTime</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="processkey"></a> <code>processKey</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="sladuetime"></a> <code>slaDueTime</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong> SLA deadline in UTC (ISO 8601)</td>
+</tr>
+<tr>
+<td><a id="slaname"></a> <code>slaName</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="slastatus"></a> <code>slaStatus</code></td>
+<td><code>null</code> | <a href="../../enumerations/CaseAppSlaStatus/"><code>CaseAppSlaStatus</code></a></td>
+<td><strong><code>Experimental</code></strong></td>
+</tr>
+<tr>
+<td><a id="state"></a> <code>state</code></td>
+<td><a href="../../enumerations/CaseAppState/"><code>CaseAppState</code></a></td>
+<td><strong><code>Experimental</code></strong> Coarse case state, collapsing transitional instance statuses onto settled ones</td>
 </tr>
 </tbody>
 </table>

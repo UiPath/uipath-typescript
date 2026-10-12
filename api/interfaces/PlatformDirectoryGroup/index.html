@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/UpdateConnectionSelectionsRequest/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/PlatformDirectoryGroup/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>UpdateConnectionSelectionsRequest - UiPath TypeScript SDK</title>
+        <title>PlatformDirectoryGroup - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              UpdateConnectionSelectionsRequest
+              PlatformDirectoryGroup
             
           </span>
         </div>
@@ -1747,6 +1747,8 @@
       
         
       
+        
+      
     
     
     
@@ -1888,6 +1890,34 @@
     
   
     Groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PlatformDirectoryServiceModel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Directory
   
 
     
@@ -3775,9 +3805,10 @@
   
 
 
-  <h1>UpdateConnectionSelectionsRequest</h1>
+  <h1>PlatformDirectoryGroup</h1>
 
-<p>Request body for updating the user's connection selections</p>
+<p>A group returned by <code>directory.getGroupMembership()</code> — one of the groups the
+user was checked against and belongs to.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3789,9 +3820,34 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="selections"></a> <code>selections</code></td>
-<td><a href="../ConnectionSelection/"><code>ConnectionSelection</code></a>[]</td>
-<td>List of connection selections to apply</td>
+<td><a id="displayname"></a> <code>displayName</code></td>
+<td><code>string</code></td>
+<td>Display name shown in the UI.</td>
+</tr>
+<tr>
+<td><a id="email"></a> <code>email</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Email address; <code>null</code> for local groups.</td>
+</tr>
+<tr>
+<td><a id="externalid"></a> <code>externalId</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>Identifier in the external directory; <code>null</code> for local groups.</td>
+</tr>
+<tr>
+<td><a id="id"></a> <code>id</code></td>
+<td><code>string</code></td>
+<td>GUID of the group.</td>
+</tr>
+<tr>
+<td><a id="name"></a> <code>name</code></td>
+<td><code>string</code></td>
+<td>Group name.</td>
+</tr>
+<tr>
+<td><a id="source"></a> <code>source</code></td>
+<td><code>string</code></td>
+<td>Where the group is provisioned from (e.g. <code>local</code>).</td>
 </tr>
 </tbody>
 </table>
