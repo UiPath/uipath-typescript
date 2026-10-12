@@ -1,0 +1,36 @@
+/**
+ * Case explore query test constants.
+ */
+
+export const CASE_EXPLORE_TEST_CONSTANTS = {
+  // Field ids
+  FIELD_CASE_ID: 'PROCESSRUNS.CASEINSTANCEID',
+  FIELD_STATUS: 'PROCESSRUNS.STATUS',
+  FIELD_IS_LATEST: 'PROCESSRUNS.ISLATEST',
+  FIELD_PROCESS_KEY: 'PROCESSRUNS.PROCESSKEY',
+  FIELD_CASE_TITLE: 'PROCESSRUNS.CASETITLE',
+  FIELD_SLA_STATUS: 'PROCESSRUNS.SLASTATUS',
+  MARKER_COLUMN: '__UiPath:Noresult:SessionId',
+
+  // Aggregates
+  AGGREGATE_ID: 'count',
+  MEASURE_CASE_COUNT: 'PROCESSRUNS.CASE_COUNT',
+
+  // Values
+  CASE_ID_1: '6f1d2c3b-4a59-4e8f-9b7a-1c2d3e4f5a6b',
+  CASE_ID_2: '7a2e3d4c-5b6a-4f9e-8c7b-2d3e4f5a6b7c',
+  STATUS_RUNNING: 'Running',
+  STATUS_COMPLETED: 'Completed',
+  IS_LATEST: '1',
+  PROCESS_KEY: 'c4d5e6f7-a8b9-4c0d-9e1f-2a3b4c5d6e7f',
+  TITLE_PREFIX: 'Claim',
+  SLA_ON_TRACK: 'On Track',
+  COUNT_1: 12,
+  COUNT_2: 3,
+
+  // Pagination
+  PAGE_SIZE: 2,
+  SERVER_PAGE_SIZE: 1,
+  JUMP_TO_PAGE: 3,
+  LIMIT: 25,
+} as const;

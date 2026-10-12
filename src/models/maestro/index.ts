@@ -23,6 +23,9 @@ export * from './case-instances.models';
 // Case app types and models
 export * from './case-app.types';
 
+// Case explore types
+export * from './case-explore.types';
+
 // Business app types and models
 export * from './business-apps.types';
 export * from './business-apps.models';
