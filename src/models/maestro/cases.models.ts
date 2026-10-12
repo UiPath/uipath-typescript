@@ -4,6 +4,8 @@
  */
 
 import { CaseGetAllResponse, CaseGetAllOptions, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
+import { CaseExploreQuery, CaseExploreResponse } from './case-explore.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationOptions } from '../../utils/pagination';
 import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
@@ -388,6 +390,78 @@ export interface CasesServiceModel {
    * ```
    */
   getInstanceStats(request: MaestroProcessStatsRequest): Promise<InstanceStats>;
+
+  /**
+   * Run an explore query over case and element runs.
+   *
+   * @experimental
+   *
+   * /// warning
+   * Preview: This method is experimental and may change or be removed in future releases.
+   * ///
+   *
+   * Groups, filters and aggregates the case management data behind case dashboards, and returns one
+   * row per group keyed by field id or aggregate `id`. For a signed-in user, results are limited to the
+   * case processes the user has permission to view.
+   *
+   * Field ids are `<TABLE>.<COLUMN>`: `PROCESSRUNS` holds one row per case status change and
+   * `ELEMENTRUNS` one row per stage or task status change, so filter `ISLATEST` to `'1'` to read the
+   * current state only.
+   *
+   * @param query - Fields to group by, plus optional filters, aggregates, sort and limit
+   * @param options - Pagination options. Pages report `hasNextPage` but no total count
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link CaseExploreResponse} rows without pagination options, or {@link PaginatedResponse} of {@link CaseExploreResponse} rows with them
+   * @example
+   * ```typescript
+   * import { Cases, CaseExploreFilterKind } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Current status of every case
+   * const { items } = await cases.explore({
+   *   groupBy: ['PROCESSRUNS.CASEINSTANCEID', 'PROCESSRUNS.STATUS'],
+   *   filters: [[{ kind: CaseExploreFilterKind.Value, field: 'PROCESSRUNS.ISLATEST', values: ['1'] }]],
+   * });
+   *
+   * for (const row of items) {
+   *   console.log(`${row['PROCESSRUNS.CASEINSTANCEID']}: ${row['PROCESSRUNS.STATUS']}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { Cases, CaseExploreFilterKind, CaseExploreSortDirection } from '@uipath/uipath-typescript/cases';
+   * import type { CaseExploreQuery } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Case count per status for one case process, largest first, 20 rows per page
+   * const query: CaseExploreQuery = {
+   *   groupBy: ['PROCESSRUNS.STATUS'],
+   *   aggregates: [{ id: 'count', measureRef: 'PROCESSRUNS.CASE_COUNT' }],
+   *   filters: [[
+   *     { kind: CaseExploreFilterKind.Value, field: 'PROCESSRUNS.ISLATEST', values: ['1'] },
+   *     { kind: CaseExploreFilterKind.Value, field: 'PROCESSRUNS.PROCESSKEY', values: ['<processKey>'] },
+   *   ]],
+   *   sort: [{ field: 'count', direction: CaseExploreSortDirection.Descending }],
+   * };
+   *
+   * const page = await cases.explore(query, { pageSize: 20 });
+   *
+   * if (page.nextCursor) {
+   *   const nextPage = await cases.explore(query, { cursor: page.nextCursor });
+   *   console.log(nextPage.items);
+   * }
+   * ```
+   */
+  explore<T extends PaginationOptions = PaginationOptions>(
+    query: CaseExploreQuery,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<CaseExploreResponse>
+      : NonPaginatedResponse<CaseExploreResponse>
+  >;
 }
 
 // Method interface that will be added to case objects
