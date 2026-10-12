@@ -351,18 +351,20 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 
 ### Roles
 
+Caller's platform roles govern access
+
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | None — caller's platform roles govern access |
-| `getById()` | None — caller's platform roles govern access |
-| `create()` | None — caller's platform roles govern access |
-| `updateById()` | None — caller's platform roles govern access |
-| `deleteById()` | None — caller's platform roles govern access |
-| `getAssignments()` | None — caller's platform roles govern access |
-| `updateAssignments()` | None — caller's platform roles govern access |
-| `exportAssignments()` | None — caller's platform roles govern access |
-| `getEffectiveAccess()` | None — caller's platform roles govern access |
-| `getActions()` | None — caller's platform roles govern access |
+| `getAll()` | None |
+| `getById()` | None |
+| `create()` | None |
+| `updateById()` | None |
+| `deleteById()` | None |
+| `getAssignments()` | None |
+| `updateAssignments()` | None |
+| `exportAssignments()` | None |
+| `getEffectiveAccess()` | None |
+| `getActions()` | None |
 
 ### Settings
 
@@ -386,7 +388,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
 | `getByName()` | `OR.Execution` or `OR.Execution.Read` |
-| `start()` | (`OR.Jobs` or `OR.Jobs.Write`) **and** (`OR.Execution` or `OR.Execution.Read`) |
+| `start()` | `OR.Jobs` or `OR.Jobs.Write`, `OR.Execution` or `OR.Execution.Read` |
 
 ## Queues
 
