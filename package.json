@@ -315,6 +315,16 @@
                 "types": "./dist/groups/index.d.ts",
                 "default": "./dist/groups/index.cjs"
             }
+        },
+        "./directory": {
+            "import": {
+                "types": "./dist/directory/index.d.ts",
+                "default": "./dist/directory/index.mjs"
+            },
+            "require": {
+                "types": "./dist/directory/index.d.ts",
+                "default": "./dist/directory/index.cjs"
+            }
         }
     },
     "files": [

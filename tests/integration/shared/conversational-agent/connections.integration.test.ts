@@ -9,7 +9,7 @@ import { ConversationalAgentService } from '../../../../src/services/conversatio
 import type {
   AvailableConnectionsResponse,
 } from '../../../../src/models/conversational-agent';
-import { ConnectionState } from '../../../../src/models/conversational-agent';
+import { ConnectionState, ConnectionSessionStatus } from '../../../../src/models/conversational-agent';
 
 const modes: InitMode[] = ['v1'];
 
@@ -215,6 +215,58 @@ describeIntegration(
             },
           ],
         });
+      });
+    });
+
+    describe('getConnectionAuthUrl', () => {
+      it('should return auth URL, sessionId, and expiresTime', async () => {
+        const connections = await service.getAvailableConnections(agentId, folderId);
+
+        const configurableItem = connections.find(
+          (item) => item.isConfigurable && item.connections.length > 0
+        );
+        if (!configurableItem) {
+          throw new Error(
+            'No configurable connector with connections — cannot test getConnectionAuthUrl.'
+          );
+        }
+
+        const result = await service.getConnectionAuthUrl(configurableItem.connectorKey);
+
+        expect(typeof result.authUrl).toBe('string');
+        expect(result.authUrl.length).toBeGreaterThan(0);
+        expect(typeof result.sessionId).toBe('string');
+        expect(result.sessionId.length).toBeGreaterThan(0);
+        expect(typeof result.expiresTime).toBe('number');
+        expect(result.expiresTime).toBeGreaterThan(Date.now());
+        // Wire field should be renamed
+        expect((result as any).expiresAt).toBeUndefined();
+      });
+    });
+
+    describe('getConnectionSessionStatus', () => {
+      it('should return session status for a valid sessionId', async () => {
+        const connections = await service.getAvailableConnections(agentId, folderId);
+
+        const configurableItem = connections.find(
+          (item) => item.isConfigurable && item.connections.length > 0
+        );
+        if (!configurableItem) {
+          throw new Error(
+            'No configurable connector with connections — cannot test getConnectionSessionStatus.'
+          );
+        }
+
+        // Start an auth session to get a valid sessionId
+        const auth = await service.getConnectionAuthUrl(configurableItem.connectorKey);
+        const result = await service.getConnectionSessionStatus(auth.sessionId);
+
+        const validStatuses = new Set<string>(Object.values(ConnectionSessionStatus));
+        expect(validStatuses.has(result.status)).toBe(true);
+        expect('connectionId' in result).toBe(true);
+        expect(typeof result.expiresTime).toBe('number');
+        // Wire field should be renamed
+        expect((result as any).expiresAt).toBeUndefined();
       });
     });
 

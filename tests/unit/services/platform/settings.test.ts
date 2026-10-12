@@ -48,6 +48,7 @@ describe('Platform Settings Service Unit Tests', () => {
         UserCaseAppOrder: 'UserCase.AppOrderByTenant',
         UserCasePinnedInstancesByTenant: 'UserCase.PinnedInstancesByTenant',
         UserCaseInstancesTableFiltersByTenant: 'UserCase.InstancesTableFiltersByTenant',
+        UserCaseInstancesTableColumnsByTenant: 'UserCase.InstancesTableColumnsByTenant',
       });
     });
 
@@ -68,7 +69,7 @@ describe('Platform Settings Service Unit Tests', () => {
 
       const spec = mockApiClient.get.mock.calls[0][1] as { params: { key: string[] } };
       expect(spec.params.key).toEqual(allKeys);
-      expect(spec.params.key).toHaveLength(8);
+      expect(spec.params.key).toHaveLength(9);
     });
 
     it('should return an empty array when no requested key has a stored value', async () => {

@@ -168,6 +168,13 @@ Creating a validation action and polling its result both go through the [Documen
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 | `getStagesSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
+| `getStagesForCaseApp()` | `PIMS` |
+| `getSlaSummaryForCaseApp()` | `PIMS` |
+| `getCaseJsonForCaseApp()` | `PIMS` |
+| `getIncidentsForCaseApp()` | `PIMS` |
+| `getAdhocTasksForCaseApp()` | `PIMS` |
+| `triggerAdhocTaskForCaseApp()` | `PIMS` |
+| `selectStageForCaseApp()` | `PIMS` |
 
 ## Conversational Agent
 
@@ -219,8 +226,6 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
-| `updateConnectionSelections()` | `OR.Execution`, `IS.Connections.Read` |
-| `getAddConnectionUrl()` | `OR.Execution` or `OR.Execution.Read` |
 
 ### User Settings
 
@@ -304,6 +309,13 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `updateById()` | `PM.Group` or `PM.Group.Write` |
 | `deleteById()` | `PM.Group` or `PM.Group.Write` |
 | `getMembers()` | `PM.Group` or `PM.Group.Read` |
+
+## Directory
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `search()` | `PM.Directory.Read` |
+| `getGroupMembership()` | `PM.Directory.Read` |
 
 ## Processes
 

@@ -30,6 +30,8 @@ export enum PlatformSettingKey {
   UserCasePinnedInstancesByTenant = 'UserCase.PinnedInstancesByTenant',
   /** The user's saved case-instance table filters, per tenant. Stored as JSON. */
   UserCaseInstancesTableFiltersByTenant = 'UserCase.InstancesTableFiltersByTenant',
+  /** The user's case-instance table column visibility, per tenant. Stored as JSON. */
+  UserCaseInstancesTableColumnsByTenant = 'UserCase.InstancesTableColumnsByTenant',
 }
 
 /**

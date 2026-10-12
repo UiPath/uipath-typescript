@@ -22,6 +22,7 @@ export const createMockRawAgent = (overrides: Partial<any> = {}): any => {
     processKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_PROCESS_KEY,
     folderId: TEST_CONSTANTS.FOLDER_ID,
     feedId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_FEED_ID,
+    processType: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_PROCESS_TYPE,
     // Raw API field names that should be transformed
     createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
     updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
