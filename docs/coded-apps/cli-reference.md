@@ -307,7 +307,7 @@ $ uip codedapp push [options]
 
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
-| `--project-id` | string | Studio Web project ID. If omitted and `UIPATH_PROJECT_ID` is not set, you are prompted to create or select a solution | — |
+| `--project-id` | string | Studio Web project ID. If omitted and `UIPATH_PROJECT_ID` is not set, you are prompted to create or select a solution (use `--solution-name`/`--project-name` to skip the prompts) | — |
 | `--solution-name` | string | Name of the Studio Web solution to create when no project ID is set. Required with `--project-name` when the CLI cannot prompt | Prompted |
 | `--project-name` | string | Name of the Coded App project to create in that solution | Prompted |
 | `--build-dir` | string | Build output directory | `dist` |
@@ -331,7 +331,7 @@ $ uip codedapp push --project-id <projectId> --build-dir build
 $ uip codedapp push --solution-name "Product Announcements" --project-name "Announcements Portal"
 ```
 
-`--solution-name` and `--project-name` only apply when no project ID is set. If one is set by `--project-id`, `UIPATH_PROJECT_ID`, or `.env`, push fails instead of pushing into that project.
+The first push saves the new project ID to `.env` as `UIPATH_PROJECT_ID`, and later pushes use it. `--solution-name` and `--project-name` only apply when no project ID is set. If one is set by `--project-id`, `UIPATH_PROJECT_ID`, or `.env`, push fails instead of pushing into that project, so running the same command with these flags a second time fails.
 
 ---
 
