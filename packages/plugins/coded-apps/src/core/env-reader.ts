@@ -32,11 +32,16 @@ export function readEnvValues(files: readonly string[] = DEV_ENV_FILES, cwd: str
 }
 
 /**
- * Values to expose for a build, or `undefined` when there is nothing to inject: outside development,
- * or with no `UIPATH_PUBLIC_*` value in any env file.
+ * Values to expose to the page a dev server is serving, or `undefined` when there is nothing to
+ * inject: no dev server, or no `UIPATH_PUBLIC_*` value in any env file.
  */
-export function readDevEnvValues(isDev: boolean): EnvironmentVariables | undefined {
-  if (!isDev) return undefined
+export function readDevEnvValues(isDevServer: boolean): EnvironmentVariables | undefined {
+  if (!isDevServer) return undefined
   const values = readEnvValues()
   return Object.keys(values).length > 0 ? values : undefined
+}
+
+/** Whether webpack runs as `webpack serve`, which webpack-cli marks by setting `WEBPACK_SERVE`. */
+export function isWebpackServe(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.WEBPACK_SERVE === 'true'
 }

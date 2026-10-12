@@ -71,6 +71,23 @@ export function resetEnvCache(): void {
 
 const GET = 'get';
 
+/**
+ * The deployment's `UIPATH_PUBLIC_*` environment variables, readable synchronously, before sign-in
+ * and without creating a `UiPath` instance. Values come from the deployment's `env.js`, or
+ * from `.env.local` / `.env.development` under the dev server. They are visible to anyone who can
+ * open the app, so never put secrets in them.
+ *
+ * A variable the deployment did not set reads as `undefined`, so give it a fallback. Augment
+ * {@link UiPathEnvironment} to type the names your app uses.
+ *
+ * @example
+ * ```typescript
+ * import { env } from '@uipath/uipath-typescript';
+ *
+ * const apiBaseUrl = env.UIPATH_PUBLIC_API_BASE_URL ?? 'https://api.example.com';
+ * const region = env.get('UIPATH_PUBLIC_REGION') ?? 'EU';
+ * ```
+ */
 export const env: UiPathEnv = new Proxy({} as UiPathEnv, {
   get(_target, property) {
     if (property === GET) return (name: string) => (hasOwn(table(), name) ? table()[name] : undefined);

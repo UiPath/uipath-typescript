@@ -52,6 +52,6 @@ describe('injectEnvScriptHtml', () => {
   })
 
   it('returns the input unchanged without a <head>', () => {
-    expect(injectEnvScriptHtml('<html></html>', {})).toBe('<html></html>')
+    expect(injectEnvScriptHtml('<html></html>', { UIPATH_PUBLIC_REGION: 'EU' })).toBe('<html></html>')
   })
 })

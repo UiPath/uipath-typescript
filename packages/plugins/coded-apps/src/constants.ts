@@ -132,5 +132,4 @@ export const DEV_ENV_FILES = ['.env.development', '.env.local', '.env.developmen
 
 export const ENV_MESSAGES = {
   ENV_FILE_READ_ERROR: (file: string, err: unknown) => `Could not read ${file}: ${err}`,
-  ENV_LOADED: (count: number) => `Exposing ${count} ${ENV_VARIABLE_PREFIX}* variable${count === 1 ? '' : 's'} to the app`,
-}
+} as const

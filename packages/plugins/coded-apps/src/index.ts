@@ -4,10 +4,22 @@ import type { UnpluginFactory, UnpluginInstance } from 'unplugin'
 import { createUnplugin } from 'unplugin'
 import type { Options } from './types'
 import { PLUGIN_NAME, DEV_MODE, DEV_ENV_FILES } from './constants'
-import { readConfig, generateMetaTagsForVite, generateMetaTagsHtml, readDevEnvValues, generateEnvScriptForVite, injectEnvScriptHtml } from './core/index'
+import {
+  readConfig,
+  generateMetaTagsForVite,
+  generateMetaTagsHtml,
+  readDevEnvValues,
+  isWebpackServe,
+  generateEnvScriptForVite,
+  injectEnvScriptHtml,
+} from './core/index'
 
 export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = {}) => {
   let isDev = false
+  // Local env values reach only a page a dev server is serving. Anything written to disk can be
+  // deployed, and a deployed app must take its values from the deployment's env.js, so Rollup and
+  // esbuild builds, `vite build --mode development` and unminified builds never get them.
+  let isDevServer = false
   let cachedConfig: ReturnType<typeof readConfig> | null = null
   const configPath = options.configPath ?? 'uipath.json'
 
@@ -18,6 +30,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
     vite: {
       configResolved(config) {
         isDev = config.command === 'serve' || config.mode === DEV_MODE
+        isDevServer = config.command === 'serve'
       },
       configureServer(server) {
         // Watch uipath.json — invalidate cache on change so next request picks it up
@@ -38,8 +51,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
           cachedConfig = readConfig({ ...options, isDev })
         }
         const tags = generateMetaTagsForVite(cachedConfig)
-        // Dev only: a production build gets env.js from the deployment, never from a local file.
-        const envValues = readDevEnvValues(isDev)
+        const envValues = readDevEnvValues(isDevServer)
         return envValues ? [...generateEnvScriptForVite(envValues), ...tags] : tags
       },
     },
@@ -47,6 +59,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
     // Webpack-specific hooks
     webpack(compiler) {
       isDev = compiler.options.mode === DEV_MODE
+      isDevServer = isWebpackServe()
 
       type Compilation = {
         assets: Record<string, { source: () => string | Buffer; size: () => number }>
@@ -56,7 +69,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
-          const envValues = readDevEnvValues(isDev)
+          const envValues = readDevEnvValues(isDevServer)
 
           if (!metaTagsHtml && !envValues) {
             callback()
@@ -97,8 +110,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         try {
           const config = readConfig({ ...options, isDev })
           const metaTagsHtml = generateMetaTagsHtml(config)
-          const envValues = readDevEnvValues(isDev)
-          if (!metaTagsHtml && !envValues) return
+          if (!metaTagsHtml) return
 
           for (const fileName of Object.keys(bundle)) {
             const asset = bundle[fileName]
@@ -107,11 +119,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
               asset.type === 'asset' &&
               typeof asset.source === 'string'
             ) {
-              let html = envValues ? injectEnvScriptHtml(asset.source, envValues) : asset.source
-              if (metaTagsHtml) {
-                html = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
-              }
-              asset.source = html
+              asset.source = asset.source.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
             }
           }
         } catch (error) {
@@ -130,8 +138,7 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
           try {
             const config = readConfig({ ...options, isDev })
             const metaTagsHtml = generateMetaTagsHtml(config)
-            const envValues = readDevEnvValues(isDev)
-            if (!metaTagsHtml && !envValues) return
+            if (!metaTagsHtml) return
 
             const outdir = build.initialOptions.outdir
             if (!outdir) return
@@ -142,10 +149,11 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
             for (const file of fs.readdirSync(outPath)) {
               if (file.endsWith('.html')) {
                 const filePath = path.join(outPath, file)
-                let html = fs.readFileSync(filePath, 'utf-8')
-                if (envValues) html = injectEnvScriptHtml(html, envValues)
-                if (metaTagsHtml) html = html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
-                fs.writeFileSync(filePath, html)
+                const html = fs.readFileSync(filePath, 'utf-8')
+                fs.writeFileSync(
+                  filePath,
+                  html.replace('</head>', `  ${metaTagsHtml}\n  </head>`)
+                )
               }
             }
           } catch (error) {

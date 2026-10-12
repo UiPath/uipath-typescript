@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { readDevEnvValues, readEnvValues } from '../src/core/env-reader'
+import { isWebpackServe, readDevEnvValues, readEnvValues } from '../src/core/env-reader'
 
 let dir: string
 
@@ -55,7 +55,7 @@ describe('readEnvValues', () => {
 })
 
 describe('readDevEnvValues', () => {
-  it('returns undefined outside development', () => {
+  it('returns undefined without a dev server', () => {
     write('.env.local', 'UIPATH_PUBLIC_REGION=EU\n')
     const cwd = process.cwd()
     process.chdir(dir)
@@ -66,7 +66,7 @@ describe('readDevEnvValues', () => {
     }
   })
 
-  it('returns undefined in development when no env file sets a UIPATH_PUBLIC_ value', () => {
+  it('returns undefined under a dev server when no env file sets a UIPATH_PUBLIC_ value', () => {
     write('.env.local', 'OTHER=1\n')
     const cwd = process.cwd()
     process.chdir(dir)
@@ -77,7 +77,7 @@ describe('readDevEnvValues', () => {
     }
   })
 
-  it('returns the values in development', () => {
+  it('returns the values under a dev server', () => {
     write('.env.local', 'UIPATH_PUBLIC_REGION=EU\n')
     const cwd = process.cwd()
     process.chdir(dir)
@@ -86,5 +86,13 @@ describe('readDevEnvValues', () => {
     } finally {
       process.chdir(cwd)
     }
+  })
+})
+
+describe('isWebpackServe', () => {
+  it('is true only when webpack-cli marks the serve command', () => {
+    expect(isWebpackServe({ WEBPACK_SERVE: 'true' })).toBe(true)
+    expect(isWebpackServe({})).toBe(false)
+    expect(isWebpackServe({ NODE_ENV: 'development' })).toBe(false)
   })
 })
