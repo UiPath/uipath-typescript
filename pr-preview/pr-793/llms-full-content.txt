@@ -258,6 +258,8 @@ export default defineFunction({
 
 Construct the SDK **inside the handler**, once per invocation. A single instance hoisted to module scope would keep serving the org, tenant and token of whichever invocation created it.
 
+The constructor reads `ctx.platform` — `baseUrl`, reduced to its origin, and the `orgId` and `tenantId` GUIDs, which the platform accepts in place of names — and `ctx.robot.accessToken` as the bearer token. `ctx.platform.folderKey` is the fallback folder for a call that needs a folder and names none, such as a lookup by name, which runs against the invocation's folder. Integration Service calls are left unscoped: Integration Service rejects a connection outside the folder a call names, and the connection a function uses often lives in another folder. Explicit `folderId`, `folderKey` or `folderPath` options still win. On a local run, where `ctx.platform` is null, the constructor falls through to the environment contract below; when neither supplies a coordinate, the error names it.
+
 ## Server-side and scripts (environment contract)
 
 Outside the browser — a script, a test, a CI job — the SDK configures itself from environment variables, so `new UiPath()` needs no arguments:
@@ -577,6 +579,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Users                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAll()`                 | ✅ Yes                 |
 | Roles                             | `getAssignments()`         | ✅ Yes                 |
+| Groups                            | `getMembers()`             | ✅ Yes                 |
 | Entities                          | `getAllRecords()`          | ✅ Yes                 |
 | Entities                          | `getRecordsByName()`       | ✅ Yes                 |
 | Entities                          | `queryRecords()`           | ✅ Yes                 |
@@ -1785,7 +1788,7 @@ const rushItem = await queues.insertItemByName('<queueName>', {
 
 Starts a transaction: acquires the next available item from a queue and marks it `InProgress`
 
-Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
+Requires a robot session. Orchestrator allocates the item to the robot that sent the request, so user and application identities always receive `null`, however many items are waiting. Inside a coded function, build the SDK with `new UiPath(ctx)`: the SDK then sends the function's robot key, which Orchestrator needs to allocate the item. Queue items are normally consumed by a robot running a process — apps produce with `insertItemByName` and observe with `getAllItems`, leaving acquisition to the robot.
 
 `null` covers both "no eligible items" and "no allocation target" — the two are not distinguishable.
 
@@ -3222,6 +3225,8 @@ const allEntities = await entities.getAll();
 
 Creates a new Data Fabric entity with the given schema
 
+To create a **Federated** entity — a read-only view over one or more external (Integration Service) or native sources — set `entityClass` to `Federated`, describe each source in `externalFields`, and pass `[]` for `fields`. A Federated entity with N sources needs N-1 `sourceJoinConditionDetails`, all starting from one source, which becomes the primary source.
+
 #### Parameters
 
 - `name`: `string` — Entity name — must start with a letter, letters/numbers/underscores only (e.g., `"productCatalog"`).
@@ -3287,8 +3292,11 @@ await entities.create("<entityName>", [], {
     }],
   }],
   // Multi-source: add more entries to `externalFields` and join them:
-  // sourceJoinConditionDetails: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>",
-  //   joinType: JoinType.LeftJoin, relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>" }],
+  // sourceJoinConditionDetails: [{
+  //   sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>",
+  //   joinType: JoinType.LeftJoin,
+  //   relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>",
+  // }],
 });
 ```
 
@@ -4243,12 +4251,17 @@ Updates an existing Data Fabric entity — schema and/or metadata.
 
 Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied only when the corresponding fields are provided.
 
-For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources` (also removes that source's joins), `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, and `updateSourceJoin`. `addFieldsToSource` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field.
+For **Federated** entities, pass source/join deltas instead: `addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, and `updateExternalConnection`.
+
+- **Identifying things.** A delta that targets an existing source identifies it by **both** `sourceObjectName` and `sourceConnectionId` (a connector `connectionId`, or the `entityId` for a native source), because an entity may have two sources with the same object name on different connections.
+- **Joins.** A Federated entity with N sources has exactly N-1 joins, all starting from one source, the *primary source*. The primary source is not stored: it is the source on the left of every join. A join cannot be removed on its own, since every other source must stay joined. To change the primary source, pass the complete new join set to `replaceSourceJoins`. To add a source, pass it in `addExternalSources` together with its join in `addSourceJoins`. `updateSourceJoin` only changes the join fields of an existing join.
+- **Fields.** `addExternalFields` maps a field that already exists on the source (a native entity's column or a connector field); it does not create the underlying field. A source must keep at least one field, and a field name must be unique across all sources. Mapping settings (direction, searchable, sortable) cannot be changed after a source is added.
+- **Sources.** A Federated entity always has at least one source: to replace its only source, remove it and add the new one in the same call. The saved result is validated by the backend (join graph, duplicate sources, duplicate field names, empty sources).
 
 #### Parameters
 
 - `id`: `string` — UUID of the entity to update
-- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addFieldsToSource`, `removeFieldsFromSource`, `updateExternalFieldMapping`, `addSourceJoins`, `updateSourceJoin`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
+- `options?`: `EntityUpdateByIdOptions` — Changes to apply ([EntityUpdateByIdOptions](../EntityUpdateByIdOptions/)). At least one of `addFields`, `removeFields`, `updateFields`, `displayName`, `description`, `isRbacEnabled`, or a federated source/join delta (`addExternalSources`, `removeExternalSources`, `addExternalFields`, `removeExternalFields`, `addSourceJoins`, `updateSourceJoin`, `replaceSourceJoins`, `updateExternalConnection`) must be provided — calling with no options, `{}`, or only `folderKey` throws a `ValidationError`. Field names passed in `addFields[].name` and `removeFields[].name` must be camelCase — start with a letter, letters and numbers only; the Data Fabric backend rejects underscores in field names. The `folderKey` property is **experimental**.
 
 #### Returns
 
@@ -4296,28 +4309,42 @@ await entities.updateById(<id>, {
   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
 });
 
-// Federated: add a source joined to the existing graph
+// Federated: add a source joined to the existing graph. Every source is identified by
+// (sourceObjectName, sourceConnectionId) — a connector connectionId, or a native entityId.
 await entities.updateById(<id>, {
   addExternalSources: [{
     externalConnectionDetail: { connectionId: "<connectionId>", elementInstanceId: 0, connectorKey: "<connectorKey>", connectorName: "<connectorName>" },
     externalObjectDetail: { externalObjectName: "<relatedObjectName>", primaryKey: "<primaryKeyField>", method: "<operationsCatalogJson>" },
     fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }],
   }],
-  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
+  addSourceJoins: [{ sourceObjectName: "<objectName>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceObjectConnectionId: "<relatedConnectionId>", relatedSourceJoinField: "<relatedExternalFieldName>", joinType: JoinType.LeftJoin }],
 });
 
 // Federated: add a field to an existing source (maps a field that already exists on it)
 await entities.updateById(<id>, {
-  addFieldsToSource: [{ sourceObjectName: "<objectName>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
+  addExternalFields: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", fields: [{ field: { name: "<internalFieldName>", type: EntityFieldDataType.STRING }, externalFieldMappingDetail: { externalFieldName: "<externalFieldName>", directionType: DataDirectionType.ReadOnly } }] }],
 });
 
-// Federated: change an existing join in place
+// Federated: change the join fields of an existing join (its sources and direction stay the same)
 await entities.updateById(<id>, {
-  updateSourceJoin: [{ sourceObjectName: "<objectName>", relatedSourceObjectName: "<relatedObjectName>", sourceJoinField: "<externalFieldName>" }],
+  updateSourceJoin: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<connectionId>", relatedSourceObjectName: "<relatedObjectName>", relatedSourceConnectionId: "<relatedConnectionId>", sourceJoinField: "<externalFieldName>" }],
 });
 
-// Federated: remove a source (its joins are removed automatically)
-await entities.updateById(<id>, { removeExternalSources: ["<relatedObjectName>"] });
+// Federated: change the primary source. Pass the complete new join set, rooted at the new
+// primary source (here "<newPrimaryObject>"); every other source is the related side of one join.
+await entities.updateById(<id>, {
+  replaceSourceJoins: [
+    { sourceObjectName: "<newPrimaryObject>", sourceObjectConnectionId: "<connectionId>", sourceJoinField: "<externalFieldName>", relatedSourceObjectName: "<otherObject>", relatedSourceObjectConnectionId: "<otherConnectionId>", relatedSourceJoinField: "<otherExternalFieldName>", joinType: JoinType.LeftJoin },
+  ],
+});
+
+// Federated: swap a connector source's connection id
+await entities.updateById(<id>, {
+  updateExternalConnection: [{ sourceObjectName: "<objectName>", sourceConnectionId: "<currentConnectionId>", newConnectionId: "<newConnectionId>" }],
+});
+
+// Federated: remove a non-primary source (its join is removed with it)
+await entities.updateById(<id>, { removeExternalSources: [{ sourceObjectName: "<relatedObjectName>", sourceConnectionId: "<relatedConnectionId>" }] });
 ```
 
 ### updateRecord()
@@ -6092,6 +6119,34 @@ const caseInstances = new CaseInstances(sdk);
 const allInstances = await caseInstances.getAll();
 ```
 
+### Case App routes (experimental)
+
+Case App routes authorize by the caller's Case persona grants instead of Orchestrator folder permissions. Use them to build apps for case workers who hold Case persona grants. Grant users roles inside Maestro Case Instances.
+
+**Requirements**
+
+- `folderKey` on `getAll`, since Case App routes list one folder at a time.
+
+**Enable** by creating the service with `{ useCaseAppRoutes: true }`:
+
+```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
+const caseApp = new CaseInstances(sdk, { useCaseAppRoutes: true });
+const { items } = await caseApp.getAll({ folderKey: '<folderKey>' });
+
+// Bound methods on returned instances keep using Case App routes
+await items[0].close({ comment: 'Resolved' });
+```
+
+**Method behavior with `useCaseAppRoutes: true`**
+
+| Methods                                                                        | Behavior                                             |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| `getAll`, `getStages`, `close`, `reopen`, `sendMessage`, `getExecutionHistory` | Call the Case App routes                             |
+| `getById`, `pause`, `resume`, `getVariables`                                   | Throw a `ValidationError` — no Case App route exists |
+| Methods ending in `ForCaseApp`                                                 | Always call the Case App routes, whatever the option |
+
 Note
 
 Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`) may have up to ~1 minute latency before reflecting the latest updates. See [Real-Time Monitoring Overview](https://docs.uipath.com/insights/automation-cloud/latest/user-guide/real-time-monitoring-overview) for details.
@@ -6114,7 +6169,7 @@ Close/Cancel a case instance
 
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
-Promise resolving to operation result with instance data
+Promise resolving to operation result with instance data. With Case App routes, a case that has already completed is rejected, and the result reports `isCompleted`.
 
 #### Example
 
@@ -6199,11 +6254,45 @@ const page5 = await caseInstances.getActionTasks(
 );
 ```
 
+### getAdhocTasksForCaseApp()
+
+> **getAdhocTasksForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppAdhocTaskStage`[]>
+
+**`Experimental`**
+
+Gets the ad-hoc tasks the caller can trigger on a running case instance, grouped by stage.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Only stages the caller holds `Cases.RunAdhocTasks` on are returned, so every task listed can be passed to `triggerAdhocTaskForCaseApp`. A caller whose grants cover no ad-hoc task gets an empty array.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppAdhocTaskStage`[]>
+
+Promise resolving to an array of [CaseAppAdhocTaskStage](../CaseAppAdhocTaskStage/)
+
+#### Example
+
+```
+const stages = await caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => stage.tasks.forEach(task => console.log(stage.stageLabel, task.taskName)));
+```
+
 ### getAll()
 
 > **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* `HasPaginationOptions`\<`T`> ? `PaginatedResponse`\<`CaseInstanceGetResponse`> : `NonPaginatedResponse`\<`CaseInstanceGetResponse`>>
 
 Get all case instances with optional filtering and pagination
+
+With Case App routes, `folderKey` is required and instances the caller's `Cases.View` grants don't cover are dropped after each page is fetched, so a page can hold fewer items than `pageSize` — or none — while `hasNextPage` is still `true`.
 
 #### Type Parameters
 
@@ -6222,6 +6311,8 @@ Promise resolving to either an array of case instances NonPaginatedResponse or a
 #### Example
 
 ```
+import { CaseInstanceSortBy, CaseInstanceSortOrder, InstanceStatus } from '@uipath/uipath-typescript/cases';
+
 // Get all case instances (non-paginated)
 const instances = await caseInstances.getAll();
 
@@ -6235,6 +6326,14 @@ for (const instance of instances.items) {
 // With filtering
 const filteredInstances = await caseInstances.getAll({
   processKey: 'MyCaseProcess'
+});
+
+// Filter by status and start time, newest first
+const running = await caseInstances.getAll({
+  statuses: [InstanceStatus.RUNNING, InstanceStatus.FAULTED],
+  startedTimeStart: new Date('2026-01-01'),
+  sortBy: CaseInstanceSortBy.StartedTime,
+  order: CaseInstanceSortOrder.Desc
 });
 
 // First page with pagination
@@ -6251,6 +6350,8 @@ if (page1.hasNextPage) {
 > **getById**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceGetResponse`>
 
 Get a specific case instance by ID
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -6276,16 +6377,50 @@ const instance = await caseInstances.getById(
 console.log(`Status: ${instance.latestRunStatus}`);
 ```
 
+### getCaseJsonForCaseApp()
+
+> **getCaseJsonForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`Record`\<`string`, `unknown`>>
+
+**`Experimental`**
+
+Gets the case plan of a case instance — the JSON document the case was designed with.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Returned exactly as stored in the package, so its shape follows the case designer's schema. Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`Record`\<`string`, `unknown`>>
+
+Promise resolving to the case plan as a `Record<string, unknown>`
+
+#### Example
+
+```
+const casePlan = await caseInstances.getCaseJsonForCaseApp('<instanceId>', '<folderKey>');
+```
+
 ### getExecutionHistory()
 
-> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
+> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceGetExecutionHistoryOptions`): `Promise`\<`CaseInstanceExecutionHistoryResponse`>
 
 Get execution history for a case instance
+
+With Case App routes the response also carries the case id, the case summary and the details sections configured on the case app.
 
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance
 - `folderKey`: `string` — Required folder key
+- `options?`: `CaseInstanceGetExecutionHistoryOptions` — Optional element-type filter
 
 #### Returns
 
@@ -6296,6 +6431,8 @@ Promise resolving to instance execution history [CaseInstanceExecutionHistoryRes
 #### Example
 
 ```
+import { CaseInstanceElementType } from '@uipath/uipath-typescript/cases';
+
 // Get execution history for a case instance
 const history = await caseInstances.getExecutionHistory(
   <instanceId>,
@@ -6308,6 +6445,43 @@ if (history.elementExecutions) {
     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
   }
 }
+
+// Only human-in-the-loop and agent elements
+const tasks = await caseInstances.getExecutionHistory(<instanceId>, <folderKey>, {
+  elementTypes: [CaseInstanceElementType.Hitl, CaseInstanceElementType.Agent]
+});
+```
+
+### getIncidentsForCaseApp()
+
+> **getIncidentsForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppIncidentGetResponse`[]>
+
+**`Experimental`**
+
+Gets the incidents raised on a case instance, across all of its runs.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppIncidentGetResponse`[]>
+
+Promise resolving to an array of [CaseAppIncidentGetResponse](../CaseAppIncidentGetResponse/)
+
+#### Example
+
+```
+const incidents = await caseInstances.getIncidentsForCaseApp('<instanceId>', '<folderKey>');
+incidents.forEach(incident => console.log(incident.errorCode, incident.errorMessage));
 ```
 
 ### getSlaSummary()
@@ -6360,6 +6534,38 @@ if (page1.hasNextPage) {
 const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
 ```
 
+### getSlaSummaryForCaseApp()
+
+> **getSlaSummaryForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+**`Experimental`**
+
+Gets the case-level SLA summary of a case instance: its due time, SLA status and escalation state.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.ViewSummary` on the case; a grant on a single stage is not enough.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetSlaSummaryResponse`>
+
+Promise resolving to [CaseAppGetSlaSummaryResponse](../CaseAppGetSlaSummaryResponse/)
+
+#### Example
+
+```
+const summary = await caseInstances.getSlaSummaryForCaseApp('<instanceId>', '<folderKey>');
+console.log(summary.slaStatus, summary.slaDueTime);
+```
+
 ### getStages()
 
 > **getStages**(`caseInstanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseGetStageResponse`[]>
@@ -6397,6 +6603,39 @@ for (const stage of stages) {
     }
   }
 }
+```
+
+### getStagesForCaseApp()
+
+> **getStagesForCaseApp**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`CaseAppGetStagesResponse`>
+
+**`Experimental`**
+
+Gets each stage of a case instance with its latest status and runtime SLA.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+Requires `Cases.View`.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+
+#### Returns
+
+`Promise`\<`CaseAppGetStagesResponse`>
+
+Promise resolving to [CaseAppGetStagesResponse](../CaseAppGetStagesResponse/)
+
+#### Example
+
+```
+// First, get case instances with caseInstances.getAll({ folderKey: '<folderKey>' })
+const { stages } = await caseInstances.getStagesForCaseApp('<instanceId>', '<folderKey>');
+stages.forEach(stage => console.log(stage.name, stage.latestStatus, stage.slaStatus));
 ```
 
 ### getStagesSlaSummary()
@@ -6447,6 +6686,8 @@ Get global variables for a case instance
 
 Returns the case instance's elements with their inputs/outputs and the global variables enriched with metadata (name, type, source element) parsed from the case's BPMN definition.
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the case instance to get variables for
@@ -6492,6 +6733,8 @@ const instanceVariables = await instance.getVariables();
 > **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: `CaseInstanceOperationOptions`): `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Pause a case instance
+
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
 
 #### Parameters
 
@@ -6560,6 +6803,8 @@ const result = await instance.reopen({ stageId: stages[0].id });
 
 Resume a case instance
 
+Throws a `ValidationError` with Case App routes, which have no route for this operation.
+
 #### Parameters
 
 - `instanceId`: `string` — The ID of the instance to resume
@@ -6571,6 +6816,43 @@ Resume a case instance
 `Promise`\<`OperationResponse`\<`CaseInstanceOperationResponse`>>
 
 Promise resolving to operation result with instance data
+
+### selectStageForCaseApp()
+
+> **selectStageForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `stageName`: `string`, `options?`: `CaseAppSelectStageOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Selects the next stage of a running case instance that is waiting for a user to choose one.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`stageName` is matched case-sensitively against the case plan's stage labels; an unknown name, or a stage that is not user-selectable, is rejected as not found. Requires `Cases.SelectStage` on the case. Resolves once the selection is sent, not once the case has transitioned.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `stageName`: `string` — Label of the stage to select
+- `options?`: `CaseAppSelectStageOptions` — Which waiting stage receives the selection, when several are waiting
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the selection is accepted
+
+#### Examples
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review');
+```
+
+```
+await caseInstances.selectStageForCaseApp('<instanceId>', '<folderKey>', 'Review', { waitingStageId: '<stageId>' });
+```
 
 ### sendMessage()
 
@@ -6622,6 +6904,46 @@ await instance.sendMessage(
   CaseInstanceMessageName.UserAdhocTrigger,
   { itemData: { taskNames: ['Approve Invoice'] } }
 );
+```
+
+### triggerAdhocTaskForCaseApp()
+
+> **triggerAdhocTaskForCaseApp**(`instanceId`: `string`, `folderKey`: `string`, `taskName`: `string`, `options?`: `CaseAppTriggerAdhocTaskOptions`): `Promise`\<`void`>
+
+**`Experimental`**
+
+Triggers one ad-hoc (manually-triggered) task on a running case instance.
+
+Warning
+
+Preview: This method is experimental and may change or be removed in future releases.
+
+`taskName` is matched case-sensitively against the case plan; an unknown or non-ad-hoc name is rejected as not found. Requires `Cases.RunAdhocTasks` on the stage that owns the task. Resolves once the trigger is accepted, not once the task has run.
+
+#### Parameters
+
+- `instanceId`: `string` — ID of the case instance
+- `folderKey`: `string` — Key of the folder the case instance lives in
+- `taskName`: `string` — Case plan name of the task, as returned by `getAdhocTasksForCaseApp`
+- `options?`: `CaseAppTriggerAdhocTaskOptions` — Optional input handed to the task
+
+#### Returns
+
+`Promise`\<`void`>
+
+Promise resolving when the trigger is accepted
+
+#### Examples
+
+```
+// First, list triggerable tasks with caseInstances.getAdhocTasksForCaseApp('<instanceId>', '<folderKey>')
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents');
+```
+
+```
+await caseInstances.triggerAdhocTaskForCaseApp('<instanceId>', '<folderKey>', 'Request Documents', {
+  taskInput: { reason: 'Missing proof of address' },
+});
 ```
 
 Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable natural language interactions with UiPath automation. Discover agents, create conversations, and stream real-time responses over WebSocket. [UiPath Conversational Agents Guide](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/conversational-agents)
@@ -6817,35 +7139,6 @@ if (isCitationSourceMedia(source)) {
 }
 ```
 
-### getAddConnectionUrl()
-
-> **getAddConnectionUrl**(`item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; }): `Promise`\<`null` | `string`>
-
-Returns the best URL for adding a new connection for a given connector.
-
-Tries to generate a connector-specific auth URL (works when running inside the UiPath platform). If that fails, falls back to the Orchestrator connections page or the connector configuration page.
-
-#### Parameters
-
-- `item`: { `configurationUrl?`: `string`; `connectionsUrl?`: `string`; `connectorKey`: `string`; } — The connector item from [getAvailableConnections](#getavailableconnections)
-- `item.configurationUrl?`: `string` — -
-- `item.connectionsUrl?`: `string` — -
-- `item.connectorKey`: `string` — -
-
-#### Returns
-
-`Promise`\<`null` | `string`>
-
-The URL to open, or `null` if no URL is available
-
-#### Example
-
-```
-const connections = await conversationalAgent.getAvailableConnections(agentId, folderId);
-const url = await conversationalAgent.getAddConnectionUrl(connections[0]);
-if (url) window.open(url, '_blank');
-```
-
 ### getAll()
 
 > **getAll**(`folderId?`: `number`): `Promise`\<`AgentGetResponse`[]>
@@ -6954,32 +7247,6 @@ const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) =>
 
 // Later, remove the handler
 cleanup();
-```
-
-### updateConnectionSelections()
-
-> **updateConnectionSelections**(`agentId`: `number`, `folderId`: `number`, `request`: `UpdateConnectionSelectionsRequest`): `Promise`\<`AvailableConnectionsResponse`>
-
-Updates the current user's connection selections for an agent. Only configurable bindings (not admin-fixed) can be updated.
-
-#### Parameters
-
-- `agentId`: `number` — ID of the agent release
-- `folderId`: `number` — ID of the folder containing the agent
-- `request`: `UpdateConnectionSelectionsRequest` — The connection selections to apply
-
-#### Returns
-
-`Promise`\<`AvailableConnectionsResponse`>
-
-Promise resolving to the updated available connections [AvailableConnectionsResponse](../../type-aliases/AvailableConnectionsResponse/)
-
-#### Example
-
-```
-const updated = await conversationalAgent.updateConnectionSelections(agentId, folderId, {
-  selections: [{ connectorKey: 'jira', connectionId: 'conn-123' }]
-});
 ```
 
 Service for creating and managing conversations with UiPath Conversational Agents
