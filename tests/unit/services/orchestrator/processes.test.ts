@@ -497,6 +497,43 @@ describe('ProcessService Unit Tests', () => {
       });
     });
 
+    it('should start a process bound to the current folder (".") in the SDK init-time folder', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+      const scopedService = new ProcessService(instance);
+      mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+      await scopedService.start({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef, { folderPath: '.' });
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers[FOLDER_KEY]).toBe(PROCESS_TEST_CONSTANTS.FOLDER_KEY);
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should start in the SDK init-time folder when an override pins a "." process to an empty folder path', async () => {
+      // A debug session's overrides give a process of the solution an empty folder path, so it runs next to the session.
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`process.${PROCESS_TEST_CONSTANTS.PROCESS_NAME}`]: { name: PROCESS_TEST_CONSTANTS.PROCESS_NAME, folderPath: '' },
+      });
+
+      try {
+        const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+        vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
+        const scopedService = new ProcessService(instance);
+        mockApiClient.post.mockResolvedValue(createMockProcessStartApiResponse([createMockProcessStartResponse()]));
+
+        await scopedService.start({ name: PROCESS_TEST_CONSTANTS.PROCESS_NAME } as ProcessRef, { folderPath: '.' });
+
+        const [, body, requestSpec] = mockApiClient.post.mock.calls[0];
+        expect(body.startInfo.releaseName).toBe(PROCESS_TEST_CONSTANTS.PROCESS_NAME);
+        expect(requestSpec.headers[FOLDER_KEY]).toBe(PROCESS_TEST_CONSTANTS.FOLDER_KEY);
+        expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
     it('should throw ValidationError when no folder context can be resolved', async () => {
       const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
       await expect(service.start(request)).rejects.toBeInstanceOf(ValidationError);
