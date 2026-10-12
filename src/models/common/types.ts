@@ -109,7 +109,7 @@ export interface FolderScopingOnly {
   folderId?: number;
   /** Folder key (GUID-formatted string). */
   folderKey?: string;
-  /** Slash-delimited folder path, e.g. `'Shared/Finance'`. */
+  /** Slash-delimited folder path, e.g. `'Shared/Finance'`; `'.'` is the folder the code runs in. */
   folderPath?: string;
 }
 
