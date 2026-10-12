@@ -37,6 +37,10 @@ export interface PrivateSDK {
    * Orchestrator needs it to hand a queue item to the function's robot.
    */
   robotKey?: string;
+  /**
+   * Studio Web license acquisition for the signed-in user, awaited before each request by the
+   * services that can start a job. Absent when the SDK authenticates with a secret.
+   */
   sessionLicense?: SessionLicense;
   /**
    * Organization GUID resolver, created lazily by

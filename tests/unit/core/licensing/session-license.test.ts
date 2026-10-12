@@ -42,7 +42,7 @@ function makeConfig(tenantName: string = TEST_CONSTANTS.TENANT_ID): UiPathConfig
 }
 
 function createLicense(tenantName?: string): SessionLicense {
-  return new SessionLicense(makeConfig(tenantName), mockApiClient as unknown as ApiClient, claims);
+  return new SessionLicense(makeConfig(tenantName), mockApiClient, claims);
 }
 
 function signedIn(userId: string, tenantName?: string): SessionLicense {

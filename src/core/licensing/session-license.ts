@@ -12,13 +12,13 @@ const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retry
 const ACQUIRE_TIMEOUT_MS = 5_000;
 
 export class SessionLicense {
-  readonly #apiClient: ApiClient;
+  readonly #apiClient: Pick<ApiClient, 'post'>;
   readonly #claims: KeyValueStore;
   readonly #claimKey: string;
   #userId?: string;
   #acquisition?: Promise<void>;
 
-  constructor(config: UiPathConfig, apiClient: ApiClient, claims: KeyValueStore) {
+  constructor(config: UiPathConfig, apiClient: Pick<ApiClient, 'post'>, claims: KeyValueStore) {
     this.#apiClient = apiClient;
     this.#claims = claims;
     this.#claimKey = `${AUTH_STORAGE_KEYS.LICENSE_PREFIX}${config.baseUrl}/${config.orgName}/${config.tenantName}`;
