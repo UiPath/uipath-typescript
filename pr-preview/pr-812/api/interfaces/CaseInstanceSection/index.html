@@ -10,7 +10,7 @@
         <meta name="author" content="UiPath">
       
       
-        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/ConnectionAuthResponse/">
+        <link rel="canonical" href="https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstanceSection/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>ConnectionAuthResponse - UiPath TypeScript SDK</title>
+        <title>CaseInstanceSection - UiPath TypeScript SDK</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ConnectionAuthResponse
+              CaseInstanceSection
             
           </span>
         </div>
@@ -3805,9 +3805,9 @@
   
 
 
-  <h1>ConnectionAuthResponse</h1>
+  <h1>CaseInstanceSection</h1>
 
-<p>Response from the connection auth endpoint</p>
+<p>A details card configured on the case app.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3819,14 +3819,19 @@
 </thead>
 <tbody>
 <tr>
-<td><a id="authurl"></a> <code>authUrl</code></td>
-<td><code>string</code></td>
-<td>The connector-specific auth URL to open</td>
+<td><a id="details"></a> <code>details</code></td>
+<td><code>null</code> | <code>Record</code>&lt;<code>string</code>, <code>unknown</code>&gt;</td>
+<td>Fields configured by the case app author, returned as the API sends them</td>
 </tr>
 <tr>
-<td><a id="expirestime"></a> <code>expiresTime</code></td>
-<td><code>number</code></td>
-<td>Unix timestamp when the auth URL expires</td>
+<td><a id="id"></a> <code>id</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td><a id="title"></a> <code>title</code></td>
+<td><code>null</code> | <code>string</code></td>
+<td>-</td>
 </tr>
 </tbody>
 </table>
