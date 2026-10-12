@@ -298,6 +298,7 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `explore()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
 

@@ -14,8 +14,15 @@ import {
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
-  createMockError
+  createMockError,
+  createRawExploreColumn,
+  createRawExploreColumns,
+  createRawExplorePagedResponse
 } from '../../../utils/mocks';
+import { CASE_EXPLORE_TEST_CONSTANTS as EXPLORE, PAGINATION_TEST_CONSTANTS } from '../../../utils/constants';
+import { CaseExploreFilterKind, CaseExploreSortDirection } from '../../../../src/models/maestro/case-explore.types';
+import type { CaseExploreQuery } from '../../../../src/models/maestro/case-explore.types';
+import type { PaginationCursor } from '../../../../src/utils/pagination';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 
@@ -473,6 +480,190 @@ describe('CasesService', () => {
         }),
         {}
       );
+    });
+  });
+
+  describe('explore', () => {
+    const query: CaseExploreQuery = {
+      groupBy: [EXPLORE.FIELD_CASE_ID, EXPLORE.FIELD_STATUS],
+      filters: [[{ kind: CaseExploreFilterKind.Value, field: EXPLORE.FIELD_IS_LATEST, values: [EXPLORE.IS_LATEST] }]],
+    };
+
+    it('should post the query and zip the columnar result into rows', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExploreColumns());
+
+      const result = await service.explore(query);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        {
+          groupBy: [EXPLORE.FIELD_CASE_ID, EXPLORE.FIELD_STATUS],
+          aggregates: [],
+          filters: [[{ Kind: 'ValueFilter', Type: 'StringValues', Dimension: EXPLORE.FIELD_IS_LATEST, Values: [EXPLORE.IS_LATEST] }]],
+          sort: [],
+        },
+        {}
+      );
+      expect(result.items).toEqual([
+        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_1, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_RUNNING },
+        { [EXPLORE.FIELD_CASE_ID]: EXPLORE.CASE_ID_2, [EXPLORE.FIELD_STATUS]: EXPLORE.STATUS_COMPLETED },
+      ]);
+      expect('hasNextPage' in result).toBe(false);
+    });
+
+    it('should drop the engine marker columns from rows', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExploreColumns());
+
+      const result = await service.explore(query);
+
+      expect(result.items[0][EXPLORE.MARKER_COLUMN]).toBeUndefined();
+    });
+
+    it('should map search filters, aggregates, sort and limit to the wire shape', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      await service.explore({
+        groupBy: [EXPLORE.FIELD_STATUS],
+        aggregates: [{ id: EXPLORE.AGGREGATE_ID, measureRef: EXPLORE.MEASURE_CASE_COUNT }],
+        filters: [
+          [{ kind: CaseExploreFilterKind.Search, field: EXPLORE.FIELD_CASE_TITLE, pattern: EXPLORE.TITLE_PREFIX }],
+          [{ kind: CaseExploreFilterKind.Value, field: EXPLORE.FIELD_PROCESS_KEY, values: [EXPLORE.PROCESS_KEY] }],
+        ],
+        sort: [{ field: EXPLORE.AGGREGATE_ID, direction: CaseExploreSortDirection.Descending }],
+        limit: EXPLORE.LIMIT,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        {
+          groupBy: [EXPLORE.FIELD_STATUS],
+          aggregates: [{ id: EXPLORE.AGGREGATE_ID, measureRef: EXPLORE.MEASURE_CASE_COUNT }],
+          filters: [
+            [{ Kind: 'SearchFilter', Dimension: EXPLORE.FIELD_CASE_TITLE, Pattern: EXPLORE.TITLE_PREFIX, FilterType: 'StartsWith' }],
+            [{ Kind: 'ValueFilter', Type: 'StringValues', Dimension: EXPLORE.FIELD_PROCESS_KEY, Values: [EXPLORE.PROCESS_KEY] }],
+          ],
+          sort: [{ Field: EXPLORE.AGGREGATE_ID, Direction: 'desc' }],
+          limit: EXPLORE.LIMIT,
+        },
+        {}
+      );
+    });
+
+    it('should keep numeric aggregate values', async () => {
+      mockApiClient.post.mockResolvedValue({
+        [EXPLORE.FIELD_STATUS]: createRawExploreColumn([EXPLORE.STATUS_RUNNING, EXPLORE.STATUS_COMPLETED]),
+        [EXPLORE.AGGREGATE_ID]: createRawExploreColumn([EXPLORE.COUNT_1, EXPLORE.COUNT_2]),
+      });
+
+      const result = await service.explore({ groupBy: [EXPLORE.FIELD_STATUS] });
+
+      expect(result.items.map(row => row[EXPLORE.AGGREGATE_ID])).toEqual([EXPLORE.COUNT_1, EXPLORE.COUNT_2]);
+    });
+
+    it('should fill null for a column shorter than the others or with no values', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExploreColumns({
+        [EXPLORE.FIELD_SLA_STATUS]: createRawExploreColumn([EXPLORE.SLA_ON_TRACK]),
+        [EXPLORE.FIELD_PROCESS_KEY]: createRawExploreColumn(null),
+      }));
+
+      const result = await service.explore(query);
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[1][EXPLORE.FIELD_SLA_STATUS]).toBeNull();
+      expect(result.items[0][EXPLORE.FIELD_PROCESS_KEY]).toBeNull();
+    });
+
+    it('should return no rows for an empty result', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await service.explore(query);
+
+      expect(result.items).toEqual([]);
+    });
+
+    it('should send page and pageSize as query params and return a paginated response', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExplorePagedResponse());
+
+      const result = await service.explore({ ...query, limit: EXPLORE.LIMIT }, { pageSize: EXPLORE.PAGE_SIZE });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        expect.objectContaining({ limit: EXPLORE.PAGE_SIZE }),
+        { params: { page: 1, pageSize: EXPLORE.PAGE_SIZE } }
+      );
+      expect(result.items).toHaveLength(2);
+      expect(result.hasNextPage).toBe(true);
+      expect(result.nextCursor).toBeDefined();
+      expect(result.previousCursor).toBeUndefined();
+      expect(result.currentPage).toBe(1);
+      expect(result.supportsPageJump).toBe(true);
+      expect(result.totalCount).toBeUndefined();
+    });
+
+    it('should fetch the next page from the cursor at the page size the engine reported', async () => {
+      mockApiClient.post.mockResolvedValueOnce(createRawExplorePagedResponse({ pageSize: EXPLORE.SERVER_PAGE_SIZE }));
+      const first = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
+
+      mockApiClient.post.mockResolvedValueOnce(createRawExplorePagedResponse({ page: 2, pageSize: EXPLORE.SERVER_PAGE_SIZE, hasNextPage: false, hasPreviousPage: true }));
+      const second = await service.explore(query, { cursor: first.nextCursor as PaginationCursor });
+
+      expect(mockApiClient.post).toHaveBeenLastCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        expect.objectContaining({ limit: EXPLORE.SERVER_PAGE_SIZE }),
+        { params: { page: 2, pageSize: EXPLORE.SERVER_PAGE_SIZE } }
+      );
+      expect(second.hasNextPage).toBe(false);
+      expect(second.nextCursor).toBeUndefined();
+      expect(second.previousCursor).toBeDefined();
+      expect(second.currentPage).toBe(2);
+    });
+
+    it('should request the page given by jumpToPage', async () => {
+      mockApiClient.post.mockResolvedValue(createRawExplorePagedResponse({ page: EXPLORE.JUMP_TO_PAGE }));
+
+      await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE, jumpToPage: EXPLORE.JUMP_TO_PAGE });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.CASE_EXPLORE,
+        expect.any(Object),
+        { params: { page: EXPLORE.JUMP_TO_PAGE, pageSize: EXPLORE.PAGE_SIZE } }
+      );
+    });
+
+    it('should treat a bare empty answer to a paginated request as the last page', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
+
+      expect(result.items).toEqual([]);
+      expect(result.hasNextPage).toBe(false);
+      expect(result.nextCursor).toBeUndefined();
+    });
+
+    it('should treat a malformed pagination envelope as an empty last page', async () => {
+      mockApiClient.post.mockResolvedValue({ data: null, pagination: { hasNextPage: true } });
+
+      const result = await service.explore(query, { pageSize: EXPLORE.PAGE_SIZE });
+
+      expect(result.items).toEqual([]);
+      expect(result.hasNextPage).toBe(false);
+    });
+
+    it('should reject an invalid page size before calling the API', async () => {
+      await expect(service.explore(query, { pageSize: 0 })).rejects.toThrow(PAGINATION_TEST_CONSTANTS.ERROR_PAGE_SIZE_POSITIVE);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(service.explore(query)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should handle API errors on a paginated request', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(service.explore(query, { pageSize: EXPLORE.PAGE_SIZE })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
