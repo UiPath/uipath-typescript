@@ -2,6 +2,33 @@
 
 This page lists the specific OAuth scopes required in external app for each SDK method.
 
+## Agent Traces
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getErrorsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getLatencyTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+| `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
+
+## Agents
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getErrors()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getErrorsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getConsumptionTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getLatencyTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopErrorCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentDistribution()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+
 ## Assets
 
 | Method | OAuth Scope |
@@ -12,43 +39,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getByKey()` | `OR.Assets` or `OR.Assets.Read` |
 | `updateValue()` | `OR.Assets` or `OR.Assets.Read`, `OR.Assets` or `OR.Assets.Write` |
 | `updateValueById()` | `OR.Assets` or `OR.Assets.Read`, `OR.Assets` or `OR.Assets.Write` |
-
-## Jobs
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
-| `getById()` | `OR.Jobs` or `OR.Jobs.Read` |
-| `getOutput()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Folders` or `OR.Folders.Read` |
-| `stop()` | `OR.Jobs` |
-| `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
-| `restart()` | `OR.Jobs` |
-| `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
-| `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
-
-## Functions
-
-Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `OR.Default` |
-| `invoke()` | `OR.Default`, `OR.Folders` or `OR.Folders.Read` |
-
-## Folders
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
-
-## Document Understanding
-
-Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `startExtractionValidation()` | `Du.Validation.Api` |
-| `getExtractionValidationResult()` | `Du.Validation.Api` |
 
 ## Attachments
 
@@ -69,6 +59,142 @@ Creating a validation action and polling its result both go through the [Documen
 | `uploadFile()` | `OR.Buckets` or `OR.Buckets.Write` |
 | `deleteFile()` | `OR.Buckets` or `OR.Buckets.Write` |
 | `getFiles()` | `OR.Buckets` or `OR.Buckets.Read` |
+
+## ChoiceSets
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `DataFabric.Schema.Read` |
+| `getById()` | `DataFabric.Data.Read` |
+| `create()` | `DataFabric.Schema.Write` |
+| `updateById()` | `DataFabric.Schema.Write` |
+| `deleteById()` | `DataFabric.Schema.Write` |
+
+## Connections
+
+### Connections
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connections.Read` |
+| `getById()` | `IS.Connections.Read` |
+
+### Connectors
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `IS.Connectors.Read` |
+| `getById()` | `IS.Connectors.Read` |
+| `getDefaultConnection()` | `IS.Connections.Read` |
+| `getConnections()` | `IS.Connections.Read` |
+
+### Elements
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getObjects()` | `IS.Connectors.Read` |
+| `getActivities()` | `IS.Connectors.Read` |
+| `getObjectMetadata()` | `IS.Connectors.Read` |
+| `getEventObjects()` | `IS.Connectors.Read` |
+| `getEventObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceObjects()` | `IS.Connectors.Read` |
+| `getInstanceObjectMetadata()` | `IS.Connectors.Read` |
+| `getInstanceEventObjects()` | `IS.Connectors.Read` |
+| `getInstanceEventObjectMetadata()` | `IS.Connectors.Read` |
+
+### Execution
+
+| Function | OAuth Scope |
+|----------|-------------|
+| `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
+
+## Conversational Agent
+
+To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:
+
+`OR.Execution` · `OR.Folders` · `OR.Users` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api` · `IS.Connections.Read` · `IS.Connectors.Read`
+
+/// note
+The `ConversationalAgents` scope is required for real-time WebSocket sessions (`startSession()`). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.
+///
+
+### Agent Memory
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getCallsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopSpaces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+
+### Agents
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read` |
+| `downloadCitationSource()` | NA |
+
+### Connections
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
+
+### Conversations
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `updateById()` | `OR.Execution`, `OR.Jobs` |
+| `deleteById()` | `OR.Execution`, `OR.Jobs` |
+| `startSession()` | `OR.Execution`, `OR.Jobs`, `ConversationalAgents` |
+| `uploadAttachment()` | `OR.Execution`, `OR.Jobs` |
+
+### Exchanges
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
+
+### Feedback
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `Traces.Api` |
+| `getById()` | `Traces.Api` |
+| `submit()` | `Traces.Api` |
+| `updateById()` | `Traces.Api` |
+| `deleteById()` | `Traces.Api` |
+| `createCategory()` | `Traces.Api` |
+| `getCategories()` | `Traces.Api` |
+| `deleteCategory()` | `Traces.Api` |
+
+### Messages
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+
+### User Settings
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getSettings()` | `OR.Users` or `OR.Users.Read` |
+| `updateSettings()` | `OR.Users` |
+
+## Document Understanding
+
+Creating a validation action and polling its result both go through the [Document Understanding API](https://docs.uipath.com/document-understanding/automation-cloud/latest/api-guide/api-overview) (`du_/api/framework/.../validation/*`). Register the `Du.Validation.Api` application scope on the external app.
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `startExtractionValidation()` | `Du.Validation.Api` |
+| `getExtractionValidationResult()` | `Du.Validation.Api` |
 
 ## Entities
 
@@ -97,59 +223,40 @@ Creating a validation action and polling its result both go through the [Documen
 | `updateById()` / `update()` | `DataFabric.Schema.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Schema.Write` |
 
-## ChoiceSets
+## Folders
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `DataFabric.Schema.Read` |
-| `getById()` | `DataFabric.Data.Read` |
-| `create()` | `DataFabric.Schema.Write` |
-| `updateById()` | `DataFabric.Schema.Write` |
-| `deleteById()` | `DataFabric.Schema.Write` |
+| `getByKey()` | `OR.Folders` or `OR.Folders.Read` |
 
-## Maestro Processes
+## Functions
+
+Coded functions are invoked through their HTTP endpoint, which requires the [`OR.Default`](https://docs.uipath.com/automation-cloud/automation-cloud/latest/api-guide/accessing-uipath-resources-using-external-applications#declaring-scopes) scope. It acts as a wildcard granting fine-grained access based on the app's assigned role, and must appear explicitly in the app's scope string.
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS` |
-| `getIncidents()` | `PIMS` |
-| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getAll()` | `OR.Default` |
+| `invoke()` | `OR.Default`, `OR.Folders` or `OR.Folders.Read` |
 
-## Maestro Process Instances
+## Governance
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS` |
-| `getById()` | `PIMS` |
-| `getExecutionHistory()` | `PIMS` `Traces.Api` |
-| `getBpmn()` | `OR.Execution.Read` |
-| `getVariables()` | `PIMS OR.Execution.Read` |
-| `getIncidents()` | `PIMS` |
-| `cancel()` | `PIMS` |
-| `pause()` | `PIMS` |
-| `resume()` | `PIMS` |
-| `retry()` | `PIMS` |
+| `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
-## Maestro Cases
+## Jobs
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS` |
-| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `getOutput()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Folders` or `OR.Folders.Read` |
+| `stop()` | `OR.Jobs` |
+| `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
+| `restart()` | `OR.Jobs` |
+| `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Maestro Case Instances
 
@@ -176,130 +283,60 @@ Creating a validation action and polling its result both go through the [Documen
 | `triggerAdhocTaskForCaseApp()` | `PIMS` |
 | `selectStageForCaseApp()` | `PIMS` |
 
-## Conversational Agent
-
-To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, retrieve history, and manage personal connections), your external app needs the following combined scopes:
-
-`OR.Execution` · `OR.Folders` · `OR.Users` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api` · `IS.Connections.Read` · `IS.Connectors.Read`
-
-/// note
-The `ConversationalAgents` scope is required for real-time WebSocket sessions (`startSession()`). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.
-///
-
-### Agents
+## Maestro Cases
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Execution` or `OR.Execution.Read` |
-| `getById()` | `OR.Execution` or `OR.Execution.Read` |
-| `downloadCitationSource()` | NA |
+| `getAll()` | `PIMS` |
+| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
-### Conversations
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `create()` | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
-| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `updateById()` | `OR.Execution`, `OR.Jobs` |
-| `deleteById()` | `OR.Execution`, `OR.Jobs` |
-| `startSession()` | `OR.Execution`, `OR.Jobs`, `ConversationalAgents` |
-| `uploadAttachment()` | `OR.Execution`, `OR.Jobs` |
-
-### Exchanges
+## Maestro Process Instances
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
+| `getAll()` | `PIMS` |
+| `getById()` | `PIMS` |
+| `getExecutionHistory()` | `PIMS` `Traces.Api` |
+| `getBpmn()` | `OR.Execution.Read` |
+| `getVariables()` | `PIMS OR.Execution.Read` |
+| `getIncidents()` | `PIMS` |
+| `cancel()` | `PIMS` |
+| `pause()` | `PIMS` |
+| `resume()` | `PIMS` |
+| `retry()` | `PIMS` |
 
-### Messages
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-
-### Connections
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAvailableConnections()` | `OR.Execution` or `OR.Execution.Read`, `IS.Connections.Read`, `IS.Connectors.Read` |
-
-### User Settings
+## Maestro Processes
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getSettings()` | `OR.Users` or `OR.Users.Read` |
-| `updateSettings()` | `OR.Users` |
+| `getAll()` | `PIMS` |
+| `getIncidents()` | `PIMS` |
+| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopElementFailedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getIncidentsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
-### Feedback
+## Platform
 
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `Traces.Api` |
-| `getById()` | `Traces.Api` |
-| `submit()` | `Traces.Api` |
-| `updateById()` | `Traces.Api` |
-| `deleteById()` | `Traces.Api` |
-| `createCategory()` | `Traces.Api` |
-| `getCategories()` | `Traces.Api` |
-| `deleteCategory()` | `Traces.Api` |
-
-### Agent Memory
+### Directory
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getCallsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopSpaces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `search()` | `PM.Directory.Read` |
+| `getGroupMembership()` | `PM.Directory.Read` |
 
-## Traces
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getById()` | `Traces.Api` |
-| `getSpansByIds()` | `Traces.Api` |
-
-## Governance
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-
-## Settings
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
-| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
-
-## Users
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `PM.User` or `PM.User.Read` |
-| `getById()` | `PM.User` or `PM.User.Read` |
-| `updateById()` | `PM.User` or `PM.User.Write` |
-
-## Roles
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | None — caller's platform roles govern access |
-| `getById()` | None — caller's platform roles govern access |
-| `create()` | None — caller's platform roles govern access |
-| `updateById()` | None — caller's platform roles govern access |
-| `deleteById()` | None — caller's platform roles govern access |
-| `getAssignments()` | None — caller's platform roles govern access |
-| `updateAssignments()` | None — caller's platform roles govern access |
-| `exportAssignments()` | None — caller's platform roles govern access |
-| `getEffectiveAccess()` | None — caller's platform roles govern access |
-| `getActions()` | None — caller's platform roles govern access |
-
-## Groups
+### Groups
 
 | Method | OAuth Scope |
 |--------|-------------|
@@ -310,12 +347,37 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `deleteById()` | `PM.Group` or `PM.Group.Write` |
 | `getMembers()` | `PM.Group` or `PM.Group.Read` |
 
-## Directory
+### Roles
+
+Caller's platform roles govern access
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `search()` | `PM.Directory.Read` |
-| `getGroupMembership()` | `PM.Directory.Read` |
+| `getAll()` | None |
+| `getById()` | None |
+| `create()` | None |
+| `updateById()` | None |
+| `deleteById()` | None |
+| `getAssignments()` | None |
+| `updateAssignments()` | None |
+| `exportAssignments()` | None |
+| `getEffectiveAccess()` | None |
+| `getActions()` | None |
+
+### Settings
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getUserSettings()` | `PM.Setting` or `PM.Setting.Read` |
+| `updateUserSettings()` | `PM.Setting` or `PM.Setting.Write` |
+
+### Users
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PM.User` or `PM.User.Read` |
+| `getById()` | `PM.User` or `PM.User.Read` |
+| `updateById()` | `PM.User` or `PM.User.Write` |
 
 ## Processes
 
@@ -324,7 +386,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
 | `getByName()` | `OR.Execution` or `OR.Execution.Read` |
-| `start()` | (`OR.Jobs` or `OR.Jobs.Write`) **and** (`OR.Execution` or `OR.Execution.Read`) |
+| `start()` | `OR.Jobs` or `OR.Jobs.Write`, `OR.Execution` or `OR.Execution.Read` |
 
 ## Queues
 
@@ -338,6 +400,17 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `insertItemByName()` / `insertItem()` | `OR.Queues` or `OR.Queues.Write` |
 | `startTransaction()` | `OR.Queues` or `OR.Queues.Write` |
 | `completeTransaction()` | `OR.Queues` or `OR.Queues.Write` |
+
+## TaskCatalogs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getByName()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateById()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `updateByName()` | `OR.Tasks` or `OR.Tasks.Write` |
 
 ## Tasks
 
@@ -360,78 +433,9 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getComments()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `createComment()` | `OR.Tasks` or `OR.Tasks.Write` |
 
-## TaskCatalogs
+## Traces
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
-| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
-| `getByName()` | `OR.Tasks` or `OR.Tasks.Read` |
-| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
-| `updateById()` | `OR.Tasks` or `OR.Tasks.Write` |
-| `updateByName()` | `OR.Tasks` or `OR.Tasks.Write` |
-
-## Agents
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getErrors()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getErrorsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getConsumptionTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getLatencyTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopErrorCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getTopConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getIncidentDistribution()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-
-## Agent Traces
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getErrorsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getLatencyTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getUnitConsumption()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getSpansByTraceId()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getSpansByReference()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `getGovernanceDecisions()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
-| `getGovernanceSummary()` | `Traces.Api Insights.RealTimeData Insights OR.Folders.Read` |
-
-## Connections
-
-### Connectors
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `IS.Connectors.Read` |
-| `getById()` | `IS.Connectors.Read` |
-| `getDefaultConnection()` | `IS.Connections.Read` |
-| `getConnections()` | `IS.Connections.Read` |
-
-### Connections
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `IS.Connections.Read` |
-| `getById()` | `IS.Connections.Read` |
-
-### Elements
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getObjects()` | `IS.Connectors.Read` |
-| `getActivities()` | `IS.Connectors.Read` |
-| `getObjectMetadata()` | `IS.Connectors.Read` |
-| `getEventObjects()` | `IS.Connectors.Read` |
-| `getEventObjectMetadata()` | `IS.Connectors.Read` |
-| `getInstanceObjects()` | `IS.Connectors.Read` |
-| `getInstanceObjectMetadata()` | `IS.Connectors.Read` |
-| `getInstanceEventObjects()` | `IS.Connectors.Read` |
-| `getInstanceEventObjectMetadata()` | `IS.Connectors.Read` |
-
-### Execution
-
-| Function | OAuth Scope |
-|----------|-------------|
-| `execute()` | `IS.Connections.Read` (plus any third-party scopes required by the underlying connection) |
+| `getById()` | `Traces.Api` |
+| `getSpansByIds()` | `Traces.Api` |
