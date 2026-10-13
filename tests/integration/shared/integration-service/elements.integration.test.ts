@@ -74,14 +74,17 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
     }
     eventObjectName = eventObjects[0].name;
 
-    // Same subset caveat as instance objects: take the name from the connection's own listing.
+    // The connection's listing can include objects with no event metadata (it 404s),
+    // so use one that both the connector and the connection list.
     instanceEventObjects = await elements.getInstanceEventObjects(connectionId, elementKey, eventOperation);
-    if (instanceEventObjects.length === 0) {
+    const instanceEventNames = new Set(instanceEventObjects.map((object) => object.name));
+    const sharedEventObject = eventObjects.find((object) => instanceEventNames.has(object.name));
+    if (!sharedEventObject) {
       throw new Error(
-        `Connection ${connectionId} exposes no event objects for ${eventOperation} — cannot exercise instance event tests.`,
+        `Connection ${connectionId} exposes none of the connector's ${eventOperation} event objects — cannot exercise instance event tests.`,
       );
     }
-    instanceEventObjectName = instanceEventObjects[0].name;
+    instanceEventObjectName = sharedEventObject.name;
   });
 
   describe('static (connection-independent)', () => {
