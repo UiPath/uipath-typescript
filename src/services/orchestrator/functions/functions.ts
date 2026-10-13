@@ -35,6 +35,7 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { SDKInternalsRegistry } from '../../../core/internals';
+import type { SessionLicense } from '../../../core/licensing/session-license';
 
 /** Cap on the function names listed when a name lookup misses. */
 const MAX_SUGGESTED_NAMES = 20;
@@ -61,10 +62,11 @@ const EXTERNAL_REFERENCE_RE =
 export class FunctionService extends FolderScopedService implements FunctionServiceModel {
   /** Folder ID → folder key (GUID); folder keys are immutable, so cache hits stay valid. */
   private readonly folderKeyCache = new Map<number, string>();
+  private readonly sessionLicense?: SessionLicense;
 
   constructor(instance: IUiPath) {
-    const { sessionLicense } = SDKInternalsRegistry.get(instance);
-    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+    super(instance);
+    this.sessionLicense = SDKInternalsRegistry.get(instance).sessionLicense;
   }
 
   @track('Functions.GetAll')
@@ -125,6 +127,7 @@ export class FunctionService extends FolderScopedService implements FunctionServ
     // only a trigger without one needs them derived.
     const { fn, target } = await this.findByName(func, folderOptions);
     const invokeTarget = target ?? await this.fallbackTarget(fn, folderOptions);
+    await this.sessionLicense?.ensure();
     return this.invokeFunction<TOutput>(fn, invokeTarget, input ?? {}, jobKey);
   }
 

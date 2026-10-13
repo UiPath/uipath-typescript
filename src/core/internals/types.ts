@@ -38,8 +38,8 @@ export interface PrivateSDK {
    */
   robotKey?: string;
   /**
-   * Studio Web license acquisition for the signed-in user, awaited before each request by the
-   * services that can start a job. Absent when the SDK authenticates with a secret.
+   * Studio Web license acquisition for the signed-in user, awaited by the calls that start a new
+   * job. Absent when the SDK authenticates with a secret.
    */
   sessionLicense?: SessionLicense;
   /**

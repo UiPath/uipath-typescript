@@ -16,7 +16,6 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
-import { SDKInternalsRegistry } from '../../../core/internals';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
 
 /**
@@ -31,8 +30,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
   constructor(instance: IUiPath) {
-    const { sessionLicense } = SDKInternalsRegistry.get(instance);
-    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+    super(instance);
     this.attachmentService = new AttachmentService(instance);
   }
 

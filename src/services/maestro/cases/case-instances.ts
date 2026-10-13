@@ -1,6 +1,5 @@
 import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
-import { SDKInternalsRegistry } from '../../../core/internals';
 import {
   CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
@@ -82,8 +81,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param options - Optional configuration (e.g. `useCaseAppRoutes` to authorize with Case persona grants)
    */
   constructor(instance: IUiPath, options?: CaseInstancesOptions) {
-    const { sessionLicense } = SDKInternalsRegistry.get(instance);
-    super(instance, undefined, sessionLicense && (() => sessionLicense.ensure()));
+    super(instance);
     this.taskService = new TaskService(instance);
     this.useCaseAppRoutes = options?.useCaseAppRoutes ?? false;
   }

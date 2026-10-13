@@ -76,12 +76,9 @@ export class BaseService {
    * const entities = new Entities(sdk);
    * ```
    */
-  constructor(instance: IUiPath, headers?: Record<string, string>, beforeSend?: () => Promise<void>) {
+  constructor(instance: IUiPath, headers?: Record<string, string>) {
     const { config, context, tokenManager, folderKey, metaFolderKey, robotKey } = SDKInternalsRegistry.get(instance);
-    this.#apiClient = new ApiClient(config, context, tokenManager, {
-      ...(headers ? { headers } : {}),
-      ...(beforeSend ? { beforeSend } : {}),
-    });
+    this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
     this.config = { folderKey, metaFolderKey, robotKey };
   }
 

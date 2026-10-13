@@ -13,6 +13,7 @@ import {
 } from '../../../utils/mocks/functions';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
+import { createHeldSessionLicense } from '../../../utils/mocks/session-license';
 import { FunctionGetAllOptions, FunctionHttpMethod, FunctionRef } from '../../../../src/models/orchestrator/functions.types';
 import { FunctionGetResponse } from '../../../../src/models/orchestrator/functions.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
@@ -221,6 +222,17 @@ describe('FunctionService Unit Tests', () => {
         functionService.getAll({ folderId: TEST_CONSTANTS.FOLDER_ID })
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should not wait for the session license', async () => {
+      const { license } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      const mockResponse = createMockTransformedFunctionCollection();
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      await expect(new FunctionService(instance).getAll({ folderId: TEST_CONSTANTS.FOLDER_ID })).resolves.toEqual(mockResponse);
+
+      expect(license.ensure).not.toHaveBeenCalled();
+    });
   });
 
   describe('invoke', () => {
@@ -256,6 +268,27 @@ describe('FunctionService Unit Tests', () => {
       );
 
       expect(result).toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+    });
+
+    it('should wait for the session license before posting the input', async () => {
+      const { license, release } = createHeldSessionLicense();
+      const { instance } = createServiceTestDependencies({ sessionLicense: license });
+      const service = new FunctionService(instance);
+      mockApiClient.get.mockResolvedValueOnce({ value: [createMockRawFunctionTrigger()] });
+      mockApiClient.post.mockResolvedValueOnce(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+
+      const invoking = service.invoke(
+        { name: FUNCTION_TEST_CONSTANTS.NAME },
+        FUNCTION_TEST_CONSTANTS.INVOKE_INPUT,
+        { folderId: TEST_CONSTANTS.FOLDER_ID }
+      );
+      await vi.waitFor(() => expect(license.ensure).toHaveBeenCalledTimes(1));
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+
+      release();
+
+      await expect(invoking).resolves.toEqual(FUNCTION_TEST_CONSTANTS.INVOKE_OUTPUT);
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
     });
 
     it('should derive the route and look up the folder key when the trigger has no ExternalReference', async () => {

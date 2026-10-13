@@ -1,13 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SessionLicense } from '@/core/licensing/session-license';
-import { ApiClient } from '@/core/http/api-client';
 import type { TokenInfo } from '@/core/auth/types';
-import type { IUiPath } from '@/core/types';
-import { FunctionService } from '@/services/orchestrator/functions/functions';
-import { ProcessService } from '@/services/orchestrator/processes/processes';
-import { JobService } from '@/services/orchestrator/jobs/jobs';
-import { ProcessInstancesService } from '@/services/maestro/processes/process-instances';
-import { CaseInstancesService } from '@/services/maestro/cases/case-instances';
 import { UiPathConfig } from '@/core/config/config';
 import { AUTH_STORAGE_KEYS } from '@/core/auth/constants';
 import { MemoryStore } from '@/utils/storage/memory-store';
@@ -16,17 +9,7 @@ import { TEST_CONSTANTS } from '@tests/utils/constants/common';
 import { LICENSE_TEST_CONSTANTS } from '@tests/utils/constants/licensing';
 import { createTestJwt } from '@tests/utils/jwt';
 import { createMockError } from '@tests/utils/mocks/core';
-import { createMockApiClient, createServiceTestDependencies } from '@tests/utils/setup';
-
-vi.mock('@/core/http/api-client');
-
-const JOB_STARTING_CLIENTS: Array<[string, new (instance: IUiPath) => object]> = [
-  ['Functions', FunctionService],
-  ['Processes', ProcessService],
-  ['Jobs', JobService],
-  ['ProcessInstances', ProcessInstancesService],
-  ['CaseInstances', CaseInstancesService],
-];
+import { createMockApiClient } from '@tests/utils/setup';
 
 const mockApiClient = createMockApiClient();
 const post = mockApiClient.post;
@@ -257,41 +240,5 @@ describe('SessionLicense', () => {
     await ensuring;
 
     expect(claimFor()).toBeUndefined();
-  });
-});
-
-describe('SessionLicense in clients that can start a job', () => {
-  beforeEach(() => {
-    claims = new MemoryStore();
-    vi.mocked(ApiClient).mockClear();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it.each(JOB_STARTING_CLIENTS)('should be ensured before each request of a %s client, not when it is created', async (_, Client) => {
-    const license = createLicense();
-    const ensure = vi.spyOn(license, 'ensure').mockResolvedValue(undefined);
-    const { instance } = createServiceTestDependencies({ sessionLicense: license });
-
-    const client = new Client(instance);
-    expect(client).toBeDefined();
-    expect(ensure).not.toHaveBeenCalled();
-
-    const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
-    await clientConfig?.beforeSend?.();
-
-    expect(ensure).toHaveBeenCalledTimes(1);
-  });
-
-  it.each(JOB_STARTING_CLIENTS)('should not hold the requests of a %s client when the SDK holds its own credential', (_, Client) => {
-    const { instance } = createServiceTestDependencies();
-
-    const client = new Client(instance);
-    expect(client).toBeDefined();
-
-    const [, , , clientConfig] = vi.mocked(ApiClient).mock.calls[0];
-    expect(clientConfig?.beforeSend).toBeUndefined();
   });
 });
