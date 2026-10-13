@@ -6,6 +6,7 @@
 import {
   AgentInput,
   CitationSource,
+  ConversationEndReason,
   InlineOrExternalValue,
   InterruptType,
   MessageRole,
@@ -337,6 +338,15 @@ export interface RawConversationGetResponse {
    * Timestamp indicating when the conversation last had activity.
    */
   lastActivityTime: string;
+  /**
+   * Timestamp indicating when the conversation ended. Undefined while the conversation is active.
+   * An ended conversation accepts no new input.
+   */
+  endedTime?: string;
+  /**
+   * Why the conversation ended. Undefined while the conversation is active.
+   */
+  endReason?: ConversationEndReason;
   /**
    * The human-readable label or title for the conversation.
    */
