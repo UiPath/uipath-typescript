@@ -4757,8 +4757,20 @@ This will create the <code>dist</code> (or build) folder.</p>
 <tr>
 <td><code>--project-id</code></td>
 <td>string</td>
-<td>Studio Web project ID. If omitted and <code>UIPATH_PROJECT_ID</code> is not set, you are prompted to create or select a solution</td>
+<td>Studio Web project ID. If omitted and <code>UIPATH_PROJECT_ID</code> is not set, you are prompted to create or select a solution (use <code>--solution-name</code>/<code>--project-name</code> to skip the prompts)</td>
 <td>—</td>
+</tr>
+<tr>
+<td><code>--solution-name</code></td>
+<td>string</td>
+<td>Name of the Studio Web solution to create when no project ID is set. Required with <code>--project-name</code> when the CLI cannot prompt</td>
+<td>Prompted</td>
+</tr>
+<tr>
+<td><code>--project-name</code></td>
+<td>string</td>
+<td>Name of the Coded App project to create in that solution</td>
+<td>Prompted</td>
 </tr>
 <tr>
 <td><code>--build-dir</code></td>
@@ -4811,8 +4823,9 @@ This will create the <code>dist</code> (or build) folder.</p>
 </tbody>
 </table>
 <p><strong>Examples</strong></p>
-<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt; --build-dir build</span><span data-ty></span></div>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt;</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --project-id &lt;projectId&gt; --build-dir build</span><span data-ty></span><span data-ty="input" data-ty-prompt="$">uip codedapp push --solution-name &quot;Product Announcements&quot; --project-name &quot;Announcements Portal&quot;</span><span data-ty></span></div>
 
+<p>The first push saves the new project ID to <code>.env</code> as <code>UIPATH_PROJECT_ID</code>, and later pushes use it. <code>--solution-name</code> and <code>--project-name</code> only apply when no project ID is set. If one is set by <code>--project-id</code>, <code>UIPATH_PROJECT_ID</code>, or <code>.env</code>, push fails instead of pushing into that project, so running the same command with these flags a second time fails.</p>
 <hr />
 <h2 id="pull">pull<a class="headerlink" href="#pull" title="Permanent link">&para;</a></h2>
 <p>Pull project files from a Studio Web project.</p>
