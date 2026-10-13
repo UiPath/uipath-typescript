@@ -61,6 +61,13 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
       expect(typeof sample.key).toBe('string');
       expect(typeof sample.name).toBe('string');
       expect(typeof sample.isPrivate).toBe('boolean');
+
+      // getAll has its own response path, so the casing guard on getById does not cover it.
+      const raw = sample as unknown as Record<string, unknown>;
+      expect(raw.Id).toBeUndefined();
+      expect(raw.Key).toBeUndefined();
+      expect(raw.Name).toBeUndefined();
+      expect(raw.IsPrivate).toBeUndefined();
     });
 
     it('should return no more connectors when filtered by hasHttpRequest', async () => {

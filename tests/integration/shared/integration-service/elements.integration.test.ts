@@ -19,9 +19,11 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
   let elementKey!: string;
   let connectionId!: string;
   let objectName!: string;
+  let instanceObjectName!: string;
   let eventOperation!: string;
   let eventObjectName!: string;
   let objects!: ElementObject[];
+  let instanceObjects!: ElementObject[];
   let eventObjects!: ElementEventObject[];
 
   beforeAll(async () => {
@@ -53,6 +55,14 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       throw new Error(`Connector ${elementKey} has no objects — cannot exercise Elements tests.`);
     }
     objectName = config.integrationServiceTestObjectName ?? objects[0].name;
+
+    // A connection may expose only a subset of its connector's objects, so the
+    // connection-scoped tests fall back to an object the connection itself lists.
+    instanceObjects = await elements.getInstanceObjects(connectionId, elementKey);
+    if (instanceObjects.length === 0) {
+      throw new Error(`Connection ${connectionId} exposes no objects — cannot exercise instance tests.`);
+    }
+    instanceObjectName = config.integrationServiceTestObjectName ?? instanceObjects[0].name;
 
     eventObjects = await elements.getEventObjects(elementKey, eventOperation);
     if (eventObjects.length === 0) {
@@ -98,25 +108,20 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
   });
 
   describe('instance (connection-scoped)', () => {
-    it('getInstanceObjects should return named objects for the connection', async () => {
-      const result = await elements.getInstanceObjects(connectionId, elementKey);
-
+    it('getInstanceObjects should return named objects for the connection', () => {
       // `Array.isArray` alone is tautological — the service returns
       // `response.data ?? []`, so it holds whatever the API sent. Assert the
       // item shape, which only holds if the call actually reached the connector.
-      expect(Array.isArray(result)).toBe(true);
-      if (result.length === 0) {
-        throw new Error(
-          `Connection ${connectionId} exposes no objects — cannot verify the instance object listing.`,
-        );
-      }
-      expect(result.every((object) => typeof object.name === 'string' && object.name.length > 0)).toBe(true);
+      expect(Array.isArray(instanceObjects)).toBe(true);
+      expect(
+        instanceObjects.every((object) => typeof object.name === 'string' && object.name.length > 0),
+      ).toBe(true);
     });
 
     it('getInstanceObjectMetadata should return an object with a matching name', async () => {
-      const result = await elements.getInstanceObjectMetadata(connectionId, elementKey, objectName);
+      const result = await elements.getInstanceObjectMetadata(connectionId, elementKey, instanceObjectName);
       expect(result).toBeDefined();
-      expect(result.name).toBe(objectName);
+      expect(result.name).toBe(instanceObjectName);
     });
   });
 

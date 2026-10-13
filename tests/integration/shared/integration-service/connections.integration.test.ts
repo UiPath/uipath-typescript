@@ -52,6 +52,12 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       expect(typeof sample.id).toBe('string');
       expect(typeof sample.name).toBe('string');
       expect(Object.values(ConnectionState)).toContain(sample.state);
+
+      // getAll has its own response path, so the casing guard on getById does not cover it.
+      const raw = sample as unknown as Record<string, unknown>;
+      expect(raw.Id).toBeUndefined();
+      expect(raw.Name).toBeUndefined();
+      expect(raw.State).toBeUndefined();
     });
   });
 
