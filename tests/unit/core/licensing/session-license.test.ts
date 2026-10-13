@@ -68,14 +68,14 @@ describe('SessionLicense', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('should acquire when a caller ensures it for the signed-in user, retrying the idempotent POST with a per-attempt timeout', async () => {
+  it('should acquire with a single timed POST when a caller ensures it for the signed-in user', async () => {
     await signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure();
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(post).toHaveBeenCalledWith(
       STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE,
       undefined,
-      { retry: expect.objectContaining({ retryMethods: ['POST'] }), timeoutMs: expect.any(Number) }
+      { timeoutMs: expect.any(Number) }
     );
     expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
   });

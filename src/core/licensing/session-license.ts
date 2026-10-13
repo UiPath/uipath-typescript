@@ -1,14 +1,11 @@
 import type { UiPathConfig } from '../config/config';
 import type { TokenInfo } from '../auth/types';
 import type { ApiClient } from '../http/api-client';
-import type { RetryOptions } from '../../models/common/http.types';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { extractUserIdFromToken } from '../../utils/encoding/jwt';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
-/** AcquireLicense is idempotent, so the POST is safe to repeat. */
-const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 1000, retryMethods: ['POST'] };
 const ACQUIRE_TIMEOUT_MS = 5_000;
 
 export class SessionLicense {
@@ -42,7 +39,7 @@ export class SessionLicense {
 
   #acquire(userId: string): Promise<void> {
     return this.#apiClient
-      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { retry: ACQUIRE_RETRY, timeoutMs: ACQUIRE_TIMEOUT_MS })
+      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { timeoutMs: ACQUIRE_TIMEOUT_MS })
       .then(
         () => undefined,
         (error: unknown) => {
