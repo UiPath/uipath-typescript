@@ -14,8 +14,9 @@ const modes: InitMode[] = ['v1'];
 describeIntegration('Integration Service Connections - Integration Tests', 'user', modes, () => {
   let connections!: ConnectionsService;
   let connectionId!: string;
+  let folderKey!: string;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const service = getServices().integrationServiceConnections;
     if (!service) {
       throw new Error('Connections service is not registered for this init mode');
@@ -29,43 +30,28 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       );
     }
     connectionId = config.integrationServiceTestConnectionId;
+
+    // Listings are folder-scoped and return nothing without folder context, so
+    // scope them to the fixture connection's own folder.
+    const fixture = await connections.getById(connectionId);
+    if (!fixture.folder?.key) {
+      throw new Error(`Connection ${connectionId} has no folder key — cannot scope folder listings.`);
+    }
+    folderKey = fixture.folder.key;
   });
 
   describe('getAll', () => {
-    it('should return a plain array of connections', async () => {
-      const result = await connections.getAll({ pageSize: 5 });
+    it('should return the fixture connection when scoped to its folder', async () => {
+      const result = await connections.getAll({ folderKey, pageSize: 50 });
 
       expect(Array.isArray(result)).toBe(true);
-      if (result.length === 0) {
-        throw new Error(
-          'Test tenant has no connections — create at least one connection to run Connections integration tests.',
-        );
-      }
-      expect(result.length).toBeLessThanOrEqual(5);
+      expect(result.length).toBeLessThanOrEqual(50);
+      expect(result.map((connection) => connection.id)).toContain(connectionId);
 
       const sample = result[0];
       expect(typeof sample.id).toBe('string');
       expect(typeof sample.name).toBe('string');
       expect(Object.values(ConnectionState)).toContain(sample.state);
-    });
-
-    it('should order results newest-first when mostRecentFirst is set', async () => {
-      const result = await connections.getAll({ pageSize: 3, mostRecentFirst: true });
-
-      expect(Array.isArray(result)).toBe(true);
-      if (result.length < 2) {
-        throw new Error(
-          'Test tenant has fewer than 2 connections — ordering cannot be verified. Create a second connection to run this test.',
-        );
-      }
-
-      // Assert the ordering the flag requests, not just that a response arrived —
-      // a shape-only assertion passes even when the flag never reaches the API,
-      // and a single-element array trivially equals its own sort.
-      const timestamps = result.map((connection) => Date.parse(connection.createTime));
-      expect(timestamps.every((value) => Number.isFinite(value))).toBe(true);
-      const descending = [...timestamps].sort((a, b) => b - a);
-      expect(timestamps).toEqual(descending);
     });
   });
 

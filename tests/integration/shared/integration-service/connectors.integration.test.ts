@@ -14,12 +14,15 @@ const modes: InitMode[] = ['v1'];
 describeIntegration('Integration Service Connectors - Integration Tests', 'user', modes, () => {
   let connectors!: ConnectorsService;
   let connectorKey!: string;
+  let connectionId!: string;
+  let folderKey!: string;
   let allConnectors!: ConnectorGetResponse[];
 
   beforeAll(async () => {
     const service = getServices().integrationServiceConnectors;
-    if (!service) {
-      throw new Error('Connectors service is not registered for this init mode');
+    const connectionsService = getServices().integrationServiceConnections;
+    if (!service || !connectionsService) {
+      throw new Error('Connectors and Connections services must be registered for this init mode');
     }
     connectors = service;
 
@@ -29,7 +32,21 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
         'INTEGRATION_SERVICE_TEST_CONNECTOR_KEY must be set in .env.integration to run Connectors integration tests',
       );
     }
+    if (!config.integrationServiceTestConnectionId) {
+      throw new Error(
+        'INTEGRATION_SERVICE_TEST_CONNECTION_ID must be set in .env.integration to run Connectors integration tests',
+      );
+    }
     connectorKey = config.integrationServiceTestConnectorKey;
+    connectionId = config.integrationServiceTestConnectionId;
+
+    // Connection listings are folder-scoped and return nothing without folder
+    // context, so scope them to the fixture connection's own folder.
+    const fixture = await connectionsService.getById(connectionId);
+    if (!fixture.folder?.key) {
+      throw new Error(`Connection ${connectionId} has no folder key — cannot scope folder listings.`);
+    }
+    folderKey = fixture.folder.key;
 
     allConnectors = await connectors.getAll();
   });
@@ -89,15 +106,11 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
   });
 
   describe('getConnections', () => {
-    it('should list connections for a connector', async () => {
-      const result = await connectors.getConnections(connectorKey);
+    it('should list the fixture connection for its connector and folder', async () => {
+      const result = await connectors.getConnections(connectorKey, { folderKey });
 
       expect(Array.isArray(result)).toBe(true);
-      if (result.length === 0) {
-        throw new Error(
-          `Connector ${connectorKey} has no connections in the test tenant — set up at least one connection to run this test.`,
-        );
-      }
+      expect(result.map((connection) => connection.id)).toContain(connectionId);
 
       const sample = result[0];
       expect(typeof sample.id).toBe('string');
@@ -106,15 +119,15 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
     });
 
     it('should respect pageSize', async () => {
-      const result = await connectors.getConnections(connectorKey, { pageSize: 1 });
+      const result = await connectors.getConnections(connectorKey, { folderKey, pageSize: 1 });
       expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeLessThanOrEqual(1);
+      expect(result.length).toBe(1);
     });
   });
 
   describe('getDefaultConnection', () => {
     it('should return a connection flagged as the default', async () => {
-      const result = await connectors.getDefaultConnection(connectorKey);
+      const result = await connectors.getDefaultConnection(connectorKey, { folderKey });
 
       expect(result).toBeDefined();
       expect(typeof result.id).toBe('string');
