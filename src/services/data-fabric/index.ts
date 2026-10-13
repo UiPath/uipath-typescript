@@ -30,6 +30,7 @@ export { EntityService as Entities, EntityService } from './entities';
 export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets';
 export { DataFabricRoleService } from './roles';
 export { DataFabricDirectoryService } from './directory';
+export * from './operations';
 
 // Re-export service-specific types
 export * from '../../models/data-fabric/entities.types';

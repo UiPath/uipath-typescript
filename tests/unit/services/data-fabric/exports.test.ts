@@ -16,9 +16,18 @@ import {
   type DataFabricRole,
   type DataFabricRoleGetAllOptions,
   type DataFabricRoleServiceModel,
+  entityOperationHost,
+  runMutation,
+  runRead,
 } from '../../../../src/services/data-fabric';
 
 describe('Data Fabric barrel exports', () => {
+  it('should export the entity-operations runtime from the entities subpath barrel', () => {
+    expect(entityOperationHost).toBeTypeOf('function');
+    expect(runMutation).toBeTypeOf('function');
+    expect(runRead).toBeTypeOf('function');
+  });
+
   it('should export roles and directory runtime values from the entities subpath barrel', () => {
     expect(DataFabricDirectoryService).toBeTypeOf('function');
     expect(DataFabricRoleService).toBeTypeOf('function');
