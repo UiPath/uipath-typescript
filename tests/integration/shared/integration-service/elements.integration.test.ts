@@ -22,9 +22,11 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
   let instanceObjectName!: string;
   let eventOperation!: string;
   let eventObjectName!: string;
+  let instanceEventObjectName!: string;
   let objects!: ElementObject[];
   let instanceObjects!: ElementObject[];
   let eventObjects!: ElementEventObject[];
+  let instanceEventObjects!: ElementEventObject[];
 
   beforeAll(async () => {
     const service = getServices().integrationServiceElements;
@@ -71,6 +73,15 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       );
     }
     eventObjectName = eventObjects[0].name;
+
+    // Same subset caveat as instance objects: take the name from the connection's own listing.
+    instanceEventObjects = await elements.getInstanceEventObjects(connectionId, elementKey, eventOperation);
+    if (instanceEventObjects.length === 0) {
+      throw new Error(
+        `Connection ${connectionId} exposes no event objects for ${eventOperation} — cannot exercise instance event tests.`,
+      );
+    }
+    instanceEventObjectName = instanceEventObjects[0].name;
   });
 
   describe('static (connection-independent)', () => {
@@ -138,16 +149,11 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(result.name).toBe(eventObjectName);
     });
 
-    it('getInstanceEventObjects should return named event objects for the connection', async () => {
-      const result = await elements.getInstanceEventObjects(connectionId, elementKey, eventOperation);
-
-      expect(Array.isArray(result)).toBe(true);
-      if (result.length === 0) {
-        throw new Error(
-          `Connection ${connectionId} exposes no event objects for ${eventOperation} — cannot verify the instance event listing.`,
-        );
-      }
-      expect(result.every((object) => typeof object.name === 'string' && object.name.length > 0)).toBe(true);
+    it('getInstanceEventObjects should return named event objects for the connection', () => {
+      expect(Array.isArray(instanceEventObjects)).toBe(true);
+      expect(
+        instanceEventObjects.every((object) => typeof object.name === 'string' && object.name.length > 0),
+      ).toBe(true);
     });
 
     it('getInstanceEventObjectMetadata should return an object with a matching name', async () => {
@@ -155,10 +161,10 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
         connectionId,
         elementKey,
         eventOperation,
-        eventObjectName,
+        instanceEventObjectName,
       );
       expect(result).toBeDefined();
-      expect(result.name).toBe(eventObjectName);
+      expect(result.name).toBe(instanceEventObjectName);
     });
   });
 });
