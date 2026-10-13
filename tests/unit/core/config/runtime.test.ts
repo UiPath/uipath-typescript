@@ -60,6 +60,36 @@ describe('loadFromMetaTags', () => {
     expect(loadFromMetaTags()?.clientId).toBe('client-123');
   });
 
+  describe('appUniqueToken (IP restriction trusted public app)', () => {
+    const folderKey = '76bfed5b-ce69-4107-a4a4-208a6b36ce30';
+    const publicPage = {
+      [UiPathMetaTags.APP_KEY]: 'uapp_key',
+      [UiPathMetaTags.FOLDER_KEY]: folderKey,
+      [UiPathMetaTags.TENANT_ID]: '22986E36-8B04-4593-B82F-AAE4C14BB2DC',
+      [UiPathMetaTags.CDN_BASE]: `https://cdn.example.net/codedapps/IDa834382e/${folderKey}/4`,
+    };
+
+    it("builds it from the page's folder key, tenant id and the system name in the CDN path", () => {
+      setMetaTags(publicPage);
+      const token = loadFromMetaTags()?.appUniqueToken;
+      expect(JSON.parse(atob(token!))).toEqual({
+        folderId: folderKey,
+        tenantId: '22986e36-8b04-4593-b82f-aae4c14bb2dc',
+        appSystemName: 'IDa834382e',
+      });
+    });
+
+    it('leaves it out when the page is not a public app', () => {
+      setMetaTags({ ...publicPage, [UiPathMetaTags.APP_KEY]: undefined as unknown as string });
+      expect(loadFromMetaTags()?.appUniqueToken).toBeUndefined();
+    });
+
+    it("leaves it out when the CDN path doesn't carry the folder key", () => {
+      setMetaTags({ ...publicPage, [UiPathMetaTags.CDN_BASE]: 'https://cdn.example.net/other/4' });
+      expect(loadFromMetaTags()?.appUniqueToken).toBeUndefined();
+    });
+  });
+
   it('reads appKey from meta tag', () => {
     setMetaTags({ [UiPathMetaTags.ORG_NAME]: 'myorg', [UiPathMetaTags.APP_KEY]: 'uapp_key' });
     expect(loadFromMetaTags()?.appKey).toBe('uapp_key');

@@ -11,6 +11,7 @@ export const ConfigSchema = z.object({
   scope: z.string().optional(),
   enforceSso: z.boolean().optional(),
   appKey: z.string().optional(),
+  appUniqueToken: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -26,6 +27,7 @@ interface ConfigOptions {
   scope?: string;
   enforceSso?: boolean;
   appKey?: string;
+  appUniqueToken?: string;
 }
 
 export class UiPathConfig {
@@ -41,6 +43,8 @@ export class UiPathConfig {
   public readonly enforceSso?: boolean;
   /** Names the app to the Apps service in public mode; its presence is what turns public mode on. */
   public readonly appKey?: string;
+  /** Lets an app trusted under IP restriction through for visitors outside the org's allowed ranges. */
+  public readonly appUniqueToken?: string;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -53,6 +57,7 @@ export class UiPathConfig {
     this.scope = options.scope;
     this.enforceSso = options.enforceSso;
     this.appKey = options.appKey;
+    this.appUniqueToken = options.appUniqueToken;
   }
 }
 
