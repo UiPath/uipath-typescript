@@ -465,7 +465,7 @@ describe('SessionEventHelper', () => {
     it('should dispatch endConversation to handlers', () => {
       const { manager, session } = createManagerWithSession();
       const endSpy = vi.fn();
-      session.onEndConversation(endSpy);
+      session.onConversationEnd(endSpy);
 
       manager.dispatch({
         conversationId: CONVERSATION_ID,
@@ -595,13 +595,18 @@ describe('SessionEventHelper', () => {
       expect((session as any)._labelUpdatedHandlers).toHaveLength(0);
     });
 
-    it('should unregister onEndConversation handler', () => {
-      const { session } = createManagerWithSession();
+    it('should unregister onConversationEnd handler', () => {
+      const { manager, session } = createManagerWithSession();
       const handler = vi.fn();
-      const cleanup = session.onEndConversation(handler);
+      const cleanup = session.onConversationEnd(handler);
 
       cleanup();
-      expect((session as any)._endConversationHandlers).toHaveLength(0);
+      manager.dispatch({
+        conversationId: CONVERSATION_ID,
+        endConversation: { reason: ConversationEndReason.Failed },
+      });
+
+      expect(handler).not.toHaveBeenCalled();
     });
 
     it('should unregister onAnyErrorStart handler', () => {

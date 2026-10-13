@@ -20,7 +20,7 @@ import type {
   AnyErrorStartHandlerArgs,
   AsyncToolCallStartHandler,
   AsyncToolCallStartHandlerAsync,
-  EndConversationHandler,
+  ConversationEndHandler,
   ErrorEndEventOptions,
   ErrorStartEventOptions,
   ExchangeStartEventOptions,
@@ -58,7 +58,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   protected readonly _asyncToolCallStartHandlers = new Array<AsyncToolCallStartHandler>();
   protected readonly _asyncToolCallMap = new Map<string, AsyncToolCallEventHelperImpl>();
   protected readonly _labelUpdatedHandlers = new Array<LabelUpdatedHandler>();
-  protected readonly _endConversationHandlers = new Array<EndConversationHandler>();
+  protected readonly _conversationEndHandlers = new Array<ConversationEndHandler>();
   protected readonly _sessionStartedHandlers = new Array<SessionStartedHandler>();
   protected readonly _sessionEndingHandlers = new Array<SessionEndingHandler>();
   protected readonly _sessionEndHandlers = new Array<SessionEndHandler>();
@@ -368,11 +368,11 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * independently of the session lifecycle — the session may still receive a later end session event.
    * @returns Cleanup function to remove the handler.
    */
-  public onEndConversation(cb: EndConversationHandler) {
-    this._endConversationHandlers.push(cb);
+  public onConversationEnd(cb: ConversationEndHandler) {
+    this._conversationEndHandlers.push(cb);
     return () => {
-      const index = this._endConversationHandlers.indexOf(cb);
-      if (index >= 0) this._endConversationHandlers.splice(index, 1);
+      const index = this._conversationEndHandlers.indexOf(cb);
+      if (index >= 0) this._conversationEndHandlers.splice(index, 1);
     };
   }
 
@@ -586,7 +586,7 @@ export class SessionEventHelperImpl extends SessionEventHelper {
 
     if (conversationEvent.endConversation) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endConversationHandlers.forEach(cb => cb(conversationEvent.endConversation!));
+      this._conversationEndHandlers.forEach(cb => cb(conversationEvent.endConversation!));
     }
 
     if (conversationEvent.endSession) {

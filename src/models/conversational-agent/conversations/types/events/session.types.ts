@@ -323,13 +323,13 @@ export interface SessionStream {
    *
    * @example
    * ```typescript
-   * session.onEndConversation((event) => {
+   * session.onConversationEnd((event) => {
    *   console.log(`Conversation ended: ${event.reason}`);
    *   disableChatInput();
    * });
    * ```
    */
-  onEndConversation(cb: (event: ConversationEndEvent) => void): () => void;
+  onConversationEnd(cb: (event: ConversationEndEvent) => void): () => void;
 
   /**
    * Sends a session started event

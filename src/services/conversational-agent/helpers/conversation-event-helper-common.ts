@@ -55,6 +55,7 @@ export type ChunkHandler = (chunk: ContentPartChunkEvent) => void;
 export type ContentPartEndHandler = (endContentPart: ContentPartEndEvent) => void;
 export type ContentPartStartHandler = (contentPart: ContentPartEventHelper) => void;
 export type ContentPartStartHandlerAsync = (contentPart: ContentPartEventHelper) => Promise<ContentPartEndEvent | void>;
+export type ConversationEndHandler = (conversationEnd: ConversationEndEvent) => void;
 export type DeletedHandler = () => void;
 export type ErrorStartHandler = (errorStart: ErrorStartHandlerArgs) => void;
 export type ErrorEndHandler = (errorEnd: ErrorEndHandlerArgs) => void;
@@ -62,7 +63,6 @@ export type AnyErrorStartHandler = (errorStart: AnyErrorStartHandlerArgs) => voi
 export type AnyErrorEndHandler = (errorEnd: AnyErrorEndHandlerArgs) => void;
 export type UnhandledErrorStartHandler = (errorStart: UnhandledErrorStartHandlerArgs) => void;
 export type UnhandledErrorEndHandler = (errorStart: UnhandledErrorEndHandlerArgs) => void;
-export type EndConversationHandler = (endConversation: ConversationEndEvent) => void;
 export type ExchangeEndHandler = (endExchange: ExchangeEndEvent) => void;
 export type ExchangeStartHandler = (exchange: ExchangeEventHelper) => void;
 export type ExchangeStartHandlerAsync = (exchange: ExchangeEventHelper) => Promise<ExchangeEndEvent | void>;
