@@ -1,12 +1,16 @@
 import type { UiPathConfig } from '../config/config';
 import type { TokenInfo } from '../auth/types';
 import type { ApiClient } from '../http/api-client';
+import type { RetryOptions } from '../../models/common/http.types';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { extractUserIdFromToken } from '../../utils/encoding/jwt';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
 
-const ACQUIRE_TIMEOUT_MS = 5_000;
+/** AcquireLicense is idempotent, so the POST is safe to repeat. */
+const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 250, retryMethods: ['POST'], maxRetryAfterMs: 1_000 };
+const ACQUIRE_ATTEMPT_TIMEOUT_MS = 2_000;
+const ACQUIRE_DEADLINE_MS = 5_000;
 
 export class SessionLicense {
   readonly #apiClient: Pick<ApiClient, 'post'>;
@@ -38,8 +42,14 @@ export class SessionLicense {
   }
 
   #acquire(userId: string): Promise<void> {
+    const deadline = new AbortController();
+    const deadlineTimer = setTimeout(() => deadline.abort(), ACQUIRE_DEADLINE_MS);
     return this.#apiClient
-      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, { timeoutMs: ACQUIRE_TIMEOUT_MS })
+      .post(STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE, undefined, {
+        retry: ACQUIRE_RETRY,
+        timeoutMs: ACQUIRE_ATTEMPT_TIMEOUT_MS,
+        signal: deadline.signal,
+      })
       .then(
         () => undefined,
         (error: unknown) => {
@@ -47,6 +57,7 @@ export class SessionLicense {
         },
       )
       .finally(() => {
+        clearTimeout(deadlineTimer);
         if (this.#userId === userId) this.#claims.write(this.#claimKey, userId);
       });
   }

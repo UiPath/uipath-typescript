@@ -58,6 +58,7 @@ describe('SessionLicense', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
@@ -68,16 +69,46 @@ describe('SessionLicense', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('should acquire with a single timed POST when a caller ensures it for the signed-in user', async () => {
+  it('should acquire when a caller ensures it for the signed-in user, retrying the idempotent POST within one deadline', async () => {
     await signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure();
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(post).toHaveBeenCalledWith(
       STUDIO_WEB_LICENSE_ENDPOINTS.ACQUIRE,
       undefined,
-      { timeoutMs: expect.any(Number) }
+      {
+        retry: expect.objectContaining({ retryMethods: ['POST'], maxRetryAfterMs: expect.any(Number) }),
+        timeoutMs: expect.any(Number),
+        signal: expect.any(AbortSignal),
+      }
     );
     expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
+  });
+
+  it('should cut the whole acquisition short once its deadline passes', async () => {
+    vi.useFakeTimers();
+    post.mockImplementationOnce((_path: string, _body: unknown, options: { signal: AbortSignal }) =>
+      new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(options.signal.reason));
+      })
+    );
+
+    const ensuring = signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure();
+    await vi.runAllTimersAsync();
+
+    await expect(ensuring).resolves.toBeUndefined();
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Could not provision a personal robot'),
+      expect.anything()
+    );
+  });
+
+  it('should clear the deadline once the acquisition settles', async () => {
+    vi.useFakeTimers();
+
+    await signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure();
+
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('should resolve at once when no user is signed in', async () => {
