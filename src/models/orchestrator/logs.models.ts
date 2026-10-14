@@ -36,7 +36,8 @@ export interface LogServiceModel {
    * in Logs after a short delay.
    *
    * Rejects with `ValidationError` before any request is made when `entries` is an empty array,
-   * when an entry has no non-empty string `message` or an invalid `timestamp`, or when no folder
+   * when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or
+   * the wire names `jobId` / `timeStamp` instead of `jobKey` / `timestamp`, or when no folder
    * context can be resolved.
    *
    * @param entries - A single log entry or an array of entries to submit in one request

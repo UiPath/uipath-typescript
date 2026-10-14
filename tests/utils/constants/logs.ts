@@ -18,14 +18,16 @@ export const LOG_TEST_CONSTANTS = {
   WINDOWS_IDENTITY: 'CORP\\invoice.svc',
   AGENT_SESSION_ID: '00000000-0000-0000-0000-000000000000',
   FINGERPRINT: '436ccdd3-3f43-4f49-b354-f21766d51d35',
+  /** Fingerprint of the second batch entry, distinct from FINGERPRINT. */
+  SECOND_FINGERPRINT: 'b2a9f6e4-3c1d-4e7f-9a8b-5d6c7e8f9a0b',
 
   // Timestamps
   /** Fake "now" for default-timestamp tests. */
   NOW: '2026-10-14T09:40:14.000Z',
   /** Caller-supplied timestamp, distinct from NOW. */
   TIMESTAMP: '2026-10-13T08:15:30.250Z',
-  /** A wire-named custom key that must lose to the SDK-generated `timeStamp`. */
-  BOGUS_TIME_STAMP: 'not-a-time',
+  /** Timestamp of the second batch entry, distinct from TIMESTAMP and NOW. */
+  SECOND_TIMESTAMP: '2026-10-13T08:16:45.500Z',
   /** Input that `new Date()` turns into an invalid Date. */
   INVALID_DATE_INPUT: 'not-a-date',
 

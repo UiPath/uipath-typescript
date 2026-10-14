@@ -72,8 +72,8 @@ describe('LogService Unit Tests', () => {
         {
           message: LOG_TEST_CONSTANTS.SECOND_MESSAGE,
           level: LogEntryLevel.Error,
-          timestamp: new Date(LOG_TEST_CONSTANTS.TIMESTAMP),
-          fingerprint: LOG_TEST_CONSTANTS.FINGERPRINT,
+          timestamp: new Date(LOG_TEST_CONSTANTS.SECOND_TIMESTAMP),
+          fingerprint: LOG_TEST_CONSTANTS.SECOND_FINGERPRINT,
         },
       ];
 
@@ -101,8 +101,8 @@ describe('LogService Unit Tests', () => {
         {
           message: LOG_TEST_CONSTANTS.SECOND_MESSAGE,
           level: 'Error',
-          timeStamp: LOG_TEST_CONSTANTS.TIMESTAMP,
-          fingerprint: LOG_TEST_CONSTANTS.FINGERPRINT,
+          timeStamp: LOG_TEST_CONSTANTS.SECOND_TIMESTAMP,
+          fingerprint: LOG_TEST_CONSTANTS.SECOND_FINGERPRINT,
         },
       ]);
     });
@@ -156,20 +156,6 @@ describe('LogService Unit Tests', () => {
       const [wire] = postedWireEntries(mockApiClient);
       expect(wire[LOG_TEST_CONSTANTS.CUSTOM_FIELD_KEY]).toBe(LOG_TEST_CONSTANTS.CUSTOM_FIELD_VALUE);
       expect(wire[LOG_TEST_CONSTANTS.NESTED_FIELD_KEY]).toEqual(LOG_TEST_CONSTANTS.NESTED_FIELD_VALUE);
-    });
-
-    it('should let named wire fields win over a same-named custom key', async () => {
-      // `timeStamp` is the wire name of `timestamp`; a custom key spelled that way must not
-      // replace the value the SDK derives from `timestamp`.
-      await logService.submit({
-        message: LOG_TEST_CONSTANTS.MESSAGE,
-        timestamp: new Date(LOG_TEST_CONSTANTS.TIMESTAMP),
-        timeStamp: LOG_TEST_CONSTANTS.BOGUS_TIME_STAMP,
-      }, folderOptions);
-
-      const [wire] = postedWireEntries(mockApiClient);
-      expect(wire.timeStamp).toBe(LOG_TEST_CONSTANTS.TIMESTAMP);
-      expect(wire.message).toBe(LOG_TEST_CONSTANTS.MESSAGE);
     });
 
     it('should omit optional fields that are undefined from the wire JSON', async () => {
@@ -269,6 +255,33 @@ describe('LogService Unit Tests', () => {
           { message: LOG_TEST_CONSTANTS.MESSAGE, timestamp: new Date(LOG_TEST_CONSTANTS.INVALID_DATE_INPUT) },
           folderOptions,
         ),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when an entry has a non-Date timestamp such as an ISO string', async () => {
+      // Models an entry that went through JSON (de)serialisation, which turns a Date into a string.
+      const entryWithStringTimestamp: Record<string, unknown> = {
+        message: LOG_TEST_CONSTANTS.MESSAGE,
+        timestamp: LOG_TEST_CONSTANTS.TIMESTAMP,
+      };
+
+      await expect(
+        logService.submit(entryWithStringTimestamp as LogEntry, folderOptions),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when an entry uses the wire name jobId instead of jobKey', async () => {
+      await expect(
+        logService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE, jobId: LOG_TEST_CONSTANTS.JOB_KEY }, folderOptions),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when an entry uses the wire name timeStamp instead of timestamp', async () => {
+      await expect(
+        logService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE, timeStamp: LOG_TEST_CONSTANTS.TIMESTAMP }, folderOptions),
       ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });

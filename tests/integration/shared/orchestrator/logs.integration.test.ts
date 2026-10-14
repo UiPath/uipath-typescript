@@ -9,6 +9,14 @@ const modes: InitMode[] = ['v1'];
 
 /** Process name every submitted entry carries, so the entries can be found in Orchestrator Logs by hand. */
 const PROCESS_NAME = 'SdkIntegrationTest';
+/** Attribution fields Orchestrator maps to log columns, sent once per run so a rejected one surfaces as a 400. */
+const ATTRIBUTION = {
+  processVersion: '1.0.0',
+  fileName: 'Main',
+  robotName: 'sdk-integration-robot',
+  machineName: 'sdk-integration-host',
+  windowsIdentity: 'SDK\\integration',
+} as const;
 /** Zero GUID no folder carries; Orchestrator rejects it as nonexistent or inaccessible. */
 const NONEXISTENT_FOLDER_KEY = '00000000-0000-0000-0000-000000000000';
 
@@ -51,7 +59,7 @@ describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () =
       ).resolves.toBeUndefined();
     });
 
-    it('should accept a batch covering every level, an explicit timestamp, a user log type and custom fields, scoped by folderId', async () => {
+    it('should accept a batch covering every level plus an entry with every named field and custom fields, scoped by folderId', async () => {
       const tag = generateRandomString();
       const entries: LogEntry[] = Object.values(LogEntryLevel).map((level) => ({
         message: `${tag} level ${level}`,
@@ -59,11 +67,15 @@ describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () =
         processName: PROCESS_NAME,
       }));
       entries.push({
-        message: `${tag} user entry with custom fields`,
+        message: `${tag} user entry with every named field and custom fields`,
         level: LogEntryLevel.Info,
         timestamp: new Date(),
         logType: LogEntryType.User,
         processName: PROCESS_NAME,
+        jobKey: crypto.randomUUID(),
+        agentSessionId: crypto.randomUUID(),
+        fingerprint: crypto.randomUUID(),
+        ...ATTRIBUTION,
         invoiceId: tag,
         activity: { name: 'ReadInvoice', durationMs: 1200 },
       });
@@ -79,6 +91,8 @@ describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () =
       ).resolves.toBeUndefined();
     });
 
+    // Reaches Orchestrator: the zero GUID is a well-formed key that passes the SDK's folder resolution,
+    // so this asserts the server's HTTP 400 (surfaced as ValidationError), not client-side validation.
     it('should reject an entry scoped to a nonexistent folder key', async () => {
       const tag = generateRandomString();
 

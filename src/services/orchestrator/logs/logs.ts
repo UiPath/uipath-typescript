@@ -26,8 +26,13 @@ export class LogService extends BaseService implements LogServiceModel {
       if (typeof entry?.message !== 'string' || !entry.message.trim()) {
         throw new ValidationError({ message: 'Logs.submit: every log entry requires a non-empty string `message`.' });
       }
-      if (entry.timestamp !== undefined && Number.isNaN(entry.timestamp.getTime())) {
+      if (entry.timestamp !== undefined && (!(entry.timestamp instanceof Date) || Number.isNaN(entry.timestamp.getTime()))) {
         throw new ValidationError({ message: 'Logs.submit: `timestamp` must be a valid Date.' });
+      }
+      if (entry.jobId !== undefined || entry.timeStamp !== undefined) {
+        throw new ValidationError({
+          message: 'Logs.submit: `jobId` and `timeStamp` are wire names; use `jobKey` and `timestamp` instead.',
+        });
       }
     }
 
@@ -39,8 +44,7 @@ export class LogService extends BaseService implements LogServiceModel {
       fallbackFolderKey: this.config.folderKey,
     });
 
-    // Serialise the batch up front so one call produces one fixed set of fingerprints; Orchestrator
-    // de-duplicates on fingerprint, so re-sending an entry with an explicit one is safe.
+    // SubmitLogs takes an array of JSON strings, not objects (objects -> HTTP 400).
     const body = entryList.map((entry) => JSON.stringify(toWireEntry(entry)));
 
     await this.post<void>(LOG_ENDPOINTS.SUBMIT, body, { headers });
@@ -48,8 +52,8 @@ export class LogService extends BaseService implements LogServiceModel {
 }
 
 /**
- * Builds the wire object for one entry: custom fields first, then the named fields on top so a
- * same-named custom key can never override them. `undefined` values vanish in `JSON.stringify`.
+ * Builds the wire object for one entry: custom fields first, named fields on top. `undefined`
+ * values vanish in `JSON.stringify`.
  */
 function toWireEntry(entry: LogEntry): LogEntryWire {
   const {
