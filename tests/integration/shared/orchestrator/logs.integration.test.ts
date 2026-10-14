@@ -1,0 +1,79 @@
+import { describe, it, expect, beforeAll } from 'vitest';
+import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
+import { generateRandomString } from '../../utils/helpers';
+import { Logs, LogEntryLevel, LogEntryType } from '../../../../src/services/orchestrator/logs';
+import type { LogEntry } from '../../../../src/services/orchestrator/logs';
+
+const modes: InitMode[] = ['v1'];
+
+/** Process name every submitted entry carries, so the entries can be found in Orchestrator Logs by hand. */
+const PROCESS_NAME = 'SdkIntegrationTest';
+
+// Elasticsearch ingestion lags and arrives out of order on the test tenant, so the suite asserts
+// only that Orchestrator accepts each batch — never that an entry can be read back.
+describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () => {
+  let logs!: Logs;
+  let folderKey!: string;
+  let folderId!: number;
+  let folderPath!: string;
+
+  beforeAll(() => {
+    const service = getServices().logs;
+    if (!service) {
+      throw new Error('Logs service is not registered for this init mode');
+    }
+    logs = service;
+
+    const config = getTestConfig();
+    if (!config.folderKey) {
+      throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for submit');
+    }
+    if (!config.folderId) {
+      throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured for submit');
+    }
+    if (!config.folderPath) {
+      throw new Error('INTEGRATION_TEST_FOLDER_PATH must be configured for submit');
+    }
+    folderKey = config.folderKey;
+    folderId = Number(config.folderId);
+    folderPath = config.folderPath;
+  });
+
+  describe('submit', () => {
+    it('should accept a single entry scoped by folderKey', async () => {
+      const tag = generateRandomString();
+
+      await expect(
+        logs.submit({ message: `${tag} single entry`, processName: PROCESS_NAME }, { folderKey }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('should accept a batch covering every level, an explicit timestamp, a user log type and custom fields, scoped by folderId', async () => {
+      const tag = generateRandomString();
+      const entries: LogEntry[] = Object.values(LogEntryLevel).map((level) => ({
+        message: `${tag} level ${level}`,
+        level,
+        processName: PROCESS_NAME,
+      }));
+      entries.push({
+        message: `${tag} user entry with custom fields`,
+        level: LogEntryLevel.Info,
+        timestamp: new Date(),
+        logType: LogEntryType.User,
+        processName: PROCESS_NAME,
+        invoiceId: tag,
+        activity: { name: 'ReadInvoice', durationMs: 1200 },
+      });
+
+      await expect(logs.submit(entries, { folderId })).resolves.toBeUndefined();
+    });
+
+    it('should accept an entry scoped by folderPath', async () => {
+      const tag = generateRandomString();
+
+      await expect(
+        logs.submit({ message: `${tag} folderPath entry`, processName: PROCESS_NAME }, { folderPath }),
+      ).resolves.toBeUndefined();
+    });
+  });
+});

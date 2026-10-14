@@ -250,6 +250,11 @@ const serviceEntries = [
     output: 'folders/index'
   },
   {
+    name: 'logs',
+    input: 'src/services/orchestrator/logs/index.ts',
+    output: 'logs/index'
+  },
+  {
     name: 'settings',
     input: 'src/services/platform/settings/index.ts',
     output: 'settings/index'

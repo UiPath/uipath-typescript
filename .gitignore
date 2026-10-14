@@ -27,8 +27,8 @@ coverage/
 coverage-integration/
 .nyc_output/
 
-# Logs
-logs/
+# Logs (root-level only: src/services/orchestrator/logs is source)
+/logs/
 *.log
 
 # Local smoke and scratch files
