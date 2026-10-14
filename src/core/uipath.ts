@@ -175,6 +175,7 @@ export class UiPath implements IUiPath {
       scope: hasOAuthAuth ? config.scope : undefined,
       enforceSso: config.enforceSso,
       appKey: config.appKey,
+      appUniqueToken: config.appUniqueToken,
     });
 
     const executionContext = new ExecutionContext();
@@ -185,7 +186,7 @@ export class UiPath implements IUiPath {
 
     // In public mode, build the client the supported services call the Apps service through.
     const publicAppClient = publicMode
-      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!)
+      ? new PublicAppClient(internalConfig.baseUrl, internalConfig.orgName, internalConfig.appKey!, internalConfig.appUniqueToken)
       : undefined;
 
     // Store internals in SDKInternalsRegistry (not visible on instance).

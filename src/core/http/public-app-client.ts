@@ -9,6 +9,12 @@ const APPS_INTEGRATION_BASE = 'apps_/default/api/v1/default/integrations/codedap
 const APP_KEY_HEADER = 'X-UiPath-App-Key';
 
 /**
+ * Lets a visitor outside the org's allowed IP ranges through when an admin trusts the app under IP restriction.
+ * Injected as `uipath:app-unique-token`; the IP check reads it from the query string, so every call carries it.
+ */
+const APP_UNIQUE_TOKEN_PARAM = 'appUniqueToken';
+
+/**
  * `uipath:base-url` is the API host, which drops Origin and answers `*` for CORS, so it can't carry a session cookie.
  * Public calls go to the Apps origin behind it instead (the routes in apps-dev-tools ApiCorsWorker's wrangler.jsonc).
  */
@@ -53,12 +59,14 @@ export function toAppsBaseUrl(baseUrl: string): string {
 export class PublicAppClient {
   private readonly integrationBase: string;
   private readonly appKey: string;
+  private readonly appUniqueToken?: string;
   // In-flight session bootstrap, shared so N concurrent 401s trigger one /session call.
   private sessionBootstrap: Promise<void> | null = null;
 
-  constructor(baseUrl: string, orgName: string, appKey: string) {
+  constructor(baseUrl: string, orgName: string, appKey: string, appUniqueToken?: string) {
     this.integrationBase = `${toAppsBaseUrl(baseUrl)}/${orgName}/${APPS_INTEGRATION_BASE}`;
     this.appKey = appKey;
+    this.appUniqueToken = appUniqueToken;
   }
 
   /**
@@ -107,6 +115,12 @@ export class PublicAppClient {
     ) as Promise<{ path: string }>;
   }
 
+  private url(subPath: string): string {
+    const url = `${this.integrationBase}${subPath}`;
+    if (!this.appUniqueToken) return url;
+    return `${url}${url.includes('?') ? '&' : '?'}${APP_UNIQUE_TOKEN_PARAM}=${encodeURIComponent(this.appUniqueToken)}`;
+  }
+
   private entityRecords(entityKey: string): string {
     return `/datafabric/entities/${encodeURIComponent(entityKey)}/records`;
   }
@@ -119,7 +133,7 @@ export class PublicAppClient {
   private async ensureSession(): Promise<void> {
     if (!this.sessionBootstrap) {
       this.sessionBootstrap = (async () => {
-        const response = await fetch(`${this.integrationBase}/session`, {
+        const response = await fetch(this.url('/session'), {
           method: 'POST',
           credentials: 'include',
           headers: { [APP_KEY_HEADER]: this.appKey },
@@ -146,7 +160,7 @@ export class PublicAppClient {
   ): Promise<unknown> {
     const contentType = raw?.contentType ?? (body === undefined ? undefined : CONTENT_TYPES.JSON);
     const doFetch = () =>
-      fetch(`${this.integrationBase}${subPath}`, {
+      fetch(this.url(subPath), {
         method,
         credentials: 'include',
         headers: {

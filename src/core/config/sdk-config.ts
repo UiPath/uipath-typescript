@@ -30,6 +30,8 @@ export interface LoginFields {
 export interface PublicModeFields {
   /** Names the app to the Apps service. Minted only for public apps, so its presence means public mode. */
   appKey?: string;
+  /** Sent with public calls so an app trusted under the org's IP restriction works for visitors outside its ranges. */
+  appUniqueToken?: string;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields

@@ -35,6 +35,23 @@ describe('PublicAppClient', () => {
     expect(JSON.parse(init.body)).toEqual({ inputArguments: '{"a":1}' });
   });
 
+  it('sends the app unique token on every call when the page has one', async () => {
+    client = new PublicAppClient('https://alpha.api.uipath.com', 'my-org', 'uapp_key', 'eyJ0b2tlbiI6MX0=');
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(json(200, { value: [] }));
+
+    await client.listRecords('Orders', { limit: 5 });
+
+    const urls = fetchMock.mock.calls.map(([url]) => url);
+    expect(urls).toEqual([
+      `${routes}/datafabric/entities/Orders/records?limit=5&appUniqueToken=eyJ0b2tlbiI6MX0%3D`,
+      `${routes}/session?appUniqueToken=eyJ0b2tlbiI6MX0%3D`,
+      `${routes}/datafabric/entities/Orders/records?limit=5&appUniqueToken=eyJ0b2tlbiI6MX0%3D`,
+    ]);
+  });
+
   it('getJob GETs the job output route', async () => {
     fetchMock.mockResolvedValueOnce(json(200, { Key: 'J-1', OutputArguments: '{"Sum":12}' }));
 
