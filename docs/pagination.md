@@ -124,6 +124,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets | `getFiles()` | ✅ Yes |
 | Buckets | `getFileMetaData()` | ❌ No |
 | Jobs | `getAll()` | ✅ Yes |
+| Orchestrator Users | `getAll()` | ✅ Yes |
 | Users | `getAll()` | ✅ Yes |
 | Roles | `getAll()` | ✅ Yes |
 | Roles | `getAssignments()` | ✅ Yes |

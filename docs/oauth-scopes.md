@@ -329,6 +329,12 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Orchestrator Users
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Users` or `OR.Users.Read` |
+
 ## Platform
 
 ### Directory
