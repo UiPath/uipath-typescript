@@ -36,7 +36,7 @@ describe('OrchestratorUserService Unit Tests', () => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as unknown as ApiClient; });
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
     orchestratorUserService = new OrchestratorUserService(instance);
@@ -97,7 +97,7 @@ describe('OrchestratorUserService Unit Tests', () => {
         cursor: { value: TEST_CONSTANTS.CURSOR_VALUE },
       };
 
-      const result = await orchestratorUserService.getAll(options);
+      const result = await orchestratorUserService.getAll(options) as PaginatedResponse<OrchestratorUserGetResponse>;
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
