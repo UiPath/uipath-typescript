@@ -6,8 +6,8 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 import { ORCHESTRATOR_USER_ENDPOINTS } from '@/utils/constants/endpoints';
 import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION } from '@/utils/constants/common';
+import { RuntimeType } from '@/models/orchestrator/processes.types';
 import {
-  OrchestratorUserLicenseType,
   OrchestratorUserProvisionType,
   OrchestratorUserRoleType,
   OrchestratorUserType,
@@ -189,7 +189,7 @@ describe('OrchestratorUserService Unit Tests', () => {
       expect(user.lastLoginTime).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.LAST_LOGIN_TIME);
       expect(user.type).toBe(OrchestratorUserType.DirectoryUser);
       expect(user.provisionType).toBe(OrchestratorUserProvisionType.Automatic);
-      expect(user.licenseType).toBe(OrchestratorUserLicenseType.Attended);
+      expect(user.licenseType).toBe(RuntimeType.Attended);
       expect(user.mayHaveUnattendedSession).toBe(false);
       expect(user.explicitRestrictToPersonalWorkspace).toBe(false);
 

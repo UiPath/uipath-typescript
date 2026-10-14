@@ -149,6 +149,7 @@ export enum RuntimeType {
   BusinessRule = 'BusinessRule',
   CaseManagement = 'CaseManagement',
   Flow = 'Flow',
+  Local = 'Local',
 }
 
 

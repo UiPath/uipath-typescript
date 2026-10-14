@@ -27,3 +27,5 @@ export {
 
 export * from '../../../models/orchestrator/users.types';
 export * from '../../../models/orchestrator/users.models';
+// `licenseType` reuses the runtime-type enum shared with Processes and Jobs.
+export { RuntimeType } from '../../../models/orchestrator/processes.types';

@@ -1,4 +1,5 @@
 import type { RequestOptions } from '../common/types';
+import type { RuntimeType } from './processes.types';
 import type { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -31,46 +32,6 @@ export enum OrchestratorUserProvisionType {
   Manual = 'Manual',
   /** The account was provisioned automatically on first sign-in, for example through directory-group membership. */
   Automatic = 'Automatic',
-}
-
-/**
- * License type assigned to an Orchestrator user.
- */
-export enum OrchestratorUserLicenseType {
-  /** Unattended robot license for non-production environments. */
-  NonProduction = 'NonProduction',
-  Attended = 'Attended',
-  Unattended = 'Unattended',
-  Development = 'Development',
-  Studio = 'Studio',
-  RpaDeveloper = 'RpaDeveloper',
-  StudioX = 'StudioX',
-  CitizenDeveloper = 'CitizenDeveloper',
-  /** Unattended robot without a user interface session. */
-  Headless = 'Headless',
-  StudioPro = 'StudioPro',
-  RpaDeveloperPro = 'RpaDeveloperPro',
-  TestAutomation = 'TestAutomation',
-  /** Cloud-hosted robot managed by Automation Cloud. */
-  AutomationCloud = 'AutomationCloud',
-  /** Serverless cloud robot. */
-  Serverless = 'Serverless',
-  AutomationKit = 'AutomationKit',
-  /** Serverless cloud robot used for test automation. */
-  ServerlessTestAutomation = 'ServerlessTestAutomation',
-  /** Cloud-hosted robot used for test automation. */
-  AutomationCloudTestAutomation = 'AutomationCloudTestAutomation',
-  AttendedStudioWeb = 'AttendedStudioWeb',
-  Hosting = 'Hosting',
-  AssistantWeb = 'AssistantWeb',
-  ProcessOrchestration = 'ProcessOrchestration',
-  AgentService = 'AgentService',
-  AppTest = 'AppTest',
-  PerformanceTest = 'PerformanceTest',
-  BusinessRule = 'BusinessRule',
-  CaseManagement = 'CaseManagement',
-  Flow = 'Flow',
-  Local = 'Local',
 }
 
 /**
@@ -136,8 +97,8 @@ export interface OrchestratorUserGetResponse {
   type: OrchestratorUserType;
   /** How the user account was provisioned. */
   provisionType: OrchestratorUserProvisionType;
-  /** The user's license type, or `null` when no license is assigned. */
-  licenseType: OrchestratorUserLicenseType | null;
+  /** The user's license type (the same values as a robot runtime type), or `null` when no license is assigned. */
+  licenseType: RuntimeType | null;
   /** The source which authenticated this user. */
   authenticationSource: string;
   /** States if the user is active or not. An inactive user cannot log in to Orchestrator. */
