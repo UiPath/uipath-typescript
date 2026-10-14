@@ -9,23 +9,27 @@ export enum OrchestratorUserType {
   User = 'User',
   /** A local robot account. */
   Robot = 'Robot',
-  /** A person provisioned from an external directory (for example Microsoft Entra ID). */
+  /**
+   * A user account from the identity directory — the Automation Cloud organization
+   * directory or a connected directory such as Microsoft Entra ID — as opposed to a
+   * local Orchestrator account.
+   */
   DirectoryUser = 'DirectoryUser',
-  /** A group provisioned from an external directory. */
+  /** A group from the identity directory, as opposed to a local Orchestrator account. */
   DirectoryGroup = 'DirectoryGroup',
-  /** A robot account provisioned from an external directory. */
+  /** A robot account from the identity directory, as opposed to a local Orchestrator account. */
   DirectoryRobot = 'DirectoryRobot',
   /** An external application that authenticates with client credentials. */
   DirectoryExternalApplication = 'DirectoryExternalApplication',
 }
 
 /**
- * How the user's robot was provisioned.
+ * How the user account was provisioned.
  */
 export enum OrchestratorUserProvisionType {
-  /** The robot was created explicitly by an administrator. */
+  /** The account was added explicitly by an administrator. */
   Manual = 'Manual',
-  /** The robot was provisioned automatically when the user first signed in. */
+  /** The account was provisioned automatically on first sign-in, for example through directory-group membership. */
   Automatic = 'Automatic',
 }
 
@@ -33,16 +37,14 @@ export enum OrchestratorUserProvisionType {
  * License type assigned to an Orchestrator user.
  */
 export enum OrchestratorUserLicenseType {
-  /** Robot license for non-production (test or staging) use. */
+  /** Unattended robot license for non-production environments. */
   NonProduction = 'NonProduction',
   Attended = 'Attended',
   Unattended = 'Unattended',
-  /** Robot license for development machines. */
   Development = 'Development',
   Studio = 'Studio',
   RpaDeveloper = 'RpaDeveloper',
   StudioX = 'StudioX',
-  /** StudioX license bundled for citizen developers. */
   CitizenDeveloper = 'CitizenDeveloper',
   /** Unattended robot without a user interface session. */
   Headless = 'Headless',
@@ -58,27 +60,16 @@ export enum OrchestratorUserLicenseType {
   ServerlessTestAutomation = 'ServerlessTestAutomation',
   /** Cloud-hosted robot used for test automation. */
   AutomationCloudTestAutomation = 'AutomationCloudTestAutomation',
-  /** Attended license granted through Studio Web. */
   AttendedStudioWeb = 'AttendedStudioWeb',
-  /** Hosting license for robots run on behalf of other tenants. */
   Hosting = 'Hosting',
-  /** License for the web version of UiPath Assistant. */
   AssistantWeb = 'AssistantWeb',
-  /** License for Maestro process orchestration. */
   ProcessOrchestration = 'ProcessOrchestration',
-  /** License for running agents. */
   AgentService = 'AgentService',
-  /** License for application test automation. */
   AppTest = 'AppTest',
-  /** License for performance testing. */
   PerformanceTest = 'PerformanceTest',
-  /** License for business rule execution. */
   BusinessRule = 'BusinessRule',
-  /** License for case management. */
   CaseManagement = 'CaseManagement',
-  /** License for flow execution. */
   Flow = 'Flow',
-  /** License consumed locally rather than from the tenant pool. */
   Local = 'Local',
 }
 
@@ -99,14 +90,17 @@ export enum OrchestratorUserRoleType {
  * when `expand` includes `userRoles`.
  */
 export interface OrchestratorUserRole {
-  /** Id of the user-role association. */
+  /**
+   * Id of the user-role association; `0` when the API does not materialize it on
+   * expanded roles — use `userId` + `roleId` to identify the pair.
+   */
   id: number;
   /** The id of the associated user. */
   userId: number;
   /** The id of the associated role. */
   roleId: number;
-  /** The name of the associated user. */
-  userName: string;
+  /** The name of the associated user, or `null` when the API does not populate it on expanded roles. */
+  userName: string | null;
   /** The name of the associated role. */
   roleName: string;
   /** Scope at which the role applies. */
@@ -134,13 +128,13 @@ export interface OrchestratorUserGetResponse {
   fullName: string;
   /** The e-mail address associated with the user. */
   emailAddress: string;
-  /** The domain from which the user is imported, or `null` for local users. */
+  /** The domain from which the user is imported, or `null` when the user is not imported from a domain. */
   domain: string | null;
-  /** The directory identifier from which the user is imported, or `null` for local users. */
+  /** The directory identifier from which the user is imported, or `null` when the user is not imported from a directory. */
   directoryIdentifier: string | null;
   /** The user type. */
   type: OrchestratorUserType;
-  /** How the user's robot was provisioned. */
+  /** How the user account was provisioned. */
   provisionType: OrchestratorUserProvisionType;
   /** The user's license type, or `null` when no license is assigned. */
   licenseType: OrchestratorUserLicenseType | null;
@@ -203,7 +197,7 @@ export interface OrchestratorUserGetResponse {
  *
  * `filter`, `orderby`, `select` and `expand` use the SDK field names shown on
  * {@link OrchestratorUserGetResponse} (for example `createdTime`, not the wire name).
- * `expand` supports `userRoles`. `pageSize` may not exceed 1000 — the API rejects
- * larger values.
+ * `expand` supports `userRoles`. Pages hold at most 1000 users; a larger `pageSize`
+ * is reduced to 1000.
  */
 export type OrchestratorUserGetAllOptions = RequestOptions & PaginationOptions;

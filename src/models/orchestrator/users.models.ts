@@ -29,7 +29,7 @@ export interface OrchestratorUserServiceModel {
    * configuration and credential fields are intentionally not exposed. Add
    * `expand: 'userRoles'` to include each user's role assignments.
    *
-   * @param options - Query options (`filter`, `orderby`, `select`, `expand`) and pagination options. OData expressions use the SDK field names, for example `createdTime`.
+   * @param options - Query options (`filter`, `orderby`, `select`, `expand`) and pagination options. Filter, sort, select and expand expressions use the SDK field names, for example `createdTime`.
    * @returns Promise resolving to a `NonPaginatedResponse` of {@link OrchestratorUserGetResponse} items, or to a `PaginatedResponse` of {@link OrchestratorUserGetResponse} items when pagination options are used.
    * @example
    * ```typescript

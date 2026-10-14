@@ -1,8 +1,8 @@
 import { track } from '../../../core/telemetry';
 import type { OrchestratorUserGetAllOptions, OrchestratorUserGetResponse } from '../../../models/orchestrator/users.types';
 import type { OrchestratorUserServiceModel } from '../../../models/orchestrator/users.models';
-import type { RawOrchestratorUserDto } from '../../../models/orchestrator/users.internal-types';
-import { ORCHESTRATOR_USER_DROPPED_FIELDS, OrchestratorUserMap } from '../../../models/orchestrator/users.constants';
+import { ORCHESTRATOR_USER_DROPPED_FIELDS, type RawOrchestratorUserDto } from '../../../models/orchestrator/users.internal-types';
+import { OrchestratorUserMap } from '../../../models/orchestrator/users.constants';
 import { ORCHESTRATOR_USER_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION } from '../../../utils/constants/common';
 import { pascalToCamelCaseKeys, transformData, transformOptions } from '../../../utils/transform';

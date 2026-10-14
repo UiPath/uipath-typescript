@@ -8,6 +8,7 @@ import type { RawOrchestratorUserDto } from '../../../src/models/orchestrator/us
 const USER_ID = 4660601;
 const USER_KEY = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
 const USER_NAME = 'jane.doe@example.com';
+const FULL_NAME = 'Jane Doe';
 const TENANT_ID = 794591;
 const ROLE_ID = 42;
 const ROLE_NAME = 'Automation User';
@@ -24,7 +25,7 @@ const RAW_USER: RawOrchestratorUserDto = {
   Surname: 'Doe',
   UserName: USER_NAME,
   Domain: null,
-  FullName: 'Jane Doe',
+  FullName: FULL_NAME,
   EmailAddress: USER_NAME,
   LastLoginTime: LAST_LOGIN_TIME,
   IsActive: true,
@@ -36,7 +37,8 @@ const RAW_USER: RawOrchestratorUserDto = {
     {
       UserId: USER_ID,
       RoleId: ROLE_ID,
-      UserName: USER_NAME,
+      // The API never populates UserName on expanded roles.
+      UserName: null,
       RoleName: ROLE_NAME,
       RoleType: 'Tenant',
       Id: USER_ROLE_ID,
@@ -92,6 +94,7 @@ export const ORCHESTRATOR_USER_TEST_CONSTANTS = {
   USER_ID,
   USER_KEY,
   USER_NAME,
+  FULL_NAME,
   TENANT_ID,
   ROLE_ID,
   ROLE_NAME,
@@ -100,6 +103,14 @@ export const ORCHESTRATOR_USER_TEST_CONSTANTS = {
   LAST_MODIFIED_TIME,
   LAST_LOGIN_TIME,
   RAW_USER,
+
+  // Wire fields the SDK strips from every user. Deliberately independent of the production
+  // ORCHESTRATOR_USER_DROPPED_FIELDS constant so the transform test cannot pass vacuously.
+  DROPPED_WIRE_FIELDS: ['Password', 'NotificationSubscription', 'RobotProvision', 'UnattendedRobot', 'UpdatePolicy', 'ExternalRoles'],
+
+  // Paginated response shape of the live tenant (36 users, 4 pages of 10).
+  TOTAL_COUNT: 36,
+  TOTAL_PAGES: 4,
 
   // OData options as a caller writes them (SDK names) and as the API must receive them.
   FILTER_SDK: "isActive eq true and createdTime gt 2000-01-01T00:00:00.000Z",

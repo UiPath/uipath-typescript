@@ -16,6 +16,7 @@ import type { OrchestratorUserGetAllOptions, OrchestratorUserGetResponse } from 
 import type { PaginatedResponse } from '@/utils/pagination';
 import { createMockError, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { ORCHESTRATOR_USER_TEST_CONSTANTS } from '@tests/utils/constants/orchestrator-users';
+import { PAGINATION_TEST_CONSTANTS } from '@tests/utils/constants/pagination';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 
 // ===== MOCKING =====
@@ -82,11 +83,11 @@ describe('OrchestratorUserService Unit Tests', () => {
     it('should pass pageSize and cursor pagination options through unchanged', async () => {
       const mockResponse: PaginatedResponse<OrchestratorUserGetResponse> = {
         items: [],
-        totalCount: 36,
+        totalCount: ORCHESTRATOR_USER_TEST_CONSTANTS.TOTAL_COUNT,
         hasNextPage: true,
         nextCursor: { value: TEST_CONSTANTS.NEXT_CURSOR },
         currentPage: 1,
-        totalPages: 4,
+        totalPages: ORCHESTRATOR_USER_TEST_CONSTANTS.TOTAL_PAGES,
         supportsPageJump: true,
       };
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -113,11 +114,11 @@ describe('OrchestratorUserService Unit Tests', () => {
     it('should pass jumpToPage through unchanged', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
-      await orchestratorUserService.getAll({ jumpToPage: 2, pageSize: TEST_CONSTANTS.PAGE_SIZE });
+      await orchestratorUserService.getAll({ jumpToPage: PAGINATION_TEST_CONSTANTS.JUMP_TO_PAGE_2, pageSize: TEST_CONSTANTS.PAGE_SIZE });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
-        expect.objectContaining({ jumpToPage: 2, pageSize: TEST_CONSTANTS.PAGE_SIZE }),
+        expect.objectContaining({ jumpToPage: PAGINATION_TEST_CONSTANTS.JUMP_TO_PAGE_2, pageSize: TEST_CONSTANTS.PAGE_SIZE }),
       );
     });
 
@@ -180,7 +181,7 @@ describe('OrchestratorUserService Unit Tests', () => {
       expect(user.key).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_KEY);
       expect(user.userName).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_NAME);
       expect(user.emailAddress).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_NAME);
-      expect(user.fullName).toBe('Jane Doe');
+      expect(user.fullName).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.FULL_NAME);
       expect(user.tenantId).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.TENANT_ID);
       expect(user.isActive).toBe(true);
       expect(user.rolesList).toEqual([ORCHESTRATOR_USER_TEST_CONSTANTS.ROLE_NAME]);
@@ -208,7 +209,7 @@ describe('OrchestratorUserService Unit Tests', () => {
       expect((user as any).RolesList).toBeUndefined();
 
       // Every dropped wire field is absent in both wire and camelCase spelling
-      for (const field of ['Password', 'NotificationSubscription', 'RobotProvision', 'UnattendedRobot', 'UpdatePolicy', 'ExternalRoles']) {
+      for (const field of ORCHESTRATOR_USER_TEST_CONSTANTS.DROPPED_WIRE_FIELDS) {
         expect(user).not.toHaveProperty(field);
         expect(user).not.toHaveProperty(field.charAt(0).toLowerCase() + field.slice(1));
       }
@@ -219,7 +220,7 @@ describe('OrchestratorUserService Unit Tests', () => {
       expect(role.id).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_ROLE_ID);
       expect(role.userId).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_ID);
       expect(role.roleId).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.ROLE_ID);
-      expect(role.userName).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.USER_NAME);
+      expect(role.userName).toBeNull();
       expect(role.roleName).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.ROLE_NAME);
       expect(role.roleType).toBe(OrchestratorUserRoleType.Tenant);
       expect((role as any).RoleName).toBeUndefined();

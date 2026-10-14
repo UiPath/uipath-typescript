@@ -9,7 +9,7 @@ export interface RawOrchestratorUserRoleDto {
   Id: number;
   UserId: number;
   RoleId: number;
-  UserName: string;
+  UserName: string | null;
   RoleName: string;
   RoleType: string;
 }
@@ -91,3 +91,18 @@ export interface RawOrchestratorUserDto {
   /** Returned by the API but absent from its public contract. */
   ExternalRoles: unknown[];
 }
+
+/**
+ * Wire fields removed from each user before it is returned: deprecated members
+ * (`Password`, `NotificationSubscription`), robot-provisioning configuration including
+ * credential fields (`RobotProvision`, `UnattendedRobot`, `UpdatePolicy`), and
+ * `ExternalRoles`, which is absent from the API's public contract.
+ */
+export const ORCHESTRATOR_USER_DROPPED_FIELDS = [
+  'Password',
+  'NotificationSubscription',
+  'RobotProvision',
+  'UnattendedRobot',
+  'UpdatePolicy',
+  'ExternalRoles',
+] as const satisfies ReadonlyArray<keyof RawOrchestratorUserDto>;

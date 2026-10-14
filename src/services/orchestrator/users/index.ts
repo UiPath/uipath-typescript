@@ -2,8 +2,8 @@
  * Orchestrator Users Module
  *
  * Provides access to the users of a UiPath Orchestrator tenant — people, directory
- * groups, robots and external applications — with OData filtering, sorting,
- * projection and pagination. Tenant-level: no folder context is required.
+ * groups, robots and external applications — with filtering, sorting, projection
+ * and pagination. Tenant-level: no folder context is required.
  *
  * @example
  * ```typescript

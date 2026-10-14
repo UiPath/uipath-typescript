@@ -1,13 +1,11 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isValidationError } from '../../../../src/core/errors';
+import { escapeODataString } from '../../../../src/services/folder-scoped';
 import { OrchestratorUsers, OrchestratorUserType } from '../../../../src/services/orchestrator/users';
 import type { OrchestratorUserGetResponse } from '../../../../src/services/orchestrator/users';
 
 const modes: InitMode[] = ['v1'];
-
-/** Escapes a value for use inside an OData single-quoted string literal. */
-const odataLiteral = (value: string) => value.replace(/'/g, "''");
 
 describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () => {
   let orchestratorUsers!: OrchestratorUsers;
@@ -31,10 +29,16 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
   });
 
   describe('getAll', () => {
-    it('should list users with a total count and apply the SDK transforms against the live response', () => {
+    it('should list users with a total count', () => {
       expect(allUsers.length).toBeGreaterThan(0);
       expect(allUsersTotalCount).toBeGreaterThanOrEqual(allUsers.length);
+      for (const user of allUsers) {
+        expect(typeof user.id).toBe('number');
+        expect(Object.values(OrchestratorUserType)).toContain(user.type);
+      }
+    });
 
+    it('should apply the SDK transforms against the live response', () => {
       const user = allUsers[0];
 
       // camelCase fields carry values
@@ -44,7 +48,6 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       expect(typeof user.createdTime).toBe('string');
       expect(typeof user.isActive).toBe('boolean');
       expect(Array.isArray(user.rolesList)).toBe(true);
-      expect(Object.values(OrchestratorUserType)).toContain(user.type);
 
       // Wire names are gone
       expect((user as any).CreationTime).toBeUndefined();
@@ -74,7 +77,7 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       const target = allUsers[0];
 
       const result = await orchestratorUsers.getAll({
-        filter: `userName eq '${odataLiteral(target.userName)}'`,
+        filter: `userName eq '${escapeODataString(target.userName)}'`,
       });
 
       expect(result.items).toHaveLength(1);
