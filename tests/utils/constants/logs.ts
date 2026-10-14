@@ -7,10 +7,12 @@ export const LOG_TEST_CONSTANTS = {
   // Entry content
   MESSAGE: 'Invoice batch started',
   SECOND_MESSAGE: 'Invoice 124 rejected',
+  /** Whitespace-only message — must be rejected like an empty one. */
+  MESSAGE_WHITESPACE: '   ',
   PROCESS_NAME: 'InvoiceApp',
   PROCESS_VERSION: '1.0.0',
   FILE_NAME: 'Main',
-  JOB_ID: '6fb260e0-1c1d-4c4c-a3a1-489028e8dd43',
+  JOB_KEY: '6fb260e0-1c1d-4c4c-a3a1-489028e8dd43',
   ROBOT_NAME: 'invoice-robot',
   MACHINE_NAME: 'INVOICE-VM-01',
   WINDOWS_IDENTITY: 'CORP\\invoice.svc',
@@ -24,6 +26,8 @@ export const LOG_TEST_CONSTANTS = {
   TIMESTAMP: '2026-10-13T08:15:30.250Z',
   /** A wire-named custom key that must lose to the SDK-generated `timeStamp`. */
   BOGUS_TIME_STAMP: 'not-a-time',
+  /** Input that `new Date()` turns into an invalid Date. */
+  INVALID_DATE_INPUT: 'not-a-date',
 
   // Custom fields
   CUSTOM_FIELD_KEY: 'invoiceId',
@@ -36,7 +40,4 @@ export const LOG_TEST_CONSTANTS = {
   // base64-of-UTF-16-LE encoded value matching encodeFolderPathHeader().
   // Reference: Buffer.from(<path>, 'utf16le').toString('base64').
   FOLDER_PATH_ENCODED: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
-
-  // Patterns
-  UUID_REGEX: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
 } as const;

@@ -26,6 +26,9 @@ export class LogService extends BaseService implements LogServiceModel {
       if (typeof entry?.message !== 'string' || !entry.message.trim()) {
         throw new ValidationError({ message: 'Logs.submit: every log entry requires a non-empty string `message`.' });
       }
+      if (entry.timestamp !== undefined && Number.isNaN(entry.timestamp.getTime())) {
+        throw new ValidationError({ message: 'Logs.submit: `timestamp` must be a valid Date.' });
+      }
     }
 
     const headers = resolveFolderHeaders({
@@ -36,8 +39,8 @@ export class LogService extends BaseService implements LogServiceModel {
       fallbackFolderKey: this.config.folderKey,
     });
 
-    // Serialise the whole batch (fingerprints included) before the single POST so an ApiClient
-    // retry resends identical fingerprints and Orchestrator de-duplicates instead of double-storing.
+    // Serialise the batch up front so one call produces one fixed set of fingerprints; Orchestrator
+    // de-duplicates on fingerprint, so re-sending an entry with an explicit one is safe.
     const body = entryList.map((entry) => JSON.stringify(toWireEntry(entry)));
 
     await this.post<void>(LOG_ENDPOINTS.SUBMIT, body, { headers });
@@ -57,7 +60,7 @@ function toWireEntry(entry: LogEntry): LogEntryWire {
     processName,
     processVersion,
     fileName,
-    jobId,
+    jobKey,
     robotName,
     machineName,
     windowsIdentity,
@@ -76,7 +79,7 @@ function toWireEntry(entry: LogEntry): LogEntryWire {
     processName,
     processVersion,
     fileName,
-    jobId,
+    jobId: jobKey,
     robotName,
     machineName,
     windowsIdentity,

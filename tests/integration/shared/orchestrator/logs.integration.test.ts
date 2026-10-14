@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
+import { isValidationError } from '../../../../src/core/errors';
 import { generateRandomString } from '../../utils/helpers';
 import { Logs, LogEntryLevel, LogEntryType } from '../../../../src/services/orchestrator/logs';
 import type { LogEntry } from '../../../../src/services/orchestrator/logs';
@@ -8,9 +9,11 @@ const modes: InitMode[] = ['v1'];
 
 /** Process name every submitted entry carries, so the entries can be found in Orchestrator Logs by hand. */
 const PROCESS_NAME = 'SdkIntegrationTest';
+/** Zero GUID no folder carries; Orchestrator rejects it as nonexistent or inaccessible. */
+const NONEXISTENT_FOLDER_KEY = '00000000-0000-0000-0000-000000000000';
 
 // Elasticsearch ingestion lags and arrives out of order on the test tenant, so the suite asserts
-// only that Orchestrator accepts each batch — never that an entry can be read back.
+// only Orchestrator's response to each batch — never that an entry can be read back.
 describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () => {
   let logs!: Logs;
   let folderKey!: string;
@@ -74,6 +77,14 @@ describeIntegration('Orchestrator Logs - Integration Tests', 'both', modes, () =
       await expect(
         logs.submit({ message: `${tag} folderPath entry`, processName: PROCESS_NAME }, { folderPath }),
       ).resolves.toBeUndefined();
+    });
+
+    it('should reject an entry scoped to a nonexistent folder key', async () => {
+      const tag = generateRandomString();
+
+      await expect(
+        logs.submit({ message: `${tag} nonexistent folder`, processName: PROCESS_NAME }, { folderKey: NONEXISTENT_FOLDER_KEY }),
+      ).rejects.toSatisfy(isValidationError);
     });
   });
 });

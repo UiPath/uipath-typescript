@@ -29,14 +29,15 @@ export interface LogServiceModel {
    * and `fingerprint` (a random UUID) when they are omitted. See {@link LogEntry} for the fields.
    *
    * Orchestrator validates each entry silently: an entry whose `timestamp` is more than 30 days
-   * in the past or more than 24 hours in the future, whose serialised form exceeds 512 KB, or which
-   * carries one of the reserved property names `@rawMessage`, `@encryption` or `@compression` is
-   * discarded while the request still succeeds. The call returns as soon as Orchestrator has
-   * accepted the batch — entries are indexed asynchronously and show up in Logs after a short
-   * delay.
+   * in the past or more than 24 hours in the future, whose serialised form exceeds 524,000 bytes
+   * (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`,
+   * `@encryption` or `@compression` is discarded while the request still succeeds. The call returns
+   * as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up
+   * in Logs after a short delay.
    *
    * Rejects with `ValidationError` before any request is made when `entries` is an empty array,
-   * when an entry has no non-empty string `message`, or when no folder context can be resolved.
+   * when an entry has no non-empty string `message` or an invalid `timestamp`, or when no folder
+   * context can be resolved.
    *
    * @param entries - A single log entry or an array of entries to submit in one request
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)

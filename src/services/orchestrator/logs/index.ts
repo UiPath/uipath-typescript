@@ -20,7 +20,7 @@
  * @module
  */
 
-export { LogService as Logs, LogService } from './logs';
+export { LogService as Logs } from './logs';
 
 export * from '../../../models/orchestrator/logs.types';
 export * from '../../../models/orchestrator/logs.models';

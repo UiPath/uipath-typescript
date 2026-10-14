@@ -4,6 +4,7 @@ import { LogService } from '@/services/orchestrator/logs/logs';
 import { ApiClient } from '@/core/http/api-client';
 import { LOG_ENDPOINTS } from '@/utils/constants/endpoints';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '@/utils/constants/headers';
+import { GUID_REGEX } from '@/utils/validation/guid';
 import { ValidationError } from '@/core/errors';
 import { LogEntryLevel, LogEntryType } from '@/models/orchestrator/logs.types';
 import type { LogEntry, LogSubmitOptions } from '@/models/orchestrator/logs.types';
@@ -40,7 +41,7 @@ describe('LogService Unit Tests', () => {
     mockApiClient = createMockApiClient();
     mockApiClient.post.mockResolvedValue(undefined);
 
-    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
+    vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
 
     logService = new LogService(instance);
   });
@@ -62,7 +63,7 @@ describe('LogService Unit Tests', () => {
           processName: LOG_TEST_CONSTANTS.PROCESS_NAME,
           processVersion: LOG_TEST_CONSTANTS.PROCESS_VERSION,
           fileName: LOG_TEST_CONSTANTS.FILE_NAME,
-          jobId: LOG_TEST_CONSTANTS.JOB_ID,
+          jobKey: LOG_TEST_CONSTANTS.JOB_KEY,
           robotName: LOG_TEST_CONSTANTS.ROBOT_NAME,
           machineName: LOG_TEST_CONSTANTS.MACHINE_NAME,
           windowsIdentity: LOG_TEST_CONSTANTS.WINDOWS_IDENTITY,
@@ -91,7 +92,7 @@ describe('LogService Unit Tests', () => {
           processName: LOG_TEST_CONSTANTS.PROCESS_NAME,
           processVersion: LOG_TEST_CONSTANTS.PROCESS_VERSION,
           fileName: LOG_TEST_CONSTANTS.FILE_NAME,
-          jobId: LOG_TEST_CONSTANTS.JOB_ID,
+          jobId: LOG_TEST_CONSTANTS.JOB_KEY,
           robotName: LOG_TEST_CONSTANTS.ROBOT_NAME,
           machineName: LOG_TEST_CONSTANTS.MACHINE_NAME,
           windowsIdentity: LOG_TEST_CONSTANTS.WINDOWS_IDENTITY,
@@ -120,7 +121,7 @@ describe('LogService Unit Tests', () => {
       const [wire] = postedWireEntries(mockApiClient);
       expect(wire.level).toBe(LogEntryLevel.Info);
       expect(wire.timeStamp).toBe(LOG_TEST_CONSTANTS.NOW);
-      expect(wire.fingerprint).toMatch(LOG_TEST_CONSTANTS.UUID_REGEX);
+      expect(wire.fingerprint).toMatch(GUID_REGEX);
     });
 
     it('should preserve a caller-provided level, timestamp and fingerprint', async () => {
@@ -135,6 +136,14 @@ describe('LogService Unit Tests', () => {
       expect(wire.level).toBe('Warn');
       expect(wire.timeStamp).toBe(LOG_TEST_CONSTANTS.TIMESTAMP);
       expect(wire.fingerprint).toBe(LOG_TEST_CONSTANTS.FINGERPRINT);
+    });
+
+    it('should send jobKey as the wire field jobId', async () => {
+      await logService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE, jobKey: LOG_TEST_CONSTANTS.JOB_KEY }, folderOptions);
+
+      const [wire] = postedWireEntries(mockApiClient);
+      expect(wire.jobId).toBe(LOG_TEST_CONSTANTS.JOB_KEY);
+      expect(wire.jobKey).toBeUndefined();
     });
 
     it('should pass custom fields, including nested objects, through verbatim', async () => {
@@ -167,7 +176,7 @@ describe('LogService Unit Tests', () => {
       await logService.submit({
         message: LOG_TEST_CONSTANTS.MESSAGE,
         processName: undefined,
-        jobId: undefined,
+        jobKey: undefined,
       }, folderOptions);
 
       const [wire] = postedWireEntries(mockApiClient);
@@ -207,7 +216,7 @@ describe('LogService Unit Tests', () => {
     it('should fall back to SDK init-time folderKey when no folder is provided', async () => {
       // Simulates the coded-app meta-tag (`uipath:folder-key`) path.
       const { instance } = createServiceTestDependencies({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new LogService(instance);
 
       await scopedService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE });
@@ -218,7 +227,7 @@ describe('LogService Unit Tests', () => {
 
     it('should suppress the init-time folderKey fallback when the caller provides an explicit folder', async () => {
       const { instance } = createServiceTestDependencies({ folderKey: TEST_CONSTANTS.FOLDER_KEY });
-      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient as ApiClient; });
+      vi.mocked(ApiClient).mockImplementation(function () { return mockApiClient; });
       const scopedService = new LogService(instance);
 
       await scopedService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE }, { folderId: TEST_CONSTANTS.FOLDER_ID });
@@ -244,6 +253,23 @@ describe('LogService Unit Tests', () => {
 
     it('should throw ValidationError when an entry has an empty-string message', async () => {
       await expect(logService.submit({ message: '' }, folderOptions)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when an entry has a whitespace-only message', async () => {
+      await expect(
+        logService.submit({ message: LOG_TEST_CONSTANTS.MESSAGE_WHITESPACE }, folderOptions),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when an entry has an invalid Date timestamp', async () => {
+      await expect(
+        logService.submit(
+          { message: LOG_TEST_CONSTANTS.MESSAGE, timestamp: new Date(LOG_TEST_CONSTANTS.INVALID_DATE_INPUT) },
+          folderOptions,
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
