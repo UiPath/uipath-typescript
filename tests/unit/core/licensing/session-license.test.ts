@@ -3,6 +3,16 @@ import { SessionLicense } from '@/core/licensing/session-license';
 import type { TokenInfo } from '@/core/auth/types';
 import { UiPathConfig } from '@/core/config/config';
 import { AUTH_STORAGE_KEYS } from '@/core/auth/constants';
+import {
+  AuthenticationError,
+  AuthorizationError,
+  HttpStatus,
+  NetworkError,
+  NotFoundError,
+  RateLimitError,
+  ServerError,
+  ValidationError,
+} from '@/core/errors';
 import { MemoryStore } from '@/utils/storage/memory-store';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '@/utils/constants/endpoints';
 import { TEST_CONSTANTS } from '@tests/utils/constants/common';
@@ -50,6 +60,27 @@ function holdNextPost(): () => void {
 }
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const BLOCKING_FAILURES = [
+  { status: HttpStatus.BAD_REQUEST, error: new ValidationError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  { status: HttpStatus.FORBIDDEN, error: new AuthorizationError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  { status: HttpStatus.NOT_FOUND, error: new NotFoundError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  {
+    status: HttpStatus.CONFLICT,
+    error: new ValidationError({ message: TEST_CONSTANTS.ERROR_MESSAGE, statusCode: HttpStatus.CONFLICT }),
+  },
+];
+
+const TRANSIENT_FAILURES = [
+  { status: 'no response', error: new NetworkError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  { status: HttpStatus.UNAUTHORIZED, error: new AuthenticationError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  { status: HttpStatus.TOO_MANY_REQUESTS, error: new RateLimitError({ message: TEST_CONSTANTS.ERROR_MESSAGE }) },
+  {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    error: new ServerError({ message: TEST_CONSTANTS.ERROR_MESSAGE, statusCode: HttpStatus.SERVICE_UNAVAILABLE }),
+  },
+  { status: 'a non-SDK error', error: createMockError(TEST_CONSTANTS.ERROR_MESSAGE) },
+];
 
 describe('SessionLicense', () => {
   beforeEach(() => {
@@ -101,6 +132,7 @@ describe('SessionLicense', () => {
       expect.stringContaining('Could not provision a personal robot'),
       expect.anything()
     );
+    expect(claimFor()).toBeUndefined();
   });
 
   it('should clear the deadline once the acquisition settles', async () => {
@@ -217,20 +249,51 @@ describe('SessionLicense', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('should warn, not reject, and keep the claim when the acquisition fails', async () => {
-    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+  it.each(BLOCKING_FAILURES)('should warn, not reject, and keep the claim when the server refuses with $status', async ({ error }) => {
+    post.mockRejectedValueOnce(error);
 
     await expect(signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure()).resolves.toBeUndefined();
 
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not provision a personal robot'),
-      expect.anything()
+      error
     );
     expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
   });
 
-  it('should not retry a failed acquisition on token refresh or reload until sign-out', async () => {
-    post.mockRejectedValueOnce(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+  it.each(TRANSIENT_FAILURES)('should warn, not reject, and leave the claim unwritten when the acquisition fails with $status', async ({ error }) => {
+    post.mockRejectedValueOnce(error);
+
+    await expect(signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure()).resolves.toBeUndefined();
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Could not provision a personal robot'),
+      error
+    );
+    expect(claimFor()).toBeUndefined();
+  });
+
+  it('should acquire again on the next page, not on token refresh, after a transient failure', async () => {
+    post.mockRejectedValueOnce(
+      new ServerError({ message: TEST_CONSTANTS.ERROR_MESSAGE, statusCode: HttpStatus.SERVICE_UNAVAILABLE })
+    );
+    const license = signedIn(LICENSE_TEST_CONSTANTS.USER_ID);
+
+    await license.ensure();
+    license.onTokenChange(tokenFor(LICENSE_TEST_CONSTANTS.USER_ID));
+    await license.ensure();
+    expect(post).toHaveBeenCalledTimes(1);
+
+    await signedIn(LICENSE_TEST_CONSTANTS.USER_ID).ensure();
+
+    expect(post).toHaveBeenCalledTimes(2);
+    expect(claimFor()).toBe(LICENSE_TEST_CONSTANTS.USER_ID);
+  });
+
+  it('should not retry a refused acquisition on token refresh or reload until sign-out', async () => {
+    post.mockRejectedValueOnce(
+      new ValidationError({ message: TEST_CONSTANTS.ERROR_MESSAGE, statusCode: HttpStatus.CONFLICT })
+    );
     const license = signedIn(LICENSE_TEST_CONSTANTS.USER_ID);
 
     await license.ensure();

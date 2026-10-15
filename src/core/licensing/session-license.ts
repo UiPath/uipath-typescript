@@ -3,6 +3,8 @@ import type { TokenInfo } from '../auth/types';
 import type { ApiClient } from '../http/api-client';
 import type { RetryOptions } from '../../models/common/http.types';
 import { AUTH_STORAGE_KEYS } from '../auth/constants';
+import { HttpStatus } from '../errors/constants';
+import { getErrorDetails } from '../errors/guards';
 import { STUDIO_WEB_LICENSE_ENDPOINTS } from '../../utils/constants/endpoints';
 import { extractUserIdFromToken } from '../../utils/encoding/jwt';
 import type { KeyValueStore } from '../../utils/storage/key-value-store';
@@ -11,6 +13,7 @@ import type { KeyValueStore } from '../../utils/storage/key-value-store';
 const ACQUIRE_RETRY: RetryOptions = { maxRetries: 2, initialDelayMs: 250, retryMethods: ['POST'], maxRetryAfterMs: 1_000 };
 const ACQUIRE_ATTEMPT_TIMEOUT_MS = 2_000;
 const ACQUIRE_DEADLINE_MS = 5_000;
+const BLOCKING_STATUS_CODES: number[] = [HttpStatus.BAD_REQUEST, HttpStatus.FORBIDDEN, HttpStatus.NOT_FOUND, HttpStatus.CONFLICT];
 
 export class SessionLicense {
   readonly #apiClient: Pick<ApiClient, 'post'>;
@@ -51,15 +54,18 @@ export class SessionLicense {
         signal: deadline.signal,
       })
       .then(
-        () => undefined,
+        () => this.#claim(userId),
         (error: unknown) => {
           console.warn('[UiPath SDK] Could not provision a personal robot for the signed-in user', error);
+          const { statusCode } = getErrorDetails(error);
+          if (statusCode !== undefined && BLOCKING_STATUS_CODES.includes(statusCode)) this.#claim(userId);
         },
       )
-      .finally(() => {
-        clearTimeout(deadlineTimer);
-        if (this.#userId === userId) this.#claims.write(this.#claimKey, userId);
-      });
+      .finally(() => clearTimeout(deadlineTimer));
+  }
+
+  #claim(userId: string): void {
+    if (this.#userId === userId) this.#claims.write(this.#claimKey, userId);
   }
 
   #release(userId: string): void {
