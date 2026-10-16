@@ -36,15 +36,16 @@ export const unpluginFactory: UnpluginFactory<Options | undefined> = (options = 
         // Watch uipath.json — invalidate cache on change so next request picks it up
         const fullConfigPath = path.resolve(process.cwd(), configPath)
         server.watcher.add(fullConfigPath)
+        // Env files are re-read per request, so a change only has to reload the page.
+        const envPaths = DEV_ENV_FILES.map(envFile => path.resolve(process.cwd(), envFile))
+        server.watcher.add(envPaths)
         server.watcher.on('change', (changedPath) => {
           if (changedPath === fullConfigPath) {
             cachedConfig = null
+          } else if (envPaths.includes(changedPath)) {
+            server.ws.send({ type: 'full-reload' })
           }
         })
-        // Env files are re-read per request, so watching them only has to trigger a reload.
-        for (const envFile of DEV_ENV_FILES) {
-          server.watcher.add(path.resolve(process.cwd(), envFile))
-        }
       },
       transformIndexHtml() {
         if (!cachedConfig) {

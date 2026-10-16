@@ -29,10 +29,15 @@ describe('readEnvValues', () => {
     expect(readEnvValues(undefined, dir)).toEqual({ UIPATH_PUBLIC_REGION: 'EU' })
   })
 
-  it('lets a later file override an earlier one', () => {
+  it('applies Vite precedence: .env.local < .env.development < .env.development.local', () => {
+    write('.env.local', 'UIPATH_PUBLIC_REGION=US\nUIPATH_PUBLIC_API=https://local\nUIPATH_PUBLIC_TEAM=apps\n')
     write('.env.development', 'UIPATH_PUBLIC_REGION=EU\nUIPATH_PUBLIC_API=https://dev\n')
-    write('.env.local', 'UIPATH_PUBLIC_REGION=US\n')
-    expect(readEnvValues(undefined, dir)).toEqual({ UIPATH_PUBLIC_REGION: 'US', UIPATH_PUBLIC_API: 'https://dev' })
+    write('.env.development.local', 'UIPATH_PUBLIC_API=https://mine\n')
+    expect(readEnvValues(undefined, dir)).toEqual({
+      UIPATH_PUBLIC_REGION: 'EU',
+      UIPATH_PUBLIC_API: 'https://mine',
+      UIPATH_PUBLIC_TEAM: 'apps',
+    })
   })
 
   it('does not read plain .env', () => {

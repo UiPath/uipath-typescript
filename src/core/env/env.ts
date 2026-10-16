@@ -23,7 +23,8 @@ export interface UiPathEnvironment {}
  * The deployment's environment variables, readable synchronously before sign-in.
  *
  * Property access returns the value or `undefined`; `get(name)` is the same read as a method.
- * Reads never throw: without `env.js` the object is empty.
+ * Names are case-sensitive, as in `process.env` and `.env` files. Reads never throw: without
+ * `env.js` the object is empty.
  */
 export type UiPathEnv = Readonly<UiPathEnvironment> &
   Readonly<Record<string, string | undefined>> & {

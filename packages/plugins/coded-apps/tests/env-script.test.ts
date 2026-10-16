@@ -1,11 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import { renderEnvScript, generateEnvScriptForVite, injectEnvScriptHtml } from '../src/core/env-script'
+import { ENV_GLOBAL } from '../src/constants'
+import { UIPATH_ENV_GLOBAL } from '../../../../src/core/env/env'
 
 function run(script: string, initial?: Record<string, string>): Record<string, string> {
   const fakeWindow: Record<string, unknown> = initial ? { __UIPATH_ENV__: initial } : {}
   new Function('window', script)(fakeWindow)
   return fakeWindow.__UIPATH_ENV__ as Record<string, string>
 }
+
+describe('ENV_GLOBAL', () => {
+  it('matches the global the SDK reads', () => {
+    expect(ENV_GLOBAL).toBe(UIPATH_ENV_GLOBAL)
+  })
+})
 
 describe('renderEnvScript', () => {
   it('sets the global to the local values when nothing set it', () => {
