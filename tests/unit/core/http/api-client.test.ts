@@ -6,7 +6,7 @@ import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
-import { JOB_KEY } from '../../../../src/utils/constants/headers';
+import { JOB_KEY, RESPONSE_TYPES } from '../../../../src/utils/constants/headers';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -181,6 +181,47 @@ describe('ApiClient Content-Type header', () => {
     await client.post('/test', { foo: 'bar' });
 
     expect(capturedHeaders['Content-Type']).toBe('application/xml');
+  });
+});
+
+describe('ApiClient raw text bodies and responses', () => {
+  it('sends a string body verbatim when bodyOptions.stringify is false', async () => {
+    let capturedBody: unknown;
+    global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+      capturedBody = options.body;
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{}') });
+    });
+
+    const client = createClient();
+    await client.put('/test', HTTP_TEST_CONSTANTS.TEXT_BODY, { bodyOptions: { stringify: false } });
+
+    expect(capturedBody).toBe(HTTP_TEST_CONSTANTS.TEXT_BODY);
+  });
+
+  it('JSON-stringifies a string body by default', async () => {
+    let capturedBody: unknown;
+    global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+      capturedBody = options.body;
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('{}') });
+    });
+
+    const client = createClient();
+    await client.put('/test', HTTP_TEST_CONSTANTS.TEXT_BODY);
+
+    expect(capturedBody).toBe(JSON.stringify(HTTP_TEST_CONSTANTS.TEXT_BODY));
+  });
+
+  it('returns the raw response text when responseType is text', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(HTTP_TEST_CONSTANTS.TEXT_BODY),
+    });
+
+    const client = createClient();
+    const result = await client.get<string>('/test', { responseType: RESPONSE_TYPES.TEXT });
+
+    expect(result).toBe(HTTP_TEST_CONSTANTS.TEXT_BODY);
   });
 });
 
