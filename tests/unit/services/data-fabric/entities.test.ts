@@ -365,10 +365,10 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
-      // Verify the API call — default tenant-only via v1 endpoint
+      // Verify the API call — default tenant-only via the tenant-marker folder key
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        { headers: {} },
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
       );
 
       expect(result[0].fields).toBeDefined();
@@ -424,10 +424,10 @@ describe("EntityService Unit Tests", () => {
         });
       });
 
-      // Verify the API call — default tenant-only via v1 endpoint
+      // Verify the API call — default tenant-only via the tenant-marker folder key
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        { headers: {} },
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
       );
     });
 
@@ -440,32 +440,21 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v3 endpoint and pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });
 
-    it("should call the v3 endpoint when includeFolderEntities is true (cross-scope)", async () => {
+    it("should send no folder header when includeFolderEntities is true (cross-scope)", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ includeFolderEntities: true });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
-        { headers: {} },
-      );
-    });
-
-    it("should call the v1 endpoint when includeFolderEntities is false (tenant-only)", async () => {
-      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
-
-      await entityService.getAll({ includeFolderEntities: false });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
@@ -473,7 +462,18 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v3 endpoint with the header when both folderKey and includeFolderEntities are provided", async () => {
+    it("should send the tenant-marker folder key when includeFolderEntities is false (tenant-only)", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ includeFolderEntities: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: { "X-UIPATH-FolderKey": DATA_FABRIC_TENANT_FOLDER_ID } },
+      );
+    });
+
+    it("should prefer folderKey when both folderKey and includeFolderEntities are provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({
@@ -482,7 +482,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3,
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
       );
     });

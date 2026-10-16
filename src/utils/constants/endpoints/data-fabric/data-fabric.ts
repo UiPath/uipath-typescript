@@ -16,10 +16,9 @@ export const DATA_FABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-00000000000
  */
 export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
-    GET_ALL: `${DATAFABRIC_BASE}/api/Entity`,
-    // v3 listing of tenant-level and folder-level entities together.
-    // Used by getAll when folderKey is set or includeFolderEntities is true.
-    GET_ALL_V3: `${DATAFABRIC_BASE}/api/v3/entities`,
+    // v3 listing; returns Federated entities too. Scope is set by the folder header:
+    // none = tenant + folder entities, empty GUID = tenant only, folder key = that folder.
+    GET_ALL: `${DATAFABRIC_BASE}/api/v3/entities`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,
     // v3 single-record read. Returns the full record including complete MULTILINE_MAX
@@ -32,7 +31,7 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/update-batch`,
     DELETE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/delete/${recordId}`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/entity/${entityId}/delete-batch`,
-    // Same URL as GET_ALL_V3; the HTTP method (POST for create/upsert vs GET for list) is resolved at the call site.
+    // Same URL as GET_ALL; the HTTP method (POST for create/upsert vs GET for list) is resolved at the call site.
     UPSERT: `${DATAFABRIC_BASE}/api/v3/entities`,
     // Same URL as GET_BY_ID; the HTTP method (DELETE vs GET) is resolved at the call site.
     DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/v3/entities/${entityId}`,

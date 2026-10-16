@@ -742,6 +742,23 @@ describeIntegration('Data Fabric Entities Schema - Integration Tests', 'both', m
     }, 90_000);
   });
 
+  describe('getAll scope', () => {
+    it('should return only tenant-level entities by default and a superset with includeFolderEntities', async () => {
+      const { entities } = getServices();
+
+      const tenantOnly = await entities.getAll();
+      const withFolders = await entities.getAll({ includeFolderEntities: true });
+
+      expect(tenantOnly.length).toBeGreaterThan(0);
+      tenantOnly.forEach(e => {
+        expect(!e.folderId || e.folderId === DATA_FABRIC_TENANT_FOLDER_ID).toBe(true);
+      });
+      expect(withFolders.length).toBeGreaterThanOrEqual(tenantOnly.length);
+      const withFoldersIds = new Set(withFolders.map(e => e.id));
+      tenantOnly.forEach(e => expect(withFoldersIds.has(e.id)).toBe(true));
+    });
+  });
+
   describe('deleteById', () => {
     it('should delete an entity created for this test', async () => {
       const { entities } = getServices();
