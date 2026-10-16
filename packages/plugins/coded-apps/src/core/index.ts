@@ -12,4 +12,4 @@ export * from './env-reader'
 export * from './env-script'
 
 // Re-export types for convenience
-export type * from '../types'
+export * from '../types'
