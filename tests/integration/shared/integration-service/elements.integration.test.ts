@@ -100,6 +100,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       const result = await elements.getObjectMetadata(elementKey, objectName);
       expect(result).toBeDefined();
       expect(result.name).toBe(objectName);
+      expect(result).not.toHaveProperty('Name');
     });
 
     it('getObjectMetadata should reject for an object the connector does not expose', async () => {
@@ -121,6 +122,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       const result = await elements.getInstanceObjectMetadata(connectionId, elementKey, instanceObjectName);
       expect(result).toBeDefined();
       expect(result.name).toBe(instanceObjectName);
+      expect(result).not.toHaveProperty('Name');
     });
   });
 
@@ -135,6 +137,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       const result = await elements.getEventObjectMetadata(elementKey, eventOperation, eventObjectName);
       expect(result).toBeDefined();
       expect(result.name).toBe(eventObjectName);
+      expect(result).not.toHaveProperty('Name');
     });
 
     it('getInstanceEventObjects should return named event objects for the connection', () => {
@@ -153,6 +156,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       );
       expect(result).toBeDefined();
       expect(result.name).toBe(instanceEventObjectName);
+      expect(result).not.toHaveProperty('Name');
     });
   });
 });

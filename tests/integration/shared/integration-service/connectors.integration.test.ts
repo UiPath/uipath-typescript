@@ -115,8 +115,7 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
 
     it('should respect pageSize', async () => {
       const result = await connectors.getConnections(connectorKey, { folderKey, pageSize: 1 });
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
+      expect(result).toHaveLength(1);
     });
   });
 
