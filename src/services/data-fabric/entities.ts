@@ -322,17 +322,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
-    // Use the v3 endpoint whenever a folder scope is requested: a folderKey scopes to that
-    // folder via the header, and includeFolderEntities returns tenant + folder entities
-    // together. Only the default (no folderKey and includeFolderEntities omitted) stays on
-    // the v1 endpoint = tenant only, since v3 has no tenant-only listing.
-    const endpoint = options?.folderKey || options?.includeFolderEntities
-      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V3
-      : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
+    // Tenant-only by default via the tenant-marker folder key (v3 has no other tenant filter);
+    // includeFolderEntities opts into cross-scope. folderKey wins over includeFolderEntities.
+    const folderKey = options?.folderKey
+      ?? (options?.includeFolderEntities ? undefined : DATA_FABRIC_TENANT_FOLDER_ID);
 
     const response = await this.get<RawEntityGetResponse[]>(
-      endpoint,
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
     
     // Apply transformations
