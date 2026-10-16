@@ -2,15 +2,11 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { ConnectionsService } from '../../../../src/services/integration-service/connections/connections';
 import { ConnectionState } from '../../../../src/models/integration-service/connections.types';
-import { isAuthenticationError, isUiPathError } from '../../../../src/core/errors';
+import { NotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v1'];
 
-// Integration Service validates JWTs locally (`bearerFormat: JWT` in its own
-// swagger), so an opaque `rt_` PAT fails at parse before any scope check and every
-// call returns a bare 401 identical to an anonymous request. The `'user'`
-// requirement routes this suite to UIPATH_USER_TOKEN, so it skips on a PAT-only
-// machine instead of failing.
+// Integration Service rejects PATs (401), so these suites run under UIPATH_USER_TOKEN.
 describeIntegration('Integration Service Connections - Integration Tests', 'user', modes, () => {
   let connections!: ConnectionsService;
   let connectionId!: string;
@@ -31,8 +27,7 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
     }
     connectionId = config.integrationServiceTestConnectionId;
 
-    // Listings are folder-scoped and return nothing without folder context, so
-    // scope them to the fixture connection's own folder.
+    // Listings are folder-scoped; use the fixture connection's folder.
     const fixture = await connections.getById(connectionId);
     if (!fixture.folder?.key) {
       throw new Error(`Connection ${connectionId} has no folder key — cannot scope folder listings.`);
@@ -53,11 +48,10 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       expect(typeof sample.name).toBe('string');
       expect(Object.values(ConnectionState)).toContain(sample.state);
 
-      // getAll has its own response path, so the casing guard on getById does not cover it.
-      const raw = sample as unknown as Record<string, unknown>;
-      expect(raw.Id).toBeUndefined();
-      expect(raw.Name).toBeUndefined();
-      expect(raw.State).toBeUndefined();
+      // getAll has its own response path from getById.
+      expect(sample).not.toHaveProperty('Id');
+      expect(sample).not.toHaveProperty('Name');
+      expect(sample).not.toHaveProperty('State');
     });
   });
 
@@ -70,24 +64,15 @@ describeIntegration('Integration Service Connections - Integration Tests', 'user
       expect(Object.values(ConnectionState)).toContain(result.state);
       expect(typeof result.createTime).toBe('string');
 
-      // The service returns the API payload verbatim, so this guards against the
-      // API switching to PascalCase rather than validating an SDK transform.
-      const raw = result as unknown as Record<string, unknown>;
-      expect(raw.Id).toBeUndefined();
-      expect(raw.Name).toBeUndefined();
-      expect(raw.State).toBeUndefined();
-      expect(raw.CreateTime).toBeUndefined();
+      // Payload is returned verbatim; guards against the API switching to PascalCase.
+      expect(result).not.toHaveProperty('Id');
+      expect(result).not.toHaveProperty('Name');
+      expect(result).not.toHaveProperty('State');
+      expect(result).not.toHaveProperty('CreateTime');
     });
 
     it('should reject for a connection id that does not exist', async () => {
-      // A random GUID is well-formed but certainly absent, so the API rejects it
-      // rather than failing validation. Asserting "a UiPath API error that is not
-      // an auth error" rather than `isNotFoundError`: the exact status for an
-      // unknown connection id is not yet confirmed against the live API, and a
-      // bare `rejects.toThrow()` would be satisfied by a 401 from a stale token.
-      await expect(connections.getById(crypto.randomUUID())).rejects.toSatisfy(
-        (error: unknown) => isUiPathError(error) && !isAuthenticationError(error),
-      );
+      await expect(connections.getById(crypto.randomUUID())).rejects.toBeInstanceOf(NotFoundError);
     });
   });
 });

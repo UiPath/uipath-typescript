@@ -2,15 +2,11 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { ConnectorsService } from '../../../../src/services/integration-service/connectors/connectors';
 import type { ConnectorGetResponse } from '../../../../src/models/integration-service/connectors.models';
-import { isAuthenticationError, isUiPathError } from '../../../../src/core/errors';
+import { NotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v1'];
 
-// Integration Service validates JWTs locally (`bearerFormat: JWT` in its own
-// swagger), so an opaque `rt_` PAT fails at parse before any scope check and every
-// call returns a bare 401 identical to an anonymous request. The `'user'`
-// requirement routes these suites to UIPATH_USER_TOKEN, so they skip on a
-// PAT-only machine instead of failing.
+// Integration Service rejects PATs (401), so these suites run under UIPATH_USER_TOKEN.
 describeIntegration('Integration Service Connectors - Integration Tests', 'user', modes, () => {
   let connectors!: ConnectorsService;
   let connectorKey!: string;
@@ -40,8 +36,7 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
     connectorKey = config.integrationServiceTestConnectorKey;
     connectionId = config.integrationServiceTestConnectionId;
 
-    // Connection listings are folder-scoped and return nothing without folder
-    // context, so scope them to the fixture connection's own folder.
+    // Connection listings are folder-scoped; use the fixture connection's folder.
     const fixture = await connectionsService.getById(connectionId);
     if (!fixture.folder?.key) {
       throw new Error(`Connection ${connectionId} has no folder key — cannot scope folder listings.`);
@@ -62,24 +57,18 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
       expect(typeof sample.name).toBe('string');
       expect(typeof sample.isPrivate).toBe('boolean');
 
-      // getAll has its own response path, so the casing guard on getById does not cover it.
-      const raw = sample as unknown as Record<string, unknown>;
-      expect(raw.Id).toBeUndefined();
-      expect(raw.Key).toBeUndefined();
-      expect(raw.Name).toBeUndefined();
-      expect(raw.IsPrivate).toBeUndefined();
+      // getAll has its own response path from getById.
+      expect(sample).not.toHaveProperty('Id');
+      expect(sample).not.toHaveProperty('Key');
+      expect(sample).not.toHaveProperty('Name');
+      expect(sample).not.toHaveProperty('IsPrivate');
     });
 
     it('should return no more connectors when filtered by hasHttpRequest', async () => {
       const result = await connectors.getAll({ hasHttpRequest: true });
 
       expect(Array.isArray(result)).toBe(true);
-      // `hasHttpRequest` is a request-only filter — it has no counterpart on
-      // ConnectorGetResponse, so the filter's effect cannot be asserted per item.
-      // Comparing against the unfiltered listing is the strongest check available:
-      // it catches a filter that broadens the result set. A filter silently
-      // dropped by the API would still pass, which is a gap in the API surface
-      // rather than in this test.
+      // The filter has no response field to check per item, so compare against the unfiltered list.
       expect(result.length).toBeLessThanOrEqual(allConnectors.length);
     });
   });
@@ -93,22 +82,16 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
       expect(typeof result.name).toBe('string');
       expect(typeof result.id).toBe('number');
 
-      // PascalCase keys must not be present — this validates the SDK returns the API shape verbatim
-      // and exercises the assumption baked into the design (IS APIs return camelCase).
-      const raw = result as unknown as Record<string, unknown>;
-      expect(raw.Key).toBeUndefined();
-      expect(raw.Name).toBeUndefined();
-      expect(raw.Id).toBeUndefined();
+      // Payload is returned verbatim; guards against the API switching to PascalCase.
+      expect(result).not.toHaveProperty('Key');
+      expect(result).not.toHaveProperty('Name');
+      expect(result).not.toHaveProperty('Id');
     });
 
     it('should reject for a connector key that does not exist', async () => {
-      // Asserting "a UiPath API error that is not an auth error" rather than
-      // `isNotFoundError`: the exact status for an unknown connector key is not
-      // yet confirmed against the live API, and a bare `rejects.toThrow()` would
-      // be satisfied by a 401 from a stale token.
       await expect(
         connectors.getById('this-connector-does-not-exist-xyz'),
-      ).rejects.toSatisfy((error: unknown) => isUiPathError(error) && !isAuthenticationError(error));
+      ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
 
@@ -123,6 +106,11 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
       expect(typeof sample.id).toBe('string');
       expect(typeof sample.name).toBe('string');
       expect(typeof sample.createTime).toBe('string');
+
+      // Separate response path from Connections.getAll.
+      expect(sample).not.toHaveProperty('Id');
+      expect(sample).not.toHaveProperty('Name');
+      expect(sample).not.toHaveProperty('CreateTime');
     });
 
     it('should respect pageSize', async () => {
@@ -139,9 +127,11 @@ describeIntegration('Integration Service Connectors - Integration Tests', 'user'
       expect(result).toBeDefined();
       expect(typeof result.id).toBe('string');
       expect(typeof result.name).toBe('string');
-      // `isDefault` is the discriminator this endpoint exists to honour — a
-      // `typeof` check would pass on the wrong connection being returned.
       expect(result.isDefault).toBe(true);
+
+      expect(result).not.toHaveProperty('Id');
+      expect(result).not.toHaveProperty('Name');
+      expect(result).not.toHaveProperty('IsDefault');
     });
   });
 });

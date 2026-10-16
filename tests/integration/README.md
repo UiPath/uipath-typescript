@@ -409,7 +409,7 @@ passes `'both'` and runs under both.
 | `IDENTITY_TEST_USER_ID` | GUID of the user whose platform settings are read and round-tripped; must be in the test PAT's organization | (required for the Platform tests) |
 | `INTEGRATION_SERVICE_TEST_CONNECTOR_KEY` | Connector key (e.g. `uipath-slack`) used by the Connectors, Elements and Execute tests | (required for those suites) |
 | `INTEGRATION_SERVICE_TEST_CONNECTION_ID` | Pre-existing connection id used by all four Integration Service suites; its folder also scopes the connection listings | (required for those suites) |
-| `INTEGRATION_SERVICE_TEST_OBJECT_NAME` | Object name used by the Elements and Execute tests | (optional — resolved from the connector for Elements, or the connection for Execute, when unset) |
+| `INTEGRATION_SERVICE_TEST_OBJECT_NAME` | Object name that supports GET, used by the Elements and Execute tests | Required by Execute; Elements resolves one from the connector when unset |
 | `INTEGRATION_SERVICE_TEST_EVENT_OPERATION` | Event operation name for the Elements event tests | (required for the Elements suite) |
 
 ## Test Data Management

@@ -5,15 +5,11 @@ import type {
   ElementObject,
   ElementEventObject,
 } from '../../../../src/models/integration-service/elements.types';
-import { isAuthenticationError, isUiPathError } from '../../../../src/core/errors';
+import { NotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v1'];
 
-// Integration Service validates JWTs locally (`bearerFormat: JWT` in its own
-// swagger), so an opaque `rt_` PAT fails at parse before any scope check and every
-// call returns a bare 401 identical to an anonymous request. The `'user'`
-// requirement routes these suites to UIPATH_USER_TOKEN, so they skip on a
-// PAT-only machine instead of failing.
+// Integration Service rejects PATs (401), so these suites run under UIPATH_USER_TOKEN.
 describeIntegration('Integration Service Elements - Integration Tests', 'user', modes, () => {
   let elements!: ElementsService;
   let elementKey!: string;
@@ -49,17 +45,14 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
     connectionId = config.integrationServiceTestConnectionId;
     eventOperation = config.integrationServiceTestEventOperation;
 
-    // Prefer the env override for the object name when supplied; otherwise resolve
-    // it from the connector so each test exercises a real API path. Both listings
-    // are kept for the tests that assert on them, so they are fetched only once.
+    // Use the env object name if set, else the first object listed.
     objects = await elements.getObjects(elementKey);
     if (objects.length === 0) {
       throw new Error(`Connector ${elementKey} has no objects — cannot exercise Elements tests.`);
     }
     objectName = config.integrationServiceTestObjectName ?? objects[0].name;
 
-    // A connection may expose only a subset of its connector's objects, so the
-    // connection-scoped tests fall back to an object the connection itself lists.
+    // A connection may expose fewer objects than its connector.
     instanceObjects = await elements.getInstanceObjects(connectionId, elementKey);
     if (instanceObjects.length === 0) {
       throw new Error(`Connection ${connectionId} exposes no objects — cannot exercise instance tests.`);
@@ -74,8 +67,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
     }
     eventObjectName = eventObjects[0].name;
 
-    // The connection's listing can include objects with no event metadata (it 404s),
-    // so use one that both the connector and the connection list.
+    // Some connection event objects have no metadata (404); use one both lists share.
     instanceEventObjects = await elements.getInstanceEventObjects(connectionId, elementKey, eventOperation);
     const instanceEventNames = new Set(instanceEventObjects.map((object) => object.name));
     const sharedEventObject = eventObjects.find((object) => instanceEventNames.has(object.name));
@@ -111,21 +103,14 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
     });
 
     it('getObjectMetadata should reject for an object the connector does not expose', async () => {
-      // Asserting "a UiPath API error that is not an auth error" rather than
-      // `isNotFoundError`: the exact status for an unknown object name is not yet
-      // confirmed against the live API, and a bare `rejects.toThrow()` would be
-      // satisfied by a 401 from a stale token.
       await expect(
         elements.getObjectMetadata(elementKey, '__non_existent_object__'),
-      ).rejects.toSatisfy((error: unknown) => isUiPathError(error) && !isAuthenticationError(error));
+      ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
 
   describe('instance (connection-scoped)', () => {
     it('getInstanceObjects should return named objects for the connection', () => {
-      // `Array.isArray` alone is tautological — the service returns
-      // `response.data ?? []`, so it holds whatever the API sent. Assert the
-      // item shape, which only holds if the call actually reached the connector.
       expect(Array.isArray(instanceObjects)).toBe(true);
       expect(
         instanceObjects.every((object) => typeof object.name === 'string' && object.name.length > 0),
