@@ -111,3 +111,26 @@ export const MESSAGES = {
   CONFIG_LOADED: (path: string) => `✓ Config loaded from ${path}`,
   CONFIG_INJECTED_AT_DEPLOYMENT: `ℹ️  Config will be injected at deployment`,
 } as const
+
+/**
+ * Prefix an environment variable needs to reach the browser. Everything else in the env files
+ * stays on the developer's machine.
+ */
+export const ENV_VARIABLE_PREFIX = 'UIPATH_PUBLIC_'
+
+/**
+ * Global the SDK reads environment variables from. A deployment sets it from `env.js`; the dev
+ * server sets it from an inline script so app code sees the same shape in both. Must equal the
+ * SDK's `UIPATH_ENV_GLOBAL`; a test checks they match.
+ */
+export const ENV_GLOBAL = '__UIPATH_ENV__'
+
+/**
+ * Local env files for `npm run dev`, lowest precedence first, in Vite's order. Plain `.env` is the
+ * CLI's own file (credentials, `UIPATH_PROJECT_ID`) and is deliberately not read.
+ */
+export const DEV_ENV_FILES = ['.env.local', '.env.development', '.env.development.local'] as const
+
+export const ENV_MESSAGES = {
+  ENV_FILE_READ_ERROR: (file: string, err: unknown) => `Could not read ${file}: ${err}`,
+} as const
