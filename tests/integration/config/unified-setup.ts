@@ -24,6 +24,9 @@ import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { ConversationalAgentService } from '../../../src/services/conversational-agent';
+import { ConnectorsService } from '../../../src/services/integration-service/connectors/connectors';
+import { ConnectionsService } from '../../../src/services/integration-service/connections/connections';
+import { ElementsService } from '../../../src/services/integration-service/elements/elements';
 import { Functions } from '../../../src/services/orchestrator/functions';
 import { Folders } from '../../../src/services/orchestrator/folders';
 import { Settings } from '../../../src/services/platform/settings';
@@ -83,6 +86,9 @@ export interface TestServices {
   notifications?: Notifications;
   subscriptions?: Subscriptions;
   conversationalAgent?: ConversationalAgentService;
+  integrationServiceConnectors?: ConnectorsService;
+  integrationServiceConnections?: ConnectionsService;
+  integrationServiceElements?: ElementsService;
   functions?: Functions;
   folders?: Folders;
   settings?: Settings;
@@ -208,6 +214,9 @@ function createV1Services(config: IntegrationConfig, token: string, baseUrl: str
     notifications: new Notifications(sdk),
     subscriptions: new Subscriptions(sdk),
     conversationalAgent: new ConversationalAgentService(sdk),
+    integrationServiceConnectors: new ConnectorsService(sdk),
+    integrationServiceConnections: new ConnectionsService(sdk),
+    integrationServiceElements: new ElementsService(sdk),
     functions: new Functions(sdk),
     folders: new Folders(sdk),
     settings: new Settings(sdk),
