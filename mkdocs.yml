@@ -229,6 +229,7 @@ nav:
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
+          - Orchestrator Users: api/interfaces/OrchestratorUserServiceModel.md
           - Platform:
             - Settings: api/interfaces/PlatformSettingServiceModel.md
             - Users: api/interfaces/PlatformUserServiceModel.md
