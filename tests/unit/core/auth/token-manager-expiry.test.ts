@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { memorySessionStorage } from '@tests/utils/session-storage';
 import { TokenManager } from '@/core/auth/token-manager';
 import { ExecutionContext } from '@/core/context/execution';
 import { AUTH_STORAGE_KEYS, TOKEN_EXPIRY_BUFFER_MS } from '@/core/auth/constants';
@@ -20,15 +21,6 @@ const NOW = new Date('2026-01-01T00:00:00.000Z');
 const WITHIN_BUFFER = new Date(NOW.getTime() + TOKEN_EXPIRY_BUFFER_MS / 2);
 const BEYOND_BUFFER = new Date(NOW.getTime() + TOKEN_EXPIRY_BUFFER_MS * 2);
 const PAST_EXPIRY = new Date(NOW.getTime() - 1000);
-
-function makeInMemorySessionStorage() {
-  const store = new Map<string, string>();
-  return {
-    getItem: vi.fn((key: string) => store.get(key) ?? null),
-    setItem: vi.fn((key: string, value: string) => { store.set(key, value); }),
-    removeItem: vi.fn((key: string) => { store.delete(key); }),
-  };
-}
 
 function makeOAuthManager() {
   const context = new ExecutionContext();
@@ -63,13 +55,10 @@ function mockRefreshResponse(accessToken: string) {
 }
 
 describe('TokenManager — expiry buffer', () => {
-  let sessionStorageMock: ReturnType<typeof makeInMemorySessionStorage>;
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    sessionStorageMock = makeInMemorySessionStorage();
-    vi.stubGlobal('sessionStorage', sessionStorageMock);
+    memorySessionStorage.reset();
   });
 
   afterEach(() => {
@@ -229,7 +218,7 @@ describe('TokenManager — expiry buffer', () => {
     const storageKey = `${AUTH_STORAGE_KEYS.TOKEN_PREFIX}${TEST_CONSTANTS.CLIENT_ID}`;
 
     it('loads a stored token expiring within the buffer, keeping its refresh token usable', () => {
-      sessionStorageMock.setItem(storageKey, JSON.stringify({
+      memorySessionStorage.setItem(storageKey, JSON.stringify({
         token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, type: 'oauth', refreshToken: 'refresh-1', expiresAt: WITHIN_BUFFER
       }));
 
@@ -241,7 +230,7 @@ describe('TokenManager — expiry buffer', () => {
     });
 
     it('discards a stored token that is past its actual expiry', () => {
-      sessionStorageMock.setItem(storageKey, JSON.stringify({
+      memorySessionStorage.setItem(storageKey, JSON.stringify({
         token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN, type: 'oauth', refreshToken: 'refresh-1', expiresAt: PAST_EXPIRY
       }));
 
@@ -249,7 +238,7 @@ describe('TokenManager — expiry buffer', () => {
 
       expect(manager.loadFromStorage()).toBe(false);
       expect(manager.hasValidToken()).toBe(false);
-      expect(sessionStorageMock.removeItem).toHaveBeenCalledWith(storageKey);
+      expect(memorySessionStorage.removeItem).toHaveBeenCalledWith(storageKey);
     });
   });
 });
