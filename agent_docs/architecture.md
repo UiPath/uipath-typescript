@@ -1,3 +1,8 @@
+---
+description: "SDK architecture and project structure: repo layout, service structure, build and subpath exports"
+alwaysApply: true
+---
+
 # Architecture & Project Structure
 
 ## Repo layout

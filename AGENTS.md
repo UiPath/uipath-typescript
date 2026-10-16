@@ -21,6 +21,16 @@ npm run docs:api         # typedoc + post-process
 
 - Version bumps go in a **separate PR** — never include a version bump in a feature or fix PR. Other in-flight changes may need to ship in the same version, so the bump is always a dedicated step.
 
+## Project conventions
+
+The full architecture, coding conventions, and testing and documentation rules live in `agent_docs/`. Read all three before changing code:
+
+- `agent_docs/architecture.md`: repo layout, service structure, build and subpath exports
+- `agent_docs/conventions.md`: naming, types, transforms, JSDoc, and service patterns
+- `agent_docs/rules.md`: testing, integration tests, docs, and the pre-PR checklist
+
+Claude Code loads these files through the imports below. Cursor loads them as rules from `.cursor/rules/`, which link to the same files. Other agents should open them directly.
+
 @agent_docs/architecture.md
 @agent_docs/conventions.md
 @agent_docs/rules.md

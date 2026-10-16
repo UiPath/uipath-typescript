@@ -1,3 +1,8 @@
+---
+description: SDK testing, quality, and documentation rules, including the pre-PR checklist
+alwaysApply: true
+---
+
 # Testing & Quality
 
 ## Testing guidelines
