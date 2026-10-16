@@ -262,6 +262,12 @@ Before running the function, `invoke()` also acquires a Studio Web license for t
 | `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
 
+## Logs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `submit()` | `OR.Monitoring` or `OR.Monitoring.Write` |
+
 ## Maestro Case Instances
 
 | Method | OAuth Scope |

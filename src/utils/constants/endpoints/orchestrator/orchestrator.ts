@@ -116,3 +116,14 @@ export const STUDIO_WEB_LICENSE_ENDPOINTS = {
    */
   ACQUIRE: `${ORCHESTRATOR_BASE}/api/StudioWeb/AcquireLicense`,
 } as const;
+
+/**
+ * Orchestrator Log Endpoints
+ */
+export const LOG_ENDPOINTS = {
+  /**
+   * Inserts a batch of execution-log entries. The body is a JSON array of strings,
+   * each string a serialised log-entry object; the response has no body.
+   */
+  SUBMIT: `${ORCHESTRATOR_BASE}/api/Logs/SubmitLogs`,
+} as const;
