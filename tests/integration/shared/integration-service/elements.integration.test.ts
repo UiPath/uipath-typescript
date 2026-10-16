@@ -84,6 +84,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(Array.isArray(objects)).toBe(true);
       expect(objects.length).toBeGreaterThan(0);
       expect(objects.every((object) => typeof object.name === 'string' && object.name.length > 0)).toBe(true);
+      expect(objects[0]).not.toHaveProperty('Name');
     });
 
     it('getActivities should return named activities', async () => {
@@ -94,6 +95,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
         throw new Error(`Connector ${elementKey} exposes no activities — cannot verify the listing.`);
       }
       expect(result.every((activity) => typeof activity.name === 'string' && activity.name.length > 0)).toBe(true);
+      expect(result[0]).not.toHaveProperty('Name');
     });
 
     it('getObjectMetadata should return an object with a matching name', async () => {
@@ -116,6 +118,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(
         instanceObjects.every((object) => typeof object.name === 'string' && object.name.length > 0),
       ).toBe(true);
+      expect(instanceObjects[0]).not.toHaveProperty('Name');
     });
 
     it('getInstanceObjectMetadata should return an object with a matching name', async () => {
@@ -131,6 +134,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(Array.isArray(eventObjects)).toBe(true);
       expect(eventObjects.length).toBeGreaterThan(0);
       expect(eventObjects.every((object) => typeof object.name === 'string' && object.name.length > 0)).toBe(true);
+      expect(eventObjects[0]).not.toHaveProperty('Name');
     });
 
     it('getEventObjectMetadata should return an object with a matching name', async () => {
@@ -145,6 +149,7 @@ describeIntegration('Integration Service Elements - Integration Tests', 'user', 
       expect(
         instanceEventObjects.every((object) => typeof object.name === 'string' && object.name.length > 0),
       ).toBe(true);
+      expect(instanceEventObjects[0]).not.toHaveProperty('Name');
     });
 
     it('getInstanceEventObjectMetadata should return an object with a matching name', async () => {
