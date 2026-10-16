@@ -1,3 +1,3 @@
 # UiPath TypeScript SDK
 
-@Agents.md
+@AGENTS.md
