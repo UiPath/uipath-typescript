@@ -48,3 +48,31 @@ export interface CaseJsonResponse {
   nodes?: any[];
   edges?: any[];
 }
+
+/**
+ * Raw stage entry from the case instance stages API
+ */
+export interface RawCaseInstanceStage {
+  elementId: string;
+  latestStatus: string;
+  startedTimeUtc?: string | null;
+  completedTimeUtc?: string | null;
+}
+
+/**
+ * Raw response from the case instance stages API
+ */
+export interface RawCaseInstanceStagesResponse {
+  caseInstanceId: string;
+  stages: RawCaseInstanceStage[];
+}
+
+/**
+ * Case instance stage entry with its time fields renamed to SDK names
+ */
+export interface CaseInstanceStageStatus {
+  elementId: string;
+  latestStatus: string;
+  startedTime?: string | null;
+  completedTime?: string | null;
+}
