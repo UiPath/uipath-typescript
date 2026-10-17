@@ -120,6 +120,37 @@ describe('resolveFolderHeaders', () => {
     });
   });
 
+  describe('current folder', () => {
+    it('resolves folderPath "." to fallbackFolderKey instead of sending it as a path', () => {
+      const headers = resolveFolderHeaders({ folderPath: '.', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_KEY]: GUID });
+    });
+
+    it('resolves a whitespace-padded "." the same way', () => {
+      const headers = resolveFolderHeaders({ folderPath: ' . ', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_KEY]: GUID });
+    });
+
+    it('sends only the explicit folderKey when folderPath is "."', () => {
+      const headers = resolveFolderHeaders({
+        folderKey: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        folderPath: '.',
+        resourceType: 'Test',
+        fallbackFolderKey: GUID,
+      });
+      expect(headers).toEqual({ [FOLDER_KEY]: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' });
+    });
+
+    it('still sends a path that only starts with "."', () => {
+      const headers = resolveFolderHeaders({ folderPath: './Finance', resourceType: 'Test', fallbackFolderKey: GUID });
+      expect(headers).toEqual({ [FOLDER_PATH_ENCODED]: encodeFolderPathHeader('./Finance') });
+    });
+
+    it('throws ValidationError for "." when there is no fallback', () => {
+      expect(() => resolveFolderHeaders({ folderPath: '.', resourceType: 'Test' })).toThrow(ValidationError);
+    });
+  });
+
   describe('errors', () => {
     it('throws ValidationError when no folder context is supplied and no fallback', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Test' }))

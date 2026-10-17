@@ -64,4 +64,9 @@ describe('loadFromMetaTags', () => {
     setMetaTags({ [UiPathMetaTags.ORG_NAME]: 'myorg', [UiPathMetaTags.FOLDER_KEY]: 'folder-abc' });
     expect(loadFromMetaTags()?.folderKey).toBe('folder-abc');
   });
+
+  it('reads debugSource from the debug-source meta tag', () => {
+    setMetaTags({ [UiPathMetaTags.DEBUG_SOURCE]: 'studioweb' });
+    expect(loadFromMetaTags()?.debugSource).toBe('studioweb');
+  });
 });

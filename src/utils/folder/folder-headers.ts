@@ -3,6 +3,10 @@ import { createHeaders } from '../http/headers';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../constants/headers';
 import { encodeFolderPathHeader } from '../encoding/folder-path';
 
+// Bindings write `'.'` for a resource in the folder the code runs in (Solutions defaults a binding's folder path to
+// it); Orchestrator resolves a relative path only against an org-unit header the SDK does not send.
+const CURRENT_FOLDER_PATH = '.';
+
 export interface ResolveFolderHeadersInput {
   /** Numeric folder ID — sent as `X-UIPATH-OrganizationUnitId`. */
   folderId?: number;
@@ -44,7 +48,7 @@ export interface ResolveFolderHeadersInput {
  * Routing:
  * - `folderId` → `X-UIPATH-OrganizationUnitId`
  * - `folderKey` → `X-UIPATH-FolderKey`
- * - `folderPath` → `X-UIPATH-FolderPath-Encoded`
+ * - `folderPath` → `X-UIPATH-FolderPath-Encoded`, except `'.'` (the current folder), which counts as not set
  * - none set + `fallbackFolderKey` → fallback used as `X-UIPATH-FolderKey`
  * - none set + no fallback → `ValidationError`
  *
@@ -64,7 +68,7 @@ export function resolveFolderHeaders(input: ResolveFolderHeadersInput): Record<s
   if (trimmedKey) {
     headers[FOLDER_KEY] = trimmedKey;
   }
-  if (trimmedPath) {
+  if (trimmedPath && trimmedPath !== CURRENT_FOLDER_PATH) {
     headers[FOLDER_PATH_ENCODED] = encodeFolderPathHeader(trimmedPath);
   }
 
