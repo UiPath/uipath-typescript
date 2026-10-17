@@ -80,7 +80,7 @@ export interface IUiPath {
    * @example
    * ```typescript
    * const task = await codedActionApp.getTask();
-   * if (task.isDebug && task.jobKey) {
+   * if (task.jobKey) {
    *   sdk.setDebugContext({ jobKey: task.jobKey });
    * }
    * ```
