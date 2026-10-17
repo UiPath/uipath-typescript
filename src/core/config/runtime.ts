@@ -3,12 +3,12 @@ import { UiPathMetaTags } from '../../utils/runtime/constants';
 import { isBrowser } from '../../utils/platform';
 
 /**
- * Meta-tag-derived config. Extends {@link PartialUiPathConfig} with
- * `folderKey`, sourced from `<meta name="uipath:folder-key">` (the
- * configuration object has no such field; a coded function's context is the
- * other source).
+ * Meta-tag-derived config. Extends {@link PartialUiPathConfig} with the
+ * tag-only fields: `folderKey`, sourced from `<meta name="uipath:folder-key">`
+ * (the configuration object has no such field; a coded function's context is
+ * the other source), and `debugSource`, from `<meta name="uipath:debug-source">`.
  */
-export type MetaTagConfig = PartialUiPathConfig & { folderKey?: string };
+export type MetaTagConfig = PartialUiPathConfig & { folderKey?: string; debugSource?: string };
 
 /**
  * Get the content of a meta tag by name.
@@ -38,6 +38,7 @@ export function loadFromMetaTags(): MetaTagConfig | null {
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),
     folderKey: getMetaTagContent(UiPathMetaTags.FOLDER_KEY),
+    debugSource: getMetaTagContent(UiPathMetaTags.DEBUG_SOURCE),
   };
 
   const hasAnyValue = Object.values(config).some(Boolean);

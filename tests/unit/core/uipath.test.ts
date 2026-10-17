@@ -12,6 +12,8 @@ import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
+import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
+import { DEBUG_JOB_KEY_QUERY_PARAM } from '../../../src/utils/runtime/constants';
 import { functionContext } from '../../utils/function-context';
 
 // ===== MOCKING =====
@@ -24,6 +26,7 @@ const mockTokenManager = {
 };
 
 const mockLogout = vi.fn();
+const mockAuthenticate = vi.fn().mockResolvedValue(true);
 
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(function () { return ({
@@ -31,7 +34,7 @@ vi.mock('../../../src/core/auth/service', () => {
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
-    authenticate: vi.fn().mockResolvedValue(true),
+    authenticate: mockAuthenticate,
     logout: mockLogout
   }); });
 
@@ -533,6 +536,100 @@ describe('UiPath Core', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Debug context from the page', () => {
+    const DEBUG_SOURCE = 'studioweb';
+    const AUTH_CODE = 'auth-code';
+    const STATE = 'state';
+    const debugSearch = `?${DEBUG_JOB_KEY_QUERY_PARAM}=${JOB_TEST_CONSTANTS.JOB_KEY}`;
+    const callbackSearch = `?code=${AUTH_CODE}&state=${STATE}`;
+    const oauthConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+      scope: 'offline_access',
+    };
+
+    function openPage(search: string, debugSource?: string) {
+      const page = { location: { search } };
+      mockPlatform.isBrowser = true;
+      vi.stubGlobal('window', page);
+      mockLoadFromMetaTags.mockReturnValue(debugSource ? { debugSource } : null);
+      return page;
+    }
+
+    afterEach(() => {
+      mockPlatform.isBrowser = false;
+      mockLoadFromMetaTags.mockReset();
+      vi.unstubAllGlobals();
+    });
+
+    it('applies the jobKey from the URL on initialize() when the page carries the debug-source tag', async () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('applies the jobKey that the sign-in restores to the URL before completeOAuth() returns', async () => {
+      const page = openPage(callbackSearch, DEBUG_SOURCE);
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      mockAuthenticate.mockImplementationOnce(async () => {
+        page.location.search = debugSearch;
+        return true;
+      });
+      const sdk = new UiPath(oauthConfig);
+
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('leaves the debug context unset when the sign-in restores no jobKey to the URL', async () => {
+      openPage(callbackSearch, DEBUG_SOURCE);
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      const sdk = new UiPath(oauthConfig);
+
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
+    it('applies the jobKey for secret auth, which initializes in the constructor', () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
+      });
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('ignores the jobKey when the page carries no debug-source tag', async () => {
+      openPage(debugSearch);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
+    it('ignores a jobKey that is not a GUID', async () => {
+      openPage(`?${DEBUG_JOB_KEY_QUERY_PARAM}=${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
   });
 

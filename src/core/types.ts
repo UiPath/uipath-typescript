@@ -74,6 +74,7 @@ export interface IUiPath {
    * or clears it with `null`. While set, requests carry the parent job key so the platform routes
    * runs they trigger as debug sub-jobs of that session — use it when the app is hosted inside a
    * platform debug run (for example, a coded action app opened from a debug task in Action Center).
+   * Apps opened from a Studio Web debug session receive the job key automatically and need no call.
    *
    * @param context - The debug context ({@link DebugContext}) with the parent job key, or `null` to clear it
    *
