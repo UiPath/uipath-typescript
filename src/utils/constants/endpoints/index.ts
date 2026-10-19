@@ -44,6 +44,7 @@ export * from './notification/notification';
 
 // Observability
 export * from './observability/agent-traces';
+export * from './observability/decisions';
 export * from './observability/traces';
 
 // Orchestrator
