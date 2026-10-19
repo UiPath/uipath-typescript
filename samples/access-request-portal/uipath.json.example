@@ -1,0 +1,8 @@
+{
+  "clientId": "<external-app-client-id>",
+  "baseUrl": "https://api.uipath.com",
+  "orgName": "<org-name>",
+  "tenantName": "<tenant-name>",
+  "redirectUri": "http://localhost:5173",
+  "scope": "PM.User.Read PM.Group PM.Directory DataFabric.Data.Read DataFabric.Data.Write"
+}
