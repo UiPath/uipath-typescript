@@ -441,3 +441,12 @@ Caller's platform roles govern access
 |--------|-------------|
 | `getById()` | `Traces.Api` |
 | `getSpansByIds()` | `Traces.Api` |
+
+### Decisions
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `Traces.Api` |
+| `getById()` | `Traces.Api` |
+| `getAll()` | `Traces.Api` |
+| `query()` | `Traces.Api` |
