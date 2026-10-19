@@ -3984,10 +3984,11 @@ in the past or more than 24 hours in the future, whose serialised form exceeds 5
 (about 512 KB) by default, or which carries one of the reserved property names <code>@rawMessage</code>,
 <code>@encryption</code> or <code>@compression</code> is discarded while the request still succeeds. The call returns
 as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up
-in Logs after a short delay.</p>
+after a short delay in the folder's Logs view (Automations &gt; Logs, and a job's View Logs when
+<code>jobKey</code> matches) — the same execution-log store that robots write to.</p>
 <p>Rejects with <code>ValidationError</code> before any request is made when <code>entries</code> is an empty array,
 when an entry has no non-empty string <code>message</code>, a <code>timestamp</code> that is not a valid <code>Date</code>, or
-the wire names <code>jobId</code> / <code>timeStamp</code> instead of <code>jobKey</code> / <code>timestamp</code>, or when no folder
+<code>jobId</code> / <code>timeStamp</code> in place of <code>jobKey</code> / <code>timestamp</code>, or when no folder
 context can be resolved.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>

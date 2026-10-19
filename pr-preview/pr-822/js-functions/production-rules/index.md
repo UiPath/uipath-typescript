@@ -93,10 +93,10 @@ ______________________________________________________________________
 
 ## Regenerate the lockfile after any dependency change
 
-The `.nupkg` includes the project's lock file — `package-lock.json` or `bun.lock`. The production worker installs from it with bun, which reads either format. A stale lockfile causes production install failures (errorCode 4801 on all routes), and `pack` now refuses one that no longer matches `package.json`.
+The `.nupkg` ships the project's `package-lock.json`, and the production worker installs from it ([Lockfile](../deployment/#lockfile)). A stale lockfile fails the production install with errorCode 4801 on all routes, so `pack` checks that the lock matches `package.json` before it builds.
 
 ```
-npm install   # or `bun install` — always run this before pack after any package.json change
+npm install   # always run this before pack after any package.json change
 uip functions pack
 ```
 

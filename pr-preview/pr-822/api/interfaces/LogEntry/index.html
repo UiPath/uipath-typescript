@@ -3857,8 +3857,8 @@ without an error while the request still succeeds.</p>
 <h2 id="indexable">Indexable<a class="headerlink" href="#indexable" title="Permanent link">&para;</a></h2>
 <p>[<code>customField</code>: <code>string</code>]: <code>unknown</code></p>
 <p>Any other property is stored on the entry and shown as a custom log field. Nested objects
-are allowed. The wire names <code>jobId</code> and <code>timeStamp</code> are rejected — use <code>jobKey</code> and
-<code>timestamp</code>. Two names are interpreted by Orchestrator instead: a numeric <code>organizationUnitId</code>
+are allowed. Use <code>jobKey</code> and <code>timestamp</code> rather than <code>jobId</code> and <code>timeStamp</code>; the latter two are
+rejected so a job key or time is never dropped silently. Two names are interpreted by Orchestrator instead: a numeric <code>organizationUnitId</code>
 overrides the folder given in options (and an unknown value discards the entry), and a numeric
 <code>machineId</code> is resolved to a machine — so pass the folder via <code>options</code> rather than here. Must
 not use the reserved names <code>@rawMessage</code>, <code>@encryption</code> or <code>@compression</code>, and the whole

@@ -1326,9 +1326,9 @@ Submits one or more log entries to Orchestrator's execution logs.
 
 Entries are stored under the folder given in `options` (`folderId`, `folderKey` or `folderPath`), which must grant the caller `Logs.Create`; when no folder is given the SDK's init-time folder (coded-app meta tag or coded-function context) is used. Every entry needs a non-empty `message`; the SDK fills in `level` ([LogEntryLevel.Info](../../enumerations/LogEntryLevel/#info)), `timestamp` (now) and `fingerprint` (a random UUID) when they are omitted. See [LogEntry](../LogEntry/) for the fields.
 
-Orchestrator validates each entry silently: an entry whose `timestamp` is more than 30 days in the past or more than 24 hours in the future, whose serialised form exceeds 524,000 bytes (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`, `@encryption` or `@compression` is discarded while the request still succeeds. The call returns as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up in Logs after a short delay.
+Orchestrator validates each entry silently: an entry whose `timestamp` is more than 30 days in the past or more than 24 hours in the future, whose serialised form exceeds 524,000 bytes (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`, `@encryption` or `@compression` is discarded while the request still succeeds. The call returns as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up after a short delay in the folder's Logs view (Automations > Logs, and a job's View Logs when `jobKey` matches) — the same execution-log store that robots write to.
 
-Rejects with `ValidationError` before any request is made when `entries` is an empty array, when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or the wire names `jobId` / `timeStamp` instead of `jobKey` / `timestamp`, or when no folder context can be resolved.
+Rejects with `ValidationError` before any request is made when `entries` is an empty array, when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or `jobId` / `timeStamp` in place of `jobKey` / `timestamp`, or when no folder context can be resolved.
 
 #### Parameters
 
@@ -3287,6 +3287,54 @@ const allEntities = await entities.getAll();
 
 ## Methods
 
+### clone()
+
+> **clone**(`request`: `EntityCloneRequest`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Starts an async job that clones the entities/choicesets listed in `entityIds` (plus their full dependency closure, capped at 1000 items) into a folder-scoped target, then resolves with the job descriptor to poll via [EntityServiceModel.getCloneJob](#getclonejob).
+
+Target must be `Folder`-scoped; source may be `Tenant` or `Folder`. Mode `SchemaAndData` (default) clones schema, rows, and attachments into a clean target; `DataOnly` copies rows into a pre-existing, schema-compatible, empty target. Federated, composite/Case, RBAC-, Insights-, or template-enabled entities and non-Legacy/Native classes are not cloneable.
+
+`DataOnly` mode needs only the `DataFabric.Data.*` scopes — the `DataFabric.Schema.*` scopes are required only for `SchemaAndData` mode (which creates the target schema).
+
+#### Parameters
+
+- `request`: `EntityCloneRequest` — Source scope, folder-scoped target, root `entityIds`, and `options` (defaults to `SchemaAndData`).
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the [EntityCloneJob](../EntityCloneJob/) descriptor (initial state `Queued`).
+
+#### Example
+
+```
+import { Entities, EntityCloneScopeType, EntityCloneMode, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const job = await entities.clone({
+  source: { scopeType: EntityCloneScopeType.Tenant },
+  target: { scopeType: EntityCloneScopeType.Folder, folderKey: "<targetFolderKey>" },
+  entityIds: ["<rootEntityId>", "<choiceSetId>"],
+  options: { mode: EntityCloneMode.SchemaAndData },
+});
+
+// Poll to a terminal state.
+const terminal = [
+  EntityCloneJobState.Done, EntityCloneJobState.Failed,
+  EntityCloneJobState.RolledBack, EntityCloneJobState.RollbackFailed,
+];
+let status = await entities.getCloneJob(job.jobId);
+while (!terminal.includes(status.state)) {
+  await new Promise((r) => setTimeout(r, 3000));
+  status = await entities.getCloneJob(job.jobId);
+}
+```
+
 ### create()
 
 > **create**(`name`: `string`, `fields`: `EntityCreateFieldOptions`[], `options?`: `EntityCreateOptions`): `Promise`\<`string`>
@@ -3823,6 +3871,35 @@ const folderEntity = await entities.getByName("Customer", { folderKey: "<folderK
 
 // Call operations directly on the entity
 const records = await entity.getAllRecords();
+```
+
+### getCloneJob()
+
+> **getCloneJob**(`jobId`: `string`): `Promise`\<`EntityCloneJob`>
+
+**`Experimental`**
+
+Gets the current status of a clone job started by [EntityServiceModel.clone](#clone); poll until `state` is terminal (`Done`, `Failed`, `RolledBack`, `RollbackFailed`). On any non-`Done` terminal state, `failureReasonCode`, `failurePhase`, and `failureMessage` are populated.
+
+#### Parameters
+
+- `jobId`: `string` — The `jobId` returned when the clone job was started.
+
+#### Returns
+
+`Promise`\<`EntityCloneJob`>
+
+Promise resolving to the latest [EntityCloneJob](../EntityCloneJob/).
+
+#### Example
+
+```
+import { Entities, EntityCloneJobState } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+const status = await entities.getCloneJob("<jobId>");
+if (status.state === EntityCloneJobState.Failed) console.error(status.failureReasonCode, status.failureMessage);
 ```
 
 ### getRecordById()

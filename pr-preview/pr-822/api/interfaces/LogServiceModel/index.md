@@ -21,9 +21,9 @@ Submits one or more log entries to Orchestrator's execution logs.
 
 Entries are stored under the folder given in `options` (`folderId`, `folderKey` or `folderPath`), which must grant the caller `Logs.Create`; when no folder is given the SDK's init-time folder (coded-app meta tag or coded-function context) is used. Every entry needs a non-empty `message`; the SDK fills in `level` ([LogEntryLevel.Info](../../enumerations/LogEntryLevel/#info)), `timestamp` (now) and `fingerprint` (a random UUID) when they are omitted. See [LogEntry](../LogEntry/) for the fields.
 
-Orchestrator validates each entry silently: an entry whose `timestamp` is more than 30 days in the past or more than 24 hours in the future, whose serialised form exceeds 524,000 bytes (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`, `@encryption` or `@compression` is discarded while the request still succeeds. The call returns as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up in Logs after a short delay.
+Orchestrator validates each entry silently: an entry whose `timestamp` is more than 30 days in the past or more than 24 hours in the future, whose serialised form exceeds 524,000 bytes (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`, `@encryption` or `@compression` is discarded while the request still succeeds. The call returns as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up after a short delay in the folder's Logs view (Automations > Logs, and a job's View Logs when `jobKey` matches) — the same execution-log store that robots write to.
 
-Rejects with `ValidationError` before any request is made when `entries` is an empty array, when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or the wire names `jobId` / `timeStamp` instead of `jobKey` / `timestamp`, or when no folder context can be resolved.
+Rejects with `ValidationError` before any request is made when `entries` is an empty array, when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or `jobId` / `timeStamp` in place of `jobKey` / `timestamp`, or when no folder context can be resolved.
 
 #### Parameters
 
