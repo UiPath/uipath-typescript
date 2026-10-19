@@ -3857,8 +3857,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="authenticationsource"></a> <code>authenticationSource</code></td>
-<td><code>string</code></td>
-<td>The source which authenticated this user.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The source which authenticated this user, or <code>null</code> when the account has never authenticated.</td>
 </tr>
 <tr>
 <td><a id="createdtime"></a> <code>createdTime</code></td>
@@ -3882,8 +3882,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="emailaddress"></a> <code>emailAddress</code></td>
-<td><code>string</code></td>
-<td>The e-mail address associated with the user.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The e-mail address associated with the user, or <code>null</code> when the account has none (groups, robots, external applications).</td>
 </tr>
 <tr>
 <td><a id="explicitmayhavepersonalworkspace"></a> <code>explicitMayHavePersonalWorkspace</code></td>
@@ -3907,8 +3907,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="fullname"></a> <code>fullName</code></td>
-<td><code>string</code></td>
-<td>The full name of the person, constructed as <code>Name Surname</code>.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The full name of the person, constructed from <code>name</code> and <code>surname</code>, or <code>null</code> when the account has none.</td>
 </tr>
 <tr>
 <td><a id="hasonlyinheritedprivileges"></a> <code>hasOnlyInheritedPrivileges</code></td>
@@ -3982,8 +3982,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="name"></a> <code>name</code></td>
-<td><code>string</code></td>
-<td>The name of the person for which the user is created.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The name of the person for which the user is created, or <code>null</code> when the account has none (groups, robots, external applications).</td>
 </tr>
 <tr>
 <td><a id="provisiontype"></a> <code>provisionType</code></td>
@@ -4002,8 +4002,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="surname"></a> <code>surname</code></td>
-<td><code>string</code></td>
-<td>The surname of the person for which the user is created.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The surname of the person for which the user is created, or <code>null</code> when the account has none.</td>
 </tr>
 <tr>
 <td><a id="tenancyname"></a> <code>tenancyName</code></td>
@@ -4017,8 +4017,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="tenantid"></a> <code>tenantId</code></td>
-<td><code>number</code></td>
-<td>The id of the tenant owning the user.</td>
+<td><code>null</code> | <code>number</code></td>
+<td>The id of the tenant owning the user, or <code>null</code> when not populated.</td>
 </tr>
 <tr>
 <td><a id="tenantkey"></a> <code>tenantKey</code></td>
@@ -4032,8 +4032,8 @@ update policy) is intentionally not exposed.</p>
 </tr>
 <tr>
 <td><a id="username"></a> <code>userName</code></td>
-<td><code>string</code></td>
-<td>The name used to log in to Orchestrator.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The name used to log in to Orchestrator, or <code>null</code> for accounts that never sign in (for example groups and external applications).</td>
 </tr>
 <tr>
 <td><a id="userroles"></a> <code>userRoles?</code></td>

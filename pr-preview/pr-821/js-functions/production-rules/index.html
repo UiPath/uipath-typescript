@@ -4237,8 +4237,8 @@ a query value, <code>z.coerce.number()</code> accepts and converts it.</p>
 </code></pre></div>
 <hr />
 <h2 id="regenerate-the-lockfile-after-any-dependency-change">Regenerate the lockfile after any dependency change<a class="headerlink" href="#regenerate-the-lockfile-after-any-dependency-change" title="Permanent link">&para;</a></h2>
-<p>The <code>.nupkg</code> includes the project's lock file — <code>package-lock.json</code> or <code>bun.lock</code>. The production worker installs from it with bun, which reads either format. A stale lockfile causes production install failures (errorCode 4801 on all routes), and <code>pack</code> now refuses one that no longer matches <code>package.json</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>install<span class="w">   </span><span class="c1"># or `bun install` — always run this before pack after any package.json change</span>
+<p>The <code>.nupkg</code> ships the project's <code>package-lock.json</code>, and the production worker installs from it (<a href="../deployment/#lockfile">Lockfile</a>). A stale lockfile fails the production install with errorCode 4801 on all routes, so <code>pack</code> checks that the lock matches <code>package.json</code> before it builds.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>npm<span class="w"> </span>install<span class="w">   </span><span class="c1"># always run this before pack after any package.json change</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uip<span class="w"> </span>functions<span class="w"> </span>pack
 </code></pre></div>
 <hr />

@@ -844,10 +844,10 @@ ______________________________________________________________________
 
 ## Regenerate the lockfile after any dependency change
 
-The `.nupkg` includes the project's lock file — `package-lock.json` or `bun.lock`. The production worker installs from it with bun, which reads either format. A stale lockfile causes production install failures (errorCode 4801 on all routes), and `pack` now refuses one that no longer matches `package.json`.
+The `.nupkg` ships the project's `package-lock.json`, and the production worker installs from it ([Lockfile](../deployment/#lockfile)). A stale lockfile fails the production install with errorCode 4801 on all routes, so `pack` checks that the lock matches `package.json` before it builds.
 
 ```
-npm install   # or `bun install` — always run this before pack after any package.json change
+npm install   # always run this before pack after any package.json change
 uip functions pack
 ```
 
@@ -1048,7 +1048,11 @@ Calling mode is always **Sync (long-polling)**. Account is always **Run as HTTP 
 
 ### Lockfile
 
-The `.nupkg` always includes the project's lock file — `package-lock.json` or `bun.lock` — and it is the only lock file that ships: the production worker installs from it with bun, which reads either format. `pack` refuses to run when the lock is missing or no longer matches `package.json`, and `publish` refuses a package that carries no lock. Always re-run your package manager's install locally after any `package.json` change before packing.
+A project is locked with npm's `package-lock.json`. That lock ships in the `.nupkg`, and the production worker installs from it with bun. Run `npm install` after any `package.json` change, then pack.
+
+On your machine the CLI holds every project to that lock. `new` installs with npm. `serve`, `run`, `debug`, `pack`, `push` and `uip solution pack` stop on a `bun.lock`, including one next to `package-lock.json`, since bun installs from `bun.lock` first: delete `bun.lock` and run `npm install`. `pack`, `push` and `uip solution pack` also stop when `package-lock.json` is missing or `npm ci --dry-run` reports that it differs from `package.json`. `publish` requires a lock in the package.
+
+Install every dependency from a registry. `pack`, `push` and `uip solution pack` stop on a dependency that `package-lock.json` takes from a git repository, transitive ones included, and name it: replace it with a registry version, then pack again.
 
 ______________________________________________________________________
 
@@ -1171,7 +1175,7 @@ uip functions new [name] [options]
 | `-l, --language <lang>` | `ts`           | `ts` (default) or `js` for JS/TS; `py`/`python` for [Python Functions](https://uipath.github.io/uipath-python/) |
 | `--empty`               |                | Skip the hello world function (JS/TS only)                                                                      |
 
-Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with the package manager the machine resolves to: npm when both npm and bun are present, and that manager writes the project's lock file.
+Creates the project directory, scaffolds `uipath.json`, `package.json`, `tsconfig.json`, and (unless `--empty`) a hello world function. Then installs with npm, which writes the project's `package-lock.json`.
 
 ______________________________________________________________________
 
@@ -1256,7 +1260,7 @@ uip functions pack [options]
 
 Reads `name` and `version` from `package.json`. Writes `.uipath/<name>.<version>.nupkg`. Re-packing the same version overwrites the file.
 
-The project must be ready to package: `node_modules/` present, exactly one supported lock file — `package-lock.json` (npm) or `bun.lock` (bun) — and that lock still current, which the package manager itself confirms via `npm ci --dry-run` / `bun install --frozen-lockfile --dry-run` (neither installs nor writes anything). When the manager cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it. `serve`, `run` and `debug` do not check the lock at all — Node does not read one.
+The project must be ready to package: `node_modules/` present and a current `package-lock.json`, as [Lockfile](../deployment/#lockfile) sets out. When npm cannot answer, because the registry is unreachable or unauthenticated, `pack` stops as well — reported as the check failing, not as a stale lock. `pack` never installs for you. Any other lock file (`yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`) is dropped so the pod's installer cannot prefer it.
 
 Steps performed:
 

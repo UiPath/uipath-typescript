@@ -3861,13 +3861,13 @@ when <code>expand</code> includes <code>userRoles</code>.</p>
 </tr>
 <tr>
 <td><a id="rolename"></a> <code>roleName</code></td>
-<td><code>string</code></td>
-<td>The name of the associated role.</td>
+<td><code>null</code> | <code>string</code></td>
+<td>The name of the associated role, or <code>null</code> when the API does not populate it on expanded roles.</td>
 </tr>
 <tr>
 <td><a id="roletype"></a> <code>roleType</code></td>
-<td><a href="../../enumerations/OrchestratorUserRoleType/"><code>OrchestratorUserRoleType</code></a></td>
-<td>Scope at which the role applies.</td>
+<td><code>null</code> | <a href="../../enumerations/OrchestratorUserRoleType/"><code>OrchestratorUserRoleType</code></a></td>
+<td>Scope at which the role applies, or <code>null</code> when the API does not populate it on expanded roles.</td>
 </tr>
 <tr>
 <td><a id="userid"></a> <code>userId</code></td>
