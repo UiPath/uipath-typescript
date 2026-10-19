@@ -9,6 +9,7 @@ A coded app showcasing the UiPath TypeScript SDK **platform RBAC services** (`@u
 | Admin gate (admin vs member experience) | `groups.getAll()`, `directory.getGroupMembership()` |
 | My Access — the signed-in user's groups and role assignments | `directory.getGroupMembership()`, `roles.getAssignments()` |
 | Request catalog (groups + roles to ask for) | `groups.getAll()`, `roles.getAll()` |
+| Verify a pending request before granting | `groups.getById()` / `roles.getById()`, `users.getById()` |
 | Approve → grant group membership | `groups.updateById()` with `memberUserIdsToAdd` |
 | Approve → grant a role | `roles.updateAssignments()` |
 | Audit — who holds what, org-wide | `roles.getAssignments('/')` (paginated) |
@@ -31,11 +32,10 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 4. Sign in. Members of the organization's **Administrators** group get the admin tabs (Approvals, Audit, Clone Access); everyone else gets the member experience.
 
-
 ## Demo flow (single browser)
 
 1. Sign in as a member → **Request Access** → pick a group or role, add a justification, submit.
-2. As an admin → **Approvals** → *Approve & grant*. The SDK performs the real grant (group membership or role assignment) against the platform.
+2. As an admin → **Approvals** → *Approve & grant*. The queue shows each requester and target as the platform resolves them, not as the request row stored them; the SDK then performs the real grant (group membership or role assignment) against the platform.
 3. **My Access** now shows the new access; **Audit** shows it org-wide; *Export all as CSV* downloads the full assignment list.
 4. **Clone Access**: pick a source user and a target user, preview what will be copied, apply.
 
@@ -43,4 +43,5 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 - **Enforcement lives server-side.** The admin check in this app only gates the UI. Every grant/audit call is re-authorized by the platform against the *caller's* permissions — a member calling `roles.updateAssignments()` directly gets a 403.
 - **Requests are stored in a shared Data Fabric entity** (`AccessRequests`, id in `src/lib/config.ts`), so the approver sees the queue from any browser or machine. The entity is coordination data, not authority — a forged "approved" row grants nothing, because grants only happen when an admin's own token calls the platform APIs.
-- Group updates always send the group `name` — the Identity API requires it on every update call.
+- **The request row is requester-written, so the approver never trusts it.** Before a request can be approved, the app resolves its `targetId` (`groups.getById()` / `roles.getById()`) and its `requestedById` (`users.getById()`) and shows those authoritative values. A row whose stored target label no longer matches the platform is marked *altered* and cannot be approved; one whose IDs do not resolve is marked *unverified*. Harden the deployment too: give requesters create permission only on the `AccessRequests` entity and reserve edit rights for the admins group, so submitted rows cannot be rewritten.
+- The Identity API requires the group name on every update; `groups.updateById()` reads the current group and sends it for you, so callers pass only the change.
