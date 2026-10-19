@@ -150,3 +150,5 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Feedback | `getAll()` | ✅ Yes |
 | Feedback | `getCategories()` | ✅ Yes |
 | Governance | `getPolicyTraces()` | ✅ Yes |
+| Decisions | `list()` | ✅ Yes |
+| Decisions | `query()` | ❌ No |
