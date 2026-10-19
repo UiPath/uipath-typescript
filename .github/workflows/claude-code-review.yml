@@ -110,7 +110,7 @@ jobs:
               • If a prior comment raised a DIFFERENT topic on the same line → OK to post.
               • New issues the prior review missed entirely → post normally.
 
-            STEP 4 — Read CLAUDE.md at the repo root first — it references Agents.md
+            STEP 4 — Read CLAUDE.md at the repo root first — it references AGENTS.md
             and agent_docs/ which contain all project conventions, architecture, and
             rules. Follow every convention defined there during your review.
 

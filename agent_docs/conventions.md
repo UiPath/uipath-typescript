@@ -1,3 +1,8 @@
+---
+description: "SDK service and coding conventions: naming, types, transforms, JSDoc, and service patterns"
+alwaysApply: true
+---
+
 # Service & Coding Conventions
 
 ## Code style
