@@ -5,11 +5,17 @@ import type { AccessRequest, RequestStore } from '../lib/storage';
 /** The requester's own requests — non-admins never see anyone else's. */
 export function MyRequests({ user, store }: { user: CurrentUser; store: RequestStore }) {
   const [requests, setRequests] = useState<AccessRequest[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    store.list().then(all => setRequests(all.filter(r => r.requestedById === user.userId)));
+    const mine = user.userId.toLowerCase();
+    store
+      .list()
+      .then(all => setRequests(all.filter(r => r.requestedById.toLowerCase() === mine)))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load requests'));
   }, [store, user]);
 
+  if (error) return <p className="error">{error}</p>;
   if (!requests) return <p>Loading…</p>;
   if (requests.length === 0) return <p className="muted">You have no requests yet.</p>;
 

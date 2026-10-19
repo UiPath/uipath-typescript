@@ -1,11 +1,18 @@
 /**
  * Access request store — backed by a shared Data Fabric entity.
  *
- * Requests live in the `AccessRequests` entity (id in `./config`), so every
+ * Requests live in the `AccessRequests` entity (name in `./config`), so every
  * user — requester and approver alike — sees the same queue from any browser.
  * Requires the `DataFabric.Data.Read` / `DataFabric.Data.Write` scopes on the
  * app registration, and Data Fabric data access for the signed-in user.
  * The request id is Data Fabric's system `Id`.
+ *
+ * Two Data Fabric behaviours the store absorbs so the UI does not have to:
+ * - A write is not immediately visible to queries. `create()` and `update()`
+ *   wait until the queue reflects the change before resolving, so a screen
+ *   that reloads right after them shows the new state.
+ * - An ISO-8601 string written to a text field comes back re-serialized: wrapped
+ *   in literal quotes and with a `+00:00` offset. `readStoredTime()` normalizes it.
  *
  * NOTE: the entity is coordination data, not authority. Anyone with DF data
  * access could edit request rows directly — but a forged "approved" row grants
@@ -14,8 +21,9 @@
  */
 
 import type { UiPath } from '@uipath/uipath-typescript/core';
-import { Entities } from '@uipath/uipath-typescript/entities';
-import { ACCESS_REQUESTS_ENTITY_ID } from './config';
+import { Entities, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+import type { EntityRecord, EntityRef } from '@uipath/uipath-typescript/entities';
+import { ACCESS_REQUESTS_ENTITY_NAME } from './config';
 
 export type RequestKind = 'group' | 'role';
 export type RequestStatus = 'pending' | 'approved' | 'denied';
@@ -47,8 +55,7 @@ export interface RequestStore {
 }
 
 /** DF record shape: the entity's user-defined columns plus the system Id. */
-interface AccessRequestRecord {
-  Id: string;
+interface AccessRequestRecord extends EntityRecord {
   kind: string;
   targetId: string;
   targetName: string;
@@ -61,43 +68,72 @@ interface AccessRequestRecord {
   resolvedTime?: string | null;
 }
 
+/** How long a write may take to become visible to queries before we give up waiting. */
+const VISIBILITY_ATTEMPTS = 10;
+const VISIBILITY_DELAY_MS = 500;
+
+/** Data Fabric hands ISO timestamps written to text fields back quoted; return a clean ISO string. */
+function readStoredTime(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  const parsed = Date.parse(value.replace(/^"|"$/g, ''));
+  return Number.isNaN(parsed) ? undefined : new Date(parsed).toISOString();
+}
+
+function toAccessRequest(record: AccessRequestRecord): AccessRequest {
+  return {
+    id: record.Id,
+    kind: record.kind as RequestKind,
+    targetId: record.targetId,
+    targetName: record.targetName,
+    justification: record.justification ?? '',
+    requestedById: record.requestedById,
+    requestedByName: record.requestedByName ?? '',
+    status: record.status as RequestStatus,
+    createdTime: readStoredTime(record.createdTime) ?? '',
+    resolvedByName: record.resolvedByName ?? undefined,
+    resolvedTime: readStoredTime(record.resolvedTime),
+  };
+}
+
 class DataFabricRequestStore implements RequestStore {
-  constructor(private entities: Entities, private entityId: string) {}
+  private readonly entity: EntityRef;
+
+  constructor(private entities: Entities, entityName: string) {
+    this.entity = { name: entityName };
+  }
 
   async list(): Promise<AccessRequest[]> {
-    const result = await this.entities.getAllRecords(this.entityId);
-    const records = result.items as unknown as AccessRequestRecord[];
-    return records
-      .map(r => ({
-        id: r.Id,
-        kind: r.kind as RequestKind,
-        targetId: r.targetId,
-        targetName: r.targetName,
-        justification: r.justification ?? '',
-        requestedById: r.requestedById,
-        requestedByName: r.requestedByName ?? '',
-        status: r.status as RequestStatus,
-        createdTime: r.createdTime ?? '',
-        resolvedByName: r.resolvedByName ?? undefined,
-        resolvedTime: r.resolvedTime ?? undefined,
-      }))
+    const result = await this.entities.queryRecords(this.entity);
+    return result.items
+      .map(record => toAccessRequest(record as AccessRequestRecord))
       .sort((a, b) => b.createdTime.localeCompare(a.createdTime));
   }
 
   async create(request: NewAccessRequest): Promise<AccessRequest> {
-    const inserted = await this.entities.insertRecordById(this.entityId, { ...request });
-    return { ...request, id: (inserted as { Id: string }).Id };
+    const inserted = await this.entities.insertRecord(this.entity, { ...request });
+    await this.awaitVisible(inserted.Id, () => true);
+    return { ...request, id: inserted.Id };
   }
 
   async update(request: AccessRequest): Promise<void> {
     const { id, ...fields } = request;
-    await this.entities.updateRecordById(this.entityId, id, { ...fields });
+    await this.entities.updateRecord(this.entity, id, { ...fields });
+    await this.awaitVisible(id, record => record.status === request.status);
+  }
+
+  /** Polls the query path until the record is there and `isCurrent` accepts it; gives up quietly after the budget. */
+  private async awaitVisible(id: string, isCurrent: (record: AccessRequestRecord) => boolean): Promise<void> {
+    for (let attempt = 0; attempt < VISIBILITY_ATTEMPTS; attempt++) {
+      const result = await this.entities.queryRecords(this.entity, {
+        filterGroup: { queryFilters: [{ fieldName: 'Id', operator: QueryFilterOperator.Equals, value: id }] },
+      });
+      const record = result.items[0] as AccessRequestRecord | undefined;
+      if (record && isCurrent(record)) return;
+      await new Promise(resolve => setTimeout(resolve, VISIBILITY_DELAY_MS));
+    }
   }
 }
 
 export function createRequestStore(sdk: UiPath): RequestStore {
-  if (!ACCESS_REQUESTS_ENTITY_ID) {
-    throw new Error('ACCESS_REQUESTS_ENTITY_ID is not configured — see src/lib/config.ts');
-  }
-  return new DataFabricRequestStore(new Entities(sdk), ACCESS_REQUESTS_ENTITY_ID);
+  return new DataFabricRequestStore(new Entities(sdk), ACCESS_REQUESTS_ENTITY_NAME);
 }

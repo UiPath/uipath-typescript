@@ -1,9 +1,9 @@
 /**
- * Data Fabric entity backing the shared request store.
+ * Data Fabric entity backing the shared request store, addressed by name so the
+ * same build works in any tenant that has the entity.
  *
- * Created once (tenant-level, PAT) with fields mirroring `AccessRequest`:
+ * Create it once at tenant level with text fields mirroring `AccessRequest`:
  * kind, targetId, targetName, justification (multiline), requestedById,
  * requestedByName, status, createdTime, resolvedByName, resolvedTime.
- *
  */
-export const ACCESS_REQUESTS_ENTITY_ID = 'c6bcba7b-58a1-f111-9b33-0022482a9eea';
+export const ACCESS_REQUESTS_ENTITY_NAME = 'AccessRequests';

@@ -23,14 +23,15 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 
 1. Create an **external application** (non-confidential, user-mode) in UiPath Admin with redirect URI `http://localhost:5173` and scopes `PM.User.Read PM.Group PM.Directory DataFabric.Data.Read DataFabric.Data.Write`. The Roles service endpoints are governed by the caller's platform roles rather than OAuth scopes, and the SDK requests `offline_access` (refresh tokens) automatically — neither needs to be configured.
 2. Copy `uipath.json.example` to `uipath.json` and fill in your `clientId`, `baseUrl`, `orgName`, and `tenantName`.
-3. Install and start:
+3. Create the request store: a tenant-level Data Fabric entity named `AccessRequests` with text fields `kind`, `targetId`, `targetName`, `justification` (multiline), `requestedById`, `requestedByName`, `status`, `createdTime`, `resolvedByName`, `resolvedTime`. The app addresses it by name (`src/lib/config.ts`), so no id needs copying.
+4. Install and start:
 
    ```bash
    npm install
    npm run dev
    ```
 
-4. Sign in. Members of the organization's **Administrators** group get the admin tabs (Approvals, Audit, Clone Access); everyone else gets the member experience.
+5. Sign in. Members of the organization's **Administrators** group get the admin tabs (Approvals, Audit, Clone Access); everyone else gets the member experience.
 
 ## Demo flow (single browser)
 
@@ -42,6 +43,6 @@ The signed-in user's identity (user GUID + organization GUID) is decoded from th
 ## Design notes
 
 - **Enforcement lives server-side.** The admin check in this app only gates the UI. Every grant/audit call is re-authorized by the platform against the *caller's* permissions — a member calling `roles.updateAssignments()` directly gets a 403.
-- **Requests are stored in a shared Data Fabric entity** (`AccessRequests`, id in `src/lib/config.ts`), so the approver sees the queue from any browser or machine. The entity is coordination data, not authority — a forged "approved" row grants nothing, because grants only happen when an admin's own token calls the platform APIs.
+- **Requests are stored in a shared Data Fabric entity** (`AccessRequests`, addressed by name — see `src/lib/config.ts`), so the approver sees the queue from any browser or machine. The store absorbs two Data Fabric behaviours: a write takes about a second to become visible to queries, so `create()` and `update()` wait for the queue to reflect the change before resolving; and an ISO timestamp written to a text field comes back wrapped in quotes with a `+00:00` offset, which the store normalizes before the UI formats it. The entity is coordination data, not authority — a forged "approved" row grants nothing, because grants only happen when an admin's own token calls the platform APIs.
 - **The request row is requester-written, so the approver never trusts it.** Before a request can be approved, the app resolves its `targetId` (`groups.getById()` / `roles.getById()`) and its `requestedById` (`users.getById()`) and shows those authoritative values. A row whose stored target label no longer matches the platform is marked *altered* and cannot be approved; one whose IDs do not resolve is marked *unverified*. Harden the deployment too: give requesters create permission only on the `AccessRequests` entity and reserve edit rights for the admins group, so submitted rows cannot be rewritten.
 - The Identity API requires the group name on every update; `groups.updateById()` reads the current group and sends it for you, so callers pass only the change.
