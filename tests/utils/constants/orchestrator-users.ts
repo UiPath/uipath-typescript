@@ -13,6 +13,8 @@ const TENANT_ID = 794591;
 const ROLE_ID = 42;
 const ROLE_NAME = 'Automation User';
 const USER_ROLE_ID = 7001;
+const GROUP_ID = 4660543;
+const GROUP_KEY = '35551807-06b1-4cda-90a1-2fb84851eee7';
 // Distinctive timestamps so a rename test proves the value travelled through intact.
 const CREATED_TIME = '2000-01-01T00:00:00.000Z';
 const LAST_MODIFIED_TIME = '2000-01-02T00:00:00.000Z';
@@ -90,7 +92,26 @@ const RAW_USER: RawOrchestratorUserDto = {
   UpdatePolicy: { Type: 'LatestVersion', SpecificVersion: null },
 };
 
+/** Raw group account: the person and tenant fields the API leaves `null` for non-person accounts. */
+const RAW_GROUP: RawOrchestratorUserDto = {
+  ...RAW_USER,
+  Id: GROUP_ID,
+  Key: GROUP_KEY,
+  Type: 'DirectoryGroup',
+  Name: null,
+  Surname: null,
+  UserName: null,
+  FullName: null,
+  EmailAddress: null,
+  AuthenticationSource: null,
+  TenantId: null,
+  LicenseType: null,
+  UserRoles: [{ UserId: GROUP_ID, RoleId: ROLE_ID, UserName: null, RoleName: null, RoleType: null, Id: USER_ROLE_ID }],
+};
+
 export const ORCHESTRATOR_USER_TEST_CONSTANTS = {
+  GROUP_ID,
+  RAW_GROUP,
   USER_ID,
   USER_KEY,
   USER_NAME,

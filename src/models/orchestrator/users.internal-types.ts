@@ -10,8 +10,8 @@ export interface RawOrchestratorUserRoleDto {
   UserId: number;
   RoleId: number;
   UserName: string | null;
-  RoleName: string;
-  RoleType: string;
+  RoleName: string | null;
+  RoleType: string | null;
 }
 
 /** Wire shape of attended-robot provisioning (`AttendedRobotDto`). Dropped from responses. */
@@ -45,23 +45,23 @@ export interface RawOrchestratorUpdatePolicyDto {
 export interface RawOrchestratorUserDto {
   Id: number;
   Key: string;
-  UserName: string;
-  Name: string;
-  Surname: string;
-  FullName: string;
-  EmailAddress: string;
+  UserName: string | null;
+  Name: string | null;
+  Surname: string | null;
+  FullName: string | null;
+  EmailAddress: string | null;
   Domain: string | null;
   DirectoryIdentifier: string | null;
   Type: string;
   ProvisionType: string;
   LicenseType: string | null;
-  AuthenticationSource: string;
+  AuthenticationSource: string | null;
   IsActive: boolean;
   IsExternalLicensed: boolean;
   RolesList: string[];
   LoginProviders: string[];
   UserRoles?: RawOrchestratorUserRoleDto[];
-  TenantId: number;
+  TenantId: number | null;
   TenancyName: string | null;
   TenantDisplayName: string | null;
   TenantKey: string | null;

@@ -227,6 +227,31 @@ describe('OrchestratorUserService Unit Tests', () => {
       expect((role as any).RoleType).toBeUndefined();
     });
 
+    it('should keep the nullable account fields null for a group', async () => {
+      const raw = ORCHESTRATOR_USER_TEST_CONSTANTS.RAW_GROUP;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation((config) => {
+        const items = config.transformFn ? [config.transformFn(raw)] : [];
+        return Promise.resolve({ items, totalCount: items.length });
+      });
+
+      const result = await orchestratorUserService.getAll();
+      const group = result.items[0];
+
+      expect(group.id).toBe(ORCHESTRATOR_USER_TEST_CONSTANTS.GROUP_ID);
+      expect(group.type).toBe(OrchestratorUserType.DirectoryGroup);
+      expect(group.userName).toBeNull();
+      expect(group.name).toBeNull();
+      expect(group.surname).toBeNull();
+      expect(group.fullName).toBeNull();
+      expect(group.emailAddress).toBeNull();
+      expect(group.authenticationSource).toBeNull();
+      expect(group.tenantId).toBeNull();
+      expect(group.licenseType).toBeNull();
+      const role = group.userRoles![0];
+      expect(role.roleName).toBeNull();
+      expect(role.roleType).toBeNull();
+    });
+
     it('should propagate API errors', async () => {
       const error = createMockError(ORCHESTRATOR_USER_TEST_CONSTANTS.ERROR_USERS_FORBIDDEN);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);

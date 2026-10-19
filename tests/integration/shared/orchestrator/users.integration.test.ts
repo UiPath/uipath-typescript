@@ -7,6 +7,9 @@ import type { OrchestratorUserGetResponse } from '../../../../src/services/orche
 
 const modes: InitMode[] = ['v1'];
 
+/** Account fields the API leaves `null` for groups, robots and external applications. */
+const isNullableString = (value: unknown): boolean => value === null || typeof value === 'string';
+
 describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () => {
   let orchestratorUsers!: OrchestratorUsers;
   /** Full tenant listing, fetched once and shared across the read-only assertions. */
@@ -35,6 +38,14 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       for (const user of allUsers) {
         expect(typeof user.id).toBe('number');
         expect(Object.values(OrchestratorUserType)).toContain(user.type);
+        // Account fields the API marks nullable (groups, robots, external applications have no person data)
+        expect(isNullableString(user.userName)).toBe(true);
+        expect(isNullableString(user.name)).toBe(true);
+        expect(isNullableString(user.surname)).toBe(true);
+        expect(isNullableString(user.fullName)).toBe(true);
+        expect(isNullableString(user.emailAddress)).toBe(true);
+        expect(isNullableString(user.authenticationSource)).toBe(true);
+        expect(user.tenantId === null || typeof user.tenantId === 'number').toBe(true);
       }
     });
 
@@ -44,7 +55,7 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       // camelCase fields carry values
       expect(typeof user.id).toBe('number');
       expect(typeof user.key).toBe('string');
-      expect(typeof user.userName).toBe('string');
+      expect(isNullableString(user.userName)).toBe(true);
       expect(typeof user.createdTime).toBe('string');
       expect(typeof user.isActive).toBe('boolean');
       expect(Array.isArray(user.rolesList)).toBe(true);
@@ -74,15 +85,19 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
     });
 
     it('should look up a single user by sign-in name', async () => {
-      const target = allUsers[0];
+      const target = allUsers.find((u) => u.userName !== null);
+      if (!target || target.userName === null) {
+        throw new Error('No user with a sign-in name was returned to look up');
+      }
+      const signInName = target.userName;
 
       const result = await orchestratorUsers.getAll({
-        filter: `userName eq '${escapeODataString(target.userName)}'`,
+        filter: `userName eq '${escapeODataString(signInName)}'`,
       });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe(target.id);
-      expect(result.items[0].userName).toBe(target.userName);
+      expect(result.items[0].userName).toBe(signInName);
     });
 
     it('should order by the renamed createdTime field', async () => {
@@ -101,7 +116,7 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       expect(result.items.length).toBeGreaterThan(0);
       for (const user of result.items) {
         expect(typeof user.id).toBe('number');
-        expect(typeof user.userName).toBe('string');
+        expect(isNullableString(user.userName)).toBe(true);
         expect((user as any).Id).toBeUndefined();
         expect(user).not.toHaveProperty('key');
       }
@@ -114,7 +129,7 @@ describeIntegration('Orchestrator Users - Integration Tests', 'both', modes, () 
       for (const user of result.items) {
         expect(Array.isArray(user.userRoles)).toBe(true);
         for (const role of user.userRoles!) {
-          expect(typeof role.roleName).toBe('string');
+          expect(isNullableString(role.roleName)).toBe(true);
           expect(role.userId).toBe(user.id);
           expect((role as any).RoleName).toBeUndefined();
         }

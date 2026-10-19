@@ -62,10 +62,10 @@ export interface OrchestratorUserRole {
   roleId: number;
   /** The name of the associated user, or `null` when the API does not populate it on expanded roles. */
   userName: string | null;
-  /** The name of the associated role. */
-  roleName: string;
-  /** Scope at which the role applies. */
-  roleType: OrchestratorUserRoleType;
+  /** The name of the associated role, or `null` when the API does not populate it on expanded roles. */
+  roleName: string | null;
+  /** Scope at which the role applies, or `null` when the API does not populate it on expanded roles. */
+  roleType: OrchestratorUserRoleType | null;
 }
 
 /**
@@ -79,16 +79,16 @@ export interface OrchestratorUserGetResponse {
   id: number;
   /** Unique key (GUID) for the user. */
   key: string;
-  /** The name used to log in to Orchestrator. */
-  userName: string;
-  /** The name of the person for which the user is created. */
-  name: string;
-  /** The surname of the person for which the user is created. */
-  surname: string;
-  /** The full name of the person, constructed as `Name Surname`. */
-  fullName: string;
-  /** The e-mail address associated with the user. */
-  emailAddress: string;
+  /** The name used to log in to Orchestrator, or `null` for accounts that never sign in (for example groups and external applications). */
+  userName: string | null;
+  /** The name of the person for which the user is created, or `null` when the account has none (groups, robots, external applications). */
+  name: string | null;
+  /** The surname of the person for which the user is created, or `null` when the account has none. */
+  surname: string | null;
+  /** The full name of the person, constructed from `name` and `surname`, or `null` when the account has none. */
+  fullName: string | null;
+  /** The e-mail address associated with the user, or `null` when the account has none (groups, robots, external applications). */
+  emailAddress: string | null;
   /** The domain from which the user is imported, or `null` when the user is not imported from a domain. */
   domain: string | null;
   /** The directory identifier from which the user is imported, or `null` when the user is not imported from a directory. */
@@ -99,8 +99,8 @@ export interface OrchestratorUserGetResponse {
   provisionType: OrchestratorUserProvisionType;
   /** The user's license type (the same values as a robot runtime type), or `null` when no license is assigned. */
   licenseType: RuntimeType | null;
-  /** The source which authenticated this user. */
-  authenticationSource: string;
+  /** The source which authenticated this user, or `null` when the account has never authenticated. */
+  authenticationSource: string | null;
   /** States if the user is active or not. An inactive user cannot log in to Orchestrator. */
   isActive: boolean;
   /** Whether the user's license is managed externally. */
@@ -111,8 +111,8 @@ export interface OrchestratorUserGetResponse {
   loginProviders: string[];
   /** The roles associated with the user. Only returned when `expand` includes `userRoles`. */
   userRoles?: OrchestratorUserRole[];
-  /** The id of the tenant owning the user. */
-  tenantId: number;
+  /** The id of the tenant owning the user, or `null` when not populated. */
+  tenantId: number | null;
   /** The name of the tenant owning the user. */
   tenancyName: string | null;
   /** The display name of the tenant owning the user. */
