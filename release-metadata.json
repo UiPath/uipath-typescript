@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "sdkVersion": "1.8.1",
+  "sdkVersion": "1.8.2",
   "services": [
     {
       "name": "AgentMemory",
@@ -488,6 +488,10 @@
           "since": null
         },
         {
+          "name": "clone",
+          "since": "1.8.2"
+        },
+        {
           "name": "create",
           "since": "1.7.0"
         },
@@ -534,6 +538,10 @@
         {
           "name": "getByName",
           "since": "1.7.1"
+        },
+        {
+          "name": "getCloneJob",
+          "since": "1.8.2"
         },
         {
           "name": "getRecordById",
