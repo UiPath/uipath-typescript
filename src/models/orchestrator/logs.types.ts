@@ -72,8 +72,8 @@ export interface LogEntry {
   fingerprint?: string;
   /**
    * Any other property is stored on the entry and shown as a custom log field. Nested objects
-   * are allowed. The wire names `jobId` and `timeStamp` are rejected — use `jobKey` and
-   * `timestamp`. Two names are interpreted by Orchestrator instead: a numeric `organizationUnitId`
+   * are allowed. Use `jobKey` and `timestamp` rather than `jobId` and `timeStamp`; the latter two are
+   * rejected so a job key or time is never dropped silently. Two names are interpreted by Orchestrator instead: a numeric `organizationUnitId`
    * overrides the folder given in options (and an unknown value discards the entry), and a numeric
    * `machineId` is resolved to a machine — so pass the folder via `options` rather than here. Must
    * not use the reserved names `@rawMessage`, `@encryption` or `@compression`, and the whole

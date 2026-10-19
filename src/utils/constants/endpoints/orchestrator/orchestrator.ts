@@ -123,7 +123,9 @@ export const STUDIO_WEB_LICENSE_ENDPOINTS = {
 export const LOG_ENDPOINTS = {
   /**
    * Inserts a batch of execution-log entries. The body is a JSON array of strings,
-   * each string a serialised log-entry object; the response has no body.
+   * each string a serialised log-entry object; the response has no body. Entries land in
+   * the folder's execution (robot) logs — the same store the Orchestrator Logs view and
+   * the RobotLogs listing read.
    */
   SUBMIT: `${ORCHESTRATOR_BASE}/api/Logs/SubmitLogs`,
 } as const;

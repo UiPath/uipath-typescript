@@ -33,11 +33,12 @@ export interface LogServiceModel {
    * (about 512 KB) by default, or which carries one of the reserved property names `@rawMessage`,
    * `@encryption` or `@compression` is discarded while the request still succeeds. The call returns
    * as soon as Orchestrator has accepted the batch — entries are indexed asynchronously and show up
-   * in Logs after a short delay.
+   * after a short delay in the folder's Logs view (Automations > Logs, and a job's View Logs when
+   * `jobKey` matches) — the same execution-log store that robots write to.
    *
    * Rejects with `ValidationError` before any request is made when `entries` is an empty array,
    * when an entry has no non-empty string `message`, a `timestamp` that is not a valid `Date`, or
-   * the wire names `jobId` / `timeStamp` instead of `jobKey` / `timestamp`, or when no folder
+   * `jobId` / `timeStamp` in place of `jobKey` / `timestamp`, or when no folder
    * context can be resolved.
    *
    * @param entries - A single log entry or an array of entries to submit in one request

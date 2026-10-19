@@ -31,7 +31,7 @@ export class LogService extends BaseService implements LogServiceModel {
       }
       if (entry.jobId !== undefined || entry.timeStamp !== undefined) {
         throw new ValidationError({
-          message: 'Logs.submit: `jobId` and `timeStamp` are wire names; use `jobKey` and `timestamp` instead.',
+          message: 'Logs.submit: use `jobKey` instead of `jobId`, and `timestamp` (a Date) instead of `timeStamp`.',
         });
       }
     }
