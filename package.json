@@ -126,6 +126,16 @@
                 "default": "./dist/folders/index.cjs"
             }
         },
+        "./orchestrator-users": {
+            "import": {
+                "types": "./dist/orchestrator-users/index.d.ts",
+                "default": "./dist/orchestrator-users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/orchestrator-users/index.d.ts",
+                "default": "./dist/orchestrator-users/index.cjs"
+            }
+        },
         "./cases": {
             "import": {
                 "types": "./dist/cases/index.d.ts",

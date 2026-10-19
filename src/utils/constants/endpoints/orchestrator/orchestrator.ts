@@ -93,6 +93,13 @@ export const FOLDER_ENDPOINTS = {
 } as const;
 
 /**
+ * Orchestrator User Endpoints (tenant-level — no folder headers are sent)
+ */
+export const ORCHESTRATOR_USER_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Users`,
+} as const;
+
+/**
  * Coded Functions Endpoints
  */
 export const FUNCTION_ENDPOINTS = {
