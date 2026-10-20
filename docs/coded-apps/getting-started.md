@@ -45,6 +45,40 @@ $ uip tools install codedapp
 
 ---
 
+## Convert an existing VB app
+
+If you already have a **VB low-code app** built in Apps Studio — a standalone app whose expressions are written in VB — you do not have to start from scratch. Export it as a `.uiapp` and convert it into a coded app you own:
+
+<!-- termynal -->
+
+```bash
+$ uip codedapp convert ./expense-app.uiapp --out ./expense-app
+```
+
+The result is a Vite + React + TypeScript project: one component per page, typed data access through this SDK, and a `conversion-report.json` that lists what converted, what did not, and whose fault each gap is (`converter`, `source-app`, `by-design`). Continue with the sections below — `uipath.json`, local development, deployment — exactly as for an app written by hand.
+
+!!! info "Prerequisite: .NET 10 Runtime"
+    The converter binds VB expressions with the Roslyn compiler, which runs on .NET, so the **.NET 10 Runtime** must be installed on the machine that runs `convert`. Download it from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/10.0) (the *Runtime* is enough), then check:
+
+    ```bash
+    dotnet --list-runtimes
+    ```
+
+    The output must include a line starting with `Microsoft.NETCore.App 10.`. The converter itself ships with the `codedapp` tool; run `uip tools update` to get a version that has `convert`.
+
+!!! note "What converts today"
+    VB apps exported as `.uiapp`. A UiPath Business Solution export (`.uis`) is refused with a clear message.
+
+The output also carries the `fix-converted-app` skill for your coding agent. From the converted project:
+
+```bash
+uip skills install --repo ./.uipath/agent-skills --path .
+```
+
+Then ask your agent (Claude Code, Cursor, Copilot, …) to run `fix-converted-app`: it works through the report's converter-blamed gaps in the generated code. See [`convert`](cli-reference.md#convert) in the CLI reference for every option.
+
+---
+
 ## Configure `uipath.json`
 
 Create a `uipath.json` at the root of your project. This file holds SDK and OAuth configuration used both during local development and at deployment time.
