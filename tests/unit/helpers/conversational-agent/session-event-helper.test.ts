@@ -7,6 +7,7 @@ import { ConversationEndReason, MessageRole } from '@/models/conversational-agen
 
 // ===== TEST CONSTANTS =====
 const CONVERSATION_ID = 'test-conv-id';
+const STOPPED_EXCHANGE_ID = 'ex-stopped';
 
 // ===== HELPERS =====
 const createManagerWithSession = (echo = false) => {
@@ -402,6 +403,54 @@ describe('SessionEventHelper', () => {
 
       expect(exchangeStartSpy).toHaveBeenCalled();
       expect(session.getExchange('ex-disp')).toBeDefined();
+    });
+
+    it('should drop events for an exchange ended with sendExchangeEnd', () => {
+      const { manager, session } = createManagerWithSession();
+      const exchange = session.startExchange({ exchangeId: STOPPED_EXCHANGE_ID });
+      const messageStartSpy = vi.fn();
+      const exchangeEndSpy = vi.fn();
+      const exchangeStartSpy = vi.fn();
+      exchange.onMessageStart(messageStartSpy);
+      exchange.onExchangeEnd(exchangeEndSpy);
+      session.onExchangeStart(exchangeStartSpy);
+
+      exchange.sendExchangeEnd();
+      manager.dispatch({
+        conversationId: CONVERSATION_ID,
+        exchange: {
+          exchangeId: STOPPED_EXCHANGE_ID,
+          message: {
+            messageId: 'msg-late',
+            startMessage: { role: MessageRole.Assistant },
+            contentPart: { contentPartId: 'cp-late', chunk: { data: 'late chunk' } },
+          },
+        },
+      });
+      manager.dispatch({
+        conversationId: CONVERSATION_ID,
+        exchange: { exchangeId: STOPPED_EXCHANGE_ID, endExchange: {} },
+      });
+
+      expect(messageStartSpy).not.toHaveBeenCalled();
+      expect(exchangeEndSpy).not.toHaveBeenCalled();
+      expect(exchangeStartSpy).not.toHaveBeenCalled();
+      expect(session.getExchange(STOPPED_EXCHANGE_ID)).toBeUndefined();
+    });
+
+    it('should keep dispatching events for other exchanges after one is ended with sendExchangeEnd', () => {
+      const { manager, session } = createManagerWithSession();
+      session.startExchange({ exchangeId: STOPPED_EXCHANGE_ID }).sendExchangeEnd();
+      const exchangeStartSpy = vi.fn();
+      session.onExchangeStart(exchangeStartSpy);
+
+      manager.dispatch({
+        conversationId: CONVERSATION_ID,
+        exchange: { exchangeId: 'ex-next', startExchange: {} },
+      });
+
+      expect(exchangeStartSpy).toHaveBeenCalled();
+      expect(session.getExchange('ex-next')).toBeDefined();
     });
 
     it('should dispatch asyncInputStream events and create stream helper', () => {
