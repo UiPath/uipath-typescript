@@ -81,19 +81,26 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
   });
 
   describe('getByName', () => {
-    it('should retrieve an asset by name using folderKey', async () => {
+    let existing!: AssetGetResponse;
+
+    beforeAll(async () => {
       const { assets } = getServices();
       const config = getTestConfig();
 
-      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
-
-      // Pick an existing asset in the folder so we have a real name to look up
+      // One real asset in the folder gives every lookup below a name to resolve
       const allAssets = await assets.getAll({
         folderId: config.folderId ? Number(config.folderId) : undefined,
         pageSize: 1,
       });
       expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
-      const existing = allAssets.items[0];
+      existing = allAssets.items[0];
+    });
+
+    it('should retrieve an asset by name using folderKey', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
 
       const result = await assets.getByName(existing.name, { folderKey: config.folderKey });
 
@@ -109,13 +116,6 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
 
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
 
-      const allAssets = await assets.getAll({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
-        pageSize: 1,
-      });
-      expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
-      const existing = allAssets.items[0];
-
       const result = await assets.getByName(existing.name, { folderPath: config.folderPath });
 
       expect(result).toBeDefined();
@@ -128,13 +128,6 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
       const config = getTestConfig();
 
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
-
-      const allAssets = await assets.getAll({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
-        pageSize: 1,
-      });
-      expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
-      const existing = allAssets.items[0];
 
       const result = await assets.getByName(resource.asset({ name: existing.name, folderPath: config.folderPath }));
 
@@ -149,13 +142,7 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
 
       expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
 
-      const allAssets = await assets.getAll({
-        folderId: config.folderId ? Number(config.folderId) : undefined,
-        pageSize: 1,
-      });
-      expect(allAssets.items.length, 'No assets available to validate transform').toBeGreaterThan(0);
-
-      const result = await assets.getByName(allAssets.items[0].name, { folderKey: config.folderKey });
+      const result = await assets.getByName(existing.name, { folderKey: config.folderKey });
 
       // Transformed camelCase fields should be present
       expect(result.createdTime).toBeDefined();

@@ -102,16 +102,26 @@ describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, ()
   });
 
   describe('getByName', () => {
-    it('should retrieve a specific queue by name with methods attached', async () => {
+    let folderId!: number;
+    let reference!: QueueGetWithMethodsResponse;
+
+    beforeAll(async () => {
       const { queues } = getServices();
       const config = getTestConfig();
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
+      const configuredFolderId = config.folderId ? Number(config.folderId) : undefined;
+      if (configuredFolderId === undefined) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured');
+      }
+      folderId = configuredFolderId;
 
-      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
-
+      // One real queue in the folder gives both lookups below a name to resolve
       const allQueues = await queues.getAll({ folderId, pageSize: 1 });
       expect(allQueues.items.length, 'No queues available to test getByName').toBeGreaterThan(0);
-      const reference = allQueues.items[0];
+      reference = allQueues.items[0];
+    });
+
+    it('should retrieve a specific queue by name with methods attached', async () => {
+      const { queues } = getServices();
 
       const result = await queues.getByName(reference.name, { folderId });
 
@@ -125,14 +135,7 @@ describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, ()
     it('should retrieve a queue by a resources.ts handle with methods attached', async () => {
       const { queues } = getServices();
       const config = getTestConfig();
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
-
-      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
       expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
-
-      const allQueues = await queues.getAll({ folderId, pageSize: 1 });
-      expect(allQueues.items.length, 'No queues available to test getByName').toBeGreaterThan(0);
-      const reference = allQueues.items[0];
 
       const result = await queues.getByName(resource.queue({ name: reference.name, folderPath: config.folderPath }));
 

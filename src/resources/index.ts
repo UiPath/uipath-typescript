@@ -97,7 +97,7 @@ export interface BucketResource<T extends BucketType = BucketType> extends Folde
 }
 
 /** Declaration accepted by {@link resource.queue}. */
-export type QueueDeclaration = FolderScopedDeclaration;
+export interface QueueDeclaration extends FolderScopedDeclaration {}
 
 /** Handle returned by {@link resource.queue}; accepted by `queues.getByName()`. */
 export interface QueueResource extends FolderScopedResource<'queue'> {}
