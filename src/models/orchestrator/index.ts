@@ -8,6 +8,8 @@ export * from './functions.types';
 export * from './functions.models';
 export * from './folders.types';
 export * from './folders.models';
+export * from './logs.types';
+export * from './logs.models';
 export * from './jobs.types';
 export * from './jobs.models';
 export * from './processes.types';

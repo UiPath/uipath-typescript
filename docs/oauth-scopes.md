@@ -260,6 +260,12 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `getAttachments()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `linkAttachment()` | `OR.Jobs` or `OR.Jobs.Write` |
 
+## Logs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `submit()` | `OR.Monitoring` or `OR.Monitoring.Write` |
+
 ## Maestro Case Instances
 
 | Method | OAuth Scope |
