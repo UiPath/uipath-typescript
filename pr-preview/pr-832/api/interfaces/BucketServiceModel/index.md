@@ -205,7 +205,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`BucketGetResponse`>
 
-Promise resolving to a single storage bucket [BucketGetResponse](../BucketGetResponse/)
+Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
 
 ##### Example
 

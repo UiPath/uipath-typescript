@@ -620,7 +620,7 @@ Retrieves entity metadata for an entity declared in `resources.ts`.
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
 
 ##### Example
 

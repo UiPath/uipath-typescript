@@ -169,7 +169,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`AssetGetResponse`>
 
-Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
 
 ##### Example
 

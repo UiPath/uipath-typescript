@@ -944,7 +944,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`AssetGetResponse`>
 
-Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
+Promise resolving to a single [AssetGetResponse](../AssetGetResponse/)
 
 ##### Example
 
@@ -1489,7 +1489,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`ProcessGetResponse`>
 
-Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
 
 ##### Example
 
@@ -1839,7 +1839,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
-Promise resolving to a single queue [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
 
 ##### Example
 
@@ -2153,7 +2153,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`BucketGetResponse`>
 
-Promise resolving to a single storage bucket [BucketGetResponse](../BucketGetResponse/)
+Promise resolving to a single [BucketGetResponse](../BucketGetResponse/)
 
 ##### Example
 
@@ -3980,7 +3980,7 @@ Retrieves entity metadata for an entity declared in `resources.ts`.
 
 `Promise`\<`EntityGetResponse`>
 
-Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+Promise resolving to the [EntityGetResponse](../../type-aliases/EntityGetResponse/) entity metadata with operation methods
 
 ##### Example
 

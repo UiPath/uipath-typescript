@@ -289,7 +289,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`QueueGetWithMethodsResponse`>
 
-Promise resolving to a single queue [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
+Promise resolving to a single [QueueGetWithMethodsResponse](../../type-aliases/QueueGetWithMethodsResponse/)
 
 ##### Example
 

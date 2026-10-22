@@ -145,7 +145,7 @@ The handle's `folderPath` scopes the lookup. A folder option passed explicitly (
 
 `Promise`\<`ProcessGetResponse`>
 
-Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
+Promise resolving to a single [ProcessGetResponse](../ProcessGetResponse/)
 
 ##### Example
 
