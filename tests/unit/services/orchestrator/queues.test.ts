@@ -778,6 +778,49 @@ describe('QueueService Unit Tests', () => {
       }
     });
   });
+  describe('bound methods on a queue fetched by id', () => {
+    const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+
+    beforeEach(() => {
+      // An override for this queue's design-time name must not move a queue the caller already holds.
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`queue.${QUEUE_TEST_CONSTANTS.QUEUE_NAME}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+      mockApiClient.get.mockResolvedValue(createMockRawQueue());
+    });
+
+    afterEach(() => {
+      delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+    });
+
+    it('insertItem targets the fetched queue, not the override target', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+      const queue = await queueService.getById(QUEUE_TEST_CONSTANTS.QUEUE_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      await queue.insertItem(QUEUE_TEST_CONSTANTS.ITEM_SPECIFIC_CONTENT);
+
+      const [, body, opts] = mockApiClient.post.mock.calls[0];
+      expect(body.itemData.Name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(opts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+      expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('startTransaction targets the fetched queue, not the override target', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem({ Status: 'InProgress' }));
+      const queue = await queueService.getById(QUEUE_TEST_CONSTANTS.QUEUE_ID, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      await queue.startTransaction();
+
+      const [, body, opts] = mockApiClient.post.mock.calls[0];
+      expect(body.transactionData.Name).toBe(QUEUE_TEST_CONSTANTS.QUEUE_NAME);
+      expect(opts?.headers?.[FOLDER_ID]).toBe(TEST_CONSTANTS.FOLDER_ID.toString());
+      expect(opts?.headers?.[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+  });
+
   describe('getByName', () => {
     it('should look up the queue by exact name and attach methods', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawQueue()] });

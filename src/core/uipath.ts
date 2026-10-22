@@ -102,6 +102,8 @@ export class UiPath implements IUiPath {
   // `<meta name="uipath:debug-source">`, present only on pages Studio Web stages for a
   // debug run; without it a `?jobKey=` on a production app must not become a debug header.
   #metaDebugSource?: string;
+  // Set before initialize() configured the instance; applied once the execution context exists.
+  #pendingDebugContext?: DebugContext | null;
   // Folder key off a coded function's `ctx.platform`; its own field because
   // #loadConfig rewrites the meta one from a re-read. Beats the meta tag, as
   // constructor input beats meta tags everywhere else — except as Integration
@@ -207,6 +209,11 @@ export class UiPath implements IUiPath {
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
       sessionLicense,
     });
+
+    if (this.#pendingDebugContext !== undefined) {
+      executionContext.set(DEBUG_CONTEXT_KEY, this.#pendingDebugContext ?? undefined);
+      this.#pendingDebugContext = undefined;
+    }
 
     // Expose read-only config for user convenience
     (this as any).config = {
@@ -460,6 +467,10 @@ export class UiPath implements IUiPath {
   }
 
   public setDebugContext(context: DebugContext | null): void {
+    if (!this.#config) {
+      this.#pendingDebugContext = context;
+      return;
+    }
     SDKInternalsRegistry.get(this).context.set(DEBUG_CONTEXT_KEY, context ?? undefined);
   }
 
@@ -470,9 +481,12 @@ export class UiPath implements IUiPath {
 
   #applyDebugContextFromPage(): void {
     if (!this.#metaDebugSource || !isBrowser) return;
+    // A context the app set itself (its host's job key) wins over the page's query parameter.
+    const context = SDKInternalsRegistry.get(this).context;
+    if (context.get(DEBUG_CONTEXT_KEY) !== undefined) return;
     const jobKey = new URLSearchParams(window.location.search).get(DEBUG_JOB_KEY_QUERY_PARAM);
     if (jobKey && GUID_REGEX.test(jobKey)) {
-      this.setDebugContext({ jobKey });
+      context.set(DEBUG_CONTEXT_KEY, { jobKey });
     }
   }
 }

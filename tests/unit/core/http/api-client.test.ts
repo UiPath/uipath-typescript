@@ -5,6 +5,8 @@ import { ServerError } from '../../../../src/core/errors/server';
 import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
+import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
+import { JOB_KEY } from '../../../../src/utils/constants/headers';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -37,10 +39,10 @@ beforeEach(() => {
   });
 });
 
-function createClient(clientConfig = {}) {
+function createClient(clientConfig = {}, context: Pick<ExecutionContext, 'get'> = mockExecutionContext) {
   return new ApiClient(
     mockConfig as any,
-    mockExecutionContext as any,
+    context as any,
     mockTokenManager as any,
     clientConfig,
   );
@@ -98,47 +100,38 @@ describe('ApiClient traceparent', () => {
 });
 
 describe('ApiClient debug context', () => {
-  function createClientWithContext(context: ExecutionContext) {
-    return new ApiClient(
-      mockConfig as any,
-      context,
-      mockTokenManager as any,
-      {},
-    );
-  }
-
   it('injects X-UIPATH-JobKey while a debug context is set', async () => {
     const context = new ExecutionContext();
-    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
 
-    await createClientWithContext(context).get('/test');
+    await createClient({}, context).get('/test');
 
-    expect(capturedHeaders['X-UIPATH-JobKey']).toBe('debug-job-key-1');
+    expect(capturedHeaders[JOB_KEY]).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
   });
 
   it('omits X-UIPATH-JobKey when no debug context is set', async () => {
-    await createClientWithContext(new ExecutionContext()).get('/test');
+    await createClient({}, new ExecutionContext()).get('/test');
 
-    expect(capturedHeaders['X-UIPATH-JobKey']).toBeUndefined();
+    expect(capturedHeaders[JOB_KEY]).toBeUndefined();
   });
 
   it('omits X-UIPATH-JobKey after the debug context is cleared', async () => {
     const context = new ExecutionContext();
-    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
     context.set(DEBUG_CONTEXT_KEY, undefined);
 
-    await createClientWithContext(context).get('/test');
+    await createClient({}, context).get('/test');
 
-    expect(capturedHeaders['X-UIPATH-JobKey']).toBeUndefined();
+    expect(capturedHeaders[JOB_KEY]).toBeUndefined();
   });
 
   it('lets per-request options.headers override the debug job key', async () => {
     const context = new ExecutionContext();
-    context.set(DEBUG_CONTEXT_KEY, { jobKey: 'debug-job-key-1' });
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
 
-    await createClientWithContext(context).get('/test', { headers: { 'X-UIPATH-JobKey': 'explicit-key' } });
+    await createClient({}, context).get('/test', { headers: { [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY_2 } });
 
-    expect(capturedHeaders['X-UIPATH-JobKey']).toBe('explicit-key');
+    expect(capturedHeaders[JOB_KEY]).toBe(JOB_TEST_CONSTANTS.JOB_KEY_2);
   });
 });
 

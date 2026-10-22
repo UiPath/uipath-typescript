@@ -631,6 +631,47 @@ describe('UiPath Core', () => {
 
       expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
+
+    it('keeps a debug context the app set before initialize() ahead of the jobKey on the page', async () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+    });
+
+    it('applies a debug context set before the configuration is complete', async () => {
+      // The base fields arrive through meta tags that initialize() re-reads, not the constructor.
+      mockLoadFromMetaTags.mockReturnValueOnce(null).mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+      });
+      const sdk = new UiPath({ clientId: TEST_CONSTANTS.CLIENT_ID, redirectUri: TEST_CONSTANTS.REDIRECT_URI, scope: 'offline_access' });
+      expect(() => getContext(sdk)).toThrow();
+
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('drops a pending debug context cleared with null before initialize()', async () => {
+      mockLoadFromMetaTags.mockReturnValueOnce(null).mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+      });
+      const sdk = new UiPath({ clientId: TEST_CONSTANTS.CLIENT_ID, redirectUri: TEST_CONSTANTS.REDIRECT_URI, scope: 'offline_access' });
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      sdk.setDebugContext(null);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
   });
 
   describe('Session license', () => {

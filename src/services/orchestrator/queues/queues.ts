@@ -18,6 +18,7 @@ import {
   QueueTransactionOutcome
 } from '../../../models/orchestrator/queues.types';
 import {
+  QueueBoundOperations,
   QueueServiceModel,
   QueueGetWithMethodsResponse,
   createQueueWithMethods
@@ -73,6 +74,15 @@ function transformQueueItem(queueItem: Record<string, unknown>): QueueItem {
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
+  // Bound queue objects call these so they hit exactly the queue they describe: name overrides
+  // apply to lookups, not to a queue the caller already resolved.
+  private readonly boundOperations: QueueBoundOperations = {
+    insertItem: ({ name, folderId }, specificData, options = {}) =>
+      this.addItem(name, createHeaders({ [FOLDER_ID]: folderId }), specificData, options),
+    startTransaction: ({ name, folderId }) =>
+      this.acquireItem(name, createHeaders({ [FOLDER_ID]: folderId }))
+  };
+
   @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
@@ -96,7 +106,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       transformFn: (queue: Record<string, unknown>) =>
         createQueueWithMethods(
           transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap),
-          this
+          this,
+          this.boundOperations
         ),
       pagination: {
         paginationType: PaginationType.OFFSET,
@@ -157,7 +168,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     );
 
     const rawQueue = transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
-    return createQueueWithMethods(rawQueue, this);
+    return createQueueWithMethods(rawQueue, this, this.boundOperations);
   }
 
   @track('Queues.GetByName')
@@ -169,7 +180,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       options,
       (raw) => createQueueWithMethods(
         transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
-        this
+        this,
+        this.boundOperations
       ),
       QueueMap,
     );
@@ -185,7 +197,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       options,
       (raw) => createQueueWithMethods(
         transformData(pascalToCamelCaseKeys(raw) as QueueGetResponse, QueueMap),
-        this
+        this,
+        this.boundOperations
       ),
       QueueMap,
     );
@@ -266,11 +279,20 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       fallbackFolderKey: this.config.folderKey
     });
 
+    return this.addItem(resolvedName, headers, specificData, options);
+  }
+
+  private async addItem(
+    queueName: string,
+    headers: Record<string, string>,
+    specificData: Record<string, QueueItemValue>,
+    options: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'>
+  ): Promise<QueueItem> {
     const response = await this.post<Record<string, unknown>>(
       QUEUE_ENDPOINTS.ADD_ITEM,
       {
         itemData: {
-          Name: resolvedName,
+          Name: queueName,
           Priority: options.priority ?? QueuePriority.Normal,
           Reference: options.reference,
           Progress: options.progress,
@@ -316,6 +338,10 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       queueName = await this.resolveQueueName(queue.id!, headers);
     }
 
+    return this.acquireItem(queueName, headers);
+  }
+
+  private async acquireItem(queueName: string, headers: Record<string, string>): Promise<QueueItem | null> {
     // A coded function's token alone gets 204 every time. Orchestrator only
     // hands out the item when told which robot is asking, so send its key.
     const response = await this.post<Record<string, unknown> | undefined>(

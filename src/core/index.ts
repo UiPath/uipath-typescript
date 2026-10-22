@@ -55,6 +55,7 @@ export type {
   CodedFunctionRobot,
 } from './config/function-context';
 export type { TokenInfo, LogoutOptions } from './auth/types';
+export type { DebugContext } from '../models/common/types';
 export * from './errors';
 
 // Pagination (common across all services)

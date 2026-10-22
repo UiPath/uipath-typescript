@@ -71,12 +71,15 @@ export interface IUiPath {
 
   /**
    * Sets the debug context applied to all subsequent API requests made through this instance,
-   * or clears it with `null`. While set, requests carry the parent job key so the platform routes
-   * runs they trigger as debug sub-jobs of that session — use it when the app is hosted inside a
-   * platform debug run (for example, a coded action app opened from a debug task in Action Center).
-   * Apps opened from a Studio Web debug session receive the job key automatically and need no call.
+   * or clears it with `null`. While set, requests carry the parent job key: Orchestrator records it
+   * as the parent of the jobs the app starts and, when that parent is a debug run, routes them as
+   * debug sub-jobs of that session. Use it when the app is hosted by a platform job (for example, a
+   * coded action app opened from a task in Action Center). A task's `jobKey` is the job that created
+   * it, debug or not, so passing it along is safe either way. Apps opened from a Studio Web debug
+   * session receive the job key automatically and need no call. Calling this before `initialize()`
+   * is fine; the context is applied once the SDK is configured.
    *
-   * @param context - The debug context ({@link DebugContext}) with the parent job key, or `null` to clear it
+   * @param context - The debug context with the parent job key, or `null` to clear it
    *
    * @example
    * ```typescript

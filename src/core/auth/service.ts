@@ -463,8 +463,8 @@ export class AuthService {
   }
 
   private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {
-    const context = store.read<OAuthContext>(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
-    if (!context?.codeVerifier) {
+    const context = AuthService.getStoredOAuthContext();
+    if (!context) {
       throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
     }
 
