@@ -298,7 +298,6 @@ Coded functions are invoked through their HTTP endpoint, which requires the [`OR
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
-| `explore()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
 
