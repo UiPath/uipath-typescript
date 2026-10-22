@@ -394,6 +394,7 @@ export interface CasesServiceModel {
   /**
    * Run an explore query over case and element runs.
    *
+   * @internal
    * @experimental
    *
    * /// warning
