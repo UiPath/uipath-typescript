@@ -107,7 +107,7 @@ UIPATH_TENANT_ID=<tenant-UUID>
 
 Note
 
-`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [FunctionContext — platform](../api/function-context/#platform).
+`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [Handler context, platform](../api/function-context/#platform).
 
 ## 3. Pack
 

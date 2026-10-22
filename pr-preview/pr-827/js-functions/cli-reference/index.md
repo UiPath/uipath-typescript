@@ -163,6 +163,8 @@ Auto-syncs the `functions` map in `uipath.json`, generates `entry-points.json`, 
 
 The remote layout mirrors the local project root; Studio Web system files (`project.uiproj`, `.project/`, `.settings/`) are never touched, and neither is anything under `.uipath/` apart from `studio_metadata.json`.
 
+A push leaves the datasets that Studio Web's Evaluations panel keeps under `evals/` in place when the project has no `evals/` folder. When the project has an `evals/` folder, even an empty one, the push replaces them with that folder's contents.
+
 Each push also updates `.uipath/studio_metadata.json`, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.
 
 ______________________________________________________________________

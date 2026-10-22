@@ -3871,7 +3871,7 @@
 <tr>
 <td><a id="descending"></a> <code>descending?</code></td>
 <td><code>boolean</code></td>
-<td>-</td>
+<td>Defaults to <code>true</code> server-side.</td>
 </tr>
 <tr>
 <td><a id="elementid"></a> <code>elementId?</code></td>
@@ -3886,17 +3886,17 @@
 <tr>
 <td><a id="from"></a> <code>from?</code></td>
 <td><code>Date</code></td>
-<td>Only decisions created at or after this time.</td>
+<td>Only decisions updated at or after this time.</td>
 </tr>
 <tr>
 <td><a id="hasoverrides"></a> <code>hasOverrides?</code></td>
 <td><code>boolean</code></td>
-<td>Filter to decisions whose fields were edited by the actor.</td>
+<td><code>true</code>: only decisions where the actor rejected or rewrote a proposal. <code>false</code>: only decisions where every proposal was accepted or lightly edited.</td>
 </tr>
 <tr>
 <td><a id="includespans"></a> <code>includeSpans?</code></td>
 <td><code>boolean</code></td>
-<td>Include the OTEL span on each item.</td>
+<td>Include the OTEL span on each item. Defaults to <code>true</code> server-side.</td>
 </tr>
 <tr>
 <td><a id="instanceid"></a> <code>instanceId?</code></td>
@@ -3919,6 +3919,11 @@
 <td>-</td>
 </tr>
 <tr>
+<td><a id="processname"></a> <code>processName?</code></td>
+<td><code>string</code></td>
+<td>Exact process name, case-insensitive.</td>
+</tr>
+<tr>
 <td><a id="processversion"></a> <code>processVersion?</code></td>
 <td><code>string</code></td>
 <td>-</td>
@@ -3930,18 +3935,18 @@
 </tr>
 <tr>
 <td><a id="sortby"></a> <code>sortBy?</code></td>
-<td><code>0</code> | <code>1</code></td>
-<td>Server-side sort key; the API doesn't document what <code>0</code>/<code>1</code> sort by.</td>
+<td><a href="../../type-aliases/DecisionSortField/"><code>DecisionSortField</code></a></td>
+<td>Defaults to <code>UpdatedAt</code> server-side.</td>
 </tr>
 <tr>
 <td><a id="take"></a> <code>take?</code></td>
 <td><code>number</code></td>
-<td>Page size. Defaults to <code>50</code> server-side.</td>
+<td>Page size, 1 to 200. Defaults to <code>50</code> server-side.</td>
 </tr>
 <tr>
 <td><a id="to"></a> <code>to?</code></td>
 <td><code>Date</code></td>
-<td>Only decisions created at or before this time.</td>
+<td>Only decisions updated at or before this time.</td>
 </tr>
 <tr>
 <td><a id="traceid"></a> <code>traceId?</code></td>

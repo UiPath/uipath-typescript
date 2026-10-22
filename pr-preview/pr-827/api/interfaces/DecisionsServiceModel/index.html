@@ -4007,7 +4007,7 @@
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
 <h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>create</strong>(<code>traceId</code>: <code>string</code>, <code>decisions</code>: <a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a>[], <code>options</code>: <a href="../DecisionCreateOptions/"><code>DecisionCreateOptions</code></a>): <code>Promise</code>&lt;<a href="../DecisionIngestAck/"><code>DecisionIngestAck</code></a>[]&gt;</p>
+<p><strong>create</strong>(<code>traceId</code>: <code>string</code>, <code>decisions</code>: <a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a>[], <code>folderKey</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../DecisionIngestAck/"><code>DecisionIngestAck</code></a>[]&gt;</p>
 </blockquote>
 <p>Writes one or more decisions to a trace; rewriting an existing <code>decisionId</code> upserts it.</p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -4028,8 +4028,8 @@
 <td><a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a>[]</td>
 </tr>
 <tr>
-<td><code>options</code></td>
-<td><a href="../DecisionCreateOptions/"><code>DecisionCreateOptions</code></a></td>
+<td><code>folderKey</code></td>
+<td><code>string</code></td>
 </tr>
 </tbody>
 </table>

@@ -4360,6 +4360,7 @@
 </table>
 <p>Auto-syncs the <code>functions</code> map in <code>uipath.json</code>, generates <code>entry-points.json</code>, diffs local files against remote by hash, and uploads only what changed. Create the project in Studio Web first to get the project ID.</p>
 <p>The remote layout mirrors the local project root; Studio Web system files (<code>project.uiproj</code>, <code>.project/</code>, <code>.settings/</code>) are never touched, and neither is anything under <code>.uipath/</code> apart from <code>studio_metadata.json</code>.</p>
+<p>A push leaves the datasets that Studio Web's Evaluations panel keeps under <code>evals/</code> in place when the project has no <code>evals/</code> folder. When the project has an <code>evals/</code> folder, even an empty one, the push replaces them with that folder's contents.</p>
 <p>Each push also updates <code>.uipath/studio_metadata.json</code>, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.</p>
 <hr />
 <h2 id="setup-hidden"><code>setup</code> <em>(hidden)</em><a class="headerlink" href="#setup-hidden" title="Permanent link">&para;</a></h2>

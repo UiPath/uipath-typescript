@@ -76,11 +76,11 @@ uip functions push    ←  syncs to Studio Web project
 
 ## Packages
 
-| Package                               | Purpose                                                                      |
-| ------------------------------------- | ---------------------------------------------------------------------------- |
-| `@uipath/coded-functions-js-sdk`      | `defineFunction`, `FunctionError`, `FunctionContext` types, response helpers |
-| `@uipath/functions-tool`              | Functions plugin for the `uip` CLI — `uip functions <cmd>`                   |
-| `@uipath/coded-functions-js-packager` | Shared packager (used internally by the CLI)                                 |
+| Package                               | Purpose                                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@uipath/coded-functions-js-sdk`      | `defineFunction`, `FunctionError`, `HttpContext` and `JobContext` types, response helpers |
+| `@uipath/functions-tool`              | Functions plugin for the `uip` CLI — `uip functions <cmd>`                                |
+| `@uipath/coded-functions-js-packager` | Shared packager (used internally by the CLI)                                              |
 
 ## JS Functions vs Python Functions
 
@@ -214,7 +214,7 @@ UIPATH_TENANT_ID=<tenant-UUID>
 
 Note
 
-`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [FunctionContext — platform](../api/function-context/#platform).
+`.env` is loaded only by `serve` (and `debug`). `uip functions run` takes its platform coordinates from the runtime-context file the host writes, not from the environment — see [Handler context, platform](../api/function-context/#platform).
 
 ## 3. Pack
 
@@ -266,9 +266,9 @@ uip functions publish
 
 # Platform Context
 
-Every function handler receives a [`FunctionContext`](../api/function-context/) as its second argument. This page explains what the platform injects and what you must forward yourself.
+An HTTP function's handler receives an [`HttpContext`](../api/function-context/) as its second argument; a job-only function's handler receives a [`JobContext`](../api/function-context/#jobcontext), which has every field below except `params` and `headers`. This page explains what the platform injects and what you must forward yourself.
 
-## FunctionContext at a glance
+## The context at a glance
 
 ```
 handler: async (input, ctx) => {
@@ -341,7 +341,7 @@ handler: async (input, ctx) => {
 }
 ```
 
-Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [FunctionContext — platform](../api/function-context/#platform) for the full contract.
+Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. `ctx.platform` is `null` unless `baseUrl`, `orgId`, and `tenantId` are all available; `folderKey` alone can be `null` (folderless invocation). See [Handler context, platform](../api/function-context/#platform) for the full contract.
 
 **Local dev fallback** — no handler runs locally, so `serve` reads these environment variables instead. They are consulted only when the request carries no `X-UiPath-*` platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.
 
@@ -489,11 +489,16 @@ interface GetAssetInput {
   folderId: number;
 }
 
+interface GetAssetOutput {
+  value: unknown;
+}
+
 export default defineFunction({
   name: "get-asset-secret-vault",
   method: "POST",
   path: "/get-asset-secret-vault",
   input: defineSchema<GetAssetInput>(),
+  output: defineSchema<GetAssetOutput>(),
   handler: async (inp, ctx) => {
     const workloadToken =
       ctx.robot?.accessToken ||             // populated by platform when deployed
@@ -625,11 +630,16 @@ interface GetAssetInput {
   folderId: number;
 }
 
+interface GetAssetOutput {
+  value: unknown;
+}
+
 export default defineFunction({
   name: "get-asset-delegated",
   method: "POST",
   path: "/get-asset-delegated",
   input: defineSchema<GetAssetInput>(),
+  output: defineSchema<GetAssetOutput>(),
   handler: async (inp, ctx) => {
     if (!ctx.user?.accessToken) {
       throw new FunctionError(
@@ -705,11 +715,16 @@ interface StartJobInput {
   folderId: number;
 }
 
+interface StartJobOutput {
+  jobId: number | null;
+}
+
 export default defineFunction({
   name: "start-job",
   method: "POST",
   path: "/start-job",
   input: defineSchema<StartJobInput>(),
+  output: defineSchema<StartJobOutput>(),
   handler: async (inp, ctx) => {
     if (!ctx.user?.accessToken) {
       throw new FunctionError("User access token not available", 403);
@@ -1313,6 +1328,8 @@ Auto-syncs the `functions` map in `uipath.json`, generates `entry-points.json`, 
 
 The remote layout mirrors the local project root; Studio Web system files (`project.uiproj`, `.project/`, `.settings/`) are never touched, and neither is anything under `.uipath/` apart from `studio_metadata.json`.
 
+A push leaves the datasets that Studio Web's Evaluations panel keeps under `evals/` in place when the project has no `evals/` folder. When the project has an `evals/` folder, even an empty one, the push replaces them with that folder's contents.
+
 Each push also updates `.uipath/studio_metadata.json`, which Studio Web uses to detect the push (offering a Reload in an open editor) and to display the version and last-pushed-by author in the Properties panel. The version increments automatically on every push that carries a change; a push with no changes reports "Already up to date." and leaves it alone.
 
 ______________________________________________________________________
@@ -1354,13 +1371,14 @@ All commands that contact the UiPath platform read credentials from environment 
 
 The `@uipath/coded-functions-js-sdk` package exports:
 
-| Export                                                      | Description                                                                             |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [`defineFunction`](define-function/)                        | Declare a function — name, method, path, contract, handler                              |
-| [`defineSchema<T>()`](define-function/#declaring-contracts) | Declare a contract as a TypeScript type — lowered to a JSON Schema at build time        |
-| [`FunctionError`](function-error/)                          | Throw to return a specific HTTP status from a handler                                   |
-| [`FunctionContext`](function-context/)                      | Type for the second handler argument — caller identity, robot identity, params, headers |
-| [Response helpers](response-helpers/)                       | `ok()`, `created()`, `notFound()`, `badRequest()`, etc.                                 |
+| Export                                                      | Description                                                                                           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [`defineFunction`](define-function/)                        | Declare a function — name, method, path, contract, handler                                            |
+| [`defineSchema<T>()`](define-function/#declaring-contracts) | Declare a contract as a TypeScript type — lowered to a JSON Schema at build time                      |
+| [`FunctionError`](function-error/)                          | Throw to return a specific HTTP status from a handler                                                 |
+| [`HttpContext`](function-context/)                          | Type for an HTTP function's second handler argument: caller identity, robot identity, params, headers |
+| [`JobContext`](function-context/#jobcontext)                | Type for a job-only function's second handler argument: caller identity, robot identity               |
+| [Response helpers](response-helpers/)                       | `ok()`, `created()`, `notFound()`, `badRequest()`, etc.                                               |
 
 The canonical "hello" sample used by every scaffolding surface (`uip functions new`, Studio Web) lives in the extractor package, next to the document builders that derive its deployment documents:
 
@@ -1399,40 +1417,58 @@ import { defineFunction } from "@uipath/coded-functions-js-sdk";
 
 ```
 function defineFunction<I extends ContractSchema, O extends ContractSchema>(
-  options: DefineFunctionOptions<I, O>
+  options: HttpFunctionOptions<I, O>
+): FunctionDefinition
+
+function defineFunction<I extends ContractSchema, O extends ContractSchema>(
+  options: JobFunctionOptions<I, O>
 ): FunctionDefinition
 ```
 
-## DefineFunctionOptions
+A helper that wraps `defineFunction` types its options as `HttpFunctionOptions` or `JobFunctionOptions` and calls `defineFunction` with that type.
 
-| Property      | Type                                              | Required | Description                                                                                                      |
-| ------------- | ------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
-| `name`        | `string`                                          | yes      | Logical name, used in the manifest and Studio                                                                    |
-| `method`      | `"GET" \| "POST" \| "PUT" \| "PATCH" \| "DELETE"` | no\*     | HTTP method. Omit (together with `path`) for a job-only function                                                 |
-| `path`        | `string`                                          | no\*     | URL path, must start with `/`. Supports `:param` segments. Omit (together with `method`) for a job-only function |
-| `input`       | [`ContractSchema`](#declaring-contracts)          | no       | Request contract — validates and types input                                                                     |
-| `output`      | [`ContractSchema`](#declaring-contracts)          | no       | Response contract — types the return value                                                                       |
-| `handler`     | `(input, ctx) => result \| Promise<result>`       | yes      | Business logic                                                                                                   |
-| `description` | `string`                                          | no       | Human-readable description, shown in Studio                                                                      |
-| `tags`        | `string[]`                                        | no       | Tags for grouping in Studio                                                                                      |
+## Options
 
-*\* `method` and `path` must be provided* *together* *or* *both omitted*\*. Providing one without the other throws.\*
+| Property      | Type                                              | Required    | Description                                                                           |
+| ------------- | ------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
+| `name`        | `string`                                          | yes         | Logical name, used in the manifest and Studio                                         |
+| `method`      | `"GET" \| "POST" \| "PUT" \| "PATCH" \| "DELETE"` | HTTP only\* | HTTP method                                                                           |
+| `path`        | `string`                                          | HTTP only\* | URL path, must start with `/`. Supports `:param` segments                             |
+| `input`       | [`ContractSchema`](#declaring-contracts)          | no          | Request contract — validates and types input                                          |
+| `output`      | [`ContractSchema`](#declaring-contracts)          | no          | Response contract: types the return value. Omit it for a handler that returns nothing |
+| `handler`     | `(input, ctx) => result \| Promise<result>`       | yes         | Business logic                                                                        |
+| `description` | `string`                                          | no          | Human-readable description, shown in Studio                                           |
+| `tags`        | `string[]`                                        | no          | Tags for grouping in Studio                                                           |
+
+*\* An HTTP function declares `method` and `path` together; a job-only function declares neither.*
 
 ## HTTP vs. job-only functions
 
 Every function **runs as a job** — callable from a Trigger, a Maestro process, a Flow, or the Orchestrator API — regardless of whether it declares HTTP semantics.
 
 - **Declare `method` + `path`** to *additionally* expose the function as an HTTP endpoint. This is what local `serve` routes to, and the use case for **Coded Apps** backends and API-style integrations.
-- **Omit both** for a **job-only** function. It stays in the manifest and is fully invokable as a job, but gets no HTTP route. When run as a job there is no HTTP request, so `ctx.params` and `ctx.headers` are empty.
+- **Omit both** for a **job-only** function. It stays in the manifest and is fully invokable as a job, but gets no HTTP route. Its handler receives a [`JobContext`](../function-context/#jobcontext) and returns the declared output.
 
 ## handler
 
+An HTTP function's handler:
+
 ```
-handler: async (input: HandlerInput<I>, ctx: FunctionContext) =>
-  | T                  // plain value — serialized as JSON with status 200
-  | FunctionResponse   // { status, body?, headers? } — full control
-  | void               // empty 200 response
+handler: async (input: HandlerInput<I>, ctx: HttpContext) =>
+  | T                                                      // the declared output, serialized as JSON with status 200
+  | FunctionResponse<T>                                    // { status, body?, headers? } carrying the declared output
+  | FunctionResponse<{ error: string; details?: unknown }> // an error body, e.g. badRequest(...)
 ```
+
+`T` is the declared output. Without an `output`, `T` is `void`: the handler returns nothing, `noContent()`, or an error response.
+
+A job-only function's handler returns the declared output, or nothing when it declares no `output`. To fail the job, throw a [`FunctionError`](../function-error/).
+
+```
+handler: async (input: HandlerInput<I>, ctx: JobContext) => T
+```
+
+The runtime fails a job-only function's job with `OutputValidationFailed` when the handler returns a `Response`, or an object with a numeric `status` that no declared `output` accepts.
 
 The handler's `input` parameter is typed from the declared contract: for `defineSchema<T>()` it is `T`; for a JSON Schema literal it is the type derived from the literal. If `output` is declared, `T` must match it the same way.
 
@@ -1451,11 +1487,16 @@ interface CreateOrderInput {
   note?: string;
 }
 
+interface CreateOrderOutput {
+  ok: boolean;
+}
+
 export default defineFunction({
   name: "create-order",
   method: "POST",
   path: "/orders",
   input: defineSchema<CreateOrderInput>(),
+  output: defineSchema<CreateOrderOutput>(),
   handler: async (input) => ({ ok: true }), // input is CreateOrderInput
 });
 ```
@@ -1488,6 +1529,12 @@ export default defineFunction({
       note: { type: "string" },
     },
     required: ["customerId", "items"],
+    additionalProperties: false,
+  },
+  output: {
+    type: "object",
+    properties: { ok: { type: "boolean" } },
+    required: ["ok"],
     additionalProperties: false,
   },
   handler: async (input) => ({ ok: true }), // input type is derived from the literal
@@ -1652,9 +1699,8 @@ export default defineFunction({
   input: defineSchema<ProcessInvoiceInput>(),
   output: defineSchema<ProcessInvoiceOutput>(),
   handler: async (input, ctx) => {
-    // Called as a job — ctx.params/ctx.headers are empty and there is no caller identity
-    // (ctx.user?.accessToken is undefined); use ctx.robot?.accessToken, which the platform
-    // provides for a deployed job.
+    // Called as a job: there is no caller identity (ctx.user?.accessToken is undefined);
+    // use ctx.robot?.accessToken, which the platform provides for a deployed job.
     return { status: "processed" };
   },
 });
@@ -1663,10 +1709,15 @@ export default defineFunction({
 ### GET with path parameter
 
 ```
+interface Invoice {
+  id: string;
+}
+
 export default defineFunction({
   name: "get-invoice",
   method: "GET",
   path: "/invoices/:id",
+  output: defineSchema<Invoice>(),
   handler: async (input, ctx) => {
     return { id: ctx.params.id };
   },
@@ -1815,24 +1866,32 @@ throw new FunctionError("Not found", 404);   // ✅ correct
 throw new FunctionError(404, "Not found");   // ❌ compiles, misbehaves at runtime
 ```
 
-# FunctionContext
+# Handler context
 
-The second argument to every handler. Carries caller identity, the function's own platform identity, path parameters, and request headers.
+The second argument to every handler. An HTTP function's handler receives an `HttpContext`: caller identity, the function's own platform identity, path parameters, and request headers. A job-only function's handler receives a [`JobContext`](#jobcontext). `FunctionContext` is a deprecated alias of `HttpContext`.
 
 ```
-import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+import type { HttpContext } from "@uipath/coded-functions-js-sdk";
 ```
 
 ## Interface
 
 ```
-interface FunctionContext {
+interface HttpContext {
   user: IdentityContext | null;
   robot: RobotContext | null;
   platform: PlatformContext | null;
   params: Record<string, string>;
   headers: Record<string, string>;
 }
+```
+
+## JobContext
+
+A job-only function's handler receives a `JobContext`: `user`, `robot` and `platform`, without `params` and `headers`.
+
+```
+import type { JobContext } from "@uipath/coded-functions-js-sdk";
 ```
 
 ## user
@@ -1957,19 +2016,19 @@ const auth = ctx.headers["authorization"];   // "Bearer eyJ..."
 const type = ctx.headers["content-type"];
 ```
 
-## Importing FunctionContext for helper functions
+## Typing helper functions
 
-`FunctionContext` is exported from the SDK. Import it explicitly when you split handler logic into typed helper functions:
+Import the context type when you split handler logic into typed helper functions. Type the helper's `ctx` as `JobContext` when it reads only `user`, `robot` or `platform`, so HTTP and job-only handlers can both pass their context to it. Use `HttpContext` when it reads `params` or `headers`.
 
 ```
-import type { FunctionContext } from "@uipath/coded-functions-js-sdk";
+import type { JobContext } from "@uipath/coded-functions-js-sdk";
 
 interface MyInput {
   id: string;
 }
 
 // The same interface declares the contract (input: defineSchema<MyInput>()) and types the helper.
-async function processItem(input: MyInput, ctx: FunctionContext) {
+async function processItem(input: MyInput, ctx: JobContext) {
   const userId = ctx.user?.sub ?? "anonymous";
   // ...
 }
@@ -1980,10 +2039,16 @@ Without the explicit import, the only alternative is `ctx: any`, which loses all
 ## Usage example
 
 ```
+interface ExampleOutput {
+  userId: string;
+  resourceId: string;
+}
+
 export default defineFunction({
   name: "example",
   method: "POST",
   path: "/example/:id",
+  output: defineSchema<ExampleOutput>(),
   handler: async (input, ctx) => {
     // Identity
     const userId = ctx.user?.sub ?? "anonymous";
@@ -2039,7 +2104,7 @@ return created({ id: "new-resource-id" });
 ### `accepted(body?)`
 
 ```
-accepted<T>(body?: T): FunctionResponse<T | undefined>
+accepted<T = never>(body?: T): FunctionResponse<T>
 ```
 
 Returns `{ status: 202, body }`. Use for long-running operations where the result is not yet available.
@@ -2047,7 +2112,7 @@ Returns `{ status: 202, body }`. Use for long-running operations where the resul
 ### `noContent()`
 
 ```
-noContent(): FunctionResponse<undefined>
+noContent(): FunctionResponse<never>
 ```
 
 Returns `{ status: 204 }`. No body.
@@ -2058,7 +2123,7 @@ These return a `FunctionResponse` — they do **not** throw. Use them when you w
 
 For errors that must halt execution (e.g. auth failures, validation errors that prevent the handler from continuing), throw [`FunctionError`](../function-error/) instead.
 
-> **Run-as-job behavior:** when the function runs as a UiPath job (no HTTP caller), returning any response with status ≥ 400 reports the job as **Faulted**, with the message surfaced in Orchestrator's job error info (`{ error }` maps to the error title, `details` to its detail). On the HTTP path the response body is returned to the caller verbatim, exactly as written.
+> **Run-as-job behavior:** when an HTTP function runs as a UiPath job (no HTTP caller), returning any response with status ≥ 400 reports the job as **Faulted**, with the message surfaced in Orchestrator's job error info (`{ error }` maps to the error title, `details` to its detail). On the HTTP path the response body is returned to the caller verbatim, exactly as written.
 
 ### `badRequest(message?, details?)`
 
@@ -2114,7 +2179,7 @@ Returns `{ status: 409, body: { error } }`.
 ### `response(status, body?, headers?)`
 
 ```
-response<T>(status: number, body?: T, headers?: Record<string, string>): FunctionResponse<T | undefined>
+response<T = never>(status: number, body?: T, headers?: Record<string, string>): FunctionResponse<T>
 ```
 
 Full control over status, body, and headers.

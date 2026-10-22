@@ -2882,10 +2882,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#functioncontext-at-a-glance" class="md-nav__link">
+  <a href="#the-context-at-a-glance" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FunctionContext at a glance
+        The context at a glance
       
     </span>
   </a>
@@ -3984,10 +3984,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#functioncontext-at-a-glance" class="md-nav__link">
+  <a href="#the-context-at-a-glance" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FunctionContext at a glance
+        The context at a glance
       
     </span>
   </a>
@@ -4126,8 +4126,8 @@
 
 
 <h1 id="platform-context">Platform Context<a class="headerlink" href="#platform-context" title="Permanent link">&para;</a></h1>
-<p>Every function handler receives a <a href="../api/function-context/"><code>FunctionContext</code></a> as its second argument. This page explains what the platform injects and what you must forward yourself.</p>
-<h2 id="functioncontext-at-a-glance">FunctionContext at a glance<a class="headerlink" href="#functioncontext-at-a-glance" title="Permanent link">&para;</a></h2>
+<p>An HTTP function's handler receives an <a href="../api/function-context/"><code>HttpContext</code></a> as its second argument; a job-only function's handler receives a <a href="../api/function-context/#jobcontext"><code>JobContext</code></a>, which has every field below except <code>params</code> and <code>headers</code>. This page explains what the platform injects and what you must forward yourself.</p>
+<h2 id="the-context-at-a-glance">The context at a glance<a class="headerlink" href="#the-context-at-a-glance" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">handler</span><span class="o">:</span><span class="w"> </span><span class="kt">async</span><span class="w"> </span><span class="p">(</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">accessToken</span><span class="w">         </span><span class="c1">// caller&#39;s OAuth token (forwarded from Authorization header)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">sub</span><span class="w">                 </span><span class="c1">// caller&#39;s user ID</span>
@@ -4197,7 +4197,7 @@
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">sdk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">UiPath</span><span class="p">({</span><span class="w"> </span><span class="nx">baseUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">orgName</span><span class="o">:</span><span class="w"> </span><span class="kt">orgId</span><span class="p">,</span><span class="w"> </span><span class="nx">tenantName</span><span class="o">:</span><span class="w"> </span><span class="kt">tenantId</span><span class="p">,</span><span class="w"> </span><span class="nx">secret</span><span class="o">:</span><span class="w"> </span><span class="kt">token</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
-<p>Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. <code>ctx.platform</code> is <code>null</code> unless <code>baseUrl</code>, <code>orgId</code>, and <code>tenantId</code> are all available; <code>folderKey</code> alone can be <code>null</code> (folderless invocation). See <a href="../api/function-context/#platform">FunctionContext — platform</a> for the full contract.</p>
+<p>Deployed, the values come from the execution handler — never from the caller — so they cannot be redirected by request input or client-set headers. <code>ctx.platform</code> is <code>null</code> unless <code>baseUrl</code>, <code>orgId</code>, and <code>tenantId</code> are all available; <code>folderKey</code> alone can be <code>null</code> (folderless invocation). See <a href="../api/function-context/#platform">Handler context, platform</a> for the full contract.</p>
 <p><strong>Local dev fallback</strong> — no handler runs locally, so <code>serve</code> reads these environment variables instead. They are consulted only when the request carries no <code>X-UiPath-*</code> platform headers at all: once any of them is present, the headers are the sole source, so the coordinates can never be stitched together out of a header and a local env value.</p>
 <p>The fallback belongs to the HTTP path only. <code>uip functions run</code> builds <code>ctx.platform</code> from the runtime-context file its host writes and never consults the environment, so a bare local <code>run</code> gets <code>ctx.platform: null</code> no matter what is exported.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>UIPATH_BASE_URL=https://cloud.uipath.com

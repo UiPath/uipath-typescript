@@ -3850,6 +3850,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#processkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processKey?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        processName?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#to" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3899,7 +3921,7 @@
   <h1>DecisionListOptions</h1>
 
 <blockquote>
-<p><strong>DecisionListOptions</strong> = <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; { <code>folderKey?</code>: <code>string</code>; <code>from?</code>: <code>Date</code>; <code>includeSpans?</code>: <code>boolean</code>; <code>to?</code>: <code>Date</code>; <code>traceId?</code>: <code>string</code>; }</p>
+<p><strong>DecisionListOptions</strong> = <a href="../PaginationOptions/"><code>PaginationOptions</code></a> &amp; { <code>folderKey?</code>: <code>string</code>; <code>from?</code>: <code>Date</code>; <code>includeSpans?</code>: <code>boolean</code>; <code>processKey?</code>: <code>string</code>; <code>processName?</code>: <code>string</code>; <code>to?</code>: <code>Date</code>; <code>traceId?</code>: <code>string</code>; }</p>
 </blockquote>
 <p>Options for <a href="../../interfaces/DecisionsServiceModel/#list">DecisionsServiceModel.list</a>.</p>
 <h2 id="type-declaration">Type Declaration<a class="headerlink" href="#type-declaration" title="Permanent link">&para;</a></h2>
@@ -3912,17 +3934,27 @@
 <blockquote>
 <p><code>optional</code> <strong>from</strong>: <code>Date</code></p>
 </blockquote>
-<p>Only decisions created at or after this time.</p>
+<p>Only decisions updated at or after this time.</p>
 <h3 id="includespans">includeSpans?<a class="headerlink" href="#includespans" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>includeSpans</strong>: <code>boolean</code></p>
 </blockquote>
 <p>Include the OTEL span on each item. Defaults to <code>false</code> server-side.</p>
+<h3 id="processkey">processKey?<a class="headerlink" href="#processkey" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>processKey</strong>: <code>string</code></p>
+</blockquote>
+<p>Filter to decisions recorded against this process key.</p>
+<h3 id="processname">processName?<a class="headerlink" href="#processname" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><code>optional</code> <strong>processName</strong>: <code>string</code></p>
+</blockquote>
+<p>Filter to decisions recorded against this process name.</p>
 <h3 id="to">to?<a class="headerlink" href="#to" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>to</strong>: <code>Date</code></p>
 </blockquote>
-<p>Only decisions created at or before this time.</p>
+<p>Only decisions updated at or before this time.</p>
 <h3 id="traceid">traceId?<a class="headerlink" href="#traceid" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>optional</code> <strong>traceId</strong>: <code>string</code></p>
