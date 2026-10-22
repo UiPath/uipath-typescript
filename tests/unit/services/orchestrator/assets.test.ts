@@ -254,6 +254,27 @@ describe('AssetService Unit Tests', () => {
   });
 
   describe('OData field rewrite in getById', () => {
+    it('should rewrite renamed SDK field names in select before calling the API', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawAsset());
+
+      await assetService.getById(
+        ASSET_TEST_CONSTANTS.ASSET_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { select: 'name,createdTime,lastModifiedTime' },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$select': 'name,creationTime,lastModificationTime',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('getByName', () => {
     it('should accept a resources.ts handle and scope the lookup by its folderPath', async () => {
       mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
 
@@ -311,27 +332,6 @@ describe('AssetService Unit Tests', () => {
       }
     });
 
-    it('should rewrite renamed SDK field names in select before calling the API', async () => {
-      mockApiClient.get.mockResolvedValue(createMockRawAsset());
-
-      await assetService.getById(
-        ASSET_TEST_CONSTANTS.ASSET_ID,
-        TEST_CONSTANTS.FOLDER_ID,
-        { select: 'name,createdTime,lastModifiedTime' },
-      );
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            '$select': 'name,creationTime,lastModificationTime',
-          }),
-        }),
-      );
-    });
-  });
-
-  describe('getByName', () => {
     it('should return a transformed asset when the OData response contains one item', async () => {
       const rawAsset = createMockRawAsset();
       mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
