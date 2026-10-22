@@ -6,6 +6,7 @@
 /**
  * Kind of a filter in a case explore query.
  *
+ * @internal
  * @experimental
  */
 export enum CaseExploreFilterKind {
@@ -18,6 +19,7 @@ export enum CaseExploreFilterKind {
 /**
  * Sort direction for a case explore query.
  *
+ * @internal
  * @experimental
  */
 export enum CaseExploreSortDirection {
@@ -28,6 +30,7 @@ export enum CaseExploreSortDirection {
 /**
  * Matches rows whose field equals one of `values`.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreValueFilter {
@@ -41,6 +44,7 @@ export interface CaseExploreValueFilter {
 /**
  * Matches rows whose field starts with `pattern`.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreSearchFilter {
@@ -54,6 +58,7 @@ export interface CaseExploreSearchFilter {
 /**
  * A filter in a case explore query.
  *
+ * @internal
  * @experimental
  */
 export type CaseExploreFilter = CaseExploreValueFilter | CaseExploreSearchFilter;
@@ -61,6 +66,7 @@ export type CaseExploreFilter = CaseExploreValueFilter | CaseExploreSearchFilter
 /**
  * Orders the result by a field.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreSort {
@@ -72,6 +78,7 @@ export interface CaseExploreSort {
 /**
  * A stored measure computed per group.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreAggregate {
@@ -88,6 +95,7 @@ export interface CaseExploreAggregate {
  * `ELEMENTRUNS` one row per stage or task status change, so filter `ISLATEST` to `'1'` to read
  * only the current state.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreQuery {
@@ -107,6 +115,7 @@ export interface CaseExploreQuery {
  * One row of a case explore result, keyed by field id or aggregate `id`.
  * A field the tenant's schema does not carry is absent.
  *
+ * @internal
  * @experimental
  */
 export interface CaseExploreResponse {
