@@ -18,11 +18,11 @@ import {
   QueueTransactionOutcome
 } from '../../../models/orchestrator/queues.types';
 import {
-  QueueBoundOperations,
   QueueServiceModel,
   QueueGetWithMethodsResponse,
   createQueueWithMethods
 } from '../../../models/orchestrator/queues.models';
+import type { QueueBoundOperations } from '../../../models/orchestrator/queues.internal-types';
 import {
   addPrefixToKeys,
   pascalToCamelCaseKeys,
@@ -77,10 +77,8 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   // Bound queue objects call these so they hit exactly the queue they describe: name overrides
   // apply to lookups, not to a queue the caller already resolved.
   private readonly boundOperations: QueueBoundOperations = {
-    insertItem: ({ name, folderId }, specificData, options = {}) =>
-      this.addItem(name, createHeaders({ [FOLDER_ID]: folderId }), specificData, options),
-    startTransaction: ({ name, folderId }) =>
-      this.acquireItem(name, createHeaders({ [FOLDER_ID]: folderId }))
+    insertItem: (queue, specificData, options) => this.insertBoundItem(queue, specificData, options),
+    startTransaction: (queue) => this.startBoundTransaction(queue)
   };
 
   @track('Queues.GetAll')
@@ -280,6 +278,21 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     });
 
     return this.addItem(resolvedName, headers, specificData, options);
+  }
+
+  // The bound path reports under the same events as the name-based methods it replaces.
+  @track('Queues.InsertItemByName')
+  private async insertBoundItem(
+    { name, folderId }: { name: string; folderId: number },
+    specificData: Record<string, QueueItemValue>,
+    options: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'> = {}
+  ): Promise<QueueItem> {
+    return this.addItem(name, createHeaders({ [FOLDER_ID]: folderId }), specificData, options);
+  }
+
+  @track('Queues.StartTransaction')
+  private async startBoundTransaction({ name, folderId }: { name: string; folderId: number }): Promise<QueueItem | null> {
+    return this.acquireItem(name, createHeaders({ [FOLDER_ID]: folderId }));
   }
 
   private async addItem(
