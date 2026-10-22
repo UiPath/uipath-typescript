@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
+import { resource } from '../../../../src/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -244,6 +245,26 @@ describeIntegration('Orchestrator Processes - Integration Tests', 'both', modes,
       const existing = allProcesses.items[0];
 
       const result = await processes.getByName(existing.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+    });
+
+    it('should retrieve a process by a resources.ts handle', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const allProcesses = await processes.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allProcesses.items.length, 'No processes available to test getByName').toBeGreaterThan(0);
+      const existing = allProcesses.items[0];
+
+      const result = await processes.getByName(resource.process({ name: existing.name, folderPath: config.folderPath }));
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existing.id);

@@ -66,6 +66,16 @@
                 "default": "./dist/assets/index.cjs"
             }
         },
+        "./resources": {
+            "import": {
+                "types": "./dist/resources/index.d.ts",
+                "default": "./dist/resources/index.mjs"
+            },
+            "require": {
+                "types": "./dist/resources/index.d.ts",
+                "default": "./dist/resources/index.cjs"
+            }
+        },
         "./jobs": {
             "import": {
                 "types": "./dist/jobs/index.d.ts",

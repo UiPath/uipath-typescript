@@ -1,5 +1,6 @@
 import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByKeyOptions, AssetGetByNameOptions, AssetNewValue, AssetRef, AssetUpdateValueByIdOptions, AssetUpdateValueOptions } from './assets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import type { AssetResource } from '../../resources';
 
 /**
  * Service for managing UiPath Assets.
@@ -90,6 +91,30 @@ export interface AssetServiceModel {
    * ```
    */
   getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
+
+  /**
+   * Retrieves a single asset declared in `resources.ts`.
+   *
+   * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
+   * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+   *
+   * @param asset - Handle created with `resource.asset()` from `@uipath/uipath-typescript/resources`
+   * @param options - Optional folder override and query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single {@link AssetGetResponse}
+   * @example
+   * ```typescript
+   * // resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly apiKey = resource.asset({ name: 'ApiKey', folderPath: 'Shared/Finance', type: 'text' });
+   * }
+   *
+   * // anywhere in the project
+   * await assets.getByName(ProjectResources.apiKey);
+   * ```
+   */
+  getByName(asset: AssetResource, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
 
   /**
    * Retrieves a single asset by key (GUID).

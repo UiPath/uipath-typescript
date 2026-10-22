@@ -3,6 +3,7 @@ import { getServices, getTestConfig, describeIntegration, InitMode } from '../..
 import { generateRandomString } from '../../utils/helpers';
 import { QueueItemReviewStatus, QueueItemStatus, QueuePriority, QueueTransactionOutcome } from '../../../../src/models/orchestrator/queues.types';
 import type { QueueGetWithMethodsResponse } from '../../../../src/models/orchestrator/queues.models';
+import { resource } from '../../../../src/resources';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -113,6 +114,27 @@ describeIntegration('Orchestrator Queues - Integration Tests', 'both', modes, ()
       const reference = allQueues.items[0];
 
       const result = await queues.getByName(reference.name, { folderId });
+
+      expect(result.id).toBe(reference.id);
+      expect(result.name).toBe(reference.name);
+      expect(result.key).toBe(reference.key);
+      expect(typeof result.getAllItems).toBe('function');
+      expect(typeof result.insertItem).toBe('function');
+    });
+
+    it('should retrieve a queue by a resources.ts handle with methods attached', async () => {
+      const { queues } = getServices();
+      const config = getTestConfig();
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const allQueues = await queues.getAll({ folderId, pageSize: 1 });
+      expect(allQueues.items.length, 'No queues available to test getByName').toBeGreaterThan(0);
+      const reference = allQueues.items[0];
+
+      const result = await queues.getByName(resource.queue({ name: reference.name, folderPath: config.folderPath }));
 
       expect(result.id).toBe(reference.id);
       expect(result.name).toBe(reference.name);

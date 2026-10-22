@@ -1,4 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
+import { ProcessResource, unpackFolderScopedHandle } from '../../../resources';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -203,13 +204,16 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     return transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
   }
 
+  getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+  getByName(process: ProcessResource, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
   @track('Processes.GetByName')
-  async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+  async getByName(nameOrHandle: string | ProcessResource, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+    const { name, options: effectiveOptions } = unpackFolderScopedHandle(nameOrHandle, options);
     const { result } = await this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
       'Process',
       PROCESS_ENDPOINTS.GET_ALL,
       name,
-      options,
+      effectiveOptions,
       (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
       ProcessMap,
     );

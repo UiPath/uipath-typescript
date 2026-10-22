@@ -1,6 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AssetService } from '../../../../src/services/orchestrator/assets';
+import { resource } from '../../../../src/resources';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import { 
@@ -253,6 +254,63 @@ describe('AssetService Unit Tests', () => {
   });
 
   describe('OData field rewrite in getById', () => {
+    it('should accept a resources.ts handle and scope the lookup by its folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+      await assetService.getByName(
+        resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE }),
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.params).toMatchObject({
+        '$filter': `Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME}'`,
+        '$top': '1',
+      });
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+    });
+
+    it('should let an explicit folder option take precedence over the handle folderPath', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+      await assetService.getByName(
+        resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH }),
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+      });
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should apply a runtime override when called with a handle', async () => {
+      const OVERRIDE_KEY = Symbol.for(OVERRIDE_TEST_CONSTANTS.CHANNEL_KEY);
+      (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY] = () => ({
+        [`asset.${ASSET_TEST_CONSTANTS.ASSET_NAME}.${ASSET_TEST_CONSTANTS.FOLDER_PATH}`]: {
+          name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME,
+          folderPath: OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH,
+        },
+      });
+
+      try {
+        mockApiClient.get.mockResolvedValue({ value: [createMockRawAsset()] });
+
+        await assetService.getByName(
+          resource.asset({ name: ASSET_TEST_CONSTANTS.ASSET_NAME, folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH }),
+        );
+
+        const [, requestSpec] = mockApiClient.get.mock.calls[0];
+        expect(requestSpec.params.$filter).toBe(`Name eq '${OVERRIDE_TEST_CONSTANTS.TARGET_NAME}'`);
+        expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBe(OVERRIDE_TEST_CONSTANTS.TARGET_FOLDER_PATH_ENCODED);
+      } finally {
+        delete (globalThis as Record<symbol, unknown>)[OVERRIDE_KEY];
+      }
+    });
+
     it('should rewrite renamed SDK field names in select before calling the API', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawAsset());
 

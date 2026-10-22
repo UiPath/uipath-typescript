@@ -1,3 +1,4 @@
+import type { QueueResource } from '../../resources';
 import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
@@ -137,6 +138,30 @@ export interface QueueServiceModel {
    * ```
    */
   getByName(name: string, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
+
+  /**
+   * Retrieves a single queue declared in `resources.ts`.
+   *
+   * The handle's `folderPath` scopes the lookup. A folder option passed explicitly
+   * (`folderId` / `folderKey` / `folderPath`) takes precedence over the handle.
+   *
+   * @param queue - Handle created with `resource.queue()` from `@uipath/uipath-typescript/resources`
+   * @param options - Optional folder override and query parameters
+   * @returns Promise resolving to a single {@link QueueGetWithMethodsResponse}
+   * @example
+   * ```typescript
+   * // resources.ts
+   * import { resource } from '@uipath/uipath-typescript/resources';
+   *
+   * export class ProjectResources {
+   *   static readonly queue = resource.queue({ name: 'InvoiceReview', folderPath: 'Finance/Shared' });
+   * }
+   *
+   * // anywhere in the project
+   * await queues.getByName(ProjectResources.queue);
+   * ```
+   */
+  getByName(queue: QueueResource, options?: QueueGetByNameOptions): Promise<QueueGetWithMethodsResponse>;
 
   /**
    * Gets a single queue by key (the queue's GUID identifier)

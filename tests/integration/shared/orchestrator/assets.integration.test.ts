@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, describeIntegration, InitMode } from '../../config/unified-setup';
 import { isNotFoundError } from '../../../../src/core/errors';
+import { resource } from '../../../../src/resources';
 import type { AssetGetResponse } from '../../../../src/models/orchestrator/assets.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -116,6 +117,26 @@ describeIntegration('Orchestrator Assets - Integration Tests', 'both', modes, ()
       const existing = allAssets.items[0];
 
       const result = await assets.getByName(existing.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+    });
+
+    it('should retrieve an asset by a resources.ts handle', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const allAssets = await assets.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
+      const existing = allAssets.items[0];
+
+      const result = await assets.getByName(resource.asset({ name: existing.name, folderPath: config.folderPath }));
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existing.id);
