@@ -3971,10 +3971,10 @@ Retrieves entity metadata for an entity declared in `resources.ts`.
 
 ##### Parameters
 
-| Parameter  | Type                     | Description                                                                        |
-| ---------- | ------------------------ | ---------------------------------------------------------------------------------- |
-| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources` |
-| `options?` | `EntityGetByNameOptions` | Optional lookup options such as `folderKey` for folder-scoped entities             |
+| Parameter  | Type                     | Description                                                                                                                            |
+| ---------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`   | `EntityResource`         | Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`                                                     |
+| `options?` | `EntityGetByNameOptions` | Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**. |
 
 ##### Returns
 
