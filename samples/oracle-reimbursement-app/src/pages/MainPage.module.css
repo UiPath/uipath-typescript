@@ -1,0 +1,191 @@
+/* Generated from MainPage. Values are exact; colours and fonts
+   resolve through the design tokens in src/styles/tokens.css. */
+
+.rootPanel {
+  align-items: stretch;
+  background-color: var(--uiapp-c-0b1220);
+  border-color: var(--uiapp-color-ink-400);
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--uiapp-font-roboto);
+  height: 100%;
+  justify-content: space-between;
+  margin: 0px 0px 0px 0px;
+  overflow-x: auto;
+  overflow-y: auto;
+  padding: 4px 4px 4px 4px;
+  width: 100%;
+}
+
+.containerViewer {
+  align-items: center;
+  align-self: stretch;
+  background-color: var(--uiapp-c-0b1220);
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  display: flex;
+  flex-basis: auto;
+  flex-direction: row;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  font-family: var(--uiapp-font-roboto);
+  height: 100%;
+  justify-content: flex-start;
+  margin: 0px 0px 0px 0px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 2px 2px 2px 2px;
+  width: 100%;
+}
+
+.containerValidationControl {
+  align-items: flex-start;
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  display: flex;
+  flex-basis: 1px;
+  flex-direction: column;
+  flex-grow: 1;
+  flex-shrink: 0;
+  font-family: var(--uiapp-font-roboto);
+  height: 98%;
+  justify-content: space-between;
+  margin: 0px 0% 0px 0%;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 0% 0% 0% 0%;
+}
+
+.validationControl {
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  color: var(--uiapp-c-333333);
+  display: flex;
+  font-family: var(--uiapp-font-roboto);
+  font-size: 14px;
+  height: 100%;
+  margin: 0px 0px 0px 0px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: auto;
+}
+
+.containerResizeButton {
+  align-items: center;
+  align-self: center;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  display: flex;
+  flex-basis: auto;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-family: var(--uiapp-font-roboto);
+  height: 98%;
+  justify-content: center;
+  margin: 0px 0px 0px 0px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 0px 0px 0px 0px;
+  width: 48px;
+}
+
+.customHTMLShowDetails {
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  color: var(--uiapp-c-333333);
+  display: inline-flex;
+  font-family: var(--uiapp-font-roboto);
+  font-size: 14px;
+  height: 100%;
+  justify-content: center;
+  margin: 4px 4px 4px 4px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: auto;
+}
+
+.containerMain {
+  align-items: stretch;
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  display: flex;
+  flex-basis: auto;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 0;
+  font-family: var(--uiapp-font-roboto);
+  height: 98%;
+  justify-content: space-between;
+  margin: 0px 0px 0px 0px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: 60%;
+}
+
+.customHTMLMain {
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  color: var(--uiapp-c-333333);
+  display: inline-flex;
+  font-family: var(--uiapp-font-roboto);
+  font-size: 14px;
+  height: 100%;
+  justify-content: center;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: auto;
+}
+
+.textMainActionTrigger {
+  color: var(--uiapp-c-333333);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--uiapp-font-roboto);
+  font-size: 14px;
+  gap: 8px;
+  margin: 4px 4px 4px 4px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 0px 0px 0px 0px;
+}
+
+.textMainActionTrigger :global(.ui-input) {
+  min-height: 0px;
+  min-width: 0px;
+  width: 256px;
+}
+
+.textMainActionTrigger :global(.ui-label) {
+  color: var(--uiapp-c-333333);
+  font-size: 14px;
+  width: 250px;
+}

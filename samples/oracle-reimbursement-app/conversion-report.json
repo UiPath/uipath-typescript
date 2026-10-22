@@ -1,0 +1,214 @@
+{
+  "app": "OracleReimbursement_App",
+  "generatedFrom": "SolutionOracle.uis#OracleReimbursement_Miles_App",
+  "runId": "SolutionOracle.uis-mvjllqcc",
+  "pages": 4,
+  "converted": {
+    "pages": 4,
+    "controls": 17,
+    "handlers": 6,
+    "validatedControls": 2,
+    "containersAggregated": 2,
+    "controlsByRole": {
+      "panel": 8,
+      "pageHeading": 2,
+      "image": 1,
+      "validationStation": 1,
+      "customHtml": 3,
+      "textInput": 2
+    },
+    "mediaAssets": 10
+  },
+  "expressions": {
+    "referenced": 367,
+    "converted": 250,
+    "exact": 250,
+    "lenient": 0,
+    "unbound": 0,
+    "noRule": 0
+  },
+  "summary": {
+    "converter": 0,
+    "source-app": 0,
+    "by-design": 13
+  },
+  "issues": [
+    {
+      "code": "layout-positions-ignored",
+      "blame": "by-design",
+      "where": "IntermediateLoadingPage",
+      "scope": "page",
+      "message": "1 control carry a designer x/y position, which is not used: controls flow in authored order, as the Apps runtime lays them out",
+      "action": "nothing to do"
+    },
+    {
+      "code": "layout-positions-ignored",
+      "blame": "by-design",
+      "where": "ItemSelectionPage",
+      "scope": "page",
+      "message": "2 controls carry a designer x/y position, which is not used: controls flow in authored order, as the Apps runtime lays them out",
+      "action": "nothing to do"
+    },
+    {
+      "code": "custom-html-verbatim",
+      "blame": "by-design",
+      "where": "ItemSelectionPage.CustomHTML",
+      "location": "code",
+      "scope": "control",
+      "message": "the Custom HTML control's code runs as authored, in a sandboxed frame with the App bridge (src/custom-html/ItemSelectionPage/CustomHTML.html, src/custom-html/ItemSelectionPage/CustomHTML.css, src/custom-html/ItemSelectionPage/CustomHTML.js); it can be rewritten as React",
+      "action": "nothing to do"
+    },
+    {
+      "code": "layout-positions-ignored",
+      "blame": "by-design",
+      "where": "LaunchPage",
+      "scope": "page",
+      "message": "2 controls carry a designer x/y position, which is not used: controls flow in authored order, as the Apps runtime lays them out",
+      "action": "nothing to do"
+    },
+    {
+      "code": "layout-positions-ignored",
+      "blame": "by-design",
+      "where": "MainPage",
+      "scope": "page",
+      "message": "5 controls carry a designer x/y position, which is not used: controls flow in authored order, as the Apps runtime lays them out",
+      "action": "nothing to do"
+    },
+    {
+      "code": "custom-html-verbatim",
+      "blame": "by-design",
+      "where": "MainPage.CustomHTML_Main",
+      "location": "code",
+      "scope": "control",
+      "message": "the Custom HTML control's code runs as authored, in a sandboxed frame with the App bridge (src/custom-html/MainPage/CustomHTML_Main.html, src/custom-html/MainPage/CustomHTML_Main.css, src/custom-html/MainPage/CustomHTML_Main.js); it can be rewritten as React",
+      "action": "nothing to do"
+    },
+    {
+      "code": "custom-html-verbatim",
+      "blame": "by-design",
+      "where": "MainPage.CustomHTML_ShowDetails",
+      "location": "code",
+      "scope": "control",
+      "message": "the Custom HTML control's code runs as authored, in a sandboxed frame with the App bridge (src/custom-html/MainPage/CustomHTML_ShowDetails.html, src/custom-html/MainPage/CustomHTML_ShowDetails.css, src/custom-html/MainPage/CustomHTML_ShowDetails.js); it can be rewritten as React",
+      "action": "nothing to do"
+    },
+    {
+      "code": "resource-not-bindable",
+      "blame": "by-design",
+      "where": "OracleReimbursement_App",
+      "location": "asset.Miles_Runtime",
+      "scope": "app",
+      "message": "the app calls asset \"Miles_Runtime\", which the Solution does not declare, so it has no binding and a deploy cannot remap it — it resolves by that name in the app's own folder",
+      "action": "nothing to do"
+    },
+    {
+      "code": "resource-not-bindable",
+      "blame": "by-design",
+      "where": "OracleReimbursement_App",
+      "location": "asset.Miles_UserList",
+      "scope": "app",
+      "message": "the app calls asset \"Miles_UserList\", which the Solution does not declare, so it has no binding and a deploy cannot remap it — it resolves by that name in the app's own folder",
+      "action": "nothing to do"
+    },
+    {
+      "code": "resource-not-bindable",
+      "blame": "by-design",
+      "where": "OracleReimbursement_App",
+      "location": "queue.FA0111_OraclePerformer",
+      "scope": "app",
+      "message": "the app calls queue \"FA0111_OraclePerformer\", which the Solution does not declare, so it has no binding and a deploy cannot remap it — it resolves by that name in the app's own folder",
+      "action": "nothing to do"
+    },
+    {
+      "code": "workflow-activity-unconverted",
+      "blame": "by-design",
+      "where": "WorkflowFiles/MainPage_Text_MainActionTrigger_change.xaml",
+      "location": "1",
+      "scope": "workflow",
+      "message": "x:Members: the workflow reads its In argument \"Req\", which an authored event does not supply — an InvokeWorkflowFile in another workflow can",
+      "action": "nothing to do",
+      "activity": "x:Members",
+      "handler": "MainPage_Text_MainActionTrigger_change",
+      "remedy": "Set \"Req\" inside the workflow, or pass it through an InvokeWorkflowFile from another workflow; an authored event supplies no arguments."
+    },
+    {
+      "code": "workflow-activity-unconverted",
+      "blame": "by-design",
+      "where": "WorkflowFiles/MainPage_Text_MainActionTrigger_change.xaml",
+      "location": "1",
+      "scope": "workflow",
+      "message": "x:Members: the workflow reads its In argument \"ReqAction\", which an authored event does not supply — an InvokeWorkflowFile in another workflow can",
+      "action": "nothing to do",
+      "activity": "x:Members",
+      "handler": "MainPage_Text_MainActionTrigger_change",
+      "remedy": "Set \"ReqAction\" inside the workflow, or pass it through an InvokeWorkflowFile from another workflow; an authored event supplies no arguments."
+    },
+    {
+      "code": "workflow-activity-unconverted",
+      "blame": "by-design",
+      "where": "WorkflowFiles/MainPage_Text_MainActionTrigger_change.xaml",
+      "location": "1",
+      "scope": "workflow",
+      "message": "x:Members: the workflow reads its In argument \"boolIsSaved\", which an authored event does not supply — an InvokeWorkflowFile in another workflow can",
+      "action": "nothing to do",
+      "activity": "x:Members",
+      "handler": "MainPage_Text_MainActionTrigger_change",
+      "remedy": "Set \"boolIsSaved\" inside the workflow, or pass it through an InvokeWorkflowFile from another workflow; an authored event supplies no arguments."
+    }
+  ],
+  "expressionRows": [],
+  "workflows": {
+    "total": 6,
+    "converted": 5,
+    "partial": 1,
+    "blocked": 0,
+    "byWorkflow": [
+      {
+        "workflow": "WorkflowFiles/IntermediateLoadingPage_IntermediateLoadingPage_load.xaml",
+        "handler": "IntermediateLoadingPage_IntermediateLoadingPage_load",
+        "status": "converted",
+        "gaps": 0
+      },
+      {
+        "workflow": "WorkflowFiles/ItemSelectionPage_ItemSelectionPage_load.xaml",
+        "handler": "ItemSelectionPage_ItemSelectionPage_load",
+        "status": "converted",
+        "gaps": 0
+      },
+      {
+        "workflow": "WorkflowFiles/ItemSelectionPage_Text_ActionTrigger_change.xaml",
+        "handler": "ItemSelectionPage_Text_ActionTrigger_change",
+        "status": "converted",
+        "gaps": 0
+      },
+      {
+        "workflow": "WorkflowFiles/LaunchPage_LaunchPage_load.xaml",
+        "handler": "LaunchPage_LaunchPage_load",
+        "status": "converted",
+        "gaps": 0
+      },
+      {
+        "workflow": "WorkflowFiles/MainPage_MainPage_load.xaml",
+        "handler": "MainPage_MainPage_load",
+        "status": "converted",
+        "gaps": 0
+      },
+      {
+        "workflow": "WorkflowFiles/MainPage_Text_MainActionTrigger_change.xaml",
+        "handler": "MainPage_Text_MainActionTrigger_change",
+        "status": "partial",
+        "gaps": 3
+      }
+    ]
+  },
+  "causes": {
+    "expressions": [],
+    "workflows": [
+      {
+        "cause": "x:Members: the workflow reads its In argument \"X\", which an authored event does not supply — an Invok",
+        "count": 3,
+        "example": "WorkflowFiles/MainPage_Text_MainActionTrigger_change.xaml @1"
+      }
+    ]
+  }
+}

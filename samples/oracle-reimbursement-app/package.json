@@ -1,0 +1,41 @@
+{
+  "name": "id81f4127466034bf1bc56119d75a71b21",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "stage-du-wc": "node scripts/stage-du-wc.mjs",
+    "predev": "npm run stage-du-wc",
+    "prebuild": "npm run stage-du-wc",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans": "5.2.5",
+    "@fontsource/roboto": "5.2.5",
+    "@reduxjs/toolkit": "2.5.0",
+    "@uipath/apollo-wind": "2.32.1",
+    "@uipath/uipath-typescript": "1.7.2",
+    "dompurify": "3.2.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-redux": "9.2.0",
+    "react-router-dom": "7.1.1",
+    "@uipath/ui-widgets-validation-station": "1.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
+    "@uipath/coded-apps-dev": "1.0.0-beta.1",
+    "@uipath/du-validation-station-wc": "1.11.0",
+    "@vitejs/plugin-react": "5.1.1",
+    "typescript": "5.9.3",
+    "vite": "7.3.1"
+  },
+  "overrides": {
+    "@uipath/du-utils": "1.1.4",
+    "@uipath/du-validation-station-wc": "1.11.0"
+  }
+}

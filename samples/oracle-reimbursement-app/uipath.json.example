@@ -1,0 +1,8 @@
+{
+  "clientId": "<external-application-clientId>",
+  "scope": "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write OR.Execution OR.Jobs OR.Folders OR.Administration OR.Buckets OR.Tasks OR.Queues OR.Assets PM.User.Read PM.Group.Read",
+  "orgName": "<your-org>",
+  "tenantName": "<your-tenant>",
+  "baseUrl": "https://cloud.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}

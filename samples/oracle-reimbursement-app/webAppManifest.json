@@ -1,0 +1,9 @@
+{
+  "type": "Coded",
+  "solutionResourceSubType": "Coded",
+  "config": {
+    "isCompiled": true,
+    "isActionApp": false,
+    "bundlePath": "dist"
+  }
+}

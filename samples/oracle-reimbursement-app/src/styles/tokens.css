@@ -1,0 +1,1071 @@
+/** Design tokens. */
+:root {
+  --uiapp-color-ink-400: #A4B1B8;
+  --uiapp-c-333333: #333333;
+  --uiapp-font-roboto: Roboto, var(--font-sans), sans-serif;
+  --uiapp-font-noto-sans: Noto Sans, var(--font-sans), sans-serif;
+  --uiapp-c-0b1220: #0b1220;
+  --uiapp-c-f4f6f8: #f4f6f8;
+  --uiapp-font-helvetica: Helvetica, var(--font-sans), sans-serif;
+  --uiapp-color-white: #ffffff;
+}
+
+/** Structural styling for controls that are more than one element. */
+.ui-tabs-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/**
+ * An image control is a FRAME plus an image, matching Apps: the authored size
+ * lands on the frame and the image fills it.
+ */
+[data-e2e="forms-host-image-control"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ui-img { width: 100%; height: 100%; }
+
+/*
+ * A disabled icon control — greyed and inert, the way Apps shows one. Scoped with
+ * :has() to elements that directly wrap a material-icons glyph, so only icon controls
+ * are dimmed (an icon BUTTON keeps its own disabled styling from Apollo).
+ */
+[data-disabled]:has(> .material-icons) {
+  opacity: 0.38;
+  cursor: default;
+  pointer-events: none;
+}
+
+/*
+ * The table's HOST stacks its parts. Its authored `display: flex` has no direction, so
+ * the parts sat in a row and anything after the grid landed beside it, past the clipped
+ * edge. `min-width: 0` on the region lets the region shrink to its box, so the wrap
+ * scrolls sideways instead of the host clipping the columns (measured on a real app: no
+ * scrollbar, columns cut off at the right edge).
+ */
+[data-e2e="forms-host-table-control"] { flex-direction: column; }
+.ui-table-region { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.ui-table-region[data-loading] { min-height: 160px; }
+.ui-table-wrap { width: 100%; overflow-x: auto; }
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: inherit;
+  text-align: left;
+}
+
+.ui-table-header {
+  background: transparent;
+  color: rgb(0 0 0 / 0.6);
+  font-size: 12px;
+  font-weight: 500;
+}
+.ui-table-header th {
+  height: 56px;
+  /* Apps' simple-table.component.scss: `padding: 5px` on header and body cells alike. */
+  padding: 0 5px;
+  border-bottom: 1px solid var(--uiapp-table-divider, rgb(0 0 0 / 0.12));
+  white-space: nowrap;
+}
+.ui-table-body { background: transparent; }
+.ui-table-body td {
+  height: 48px;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--uiapp-table-divider, rgb(0 0 0 / 0.12));
+}
+
+.ui-table-body tr { cursor: pointer; }
+.ui-table-empty-row td { text-align: center; height: 48px; cursor: default; }
+/*
+ * A table is a TABLE: rows and cells keep their table display whatever class they also
+ * carry, so the header and the body always share one set of column widths. A shared
+ * row class once laid the body out as flex strips under a real header row.
+ */
+.ui-table thead tr, .ui-table tbody tr { display: table-row; }
+.ui-table th, .ui-table td { display: table-cell; }
+.ui-table-row-selected { background-color: rgba(0, 0, 0, 0.16); }
+@media (prefers-color-scheme: dark) { .ui-table-row-selected { background-color: rgba(255, 255, 255, 0.16); } }
+
+.ui-table-body tr:hover { background: rgb(0 0 0 / 0.04); }
+/*
+ * The loading indicator is CENTRED OVER the grid, the way Apps (and the edit grid)
+ * shows it — not a line of text wedged in beside the first column. It overlays the
+ * table region, so the header stays put and a translucent scrim sits over the rows
+ * while they load.
+ */
+.ui-table-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-style: italic;
+  color: rgb(0 0 0 / 0.6);
+  background: rgb(255 255 255 / 0.55);
+}
+.ui-table-spinner, .ui-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgb(0 0 0 / 0.15);
+  border-top-color: rgb(0 0 0 / 0.55);
+  animation: ui-spin 0.8s linear infinite;
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+
+/*
+ * The sort glyph is HIDDEN until the header is hovered — Apps only shows it on hover —
+ * and stays solid on the column that is actually sorted.
+ */
+.ui-th-sortable { cursor: pointer; user-select: none; }
+.ui-th-sortable:hover { color: var(--uiapp-table-header-hover, rgb(0 0 0 / 0.87)); }
+.ui-sort {
+  margin-left: 6px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+.ui-th-sortable:hover .ui-sort { opacity: 0.5; }
+.ui-sort[data-active] { opacity: 0.9; }
+
+.ui-rows { display: flex; flex-direction: column; }
+/*
+ * A row is as WIDE AS ITS TEMPLATE, never narrower than the list: Apps sizes each row to
+ * its content and scrolls the list sideways when the template is wider (a 1150px order
+ * row in an 880px list). As a block the row was the list's width and the template
+ * clipped its own overflow, so the last fields were cut off.
+ */
+.ui-row { display: flex; width: max-content; min-width: 100%; }
+/* Apps' empty-list placeholder: italic, muted, centred in whatever space the list has. */
+.ui-list-empty { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; font-style: italic; color: rgb(0 0 0 / 0.6); min-height: 48px; }
+/*
+ * The FIELD FRAME, as Apps draws it (measured on the runtime): a 1px #526069 border with a
+ * 3px radius on a 32px-tall field. Apollo's defaults are a paler 1px #cfd8dd, 6px radius,
+ * 36px, which read as a different design next to the low-code app. Scoped to field hosts.
+ */
+[data-e2e^="forms-host-"] input:not([type="radio"]):not([type="checkbox"]),
+[data-e2e^="forms-host-"] textarea,
+[data-e2e^="forms-host-"] button[role="combobox"],
+[data-e2e^="forms-host-"] .ui-multiselect,
+[data-e2e^="forms-host-"] .ui-date-trigger {
+  border-color: var(--uiapp-field-border, #526069);
+  border-radius: 3px;
+}
+/*
+ * The dropdown and multi-select TRIGGERS, wherever their host sits: Apollo's Select and
+ * MultiSelect draw their own trigger (a button with the combobox role) and do not take
+ * the class the emitter passes, so the frame above never reached them — a paler 6px-
+ * cornered 36px box stood beside 3px-cornered 32px text fields. The multi-select grows
+ * with its chips, so a minimum rather than a fixed height.
+ */
+[data-uiapp-name] button[role="combobox"] {
+  border-color: var(--uiapp-field-border, #526069);
+  border-radius: 3px;
+  min-height: 32px;
+  height: auto;
+  /* Apps' ng-select text is regular weight (measured 400 on two apps); Apollo's MultiSelect trigger is medium. */
+  font-weight: 400;
+}
+/*
+ * Low specificity on purpose (:where): an AUTHORED height, emitted as
+ * `.control :global(.ui-input)`, must win over this default — and Apollo's own
+ * `h-9` loses only because this sheet loads after it.
+ */
+[data-e2e^="forms-host-"] :where(input:not([type="radio"]):not([type="checkbox"]),
+  button[role="combobox"], .ui-date-trigger) { height: 32px; flex: 0 1 auto; }
+
+/*
+ * The FIELD of a labelled control carries the authored size — Apps sets it on the
+ * mat-form-field, never on the host (see FIELD_SIZED_ROLES). With nothing authored the
+ * field keeps its intrinsic width, so a long caption never widens it, and a
+ * percentage shrinks it to the room left beside the caption. Apollo's `w-full` would
+ * otherwise size the field to a wrapper that was itself sized by the field.
+ */
+.ui-input { flex: 0 1 auto; min-width: 0; }
+/*
+ * Everything but the field itself stays inside `:where()`, so each selector is one
+ * class deep: the page's `.control :global(.ui-input) { width }` — the authored or
+ * default size — must win, and it is two classes deep. A wrapper class outside the
+ * `:where()` made the selector two deep as well, and this sheet loads last, so every
+ * field went back to `width: auto`: a 256px dropdown was its chevron again.
+ */
+:where([data-uiapp-name]) > .ui-input,
+:where([data-uiapp-name] > .ui-field) > .ui-input,
+:where([data-uiapp-name] > .ui-field-group) > .ui-input,
+:where([data-uiapp-name] > .ui-field-group > .ui-field) > .ui-input { width: auto; }
+
+/*
+ * The field and its validation message sit side by side in one group beside the caption,
+ * as Apps lays them out: control-label, then `.control-direction { flex-direction: row;
+ * flex-grow: 1 }` holding the mat-form-field and, after it, the error-label with
+ * `margin-top: $pad-l` (8px). The message used to be a sibling of the field in the host's
+ * row at `width: 100%`: it claimed the row and the field, which may shrink, gave way (a
+ * 256px dropdown dropped to 110px the moment it showed "Required field"). Here the field
+ * keeps its width and the message takes the room left beside it.
+ */
+.ui-field-group { display: flex; flex-direction: row; align-items: flex-start; flex: 1 1 auto; min-width: 0; }
+.ui-field-group > .ui-error { width: auto; flex: 1 1 auto; min-width: 0; margin: 8px 0 0 8px; }
+.ui-select-trigger { min-width: 180px; }
+
+/* A label's text block — see UiLabel. */
+.ui-label-text { display: block; width: 100%; }
+
+/*
+ * An input's caption keeps its (authored or default 250px) width instead of shrinking
+ * to make room for the field — Apps' .forms-host-control-label-container is flex-shrink 0
+ * and wraps long words (overflow-wrap: anywhere).
+ */
+:where([data-uiapp-name]) > .ui-label { flex-shrink: 0; overflow-wrap: anywhere; }
+/*
+ * Apps' caption container (control-label.component.scss): `display: flex; align-items:
+ * flex-start; padding-top: $pad-l` (8px). Beside a 32px field that sets the caption's
+ * text 3px below the field's centre; without it the caption sat at the top of the row,
+ * 7px higher than Apps (measured). Not the inline caption of a checkbox or switch, which
+ * Apps draws with Material's own label.
+ */
+:where([data-uiapp-name]:not([data-inline-field])) > .ui-label {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
+}
+
+/* A text field's prefix (`numberControlPrefix`), inside the field's row, before the value. */
+.ui-field { display: inline-flex; align-items: center; flex: 0 1 auto; min-width: 0; }
+.ui-field > input { flex: 0 1 auto; min-width: 0; }
+.ui-prefix { white-space: nowrap; margin-right: 4px; }
+
+/* A slider prints its min and max at the two ends of the track, as Apps does. */
+.ui-slider { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.ui-slider > :not(.ui-slider-bound) { flex: 1 1 auto; min-width: 0; }
+.ui-slider-bound { font-size: 12px; white-space: nowrap; }
+
+/*
+ * A control that could not render (see Guarded in ui-base), and a widget without its
+ * UiPath connection: visible, labelled, and out of the way of the rest of the page.
+ */
+.ui-control-failed, [data-unavailable] {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px dashed var(--uiapp-error-color, #b00020);
+  border-radius: 3px;
+  color: var(--uiapp-error-color, #b00020);
+  font-size: 12px;
+}
+[data-unavailable] { border-color: var(--uiapp-field-border, #526069); color: inherit; opacity: .8; }
+
+/*
+ * SELECTION. A flat translucent overlay, as Apps paints it (selection-color-light /
+ * -dark in ui-path-theme.scss), which is why it works over any authored row background.
+ */
+/*
+ * `user-select: none` because the row IS the click target.
+ *
+ * Without it a click that drags a pixel, or a second click, selects the row's TEXT
+ * instead of the row — the browser wins the gesture and the `onClick` that publishes
+ * `SelectedItem` never runs. Measured on a one-item list: single clicks left
+ * `aria-selected="false"` and a rule reading `List.SelectedItem` got `undefined`, so a
+ * remove-selected-item button silently removed nothing. The control looked broken and
+ * was not. A deliberate double-click on the glyph was the only reliable way to select,
+ * which is a fair description of unusable.
+ *
+ * The sortable table header a few rules above already does this, for the same reason.
+ * Selecting the text of something whose only purpose is to be clicked is never what
+ * anyone wanted.
+ */
+.ui-row, .ui-list-item { cursor: pointer; user-select: none; }
+.ui-row-selected, .ui-list-item-selected { background-color: rgba(0, 0, 0, 0.16); }
+@media (prefers-color-scheme: dark) {
+  .ui-row-selected, .ui-list-item-selected { background-color: rgba(255, 255, 255, 0.16); }
+}
+
+.ui-document { width: 100%; height: 100%; min-height: 240px; border: 0; }
+/*
+ * The painted-PDF surface and its toolbar.
+ *
+ * The plugin's own chrome goes with the plugin, so the dark bar, the page counter and the
+ * zoom controls are ours. Empty until the effect fills it, so an app with no document
+ * takes no space.
+ */
+/*
+ * The viewer owns a COLUMN of its own. The authored control box can be laid out in a
+ * row, and then the toolbar and the pages sat side by side with the pages squeezed to
+ * nothing — a dark empty panel with a toolbar down its edge.
+ *
+ * Colours and proportions follow the browser's own PDF viewer, which is what the
+ * low-code original shows: a #323639 bar, a #525659 page surface, pages with a shadow.
+ */
+.ui-document-view {
+  display: flex; flex-direction: column; flex: 1 1 auto;
+  width: 100%; height: 100%; min-width: 0; min-height: 0;
+}
+.ui-document-pages { width: 100%; overflow: auto; background: #525659; }
+.ui-document-pages[data-mode="drawn"] { flex: 1 1 auto; min-height: 240px; padding: 8px 0; }
+.ui-document-pages:empty { background: none; padding: 0; }
+.ui-document-page { display: block; margin: 0 auto 8px; box-shadow: 0 2px 8px rgba(0,0,0,.5); background: #fff; }
+.ui-document-image { object-fit: contain; height: auto; min-height: 0; max-height: 100%; }
+.ui-document-text { margin: 0; padding: 8px; overflow: auto; white-space: pre-wrap; font: 13px/1.4 ui-monospace, Menlo, monospace; background: #fff; }
+.ui-document-bar {
+  display: flex; align-items: center; gap: 2px; flex: 0 0 auto;
+  height: 48px; padding: 0 12px; box-sizing: border-box;
+  background: #323639; color: #f1f1f1;
+  font: 13px/1 Roboto, "Segoe UI", system-ui, sans-serif; user-select: none;
+  box-shadow: 0 -2px 8px rgba(0,0,0,.3) inset;
+}
+.ui-document-bar button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; margin: 0 2px; padding: 0;
+  background: none; border: 0; border-radius: 50%; color: inherit; cursor: pointer;
+}
+.ui-document-bar button:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+.ui-document-bar button:active:not(:disabled) { background: rgba(255,255,255,.2); }
+.ui-document-bar button:disabled { opacity: .35; cursor: default; }
+
+/*
+ * Validation Station. Disabled, Apps shows the whole station faded with its fields read-only;
+ * the web component handles read-only itself and the host carries the fade.
+ */
+.ui-validation-station[data-disabled] { opacity: .6; }
+.ui-validation-station-waiting, .ui-validation-station-error { padding: 16px; color: var(--ui-text-muted, #6b6b6b); }
+.ui-document-pagebox {
+  width: 34px; height: 24px; padding: 0 4px; margin-right: 4px; box-sizing: border-box;
+  background: #191b1c; color: #f1f1f1; border: 0; border-radius: 2px;
+  font: inherit; text-align: center; outline: none;
+}
+.ui-document-pagebox:focus { box-shadow: 0 0 0 2px #8ab4f8; }
+.ui-document-count { padding: 0 2px; white-space: nowrap; }
+.ui-document-zoom { min-width: 44px; text-align: center; }
+.ui-document-spring { flex: 1 1 auto; }
+.ui-document-sep { width: 1px; height: 20px; margin: 0 10px; background: rgba(255,255,255,.3); }
+
+.ui-file-download {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: var(--uiapp-file-download-width, 250px);
+  max-width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+.ui-file-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.ui-file-icon { display: inline-flex; align-items: center; flex: 0 0 auto; }
+
+.ui-file-download.ui-empty {
+  border: 1px dashed var(--uiapp-border-color, #cfd8dd);
+  justify-content: center;
+  cursor: default;
+}
+.ui-file-download:focus-visible { outline: 2px solid var(--uiapp-focus-color, #0067df); }
+
+.ui-file-drop,
+.ui-file-picked {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: var(--uiapp-file-download-width, 250px);
+  max-width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 3px;
+  font: inherit;
+  color: inherit;
+}
+.ui-file-drop {
+  border: 1px dashed var(--uiapp-border-color, #cfd8dd);
+  justify-content: space-between;
+  transition: border-color 0.33s ease-in-out;
+}
+
+.ui-file-drop.ui-invalid { border-color: var(--uiapp-error-color, #b00020); }
+.ui-file-placeholder { font-style: italic; opacity: 0.8; }
+/*
+ * Apps' picker at rest (measured on the runtime) is an EMPTY framed field — the same 1px
+ * #526069, 3px-cornered frame as a text box, 250px wide, 30px tall — with a round 28px
+ * "add" icon button at its end and no words. The drop-zone text and a dashed accent
+ * border appear only while a file is being dragged over it. Ours showed "Drop file to
+ * upload here" in a 420px dashed box permanently, which read as a different control.
+ */
+.ui-file-drop { border: 1px solid var(--uiapp-field-border, #526069); border-radius: 3px; min-height: 30px; padding: 0 0 0 8px; }
+.ui-file-drop.ui-file-dragging { border-style: dashed; border-color: #0067df; }
+.ui-file-drop .ui-file-btn, .ui-file-picked .ui-file-btn {
+  width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; color: #374652;
+}
+.ui-file-btn .material-icons { font-size: 20px; }
+
+.ui-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.ui-file-btn:hover:not(:disabled) { background: var(--uiapp-hover-color, rgba(0, 0, 0, 0.06)); }
+.ui-file-btn:disabled { opacity: 0.5; cursor: default; }
+.ui-file-btn:focus-visible { outline: 2px solid var(--uiapp-focus-color, #0067df); }
+
+.ui-file-hint { font-size: 12px; opacity: 0.8; }
+
+/*
+ * The MULTI file uploader (multi-file-uploader.component.scss). Its drop zone is a dashed
+ * 1px frame that always shows "Drop file to upload here" as disabled input text, 320px by
+ * 32px when the designer left the size auto (ControlVersionConfig, version 1); the files
+ * list under it in 1px-framed rows with a status icon, the name ellipsised, and a remove
+ * button that is disabled while that file uploads.
+ */
+.ui-file-multi-drop {
+  /* Fills the control, as Apps' flex:1 drop zone does; 320px when the control is auto-sized. */
+  width: 100%;
+  min-width: var(--uiapp-file-download-width, 320px);
+  min-height: 32px;
+  border: 1px dashed var(--uiapp-border-color, #cfd8dd);
+  justify-content: space-between;
+  padding: 0 0 0 8px;
+}
+.ui-file-multi-drop .ui-file-placeholder { font-style: normal; opacity: 0.6; }
+.ui-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ui-file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding-left: 12px;
+  border: 1px solid var(--uiapp-border-color, #cfd8dd);
+  border-radius: 4px;
+  background: var(--uiapp-surface-color, #fff);
+}
+.ui-file-item-failed { border-color: var(--uiapp-error-color, #b00020); background: rgba(176, 0, 32, 0.1); }
+.ui-file-status { flex: 0 0 auto; font-size: 20px; width: 20px; height: 20px; }
+.ui-file-status-ok { color: #4caf50; }
+.ui-file-status-error { color: var(--uiapp-error-color, #b00020); }
+.ui-file-spinner {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #0067df;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ui-file-spin 0.8s linear infinite;
+}
+@keyframes ui-file-spin { to { transform: rotate(360deg); } }
+.ui-file-item .ui-file-name { line-height: 1.5; }
+.ui-file-item .ui-file-remove { width: 32px; height: 32px; border-radius: 2px; }
+
+/*
+ * The divider's BOX centres the hairline in whatever space the designer gave it. The
+ * rule itself keeps Apollo's 1px thickness — the authored height belongs to the box.
+ */
+/*
+ * A control's host never SHRINKS below its content — Apps renders every control host as
+ * `flex: 0 0 auto` (measured: 70 of 72 hosts on one page; the two exceptions were
+ * authored to fill). The CSS default is `flex-shrink: 1`, and with the authored
+ * `min-height: 0` that let a column of sections squash its page containers to 85px and
+ * clip their fields. Zero specificity, so any authored flex-shrink still wins.
+ */
+:where([data-uiapp-name]) { flex-shrink: 0; }
+
+.ui-divider-box { display: flex; align-items: center; justify-content: center; }
+/*
+ * ONE hairline, never a rectangle. A divider control is routinely authored with a
+ * border on all four sides, and painting that on the box drew an outlined box with the
+ * rule inside it — two lines where the low-code app shows one. Apps uses the authored
+ * box for SPACING only and draws a single line, so the box's own border and background
+ * are suppressed. `!important` because the authored class is emitted per page and can
+ * out-order this sheet.
+ */
+.ui-divider-box { border: 0 !important; background: none !important; }
+/*
+ * The authored size does NOT size the box along the line's thickness. A horizontal
+ * divider authored `height: 100%` in a column of sections resolved to the column's
+ * whole height and, as a flex item, then squeezed every section beside it down to a
+ * sliver: three detail sections at 85px each with their fields clipped, two dividers at
+ * 305px. Apps applies that size to the inner line, whose host is content-sized — so
+ * the box here is content-sized on that axis too. `!important` for the same reason as
+ * the border above.
+ */
+.ui-divider-box:has(> :not([data-orientation="vertical"])) { height: auto !important; max-height: none !important; }
+.ui-divider-box:has(> [data-orientation="vertical"]) { width: auto !important; max-width: none !important; }
+.ui-divider[data-orientation="vertical"] { height: var(--uiapp-divider-size, 100%); width: 1px; }
+.ui-divider:not([data-orientation="vertical"]) { width: var(--uiapp-divider-size, 100%); height: 1px; }
+
+/*
+ * A control inside a field whose authored box has a FIXED height must be allowed to
+ * shrink. A textarea keeps its intrinsic (rows-based) height otherwise, so the box's
+ * own `overflow: hidden` clipped the bottom of the field — the Reason box on the
+ * action form lost its lower border and last line.
+ */
+[data-e2e="forms-host-textarea-control"] textarea,
+[data-e2e="forms-host-rte-control"] .ui-rte { flex: 1 1 auto; min-height: 0; }
+
+/*
+ * No resize grip. A control's size is the DESIGNER's, and the field box clips anything
+ * bigger anyway (`overflow: hidden`), so the browser's default grip advertised a drag
+ * that could not work: it appeared to do nothing. Apps sizes the control and offers no
+ * handle either.
+ */
+[data-e2e="forms-host-textarea-control"] textarea { resize: none; }
+/* Apps' three-row text area measures 86px; the same three rows at Apollo's 20px leading were 78. */
+[data-e2e="forms-host-textarea-control"] textarea { line-height: 22px; }
+
+.ui-radio-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ui-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.ui-multiselect {
+  flex: 1 1 auto;
+  min-width: 180px;
+  width: 100%;
+  /*
+   * Apollo input widgets carry the theme surface; an authored control colour or
+   * background belongs to the field FRAME (the wrapper), not the widget internals —
+   * Apps applies it that way too. Without this reset a control styled dark (e.g.
+   * #211f1f background, #75ff00 text) bled through into the MultiSelect chips, which
+   * inherit currentColor, leaving unreadable green pills on a black box.
+   */
+  background: var(--surface, #fff);
+  color: var(--foreground, #1f2933);
+  border-radius: 3px;
+}
+/*
+ * The chips and placeholder inside carry Apollo's own themed text colours (a muted grey
+ * placeholder, a readable chip label) rather than inheriting the authored control colour
+ * — which, when the field was styled dark with bright text, painted unreadable pills.
+ */
+.ui-multiselect [role="combobox"] { color: var(--foreground, #1f2933); }
+.ui-multiselect [role="combobox"] .text-muted-foreground { color: var(--muted-foreground, #64748b); }
+
+.ui-empty { opacity: 0.6; font-style: italic; }
+
+/*
+ * Radix floating layers (Select / MultiSelect / date popover) portal to <body> with a
+ * modest z-index, so when a page is opened as a MODAL (z-index ~1e6) their dropdowns
+ * opened BEHIND it. Lift every popper above the modal so a dropdown inside a popup is
+ * usable.
+ */
+[data-radix-popper-content-wrapper] { z-index: 1000003 !important; }
+
+/*
+ * The rich-text editor (hugeRTE) fills the field width; its height comes from init.
+ * A min width keeps the toolbar on as few rows as possible (a very narrow editor pushes
+ * most tools behind the overflow "..." button).
+ */
+.ui-rte {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ui-rte .tox-tinymce { flex: 1 1 auto; min-height: 0; border-radius: 4px; }
+/*
+ * The font-family / font-size dropdowns at Apps' width. hugeRTE sized them to their
+ * widest entry (~190px), which alone filled a 400px editor's row and pushed "Table"
+ * onto a row of its own; at 140px the drawer packs Table + font + size + colour on one
+ * row and wraps the highlight, exactly as Apps lays it out.
+ */
+.ui-rte .tox .tox-tbtn--bespoke { width: 124px; }
+
+/*
+ * A caption BESIDE its field sits OUTSIDE the authored box, as Apps draws it. The
+ * designer's width and height belong to the control — a 400px rich-text control is a
+ * 400px editor — so the caption is lifted out of flow and hung off the box's edge,
+ * still inside the element (so it keeps the authored text styling). The authored
+ * `overflow: hidden` would clip it there, hence the override; the editor exactly fills
+ * the box, so nothing else can spill.
+ */
+[data-label-aside] { position: relative; overflow: visible !important; }
+[data-label-aside] > .ui-label { position: absolute; top: 0; white-space: nowrap; }
+[data-label-aside="left"] > .ui-label { right: 100%; margin-right: 8px; }
+[data-label-aside="right"] > .ui-label { left: 100%; margin-left: 8px; }
+
+/*
+ * The date field's trigger. Ours rather than Apollo's `DatePicker`, so it needs the
+ * field styling that component brought with it — matched to the other inputs' box so a
+ * form does not have one control that looks like a button.
+ */
+.ui-date-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 12px;
+  font: inherit;
+  text-align: start;
+  color: inherit;
+  background: var(--uiapp-field-bg, #fff);
+  border: 1px solid var(--uiapp-field-border, rgb(0 0 0 / 0.24));
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ui-date-trigger:disabled { cursor: default; opacity: 0.6; }
+/* The glyph sits 6px inside the field's edge in Apps' mat-datepicker-toggle, in the text colour. */
+.ui-date-trigger { justify-content: space-between; gap: 8px; padding-right: 6px; }
+.ui-date-icon { flex: none; }
+.ui-date-popover { width: auto; padding: 8px; }
+
+/* The empty-list row, so a dropdown with no options is a readable panel, not a sliver. */
+.ui-select-empty { padding: 8px 12px; white-space: nowrap; }
+
+/*
+ * The edit grid's INTERNAL geometry, independent of the authored wrapper.
+ *
+ * The wrapper's class is generated from the designer's styles and is routinely
+ * `display: flex` — row direction — while AG Grid in `autoHeight` mode renders
+ * ZERO WIDTH unless its container has a definite one. Without these two rules a
+ * mounted, fully-loaded grid drew nothing: an empty bordered strip with the pager
+ * squeezed at its left edge.
+ */
+.ui-grid-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  /*
+   * Fill the authored wrapper's height whether that wrapper is a flex row, a flex
+   * column, or a plain block — so the grid host and pager have a bounded box to divide
+   * between them. On an auto-height wrapper this resolves to the content height and the
+   * grid grows naturally, which is what the autoHeight grids want.
+   */
+  height: 100%;
+  min-height: 0;
+}
+/*
+ * The grid host gets a DEFINITE height. AG Grid's `normal` layout sizes its body as
+ * `height: 100%` of this box, and a percentage only resolves against an explicit
+ * height — a `min-height` alone left it indefinite, the body resolved to zero, and the
+ * grid drew nothing but its pager. 320px shows ~6 rows, which is what Apps' grids show;
+ * it is also the flex basis, so inside a taller authored wrapper the grid grows to fill.
+ */
+.ui-grid-host { width: 100%; min-width: 0; height: 320px; }
+
+/*
+ * The grid's search, as Apps draws it: ONE outlined field — search icon, the text box,
+ * the clear button and the column selector — 32px tall, 4px corners, the column selector
+ * with its own chevron inside the same border. It had been bare controls in a row.
+ */
+.eg-search {
+  display: inline-flex;
+  /* A FIELD of fixed width, never stretched by the column it sits in: Apps' measures 317px
+   * whether or not its clear button is showing; sized by its parts, ours grew by 24px. */
+  align-self: flex-start;
+  width: 320px;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 8px 0 16px;
+  margin-bottom: 8px;
+  border: 1px solid var(--uiapp-field-border, #a4b1b8);
+  border-radius: 4px;
+  background: var(--uiapp-field-bg, #fff);
+  color: inherit;
+}
+.eg-search:focus-within { border-color: #0067df; box-shadow: inset 0 0 0 1px #0067df; }
+.eg-search .material-icons { font-size: 20px; }
+/*
+ * The row's pencil and bin and the header's add, as Apps draws them: 32px round icon
+ * buttons (mat-icon-button) holding a 20px Material glyph, no border, no fill. What
+ * showed before was the browser's default button — a bordered grey box, 13px bold.
+ */
+/*
+ * THE ACTION CELL, AND WHY IT SHOWED "...".
+ *
+ * Two 32px icon buttons are 64px; the column is 96; ag-grid's alpine theme puts 17px of
+ * padding on each side, which makes 98 - two pixels too many. The content overflowed and
+ * the theme's text-overflow: ellipsis drew an ellipsis after the bin, on every row of
+ * every grid. Apps shows the two icons and nothing else.
+ */
+.ui-grid-host .eg-action-cell {
+  padding-left: 4px;
+  padding-right: 4px;
+  text-overflow: clip;
+}
+.eg-actions { display: inline-flex; align-items: center; }
+.eg-actions button, .eg-add {
+  width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  color: #181d1f; font-size: 24px; font-weight: 400; line-height: 1;
+}
+.eg-actions button .material-icons, .eg-add .material-icons { font-size: 20px; color: #374652; }
+.eg-actions button:hover:not(:disabled), .eg-add:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+/* Disabled as Apps dims it: the glyph itself goes to a third-strength black. */
+.eg-actions button:disabled, .eg-add:disabled { color: rgba(0, 0, 0, 0.33); cursor: default; }
+.eg-actions button:disabled .material-icons, .eg-add:disabled .material-icons { color: inherit; }
+.eg-search input {
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  /* The text box takes what the icon, clear button and column selector leave of the 320px. */
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
+  padding: 0 8px;
+}
+/* The clear button, as Apps' dense icon button: 20px round, 24px glyph size, inheriting the field's ink. */
+.eg-search button {
+  border: 0; background: none; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: inherit; width: 20px; height: 20px; border-radius: 50%; font-size: 24px; flex: 0 0 auto;
+}
+.eg-search select {
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  padding: 0 8px 0 4px;
+  cursor: pointer;
+}
+
+/*
+ * Rows, as Apps paints them (edit-grid.component.scss): a SELECTED row is the flat
+ * translucent selection overlay, not AG Grid's blue; the row UNDER EDIT has no fill and
+ * a raised shadow; the cell being edited carries the 4px primary bar at its left edge.
+ */
+/*
+ * A SELECTED row keeps its fill WHILE IT IS BEING EDITED. Apps shows both at once - the
+ * row grey, the cell you pressed in edit - and excluding the editing row from the
+ * selection colour meant that clicking a cell selected the row and then immediately
+ * hid the fact, so selection looked broken.
+ *
+ * The pencil is the other case: it opens a row for editing WITHOUT selecting it, and
+ * that row still has no fill and a raised shadow, as measured.
+ */
+.ui-grid-host .ag-row-selected { background-color: rgba(0, 0, 0, 0.16) !important; }
+.ui-grid-host .ag-row-selected .ag-cell { background-color: transparent; }
+.ui-grid-host .ag-row-selected::before, .ui-grid-host .ag-row-hover::before { background: none !important; }
+.ui-grid-host .ag-row.row-editing:not(.ag-row-selected) {
+  background-color: transparent !important;
+  box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+  clip-path: inset(-4px -4px -4px 0);
+}
+.ui-grid-host .ag-cell.ag-cell-inline-editing { border-left: 4px solid #0067df !important; }
+@media (prefers-color-scheme: dark) {
+  .ui-grid-host .ag-row-selected { background-color: rgba(255, 255, 255, 0.16) !important; }
+}
+
+/* Apps' image placeholder: the "unable to render" sentence, centred in the control's box. */
+.ui-image-placeholder, .ui-image-loading { margin: 0; width: 100%; height: 100%; min-height: 24px; display: flex; align-items: center; justify-content: center; }
+.ui-image-placeholder { font-style: italic; color: rgb(0 0 0 / 0.6); }
+
+/* A button's caption: icon then text on one line, as Apps' button label is laid out. */
+/* Apps' button caption is regular weight (mat-button, 400); Apollo's default is medium. */
+/*
+ * Zero specificity (`:where`), so the reset yields to an authored weight: a button the
+ * designer made bold carries a module class (specificity 0,1,0), and a plain
+ * `button[attr]` selector (0,1,1) outranked it — every bold button rendered regular.
+ */
+/* Apps' button is the font's normal line height: a 14px label with 10px padding is 36px tall; Apollo's 20px made it 40. */
+:where(button[data-uiapp-name]) { font-weight: 400; line-height: normal; }
+.ui-button-content { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; }
+.ui-button-content .ui-icon { display: inline-flex; font-size: 20px; line-height: 1; }
+
+/* The grid's pager, in Apps' arrangement: bottom-right, page-size first. */
+.eg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.eg-pager button {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: none;
+  padding: 2px;
+  color: inherit;
+  cursor: pointer;
+}
+.eg-pager button:disabled { opacity: 0.35; cursor: default; }
+.eg-pagesize { display: inline-flex; align-items: center; gap: 6px; }
+.eg-pagesize select {
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: none;
+  font: inherit;
+  padding: 2px 4px;
+}
+
+/*
+ * A checkbox (or switch) is one INLINE row — box, then caption — where every other
+ * input stacks its caption above the field. Without this the caption landed on its
+ * own line under the box, which read as a layout bug next to the original.
+ */
+label[data-inline-field] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+ * The error ICON inside an invalid field, drawn as a background so it needs no markup
+ * inside components whose inner element belongs to the design system. Matches the
+ * exclamation badge Apps shows at the field's right edge once a rule fails.
+ */
+[data-invalid] input:not([type='checkbox']):not([type='radio']),
+[data-invalid] textarea {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%23b00020'/%3E%3Crect x='7.25' y='4' width='1.5' height='5' rx='0.75' fill='white'/%3E%3Ccircle cx='8' cy='11.5' r='1' fill='white'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px 16px;
+  padding-right: 32px;
+}
+
+/*
+ * VALIDATION DISPLAY.
+ *
+ * The rules were always evaluated and their answer stored, and NOTHING rendered it —
+ * a converted form could never show a red border or a message, so a required field
+ * looked optional and a Submit button disabled on `Not(field.IsValid)` gave no clue
+ * why. Apps shows three things: an asterisk on a required caption from first render,
+ * and — only once the field has been touched and left — a red border plus the message.
+ * The blur gating lives in `useFieldValidity`; these rules only paint it.
+ */
+.ui-required {
+  color: var(--uiapp-error-color, #b00020);
+  margin-inline-start: 4px;
+  font-weight: 700;
+}
+
+.ui-error {
+  display: block;
+  width: 100%;
+  color: var(--uiapp-error-color, #b00020);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/*
+ * Scoped to the invalid field's own wrapper rather than set on the control component,
+ * so it reaches an Apollo control's inner element too — those render their own markup
+ * and do not forward a border style.
+ */
+[data-invalid] input,
+[data-invalid] textarea,
+[data-invalid] select,
+[data-invalid] [role='combobox'] {
+  border-color: var(--uiapp-error-color, #b00020);
+}
+
+/*
+ * Material tabs, as Apps draws them: each tab at least 160px wide with its label
+ * centred, 48px tall, no gap and no box — only a 2px underline and the theme's primary
+ * colour mark the active one. The earlier 8x16 padded, boxed tabs read as buttons.
+ */
+.ui-tabstrip {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+  border-bottom: 1px solid var(--uiapp-tab-border, rgb(0 0 0 / 0.12));
+}
+.ui-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  min-width: 160px;
+  height: 48px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+/*
+ * Apps' tabs (tabs.component.ts, setTabStyles): every label in `textColorTab`, the
+ * ACTIVE label and the ink bar in `activeTabColor` — a colour, never a fill — and no
+ * dimming of the inactive labels (`.mat-tab-label { opacity: 1 }`; disabled 0.5). The
+ * per-page part rule `.x :global(.ui-tab) { color }` carries the authored label colour,
+ * so the active colour is stated with more specificity than that rule.
+ */
+.ui-tabstrip .ui-tab.ui-tab-active {
+  color: var(--uiapp-tab-active-color, var(--apps-theme-primary-color, #0067df));
+  border-bottom-color: var(--uiapp-tab-active-color, var(--apps-theme-primary-color, #0067df));
+}
+.ui-tab:disabled { opacity: 0.5; cursor: default; }
+/* Apps' small tabs (`tabType: false`): `padding: 0 $pad-xxl; min-width: auto; height: $font-header-3-line-height`. */
+.ui-tabstrip[data-tab-size="small"] .ui-tab { padding: 0 12px; min-width: auto; height: 32px; }
+.ui-tabpanel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  /*
+   * SCROLL, don't clip. The authored tab wrapper is a fixed height with
+   * `overflow: hidden`; a page hosted in the panel was being squeezed into it, which
+   * collapsed the percentage heights inside that page and overlapped its content. Apps
+   * lets the panel scroll instead (its tab shows a scrollbar), so the hosted page lays
+   * out at its natural height.
+   */
+  overflow: auto;
+}
+.ui-tabpanel > * {
+  height: auto !important;
+  min-height: 100%;
+  flex: 0 0 auto;
+}
+
+.ui-tab { background: var(--uiapp-tab-bg, none); }
+.ui-tab-active { background: var(--uiapp-tab-active-bg, var(--uiapp-tab-bg, none)); }
+
+/*
+ * DEFAULT-style tabs are Material tabs: Apps paints no per-tab background for them and
+ * colours the active label and its underline with the authored active colour (else the
+ * theme's primary). The authored tab/active background colours were being painted as
+ * boxes here, over black labels. `!important` because the authored part rules are
+ * emitted per page and out-order this sheet.
+ */
+.ui-tabstrip[data-tab-style="tabDefault"] .ui-tab { background: none !important; }
+.ui-tabstrip[data-tab-style="tabDefault"] .ui-tab-active {
+  color: var(--uiapp-tab-active-color, var(--uiapp-tab-active-bg, var(--apps-theme-primary-color, #0067df))) !important;
+  border-bottom-color: currentColor;
+}
+.ui-tabstrip[data-tab-style="tabPills"] { border-bottom: 0; gap: 8px; }
+.ui-tabstrip[data-tab-style="tabPills"] .ui-tab {
+  border-radius: 999px;
+  border-bottom: 0;
+  padding: 6px 16px;
+}
+.ui-tabstrip[data-tab-style="tabPills"] .ui-tab-active { border-bottom-color: transparent; }
+
+.ui-tabs-inner[data-orientation="vertical"] { flex-direction: row; }
+.ui-tabs-inner[data-orientation="vertical"] .ui-tabstrip {
+  flex-direction: column;
+  border-bottom: 0;
+  border-right: 1px solid var(--uiapp-tab-border, rgb(0 0 0 / 0.12));
+}
+
+/** Root typography. */
+body {
+  font-family: 'Noto Sans', system-ui, sans-serif;
+}
+
+/** The viewport-height chain. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/*
+ * The app root IS the viewport, as in Apps: the page root fills it and scrolls INSIDE
+ * (its authored overflow), so the browser page itself never scrolls. With
+ * `min-height: 100%` the root grew with the page and the whole browser scrolled instead.
+ */
+#root {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * The page fills what the shell leaves. `min-height: 0` because a flex item's default
+ * `min-height: auto` refuses to shrink below its content, which breaks scrolling in any
+ * panel that authored its own overflow.
+ */
+.uiapp-page-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  /*
+   * A BLOCK, not a flex column. The HOST scrolls, and the page is as tall as its content —
+   * Apps' own arrangement (app-host.component.scss: `.root-container { overflow: auto }`
+   * holding a form with `height: fit-content`). As a flex container the host gave its
+   * auto-height page a definite height (css-flexbox §9.8), so an authored `height: 80%`
+   * on a panel resolved against the page's own content and clipped the bottom fifth of
+   * everything inside it; in a block, as in Apps, that percentage behaves as `auto`.
+   * The page was earlier stretched to the viewport and nothing scrolled — a page taller
+   * than the window was cut off with no scrollbar; `overflow: auto` here is that fix.
+   */
+  display: block;
+  overflow: auto;
+}
+
+/*
+ * The page root fills the host. Apps' app-host is a flex ROW of viewport height whose one
+ * item, the root panel, stretches to it (app-host.component.scss: the host is height 100%
+ * and its .root-container a flex box of height 100%; panel.component.scss gives the root
+ * panel's own container min-height 100%). So a column root with a flex-grow child hands
+ * that child the spare height. Without this the root was only as tall as its content, a
+ * growing child kept its flex-basis, and a side panel authored height 100% inside it was
+ * clipped to that basis. A MINIMUM: a page taller than the window still grows and the
+ * host scrolls. Border-box, so the root's own padding does not push it past the host and
+ * put a scrollbar on every page.
+ */
+.uiapp-page-host > [data-uiapp-name] {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+/*
+ * The load curtain: the page root holds this over its content while its sources load
+ * and its load rule runs (`holdUntilLoaded`) — Apps' loading curtain for a page that
+ * authors `showRuntimeLoadProgress`. Opaque, so the pre-load state never shows.
+ */
+[data-holding] { position: relative; }
+.ui-load-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--uiapp-page-bg, #fff);
+}

@@ -1,0 +1,64 @@
+/* Generated from ItemSelectionPage. Values are exact; colours and fonts
+   resolve through the design tokens in src/styles/tokens.css. */
+
+.rootPanel {
+  align-items: center;
+  background-color: var(--uiapp-c-0b1220);
+  border-color: var(--uiapp-color-ink-400);
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--uiapp-font-noto-sans);
+  height: 100%;
+  justify-content: flex-start;
+  margin: 0px 0px 0px 0px;
+  overflow-x: auto;
+  overflow-y: auto;
+  padding: 4px 4px 4px 4px;
+  width: 100%;
+}
+
+.customHTML {
+  align-self: stretch;
+  border-color: var(--uiapp-color-ink-400);
+  border-radius: 3px 3px 3px 3px;
+  border-style: solid;
+  color: var(--uiapp-c-333333);
+  display: inline-flex;
+  font-family: var(--uiapp-font-noto-sans);
+  font-size: 14px;
+  height: 100%;
+  justify-content: center;
+  margin: 4px 4px 4px 4px;
+  min-height: 0px;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: auto;
+}
+
+.textActionTrigger {
+  color: var(--uiapp-c-333333);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--uiapp-font-noto-sans);
+  font-size: 14px;
+  gap: 8px;
+  margin: 4px 4px 4px 4px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 0px 0px 0px 0px;
+}
+
+.textActionTrigger :global(.ui-input) {
+  min-height: 0px;
+  min-width: 0px;
+  width: 256px;
+}
+
+.textActionTrigger :global(.ui-label) {
+  color: var(--uiapp-c-333333);
+  font-family: var(--uiapp-font-noto-sans);
+  font-size: 14px;
+  width: 250px;
+}

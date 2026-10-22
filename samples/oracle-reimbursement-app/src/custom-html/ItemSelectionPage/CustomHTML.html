@@ -1,0 +1,49 @@
+<!-- Reimbursement · ItemSelectionPage · Custom HTML control — HTML tab. -->
+<div id="miles-root" class="mq">
+  <header class="mq-header">
+    <div class="mq-title">
+      <h1>Please select an item to work with</h1>
+      <p>Reimbursement work queue</p>
+    </div>
+    <div class="mq-header-right" id="mq-head-right"></div>
+  </header>
+
+  <section class="mq-card" aria-label="Work items">
+    <div class="mq-progress" id="mq-progress" hidden></div>
+
+    <div class="mq-toolbar">
+      <div class="mq-tabs" role="tablist" id="mq-tabs"></div>
+      <div class="mq-toolbar-right">
+        <label class="mq-search">
+          <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="mq-search" type="search" placeholder="Search project, study, RSS…" aria-label="Search items" autocomplete="off">
+          <span class="mq-kbd" id="mq-kbd">/</span>
+        </label>
+        <button class="mq-tbtn" id="mq-filter-toggle" aria-expanded="false" aria-controls="mq-fpanel">
+          <svg class="i" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 2v-8.5z"/></svg>
+          Filters <span class="mq-badge" id="mq-filter-badge" hidden>0</span>
+        </button>
+        <button class="mq-tbtn mq-tbtn--icon" id="mq-refresh" title="Refresh from Data Fabric" aria-label="Refresh">
+          <svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="mq-fpanel" id="mq-fpanel" hidden></div>
+
+    <div class="mq-subbar" id="mq-subbar"></div>
+
+    <div class="mq-tablewrap" id="mq-tablewrap">
+      <table class="mq-table" id="mq-table">
+        <thead id="mq-thead"></thead>
+        <tbody id="mq-tbody"></tbody>
+      </table>
+      <div id="mq-empty" hidden></div>
+    </div>
+
+    <div class="mq-selbar" id="mq-selbar" hidden></div>
+    <footer class="mq-footer" id="mq-footer"></footer>
+  </section>
+
+  <div class="mq-toasts" id="mq-toasts" aria-live="polite"></div>
+</div>

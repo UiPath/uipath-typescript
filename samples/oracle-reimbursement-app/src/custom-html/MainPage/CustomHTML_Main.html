@@ -1,0 +1,88 @@
+<!-- Reimbursement · MainPage · Custom HTML control — HTML tab. -->
+<div id="mp-root" class="mp">
+  <header class="mp-head">
+    <div class="mp-head-l">
+      <button class="mp-hbtn mp-hbtn--icon" id="mp-collapse" title="Hide details and show the document full width" aria-label="Hide details">
+        <svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m8 10 2 2-2 2"/></svg>
+      </button>
+      <button class="mp-hbtn" id="mp-back" title="Back to the item list">
+        <svg class="i" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>Go back
+      </button>
+    </div>
+    <h1 class="mp-title" id="mp-title">Loading item…</h1>
+    <div class="mp-head-r">
+      <div class="mp-flags" id="mp-flags"></div>
+      <button class="mp-hbtn mp-hbtn--icon" id="mp-refresh" title="Reload this page (unsaved table changes are kept)" aria-label="Reload page">
+        <svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="mp-progress" id="mp-progress" hidden></div>
+
+  <main class="mp-body" id="mp-body">
+    <div id="mp-banner"></div>
+
+    <section class="mp-info">
+      <div class="mp-card" id="mp-study"></div>
+      <div class="mp-card" id="mp-contract"></div>
+      <div class="mp-card" id="mp-audit"></div>
+    </section>
+
+    <section class="mp-kpis" id="mp-kpis"></section>
+
+    <section class="mp-card" id="mp-recon"></section>
+
+    <section class="mp-card mp-events">
+      <div class="mp-card-head">
+        <h2>Oracle events <span class="mp-count" id="mp-ev-count">0</span></h2>
+        <div class="right">
+          <label class="mp-search">
+            <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="mp-ev-search" type="search" placeholder="Search events…" aria-label="Search events" autocomplete="off">
+          </label>
+          <button class="mp-btn mp-btn--primary mp-btn--sm" id="mp-add">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add event
+          </button>
+        </div>
+      </div>
+      <div class="mp-tablewrap">
+        <table class="mp-table">
+          <thead>
+            <tr>
+              <th class="mp-idx">#</th>
+              <th>Generated event</th>
+              <th>Category</th>
+              <th class="r">Direct</th>
+              <th class="r">Total</th>
+              <th class="r">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mp-ev-body"></tbody>
+          <tfoot id="mp-ev-foot"></tfoot>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mp-foot">
+    <div class="mp-pages">
+      <label for="mp-pages-in">Pages to delete</label>
+      <input id="mp-pages-in" type="text" placeholder="e.g. 1,2,5-7" autocomplete="off">
+      <span class="mp-tip" tabindex="0">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <span class="bubble">Separate pages with commas and use a dash for ranges.<br><b>1,2,5-7</b> deletes pages 1, 2 and 5 to 7.<br>Leave it empty to delete nothing. The automation deletes these pages after approval.</span>
+      </span>
+      <span class="msg" id="mp-pages-msg"></span>
+    </div>
+    <span class="spacer"></span>
+    <span class="mp-busy" id="mp-busy" hidden><span class="mp-spin"></span><span id="mp-busy-text">Working…</span></span>
+    <button class="mp-btn mp-btn--reject" id="mp-reject">Reject</button>
+    <button class="mp-btn mp-btn--outline" id="mp-save">Save for later</button>
+    <button class="mp-btn mp-btn--primary" id="mp-approve">
+      <svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>Approve
+    </button>
+  </footer>
+
+  <div class="mp-modal" id="mp-modal" hidden></div>
+  <div class="mp-toasts" id="mp-toasts" aria-live="polite"></div>
+</div>

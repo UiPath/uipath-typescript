@@ -1,0 +1,20 @@
+node_modules
+dist
+
+# Your tenant and client id. Copy uipath.json.example and fill it in.
+/uipath.json
+
+# The Validation Station web component, staged from node_modules by scripts/stage-du-wc.mjs.
+/public/du-vs-wc
+
+# The repo-root .gitignore ignores `lib/` (build artifacts elsewhere in the monorepo) and
+# `.uipath/` (deploy state). Here `src/lib/` is the app's runtime and `.uipath/` holds the
+# fix-converted-app skill source the README points at, so both are tracked.
+!src/lib/
+!src/lib/**
+!.uipath/
+!.uipath/**
+
+# Your tenant's resource names. Copy .env.example and fill it in.
+.env
+.env.local

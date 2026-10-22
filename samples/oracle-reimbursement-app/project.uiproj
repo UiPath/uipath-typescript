@@ -1,0 +1,10 @@
+{
+  "ProjectType": "AppV2",
+  "WebAppSettings": {
+    "AppId": "",
+    "IsCoreProject": false
+  },
+  "Name": "OracleReimbursement_App",
+  "Description": null,
+  "MainFile": null
+}
