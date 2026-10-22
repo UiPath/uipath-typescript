@@ -1024,7 +1024,7 @@ export interface EntityServiceModel {
    * Retrieves entity metadata for an entity declared in `resources.ts`.
    *
    * @param entity - Handle created with `resource.entity()` from `@uipath/uipath-typescript/resources`
-   * @param options - Optional lookup options such as `folderKey` for folder-scoped entities
+   * @param options - Optional lookup options; pass `folderKey` to scope the lookup to an organizational unit. The `folderKey` property is **experimental**.
    * @returns Promise resolving to the {@link EntityGetResponse} entity metadata with operation methods
    * @example
    * ```typescript
