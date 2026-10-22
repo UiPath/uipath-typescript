@@ -181,10 +181,20 @@ function tags(node) {
 }
 
 // Slicing at the first `{` would clip a default value such as `options = {}`.
+// A default value only makes the parameter optional for callers, so `p: T = x` renders as `p?: T`.
 function sigOf(n) {
   const sf = n.getSourceFile();
+  const start = n.getStart(sf);
   const full = n.getText(sf);
-  return n.body ? full.slice(0, n.body.getStart(sf) - n.getStart(sf)) : full;
+  let sig = n.body ? full.slice(0, n.body.getStart(sf) - start) : full;
+  const params = n.parameters ?? [];
+  for (let i = params.length - 1; i >= 0; i--) {
+    const p = params[i];
+    if (!p.initializer) continue;
+    const head = `${p.dotDotDotToken ? '...' : ''}${p.name.getText(sf)}?${p.type ? `: ${p.type.getText(sf)}` : ''}`;
+    sig = sig.slice(0, p.getStart(sf) - start) + head + sig.slice(p.getEnd() - start);
+  }
+  return sig;
 }
 
 const paramsAndReturn = (n) => {
