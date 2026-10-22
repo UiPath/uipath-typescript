@@ -3854,6 +3854,16 @@
 <td>Timestamp indicating when the conversation was created.</td>
 </tr>
 <tr>
+<td><a id="endedtime"></a> <code>endedTime?</code></td>
+<td><code>string</code></td>
+<td>Timestamp indicating when the conversation ended. Undefined while the conversation is active. An ended conversation accepts no new input.</td>
+</tr>
+<tr>
+<td><a id="endreason"></a> <code>endReason?</code></td>
+<td><a href="../../enumerations/ConversationEndReason/"><code>ConversationEndReason</code></a></td>
+<td>Why the conversation ended. Undefined while the conversation is active.</td>
+</tr>
+<tr>
 <td><a id="folderid"></a> <code>folderId</code></td>
 <td><code>number</code></td>
 <td>Identifier of the folder where the conversation is stored.</td>
