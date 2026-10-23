@@ -149,6 +149,8 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
     this.assertNotEnded();
     this.setEnded();
     this.emit({ endExchange });
+    // Remove locally so late events for this exchange (e.g. chunks still in flight after a stop) are dropped.
+    this.delete();
   }
 
   /**
