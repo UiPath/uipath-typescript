@@ -4525,7 +4525,7 @@ other's inherited fields. If the merge still carries <code>secret</code> beside 
 <li><code>sdk.getToken()</code> - Get the logged-in user's access token</li>
 <li><code>sdk.logout()</code> - Logout and clear all authentication state (requires re-initialization to authenticate again). By default the UiPath session (Automation Cloud or Automation Suite) stays active, so the next sign-in completes silently. Pass <code>sdk.logout({ endSession: true })</code> to also sign the user out of UiPath session — the browser is redirected to end the session and returns to your app.</li>
 <li><code>sdk.updateToken()</code> - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)</li>
-<li><code>sdk.setDebugContext()</code> - Attach a parent job key to every request so Orchestrator links the jobs the app starts to it and, when that parent is a debug run, routes them as debug sub-jobs; coded action apps pass the task's <code>jobKey</code>, pages opened from a Studio Web debug session set it automatically</li>
+<li><code>sdk.setDebugContext()</code> - Attach a parent job key to the jobs the app starts so Orchestrator links them to it and, when that parent is a debug run, routes them as debug sub-jobs. Studio Web debug sessions and Action Center debug tasks hand the key to the SDK themselves; call this only when another host runs the app inside a job</li>
 </ul>
 <hr />
 <h2 id="quick-test-script">Quick Test Script<a class="headerlink" href="#quick-test-script" title="Permanent link">&para;</a></h2>

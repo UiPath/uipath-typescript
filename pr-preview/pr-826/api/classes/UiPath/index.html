@@ -4372,14 +4372,14 @@ login screen appearing twice.</p>
 <blockquote>
 <p><strong>setDebugContext</strong>(<code>context</code>: <code>null</code> | <a href="../../interfaces/DebugContext/"><code>DebugContext</code></a>): <code>void</code></p>
 </blockquote>
-<p>Sets the debug context applied to all subsequent API requests made through this instance,
-or clears it with <code>null</code>. While set, requests carry the parent job key: Orchestrator records it
-as the parent of the jobs the app starts and, when that parent is a debug run, routes them as
-debug sub-jobs of that session. Use it when the app is hosted by a platform job (for example, a
-coded action app opened from a task in Action Center). A task's <code>jobKey</code> is the job that created
-it, debug or not, so passing it along is safe either way. Apps opened from a Studio Web debug
-session receive the job key automatically and need no call. Calling this before <code>initialize()</code>
-is fine; the context is applied once the SDK is configured.</p>
+<p>Sets the debug context for the jobs this instance starts, or clears it with <code>null</code>. While set,
+<code>Processes.start</code> carries the parent job key: Orchestrator records it as the parent of the started
+job and, when that parent is a debug run, routes the job as a debug sub-job of that session.
+Hosts set this for you: a Studio Web debug session passes the key on the page URL and Action
+Center sends it with the token of a debug task, so an app calls this only when another host runs
+it inside a job. A context set here wins over the host's, and <code>null</code> keeps the host's key from
+being applied. Calling this before <code>initialize()</code> is fine; the context is applied once the SDK
+is configured.</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -4400,10 +4400,7 @@ is fine; the context is applied once the SDK is configured.</p>
 <h4 id="returns_16">Returns<a class="headerlink" href="#returns_16" title="Permanent link">&para;</a></h4>
 <p><code>void</code></p>
 <h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">codedActionApp</span><span class="p">.</span><span class="nx">getTask</span><span class="p">();</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">task</span><span class="p">.</span><span class="nx">jobKey</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nx">sdk</span><span class="p">.</span><span class="nx">setDebugContext</span><span class="p">({</span><span class="w"> </span><span class="nx">jobKey</span><span class="o">:</span><span class="w"> </span><span class="kt">task.jobKey</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">sdk</span><span class="p">.</span><span class="nx">setDebugContext</span><span class="p">({</span><span class="w"> </span><span class="nx">jobKey</span><span class="o">:</span><span class="w"> </span><span class="kt">hostJobKey</span><span class="w"> </span><span class="p">});</span>
 </code></pre></div>
 <h4 id="inherited-from_9">Inherited from<a class="headerlink" href="#inherited-from_9" title="Permanent link">&para;</a></h4>
 <p><code>UiPathCore.setDebugContext</code></p>
