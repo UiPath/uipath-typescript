@@ -23,6 +23,7 @@ const mockTokenManager = {
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
   onTokenChange: vi.fn(),
+  onDebugJobKey: vi.fn(),
 };
 
 const mockLogout = vi.fn();
@@ -536,6 +537,45 @@ describe('UiPath Core', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Debug context from the Action Center host', () => {
+    const secretConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.CLIENT_SECRET,
+    };
+    const hostSendsJobKey = (jobKey: string) => {
+      const [listener] = mockTokenManager.onDebugJobKey.mock.calls.at(-1) as [(jobKey: string) => void];
+      listener(jobKey);
+    };
+
+    it('adopts the job key the host sends with the token', () => {
+      const sdk = new UiPath(secretConfig);
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('keeps a context the app set itself over the host key', () => {
+      const sdk = new UiPath(secretConfig);
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+    });
+
+    it('keeps a context the app cleared from being filled by the host key', () => {
+      const sdk = new UiPath(secretConfig);
+      sdk.setDebugContext(null);
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
   });
 

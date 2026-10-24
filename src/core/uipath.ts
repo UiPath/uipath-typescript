@@ -104,6 +104,7 @@ export class UiPath implements IUiPath {
   #metaDebugSource?: string;
   // Set before initialize() configured the instance; applied once the execution context exists.
   #pendingDebugContext?: DebugContext | null;
+  #debugContextSetByApp = false;
   // Folder key off a coded function's `ctx.platform`; its own field because
   // #loadConfig rewrites the meta one from a re-read. Beats the meta tag, as
   // constructor input beats meta tags everywhere else — except as Integration
@@ -196,6 +197,10 @@ export class UiPath implements IUiPath {
       SessionStore.open() ?? new MemoryStore(),
     );
     if (sessionLicense) tokenManager.onTokenChange((tokenInfo) => sessionLicense.onTokenChange(tokenInfo));
+    // Action Center sends the debug job key with the token of a debug task; a context the app set itself wins.
+    tokenManager.onDebugJobKey((jobKey) => {
+      if (!this.#debugContextSetByApp) executionContext.set(DEBUG_CONTEXT_KEY, { jobKey });
+    });
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
@@ -467,6 +472,7 @@ export class UiPath implements IUiPath {
   }
 
   public setDebugContext(context: DebugContext | null): void {
+    this.#debugContextSetByApp = true;
     if (!this.#config) {
       this.#pendingDebugContext = context;
       return;

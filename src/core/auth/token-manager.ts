@@ -27,6 +27,7 @@ export class TokenManager {
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
   private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
   private readonly tokenChangeListeners: Array<(tokenInfo: TokenInfo | undefined) => void> = [];
+  private readonly debugJobKeyListeners: Array<(jobKey: string) => void> = [];
   private readonly store: KeyValueStore = SessionStore.open() ?? NO_OP_STORE;
 
   /**
@@ -41,7 +42,11 @@ export class TokenManager {
     private isOAuth: boolean = false
   ) {
     if (isInActionCenter) {
-      this.actionCenterTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
+      this.actionCenterTokenManager = new ActionCenterTokenManager(
+        config,
+        (tokenInfo) => this.setToken(tokenInfo),
+        (jobKey) => this.debugJobKeyListeners.forEach(listener => listener(jobKey))
+      );
       this.isOAuth = false;
     } else if (hostEmbeddingOrigin) {
       this.embeddedTokenManager = new EmbeddedTokenManager(hostEmbeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
@@ -244,6 +249,11 @@ export class TokenManager {
   onTokenChange(listener: (tokenInfo: TokenInfo | undefined) => void): void {
     this.tokenChangeListeners.push(listener);
     listener(this.currentToken);
+  }
+
+  /** Registers a listener for the debug job key an Action Center host sends with the token of a debug task. */
+  onDebugJobKey(listener: (jobKey: string) => void): void {
+    this.debugJobKeyListeners.push(listener);
   }
 
   /**

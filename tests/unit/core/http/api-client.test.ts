@@ -100,38 +100,13 @@ describe('ApiClient traceparent', () => {
 });
 
 describe('ApiClient debug context', () => {
-  it('injects X-UIPATH-JobKey while a debug context is set', async () => {
+  it('leaves X-UIPATH-JobKey to the services that start jobs, even while a debug context is set', async () => {
     const context = new ExecutionContext();
     context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
 
     await createClient({}, context).get('/test');
 
-    expect(capturedHeaders[JOB_KEY]).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
-  });
-
-  it('omits X-UIPATH-JobKey when no debug context is set', async () => {
-    await createClient({}, new ExecutionContext()).get('/test');
-
     expect(capturedHeaders[JOB_KEY]).toBeUndefined();
-  });
-
-  it('omits X-UIPATH-JobKey after the debug context is cleared', async () => {
-    const context = new ExecutionContext();
-    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
-    context.set(DEBUG_CONTEXT_KEY, undefined);
-
-    await createClient({}, context).get('/test');
-
-    expect(capturedHeaders[JOB_KEY]).toBeUndefined();
-  });
-
-  it('lets per-request options.headers override the debug job key', async () => {
-    const context = new ExecutionContext();
-    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
-
-    await createClient({}, context).get('/test', { headers: { [JOB_KEY]: JOB_TEST_CONSTANTS.JOB_KEY_2 } });
-
-    expect(capturedHeaders[JOB_KEY]).toBe(JOB_TEST_CONSTANTS.JOB_KEY_2);
   });
 });
 

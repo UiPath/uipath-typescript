@@ -29,6 +29,7 @@ const mockTokenManager = {
   getToken: () => 'mock-access-token',
   hasValidToken: () => true,
   onTokenChange: vi.fn(),
+  onDebugJobKey: vi.fn(),
 };
 
 vi.mock('../../../src/core/auth/service', () => {

@@ -25,6 +25,8 @@ export const hostEmbeddingOrigin: string | null =
 export interface HostTokenResponse {
   accessToken: string;
   expiresAt: Date;
+  /** Present when the host runs the app for a debug task. */
+  debugJobKey?: string;
 }
 
 export interface HostTokenRequestOptions {
@@ -38,6 +40,8 @@ export interface HostTokenRequestOptions {
   extractToken: (data: unknown) => HostTokenResponse | undefined;
   /** Called with the refreshed TokenInfo before the promise resolves. */
   onTokenRefreshed: (tokenInfo: TokenInfo) => void;
+  /** Called with the debug job key when the host's response carries one. */
+  onDebugJobKey?: (jobKey: string) => void;
 }
 
 export interface HostTokenRequest {
@@ -78,7 +82,7 @@ function waitForMessage(
  * function; they differ only in the event names and message shape they use.
  */
 export function requestHostToken(options: HostTokenRequestOptions): HostTokenRequest {
-  const { pinnedOrigin, sendRequest, responseEventType, extractToken, onTokenRefreshed } = options;
+  const { pinnedOrigin, sendRequest, responseEventType, extractToken, onTokenRefreshed, onDebugJobKey } = options;
 
   const controller = new AbortController();
 
@@ -125,6 +129,9 @@ export function requestHostToken(options: HostTokenRequestOptions): HostTokenReq
       // from running — the host manager owns the refresh cycle via requestHostToken.
       // This mirrors the same pattern used by ActionCenterTokenManager.
       onTokenRefreshed({ token: token.accessToken, type: 'secret', expiresAt: token.expiresAt });
+      if (token.debugJobKey) {
+        onDebugJobKey?.(token.debugJobKey);
+      }
       return token.accessToken;
     } finally {
       clearTimeout(timer);

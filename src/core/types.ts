@@ -70,23 +70,20 @@ export interface IUiPath {
   updateToken(tokenInfo: TokenInfo): void;
 
   /**
-   * Sets the debug context applied to all subsequent API requests made through this instance,
-   * or clears it with `null`. While set, requests carry the parent job key: Orchestrator records it
-   * as the parent of the jobs the app starts and, when that parent is a debug run, routes them as
-   * debug sub-jobs of that session. Use it when the app is hosted by a platform job (for example, a
-   * coded action app opened from a task in Action Center). A task's `jobKey` is the job that created
-   * it, debug or not, so passing it along is safe either way. Apps opened from a Studio Web debug
-   * session receive the job key automatically and need no call. Calling this before `initialize()`
-   * is fine; the context is applied once the SDK is configured.
+   * Sets the debug context for the jobs this instance starts, or clears it with `null`. While set,
+   * `Processes.start` carries the parent job key: Orchestrator records it as the parent of the started
+   * job and, when that parent is a debug run, routes the job as a debug sub-job of that session.
+   * Hosts set this for you: a Studio Web debug session passes the key on the page URL and Action
+   * Center sends it with the token of a debug task, so an app calls this only when another host runs
+   * it inside a job. A context set here wins over the host's, and `null` keeps the host's key from
+   * being applied. Calling this before `initialize()` is fine; the context is applied once the SDK
+   * is configured.
    *
    * @param context - The debug context with the parent job key, or `null` to clear it
    *
    * @example
    * ```typescript
-   * const task = await codedActionApp.getTask();
-   * if (task.jobKey) {
-   *   sdk.setDebugContext({ jobKey: task.jobKey });
-   * }
+   * sdk.setDebugContext({ jobKey: hostJobKey });
    * ```
    */
   setDebugContext(context: DebugContext | null): void;
