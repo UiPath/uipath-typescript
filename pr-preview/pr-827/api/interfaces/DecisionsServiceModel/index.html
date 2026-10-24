@@ -2280,28 +2280,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#builddecision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        buildDecision()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#capturedecision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        captureDecision()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#create" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3955,28 +3933,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#builddecision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        buildDecision()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#capturedecision" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        captureDecision()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#create" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4049,122 +4005,12 @@
 
 <p>Records and reads the Decision Object Model: who decided what on a trace, field by field.</p>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h2>
-<h3 id="builddecision">buildDecision()<a class="headerlink" href="#builddecision" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>buildDecision</strong>(<code>input</code>: <a href="../DecisionCaptureInput/"><code>DecisionCaptureInput</code></a>): <a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a></p>
-</blockquote>
-<p>Builds a decision from what a coded app's reviewer did, without sending it. Use it to inspect the decision before writing it with <code>create</code>.
-Each field is <code>Accepted</code> when its proposed and final values are deeply equal and <code>Rewritten</code> otherwise, including when there is no proposed value.
-The decision gets a generated 16-character lowercase hex <code>decisionId</code>, the <code>Human</code> actor kind and the <code>CodedApp</code> platform.</p>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>input</code></td>
-<td><a href="../DecisionCaptureInput/"><code>DecisionCaptureInput</code></a></td>
-<td>The reviewer's outcome, reviewed fields and actor</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
-<p><a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a></p>
-<p>The <a href="../DecisionCreateInput/">DecisionCreateInput</a> ready to pass to <code>create</code></p>
-<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">buildDecision</span><span class="p">({</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nx">outcome</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nx">outcomes</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Reject&#39;</span><span class="p">],</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nx">fields</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;amount&#39;</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nx">proposedValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nx">finalValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1000</span><span class="p">,</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nx">proposedBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Agent&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;agentId&gt;&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="p">}],</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nx">actor</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userEmail&gt;&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">});</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">decision</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">amount</span><span class="p">.</span><span class="nx">disposition</span><span class="p">);</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Carry the app&#39;s own signals under implicitSignals</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">buildDecision</span><span class="p">({</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">outcome</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">fields</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nx">actor</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userEmail&gt;&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nx">recordId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;recordId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">intrinsicSignals</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">reviewSeconds</span><span class="o">:</span><span class="w"> </span><span class="kt">42</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">});</span>
-</code></pre></div>
-<hr />
-<h3 id="capturedecision">captureDecision()<a class="headerlink" href="#capturedecision" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p><strong>captureDecision</strong>(<code>traceId</code>: <code>string</code>, <code>input</code>: <a href="../DecisionCaptureInput/"><code>DecisionCaptureInput</code></a>, <code>folderKey</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../Decision/"><code>Decision</code></a>&gt;</p>
-</blockquote>
-<p>Records a reviewer's decision from a coded app that has no Action Center task, so nothing else writes the decision's span.
-Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecision</a> does and writes it with <code>create</code>.</p>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>traceId</code></td>
-<td><code>string</code></td>
-<td>Trace the decision belongs to (32 lowercase hex characters)</td>
-</tr>
-<tr>
-<td><code>input</code></td>
-<td><a href="../DecisionCaptureInput/"><code>DecisionCaptureInput</code></a></td>
-<td>The reviewer's outcome, reviewed fields and actor</td>
-</tr>
-<tr>
-<td><code>folderKey</code></td>
-<td><code>string</code></td>
-<td>Folder (GUID) the decision is written to</td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
-<p><code>Promise</code>&lt;<a href="../Decision/"><code>Decision</code></a>&gt;</p>
-<p>Promise resolving to the <a href="../Decision/">Decision</a> that was written</p>
-<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">captureDecision</span><span class="p">(</span><span class="s1">&#39;&lt;traceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">outcome</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">outcomes</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Reject&#39;</span><span class="p">],</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">fields</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;amount&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nx">proposedValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nx">finalValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="nx">proposedBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Agent&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;agentId&gt;&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="p">}],</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nx">actor</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userEmail&gt;&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">},</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">decision</span><span class="p">.</span><span class="nx">decisionId</span><span class="p">);</span>
-</code></pre></div>
-<hr />
 <h3 id="create">create()<a class="headerlink" href="#create" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>create</strong>(<code>traceId</code>: <code>string</code>, <code>decisions</code>: <a href="../DecisionCreateInput/"><code>DecisionCreateInput</code></a>[], <code>folderKey</code>: <code>string</code>): <code>Promise</code>&lt;<a href="../DecisionIngestAck/"><code>DecisionIngestAck</code></a>[]&gt;</p>
 </blockquote>
 <p>Writes one or more decisions to a trace. Rewriting an existing <code>decisionId</code> on the same trace updates that decision.</p>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4191,30 +4037,30 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 </tr>
 </tbody>
 </table>
-<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
+<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../DecisionIngestAck/"><code>DecisionIngestAck</code></a>[]&gt;</p>
 <p>Promise resolving to one <a href="../DecisionIngestAck/">DecisionIngestAck</a> per decision, in input order</p>
-<h4 id="example_1">Example<a class="headerlink" href="#example_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">acks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;&lt;traceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nx">decisionId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;spanId&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="nx">proposedValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">      </span><span class="nx">finalValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">      </span><span class="nx">disposition</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Accepted&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">      </span><span class="nx">proposedBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;agentId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Agent&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="nx">actor</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userEmail&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Human&#39;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nx">acceptedOutcome</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="nx">decisionTimestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">toISOString</span><span class="p">(),</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="nx">platform</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ActionCenter&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="p">}],</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">acks</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">feedbackId</span><span class="p">);</span>
+<h4 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">acks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s1">&#39;&lt;traceId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nx">decisionId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;spanId&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nx">amount</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nx">proposedValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nx">finalValue</span><span class="o">:</span><span class="w"> </span><span class="kt">1065</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nx">disposition</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Accepted&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nx">proposedBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;agentId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Agent&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nx">actor</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">identity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;userEmail&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Human&#39;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="nx">acceptedOutcome</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Approve&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="nx">decisionTimestamp</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">toISOString</span><span class="p">(),</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nx">platform</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ActionCenter&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="p">}],</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">acks</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">feedbackId</span><span class="p">);</span>
 </code></pre></div>
 <hr />
 <h3 id="getbyid">getById()<a class="headerlink" href="#getbyid" title="Permanent link">&para;</a></h3>
@@ -4222,7 +4068,7 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 <p><strong>getById</strong>(<code>decisionId</code>: <code>string</code>, <code>options?</code>: <a href="../DecisionGetOptions/"><code>DecisionGetOptions</code></a>): <code>Promise</code>&lt;<a href="../DecisionResponse/"><code>DecisionResponse</code></a>&gt;</p>
 </blockquote>
 <p>Gets a single decision by its decision ID, including the decision body and, unless disabled, the span it is attached to.</p>
-<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4244,22 +4090,22 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
+<h4 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../DecisionResponse/"><code>DecisionResponse</code></a>&gt;</p>
 <p>Promise resolving to the <a href="../DecisionResponse/">DecisionResponse</a></p>
-<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;decisionId&gt;&#39;</span><span class="p">);</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">decision</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">acceptedOutcome</span><span class="p">,</span><span class="w"> </span><span class="nx">decision</span><span class="p">.</span><span class="nx">updatedTime</span><span class="p">);</span>
+<h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;decisionId&gt;&#39;</span><span class="p">);</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">decision</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">acceptedOutcome</span><span class="p">,</span><span class="w"> </span><span class="nx">decision</span><span class="p">.</span><span class="nx">updatedTime</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Scope the read to a folder and skip the span lookup</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;decisionId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nx">includeSpans</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Scope the read to a folder and skip the span lookup</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">getById</span><span class="p">(</span><span class="s1">&#39;&lt;decisionId&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nx">folderKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;folderKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nx">includeSpans</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">});</span>
 </code></pre></div>
 <hr />
 <h3 id="list">list()<a class="headerlink" href="#list" title="Permanent link">&para;</a></h3>
@@ -4282,7 +4128,7 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 </tr>
 </tbody>
 </table>
-<h4 id="parameters_4">Parameters<a class="headerlink" href="#parameters_4" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4299,27 +4145,27 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns<a class="headerlink" href="#returns_4" title="Permanent link">&para;</a></h4>
+<h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<code>T</code> <em>extends</em> <a href="../../type-aliases/HasPaginationOptions/"><code>HasPaginationOptions</code></a>&lt;<code>T</code>&gt; ? <a href="../PaginatedResponse/"><code>PaginatedResponse</code></a>&lt;<a href="../DecisionResponse/"><code>DecisionResponse</code></a>&gt; : <a href="../NonPaginatedResponse/"><code>NonPaginatedResponse</code></a>&lt;<a href="../DecisionResponse/"><code>DecisionResponse</code></a>&gt;&gt;</p>
 <p>Promise resolving to a paginated or non-paginated list of <a href="../DecisionResponse/">DecisionResponse</a></p>
-<h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span><span class="w"> </span><span class="nx">traceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;traceId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nx">result</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">decisionId</span><span class="p">,</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">acceptedOutcome</span><span class="p">));</span>
+<h4 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span><span class="w"> </span><span class="nx">traceId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;traceId&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nx">result</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">decisionId</span><span class="p">,</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">acceptedOutcome</span><span class="p">));</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// Decisions for one process since a start time, paginated</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nx">from</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2026-01-01T00:00:00Z&#39;</span><span class="p">),</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span><span class="p">,</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="p">});</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">page</span><span class="p">.</span><span class="nx">nextCursor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page.nextCursor</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Decisions for one process since a start time, paginated</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nx">from</span><span class="o">:</span><span class="w"> </span><span class="kt">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2026-01-01T00:00:00Z&#39;</span><span class="p">),</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nx">pageSize</span><span class="o">:</span><span class="w"> </span><span class="kt">25</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">});</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">page</span><span class="p">.</span><span class="nx">hasNextPage</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">page</span><span class="p">.</span><span class="nx">nextCursor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">list</span><span class="p">({</span><span class="w"> </span><span class="nx">cursor</span><span class="o">:</span><span class="w"> </span><span class="kt">page.nextCursor</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h3 id="query">query()<a class="headerlink" href="#query" title="Permanent link">&para;</a></h3>
@@ -4328,7 +4174,7 @@ Builds the decision as <a href="#builddecision">DecisionsServiceModel.buildDecis
 </blockquote>
 <p>Finds decisions with a richer filter than <code>list</code>: by process, actor, outcome or whether the actor overrode a proposal.
 Filters on decision content are limited to the most recent 90 days, reported as <code>effectiveFrom</code> on the returned page.</p>
-<h4 id="parameters_5">Parameters<a class="headerlink" href="#parameters_5" title="Permanent link">&para;</a></h4>
+<h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -4345,25 +4191,25 @@ Filters on decision content are limited to the most recent 90 days, reported as 
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns<a class="headerlink" href="#returns_5" title="Permanent link">&para;</a></h4>
+<h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>&lt;<a href="../DecisionsPageResponse/"><code>DecisionsPageResponse</code></a>&gt;</p>
 <p>Promise resolving to a <a href="../DecisionsPageResponse/">DecisionsPageResponse</a> with <code>items</code>, <code>totalCount</code> and <code>effectiveFrom</code></p>
-<h4 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">query</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">page</span><span class="p">.</span><span class="nx">totalCount</span><span class="si">}</span><span class="sb"> decisions`</span><span class="p">);</span>
+<h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Decisions</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@uipath/uipath-typescript/traces&#39;</span><span class="p">;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">decisions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Decisions</span><span class="p">(</span><span class="nx">sdk</span><span class="p">);</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">query</span><span class="p">({</span><span class="w"> </span><span class="nx">processKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&lt;processKey&gt;&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">page</span><span class="p">.</span><span class="nx">totalCount</span><span class="si">}</span><span class="sb"> decisions`</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Decisions where the actor overrode a proposal, newest created first</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">overridden</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">query</span><span class="p">({</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">hasOverrides</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nx">actorKind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Human&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nx">sortBy</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;CreatedAt&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nx">take</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">});</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nx">overridden</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">actor</span><span class="p">.</span><span class="nx">identity</span><span class="p">));</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Decisions where the actor overrode a proposal, newest created first</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">overridden</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">decisions</span><span class="p">.</span><span class="nx">query</span><span class="p">({</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nx">hasOverrides</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nx">actorKind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Human&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nx">sortBy</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;CreatedAt&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nx">take</span><span class="o">:</span><span class="w"> </span><span class="kt">20</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">});</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nx">overridden</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">item</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">decision</span><span class="p">.</span><span class="nx">actor</span><span class="p">.</span><span class="nx">identity</span><span class="p">));</span>
 </code></pre></div>
 
 
