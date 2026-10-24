@@ -12,6 +12,7 @@ export * from './processes';
 export * from './assets';
 export * from './folders';
 export * from './queues';
+export * from './resources';
 export * from './pagination';
 export * from './conversational-agent';
 export * from './attachments';
