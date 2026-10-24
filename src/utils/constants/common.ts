@@ -366,3 +366,16 @@ export const AUTHORIZATION_ROLES_MAX_PAGE_SIZE = 1000;
  * above 100 (live-verified: "Page size cannot be greater than 100!").
  */
 export const AUTHORIZATION_ASSIGNMENTS_MAX_PAGE_SIZE = 100;
+
+/** Decisions list/query pagination response shape — an envelope, not a bare array. */
+export const DECISIONS_PAGINATION = {
+  ITEMS_FIELD: 'items',
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/** Decisions OFFSET pagination parameter names (take/skip style). */
+export const DECISIONS_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'take',
+  OFFSET_PARAM: 'skip',
+  COUNT_PARAM: undefined
+};
