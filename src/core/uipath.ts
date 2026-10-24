@@ -1,7 +1,8 @@
 import { UiPathConfig } from './config/config';
-import { ExecutionContext } from './context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
 import { TokenInfo, LogoutOptions } from './auth/types';
+import type { DebugContext } from '../models/common/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { normalizeBaseUrl, isCompleteConfig, compactConfig, missingConfigMessage, conflictingAuthMessage } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -16,7 +17,9 @@ import {
   type CodedFunctionContext,
 } from './config/function-context';
 import type { IUiPath } from './types';
-import { isInActionCenter } from '../utils/platform';
+import { isBrowser, isInActionCenter } from '../utils/platform';
+import { GUID_REGEX } from '../utils/validation/guid';
+import { DEBUG_JOB_KEY_QUERY_PARAM } from '../utils/runtime/constants';
 import { SessionLicense } from './licensing/session-license';
 import { ApiClient } from './http/api-client';
 import { SessionStore } from '../utils/storage/session-store';
@@ -96,6 +99,12 @@ export class UiPath implements IUiPath {
   // Not a configuration field; lives here so the SDK can flow it through to
   // BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
+  // `<meta name="uipath:debug-source">`, present only on pages Studio Web stages for a
+  // debug run; without it a `?jobKey=` on a production app must not become a debug header.
+  #metaDebugSource?: string;
+  // Set before initialize() configured the instance; applied once the execution context exists.
+  #pendingDebugContext?: DebugContext | null;
+  #debugContextSetByApp = false;
   // Folder key off a coded function's `ctx.platform`; its own field because
   // #loadConfig rewrites the meta one from a re-read. Beats the meta tag, as
   // constructor input beats meta tags everywhere else — except as Integration
@@ -140,6 +149,7 @@ export class UiPath implements IUiPath {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
     this.#metaFolderKey = configFromMetaTags?.folderKey;
+    this.#metaDebugSource = configFromMetaTags?.debugSource;
     this.#metaOrgId = configFromMetaTags?.organizationId ?? configFromMetaTags?.orgName;
     this.#metaTenantId = configFromMetaTags?.tenantName;
 
@@ -187,6 +197,10 @@ export class UiPath implements IUiPath {
       SessionStore.open() ?? new MemoryStore(),
     );
     if (sessionLicense) tokenManager.onTokenChange((tokenInfo) => sessionLicense.onTokenChange(tokenInfo));
+    // Action Center sends the debug job key with the token of a debug task; a context the app set itself wins.
+    tokenManager.onDebugJobKey((jobKey) => {
+      if (!this.#debugContextSetByApp) executionContext.set(DEBUG_CONTEXT_KEY, { jobKey });
+    });
 
     // Store internals in SDKInternalsRegistry (not visible on instance).
     // The folder keys are kept off `UiPathConfig` (which mirrors user-passed
@@ -200,6 +214,11 @@ export class UiPath implements IUiPath {
       robotKey: this.#functionContext && robotKeyFromFunctionContext(this.#functionContext),
       sessionLicense,
     });
+
+    if (this.#pendingDebugContext !== undefined) {
+      executionContext.set(DEBUG_CONTEXT_KEY, this.#pendingDebugContext ?? undefined);
+      this.#pendingDebugContext = undefined;
+    }
 
     // Expose read-only config for user convenience
     (this as any).config = {
@@ -229,7 +248,7 @@ export class UiPath implements IUiPath {
      */
     if (hasSecretAuth || isInActionCenter || hostEmbeddingOrigin) {
       this.#authService.authenticateWithSecret(config.secret ?? '');
-      this.#initialized = true;
+      this.#markInitialized();
     }
   }
 
@@ -291,6 +310,7 @@ export class UiPath implements IUiPath {
     // runs at all.
     const metaConfig = loadFromMetaTags();
     this.#metaFolderKey = metaConfig?.folderKey;
+    this.#metaDebugSource = metaConfig?.debugSource;
     this.#metaOrgId = metaConfig?.organizationId ?? metaConfig?.orgName;
     this.#metaTenantId = metaConfig?.tenantName;
 
@@ -333,7 +353,7 @@ export class UiPath implements IUiPath {
 
       // Check if already authenticated
       if (this.isAuthenticated()) {
-        this.#initialized = true;
+        this.#markInitialized();
         return;
       }
 
@@ -341,7 +361,7 @@ export class UiPath implements IUiPath {
       await this.#authService!.authenticate(this.#config!);
 
       if (this.isAuthenticated()) {
-        this.#initialized = true;
+        this.#markInitialized();
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -380,7 +400,7 @@ export class UiPath implements IUiPath {
     try {
       const success = await this.#authService!.authenticate(this.#config!);
       if (success && this.isAuthenticated()) {
-        this.#initialized = true;
+        this.#markInitialized();
         return true;
       }
       return false;
@@ -451,4 +471,28 @@ export class UiPath implements IUiPath {
     this.#authService?.updateToken(tokenInfo);
   }
 
+  public setDebugContext(context: DebugContext | null): void {
+    this.#debugContextSetByApp = true;
+    if (!this.#config) {
+      this.#pendingDebugContext = context;
+      return;
+    }
+    SDKInternalsRegistry.get(this).context.set(DEBUG_CONTEXT_KEY, context ?? undefined);
+  }
+
+  #markInitialized(): void {
+    this.#initialized = true;
+    this.#applyDebugContextFromPage();
+  }
+
+  #applyDebugContextFromPage(): void {
+    if (!this.#metaDebugSource || !isBrowser) return;
+    // A context the app set itself (its host's job key) wins over the page's query parameter.
+    const context = SDKInternalsRegistry.get(this).context;
+    if (context.get(DEBUG_CONTEXT_KEY) !== undefined) return;
+    const jobKey = new URLSearchParams(window.location.search).get(DEBUG_JOB_KEY_QUERY_PARAM);
+    if (jobKey && GUID_REGEX.test(jobKey)) {
+      context.set(DEBUG_CONTEXT_KEY, { jobKey });
+    }
+  }
 }

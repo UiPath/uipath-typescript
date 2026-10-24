@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { TelemetryContext } from '@uipath/core-telemetry';
 import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
-import { ExecutionContext } from '../../../src/core/context/execution';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../src/core/context/execution';
 import { telemetryClient } from '../../../src/core/telemetry';
 import { SessionLicense } from '../../../src/core/licensing/session-license';
 import { AuthService } from '../../../src/core/auth/service';
@@ -12,6 +12,8 @@ import { MemoryStore } from '../../../src/utils/storage/memory-store';
 import type { TokenInfo } from '../../../src/core/auth/types';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
+import { JOB_TEST_CONSTANTS } from '../../utils/constants/jobs';
+import { DEBUG_JOB_KEY_QUERY_PARAM } from '../../../src/utils/runtime/constants';
 import { functionContext } from '../../utils/function-context';
 
 // ===== MOCKING =====
@@ -21,9 +23,11 @@ const mockTokenManager = {
   hasValidToken: () => true,
   destroy: mockTokenManagerDestroy,
   onTokenChange: vi.fn(),
+  onDebugJobKey: vi.fn(),
 };
 
 const mockLogout = vi.fn();
+const mockAuthenticate = vi.fn().mockResolvedValue(true);
 
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(function () { return ({
@@ -31,7 +35,7 @@ vi.mock('../../../src/core/auth/service', () => {
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
-    authenticate: vi.fn().mockResolvedValue(true),
+    authenticate: mockAuthenticate,
     logout: mockLogout
   }); });
 
@@ -152,6 +156,16 @@ describe('UiPath Core', () => {
     it('should provide access token', () => {
       const token = sdk.getToken();
       expect(token).toBe('mock-access-token');
+    });
+
+    it('should store and clear the debug context on the execution context', () => {
+      const context = getContext(sdk);
+
+      sdk.setDebugContext({ jobKey: 'debug-job-key-1' });
+      expect(context.get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: 'debug-job-key-1' });
+
+      sdk.setDebugContext(null);
+      expect(context.get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
   });
 
@@ -523,6 +537,180 @@ describe('UiPath Core', () => {
       const sdk = new UiPath(oauthConfig);
 
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Debug context from the Action Center host', () => {
+    const secretConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      secret: TEST_CONSTANTS.CLIENT_SECRET,
+    };
+    const hostSendsJobKey = (jobKey: string) => {
+      const [listener] = mockTokenManager.onDebugJobKey.mock.calls.at(-1) as [(jobKey: string) => void];
+      listener(jobKey);
+    };
+
+    it('adopts the job key the host sends with the token', () => {
+      const sdk = new UiPath(secretConfig);
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('keeps a context the app set itself over the host key', () => {
+      const sdk = new UiPath(secretConfig);
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+    });
+
+    it('keeps a context the app cleared from being filled by the host key', () => {
+      const sdk = new UiPath(secretConfig);
+      sdk.setDebugContext(null);
+
+      hostSendsJobKey(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+  });
+
+  describe('Debug context from the page', () => {
+    const DEBUG_SOURCE = 'studioweb';
+    const AUTH_CODE = 'auth-code';
+    const STATE = 'state';
+    const debugSearch = `?${DEBUG_JOB_KEY_QUERY_PARAM}=${JOB_TEST_CONSTANTS.JOB_KEY}`;
+    const callbackSearch = `?code=${AUTH_CODE}&state=${STATE}`;
+    const oauthConfig = {
+      baseUrl: TEST_CONSTANTS.BASE_URL,
+      orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantName: TEST_CONSTANTS.TENANT_ID,
+      clientId: TEST_CONSTANTS.CLIENT_ID,
+      redirectUri: TEST_CONSTANTS.REDIRECT_URI,
+      scope: 'offline_access',
+    };
+
+    function openPage(search: string, debugSource?: string) {
+      const page = { location: { search } };
+      mockPlatform.isBrowser = true;
+      vi.stubGlobal('window', page);
+      mockLoadFromMetaTags.mockReturnValue(debugSource ? { debugSource } : null);
+      return page;
+    }
+
+    afterEach(() => {
+      mockPlatform.isBrowser = false;
+      mockLoadFromMetaTags.mockReset();
+      vi.unstubAllGlobals();
+    });
+
+    it('applies the jobKey from the URL on initialize() when the page carries the debug-source tag', async () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('applies the jobKey that the sign-in restores to the URL before completeOAuth() returns', async () => {
+      const page = openPage(callbackSearch, DEBUG_SOURCE);
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      mockAuthenticate.mockImplementationOnce(async () => {
+        page.location.search = debugSearch;
+        return true;
+      });
+      const sdk = new UiPath(oauthConfig);
+
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('leaves the debug context unset when the sign-in restores no jobKey to the URL', async () => {
+      openPage(callbackSearch, DEBUG_SOURCE);
+      vi.mocked(AuthService.isInOAuthCallback).mockReturnValueOnce(true);
+      const sdk = new UiPath(oauthConfig);
+
+      await expect(sdk.completeOAuth()).resolves.toBe(true);
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
+    it('applies the jobKey for secret auth, which initializes in the constructor', () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
+      });
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('ignores the jobKey when the page carries no debug-source tag', async () => {
+      openPage(debugSearch);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
+    it('ignores a jobKey that is not a GUID', async () => {
+      openPage(`?${DEBUG_JOB_KEY_QUERY_PARAM}=${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
+    });
+
+    it('keeps a debug context the app set before initialize() ahead of the jobKey on the page', async () => {
+      openPage(debugSearch, DEBUG_SOURCE);
+      const sdk = new UiPath(oauthConfig);
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY_2 });
+    });
+
+    it('applies a debug context set before the configuration is complete', async () => {
+      // The base fields arrive through meta tags that initialize() re-reads, not the constructor.
+      mockLoadFromMetaTags.mockReturnValueOnce(null).mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+      });
+      const sdk = new UiPath({ clientId: TEST_CONSTANTS.CLIENT_ID, redirectUri: TEST_CONSTANTS.REDIRECT_URI, scope: 'offline_access' });
+      expect(() => getContext(sdk)).toThrow();
+
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toEqual({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+    });
+
+    it('drops a pending debug context cleared with null before initialize()', async () => {
+      mockLoadFromMetaTags.mockReturnValueOnce(null).mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+      });
+      const sdk = new UiPath({ clientId: TEST_CONSTANTS.CLIENT_ID, redirectUri: TEST_CONSTANTS.REDIRECT_URI, scope: 'offline_access' });
+      sdk.setDebugContext({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+      sdk.setDebugContext(null);
+
+      await sdk.initialize();
+
+      expect(getContext(sdk).get(DEBUG_CONTEXT_KEY)).toBeUndefined();
     });
   });
 

@@ -14,6 +14,7 @@ import {
   QueueCompleteTransactionOptions,
   QueueTransactionOutcome
 } from './queues.types';
+import type { QueueBoundOperations } from './queues.internal-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { ValidationError } from '../../core/errors/validation';
 
@@ -201,6 +202,14 @@ export interface QueueServiceModel {
    * The payload must be flat — values are simple scalars (see
    * {@link QueueItemValue}); nested objects and arrays are rejected.
    *
+   * The returned item's `folderId` reflects the folder the SDK actually
+   * targeted — after any runtime resource-override redirect on `folderPath`.
+   * Pass `{ folderId: item.folderId }` to follow-up calls on the same queue
+   * (e.g. `getAllItems`, `startTransaction`) so they scope to the same folder
+   * without the caller having to re-derive it. A freshly inserted item has no
+   * transaction yet, so `completeTransaction` applies only once a robot has
+   * acquired it.
+   *
    * @param queueName - Name of the queue to insert into
    * @param specificData - The item's business payload (stored as the queue item's specific content)
    * @param options Item metadata (priority, reference, defer/due dates) and folder scoping (`folderId` / `folderKey` / `folderPath`)
@@ -251,11 +260,19 @@ export interface QueueServiceModel {
    * API identifies queues by name, so an `id` selector is first resolved to
    * the queue's name (one extra lookup).
    *
+   * The returned item's `folderId` reflects the folder the SDK actually
+   * targeted — after any runtime resource-override redirect on the
+   * `{ name }` selector's `folderPath`. Pass `{ folderId: item.folderId }`
+   * to `completeTransaction` so the follow-up scopes to the same folder
+   * without the caller having to re-derive it.
+   *
    * @param queue - Queue selector: `{ name: '<queueName>' }` or `{ id: <queueId> }`
    * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
    * @returns Promise resolving to the acquired {@link QueueItem} (in `InProgress` status with `processingStartTime` set), or `null` when no item is available
    * @example
    * ```typescript
+   * import { QueueTransactionOutcome } from '@uipath/uipath-typescript/queues';
+   *
    * const transaction = await queues.startTransaction({ name: '<queueName>' }, { folderId: <folderId> });
    *
    * // or select by ID — the SDK first resolves the queue's name (one extra lookup)
@@ -268,6 +285,14 @@ export interface QueueServiceModel {
    *   // Running under a robot session: the item is now locked to this caller
    *   console.log(transaction.status);        // 'InProgress'
    *   console.log(transaction.specificData);  // the item's business payload
+   *
+   *   // Complete via the SAME folder the item lives in — `folderId` on the
+   *   // returned item is the resolved folder after any override redirect.
+   *   await queues.completeTransaction(
+   *     transaction.id,
+   *     QueueTransactionOutcome.Successful,
+   *     { folderId: transaction.folderId },
+   *   );
    * } else {
    *   // No item was acquired. This happens when the queue has no eligible
    *   // items — and always for user/application identities (e.g. a coded app
@@ -290,6 +315,12 @@ export interface QueueServiceModel {
    *
    * Applies to items with an active transaction. Changing the outcome of an
    * item that already reached a terminal status is rejected.
+   *
+   * Folder scoping works like the other methods: `folderId` / `folderKey` /
+   * `folderPath`, else the SDK's configured folder. When the item came from
+   * `startTransaction`, pass `{ folderId: item.folderId }` — that's the
+   * resolved folder the item lives in after any override redirect, so no
+   * re-derivation is needed at the call site.
    *
    * @param itemId - Queue item ID of the transaction to complete
    * @param outcome - The caller's verdict on its own processing of the item; Orchestrator records it as-is
@@ -326,7 +357,9 @@ export interface QueueServiceModel {
 /**
  * Queue methods interface - operations bound to a queue returned by getAll,
  * the options-object getById, getByName, and getByKey. The queue's own id,
- * name, and folder are filled in automatically.
+ * name, and folder are filled in automatically, and the calls target exactly
+ * that queue: runtime overrides redirect name lookups, not a queue object the
+ * caller already holds.
  */
 export interface QueueMethods {
   /**
@@ -386,9 +419,11 @@ export interface QueueMethods {
  * Creates queue methods bound to a specific queue's data
  * @param queueData - The queue data
  * @param service - The queue service instance
+ * @param bound - Calls that target the queue as resolved, bypassing name overrides; without them the
+ *   name-based service methods are used
  * @returns Object containing queue methods
  */
-function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueMethods {
+function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceModel, bound?: QueueBoundOperations): QueueMethods {
   return {
     async getAllItems<T extends Omit<QueueGetAllItemsOptions, 'folderId' | 'folderKey' | 'folderPath'> = Omit<QueueGetAllItemsOptions, 'folderId' | 'folderKey' | 'folderPath'>>(options?: T): Promise<
       T extends HasPaginationOptions<T>
@@ -410,13 +445,17 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
     async insertItem(specificData: Record<string, QueueItemValue>, options?: Omit<QueueInsertItemOptions, 'folderId' | 'folderKey' | 'folderPath'>): Promise<QueueItem> {
       if (!queueData.name) throw new ValidationError({ message: 'Queue name is undefined' });
       if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
-      return service.insertItemByName(queueData.name, specificData, { ...options, folderId: queueData.folderId });
+      return bound
+        ? bound.insertItem({ name: queueData.name, folderId: queueData.folderId }, specificData, options)
+        : service.insertItemByName(queueData.name, specificData, { ...options, folderId: queueData.folderId });
     },
 
     async startTransaction(): Promise<QueueItem | null> {
       if (!queueData.name) throw new ValidationError({ message: 'Queue name is undefined' });
       if (!queueData.folderId) throw new ValidationError({ message: 'Folder ID is undefined' });
-      return service.startTransaction({ name: queueData.name }, { folderId: queueData.folderId });
+      return bound
+        ? bound.startTransaction({ name: queueData.name, folderId: queueData.folderId })
+        : service.startTransaction({ name: queueData.name }, { folderId: queueData.folderId });
     },
 
     async completeTransaction(itemId: number, outcome: QueueTransactionOutcome, options?: Omit<QueueCompleteTransactionOptions, 'folderId' | 'folderKey' | 'folderPath'>): Promise<void> {
@@ -430,8 +469,13 @@ function createQueueMethods(queueData: QueueGetResponse, service: QueueServiceMo
  * Creates a queue object with methods attached
  * @param queueData - The queue data
  * @param service - The queue service instance
+ * @param bound - Calls that target the queue as resolved, bypassing name overrides (the service supplies them)
  * @returns Queue data with bound methods
  */
-export function createQueueWithMethods(queueData: QueueGetResponse, service: QueueServiceModel): QueueGetWithMethodsResponse {
-  return Object.assign({}, queueData, createQueueMethods(queueData, service));
+export function createQueueWithMethods(
+  queueData: QueueGetResponse,
+  service: QueueServiceModel,
+  bound?: QueueBoundOperations
+): QueueGetWithMethodsResponse {
+  return Object.assign({}, queueData, createQueueMethods(queueData, service, bound));
 }

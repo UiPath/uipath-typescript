@@ -1,3 +1,6 @@
+/** Context key under which the SDK's debug context (parent job key) is stored. */
+export const DEBUG_CONTEXT_KEY = 'debugContext';
+
 /**
  * ExecutionContext manages the state and context of API operations.
  * It provides a way to share context across service calls and maintain

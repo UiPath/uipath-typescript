@@ -18,6 +18,7 @@ vi.mock('@/core/auth/service', () => {
           hasValidToken: () => true,
           destroy: vi.fn(),
           onTokenChange: vi.fn(),
+          onDebugJobKey: vi.fn(),
         }),
         hasValidToken: () => true,
         authenticateWithSecret: vi.fn(),

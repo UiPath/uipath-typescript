@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { DEBUG_CONTEXT_KEY, ExecutionContext } from '../../../../src/core/context/execution';
 import { ServerError } from '../../../../src/core/errors/server';
 import { NetworkError } from '../../../../src/core/errors/network';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { HTTP_TEST_CONSTANTS } from '../../../utils/constants/http';
+import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
+import { JOB_KEY } from '../../../../src/utils/constants/headers';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
@@ -17,7 +20,7 @@ const mockConfig = {
   tenantName: TEST_CONSTANTS.TENANT_ID,
 };
 
-const mockExecutionContext = {};
+const mockExecutionContext = { get: vi.fn() };
 
 let capturedHeaders: Record<string, string> = {};
 let capturedUrl = '';
@@ -36,10 +39,10 @@ beforeEach(() => {
   });
 });
 
-function createClient(clientConfig = {}) {
+function createClient(clientConfig = {}, context: Pick<ExecutionContext, 'get'> = mockExecutionContext) {
   return new ApiClient(
     mockConfig as any,
-    mockExecutionContext as any,
+    context as any,
     mockTokenManager as any,
     clientConfig,
   );
@@ -93,6 +96,17 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient debug context', () => {
+  it('leaves X-UIPATH-JobKey to the services that start jobs, even while a debug context is set', async () => {
+    const context = new ExecutionContext();
+    context.set(DEBUG_CONTEXT_KEY, { jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+
+    await createClient({}, context).get('/test');
+
+    expect(capturedHeaders[JOB_KEY]).toBeUndefined();
   });
 });
 
