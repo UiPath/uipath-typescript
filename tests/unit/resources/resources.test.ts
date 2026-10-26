@@ -117,6 +117,22 @@ describe('resource factories', () => {
     });
     expect(handle.value).toEqual({ name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME, folderPath: FOLDER_PATH });
   });
+
+  it.each([['.'], ['']])('omits folderPath when the override maps the resource to the current folder as %j', (folderPath) => {
+    const handle = resource.asset({ name: RESOURCE_TEST_CONSTANTS.ASSET_NAME, folderPath: FOLDER_PATH });
+    publishOverrides({
+      [`asset.${RESOURCE_TEST_CONSTANTS.ASSET_NAME}.${FOLDER_PATH}`]: { name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME, folderPath },
+    });
+
+    expect(handle.value).toEqual({ name: OVERRIDE_TEST_CONSTANTS.TARGET_NAME });
+  });
+
+  it('omits folderPath from value when the declaration itself uses "."', () => {
+    const handle = resource.queue({ name: RESOURCE_TEST_CONSTANTS.LOCAL_QUEUE_NAME, folderPath: '.' });
+
+    expect(handle.folderPath).toBe('.');
+    expect(handle.value).toEqual({ name: RESOURCE_TEST_CONSTANTS.LOCAL_QUEUE_NAME });
+  });
 });
 
 describe('kind guards', () => {

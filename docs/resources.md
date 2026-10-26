@@ -47,7 +47,7 @@ An explicit `folderId`, `folderKey` or `folderPath` option still wins over the h
 
 ### What the handle resolves to
 
-`handle.value` is the name and folder the SDK will actually send, after any override published for the binding has been applied. It is computed on each read, so it always reflects the current overrides.
+`handle.value` is the name and folder the SDK will actually send, after any override published for the binding has been applied. It is computed on each read, so it always reflects the current overrides. An override whose folder is `'.'` or empty points at the folder the code runs in, so `value` carries no `folderPath` and the call uses the SDK's own folder context.
 
 ```typescript
 ProjectResources.invoiceThreshold.value;

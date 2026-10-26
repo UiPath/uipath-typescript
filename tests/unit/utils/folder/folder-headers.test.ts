@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFolderHeaders } from '../../../../src/utils/folder/folder-headers';
+import { resolveFolderHeaders, isCurrentFolderPath } from '../../../../src/utils/folder/folder-headers';
 import { encodeFolderPathHeader } from '../../../../src/utils/encoding/folder-path';
 import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { ValidationError } from '../../../../src/core/errors';
@@ -161,5 +161,15 @@ describe('resolveFolderHeaders', () => {
       expect(() => resolveFolderHeaders({ resourceType: 'Asset.getByName' }))
         .toThrow(/Asset\.getByName/);
     });
+  });
+});
+
+describe('isCurrentFolderPath', () => {
+  it.each([[undefined], [''], ['   '], ['.'], [' . ']])('is true for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(true);
+  });
+
+  it.each([['Shared'], ['./Finance'], ['..']])('is false for %j', (path) => {
+    expect(isCurrentFolderPath(path)).toBe(false);
   });
 });

@@ -33,6 +33,7 @@
 import { ValidationError } from '../core/errors';
 import type { FolderScopedOptions } from '../models/common/types';
 import { resolveOverride } from '../utils/overrides/resolve-override';
+import { isCurrentFolderPath } from '../utils/folder/folder-headers';
 
 /** Kinds a project can declare. Each is the lowercase `resource` string written into `bindings_v2.json`. */
 export type ResourceKind = 'asset' | 'bucket' | 'queue' | 'process' | 'entity';
@@ -46,6 +47,7 @@ export type BucketType = 'orchestrator' | 'amazon' | 'azure';
 /** The name and folder an SDK call actually targets once runtime overrides are applied. */
 export interface ResolvedResource {
   name: string;
+  /** Omitted when the resource lives in the folder the code runs in: declared without a folder, or overridden to `''` or `'.'`. */
   folderPath?: string;
 }
 
@@ -131,7 +133,7 @@ function resolve(kind: ResourceKind, name: string, folderPath?: string): Resolve
   const resolvedFolder = override?.folderPath ?? folderPath;
   return {
     name: override?.name ?? name,
-    ...(resolvedFolder !== undefined && { folderPath: resolvedFolder }),
+    ...(resolvedFolder !== undefined && !isCurrentFolderPath(resolvedFolder) && { folderPath: resolvedFolder }),
   };
 }
 
